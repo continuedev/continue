@@ -1,6 +1,7 @@
 {
   "name": "binary",
   "version": "1.0.0",
+  "author": "Continue Dev, Inc",
   "description": "",
   "main": "out/index.js",
   "bin": "out/index.js",
@@ -26,7 +27,6 @@
     "build:dev": "tsc",
     "esbuild": "node build.js --esbuild-only"
   },
-  "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
     "@biomejs/biome": "1.6.4",

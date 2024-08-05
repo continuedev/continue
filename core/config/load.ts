@@ -36,6 +36,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import { execSync } from "child_process";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
@@ -61,8 +62,6 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-
-const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -465,6 +464,7 @@ function finalToBrowserConfig(
       systemMessage: m.systemMessage,
       requestOptions: m.requestOptions,
       promptTemplates: m.promptTemplates as any,
+      capabilities: m.capabilities,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
@@ -534,7 +534,7 @@ async function buildConfigTs() {
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
-      const esbuild = require("esbuild");
+      const esbuild = await import("esbuild");
 
       await esbuild.build({
         entryPoints: [getConfigTsPath()],
@@ -586,7 +586,7 @@ async function loadFullConfigNode(
     try {
       // Try config.ts first
       const configJsPath = getConfigJsPath();
-      const module = await require(configJsPath);
+      const module = await import(configJsPath);
       delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
@@ -603,7 +603,7 @@ async function loadFullConfigNode(
       const configJsPathForRemote = getConfigJsPathForRemote(
         ideSettings.remoteConfigServerUrl,
       );
-      const module = await require(configJsPathForRemote);
+      const module = await import(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");

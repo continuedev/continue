@@ -137,7 +137,7 @@ const IndexingProgressBar = ({
         <FlexDiv data-tooltip-id="indexingFailed_dot">
           <StatusDot color={STATUS_COLORS.FAILED}></StatusDot>
           <div>
-            <StatusHeading>Indexing error! Click to retry</StatusHeading>
+            <StatusHeading>Indexing error - click to retry</StatusHeading>
             <StatusInfo>{getIndexingErrMsg(indexingState.desc)}</StatusInfo>
           </div>
           {tooltipPortalDiv &&
@@ -151,7 +151,7 @@ const IndexingProgressBar = ({
       ) : indexingState.status === "loading" ? (
         <FlexDiv>
           <StatusDot shouldBlink color={STATUS_COLORS.LOADING}></StatusDot>
-          <StatusHeading>Continue is initializing</StatusHeading>
+          <StatusHeading>Initializing</StatusHeading>
         </FlexDiv>
       ) : indexingState.status === "done" ? (
         <FlexDiv data-tooltip-id="indexingDone_dot">

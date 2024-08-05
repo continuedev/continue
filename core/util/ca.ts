@@ -1,4 +1,5 @@
 import { globalAgent } from "https";
+// @ts-ignore
 import { systemCertsAsync } from "system-ca";
 
 export async function setupCa() {
@@ -6,11 +7,13 @@ export async function setupCa() {
     switch (process.platform) {
       case "darwin":
         // https://www.npmjs.com/package/mac-ca#usage
-        require("mac-ca").addToGlobalAgent();
+        const macCa = await import("mac-ca");
+        macCa.addToGlobalAgent();
         break;
       case "win32":
         // https://www.npmjs.com/package/win-ca#caveats
-        require("win-ca").inject("+");
+        const winCa = await import("win-ca");
+        winCa.inject("+");
         break;
       default:
         // https://www.npmjs.com/package/system-ca

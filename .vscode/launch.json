@@ -22,7 +22,6 @@
         "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/binary/.continue"
       }
     },
-
     {
       "name": "Debug Jest Tests",
       "type": "node",
@@ -35,6 +34,7 @@
         "--config",
         "${workspaceRoot}/core/jest.config.js"
       ],
+
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     },
@@ -113,7 +113,31 @@
       ],
       "cwd": "${workspaceRoot}/core",
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen"
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_OPTIONS": "--experimental-vm-modules",
+        "CI": "true",
+        "DEBUG": "jest"
+      }
+    },
+    {
+      "name": "[openai-adapters] Jest Test Debugger, Current Open File",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/packages/openai-adapters/node_modules/jest/bin/jest.js",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/packages/openai-adapters/jest.config.mjs",
+        "${relativeFile}"
+      ],
+      "cwd": "${workspaceRoot}/packages/openai-adapters",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "env": {
+        "NODE_OPTIONS": "--experimental-vm-modules"
+      }
     }
     // {
     //   "name": "[openai-adapters] Jest Test Debugger, Current Open File",

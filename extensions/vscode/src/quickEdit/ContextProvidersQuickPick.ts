@@ -1,6 +1,6 @@
 import { ContinueConfig, IDE } from "core";
-import { QuickPickItem, window } from "vscode";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
+import { QuickPickItem, window } from "vscode";
 
 export async function getContextProviderItems({
   contextProviders,
@@ -39,6 +39,7 @@ export async function getContextProvidersString(
         }
 
         return provider.getContextItems("", {
+          config,
           ide,
           embeddingsProvider: config.embeddingsProvider,
           reranker: config.reranker,

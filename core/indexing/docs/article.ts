@@ -118,7 +118,6 @@ function extractTitlesAndBodies(html: string): ArticleComponent[] {
 
   return result;
 }
-
 export function stringToArticle(
   url: string,
   html: string,

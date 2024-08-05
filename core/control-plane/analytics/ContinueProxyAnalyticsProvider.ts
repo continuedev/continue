@@ -1,7 +1,7 @@
 import { Analytics } from "@continuedev/config-types";
 import fetch from "node-fetch";
-import { CONTROL_PLANE_URL } from "../client";
-import { IAnalyticsProvider } from "./IAnalyticsProvider";
+import { CONTROL_PLANE_URL } from "../client.js";
+import { IAnalyticsProvider } from "./IAnalyticsProvider.js";
 
 export default class ContinueProxyAnalyticsProvider
   implements IAnalyticsProvider

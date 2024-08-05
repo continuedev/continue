@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import type { AutocompleteInput } from "../autocomplete/completionProvider.js";
+import { ProfileDescription } from "../config/ConfigHandler.js";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -14,9 +16,7 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
-} from "..";
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import { ProfileDescription } from "../config/ConfigHandler";
+} from "../index.js";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -68,7 +68,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
-  "context/removeDocs": [{ baseUrl: string }, void];
+  "context/removeDocs": [Pick<SiteIndexingConfig, "startUrl">, void];
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];

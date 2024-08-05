@@ -1,12 +1,12 @@
 import { ContinueConfig, QuickActionConfig } from "core";
+import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
+import { QuickEditShowParams } from "../../../quickEdit/QuickEditQuickPick";
 import {
   CONTINUE_WORKSPACE_KEY,
   getContinueWorkspaceConfig,
 } from "../../../util/workspaceConfig";
 import { isTutorialFile } from "./TutorialCodeLensProvider";
-import { Telemetry } from "core/util/posthog";
-import { QuickEditShowParams } from "../../../quickEdit/QuickEditQuickPick";
 
 export const ENABLE_QUICK_ACTIONS_KEY = "enableQuickActions";
 
@@ -48,13 +48,14 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
   /**
    * Defines which code elements are eligible for Quick Actions.
    *
-   * Right now, we only allow functions, methods and classes
-   * to keep things simple.
+   * Right now, we only allow functions, methods, constructors
+   * and classes to keep things simple.
    */
-  static quickActionSymbolKinds = [
+  quickActionSymbolKinds = [
     vscode.SymbolKind.Function,
     vscode.SymbolKind.Method,
     vscode.SymbolKind.Class,
+    vscode.SymbolKind.Constructor,
   ];
 
   customQuickActionsConfig?: QuickActionConfig[];
@@ -94,6 +95,43 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     return [quickEdit];
   }
 
+  getSymbolsFrom(symbol: vscode.DocumentSymbol): vscode.DocumentSymbol[] {
+    if (symbol.children.length === 0) {
+      return [symbol];
+    }
+
+    const symbols: vscode.DocumentSymbol[] = [];
+
+    symbols.push(symbol);
+
+    for (const children of symbol.children) {
+      if (children.children.length === 0) {
+        symbols.push(children);
+      } else {
+        symbols.push(...this.getSymbolsFrom(children));
+      }
+    }
+    return symbols;
+  }
+
+  async getAllSymbols(uri: vscode.Uri) {
+    const docSymbols = await vscode.commands.executeCommand<
+      Array<vscode.DocumentSymbol> | undefined
+    >("vscode.executeDocumentSymbolProvider", uri);
+
+    if (!docSymbols) {
+      return [];
+    }
+
+    const symbols = docSymbols.flatMap((symbol) => this.getSymbolsFrom(symbol));
+
+    const filteredSmybols = symbols?.filter((def) =>
+      this.quickActionSymbolKinds.includes(def.kind),
+    );
+
+    return filteredSmybols;
+  }
+
   async provideCodeLenses(
     document: vscode.TextDocument,
   ): Promise<vscode.CodeLens[]> {
@@ -109,19 +147,9 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
       return [];
     }
 
-    const symbols = await vscode.commands.executeCommand<
-      Array<vscode.DocumentSymbol> | undefined
-    >("vscode.executeDocumentSymbolProvider", document.uri);
+    const symbols = await this.getAllSymbols(document.uri);
 
-    if (!symbols) {
-      return [];
-    }
-
-    const filteredSmybols = symbols?.filter((def) =>
-      QuickActionsCodeLensProvider.quickActionSymbolKinds.includes(def.kind),
-    );
-
-    return filteredSmybols.flatMap(({ range }) => {
+    return symbols.flatMap(({ range }) => {
       const commands: vscode.Command[] = !!this.customQuickActionsConfig
         ? this.getCustomCommands(range, this.customQuickActionsConfig)
         : this.getDefaultCommand(range);

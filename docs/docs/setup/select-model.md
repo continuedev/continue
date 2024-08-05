@@ -38,7 +38,7 @@ _You can also use other open-source chat models by adding them to your `config.j
 #### GPT-4o from OpenAI
 
 - Unlimited budget: `gpt-4o`
-- Limited budget: `gpt-3.5-turbo-0125`
+- Limited budget: `gpt-4o-mini`
 
 #### Gemini Pro from Google
 

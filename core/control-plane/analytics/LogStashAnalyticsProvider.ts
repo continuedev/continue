@@ -1,6 +1,6 @@
 import { Analytics } from "@continuedev/config-types";
 import net from "node:net";
-import { IAnalyticsProvider } from "./IAnalyticsProvider";
+import { IAnalyticsProvider } from "./IAnalyticsProvider.js";
 
 export default class LogStashAnalyticsProvider implements IAnalyticsProvider {
   private host?: string;

@@ -1,6 +1,6 @@
 import {
   BedrockRuntimeClient,
-  InvokeModelWithResponseStreamCommand,
+  ConverseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 import {
@@ -18,7 +18,7 @@ class Bedrock extends BaseLLM {
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
-    model: "claude-3-sonnet-20240229",
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
     contextLength: 200_000,
   };
 
@@ -52,17 +52,71 @@ class Bedrock extends BaseLLM {
         sessionToken: credentials.sessionToken || "",
       },
     });
-    const toolkit = this._getToolkit(options.model);
-    const command = toolkit.generateCommand(messages, options);
+
+    const input = this._generateConverseInput(messages, options);
+    const command = new ConverseStreamCommand(input);
     const response = await client.send(command);
-    if (response.body) {
-      for await (const value of response.body) {
-        const text = toolkit.unwrapResponseChunk(value);
-        if (text) {
-          yield { role: "assistant", content: text };
+
+    if (response.stream) {
+      for await (const chunk of response.stream) {
+        if (chunk.contentBlockDelta?.delta?.text) {
+          yield {
+            role: "assistant",
+            content: chunk.contentBlockDelta.delta.text,
+          };
         }
       }
     }
+  }
+
+  private _generateConverseInput(
+    messages: ChatMessage[],
+    options: CompletionOptions,
+  ): any {
+    const convertedMessages = this._convertMessages(messages);
+
+    return {
+      modelId: options.model,
+      messages: convertedMessages,
+      system: this.systemMessage ? [{ text: this.systemMessage }] : undefined,
+      inferenceConfig: {
+        maxTokens: options.maxTokens,
+        temperature: options.temperature,
+        topP: options.topP,
+        stopSequences: options.stop?.filter((stop) => stop.trim() !== ""),
+      },
+    };
+  }
+
+  private _convertMessages(messages: ChatMessage[]): any[] {
+    return messages.map((message) => ({
+      role: message.role,
+      content: this._convertMessageContent(message.content),
+    }));
+  }
+
+  private _convertMessageContent(messageContent: MessageContent): any[] {
+    if (typeof messageContent === "string") {
+      return [{ text: messageContent }];
+    }
+    return messageContent
+      .map((part) => {
+        if (part.type === "text") {
+          return { text: part.text };
+        }
+        if (part.type === "imageUrl" && part.imageUrl) {
+          return {
+            image: {
+              format: "jpeg",
+              source: {
+                bytes: Buffer.from(part.imageUrl.url.split(",")[1], "base64"),
+              },
+            },
+          };
+        }
+        return null;
+      })
+      .filter(Boolean);
   }
 
   private async _getCredentials() {
@@ -76,139 +130,6 @@ class Bedrock extends BaseLLM {
       );
       return await fromIni()();
     }
-  }
-
-  private _getToolkit(model: string): BedrockModelToolkit {
-    if (model.includes("claude-3")) {
-      return new AnthropicClaude3Toolkit(this);
-    } else if (model.includes("llama")) {
-      return new Llama3Toolkit(this);
-    } else {
-      throw new Error(
-        `Model ${model} is currently not supported in Continue for Bedrock`,
-      );
-    }
-  }
-}
-
-interface BedrockModelToolkit {
-  generateCommand(
-    messages: ChatMessage[],
-    options: CompletionOptions,
-  ): InvokeModelWithResponseStreamCommand;
-  unwrapResponseChunk(rawValue: any): string;
-}
-
-class AnthropicClaude3Toolkit implements BedrockModelToolkit {
-  constructor(private bedrock: Bedrock) {}
-  generateCommand(
-    messages: ChatMessage[],
-    options: CompletionOptions,
-  ): InvokeModelWithResponseStreamCommand {
-    const payload = {
-      anthropic_version: "bedrock-2023-05-31",
-      max_tokens: options.maxTokens,
-      system: this.bedrock.systemMessage,
-      messages: this._convertMessages(messages),
-      temperature: options.temperature,
-      top_p: options.topP,
-      top_k: options.topK,
-      // each stop sequence must contain non-whitespace
-      stop_sequences: options.stop?.filter((stop) => stop.trim() !== ""),
-    };
-    return new InvokeModelWithResponseStreamCommand({
-      body: new TextEncoder().encode(JSON.stringify(payload)),
-      contentType: "application/json",
-      modelId: options.model,
-    });
-  }
-
-  private _convertMessages(msgs: ChatMessage[]): any[] {
-    return msgs
-      .filter((m) => m.role !== "system")
-      .map((message) => this._convertMessage(message));
-  }
-
-  private _convertMessage(message: ChatMessage): any {
-    return {
-      role: message.role,
-      content: this._convertMessageContent(message.content),
-    };
-  }
-
-  private _convertMessageContent(messageContent: MessageContent): any {
-    if (typeof messageContent === "string") {
-      return messageContent;
-    }
-    return messageContent.map((part) => {
-      if (part.type === "text") {
-        return part;
-      }
-      return {
-        type: "image",
-        source: {
-          type: "base64",
-          media_type: "image/jpeg",
-          data: part.imageUrl?.url.split(",")[1],
-        },
-      };
-    });
-  }
-  unwrapResponseChunk(rawValue: any): string {
-    const binaryChunk = rawValue.chunk?.bytes;
-    const textChunk = new TextDecoder().decode(binaryChunk);
-    const chunk = JSON.parse(textChunk).delta?.text;
-    return chunk;
-  }
-}
-
-class Llama3Toolkit implements BedrockModelToolkit {
-  constructor(private bedrock: Bedrock) {}
-  generateCommand(
-    messages: ChatMessage[],
-    options: CompletionOptions,
-  ): InvokeModelWithResponseStreamCommand {
-    let prompt = "<|begin_of_text|>";
-    if (this.bedrock.systemMessage) {
-      prompt += `<|start_header_id|>system<|end_header_id|>${this.bedrock.systemMessage}<|eot_id|>`;
-    }
-    for (const message of messages) {
-      let content = "";
-      if (typeof message.content === "string") {
-        content = message.content;
-      } else {
-        for (const part of message.content) {
-          if (part.type === "text") {
-            content += part.text || "";
-          } else {
-            console.warn("Skipping non-text message part", part);
-          }
-        }
-      }
-      if (content) {
-        prompt += `<|start_header_id|>${message.role}<|end_header_id|>${content}<|eot_id|>`;
-      }
-    }
-    prompt += "<|start_header_id|>assistant<|end_header_id|>";
-
-    const payload = {
-      prompt,
-      max_gen_len: options.maxTokens,
-      temperature: options.temperature,
-      top_p: options.topP,
-    };
-
-    return new InvokeModelWithResponseStreamCommand({
-      body: new TextEncoder().encode(JSON.stringify(payload)),
-      contentType: "application/json",
-      modelId: options.model,
-    });
-  }
-  unwrapResponseChunk(rawValue: any): string {
-    const binaryChunk = rawValue.chunk?.bytes;
-    const textChunk = new TextDecoder().decode(binaryChunk);
-    const chunk = JSON.parse(textChunk).generation;
-    return chunk;
   }
 }
 

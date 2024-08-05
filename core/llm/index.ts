@@ -7,6 +7,7 @@ import {
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
+  ModelCapability,
   ModelName,
   ModelProvider,
   PromptLog,
@@ -53,7 +54,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsImages(): boolean {
-    return modelSupportsImages(this.providerName, this.model, this.title);
+    return modelSupportsImages(this.providerName, this.model, this.title, this.capabilities);
   }
 
   supportsCompletions(): boolean {
@@ -94,6 +95,7 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  capabilities?: ModelCapability
 
   engine?: string;
   apiVersion?: string;
@@ -102,6 +104,16 @@ export abstract class BaseLLM implements ILLM {
   projectId?: string;
   accountId?: string;
   aiGatewaySlug?: string;
+
+  // For WatsonX only.
+
+  watsonxUrl?: string;
+  watsonxApiKey?: string;
+  watsonxZenApiKeyBase64?:string = "YOUR_WATSONX_ZENAPIKEY" // Required if using watsonx software with ZenApiKey auth
+  watsonxUsername?:string;
+  watsonxPassword?:string;
+  watsonxProjectId?: string;
+
 
   private _llmOptions: LLMOptions;
 
@@ -154,10 +166,18 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+    // for watsonx only
+    this.watsonxUrl = options.watsonxUrl;
+    this.watsonxApiKey = options.watsonxApiKey;
+    this.watsonxProjectId = options.watsonxProjectId;
+    this.watsonxUsername = options.watsonxUsername;
+    this.watsonxPassword = options.watsonxPassword;
+
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
     }
     this.accountId = options.accountId;
+    this.capabilities = options.capabilities;
 
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;

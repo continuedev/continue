@@ -1,10 +1,10 @@
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
-import React, { useContext, useLayoutEffect, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Button, Input } from "..";
+import { Button, HelperText, Input, lightGray } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
 
 const DEFAULT_MAX_DEPTH = 3;
@@ -15,15 +15,16 @@ function AddDocsDialog() {
 
   const ref = useRef<HTMLInputElement>(null);
 
-  const [docsUrl, setDocsUrl] = useState("");
-  const [docsTitle, setDocsTitle] = useState("");
-  const [urlValid, setUrlValid] = useState(false);
+  const [title, setTitle] = useState("");
+  const [startUrl, setStartUrl] = useState("");
+  const [rootUrl, setRootUrl] = useState("");
+  const [faviconUrl, setFaviconUrl] = useState("");
   const [maxDepth, setMaxDepth] = useState<number | string>("");
+  const [isOpen, setIsOpen] = useState(false);
 
   const ideMessenger = useContext(IdeMessengerContext);
-  const { addItem } = useContext(SubmenuContextProvidersContext);
 
-  const isFormValid = docsUrl && docsTitle && urlValid;
+  const isFormValid = startUrl && title;
 
   useLayoutEffect(() => {
     setTimeout(() => {
@@ -37,34 +38,30 @@ function AddDocsDialog() {
     e.preventDefault();
 
     const siteIndexingConfig: SiteIndexingConfig = {
-      startUrl: docsUrl,
-      rootUrl: docsUrl,
-      title: docsTitle,
+      startUrl,
+      rootUrl,
+      title,
       maxDepth: typeof maxDepth === "string" ? DEFAULT_MAX_DEPTH : maxDepth,
-      faviconUrl: new URL("/favicon.ico", docsUrl).toString(),
+      faviconUrl: new URL("/favicon.ico", startUrl).toString(),
     };
 
     ideMessenger.post("context/addDocs", siteIndexingConfig);
 
-    setDocsTitle("");
-    setDocsUrl("");
+    setTitle("");
+    setStartUrl("");
+    setRootUrl("");
     setMaxDepth("");
+    setFaviconUrl("");
 
     dispatch(setShowDialog(false));
 
-    addItem("docs", {
-      id: docsUrl,
-      title: docsTitle,
-      description: new URL(docsUrl).hostname,
-    });
-
-    posthog.capture("add_docs", { url: docsUrl });
+    posthog.capture("add_docs_gui", { url: startUrl });
   }
 
   return (
     <div className="p-4">
       <div className="mb-8">
-        <h2>Add Docs</h2>
+        <h1>Add a documentation site</h1>
 
         <p>
           Continue pre-indexes many common documentation sites, but if there's
@@ -79,47 +76,112 @@ function AddDocsDialog() {
 
       <form onSubmit={onSubmit} className="flex flex-col space-y-4">
         <label>
-          URL
-          <Input
-            type="url"
-            placeholder="URL"
-            value={docsUrl}
-            ref={ref}
-            onChange={(e) => {
-              setDocsUrl(e.target.value);
-              setUrlValid(e.target.validity.valid);
-            }}
-          />
-        </label>
-
-        <label>
           Title
           <Input
             type="text"
             placeholder="Title"
-            value={docsTitle}
-            onChange={(e) => setDocsTitle(e.target.value)}
+            value={title}
+            ref={ref}
+            onChange={(e) => setTitle(e.target.value)}
           />
+          <HelperText>
+            The title that will be displayed to users in the `@docs` submenu
+          </HelperText>
         </label>
 
         <label>
-          Max Depth [Optional]
+          Start URL
           <Input
-            type="text"
-            inputMode="numeric"
-            placeholder={`Max depth (Default: ${DEFAULT_MAX_DEPTH})`}
-            title="The maximum search tree depth - where your input url is the root node"
-            value={maxDepth}
+            type="url"
+            placeholder="Start URL"
+            value={startUrl}
             onChange={(e) => {
-              const value = e.target.value;
-              if (value == "") {
-                setMaxDepth("");
-              } else if (!isNaN(+value) && Number(value) > 0) {
-                setMaxDepth(Number(value));
-              }
+              setStartUrl(e.target.value);
             }}
           />
+          <HelperText>
+            The starting location to begin crawling the documentation site
+          </HelperText>
         </label>
+
+        <div
+          className="cursor-pointer"
+          onClick={() => setIsOpen((prev) => !prev)}
+        >
+          {isOpen ? (
+            <ChevronUpIcon
+              width="1.0em"
+              height="1.0em"
+              style={{ color: lightGray }}
+            ></ChevronUpIcon>
+          ) : (
+            <ChevronDownIcon
+              width="1.0em"
+              height="1.0em"
+              style={{ color: lightGray }}
+            ></ChevronDownIcon>
+          )}
+          <span className="ms-1">Advanced</span>
+        </div>
+
+        {isOpen && (
+          <div className="pt-2">
+            <label>
+              Root URL [Optional]
+              <Input
+                type="url"
+                placeholder="Root URL"
+                value={rootUrl}
+                onChange={(e) => {
+                  setRootUrl(e.target.value);
+                }}
+              />
+              <HelperText>
+                Limits the crawler to pages within the same domain and path as
+                the Root URL
+              </HelperText>
+            </label>
+
+            <label>
+              Favicon URL [Optional]
+              <Input
+                type="url"
+                placeholder={`${startUrl}/favicon.ico`}
+                value={faviconUrl}
+                onChange={(e) => {
+                  setFaviconUrl(e.target.value);
+                }}
+              />
+              <HelperText>
+                The URL path to a favicon for the site - by default, it will be
+                `/favicon.ico` path from the Start URL
+              </HelperText>
+            </label>
+
+            <label>
+              Max Depth [Optional]
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder={`Default: ${DEFAULT_MAX_DEPTH}`}
+                title="The maximum search tree depth - where your input url is the root node"
+                value={maxDepth}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value == "") {
+                    setMaxDepth("");
+                  } else if (!isNaN(+value) && Number(value) > 0) {
+                    setMaxDepth(Number(value));
+                  }
+                }}
+              />
+              <HelperText>
+                Limits the maximum search tree depth of the crawler - 3 by
+                default
+              </HelperText>
+            </label>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <Button disabled={!isFormValid} type="submit">

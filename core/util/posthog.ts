@@ -1,5 +1,5 @@
 import os from "node:os";
-import { TeamAnalytics } from "../control-plane/TeamAnalytics";
+import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
 
 export class Telemetry {
   // Set to undefined whenever telemetry is disabled

@@ -1,13 +1,13 @@
 import {
-  PencilSquareIcon,
-  Cog6ToothIcon,
   BookOpenIcon,
   ClipboardDocumentIcon,
+  Cog6ToothIcon,
+  PencilSquareIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { getMetaKeyLabel } from "../../util";
 import styled from "styled-components";
-import { lightGray } from "..";
+import { defaultBorderRadius, lightGray } from "..";
+import { getMetaKeyLabel } from "../../util";
 
 interface TutorialCardProps {
   onClose: () => void;
@@ -15,7 +15,7 @@ interface TutorialCardProps {
 
 const TutorialCardDiv = styled.div`
   border: 1px solid ${lightGray};
-  border-radius: 0.125rem;
+  border-radius: ${defaultBorderRadius};
   padding: 1rem 2.5rem 1rem 2rem;
   margin: 1rem;
   max-width: 28rem;
