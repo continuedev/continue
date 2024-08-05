@@ -7,7 +7,7 @@ import {
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -24,6 +24,7 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
+import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -127,6 +128,11 @@ function ProfileSwitcher(props: {}) {
   const { session, logout, login } = useAuth();
   const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
 
+  const dispatch = useDispatch();
+  const lastControlServerBetaEnabledStatus = useSelector(
+    (state: RootState) => state.misc.lastControlServerBetaEnabledStatus,
+  );
+
   const selectedProfileId = useSelector(
     (store: RootState) => store.state.selectedProfileId,
   );
@@ -135,8 +141,16 @@ function ProfileSwitcher(props: {}) {
     useState(false);
 
   useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then((settings) => {
-      setControlServerBetaEnabled(settings.enableControlServerBeta);
+    ideMessenger.ide.getIdeSettings().then(({ enableControlServerBeta }) => {
+      const shouldShowPopup =
+        !lastControlServerBetaEnabledStatus && enableControlServerBeta;
+
+      if (shouldShowPopup) {
+        ideMessenger.ide.infoPopup("Continue for Teams enabled");
+      }
+
+      setControlServerBetaEnabled(enableControlServerBeta);
+      dispatch(setLastControlServerBetaEnabledStatus(enableControlServerBeta));
     });
   }, []);
 
