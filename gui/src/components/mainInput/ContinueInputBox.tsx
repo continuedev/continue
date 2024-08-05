@@ -54,7 +54,6 @@ interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
   onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
-
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
   hidden?: boolean;

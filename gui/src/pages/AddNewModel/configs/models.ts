@@ -9,7 +9,6 @@ export interface PackageDimension {
   description: string;
   options: { [key: string]: { [key: string]: any } };
 }
-
 export interface ModelPackage {
   title: string;
   icon?: string;
@@ -32,6 +31,138 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  llama31Chat: {
+    title: "Llama3.1 Chat",
+    description: "The latest model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-8b",
+      model: "llama3.1-8b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "llama3.1-8b",
+            title: "Llama3.1-8b",
+          },
+          "70b": {
+            model: "llama3.1-70b",
+            title: "Llama3.1-70b",
+          },
+          "405b": {
+            model: "llama3.1-405b",
+            title: "Llama3.1-405b",
+          },
+        },
+      },
+    ],
+    providerOptions: [
+      "ollama",
+      "lmstudio",
+      "together",
+      "llama.cpp",
+      "replicate",
+    ],
+    isOpenSource: true,
+  },
+  deepseek: {
+    title: "DeepSeek Coder",
+    description:
+      "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
+    params: {
+      title: "DeepSeek-7b",
+      model: "deepseek-7b",
+      contextLength: 4096,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "1b": {
+            model: "deepseek-1b",
+            title: "DeepSeek-1b",
+          },
+          "7b": {
+            model: "deepseek-7b",
+            title: "DeepSeek-7b",
+          },
+          "33b": {
+            model: "deepseek-33b",
+            title: "DeepSeek-33b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
+    isOpenSource: true,
+  },
+  deepseekChatApi: {
+    title: "DeepSeek Chat",
+    description: "DeepSeek's best model for general chat use cases.",
+    params: {
+      title: "DeepSeek Chat",
+      model: "deepseek-chat",
+      contextLength: 128_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["deepseek"],
+    isOpenSource: false,
+  },
+  deepseekCoderApi: {
+    title: "DeepSeek Coder",
+    description:
+      "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
+    params: {
+      title: "DeepSeek Coder",
+      model: "deepseek-coder",
+      contextLength: 128_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["deepseek"],
+    isOpenSource: false,
+  },
+  mistralOs: {
+    title: "Mistral",
+    description:
+      "A series of open-weight models created by Mistral AI, highly competent for code generation and other tasks",
+    params: {
+      title: "Mistral",
+      model: "mistral-7b",
+      contextLength: 4096,
+    },
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "7b": {
+            model: "mistral-7b",
+            title: "Mistral-7b",
+          },
+          "8x7b (MoE)": {
+            model: "mistral-8x7b",
+            title: "Mixtral",
+          },
+        },
+      },
+    ],
+    icon: "mistral.png",
+    providerOptions: [
+      "ollama",
+      "lmstudio",
+      "together",
+      "llama.cpp",
+      "replicate",
+    ],
+    isOpenSource: true,
+  },
   codeLlamaInstruct: {
     title: "CodeLlama Instruct",
     description:
@@ -76,7 +207,7 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
-  codellama70bTrial: {
+  llama3170bTrial: {
     title: "Codellama 70b (Free Trial)",
     description:
       "The best code model from Meta, fine-tuned for code generation and conversation",
@@ -85,6 +216,19 @@ export const models: { [key: string]: ModelPackage } = {
       title: "CodeLlama-70b",
       model: "codellama-70b",
       contextLength: 4096,
+    },
+    icon: "meta.png",
+    providerOptions: ["free-trial"],
+    isOpenSource: false,
+  },
+  llama31405bTrial: {
+    title: "Llama3.1 405b (Free Trial)",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-405b",
+      model: "llama3.1-405b",
+      contextLength: 8192,
     },
     icon: "meta.png",
     providerOptions: ["free-trial"],
@@ -124,6 +268,45 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Llama3-70b",
       model: "llama3-70b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["groq"],
+    isOpenSource: false,
+  },
+  llama318bChat: {
+    title: "Llama3.1 8b Chat",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-8b",
+      model: "llama3.1-8b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["groq"],
+    isOpenSource: false,
+  },
+  llama3170bChat: {
+    title: "Llama3.1 70b Chat",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-70b",
+      model: "llama3.1-70b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["groq"],
+    isOpenSource: false,
+  },
+  llama31405bChat: {
+    title: "Llama3.1 405b Chat",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-405b",
+      model: "llama3.1-405b",
       contextLength: 8192,
     },
     icon: "meta.png",
@@ -178,6 +361,44 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
+  graniteCodeOpenSource: {
+    title: "Granite Code",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "granite-code",
+      contextLength: 20_000,
+      title: "Granite Code",
+      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
+    },
+    providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
+    icon: "ibm.png",
+    isOpenSource: true,
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "3b": {
+            model: "granite-code-3b",
+            title: "Granite Code 3B",
+          },
+          "8b": {
+            model: "granite-code-8b",
+            title: "Granite Code 8B",
+          },
+          "20b": {
+            model: "granite-code-20b",
+            title: "Granite Code 20B",
+          },
+          "34b": {
+            model: "granite-code-34b",
+            title: "Granite Code 34B",
+          },
+        },
+      },
+    ],
+  },
   wizardCoder: {
     title: "WizardCoder",
     description:
@@ -227,41 +448,6 @@ export const models: { [key: string]: ModelPackage } = {
       "llama.cpp",
       "replicate",
       "free-trial",
-    ],
-    isOpenSource: true,
-  },
-  mistralOs: {
-    title: "Mistral",
-    description:
-      "A series of open-weight models created by Mistral AI, highly competent for code generation and other tasks",
-    params: {
-      title: "Mistral",
-      model: "mistral-7b",
-      contextLength: 4096,
-    },
-    dimensions: [
-      {
-        name: "Parameter Count",
-        description: "The number of parameters in the model",
-        options: {
-          "7b": {
-            model: "mistral-7b",
-            title: "Mistral-7b",
-          },
-          "8x7b (MoE)": {
-            model: "mistral-8x7b",
-            title: "Mixtral",
-          },
-        },
-      },
-    ],
-    icon: "mistral.png",
-    providerOptions: [
-      "ollama",
-      "lmstudio",
-      "together",
-      "llama.cpp",
-      "replicate",
     ],
     isOpenSource: true,
   },
@@ -374,7 +560,7 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Gemini 1.5 Pro",
       model: "gemini-1.5-pro-latest",
-      contextLength: 1_000_000,
+      contextLength: 2_000_000,
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
@@ -394,39 +580,6 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "gemini.png",
     providerOptions: ["gemini"],
     isOpenSource: false,
-  },
-  deepseek: {
-    title: "DeepSeek-Coder",
-    description:
-      "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
-    params: {
-      title: "DeepSeek-7b",
-      model: "deepseek-7b",
-      contextLength: 4096,
-    },
-    icon: "deepseek.png",
-    dimensions: [
-      {
-        name: "Parameter Count",
-        description: "The number of parameters in the model",
-        options: {
-          "1b": {
-            model: "deepseek-1b",
-            title: "DeepSeek-1b",
-          },
-          "7b": {
-            model: "deepseek-7b",
-            title: "DeepSeek-7b",
-          },
-          "33b": {
-            model: "deepseek-33b",
-            title: "DeepSeek-33b",
-          },
-        },
-      },
-    ],
-    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
-    isOpenSource: true,
   },
   commandR: {
     title: "Command R",
@@ -566,6 +719,75 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["anthropic", "free-trial"],
     icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  graniteChat: {
+    title: "WatsonX - Granite Chat",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-13b-chat-v2",
+      contextLength: 20_000,
+      title: "Granite Chat",
+    },
+    providerOptions: ["watsonx"],
+    icon: "",
+    isOpenSource: false,
+  },
+  graniteCode: {
+    title: "WatsonX - Granite Code",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-13b-instruct-v2",
+      contextLength: 20_000,
+      title: "Granite Code",
+      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
+  MistralLarge: {
+    title: "WatsonX - Mistral",
+    description:
+      "Mistral Large, the most advanced Large Language Model (LLM) developed by Mistral Al, is an exceptionally powerful model.",
+    params: {
+      model: "mistralai/mistral-large",
+      contextLength: 20_000,
+      title: "WatsonX - Mistral",
+    },
+    providerOptions: ["watsonx"],
+    icon: "mistral.png",
+    isOpenSource: false,
+  },
+  MetaLlama3: {
+    title: "Meta Llama 3",
+    description:
+      "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Meta-llama3-8b",
+      model: "meta-llama/llama-3-8b-instruct",
+      contextLength: 20_000,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "meta-llama/llama-3-8b-instruct",
+            title: "Meta-llama3-8b",
+          },
+          "70b": {
+            model: "meta-llama/llama-3-70b-instruct",
+            title: "Meta-llama3-70b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["watsonx"],
     isOpenSource: false,
   },
   AUTODETECT: {

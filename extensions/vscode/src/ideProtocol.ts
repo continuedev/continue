@@ -20,7 +20,6 @@ import {
   editConfigJson,
   getConfigJsonPath,
   getContinueGlobalPath,
-  internalBetaPathExists,
 } from "core/util/paths";
 import * as vscode from "vscode";
 import { executeGotoProvider } from "./autocomplete/lsp";
@@ -271,12 +270,14 @@ class VsCodeIde implements IDE {
   }
 
   async isTelemetryEnabled(): Promise<boolean> {
-    return (
+    const globalEnabled = vscode.env.isTelemetryEnabled;
+    const continueEnabled: boolean =
       (await vscode.workspace
         .getConfiguration("continue")
-        .get("telemetryEnabled")) ?? true
-    );
+        .get("telemetryEnabled")) ?? true;
+    return globalEnabled && continueEnabled;
   }
+
   getUniqueId(): Promise<string> {
     return Promise.resolve(vscode.env.machineId);
   }
@@ -521,8 +522,14 @@ class VsCodeIde implements IDE {
         60,
       ),
       userToken: settings.get<string>("userToken", ""),
-      enableControlServerBeta: internalBetaPathExists(),
-      pauseCodebaseIndexOnStart: settings.get<boolean>("pauseCodebaseIndexOnStart", false),
+      enableControlServerBeta: settings.get<boolean>(
+        "enableContinueForTeams",
+        false,
+      ),
+      pauseCodebaseIndexOnStart: settings.get<boolean>(
+        "pauseCodebaseIndexOnStart",
+        false,
+      ),
       enableDebugLogs: settings.get<boolean>("enableDebugLogs", false),
       // settings.get<boolean>(
       //   "enableControlServerBeta",

@@ -1,7 +1,8 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.189",
+  "author": "Continue Dev, Inc",
+  "version": "0.9.194",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -74,6 +75,11 @@
           "default": true,
           "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
         },
+        "continue.enableContinueForTeams": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "_(Requires window reload)_ Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+        },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,
@@ -81,13 +87,13 @@
         },
         "continue.enableQuickActions": {
           "type": "boolean",
-          "default": true,
-          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/walkthroughs/quick-actions)"
+          "default": false,
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/features/quick-actions)"
         },
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
         },
         "continue.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
@@ -295,13 +301,13 @@
         "command": "continue.quickEditHistoryUp",
         "mac": "up",
         "key": "up",
-        "when": "continue.quickEditHistoryFocused"
+        "when": "false && continue.quickEditHistoryFocused"
       },
       {
         "command": "continue.quickEditHistoryDown",
         "mac": "down",
         "key": "down",
-        "when": "continue.quickEditHistoryFocused"
+        "when": "false && continue.quickEditHistoryFocused"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",

@@ -1,12 +1,12 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.5",
+  "version": "1.0.8",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "build": "tsc"
   },
   "author": "Nate Sesti and Ty Dunn",
@@ -14,11 +14,14 @@
   "dependencies": {
     "@azure/openai": "^1.0.0-beta.12",
     "@continuedev/config-types": "^1.0.5",
-    "@continuedev/fetch": "^1.0.1",
+    "@continuedev/fetch": "^1.0.3",
     "node-fetch": "^3.3.2",
     "openai": "^4.52.5"
   },
   "devDependencies": {
-    "@types/follow-redirects": "^1.14.4"
+    "@types/follow-redirects": "^1.14.4",
+    "cross-env": "^7.0.3",
+    "ts-jest": "^29.2.3",
+    "ts-node": "^10.9.2"
   }
 }

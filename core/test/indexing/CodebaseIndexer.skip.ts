@@ -1,22 +1,25 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ConfigHandler } from "../../config/ConfigHandler";
-import { ContinueServerClient } from "../../continueServer/stubs/client";
-import { CodebaseIndexer, PauseToken } from "../../indexing/CodebaseIndexer";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex";
-import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import FileSystemIde from "../../util/filesystem";
+import { ConfigHandler } from "../../config/ConfigHandler.js";
+import { ContinueServerClient } from "../../continueServer/stubs/client.js";
+import { CodebaseIndexer, PauseToken } from "../../indexing/CodebaseIndexer.js";
+import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
+import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import FileSystemIde from "../../util/filesystem.js";
 import {
   getIndexFolderPath,
   getIndexSqlitePath,
   getLanceDbPath,
-} from "../../util/paths";
+} from "../../util/paths.js";
 import {
   addToTestDir,
   setUpTestDir,
   tearDownTestDir,
   TEST_DIR,
-} from "../testUtils/testDir";
+} from "../testUtils/testDir.js";
+import { jest } from "@jest/globals";
+
+jest.useFakeTimers();
 
 const TEST_TS = `\
 function main() {

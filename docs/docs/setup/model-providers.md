@@ -45,6 +45,7 @@ You can run a model on your local computer using:
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
 - [IPEX-LLM](../reference/Model%20Providers/ipex_llm.md) (Local LLM on Intel GPU)
 - [Msty](../reference/Model%20Providers/msty.md)
+- [WatsonX](../reference/Model%20Providers/watsonx.md)
 
 ### Remote
 
@@ -83,7 +84,7 @@ You can use commercial LLMs via APIs using:
 - [Azure OpenAI Service](../reference/Model%20Providers/openai.md)
 - [Google Gemini API](../reference/Model%20Providers/geminiapi.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
-- [Voyage AI API](../walkthroughs/codebase-embeddings.md#openai)
+- [Voyage AI API](../features/codebase-embeddings.md#openai)
 - [Cohere API](../reference/Model%20Providers/cohere.md)
 
 **In addition to selecting providers, you will need to figure out [what models to use](./select-model.md).**

@@ -1,25 +1,13 @@
 import { ConfigJson } from "@continuedev/config-types";
+import { ControlPlaneClient } from "../../control-plane/client.js";
 import {
   ContinueConfig,
   IDE,
   IdeSettings,
   SerializedContinueConfig,
-} from "../..";
-import { ControlPlaneClient } from "../../control-plane/client";
-import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
-import { Telemetry } from "../../util/posthog";
-import {
-  defaultContextProvidersJetBrains,
-  defaultContextProvidersVsCode,
-  defaultSlashCommandsJetBrains,
-  defaultSlashCommandsVscode,
-} from "../default";
-import {
-  intermediateToFinalConfig,
-  serializedToIntermediateConfig,
-} from "../load";
-import { IProfileLoader } from "./IProfileLoader";
+} from "../../index.js";
+import { IProfileLoader } from "./IProfileLoader.js";
+import doLoadConfig from "./doLoadConfig.js";
 
 export default class ControlPlaneProfileLoader implements IProfileLoader {
   private static RELOAD_INTERVAL = 1000 * 60 * 15; // every 15 minutes
@@ -49,58 +37,20 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
   }
 
   async doLoadConfig(): Promise<ContinueConfig> {
-    const ideInfo = await this.ide.getIdeInfo();
     const settings =
       this.workspaceSettings ??
       ((await this.controlPlaneClient.getSettingsForWorkspace(
         this.profileId,
       )) as any);
-
-    // First construct a SerializedContinueConfig from the ControlPlaneSettings (TODO)
     const serializedConfig: SerializedContinueConfig = settings;
 
-    serializedConfig.contextProviders ??=
-      ideInfo.ideType === "vscode"
-        ? defaultContextProvidersVsCode
-        : defaultContextProvidersJetBrains;
-    serializedConfig.slashCommands ??=
-      ideInfo.ideType === "vscode"
-        ? defaultSlashCommandsVscode
-        : defaultSlashCommandsJetBrains;
-
-    const intermediateConfig = await serializedToIntermediateConfig(
-      serializedConfig,
+    return doLoadConfig(
       this.ide,
-    );
-
-    const uniqueId = await this.ide.getUniqueId();
-    const finalConfig = await intermediateToFinalConfig(
-      intermediateConfig,
-      this.ide,
-      await this.ideSettingsPromise,
-      uniqueId,
+      this.ideSettingsPromise,
+      this.controlPlaneClient,
       this.writeLog,
+      serializedConfig,
     );
-
-    // Set up team analytics/telemetry
-    await Telemetry.setup(true, uniqueId, ideInfo.extensionVersion);
-    await TeamAnalytics.setup(
-      settings.analytics,
-      uniqueId,
-      ideInfo.extensionVersion,
-    );
-
-    [
-      ...finalConfig.models,
-      ...(finalConfig.tabAutocompleteModels ?? []),
-    ].forEach(async (model) => {
-      if (model.providerName === "continue-proxy") {
-        const accessToken = await this.controlPlaneClient.getAccessToken();
-        (model as ContinueProxy).workOsAccessToken = accessToken;
-      }
-    });
-
-    return finalConfig;
   }
 
   setIsActive(isActive: boolean): void {}

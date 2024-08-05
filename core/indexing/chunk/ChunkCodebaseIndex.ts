@@ -18,7 +18,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
     private readonly continueServerClient: IContinueServerClient,
-    private readonly maxChunkSize: number
+    private readonly maxChunkSize: number,
   ) {
     this.readFile = readFile;
   }
@@ -105,31 +105,15 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       const item = results.compute[i];
 
       // Insert chunks
-      for await (const chunk of chunkDocument(
-        item.path,
-        contents[i],
-        this.maxChunkSize,
-        item.cacheKey,
-      )) {
-        handleChunk(chunk);
-      }
-
-      accumulatedProgress =
-        (i / results.compute.length) * (1 - progressReservedForTagging);
-      yield {
-        progress: accumulatedProgress,
-        desc: `Chunking ${getBasename(item.path)}`,
-        status: "indexing",
-      };
-      markComplete([item], IndexResultType.Compute);
-      // Insert chunks
-      for await (const chunk of chunkDocument(
-        item.path,
-        contents[i],
-        this.maxChunkSize,
-        item.cacheKey,
-      )) {
-        handleChunk(chunk);
+      if (contents.length) {
+        for await (const chunk of chunkDocument({
+          filepath: item.path,
+          contents: contents[i],
+          maxChunkSize: this.maxChunkSize,
+          digest: item.cacheKey,
+        })) {
+          await handleChunk(chunk);
+        }
       }
 
       accumulatedProgress =
@@ -150,13 +134,15 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       const item = results.addTag[i];
 
       // Insert chunks
-      for await (const chunk of chunkDocument(
-        item.path,
-        addContents[i],
-        this.maxChunkSize,
-        item.cacheKey,
-      )) {
-        handleChunk(chunk);
+      if (contents.length) {
+        for await (const chunk of chunkDocument({
+          filepath: item.path,
+          contents: contents[i],
+          maxChunkSize: this.maxChunkSize,
+          digest: item.cacheKey,
+        })) {
+          handleChunk(chunk);
+        }
       }
 
       markComplete([item], IndexResultType.AddTag);

@@ -36,6 +36,8 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
+import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
@@ -59,8 +61,7 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-const { execSync } = require("child_process");
-
+import { execSync } from "child_process";
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
@@ -94,13 +95,16 @@ function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
   ideType: IdeType,
+  overrideConfigJson: SerializedContinueConfig | undefined,
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath(ideType);
-  let config: SerializedContinueConfig;
-  try {
-    config = resolveSerializedConfig(configPath);
-  } catch (e) {
-    throw new Error(`Failed to parse config.json: ${e}`);
+  let config: SerializedContinueConfig = overrideConfigJson!;
+  if (!config) {
+    try {
+      config = resolveSerializedConfig(configPath);
+    } catch (e) {
+      throw new Error(`Failed to parse config.json: ${e}`);
+    }
   }
 
   if (config.allowAnonymousTelemetry === undefined) {
@@ -210,6 +214,7 @@ async function intermediateToFinalConfig(
   ideSettings: IdeSettings,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
+  workOsAccessToken: string | undefined,
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   // Auto-detect models
@@ -347,16 +352,39 @@ async function intermediateToFinalConfig(
     ).filter((x) => x !== undefined) as BaseLLM[];
   }
 
+  // These context providers are always included, regardless of what, if anything,
+  // the user has configured in config.json
+  const DEFAULT_CONTEXT_PROVIDERS = [
+    new FileContextProvider({}),
+    new CodebaseContextProvider({}),
+  ];
+
+  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
+    ({ description: { title } }) => title,
+  );
+
   // Context providers
-  const contextProviders: IContextProvider[] = [new FileContextProvider({})];
+  const contextProviders: IContextProvider[] = DEFAULT_CONTEXT_PROVIDERS;
+
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
       const cls = contextProviderClassFromName(provider.name) as any;
       if (!cls) {
-        console.warn(`Unknown context provider ${provider.name}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(provider.name)) {
+          console.warn(`Unknown context provider ${provider.name}`);
+        }
+
         continue;
       }
-      contextProviders.push(new cls(provider.params));
+      const instance: IContextProvider = new cls(provider.params);
+
+      // Handle continue-proxy
+      if (instance.description.title === "continue-proxy") {
+        (instance as ContinueProxyContextProvider).workOsAccessToken =
+          workOsAccessToken;
+      }
+
+      contextProviders.push(instance);
     } else {
       contextProviders.push(new CustomContextProviderClass(provider));
     }
@@ -435,6 +463,7 @@ function finalToBrowserConfig(
       systemMessage: m.systemMessage,
       requestOptions: m.requestOptions,
       promptTemplates: m.promptTemplates as any,
+      capabilities: m.capabilities,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
@@ -504,7 +533,7 @@ async function buildConfigTs() {
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
-      const esbuild = require("esbuild");
+      const esbuild = await import("esbuild");
 
       await esbuild.build({
         entryPoints: [getConfigTsPath()],
@@ -536,9 +565,16 @@ async function loadFullConfigNode(
   ideType: IdeType,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
+  workOsAccessToken: string | undefined,
+  overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ContinueConfig> {
   // Serialized config
-  let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
+  let serialized = loadSerializedConfig(
+    workspaceConfigs,
+    ideSettings,
+    ideType,
+    overrideConfigJson,
+  );
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
@@ -549,7 +585,7 @@ async function loadFullConfigNode(
     try {
       // Try config.ts first
       const configJsPath = getConfigJsPath();
-      const module = await require(configJsPath);
+      const module = await import(configJsPath);
       delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
@@ -566,7 +602,7 @@ async function loadFullConfigNode(
       const configJsPathForRemote = getConfigJsPathForRemote(
         ideSettings.remoteConfigServerUrl,
       );
-      const module = await require(configJsPathForRemote);
+      const module = await import(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
@@ -584,6 +620,7 @@ async function loadFullConfigNode(
     ideSettings,
     uniqueId,
     writeLog,
+    workOsAccessToken,
   );
   return finalConfig;
 }

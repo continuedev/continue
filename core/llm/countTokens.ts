@@ -1,29 +1,42 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+import {
+  AsyncEncoder,
+  GPTAsyncEncoder,
+  LlamaAsyncEncoder,
+} from "./asyncEncoder.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
+import { stripImages } from "./images.js";
 import llamaTokenizer from "./llamaTokenizer.js";
-
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
 }
 
 class LlamaEncoding implements Encoding {
-  encode(
-    text: string,
-    allowedSpecial?: string[] | "all" | undefined,
-    disallowedSpecial?: string[] | "all" | undefined,
-  ): number[] {
+  encode(text: string): number[] {
     return llamaTokenizer.encode(text);
   }
+
   decode(tokens: number[]): string {
     return llamaTokenizer.decode(tokens);
   }
 }
 
 let gptEncoding: Encoding | null = null;
+const gptAsyncEncoder = new GPTAsyncEncoder();
 const llamaEncoding = new LlamaEncoding();
+const llamaAsyncEncoder = new LlamaAsyncEncoder();
+
+function asyncEncoderForModel(modelName: string): AsyncEncoder {
+  const modelType = autodetectTemplateType(modelName);
+  if (!modelType || modelType === "none") {
+    return gptAsyncEncoder;
+  }
+  // Temporary due to issues packaging the worker files
+  return process.env.IS_BINARY ? gptAsyncEncoder : llamaAsyncEncoder;
+}
 
 function encodingForModel(modelName: string): Encoding {
   const modelType = autodetectTemplateType(modelName);
@@ -44,6 +57,24 @@ function countImageTokens(content: MessagePart): number {
     return 85;
   }
   throw new Error("Non-image content type");
+}
+
+async function countTokensAsync(
+  content: MessageContent,
+  // defaults to llama2 because the tokenizer tends to produce more tokens
+  modelName = "llama2",
+): Promise<number> {
+  const encoding = asyncEncoderForModel(modelName);
+  if (Array.isArray(content)) {
+    const promises = content.map(async (part) => {
+      if (part.type === "imageUrl") {
+        return countImageTokens(part);
+      }
+      return (await encoding.encode(part.text ?? "")).length;
+    });
+    return (await Promise.all(promises)).reduce((sum, val) => sum + val, 0);
+  }
+  return (await encoding.encode(content ?? "")).length;
 }
 
 function countTokens(
@@ -77,16 +108,6 @@ function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
     }
   }
   return flattened;
-}
-
-export function stripImages(content: MessageContent): string {
-  if (Array.isArray(content)) {
-    return content
-      .filter((part) => part.type === "text")
-      .map((part) => part.text)
-      .join("\n");
-  }
-  return content;
 }
 
 function countChatMessageTokens(
@@ -360,6 +381,7 @@ function compileChatMessages(
 export {
   compileChatMessages,
   countTokens,
+  countTokensAsync,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,

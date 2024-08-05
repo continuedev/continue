@@ -1,11 +1,16 @@
 import { Response } from "node-fetch";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { constants } from "../../deploy/constants.js";
-import { EmbedOptions, FetchFunction } from "../../index.js";
+import {
+  EmbeddingsProviderName,
+  EmbedOptions,
+  FetchFunction,
+} from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static providerName: EmbeddingsProviderName = "free-trial";
   static maxBatchSize = 128;
 
   static defaultOptions: Partial<EmbedOptions> | undefined = {

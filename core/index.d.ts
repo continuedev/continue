@@ -127,6 +127,7 @@ export interface ContextProviderDescription {
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 
 export interface ContextProviderExtras {
+  config: ContinueConfig;
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
   reranker: Reranker | undefined;
@@ -137,6 +138,7 @@ export interface ContextProviderExtras {
 }
 
 export interface LoadSubmenuItemsArgs {
+  config: ContinueConfig;
   ide: IDE;
   fetch: FetchFunction;
 }
@@ -160,21 +162,21 @@ export interface ContextSubmenuItem {
   id: string;
   title: string;
   description: string;
-  iconUrl?: string;
+  icon?: string;
   metadata?: any;
 }
 
 export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl: string;
   title: string;
+  startUrl: string;
+  rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
 }
 
 export interface SiteIndexingConfig {
   startUrl: string;
-  rootUrl: string;
+  rootUrl?: string;
   title: string;
   maxDepth?: number;
 }
@@ -268,6 +270,7 @@ export interface ContextItem {
   description: string;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface ContextItemWithId {
@@ -277,6 +280,7 @@ export interface ContextItemWithId {
   id: ContextItemId;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface InputModifiers {
@@ -338,6 +342,15 @@ export interface LLMOptions {
   // GCP Options
   region?: string;
   projectId?: string;
+  capabilities?: ModelCapability;
+
+  // WatsonX options
+  watsonxUrl?: string;
+  watsonxApiKey?: string;
+  watsonxZenApiKeyBase64?:string// Required if using watsonx software with ZenApiKey auth
+  watsonxUsername?:string;
+  watsonxPassword?:string;
+  watsonxProjectId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -422,8 +435,8 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
-  pauseCodebaseIndexOnStart: boolean
-  enableDebugLogs: boolean
+  pauseCodebaseIndexOnStart: boolean;
+  enableDebugLogs: boolean;
 }
 
 export interface IDE {
@@ -589,7 +602,8 @@ type ModelProvider =
   | "deepseek"
   | "azure"
   | "openai-aiohttp"
-  | "msty";
+  | "msty"
+  | "watsonx";
 
 export type ModelName =
   | "AUTODETECT"
@@ -717,6 +731,10 @@ interface BaseCompletionOptions {
   stream?: boolean;
 }
 
+export interface ModelCapability {
+  uploadImage?: boolean;
+}
+
 export interface ModelDescription {
   title: string;
   provider: ModelProvider;
@@ -729,6 +747,7 @@ export interface ModelDescription {
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
+  capabilities?: ModelCapability;
 }
 
 export type EmbeddingsProviderName =
@@ -738,7 +757,9 @@ export type EmbeddingsProviderName =
   | "openai"
   | "cohere"
   | "free-trial"
-  | "gemini";
+  | "gemini"
+  | "continue-proxy"
+  | "deepinfra";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -757,6 +778,7 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  providerName: EmbeddingsProviderName;
   maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
@@ -766,7 +788,8 @@ export type RerankerName =
   | "voyage"
   | "llm"
   | "free-trial"
-  | "huggingface-tei";
+  | "huggingface-tei"
+  | "continue-proxy";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -858,6 +881,12 @@ interface ExperimentalConfig {
   quickActions?: QuickActionConfig[];
 }
 
+interface AnalyticsConfig {
+  type: string;
+  url?: string;
+  clientKey?: string;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
@@ -878,6 +907,8 @@ export interface SerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -928,6 +959,8 @@ export interface Config {
   reranker?: RerankerDescription | Reranker;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
+  /** Analytics configuration */
+  analytics?: AnalyticsConfig;
 }
 
 // in the actual Continue source code
@@ -948,6 +981,8 @@ export interface ContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: Reranker;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -965,4 +1000,5 @@ export interface BrowserSerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
 }

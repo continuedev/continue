@@ -3,7 +3,6 @@ import {
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
-  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
@@ -40,6 +39,7 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   clearLastResponse,
+  deleteMessage,
   newSession,
   setInactive,
 } from "../redux/slices/stateSlice";
@@ -57,7 +57,6 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import Logo from "../components/Logo";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -88,6 +87,7 @@ const StopButton = styled.div`
 `;
 
 const StepsDiv = styled.div`
+  padding-bottom: 8px;
   position: relative;
   background-color: transparent;
 
@@ -141,9 +141,11 @@ const ThreadHead = styled.div`
   margin: 18px 6px 0 6px;
 `;
 
+const THREAD_AVATAR_SIZE = 15;
+
 const ThreadAvatar = styled.div`
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background-color: rgba(248, 248, 248, 0.75);
   color: #000;
@@ -398,47 +400,22 @@ function GUI() {
                     }}
                   >
                     {item.message.role === "user" ? (
-                      <div className="thread-message">
-                        <ThreadHead>
-                          <ThreadAvatar>
-                            <Logo height={19} width={19} />
-                          </ThreadAvatar>
-                          <div>
-                            <ThreadUserTitle>Continue</ThreadUserTitle>
-                            <ThreadUserName>User</ThreadUserName>
-                          </div>
-                        </ThreadHead>
-                        <ContinueInputBox
-                          onEnter={async (editorState, modifiers) => {
-                            streamResponse(
-                              editorState,
-                              modifiers,
-                              ideMessenger,
-                              index,
-                            );
-                          }}
-                          isLastUserInput={isLastUserInput(index)}
-                          isMainInput={false}
-                          editorState={item.editorState}
-                          contextItems={item.contextItems}
-                        ></ContinueInputBox>
-                      </div>
+                      <ContinueInputBox
+                        onEnter={async (editorState, modifiers) => {
+                          streamResponse(
+                            editorState,
+                            modifiers,
+                            ideMessenger,
+                            index,
+                          );
+                        }}
+                        isLastUserInput={isLastUserInput(index)}
+                        isMainInput={false}
+                        editorState={item.editorState}
+                        contextItems={item.contextItems}
+                      ></ContinueInputBox>
                     ) : (
                       <div className="thread-message">
-                        <ThreadHead>
-                          <ThreadAvatar>
-                            <SparklesIcon height={20} width={20} />
-                          </ThreadAvatar>
-                          <div>
-                            <ThreadUserTitle>
-                              {item.message.role}
-                            </ThreadUserTitle>
-                            <ThreadUserName>
-                              {item.promptLogs?.[0]?.completionOptions?.model ??
-                                "Agent"}
-                            </ThreadUserName>
-                          </div>
-                        </ThreadHead>
                         <TimelineItem
                           item={item}
                           iconElement={
@@ -503,7 +480,13 @@ function GUI() {
                                 "*",
                               );
                             }}
-                            onDelete={() => {}}
+                            onDelete={() => {
+                              dispatch(deleteMessage(index));
+                            }}
+                            modelTitle={
+                              item.promptLogs?.[0]?.completionOptions?.model ??
+                              ""
+                            }
                           />
                         </TimelineItem>
                       </div>
@@ -528,26 +511,30 @@ function GUI() {
               <br />
             </>
           ) : state.history.length > 0 ? (
-            <NewSessionButton
-              onClick={() => {
-                saveSession();
-              }}
-              className="mr-auto"
-            >
-              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
-            </NewSessionButton>
+            <div className="mt-2">
+              <NewSessionButton
+                onClick={() => {
+                  saveSession();
+                }}
+                className="mr-auto"
+              >
+                New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+              </NewSessionButton>{" "}
+            </div>
           ) : (
             <>
               {getLastSessionId() ? (
-                <NewSessionButton
-                  onClick={async () => {
-                    loadLastSession();
-                  }}
-                  className="mr-auto flex items-center gap-1"
-                >
-                  <ArrowLeftIcon width="11px" height="11px" />
-                  Last Session
-                </NewSessionButton>
+                <div className="mt-2">
+                  <NewSessionButton
+                    onClick={async () => {
+                      loadLastSession();
+                    }}
+                    className="mr-auto flex items-center gap-2"
+                  >
+                    <ArrowLeftIcon width="11px" height="11px" />
+                    Last Session
+                  </NewSessionButton>
+                </div>
               ) : null}
 
               {!!showTutorialCard && (
@@ -567,7 +554,7 @@ function GUI() {
       </TopGuiDiv>
       {active && (
         <StopButton
-          className="mt-auto"
+          className="mt-auto mb-4"
           onClick={() => {
             dispatch(setInactive());
             if (

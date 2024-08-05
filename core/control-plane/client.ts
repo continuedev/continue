@@ -1,6 +1,6 @@
 import { ConfigJson } from "@continuedev/config-types";
 import fetch, { RequestInit, Response } from "node-fetch";
-import { ModelDescription } from "..";
+import { ModelDescription } from "../index.js";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -18,9 +18,10 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
-// export const CONTROL_PLANE_URL = "http://localhost:3001";
 export const CONTROL_PLANE_URL =
-  "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app";
+  process.env.CONTROL_PLANE_ENV === "local"
+    ? "http://localhost:3001"
+    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app";
 
 export class ControlPlaneClient {
   private static URL = CONTROL_PLANE_URL;
@@ -72,10 +73,14 @@ export class ControlPlaneClient {
       return [];
     }
 
-    const resp = await this.request(`/workspaces`, {
-      method: "GET",
-    });
-    return (await resp.json()) as any;
+    try {
+      const resp = await this.request(`/workspaces`, {
+        method: "GET",
+      });
+      return (await resp.json()) as any;
+    } catch (e) {
+      return [];
+    }
   }
 
   async getSettingsForWorkspace(workspaceId: string): Promise<ConfigJson> {

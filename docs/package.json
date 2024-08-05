@@ -1,6 +1,7 @@
 {
   "name": "continue-docs",
   "version": "0.0.0",
+  "author": "Continue Dev, Inc",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",

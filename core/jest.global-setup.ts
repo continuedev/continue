@@ -1,4 +1,3 @@
-// jest.global-setup.js
 import path from "path";
 
 export default async function () {

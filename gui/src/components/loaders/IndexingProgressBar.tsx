@@ -1,4 +1,5 @@
 import { IndexingProgressUpdate } from "core";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useSelector } from "react-redux";
@@ -108,7 +109,10 @@ const IndexingProgressBar = ({
   }, [paused]);
 
   function getIndexingErrMsg(msg: string): string {
-    if (isJetBrains() && embeddingsProvider === "all-MiniLM-L6-v2") {
+    if (
+      isJetBrains() &&
+      embeddingsProvider === TransformersJsEmbeddingsProvider.model
+    ) {
       return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers";
     }
     return msg;
@@ -133,7 +137,7 @@ const IndexingProgressBar = ({
         <FlexDiv data-tooltip-id="indexingFailed_dot">
           <StatusDot color={STATUS_COLORS.FAILED}></StatusDot>
           <div>
-            <StatusHeading>Indexing error! Click to retry</StatusHeading>
+            <StatusHeading>Indexing error - click to retry</StatusHeading>
             <StatusInfo>{getIndexingErrMsg(indexingState.desc)}</StatusInfo>
           </div>
           {tooltipPortalDiv &&
@@ -147,7 +151,7 @@ const IndexingProgressBar = ({
       ) : indexingState.status === "loading" ? (
         <FlexDiv>
           <StatusDot shouldBlink color={STATUS_COLORS.LOADING}></StatusDot>
-          <StatusHeading>Continue is initializing</StatusHeading>
+          <StatusHeading>Initializing</StatusHeading>
         </FlexDiv>
       ) : indexingState.status === "done" ? (
         <FlexDiv data-tooltip-id="indexingDone_dot">

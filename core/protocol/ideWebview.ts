@@ -1,5 +1,5 @@
-import type { ContextSubmenuItem } from "..";
-import type { RangeInFileWithContents } from "../commands/util";
+import type { RangeInFileWithContents } from "../commands/util.js";
+import type { ContextSubmenuItem } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 

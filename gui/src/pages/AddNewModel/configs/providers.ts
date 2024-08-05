@@ -19,6 +19,11 @@ export interface InputDescriptor {
   required?: boolean;
   description?: string;
   [key: string]: any;
+  // the following are used only for WatsonX provider
+  // these attributes are used to determine whether the input is used in Api Authentication or Credentials section
+  isWatsonxAuthenticatedByApiKey?: boolean;
+  isWatsonxAuthenticatedByCredentials?: boolean;
+  isWatsonxAttribute?: boolean;
 }
 
 export interface ProviderInfo {
@@ -262,8 +267,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
     ],
     packages: [
-      models.llama370bChat,
-      models.llama38bChat,
+      models.llama31405bChat,
+      models.llama3170bChat,
+      models.llama318bChat,
       { ...models.mixtralTrial, title: "Mixtral" },
       models.llama270bChat,
       {
@@ -276,6 +282,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ,
     ],
     apiKeyUrl: "https://console.groq.com/keys",
+  },
+  deepseek: {
+    title: "DeepSeek",
+    provider: "deepseek",
+    icon: "deepseek.png",
+    description:
+      "DeepSeek provides cheap inference of its DeepSeek Coder v2 and other impressive open-source models.",
+    longDescription:
+      "To get started with DeepSeek, obtain an API key from their website [here](https://platform.deepseek.com/api_keys).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your DeepSeek API key",
+        required: true,
+      },
+    ],
+    packages: [models.deepseekCoderApi, models.deepseekChatApi],
+    apiKeyUrl: "https://platform.deepseek.com/api_keys",
   },
   together: {
     title: "TogetherAI",
@@ -300,7 +327,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama3Chat,
+      models.llama31Chat,
       models.codeLlamaInstruct,
       models.mistralOs,
     ].map((p) => {
@@ -454,6 +481,82 @@ After it's up and running, you can start using Continue.`,
       ...openSourceModels,
     ],
   },
+  watsonx: {
+    title: "WatsonX",
+    provider: "watsonx",
+    refPage: "watsonX",
+    description:
+      "Explore foundation models from IBM and other third-parties depending on your use case.",
+    longDescription: `Watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.`,
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "watsonxUrl",
+        label: "WatsonX URL",
+        placeholder: "http://<region>.dataplatform.cloud.ibm.com",
+        required: true,
+        isWatsonxAuthenticatedByApiKey: true,
+        isWatsonxAuthenticatedByCredentials: true,
+      },
+      {
+        inputType: "text",
+        key: "watsonxApiKey",
+        label: "WatsonX API Key",
+        placeholder: "Enter your API key",
+        required: true,
+        isWatsonxAuthenticatedByApiKey: true,
+      },
+      {
+        inputType: "text",
+        key: "watsonxProjectId",
+        label: "WatsonX Project Id",
+        placeholder: "Enter your project Id",
+        required: true,
+        isWatsonxAuthenticatedByApiKey: true,
+        isWatsonxAuthenticatedByCredentials: true,
+      },
+      {
+        inputType: "text",
+        key: "watsonxUsername",
+        label: "WatsonX Username",
+        placeholder: "Enter your Username",
+        required: true,
+        isWatsonxAuthenticatedByCredentials: true,
+      },
+      {
+        inputType: "text",
+        key: "watsonxPassword",
+        label: "WatsonX Password",
+        placeholder: "Enter your password",
+        required: true,
+        isWatsonxAuthenticatedByCredentials: true,
+      },
+      {
+        inputType: "text",
+        key: "title",
+        label: "Model name",
+        placeholder: "Granite 13B Chat v2",
+        isWatsonxAttribute: true,
+      },
+      {
+        inputType: "text",
+        key: "model",
+        label: "Model Id",
+        placeholder: "ibm/granite-13b-chat-v2",
+        isWatsonxAttribute: true,
+      },
+
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "WatsonX.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [
+      models.graniteCode,
+      models.graniteChat,
+      models.MistralLarge,
+      models.MetaLlama3,
+    ],
+  },
   "free-trial": {
     title: "Continue limited free trial",
     provider: "free-trial",
@@ -464,7 +567,8 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.png",
     tags: [ModelProviderTags.Free],
     packages: [
-      models.codellama70bTrial,
+      models.llama31405bTrial,
+      models.llama3170bTrial,
       { ...models.claude35Sonnet, title: "Claude 3.5 Sonnet (trial)" },
       { ...models.gpt4o, title: "GPT-4o (trial)" },
       { ...models.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },

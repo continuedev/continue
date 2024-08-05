@@ -8,7 +8,6 @@
   "plugins": ["@typescript-eslint", "import"],
   "rules": {
     "quotes": ["warn", "double", {}],
-    "import/extensions": ["error", "ignorePackages"],
     "@typescript-eslint/naming-convention": "warn",
     "@typescript-eslint/semi": "warn",
     "curly": "warn",

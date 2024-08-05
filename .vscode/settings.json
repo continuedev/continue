@@ -7,10 +7,15 @@
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
   "terminal.integrated.defaultProfile.linux": "bash",
-    "terminal.integrated.profiles.linux": {
-      "bash": {
-        "path": "bash",
-        "args": ["-l"]
-      }
+  "terminal.integrated.profiles.linux": {
+    "bash": {
+      "path": "bash",
+      "args": ["-l"]
     }
+  },
+  "search.exclude": {
+    "**/binary": true,
+    "**/core/vendor/**": true,
+    "**/gui/dist": true
+  }
 }

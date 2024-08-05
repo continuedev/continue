@@ -1,10 +1,15 @@
-import fetch, { Response } from "node-fetch";
-import { EmbedOptions, FetchFunction } from "../..";
-import { withExponentialBackoff } from "../../util/withExponentialBackoff";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+import { Response } from "node-fetch";
+import {
+  EmbeddingsProviderName,
+  EmbedOptions,
+  FetchFunction,
+} from "../../index.js";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
-  private maxBatchSize = 32;
+  static providerName: EmbeddingsProviderName = "huggingface-tei";
+  maxBatchSize = 32;
 
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "http://localhost:8080",
@@ -17,7 +22,7 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
     if (!this.options.apiBase?.endsWith("/")) {
       this.options.apiBase += "/";
     }
-    this.doInfoRequest().then(response => {
+    this.doInfoRequest().then((response) => {
       this.options.model = response.model_id;
       this.maxBatchSize = response.max_client_batch_size;
     });
@@ -26,7 +31,9 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
   async embed(chunks: string[]) {
     const promises = [];
     for (let i = 0; i < chunks.length; i += this.maxBatchSize) {
-      promises.push(this.doEmbedRequest(chunks.slice(i, i + this.maxBatchSize)));
+      promises.push(
+        this.doEmbedRequest(chunks.slice(i, i + this.maxBatchSize)),
+      );
     }
     const results = await Promise.all(promises);
     return results.flat();
@@ -37,11 +44,11 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
       this.fetch(new URL("embed", this.options.apiBase), {
         method: "POST",
         body: JSON.stringify({
-          inputs: batch
+          inputs: batch,
         }),
         headers: {
           "Content-Type": "application/json",
-        }
+        },
       }),
     );
     if (!resp.ok) {
@@ -75,9 +82,9 @@ class TEIEmbedError extends Error {
 }
 
 type TEIEmbedErrorResponse = {
-  error: string
-  error_type: string
-}
+  error: string;
+  error_type: string;
+};
 
 type TEIInfoResponse = {
   model_id: string;
@@ -86,7 +93,7 @@ type TEIInfoResponse = {
   model_type: {
     embedding: {
       pooling: string;
-    }
+    };
   };
   max_concurrent_requests: number;
   max_input_length: number;

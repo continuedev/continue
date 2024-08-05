@@ -1,37 +1,32 @@
 import { v4 as uuidv4 } from "uuid";
-import type {
-  ContextItemId,
-  EmbeddingsProvider,
-  IDE,
-  IndexingProgressUpdate,
-  SiteIndexingConfig,
-} from ".";
-import { CompletionProvider } from "./autocomplete/completionProvider.js";
-import { ConfigHandler } from "./config/ConfigHandler.js";
+import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+import { CompletionProvider } from "./autocomplete/completionProvider";
+import { ConfigHandler } from "./config/ConfigHandler";
 import {
   setupApiKeysMode,
   setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
-} from "./config/onboarding.js";
-import { createNewPromptFile } from "./config/promptFile.js";
-import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
-import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { ControlPlaneClient } from "./control-plane/client.js";
-import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
-import { DocsService } from "./indexing/docs/DocsService.js";
-import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import Ollama from "./llm/llms/Ollama.js";
+} from "./config/onboarding";
+import { createNewPromptFile } from "./config/promptFile";
+import { addModel, addOpenAIKey, deleteModel } from "./config/util";
+import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
+import { ContinueServerClient } from "./continueServer/stubs/client";
+import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
+import { ControlPlaneClient } from "./control-plane/client";
+import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
+import DocsService, { docsServiceSingleton } from "./indexing/docs/DocsService";
+import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { GlobalContext } from "./util/GlobalContext.js";
-import { logDevData } from "./util/devdata.js";
-import { DevDataSqliteDb } from "./util/devdataSqlite.js";
-import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
-import historyManager from "./util/history.js";
+import { GlobalContext } from "./util/GlobalContext";
+import { logDevData } from "./util/devdata";
+import { DevDataSqliteDb } from "./util/devdataSqlite";
+import { fetchwithRequestOptions } from "./util/fetchWithOptions";
+import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
-import { editConfigJson } from "./util/paths.js";
-import { Telemetry } from "./util/posthog.js";
-import { streamDiffLines } from "./util/verticalEdit.js";
+import { editConfigJson } from "./util/paths";
+import { Telemetry } from "./util/posthog";
+import { streamDiffLines } from "./util/verticalEdit";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -41,8 +36,9 @@ export class Core {
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
   controlPlaneClient: ControlPlaneClient;
+  private docsService: DocsService;
   private globalContext = new GlobalContext();
-  private docsService = DocsService.getInstance();
+
   private readonly indexingPauseToken = new PauseToken(
     this.globalContext.get("indexingPaused") === true,
   );
@@ -97,19 +93,15 @@ export class Core {
       this.controlPlaneClient,
     );
 
+    this.docsService = DocsService.createSingleton(
+      this.configHandler,
+      this.ide,
+      this.messenger,
+    );
+
     this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
-
-    this.configHandler.onConfigUpdate(async ({ embeddingsProvider }) => {
-      if (
-        await this.shouldReindexDocsOnNewEmbeddingsProvider(
-          embeddingsProvider.id,
-        )
-      ) {
-        await this.reindexDocsOnNewEmbeddingsProvider(embeddingsProvider);
-      }
-    });
 
     this.configHandler.onDidChangeAvailableProfiles((profiles) =>
       this.messenger.send("didChangeAvailableProfiles", { profiles }),
@@ -143,16 +135,19 @@ export class Core {
       );
 
       // Index on initialization
-      this.ide
-        .getWorkspaceDirs()
-        .then((dirs) => {
-          // Respect pauseCodebaseIndexOnStart user settings
-          if (ideSettings.pauseCodebaseIndexOnStart) {
-            return;
-          }
+      this.ide.getWorkspaceDirs().then(async (dirs) => {
+        // Respect pauseCodebaseIndexOnStart user settings
+        if (ideSettings.pauseCodebaseIndexOnStart) {
+          await this.messenger.request("indexProgress", {
+            progress: 100,
+            desc: "Initial Indexing Skipped",
+            status: "paused",
+          });
+          return;
+        }
 
-          this.refreshCodebaseIndex(dirs);
-        });
+        this.refreshCodebaseIndex(dirs);
+      });
     });
 
     const getLlm = async () => {
@@ -205,12 +200,15 @@ export class Core {
     on("history/list", (msg) => {
       return historyManager.list(msg.data);
     });
+
     on("history/delete", (msg) => {
       historyManager.delete(msg.data.id);
     });
+
     on("history/load", (msg) => {
       return historyManager.load(msg.data.id);
     });
+
     on("history/save", (msg) => {
       historyManager.save(msg.data);
     });
@@ -226,14 +224,17 @@ export class Core {
       addModel(model);
       this.configHandler.reloadConfig();
     });
+
     on("config/addOpenAiKey", (msg) => {
       addOpenAIKey(msg.data);
       this.configHandler.reloadConfig();
     });
+
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
       this.configHandler.reloadConfig();
     });
+
     on("config/newPromptFile", async (msg) => {
       createNewPromptFile(
         this.ide,
@@ -241,10 +242,12 @@ export class Core {
       );
       this.configHandler.reloadConfig();
     });
+
     on("config/reload", (msg) => {
       this.configHandler.reloadConfig();
       return this.configHandler.getSerializedConfig();
     });
+
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
@@ -254,47 +257,46 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
-      await this.getEmbeddingsProviderAndIndexDoc(msg.data);
+      let hasFailed = false;
 
-      this.ide.infoPopup(`Successfully indexed ${msg.data.title}`);
-      this.messenger.send("refreshSubmenuItems", undefined);
+      for await (const result of this.docsService.indexAndAdd(msg.data)) {
+        if (result.status === "failed") {
+          hasFailed = true;
+          break;
+        }
+      }
+
+      if (hasFailed) {
+        this.ide.infoPopup(`Failed to index ${msg.data.startUrl}`);
+      } else {
+        this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
+        this.messenger.send("refreshSubmenuItems", undefined);
+      }
     });
+
     on("context/removeDocs", async (msg) => {
-      const baseUrl = msg.data.baseUrl;
-      await this.docsService.delete(baseUrl);
+      await this.docsService.delete(msg.data.startUrl);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
+
     on("context/indexDocs", async (msg) => {
-      const config = await this.config();
-      const provider: any = config.contextProviders?.find(
-        (provider) => provider.description.title === "docs",
-      );
-
-      if (!provider) {
-        this.ide.infoPopup("No docs in configuration");
-        return;
-      }
-
-      const siteIndexingOptions: SiteIndexingConfig[] = ((mProvider) =>
-        mProvider?.options?.sites || [])({ ...provider });
-
-      for (const site of siteIndexingOptions) {
-        await this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex);
-      }
-
-      this.ide.infoPopup("Docs indexing completed");
+      await this.docsService.indexAllDocs(msg.data.reIndex);
+      this.messenger.send("refreshSubmenuItems", undefined);
     });
+
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
       const items = await config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
+          config,
           ide: this.ide,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
       return items || [];
     });
+
     on("context/getContextItems", async (msg) => {
       const { name, query, fullInput, selectedCode } = msg.data;
       const config = await this.config();
@@ -311,7 +313,9 @@ export class Core {
           providerTitle: provider.description.title,
           itemId: uuidv4(),
         };
+
         const items = await provider.getContextItems(query, {
+          config,
           llm,
           embeddingsProvider: config.embeddingsProvider,
           fullInput,
@@ -647,9 +651,18 @@ export class Core {
 
     on("didChangeSelectedProfile", (msg) => {
       this.configHandler.setSelectedProfile(msg.data.id);
+      this.configHandler.reloadConfig();
     });
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+    });
+    on("auth/getAuthUrl", async (msg) => {
+      const url = await getAuthUrlForTokenPage();
+      return { url };
+    });
+
+    on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
+      recentlyEditedFilesCache.set(filepath, filepath);
     });
   }
 
@@ -669,95 +682,5 @@ export class Core {
     }
 
     this.messenger.send("refreshSubmenuItems", undefined);
-  }
-
-  private async shouldReindexDocsOnNewEmbeddingsProvider(
-    curEmbeddingsProviderId: EmbeddingsProvider["id"],
-  ): Promise<boolean> {
-    const ideInfo = await this.ide.getIdeInfo();
-    const isJetBrainsAndPreIndexedDocsProvider =
-      this.docsService.isJetBrainsAndPreIndexedDocsProvider(
-        ideInfo,
-        curEmbeddingsProviderId,
-      );
-
-    if (isJetBrainsAndPreIndexedDocsProvider) {
-      this.ide.errorPopup(
-        `${DocsService.preIndexedDocsEmbeddingsProvider.id} cannot be used as an embeddings provider with JetBrains. Please select a different embeddings provider.`,
-      );
-
-      this.globalContext.update(
-        "curEmbeddingsProviderId",
-        curEmbeddingsProviderId,
-      );
-
-      return false;
-    }
-
-    const lastEmbeddingsProviderId = this.globalContext.get(
-      "curEmbeddingsProviderId",
-    );
-
-    if (!lastEmbeddingsProviderId) {
-      // If it's the first time we're setting the `curEmbeddingsProviderId`
-      // global state, we don't need to reindex docs
-      this.globalContext.update(
-        "curEmbeddingsProviderId",
-        curEmbeddingsProviderId,
-      );
-
-      return false;
-    }
-
-    return lastEmbeddingsProviderId !== curEmbeddingsProviderId;
-  }
-
-  private async getEmbeddingsProviderAndIndexDoc(
-    site: SiteIndexingConfig,
-    reIndex: boolean = false,
-  ): Promise<void> {
-    const config = await this.config();
-    const { embeddingsProvider } = config;
-
-    for await (const update of this.docsService.indexAndAdd(
-      site,
-      embeddingsProvider,
-      reIndex,
-    )) {
-      // Temporary disabled posting progress updates to the UI due to
-      // possible collision with code indexing progress updates.
-      // this.messenger.request("indexProgress", update);
-      // this.indexingState = update;
-    }
-  }
-
-  private async reindexDocsOnNewEmbeddingsProvider(
-    embeddingsProvider: EmbeddingsProvider,
-  ) {
-    const docs = await this.docsService.list();
-
-    if (docs.length === 0) {
-      return;
-    }
-
-    this.ide.infoPopup("Reindexing docs with new embeddings provider");
-
-    for (const { title, baseUrl } of docs) {
-      await this.docsService.delete(baseUrl);
-
-      const generator = this.docsService.indexAndAdd(
-        { title, startUrl: baseUrl, rootUrl: baseUrl },
-        embeddingsProvider,
-      );
-
-      while (!(await generator.next()).done) {}
-    }
-
-    // Important that this only is invoked after we have successfully
-    // cleared and reindex the docs so that the table cannot end up in an
-    // invalid state.
-    this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
-
-    this.ide.infoPopup("Completed reindexing of all docs");
   }
 }

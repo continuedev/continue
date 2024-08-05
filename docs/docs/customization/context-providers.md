@@ -90,7 +90,7 @@ Type '@open' to reference the contents of all of your open files. Set `onlyPinne
 
 ### Codebase Retrieval
 
-Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](../walkthroughs/codebase-embeddings.md).
+Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](../features/codebase-embeddings.md).
 
 ```json
 { "name": "codebase" }

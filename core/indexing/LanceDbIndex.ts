@@ -62,9 +62,17 @@ export class LanceDbIndex implements CodebaseIndex {
         "lancedb_sqlite_artifact_id_column",
         async () => {
           try {
-            await db.exec(
-              "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
+            const pragma = await db.all("PRAGMA table_info(lance_db_cache)");
+
+            const hasArtifactIdCol = pragma.some(
+              (pragma) => pragma.name === "artifact_id",
             );
+
+            if (!hasArtifactIdCol) {
+              await db.exec(
+                "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
+              );
+            }
           } finally {
             resolve(undefined);
           }
@@ -96,12 +104,12 @@ export class LanceDbIndex implements CodebaseIndex {
 
       let hasEmptyChunks = false;
 
-      for await (const chunk of chunkDocument(
-        items[i].path,
-        content,
-        this.embeddingsProvider.maxChunkSize,
-        items[i].cacheKey,
-      )) {
+      for await (const chunk of chunkDocument({
+        filepath: items[i].path,
+        contents: content,
+        maxChunkSize: this.embeddingsProvider.maxChunkSize,
+        digest: items[i].cacheKey,
+      })) {
         if (chunk.content.length == 0) {
           hasEmptyChunks = true;
           break;
