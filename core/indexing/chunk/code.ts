@@ -1,6 +1,6 @@
 import { SyntaxNode } from "web-tree-sitter";
 import { ChunkWithoutID } from "../../index.js";
-import { countTokens, countTokensAsync } from "../../llm/countTokens.js";
+import { countTokensAsync } from "../../llm/countTokens.js";
 import { getParserForFile } from "../../util/treeSitter.js";
 
 function collapsedReplacement(node: SyntaxNode): string {
@@ -163,6 +163,9 @@ const collapsedNodeConstructors: {
   function_definition: constructFunctionDefinitionChunk,
   function_declaration: constructFunctionDefinitionChunk,
   function_item: constructFunctionDefinitionChunk,
+  // Methods
+  method_declaration: constructFunctionDefinitionChunk,
+  // Properties
 };
 
 async function maybeYieldChunk(
@@ -199,14 +202,20 @@ async function* getSmartCollapsedChunks(
   // If a collapsed form is defined, use that
   if (node.type in collapsedNodeConstructors) {
     yield {
-      content: await collapsedNodeConstructors[node.type](node, code, maxChunkSize),
+      content: await collapsedNodeConstructors[node.type](
+        node,
+        code,
+        maxChunkSize,
+      ),
       startLine: node.startPosition.row,
       endLine: node.endPosition.row,
     };
   }
 
   // Recurse (because even if collapsed version was shown, want to show the children in full somewhere)
-  const generators = node.children.map((child) => getSmartCollapsedChunks(child, code, maxChunkSize, false));
+  const generators = node.children.map((child) =>
+    getSmartCollapsedChunks(child, code, maxChunkSize, false),
+  );
   for (const generator of generators) {
     yield* generator;
   }
