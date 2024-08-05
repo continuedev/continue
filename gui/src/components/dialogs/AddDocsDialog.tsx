@@ -6,7 +6,6 @@ import { useDispatch } from "react-redux";
 import { Button, HelperText, Input, lightGray } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 
 const DEFAULT_MAX_DEPTH = 3;
 
