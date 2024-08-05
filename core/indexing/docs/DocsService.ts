@@ -1,3 +1,8 @@
+import { open, type Database } from "sqlite";
+import sqlite3 from "sqlite3";
+import lancedb, { Connection } from "vectordb";
+import { ConfigHandler } from "../../config/ConfigHandler.js";
+import DocsContextProvider from "../../context/providers/DocsContextProvider.js";
 import {
   Chunk,
   ContinueConfig,
@@ -6,13 +11,19 @@ import {
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from "../../index.js";
+import { FromCoreProtocol, ToCoreProtocol } from "../../protocol/index.js";
+import { GlobalContext } from "../../util/GlobalContext.js";
+import { IMessenger } from "../../util/messenger.js";
 import {
   editConfigJson,
   getDocsSqlitePath,
   getLanceDbPath,
 } from "../../util/paths.js";
+import { Telemetry } from "../../util/posthog.js";
+import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider.js";
 import { Article, chunkArticle, pageToArticle } from "./article.js";
 import { crawlPage } from "./crawl.js";
+import { runLanceMigrations, runSqliteMigrations } from "./migrations.js";
 import {
   downloadFromS3,
   getS3Filename,
@@ -20,17 +31,6 @@ import {
   SiteIndexingResults,
 } from "./preIndexed.js";
 import preIndexedDocs from "./preIndexedDocs.js";
-import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider.js";
-import { ConfigHandler } from "../../config/ConfigHandler.js";
-import lancedb, { Connection } from "vectordb";
-import { GlobalContext } from "../../util/GlobalContext.js";
-import DocsContextProvider from "../../context/providers/DocsContextProvider.js";
-import { open, type Database } from "sqlite";
-import sqlite3 from "sqlite3";
-import { Telemetry } from "../../util/posthog.js";
-import { runSqliteMigrations, runLanceMigrations } from "./migrations.js";
-import { IMessenger } from "../../util/messenger.js";
-import { ToCoreProtocol, FromCoreProtocol } from "../../protocol/index.js";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -521,9 +521,8 @@ export default class DocsService {
   private async getLanceTableNameFromEmbeddingsProvider(
     isPreIndexedDoc: boolean,
   ) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(
-      isPreIndexedDoc,
-    );
+    const embeddingsProvider =
+      await this.getEmbeddingsProvider(isPreIndexedDoc);
     const embeddingsProviderId = this.removeInvalidLanceTableNameChars(
       embeddingsProvider.id,
     );

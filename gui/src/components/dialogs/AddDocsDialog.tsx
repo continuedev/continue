@@ -1,3 +1,4 @@
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
