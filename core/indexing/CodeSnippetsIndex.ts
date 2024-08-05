@@ -7,6 +7,7 @@ import type {
   IndexingProgressUpdate,
 } from "../index.js";
 import { getBasename, getLastNPathParts } from "../util/index.js";
+import { migrate } from "../util/paths.js";
 import {
   TSQueryType,
   getParserForFile,
@@ -36,21 +37,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL
     )`);
-    // Delete duplicate entries in code_snippets
-    await db.exec(`
-      DELETE FROM code_snippets
-      WHERE id NOT IN (
-        SELECT MIN(id)
-        FROM code_snippets
-        GROUP BY path, cacheKey, content, title, startLine, endLine
-      )
-    `);
-
-    // Add unique constraint if it doesn't exist
-    await db.exec(`
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_code_snippets_unique
-      ON code_snippets (path, cacheKey, content, title, startLine, endLine)
-    `);
 
     await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets_tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -59,36 +45,54 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       FOREIGN KEY (snippetId) REFERENCES code_snippets (id)
     )`);
 
-    // Delete code_snippets associated with duplicate code_snippets_tags entries
-    await db.exec(`
-    DELETE FROM code_snippets
-    WHERE id IN (
-      SELECT snippetId
-      FROM code_snippets_tags
-      WHERE (snippetId, tag) IN (
-        SELECT snippetId, tag
-        FROM code_snippets_tags
-        GROUP BY snippetId, tag
-        HAVING COUNT(*) > 1
-      )
-    )
-  `);
+    migrate("delete_duplicate_code_snippets", async () => {
+      // Delete duplicate entries in code_snippets
+      await db.exec(`
+        DELETE FROM code_snippets
+        WHERE id NOT IN (
+          SELECT MIN(id)
+          FROM code_snippets
+          GROUP BY path, cacheKey, content, title, startLine, endLine
+        )
+      `);
 
-    // Delete duplicate entries
-    await db.exec(`
-      DELETE FROM code_snippets_tags
-      WHERE id NOT IN (
-        SELECT MIN(id)
-        FROM code_snippets_tags
-        GROUP BY snippetId, tag
-      )
-    `);
+      // Add unique constraint if it doesn't exist
+      await db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_code_snippets_unique
+        ON code_snippets (path, cacheKey, content, title, startLine, endLine)
+      `);
 
-    // Add unique constraint if it doesn't exist
-    await db.exec(`
-      CREATE UNIQUE INDEX IF NOT EXISTS idx_snippetId_tag
-      ON code_snippets_tags (snippetId, tag)
-    `);
+      // Delete code_snippets associated with duplicate code_snippets_tags entries
+      await db.exec(`
+        DELETE FROM code_snippets
+        WHERE id IN (
+          SELECT snippetId
+          FROM code_snippets_tags
+          WHERE (snippetId, tag) IN (
+            SELECT snippetId, tag
+            FROM code_snippets_tags
+            GROUP BY snippetId, tag
+            HAVING COUNT(*) > 1
+          )
+        )
+      `);
+
+      // Delete duplicate entries
+      await db.exec(`
+        DELETE FROM code_snippets_tags
+        WHERE id NOT IN (
+          SELECT MIN(id)
+          FROM code_snippets_tags
+          GROUP BY snippetId, tag
+        )
+      `);
+
+      // Add unique constraint if it doesn't exist
+      await db.exec(`
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_snippetId_tag
+        ON code_snippets_tags (snippetId, tag)
+      `);
+    });
   }
 
   async getSnippetsInFile(
