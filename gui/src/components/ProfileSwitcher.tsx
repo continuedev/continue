@@ -21,10 +21,10 @@ import {
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
