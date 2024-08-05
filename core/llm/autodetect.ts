@@ -42,6 +42,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "sagemaker",
   "continue-proxy",
   "mistral",
 ];
@@ -54,6 +55,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "msty",
   "anthropic",
   "bedrock",
+  "sagemaker",
   "continue-proxy",
 ];
 
@@ -97,6 +99,7 @@ function modelSupportsImages(
 const PARALLEL_PROVIDERS: ModelProvider[] = [
   "anthropic",
   "bedrock",
+  "sagemaker",
   "deepinfra",
   "gemini",
   "huggingface-inference-api",

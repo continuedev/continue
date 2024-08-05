@@ -31,6 +31,7 @@ import Azure from "./Azure.js";
 import Ollama from "./Ollama.js";
 import OpenAI from "./OpenAI.js";
 import Replicate from "./Replicate.js";
+import SageMaker from "./SageMaker.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
@@ -118,6 +119,7 @@ const LLMs = [
   LMStudio,
   Mistral,
   Bedrock,
+  SageMaker,
   DeepInfra,
   Flowise,
   Groq,

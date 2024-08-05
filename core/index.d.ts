@@ -592,6 +592,7 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "sagemaker"
   | "deepinfra"
   | "flowise"
   | "groq"
