@@ -216,8 +216,8 @@ function ModelSelect() {
           className="h-[18px] overflow-hidden"
           style={{ padding: 0 }}
         >
-          <div>{modelSelectTitle(defaultModel) || "Select model"}</div>
-          <div className="pointer-events-none flex items-center">
+          <div className="hover:underline">
+            {modelSelectTitle(defaultModel) || "Select model"}{" "}
             <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
           </div>
         </StyledListboxButton>

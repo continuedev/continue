@@ -219,6 +219,7 @@ function ProfileSwitcher(props: {}) {
 
       {/* Settings button (either opens config.json or /settings page in control plane) */}
       <HeaderButtonWithText
+        tooltipPlacement="top-end"
         onClick={() => {
           if (selectedProfileId === "local") {
             ideMessenger.post("openConfigJson", undefined);
@@ -237,6 +238,7 @@ function ProfileSwitcher(props: {}) {
       {/* Only show login if beta explicitly enabled */}
       {controlServerBetaEnabled && (
         <HeaderButtonWithText
+          tooltipPlacement="top-end"
           text={
             session?.account
               ? `Logged in as ${session.account.label}`
