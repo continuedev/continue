@@ -60,7 +60,7 @@ import { ComboBoxItem } from "./types";
 const InputBoxDiv = styled.div`
   resize: none;
 
-  padding: 12px;
+  padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
@@ -139,7 +139,6 @@ interface TipTapEditorProps {
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
   onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
-
   editorState?: JSONContent;
 }
 
@@ -157,6 +156,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { saveSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -432,6 +432,8 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
     },
     content: props.editorState || mainEditorContent || "",
+    onFocus: () => setIsEditorFocused(true),
+    onBlur: () => setIsEditorFocused(false),
     onUpdate: ({ editor, transaction }) => {
       // If /edit is typed and no context items are selected, select the first
 
@@ -826,27 +828,29 @@ function TipTapEditor(props: TipTapEditorProps) {
           event.stopPropagation();
         }}
       />
-      <InputToolbar
-        showNoContext={optionKeyHeld}
-        hidden={!(editorFocusedRef.current || props.isMainInput)}
-        onAddContextItem={() => {
-          if (editor.getText().endsWith("@")) {
-          } else {
-            editor.commands.insertContent("@");
-          }
-        }}
-        onEnter={onEnterRef.current}
-        onImageFileSelected={(file) => {
-          handleImageFile(file).then(([img, dataUrl]) => {
-            const { schema } = editor.state;
-            const node = schema.nodes.image.create({ src: dataUrl });
-            editor.commands.command(({ tr }) => {
-              tr.insert(0, node);
-              return true;
+      {(isEditorFocused || props.isMainInput) && (
+        <InputToolbar
+          showNoContext={optionKeyHeld}
+          hidden={!(editorFocusedRef.current || props.isMainInput)}
+          onAddContextItem={() => {
+            if (editor.getText().endsWith("@")) {
+            } else {
+              editor.commands.insertContent("@");
+            }
+          }}
+          onEnter={onEnterRef.current}
+          onImageFileSelected={(file) => {
+            handleImageFile(file).then(([img, dataUrl]) => {
+              const { schema } = editor.state;
+              const node = schema.nodes.image.create({ src: dataUrl });
+              editor.commands.command(({ tr }) => {
+                tr.insert(0, node);
+                return true;
+              });
             });
-          });
-        }}
-      />
+          }}
+        />
+      )}
       {showDragOverMsg &&
         modelSupportsImages(
           defaultModel.provider,
