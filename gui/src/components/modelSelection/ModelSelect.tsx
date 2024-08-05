@@ -26,6 +26,7 @@ import {
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
 const StyledListboxButton = styled(Listbox.Button)`
+  font-family: inherit;
   display: flex;
   align-items: center;
   gap: 2px;
@@ -216,10 +217,10 @@ function ModelSelect() {
           className="h-[18px] overflow-hidden"
           style={{ padding: 0 }}
         >
-          <div className="hover:underline">
+          <span className="hover:underline">
             {modelSelectTitle(defaultModel) || "Select model"}{" "}
             <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
-          </div>
+          </span>
         </StyledListboxButton>
         <StyledListboxOptions>
           {options.map((option, idx) => (

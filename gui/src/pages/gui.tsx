@@ -483,7 +483,7 @@ function GUI() {
                             onDelete={() => {
                               dispatch(deleteMessage(index));
                             }}
-                            subtext={
+                            modelTitle={
                               item.promptLogs?.[0]?.completionOptions?.model ??
                               ""
                             }

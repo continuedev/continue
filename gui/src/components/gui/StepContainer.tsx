@@ -37,7 +37,7 @@ interface StepContainerProps {
   isFirst: boolean;
   isLast: boolean;
   index: number;
-  subtext?: string;
+  modelTitle?: string;
 }
 
 const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
@@ -132,10 +132,10 @@ function StepContainer(props: StepContainerProps) {
               fontSize: getFontSize() - 3,
             }}
           >
-            {props.subtext && (
+            {props.modelTitle && (
               <div className="flex items-center">
                 <CubeIcon className="w-3 h-4 mr-1 flex-shrink-0" />
-                {props.subtext}
+                {props.modelTitle}
                 <div
                   style={{
                     backgroundColor: vscButtonBackground,
