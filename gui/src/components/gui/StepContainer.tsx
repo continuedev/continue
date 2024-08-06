@@ -1,9 +1,9 @@
 import {
+  ArrowPathIcon,
   BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
   TrashIcon,
-  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/images";
@@ -131,9 +131,9 @@ function StepContainer(props: StepContainerProps) {
                 fontSize: getFontSize() - 3,
               }}
             >
-              {props.subtext && (
+              {props.modelTitle && (
                 <>
-                  <div className="flex items-center">{props.subtext}</div>
+                  <div className="flex items-center">{props.modelTitle}</div>
                   <div
                     className="ml-2 mr-1"
                     style={{

@@ -828,29 +828,27 @@ function TipTapEditor(props: TipTapEditorProps) {
           event.stopPropagation();
         }}
       />
-      {(isEditorFocused || props.isMainInput) && (
-        <InputToolbar
-          showNoContext={optionKeyHeld}
-          hidden={!(editorFocusedRef.current || props.isMainInput)}
-          onAddContextItem={() => {
-            if (editor.getText().endsWith("@")) {
-            } else {
-              editor.commands.insertContent("@");
-            }
-          }}
-          onEnter={onEnterRef.current}
-          onImageFileSelected={(file) => {
-            handleImageFile(file).then(([img, dataUrl]) => {
-              const { schema } = editor.state;
-              const node = schema.nodes.image.create({ src: dataUrl });
-              editor.commands.command(({ tr }) => {
-                tr.insert(0, node);
-                return true;
-              });
+      <InputToolbar
+        showNoContext={optionKeyHeld}
+        hidden={!(editorFocusedRef.current || props.isMainInput)}
+        onAddContextItem={() => {
+          if (editor.getText().endsWith("@")) {
+          } else {
+            editor.commands.insertContent("@");
+          }
+        }}
+        onEnter={onEnterRef.current}
+        onImageFileSelected={(file) => {
+          handleImageFile(file).then(([img, dataUrl]) => {
+            const { schema } = editor.state;
+            const node = schema.nodes.image.create({ src: dataUrl });
+            editor.commands.command(({ tr }) => {
+              tr.insert(0, node);
+              return true;
             });
-          }}
-        />
-      )}
+          });
+        }}
+      />
       {showDragOverMsg &&
         modelSupportsImages(
           defaultModel.provider,
