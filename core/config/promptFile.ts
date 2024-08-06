@@ -4,8 +4,8 @@ import * as YAML from "yaml";
 import type { IDE, SlashCommand } from "..";
 import { walkDir } from "../indexing/walkDir";
 import { stripImages } from "../llm/images";
-import { renderTemplatedString } from "../llm/llms/index";
 import { getBasename } from "../util/index";
+import { renderTemplatedString } from "../promptFiles/renderTemplatedString";
 
 export const DEFAULT_PROMPTS_FOLDER = ".prompts";
 
@@ -15,6 +15,7 @@ export async function getPromptFiles(
 ): Promise<{ path: string; content: string }[]> {
   try {
     const exists = await ide.fileExists(dir);
+
     if (!exists) {
       return [];
     }
@@ -89,6 +90,32 @@ export function slashCommandFromPromptFile(
   path: string,
   content: string,
 ): SlashCommand {
+  const { name, description, systemMessage, prompt } = parsePromptFile(
+    path,
+    content,
+  );
+
+  return {
+    name,
+    description,
+    run: async function* (context) {
+      const userInput = extractUserInput(context.input, name);
+      const renderedPrompt = await renderPrompt(prompt, context, userInput);
+      const messages = updateChatHistory(
+        context.history,
+        name,
+        renderedPrompt,
+        systemMessage,
+      );
+
+      for await (const chunk of context.llm.streamChat(messages)) {
+        yield stripImages(chunk.content);
+      }
+    },
+  };
+}
+
+function parsePromptFile(path: string, content: string) {
   let [preambleRaw, prompt] = content.split("\n---\n");
   if (prompt === undefined) {
     prompt = preambleRaw;
@@ -105,115 +132,122 @@ export function slashCommandFromPromptFile(
     prompt = prompt.split("</system>")[1].trim();
   }
 
-  return {
-    name,
-    description,
-    run: async function* ({
-      input,
-      llm,
-      history,
-      ide,
-      config,
-      fetch,
-      selectedCode,
-      addContextItem,
-    }) {
-      // Remove slash command prefix from input
-      let userInput = input;
-      if (userInput.startsWith(`/${name}`)) {
-        userInput = userInput
-          .slice(name.length + 1, userInput.length)
-          .trimStart();
-      }
+  return { name, description, systemMessage, prompt };
+}
 
-      // Render prompt template
-      const helpers: [string, Handlebars.HelperDelegate][] | undefined =
-        config.contextProviders?.map((provider) => {
-          return [
-            provider.description.title,
-            async (context: any) => {
-              const items = await provider.getContextItems(context, {
-                config,
-                embeddingsProvider: config.embeddingsProvider,
-                fetch,
-                fullInput: userInput,
-                ide,
-                llm,
-                reranker: config.reranker,
-                selectedCode,
-              });
-              items.forEach((item) =>
-                addContextItem({
-                  ...item,
-                  id: {
-                    itemId: item.description,
-                    providerTitle: provider.description.title,
-                  },
-                }),
-              );
-              return items.map((item) => item.content).join("\n\n");
-            },
-          ];
-        });
+function extractUserInput(input: string, commandName: string): string {
+  if (input.startsWith(`/${commandName}`)) {
+    return input.slice(commandName.length + 1).trimStart();
+  }
+  return input;
+}
 
-      // A few context providers that don't need to be in config.json to work in .prompt files
-      const diff = await ide.getDiff();
-      const currentFilePath = await ide.getCurrentFile();
-      const promptUserInput = await renderTemplatedString(
-        prompt,
-        ide.readFile.bind(ide),
-        {
-          input: userInput,
-          diff,
-          currentFile: currentFilePath
-            ? await ide.readFile(currentFilePath)
-            : undefined,
-        },
-        helpers,
+async function renderPrompt(prompt: string, context: any, userInput: string) {
+  const helpers = getContextProviderHelpers(context);
+
+  // A few context providers that don't need to be in config.json to work in .prompt files
+  const diff = await context.ide.getDiff();
+  const currentFilePath = await context.ide.getCurrentFile();
+  const currentFile = currentFilePath
+    ? await context.ide.readFile(currentFilePath)
+    : undefined;
+
+  return renderTemplatedString(
+    prompt,
+    context.ide.readFile.bind(context.ide),
+    { diff, currentFile, input: userInput },
+    helpers,
+  );
+}
+
+function getContextProviderHelpers(
+  context: any,
+): Array<[string, Handlebars.HelperDelegate]> | undefined {
+  return context.config.contextProviders?.map((provider: any) => [
+    provider.description.title,
+    async (helperContext: any) => {
+      const items = await provider.getContextItems(helperContext, {
+        config: context.config,
+        embeddingsProvider: context.config.embeddingsProvider,
+        fetch: context.fetch,
+        fullInput: context.input,
+        ide: context.ide,
+        llm: context.llm,
+        reranker: context.config.reranker,
+        selectedCode: context.selectedCode,
+      });
+
+      items.forEach((item: any) =>
+        context.addContextItem(createContextItem(item, provider)),
       );
 
-      const messages = [...history];
-      // Find the last chat message with this slash command and replace it with the user input
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const { role, content } = messages[i];
-        if (role !== "user") {
-          continue;
-        }
-
-        if (
-          Array.isArray(content) &&
-          content.some((part) => part.text?.startsWith(`/${name}`))
-        ) {
-          messages[i] = {
-            ...messages[i],
-            content: content.map((part) => {
-              return part.text?.startsWith(`/${name}`)
-                ? { ...part, text: promptUserInput }
-                : part;
-            }),
-          };
-          break;
-        } else if (
-          typeof content === "string" &&
-          content.startsWith(`/${name}`)
-        ) {
-          messages[i] = { ...messages[i], content: promptUserInput };
-          break;
-        }
-      }
-
-      // System message
-      if (systemMessage) {
-        if (messages[0]?.role === "system") {
-          messages[0].content = systemMessage;
-        } else {
-          messages.unshift({ role: "system", content: systemMessage });
-        }
-      }
-
-      for await (const chunk of llm.streamChat(messages)) {
-        yield stripImages(chunk.content);
-      }
+      return items.map((item: any) => item.content).join("\n\n");
     },
+  ]);
+}
+
+function createContextItem(item: any, provider: any) {
+  return {
+    ...item,
+    id: {
+      itemId: item.description,
+      providerTitle: provider.description.title,
+    },
+  };
+}
+
+function updateChatHistory(
+  history: any[],
+  commandName: string,
+  renderedPrompt: string,
+  systemMessage?: string,
+) {
+  const messages = [...history];
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const { role, content } = messages[i];
+    if (role !== "user") {
+      continue;
+    }
+
+    if (Array.isArray(content)) {
+      if (content.some((part) => part.text?.startsWith(`/${commandName}`))) {
+        messages[i] = updateArrayContent(
+          messages[i],
+          commandName,
+          renderedPrompt,
+        );
+        break;
+      }
+    } else if (
+      typeof content === "string" &&
+      content.startsWith(`/${commandName}`)
+    ) {
+      messages[i] = { ...messages[i], content: renderedPrompt };
+      break;
+    }
+  }
+
+  if (systemMessage) {
+    messages[0]?.role === "system"
+      ? (messages[0].content = systemMessage)
+      : messages.unshift({ role: "system", content: systemMessage });
+  }
+
+  return messages;
+}
+
+function updateArrayContent(
+  message: any,
+  commandName: string,
+  renderedPrompt: string,
+) {
+  return {
+    ...message,
+    content: message.content.map((part: any) =>
+      part.text?.startsWith(`/${commandName}`)
+        ? { ...part, text: renderedPrompt }
+        : part,
+    ),
   };
 }
