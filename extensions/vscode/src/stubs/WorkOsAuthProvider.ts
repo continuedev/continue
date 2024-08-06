@@ -142,7 +142,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     if (this._sessions[0].expiresIn) {
       setTimeout(
         () => this._refreshSessions(),
-        (this._sessions[0].expiresIn * 1000 * 2) / 3,
+        (this._sessions[0].expiresIn * 2) / 3,
       );
     }
   }
