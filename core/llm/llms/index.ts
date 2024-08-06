@@ -1,41 +1,39 @@
-import Handlebars from "handlebars";
-import { v4 as uuidv4 } from "uuid";
 import {
   BaseCompletionOptions,
   IdeSettings,
   ILLM,
   LLMOptions,
   ModelDescription,
-} from "../../index.js";
-import { DEFAULT_MAX_TOKENS } from "../constants.js";
-import { BaseLLM } from "../index.js";
-import Anthropic from "./Anthropic.js";
-import Bedrock from "./Bedrock.js";
-import Cloudflare from "./Cloudflare.js";
-import Cohere from "./Cohere.js";
-import DeepInfra from "./DeepInfra.js";
-import Deepseek from "./Deepseek.js";
-import Fireworks from "./Fireworks.js";
-import Flowise from "./Flowise.js";
-import FreeTrial from "./FreeTrial.js";
-import Gemini from "./Gemini.js";
-import Groq from "./Groq.js";
-import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI.js";
-import HuggingFaceTGI from "./HuggingFaceTGI.js";
-import LMStudio from "./LMStudio.js";
-import LlamaCpp from "./LlamaCpp.js";
-import Llamafile from "./Llamafile.js";
-import Mistral from "./Mistral.js";
-import Msty from "./Msty.js";
-import Azure from "./Azure.js";
-import Ollama from "./Ollama.js";
-import OpenAI from "./OpenAI.js";
-import Replicate from "./Replicate.js";
-import TextGenWebUI from "./TextGenWebUI.js";
-import Together from "./Together.js";
-import ContinueProxy from "./stubs/ContinueProxy.js";
-import WatsonX from "./WatsonX.js";
-import { renderTemplatedString } from "../../promptFiles/renderTemplatedString.js";
+} from "../..";
+import { DEFAULT_MAX_TOKENS } from "../constants";
+import { BaseLLM } from "../index";
+import Anthropic from "./Anthropic";
+import Bedrock from "./Bedrock";
+import Cloudflare from "./Cloudflare";
+import Cohere from "./Cohere";
+import DeepInfra from "./DeepInfra";
+import Deepseek from "./Deepseek";
+import Fireworks from "./Fireworks";
+import Flowise from "./Flowise";
+import FreeTrial from "./FreeTrial";
+import Gemini from "./Gemini";
+import Groq from "./Groq";
+import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
+import HuggingFaceTGI from "./HuggingFaceTGI";
+import LMStudio from "./LMStudio";
+import LlamaCpp from "./LlamaCpp";
+import Llamafile from "./Llamafile";
+import Mistral from "./Mistral";
+import Msty from "./Msty";
+import Azure from "./Azure";
+import Ollama from "./Ollama";
+import OpenAI from "./OpenAI";
+import Replicate from "./Replicate";
+import TextGenWebUI from "./TextGenWebUI";
+import Together from "./Together";
+import ContinueProxy from "./stubs/ContinueProxy";
+import WatsonX from "./WatsonX";
+import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
 
 const LLMs = [
   Anthropic,
