@@ -95,38 +95,29 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     return [quickEdit];
   }
 
-  getSymbolsFrom(symbol: vscode.DocumentSymbol): vscode.DocumentSymbol[] {
-    if (symbol.children.length === 0) {
-      return [symbol];
-    }
-
-    const symbols: vscode.DocumentSymbol[] = [];
-
-    symbols.push(symbol);
-
-    for (const children of symbol.children) {
-      if (children.children.length === 0) {
-        symbols.push(children);
-      } else {
-        symbols.push(...this.getSymbolsFrom(children));
-      }
-    }
-    return symbols;
-  }
-
-  async getAllSymbols(uri: vscode.Uri) {
-    const docSymbols = await vscode.commands.executeCommand<
+  /**
+   * Get all top-level symbols and their immediate children.
+   * We do not recurse through all children to avoid noise.
+   */
+  async getTopLevelAndChildrenSymbols(uri: vscode.Uri) {
+    const topLevelSymbols = await vscode.commands.executeCommand<
       Array<vscode.DocumentSymbol> | undefined
     >("vscode.executeDocumentSymbolProvider", uri);
 
-    if (!docSymbols) {
+    if (!topLevelSymbols) {
       return [];
     }
 
-    const symbols = docSymbols.flatMap((symbol) => this.getSymbolsFrom(symbol));
+    const childrenSymbols = topLevelSymbols.flatMap(
+      (symbol) => symbol.children,
+    );
 
-    const filteredSmybols = symbols?.filter((def) =>
-      this.quickActionSymbolKinds.includes(def.kind),
+    const symbols = [...topLevelSymbols, ...childrenSymbols];
+
+    const filteredSmybols = symbols?.filter(
+      (symbol) =>
+        this.quickActionSymbolKinds.includes(symbol.kind) &&
+        !symbol.range.isSingleLine,
     );
 
     return filteredSmybols;
@@ -147,7 +138,7 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
       return [];
     }
 
-    const symbols = await this.getAllSymbols(document.uri);
+    const symbols = await this.getTopLevelAndChildrenSymbols(document.uri);
 
     return symbols.flatMap(({ range }) => {
       const commands: vscode.Command[] = !!this.customQuickActionsConfig

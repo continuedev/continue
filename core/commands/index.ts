@@ -4,7 +4,7 @@ import {
   SlashCommandDescription,
 } from "../index.js";
 import { stripImages } from "../llm/images.js";
-import { renderTemplatedString } from "../llm/llms/index.js";
+import { renderTemplatedString } from "../promptFiles/renderTemplatedString.js";
 import SlashCommands from "./slash/index.js";
 
 export function slashFromCustomCommand(

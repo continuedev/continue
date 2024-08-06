@@ -69,8 +69,8 @@ To add a system message, start the body with `<system></system>` tags like in th
 
 The body also supports templating with [Handlebars syntax](https://handlebarsjs.com/guide/). The following variables are currently available:
 
-- `input`: The full text from the input box in the sidebar that is sent along with the slash command
-- `currentFile`: The currently open file in your IDE
+- `{{{ input }}}`: The full text from the input box in the sidebar that is sent along with the slash command
+- `{{{ currentFile }}}`: The currently open file in your IDE
 
 #### Context providers
 
