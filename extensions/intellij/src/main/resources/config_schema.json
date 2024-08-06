@@ -1380,6 +1380,27 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["commit"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "markdownDescription": "If includeUnstaged is set to true, then unstaged changes are also included in the prompt, otherwise only staged changes are included."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name", "description"]

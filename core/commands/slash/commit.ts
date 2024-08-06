@@ -4,8 +4,8 @@ import { stripImages } from "../../llm/images.js";
 const CommitMessageCommand: SlashCommand = {
   name: "commit",
   description: "Generate a commit message for current changes",
-  run: async function* ({ ide, llm, input }) {
-    const diff = await ide.getDiff();
+  run: async function* ({ ide, llm, params }) {
+    const diff = await ide.getDiff(!params?.includeUnstaged);
 
     if (!diff || diff.trim() === "") {
       yield "No changes detected. Make sure you are in a git repository with current changes.";

@@ -80,7 +80,7 @@ describe("IDE Utils", () => {
   });
 
   test("noDiff", async () => {
-    const noDiff = await utils.getDiff();
+    const noDiff = await utils.getDiff(false);
     assert(noDiff === "");
   });
 
