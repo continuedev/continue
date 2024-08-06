@@ -1,7 +1,3 @@
-import {
-  EmbedContentRequest,
-  EmbedContentResponse,
-} from "@google/generative-ai";
 import { Response } from "node-fetch";
 import { EmbeddingsProviderName } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
@@ -20,26 +16,26 @@ class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   get urlPath(): string {
-    return `${this.options.model}:embedContent`;
+    return `${this.options.model}:batchEmbedContents`;
   }
 
   async getSingleBatchEmbedding(batch: string[]) {
-    const body: EmbedContentRequest = {
+    // Batch embed endpoint: https://ai.google.dev/api/embeddings?authuser=1#EmbedContentRequest
+    const requests = batch.map((text) => ({
+      model: this.options.model,
       content: {
-        /**
-         * Listed as optional in the [docs](https://ai.google.dev/api/rest/v1/Content)
-         * but is required in the interface.
-         */
         role: "user",
-        parts: batch.map((part) => ({ text: part })),
+        parts: [{ text }],
       },
-    };
+    }));
 
     const fetchWithBackoff = () =>
       withExponentialBackoff<Response>(() =>
         this.fetch(new URL(this.urlPath, this.options.apiBase), {
           method: "POST",
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            requests,
+          }),
           headers: {
             // eslint-disable-next-line @typescript-eslint/naming-convention
             "x-goog-api-key": this.options.apiKey,
@@ -55,17 +51,18 @@ class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
       throw new Error(await resp.text());
     }
 
-    const data = (await resp.json()) as EmbedContentResponse;
+    const data = (await resp.json()) as any;
 
-    return data.embedding.values;
+    return data.embeddings.map((embedding: any) => embedding.values);
   }
 
   async embed(chunks: string[]) {
     const batches = GeminiEmbeddingsProvider.getBatchedChunks(chunks);
 
-    return await Promise.all(
+    const results = await Promise.all(
       batches.map((batch) => this.getSingleBatchEmbedding(batch)),
     );
+    return results.flat();
   }
 }
 

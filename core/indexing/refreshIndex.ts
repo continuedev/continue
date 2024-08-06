@@ -23,6 +23,8 @@ export class SqliteDb {
   static db: DatabaseConnection | null = null;
 
   private static async createTables(db: DatabaseConnection) {
+    await db.exec("PRAGMA journal_mode=WAL;");
+
     await db.exec(
       `CREATE TABLE IF NOT EXISTS tag_catalog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

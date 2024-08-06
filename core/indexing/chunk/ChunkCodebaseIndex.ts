@@ -24,6 +24,8 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   private async _createTables(db: DatabaseConnection) {
+    await db.exec("PRAGMA journal_mode=WAL;");
+    
     await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       cacheKey TEXT NOT NULL,
@@ -127,29 +129,20 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     }
 
     // Add tag
-    const addContents = await Promise.all(
-      results.addTag.map(({ path }) => this.readFile(path)),
-    );
-    for (let i = 0; i < results.addTag.length; i++) {
-      const item = results.addTag[i];
-
-      // Insert chunks
-      if (contents.length) {
-        for await (const chunk of chunkDocument({
-          filepath: item.path,
-          contents: contents[i],
-          maxChunkSize: this.maxChunkSize,
-          digest: item.cacheKey,
-        })) {
-          handleChunk(chunk);
-        }
-      }
-
+    for (const item of results.addTag) {
+      await db.run(
+        `
+        INSERT INTO chunk_tags (chunkId, tag)
+        SELECT id, ? FROM chunks
+        WHERE cacheKey = ? AND path = ?
+      `,
+        [tagString, item.cacheKey, item.path],
+      );
       markComplete([item], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 4;
       yield {
         progress: accumulatedProgress,
-        desc: `Chunking ${getBasename(item.path)}`,
+        desc: `Adding ${getBasename(item.path)}`,
         status: "indexing",
       };
     }

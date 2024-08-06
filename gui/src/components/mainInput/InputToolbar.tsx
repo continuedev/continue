@@ -1,4 +1,7 @@
-import { PhotoIcon as OutlinePhotoIcon } from "@heroicons/react/24/outline";
+import {
+  PhotoIcon as OutlinePhotoIcon,
+  PlusIcon,
+} from "@heroicons/react/24/outline";
 import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
@@ -106,7 +109,7 @@ function InputToolbar(props: InputToolbarProps) {
             }}
             className="hover:underline cursor-pointer"
           >
-            + Add Context
+            Add Context <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
           </StyledSpan>
           {defaultModel &&
             modelSupportsImages(
@@ -116,7 +119,7 @@ function InputToolbar(props: InputToolbarProps) {
               defaultModel.capabilities,
             ) && (
               <span
-                className="ml-1 mt-0.5"
+                className="ml-1 mt-0.5 cursor-pointer"
                 onMouseLeave={() => setFileSelectHovered(false)}
                 onMouseEnter={() => setFileSelectHovered(true)}
               >

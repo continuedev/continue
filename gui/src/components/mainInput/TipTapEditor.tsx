@@ -60,7 +60,7 @@ import { ComboBoxItem } from "./types";
 const InputBoxDiv = styled.div`
   resize: none;
 
-  padding: 12px;
+  padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
@@ -139,7 +139,6 @@ interface TipTapEditorProps {
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
   onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
-
   editorState?: JSONContent;
 }
 
@@ -157,6 +156,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { saveSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -267,6 +267,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             props: {
               handleDOMEvents: {
                 paste(view, event) {
+                  console.log("Pasting image");
                   const items = event.clipboardData.items;
                   for (const item of items) {
                     const file = item.getAsFile();
@@ -431,6 +432,8 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
     },
     content: props.editorState || mainEditorContent || "",
+    onFocus: () => setIsEditorFocused(true),
+    onBlur: () => setIsEditorFocused(false),
     onUpdate: ({ editor, transaction }) => {
       // If /edit is typed and no context items are selected, select the first
 

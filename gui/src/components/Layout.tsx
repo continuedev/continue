@@ -285,6 +285,7 @@ const Layout = () => {
 
               <ProfileSwitcher />
               <HeaderButtonWithText
+                tooltipPlacement="top-end"
                 text="Help"
                 onClick={() => {
                   if (location.pathname === "/help") {
