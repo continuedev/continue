@@ -1,8 +1,12 @@
 # Prompt files (experimental)
 
-Prompt (`.prompt`) files are an easy way to build and share LLM prompts with others. The format is inspired by [HumanLoops's .prompt file](https://docs.humanloop.com/docs/prompt-file-format), and adds templating so that you can easily refer to files, your current git diff, and eventually much more.
+Prompt files provide a convenient way to standardize common patterns and share a collection of LLM prompts with your team. They make it easy to build and use these prompts.
 
-## How to create a prompt file
+## Quick start
+
+:::tip[Prompt library]
+To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-example). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
+:::
 
 Below is a quick example of setting up a prompt file to write unit tests using Jest.
 
@@ -29,22 +33,23 @@ Write unit tests for the above selected code, following each of these instructio
 - Don't explain how to set up `jest`
 ```
 
-Now to use this prompt, you can highlight code and use cmd/ctrl+L to select it in the Continue sidebar. Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
+Now to use this prompt, you can highlight code and use `cmd/ctrl+L` to select it in the Continue sidebar.
 
-## Examples library
+Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
 
-To assist you in getting started, we've curated a small library of `.prompt` files. You can access this collection here: <https://github.com/continuedev/prompt-file-examples>
+## Format
 
-We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
+The format is inspired by [HumanLoops's .prompt file](https://docs.humanloop.com/docs/prompt-file-format), with additional templating to use context providers and built-in variables using [Handlebars syntax](https://handlebarsjs.com/guide/).
 
-## Syntax
-
-> The current state of this format is experimental and subject to change
+:::info
+The current state of this format is experimental and subject to change
+:::
 
 ### Preamble
 
 The "preamble" is everything above the `---` separator, and lets you specify model parameters. It uses YAML syntax and currently supports the following parameters:
 
+- `name`
 - `temperature`
 - `topP`
 - `topK`
@@ -54,29 +59,28 @@ The "preamble" is everything above the `---` separator, and lets you specify mod
 - `mirostat`
 - `stop`
 - `maxTokens`
-- `name`
 - `description`
 
 If you don't need any of these parameters, you can leave out the preamble and do not need to include the `---` separator.
 
-### Body
-
-The "body" is everything below the `---` separator, and contains your prompt.
-
-At its most basic, the body can be just text.
+### System message
 
 To add a system message, start the body with `<system></system>` tags like in the example above and place your system message inside.
 
-The body also supports templating with [Handlebars syntax](https://handlebarsjs.com/guide/). The following variables are currently available:
+### Built-in variables
 
-- `{{{ input }}}`: The full text from the input box in the sidebar that is sent along with the slash command
-- `{{{ currentFile }}}`: The currently open file in your IDE
+The following built-in variables are currently available:
 
-#### Context providers
+- `{{{ input }}}` - The full text from the input box in the sidebar that is sent along with the slash command
+- `{{{ currentFile }}}` - The currently open file in your IDE
+- `{{{ ./path/to/file.js }}}` - Any file can be directly referenced
 
-The body of a .prompt file also supports any [context provider](../customization/context-providers.md) that you have added to your config by referencing the name of the context provider.
+### Context providers
 
-For example, if you wanted to include the contents of the terminal in your prompt, then you would use `{{{terminal}}}` in your prompt file. If you wanted to use the "url" context provider to include the contents of <https://github.com/continuedev/continue>, you would use `{{{url "https://github.com/continuedev/continue"}}}`, where the second part is the argument to the context provider, separated by a space.
+Any [context provider](../customization/context-providers.md) that you have added to your config can be referenced using the name of the context provider. Context providers that receive an input are also supported.
+
+- `{{{ terminal }}}` - The contents of the terminal
+- `{{{ url "https://github.com/continuedev/continue" }}}` - The contents of a URL
 
 ## Feedback
 
