@@ -194,29 +194,37 @@ export class VsCodeWebviewProtocol
   public request<T extends keyof ToWebviewProtocol>(
     messageType: T,
     data: ToWebviewProtocol[T][0],
+    retry: boolean = true,
   ): Promise<ToWebviewProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise(async (resolve) => {
-      let i = 0;
-      while (!this.webview) {
-        if (i >= 10) {
-          resolve(undefined);
-          return;
-        } else {
-          await new Promise((res) => setTimeout(res, i >= 5 ? 1000 : 500));
-          i++;
+      if (retry) {
+        let i = 0;
+        while (!this.webview) {
+          if (i >= 10) {
+            resolve(undefined);
+            return;
+          } else {
+            await new Promise((res) => setTimeout(res, i >= 5 ? 1000 : 500));
+            i++;
+          }
         }
       }
 
       this.send(messageType, data, messageId);
-      const disposable = this.webview.onDidReceiveMessage(
-        (msg: Message<ToWebviewProtocol[T][1]>) => {
-          if (msg.messageId === messageId) {
-            resolve(msg.data);
-            disposable?.dispose();
-          }
-        },
-      );
+
+      if (this.webview) {
+        const disposable = this.webview.onDidReceiveMessage(
+          (msg: Message<ToWebviewProtocol[T][1]>) => {
+            if (msg.messageId === messageId) {
+              resolve(msg.data);
+              disposable?.dispose();
+            }
+          },
+        );
+      } else if (!retry) {
+        resolve(undefined);
+      }
     });
   }
 }
