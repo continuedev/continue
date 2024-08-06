@@ -4,6 +4,10 @@ Prompt files provide a convenient way to standardize common patterns and share a
 
 ## Quick start
 
+:::tip[Prompt library]
+To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-example). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
+:::
+
 Below is a quick example of setting up a prompt file to write unit tests using Jest.
 
 1. Create a folder called `.prompts/` at the top level of your workspace.
@@ -32,12 +36,6 @@ Write unit tests for the above selected code, following each of these instructio
 Now to use this prompt, you can highlight code and use `cmd/ctrl+L` to select it in the Continue sidebar.
 
 Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
-
-## Examples library
-
-To assist you in getting started, we've curated a small library of `.prompt` files. You can access [this collection here.](https://github.com/continuedev/prompt-file-example)
-
-We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
 
 ## Format
 
