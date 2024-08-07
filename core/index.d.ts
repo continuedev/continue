@@ -352,6 +352,7 @@ export interface LLMOptions {
   watsonxUsername?: string;
   watsonxPassword?: string;
   watsonxProjectId?: string;
+  watsonxStopToken?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
