@@ -51,6 +51,7 @@ export const modelDescriptionSchema = z.object({
     "gemini",
     "mistral",
     "bedrock",
+    "sagemaker",
     "cloudflare",
     "azure",
     "continue-proxy",

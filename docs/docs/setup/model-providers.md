@@ -18,6 +18,7 @@ keywords:
     Ollama,
     HuggingFace,
     AWS Bedrock,
+    AWS SageMaker,
   ]
 ---
 

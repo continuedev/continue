@@ -171,6 +171,7 @@
             "anthropic",
             "cohere",
             "bedrock",
+            "sagemaker",
             "together",
             "ollama",
             "huggingface-tgi",
@@ -718,6 +719,23 @@
                     "type": "string"
                   }
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["sagemaker"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "markdownDescription": "SageMaker endpoint name"
               }
             }
           }
@@ -1474,6 +1492,46 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["docs"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "sites": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "startUrl": {
+                          "type": "string"
+                        },
+                        "rootUrl": {
+                          "type": "string"
+                        },
+                        "maxDepth": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["title", "startUrl"]
+                    }
+                  }
+                },
+                "required": ["sites"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
         {
           "if": {
             "properties": {

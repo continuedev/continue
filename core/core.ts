@@ -171,6 +171,9 @@ export class Core {
 
     this.messenger.onError((err) => {
       console.error(err);
+      Telemetry.capture("core_messenger_error", {
+        message: err.message,
+      });
       this.messenger.request("errorPopup", { message: err.message });
     });
 

@@ -507,6 +507,7 @@ declare global {
     | "gemini"
     | "mistral"
     | "bedrock"
+    | "sagemaker"
     | "deepinfra"
     | "flowise"
     | "groq"

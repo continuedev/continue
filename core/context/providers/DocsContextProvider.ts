@@ -1,3 +1,4 @@
+import { BaseContextProvider } from "../";
 import {
   Chunk,
   ContextItem,
@@ -9,7 +10,6 @@ import {
 import DocsService from "../../indexing/docs/DocsService";
 import preIndexedDocs from "../../indexing/docs/preIndexedDocs";
 import { Telemetry } from "../../util/posthog";
-import { BaseContextProvider } from "../";
 
 class DocsContextProvider extends BaseContextProvider {
   static nRetrieve = 30;
@@ -108,9 +108,8 @@ class DocsContextProvider extends BaseContextProvider {
       });
     }
 
-    const embeddingsProvider = await docsService.getEmbeddingsProvider(
-      !!preIndexedDoc,
-    );
+    const embeddingsProvider =
+      await docsService.getEmbeddingsProvider(!!preIndexedDoc);
 
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
