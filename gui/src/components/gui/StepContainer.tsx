@@ -1,6 +1,7 @@
 import {
   ArrowPathIcon,
   BarsArrowDownIcon,
+  CubeIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
   TrashIcon,

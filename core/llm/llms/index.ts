@@ -5,9 +5,11 @@ import {
   LLMOptions,
   ModelDescription,
 } from "../..";
+import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
 import { DEFAULT_MAX_TOKENS } from "../constants";
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
+import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
@@ -25,16 +27,14 @@ import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import Mistral from "./Mistral";
 import Msty from "./Msty";
-import Azure from "./Azure";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import Replicate from "./Replicate";
+import SageMaker from "./SageMaker";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
-import ContinueProxy from "./stubs/ContinueProxy";
 import WatsonX from "./WatsonX";
-import SageMaker from "./SageMaker";
-import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
+import ContinueProxy from "./stubs/ContinueProxy";
 
 const LLMs = [
   Anthropic,
