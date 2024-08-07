@@ -1376,7 +1376,7 @@
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
-                  "ibm/granite-13b-instruct-v2",
+                  "ibm/granite-20b-code-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
