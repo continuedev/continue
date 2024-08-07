@@ -135,22 +135,6 @@ export class VsCodeIdeUtils {
     );
   }
 
-  showMultiFileEdit(edits: FileEdit[]) {
-    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-    const panel = vscode.window.createWebviewPanel(
-      "continue.continueGUIView",
-      "Continue",
-      vscode.ViewColumn.One,
-    );
-    // panel.webview.html = this.sidebar.getSidebarContent(
-    //   extensionContext,
-    //   panel,
-    //   this.ide,
-    //   "/monaco",
-    //   edits
-    // );
-  }
-
   openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
     return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
@@ -380,7 +364,9 @@ export class VsCodeIdeUtils {
     const lastLine = lines.pop()?.trim();
     if (lastLine) {
       let i = lines.length - 1;
-      while (i >= 0 && !lines[i].trim().startsWith(lastLine)) i--;
+      while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
+        i--;
+      }
       terminalContents = lines.slice(Math.max(i, 0)).join("\n");
     }
 
@@ -400,7 +386,9 @@ export class VsCodeIdeUtils {
 
   async getAvailableThreads(): Promise<Thread[]> {
     const session = vscode.debug.activeDebugSession;
-    if (!session) return [];
+    if (!session) {
+      return [];
+    }
 
     const threadsResponse = await this._getThreads(session);
     return threadsResponse.threads;
@@ -449,7 +437,9 @@ export class VsCodeIdeUtils {
     stackDepth = 3,
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
-    if (!session) return [];
+    if (!session) {
+      return [];
+    }
 
     const sourcesPromises = await session
       .customRequest("stackTrace", {
@@ -476,7 +466,9 @@ export class VsCodeIdeUtils {
   }
 
   private async retrieveSource(sourceContainer: any): Promise<string> {
-    if (!sourceContainer.source) return "";
+    if (!sourceContainer.source) {
+      return "";
+    }
 
     const sourceRef = sourceContainer.source.sourceReference;
     if (sourceRef && sourceRef > 0) {
@@ -498,7 +490,7 @@ export class VsCodeIdeUtils {
           sourceContainer.endColumn,
         ),
       );
-    } else if (sourceContainer.line)
+    } else if (sourceContainer.line) {
       // fall back to 5 line of context
       return await this.readRangeInFile(
         sourceContainer.source.path,
@@ -509,7 +501,9 @@ export class VsCodeIdeUtils {
           0,
         ),
       );
-    else return "unavailable";
+    } else {
+      return "unavailable";
+    }
   }
 
   private async _getRepo(
@@ -557,7 +551,9 @@ export class VsCodeIdeUtils {
 
     let i = 0;
     while (!repo?.state?.HEAD?.name) {
-      if (this._repoWasNone) return undefined;
+      if (this._repoWasNone) {
+        return undefined;
+      }
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;

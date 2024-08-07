@@ -245,6 +245,7 @@ const exe = os === "win32" ? ".exe" : "";
     "../../../core/vendor/tree-sitter.wasm",
     "../../../core/llm/llamaTokenizerWorkerPool.mjs",
     "../../../core/llm/llamaTokenizer.mjs",
+    "../../../core/llm/tiktokenWorkerPool.mjs",
   ];
   for (const f of filesToCopy) {
     fs.copyFileSync(path.join(__dirname, f), path.join(__dirname, "..", "out", path.basename(f)));
