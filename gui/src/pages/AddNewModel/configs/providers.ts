@@ -545,6 +545,12 @@ After it's up and running, you can start using Continue.`,
         placeholder: "ibm/granite-13b-chat-v2",
         isWatsonxAttribute: true,
       },
+      {
+        inputType: "text",
+        key: "watsonxStopToken",
+        label: "Stop Token",
+        placeholder: "<|im_end|>",
+      },
 
       ...completionParamsInputsConfigs,
     ],
