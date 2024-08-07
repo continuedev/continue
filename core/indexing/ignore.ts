@@ -100,3 +100,10 @@ export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
 
 export const DEFAULT_IGNORE =
   DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");
+
+export function gitIgArrayFromFile(file: string) {
+  return file
+    .split(/\r?\n/) // Split on new line
+    .map((l) => l.trim()) // Remove whitespace
+    .filter((l) => !/^#|^$/.test(l)); // Remove empty lines
+}
