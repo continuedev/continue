@@ -170,7 +170,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   private async computeChunks(paths: PathAndCacheKey[]): Promise<Chunk[]> {
-    const chunkLists = await Promise.all(paths.map(this.packToChunks.bind(this)));
+    const chunkLists = await Promise.all(paths.map(p => this.packToChunks(p)));
     return chunkLists.flat();
   }
 
