@@ -739,10 +739,9 @@ export const models: { [key: string]: ModelPackage } = {
     description:
       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
-      model: "ibm/granite-13b-instruct-v2",
+      model: "ibm/granite-20b-code-instruct",
       contextLength: 20_000,
-      title: "Granite Code",
-      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
+      title: "Granite Code"
     },
     providerOptions: ["watsonx"],
     icon: "WatsonX.png",
