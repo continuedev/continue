@@ -289,6 +289,7 @@ export interface InputModifiers {
 }
 
 export interface PromptLog {
+  modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
@@ -592,6 +593,7 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "sagemaker"
   | "deepinfra"
   | "flowise"
   | "groq"

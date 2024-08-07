@@ -138,7 +138,7 @@ const IndexingProgressBar = ({
           <StatusDot color={STATUS_COLORS.FAILED}></StatusDot>
           <div>
             <StatusHeading>Indexing error - click to retry</StatusHeading>
-            <StatusInfo>{getIndexingErrMsg(indexingState.desc)}</StatusInfo>
+            {/* <StatusInfo>{getIndexingErrMsg(indexingState.desc)}</StatusInfo> */}
           </div>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(

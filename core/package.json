@@ -40,6 +40,7 @@
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.620.1",
     "@aws-sdk/credential-providers": "^3.620.1",
+    "@aws-sdk/client-sagemaker-runtime": "^3.621.0",
     "@continuedev/config-types": "^1.0.10",
     "@continuedev/llm-info": "^1.0.1",
     "@mozilla/readability": "^0.5.0",
@@ -47,6 +48,7 @@
     "@typescript-eslint/eslint-plugin": "^7.8.0",
     "@typescript-eslint/parser": "^7.8.0",
     "@xenova/transformers": "2.14.0",
+    "jinja-js": "0.1.8",
     "adf-to-md": "^1.1.0",
     "async-mutex": "^0.5.0",
     "axios": "^1.6.7",

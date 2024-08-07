@@ -476,7 +476,8 @@ export default class DocsService {
 
       await runSqliteMigrations(db);
 
-      db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
+      await db.exec("PRAGMA journal_mode=WAL;");
+      await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title STRING NOT NULL,
             startUrl STRING NOT NULL UNIQUE,

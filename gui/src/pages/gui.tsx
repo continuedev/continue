@@ -483,10 +483,7 @@ function GUI() {
                             onDelete={() => {
                               dispatch(deleteMessage(index));
                             }}
-                            modelTitle={
-                              item.promptLogs?.[0]?.completionOptions?.model ??
-                              ""
-                            }
+                            modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
                           />
                         </TimelineItem>
                       </div>

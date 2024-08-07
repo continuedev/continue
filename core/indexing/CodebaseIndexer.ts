@@ -7,7 +7,7 @@ import { LanceDbIndex } from "./LanceDbIndex.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { CodebaseIndex, IndexResultType } from "./types.js";
-import { walkDir } from "./walkDir.js";
+import { walkDirAsync } from "./walkDir.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -62,25 +62,7 @@ export class CodebaseIndexer {
     }
     const branch = await this.ide.getBranch(workspaceDir);
     const repoName = await this.ide.getRepoName(workspaceDir);
-    const stats = await this.ide.getLastModified([file]);
-    const indexesToBuild = await this.getIndexesToBuild();
-    for (const codebaseIndex of indexesToBuild) {
-      const tag: IndexTag = {
-        directory: workspaceDir,
-        branch,
-        artifactId: codebaseIndex.artifactId,
-      };
-      const [results, lastUpdated, markComplete] = await getComputeDeleteAddRemove(
-        tag,
-        { ...stats },
-        (filepath) => this.ide.readFile(filepath),
-        repoName,
-      );
-      for await (const _ of codebaseIndex.update(tag, results, markComplete, repoName)) {
-        lastUpdated.forEach((lastUpdated, path) => {
-          markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
-        });
-      }
+    for await (const updateDesc of this.indexFiles(workspaceDir, branch, repoName, [file])) {
     }
   }
 
@@ -131,33 +113,40 @@ export class CodebaseIndexer {
       desc: "Starting indexing...",
       status: "loading",
     };
+    const beginTime = Date.now();
 
     for (const directory of workspaceDirs) {
-      const files = await walkDir(directory, this.ide);
-      const stats = await this.ide.getLastModified(files);
+      const dirBasename = await this.basename(directory);
+      yield {
+        progress,
+        desc: `Discovering files in ${dirBasename}...`,
+        status: "indexing"
+      };
+      // compute the number of files in this directory to display an accurate progress bar
+      let totalFileCount = 0;
+      for await (const p of walkDirAsync(directory, this.ide)) {
+        totalFileCount += 1;
+        if (abortSignal.aborted) {
+          yield {
+            progress: 1,
+            desc: "Indexing cancelled",
+            status: "disabled",
+          };
+          return;
+        }
+        if (this.pauseToken.paused) {
+          yield *this.yieldUpdateAndPause();
+        }
+      }
+
       const branch = await this.ide.getBranch(directory);
       const repoName = await this.ide.getRepoName(directory);
-      let completedRelativeExpectedTime = 0;
+      const batchSize = this.getBatchSize(totalFileCount);
+      let completedFileCount = 0;
 
-      for (const codebaseIndex of indexesToBuild) {
-        // TODO: IndexTag type should use repoName rather than directory
-        const tag: IndexTag = {
-          directory,
-          branch,
-          artifactId: codebaseIndex.artifactId,
-        };
-        const [results, lastUpdated, markComplete] = await getComputeDeleteAddRemove(
-          tag,
-          { ...stats },
-          (filepath) => this.ide.readFile(filepath),
-          repoName,
-        );
-
+      for await (const files of this.walkDirInBatches(directory, batchSize)) {
         try {
-          for await (let {
-            progress: indexProgress,
-            desc,
-          } of codebaseIndex.update(tag, results, markComplete, repoName)) {
+          for await (const updateDesc of this.indexFiles(directory, branch, repoName, files)) {
             // Handle pausing in this loop because it's the only one really taking time
             if (abortSignal.aborted) {
               yield {
@@ -167,77 +156,125 @@ export class CodebaseIndexer {
               };
               return;
             }
-
             if (this.pauseToken.paused) {
-              yield {
-                progress,
-                desc: "Paused",
-                status: "paused",
-              };
-              while (this.pauseToken.paused) {
-                await new Promise((resolve) => setTimeout(resolve, 100));
-              }
+              yield *this.yieldUpdateAndPause();
             }
-
-            progress =
-              (completedDirs +
-                (completedRelativeExpectedTime +
-                  Math.min(1.0, indexProgress) *
-                    codebaseIndex.relativeExpectedTime) /
-                  totalRelativeExpectedTime) /
-              workspaceDirs.length;
             yield {
-              progress,
-              desc,
+              progress: progress,
+              desc: updateDesc,
               status: "indexing",
             };
           }
-
-          lastUpdated.forEach((lastUpdated, path) => {
-            markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
-          });
-
-          completedRelativeExpectedTime += codebaseIndex.relativeExpectedTime;
-          yield {
-            progress:
-              (completedDirs +
-                completedRelativeExpectedTime / totalRelativeExpectedTime) /
-              workspaceDirs.length,
-            desc: "Completed indexing " + codebaseIndex.artifactId,
-            status: "indexing",
-          };
-        } catch (e: any) {
-          let errMsg = `${e}`;
-
-          const errorRegex =
-            /Invalid argument error: Values length (\d+) is less than the length \((\d+)\) multiplied by the value size \(\d+\)/;
-          const match = e.message.match(errorRegex);
-
-          if (match) {
-            const [_, valuesLength, expectedLength] = match;
-            errMsg = `Generated embedding had length ${valuesLength} but was expected to be ${expectedLength}. This may be solved by deleting ~/.continue/index and refreshing the window to re-index.`;
-          }
-
-          yield {
-            progress: 0,
-            desc: errMsg,
-            status: "failed",
-          };
-
-          console.warn(
-            `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
-          );
+        } catch (err) {
+          yield this.handleErrorAndGetProgressUpdate(err);
           return;
         }
+        completedFileCount += files.length;
+        progress = completedFileCount / totalFileCount / workspaceDirs.length + completedDirs / workspaceDirs.length;
+        this.logProgress(beginTime, completedFileCount, progress);
       }
+      completedDirs += 1;
+    }
+    yield {
+      progress: 100,
+      desc: "Indexing Complete",
+      status: "done",
+    };
+  }
 
-      completedDirs++;
-      progress = completedDirs / workspaceDirs.length;
-      yield {
-        progress,
-        desc: "Indexing Complete",
-        status: "done",
+  private handleErrorAndGetProgressUpdate(err: unknown): IndexingProgressUpdate {
+    console.log("error when indexing: ", err);
+    if (err instanceof Error) {
+      return this.errorToProgressUpdate(err);
+    }
+    return {
+      progress: 0,
+      desc: `Indexing failed: ${err}`,
+      status: "failed",
+    };
+  }
+
+  private errorToProgressUpdate(err: Error): IndexingProgressUpdate {
+    const errorRegex =
+      /Invalid argument error: Values length (\d+) is less than the length \((\d+)\) multiplied by the value size \(\d+\)/;
+    const match = err.message.match(errorRegex);
+    let errMsg: string;
+    if (match) {
+      const [_, valuesLength, expectedLength] = match;
+      errMsg = `Generated embedding had length ${valuesLength} but was expected to be ${expectedLength}. This may be solved by deleting ~/.continue/index and refreshing the window to re-index.`;
+    } else {
+      errMsg = `${err}`;
+    }
+    return {
+      progress: 0,
+      desc: errMsg,
+      status: "failed",
+    };
+  }
+
+  private logProgress(beginTime: number, completedFileCount: number, progress: number) {
+    const timeTaken = Date.now() - beginTime;
+    const seconds = Math.round(timeTaken / 1000);
+    const progressPercentage = (progress * 100).toFixed(1);
+    const filesPerSec = (completedFileCount / seconds).toFixed(2);
+    console.log(`Indexing: ${progressPercentage}% complete, elapsed time: ${seconds}s, ${filesPerSec} file/sec`);
+  }
+
+  private async* yieldUpdateAndPause(): AsyncGenerator<IndexingProgressUpdate> {
+    yield {
+      progress: 0,
+      desc: "Indexing Paused",
+      status: "paused",
+    };
+    while (this.pauseToken.paused) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  private getBatchSize(workspaceSize: number): number {
+    // at least 10 and as much as 100 (in a repository with 10000 files)
+    return Math.min(100, Math.max(10, Math.floor(workspaceSize / 100)));
+  }
+
+  /*
+   * enables the indexing operation to be completed in small batches, this is important in large
+   * repositories where indexing can quickly use up all the memory available
+   */
+  private async* walkDirInBatches(directory: string, batchSize: number): AsyncGenerator<string[]> {
+    let results = [];
+    for await (const p of walkDirAsync(directory, this.ide)) {
+      results.push(p);
+      if (results.length === batchSize) {
+        yield results;
+        results = [];
+      }
+    }
+    if (results.length > 0) {
+      yield results;
+    }
+  }
+
+  private async* indexFiles(workspaceDir: string, branch: string, repoName: string | undefined, filePaths: string[]): AsyncGenerator<string> {
+    const stats = await this.ide.getLastModified(filePaths);
+    const indexesToBuild = await this.getIndexesToBuild();
+    for (const codebaseIndex of indexesToBuild) {
+      const tag: IndexTag = {
+        directory: workspaceDir,
+        branch,
+        artifactId: codebaseIndex.artifactId,
       };
+      const [results, lastUpdated, markComplete] = await getComputeDeleteAddRemove(
+        tag,
+        { ...stats },
+        (filepath) => this.ide.readFile(filepath),
+        repoName,
+      );
+      for await (const { desc } of codebaseIndex.update(tag, results, markComplete, repoName)) {
+        lastUpdated.forEach((lastUpdated, path) => {
+          markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
+        });
+        yield desc;
+      }
     }
   }
 
@@ -249,5 +286,11 @@ export class CodebaseIndexer {
       }
     }
     return undefined;
+  }
+
+  private async basename(filepath: string): Promise<string> {
+    const pathSep = await this.ide.pathSep();
+    const path = filepath.split(pathSep);
+    return path[path.length - 1];
   }
 }

@@ -171,6 +171,9 @@ export class Core {
 
     this.messenger.onError((err) => {
       console.error(err);
+      Telemetry.capture("core_messenger_error", {
+        message: err.message,
+      });
       this.messenger.request("errorPopup", { message: err.message });
     });
 
@@ -366,6 +369,7 @@ export class Core {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
           next = await gen.return({
+            modelTitle: model.title ?? model.model,
             completion: "",
             prompt: "",
             completionOptions: {
@@ -402,6 +406,7 @@ export class Core {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
           next = await gen.return({
+            modelTitle: model.title ?? model.model,
             completion: "",
             prompt: "",
             completionOptions: {

@@ -171,6 +171,7 @@
             "anthropic",
             "cohere",
             "bedrock",
+            "sagemaker",
             "together",
             "ollama",
             "huggingface-tgi",
@@ -718,6 +719,23 @@
                     "type": "string"
                   }
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["sagemaker"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "markdownDescription": "SageMaker endpoint name"
               }
             }
           }

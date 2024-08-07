@@ -38,8 +38,8 @@ import {
   countTokens,
   pruneRawPromptFromTop,
 } from "./countTokens.js";
-import CompletionOptionsForModels from "./templates/options.js";
 import { stripImages } from "./images.js";
+import CompletionOptionsForModels from "./templates/options.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
@@ -54,7 +54,12 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsImages(): boolean {
-    return modelSupportsImages(this.providerName, this.model, this.title, this.capabilities);
+    return modelSupportsImages(
+      this.providerName,
+      this.model,
+      this.title,
+      this.capabilities,
+    );
   }
 
   supportsCompletions(): boolean {
@@ -95,7 +100,7 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
-  capabilities?: ModelCapability
+  capabilities?: ModelCapability;
 
   engine?: string;
   apiVersion?: string;
@@ -109,11 +114,10 @@ export abstract class BaseLLM implements ILLM {
 
   watsonxUrl?: string;
   watsonxApiKey?: string;
-  watsonxZenApiKeyBase64?:string = "YOUR_WATSONX_ZENAPIKEY" // Required if using watsonx software with ZenApiKey auth
-  watsonxUsername?:string;
-  watsonxPassword?:string;
+  watsonxZenApiKeyBase64?: string = "YOUR_WATSONX_ZENAPIKEY"; // Required if using watsonx software with ZenApiKey auth
+  watsonxUsername?: string;
+  watsonxPassword?: string;
   watsonxProjectId?: string;
-
 
   private _llmOptions: LLMOptions;
 
@@ -465,7 +469,12 @@ ${prompt}`;
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
 
-    return { prompt, completion, completionOptions };
+    return {
+      modelTitle: this.title ?? completionOptions.model,
+      prompt,
+      completion,
+      completionOptions,
+    };
   }
 
   async complete(_prompt: string, options: LLMFullCompletionOptions = {}) {
@@ -562,6 +571,7 @@ ${prompt}`;
     }
 
     return {
+      modelTitle: this.title ?? completionOptions.model,
       prompt,
       completion,
       completionOptions,

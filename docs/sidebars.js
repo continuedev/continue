@@ -59,8 +59,21 @@ const sidebars = {
       collapsed: true,
       items: ["walkthroughs/set-up-codestral", "walkthroughs/llama3.1"],
     },
-    "development-data",
-    "telemetry",
+    {
+      type: "category",
+      label: "🧑‍💻 Privacy",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        "development-data",
+        "telemetry",
+        {
+          type: 'link',
+          label: 'Privacy Policy',
+          href: 'https://www.continue.dev/privacy',
+        },
+      ],
+    },
     "troubleshooting",
     {
       type: "category",

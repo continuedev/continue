@@ -84,6 +84,10 @@ export async function getParserForFile(filepath: string) {
     const parser = new Parser();
 
     const language = await getLanguageForFile(filepath);
+    if (!language) {
+      return undefined;
+    }
+
     parser.setLanguage(language);
 
     return parser;
