@@ -1,5 +1,6 @@
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
 import { Message } from "core/util/messenger";
+import { Telemetry } from "core/util/posthog";
 import fs from "node:fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -153,6 +154,14 @@ export class VsCodeWebviewProtocol
                 }
               });
           } else {
+            Telemetry.capture(
+              "webview_protocol_error",
+              {
+                messageType: msg.messageType,
+                errorMsg: message.split("\n\n")[0],
+              },
+              false,
+            );
             vscode.window
               .showErrorMessage(
                 message.split("\n\n")[0],
