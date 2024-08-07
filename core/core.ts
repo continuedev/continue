@@ -15,7 +15,7 @@ import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
-import DocsService, { docsServiceSingleton } from "./indexing/docs/DocsService";
+import DocsService from "./indexing/docs/DocsService";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
@@ -366,6 +366,7 @@ export class Core {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
           next = await gen.return({
+            modelTitle: model.title ?? model.model,
             completion: "",
             prompt: "",
             completionOptions: {
@@ -402,6 +403,7 @@ export class Core {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
           next = await gen.return({
+            modelTitle: model.title ?? model.model,
             completion: "",
             prompt: "",
             completionOptions: {

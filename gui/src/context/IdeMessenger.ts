@@ -214,6 +214,7 @@ export class IdeMessenger implements IIdeMessenger {
     }
 
     return {
+      modelTitle: next.value.content?.modelTitle,
       prompt: next.value.content?.prompt,
       completion: next.value.content?.completion,
       completionOptions: next.value.content?.completionOptions,

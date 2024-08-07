@@ -289,6 +289,7 @@ export interface InputModifiers {
 }
 
 export interface PromptLog {
+  modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
@@ -347,9 +348,9 @@ export interface LLMOptions {
   // WatsonX options
   watsonxUrl?: string;
   watsonxApiKey?: string;
-  watsonxZenApiKeyBase64?:string// Required if using watsonx software with ZenApiKey auth
-  watsonxUsername?:string;
-  watsonxPassword?:string;
+  watsonxZenApiKeyBase64?: string; // Required if using watsonx software with ZenApiKey auth
+  watsonxUsername?: string;
+  watsonxPassword?: string;
   watsonxProjectId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
