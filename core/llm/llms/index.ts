@@ -33,6 +33,7 @@ import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import ContinueProxy from "./stubs/ContinueProxy";
 import WatsonX from "./WatsonX";
+import SageMaker from "./SageMaker";
 import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
 
 const LLMs = [
@@ -52,6 +53,7 @@ const LLMs = [
   LMStudio,
   Mistral,
   Bedrock,
+  SageMaker,
   DeepInfra,
   Flowise,
   Groq,
