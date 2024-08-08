@@ -91,6 +91,9 @@ export class SqliteDb {
       driver: sqlite3.Database,
     });
 
+    // This next line, setting the journal_mode, can be removed once all databases are back to the default
+    // journal_mode and not using WAL.
+    const result = await SqliteDb.db.exec("PRAGMA journal_mode=DELETE;");
     await SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;
@@ -408,7 +411,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        () => {},
+        async () => {},
         repoName,
       )) {
       }
@@ -435,7 +438,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     _: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const add = results.addTag;
+    const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
       ...remove.map(({ cacheKey }) => {
