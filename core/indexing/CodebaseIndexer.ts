@@ -217,7 +217,7 @@ export class CodebaseIndexer {
     const seconds = Math.round(timeTaken / 1000);
     const progressPercentage = (progress * 100).toFixed(1);
     const filesPerSec = (completedFileCount / seconds).toFixed(2);
-    console.log(`Indexing: ${progressPercentage}% complete, elapsed time: ${seconds}s, ${filesPerSec} file/sec`);
+    console.debug(`Indexing: ${progressPercentage}% complete, elapsed time: ${seconds}s, ${filesPerSec} file/sec`);
   }
 
   private async* yieldUpdateAndPause(): AsyncGenerator<IndexingProgressUpdate> {

@@ -52,7 +52,7 @@ export async function* chunkDocument({
   )) {
     chunkPromises.push(new Promise(async (resolve) => {
       if (await countTokensAsync(chunkWithoutId.content) > maxChunkSize) {
-        console.warn(
+        console.debug(
           `Chunk with more than ${maxChunkSize} tokens constructed: `,
           filepath,
           countTokens(chunkWithoutId.content),
