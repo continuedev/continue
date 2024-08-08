@@ -684,6 +684,16 @@ export class Core {
     )) {
       this.messenger.request("indexProgress", update);
       this.indexingState = update;
+
+      if (update.status === "failed") {
+        Telemetry.capture(
+          "indexing_error",
+          {
+            error: update.desc,
+          },
+          false,
+        );
+      }
     }
 
     this.messenger.send("refreshSubmenuItems", undefined);
