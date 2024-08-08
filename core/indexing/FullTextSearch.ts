@@ -20,8 +20,6 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   artifactId = "sqliteFts";
 
   private async _createTables(db: DatabaseConnection) {
-    await db.exec("PRAGMA journal_mode=WAL;");
-
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
         path,
         content,
