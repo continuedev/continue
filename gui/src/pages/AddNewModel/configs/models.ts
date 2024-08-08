@@ -722,7 +722,7 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   graniteChat: {
-    title: "WatsonX - Granite Chat",
+    title: "Watsonx - Granite Chat",
     description:
       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
@@ -735,7 +735,7 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   graniteCode: {
-    title: "WatsonX - Granite Code",
+    title: "Watsonx - Granite Code",
     description:
       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
@@ -744,17 +744,17 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Granite Code"
     },
     providerOptions: ["watsonx"],
-    icon: "WatsonX.png",
+    icon: "Watsonx.png",
     isOpenSource: false,
   },
   MistralLarge: {
-    title: "WatsonX - Mistral",
+    title: "Watsonx - Mistral",
     description:
       "Mistral Large, the most advanced Large Language Model (LLM) developed by Mistral Al, is an exceptionally powerful model.",
     params: {
       model: "mistralai/mistral-large",
       contextLength: 20_000,
-      title: "WatsonX - Mistral",
+      title: "Watsonx - Mistral",
     },
     providerOptions: ["watsonx"],
     icon: "mistral.png",
