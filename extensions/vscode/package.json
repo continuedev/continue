@@ -1,10 +1,10 @@
 {
-  "name": "continue",
+  "name": "continue-microsoft-quantum",
   "icon": "media/icon.png",
-  "version": "0.8.45",
+  "version": "0.8.46",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue"
+    "url": "https://github.com/microsoft/continue"
   },
   "extensionKind": [
     "ui",
@@ -17,9 +17,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Codestral, Claude, and more",
+  "displayName": "Continue - Azure Quantum",
   "pricing": "Free",
-  "description": "The leading open-source AI code assistant",
+  "description": "Continue extension adapted for the Quantum team.",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
@@ -71,7 +71,7 @@
       "properties": {
         "continue.telemetryEnabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
         },
         "continue.enableContinueForTeamsBeta": {
