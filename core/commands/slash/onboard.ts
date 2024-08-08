@@ -91,17 +91,18 @@ async function gatherProjectContext(
 
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
+      const relativePath = path.relative(workspaceDir, fullPath);
 
       if (entry.isDirectory()) {
-        context += `\nFolder: ${fullPath}\n`;
+        context += `\nFolder: ${relativePath}\n`;
         await exploreDirectory(fullPath, currentDepth + 1);
       } else {
         if (entry.name.toLowerCase() === "readme.md") {
           const content = await fs.readFile(fullPath, "utf-8");
-          context += `README for ${dir}:\n${content}\n\n`;
+          context += `README for ${relativePath}:\n${content}\n\n`;
         } else if (LANGUAGE_DEP_MGMT_FILENAMES.includes(entry.name)) {
           const content = await fs.readFile(fullPath, "utf-8");
-          context += `${entry.name} for ${dir}:\n${content}\n\n`;
+          context += `${entry.name} for ${relativePath}:\n${content}\n\n`;
         }
       }
     }
@@ -120,19 +121,20 @@ function createOnboardingPrompt(context: string): string {
     ${context}
 
     Please provide an overview of the project with the following guidelines:
+    - Determine the most important folders in the project, at most 10
     - Go through each important folder step-by-step:
       - Explain what each folder does in isolation by summarzing the README or package.json file, if available
       - Mention the most popular or common packages used in that folder and their roles.
-    - After covering individual folders, zoom out to explain:
+    - After covering individual folders, zoom out to explain at most 5 high-level insights about the project's architecture:
       - How different parts of the codebase fit together.
       - The overall project architecture or design patterns evident from the folder structure and dependencies.
-    - Provide any additional insights on the project's architecture that weren't covered in the folder-by-folder breakdown.
+    - Provide at most 5 additional insights on the project's architecture that weren't covered in the folder-by-folder breakdown.
 
     Your response should be structured, clear, and focused on giving the new developer both a detailed understanding of individual components and a high-level overview of the project as a whole.
 
     Here is an example of a valid response:
     
-    ## Folder structure
+    ## Important folders
 
     ### /folder1
     - Description: Contains the main application logic.
