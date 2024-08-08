@@ -1,7 +1,7 @@
 {
-  "name": "continue-microsoft-quantum",
+  "name": "microsoft-continue",
   "icon": "media/icon.png",
-  "version": "0.8.46",
+  "version": "0.8.47",
   "repository": {
     "type": "git",
     "url": "https://github.com/microsoft/continue"
@@ -17,7 +17,7 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Azure Quantum",
+  "displayName": "Microsoft-Continue",
   "pricing": "Free",
   "description": "Continue extension adapted for the Quantum team.",
   "publisher": "Continue",
@@ -129,139 +129,139 @@
     "commands": [
       {
         "command": "continue.acceptDiff",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Accept Diff",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.rejectDiff",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Reject Diff",
-        "group": "Continue",
+        "group": "Microsoft-Continue",
         "icon": "$(stop)"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Accept Vertical Diff Block",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.rejectVerticalDiffBlock",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Reject Vertical Diff Block",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.quickEdit",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Generate Code",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Add Highlighted Code to Context",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Add Highlighted Code to Context",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.debugTerminal",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Continue: Debug Terminal",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.toggleFullScreen",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Toggle Full Screen",
         "icon": "$(fullscreen)",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.openConfigJson",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Open config.json",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.toggleTabAutocompleteEnabled",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.selectFilesAsContext",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Continue: Select Files as Context",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.newSession",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "New Session",
         "icon": "$(add)",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.viewHistory",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "View History",
         "icon": "$(history)",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.writeCommentsForCode",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Write Comments for this Code",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.writeDocstringForCode",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Write a Docstring for this Code",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.fixCode",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Fix this Code",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.optimizeCode",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Optimize this Code",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.fixGrammar",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Fix Grammar / Spelling",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.codebaseForceReIndex",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Codebase Force Re-Index",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.docsIndex",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Docs Index",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       },
       {
         "command": "continue.docsReIndex",
-        "category": "Continue",
+        "category": "Microsoft-Continue",
         "title": "Docs Force Re-Index",
-        "group": "Continue"
+        "group": "Microsoft-Continue"
       }
     ],
     "keybindings": [
@@ -377,39 +377,39 @@
       "editor/title/run": [
         {
           "command": "continue.rejectDiff",
-          "group": "Continue",
+          "group": "Microsoft-Continue",
           "when": "continue.streamingDiff"
         }
       ],
       "continue.continueSubMenu": [
         {
           "command": "continue.focusContinueInputWithoutClear",
-          "group": "Continue",
+          "group": "Microsoft-Continue",
           "when": "editorHasSelection"
         },
         {
           "command": "continue.writeCommentsForCode",
-          "group": "Continue",
+          "group": "Microsoft-Continue",
           "when": "editorHasSelection"
         },
         {
           "command": "continue.writeDocstringForCode",
-          "group": "Continue",
+          "group": "Microsoft-Continue",
           "when": "editorHasSelection"
         },
         {
           "command": "continue.fixCode",
-          "group": "Continue",
+          "group": "Microsoft-Continue",
           "when": "editorHasSelection"
         },
         {
           "command": "continue.optimizeCode",
-          "group": "Continue",
+          "group": "Microsoft-Continue",
           "when": "editorHasSelection"
         },
         {
           "command": "continue.fixGrammar",
-          "group": "Continue",
+          "group": "Microsoft-Continue",
           "when": "editorHasSelection && editorLangId == 'markdown'"
         }
       ],
