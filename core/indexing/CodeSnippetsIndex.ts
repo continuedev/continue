@@ -28,8 +28,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   constructor(private readonly ide: IDE) {}
 
   private static async _createTables(db: DatabaseConnection) {
-    await db.exec("PRAGMA journal_mode=WAL;");
-
     await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL,
