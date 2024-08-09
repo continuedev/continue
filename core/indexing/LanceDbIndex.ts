@@ -84,6 +84,47 @@ export class LanceDbIndex implements CodebaseIndex {
     );
   }
 
+  private async packToRows(item: PathAndCacheKey): Promise<LanceDbRow[]> {
+    const content = await this.readFile(item.path);
+    const chunks: Chunk[] = [];
+    const chunkParams = {
+      filepath: item.path,
+      contents: content,
+      maxChunkSize: this.embeddingsProvider.maxChunkSize,
+      digest: item.cacheKey,
+    };
+    for await (const chunk of chunkDocument(chunkParams)) {
+      if (chunk.content.length === 0) {
+        // File did not chunk properly, let's skip it.
+        throw new Error("did not chunk properly");
+      }
+      chunks.push(chunk);
+      if (chunks.length > 20) {
+        // Too many chunks to index, probably a larger file than we want to include
+        throw new Error("too large to index");
+      }
+    }
+    const embeddings = await this.chunkListToEmbedding(chunks);
+    if (chunks.length !== embeddings.length) {
+      throw new Error(
+        `Unexpected lengths: chunks and embeddings do not match for ${item.path}`,
+      );
+    }
+    const results = [];
+    for (let i = 0; i < chunks.length; i++) {
+      results.push({
+        path: item.path,
+        cachekey: item.cacheKey,
+        uuid: uuidv4(),
+        vector: embeddings[i],
+        startLine: chunks[i].startLine,
+        endLine: chunks[i].endLine,
+        contents: chunks[i].content,
+      });
+    }
+    return results;
+  }
+
   private async chunkListToEmbedding(chunks: Chunk[]): Promise<number[][]> {
     let embeddings: number[][];
     try {
@@ -105,36 +146,11 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
-    const allChunks: Chunk[] = [];
-    const chunkMap: Map<string, { item: PathAndCacheKey; chunks: Chunk[] }> =
-      new Map();
-
-    // First, collect all chunks
-    for (const item of items) {
+    const rowChunkPromises = items.map(this.packToRows.bind(this));
+    const rowChunkLists = [];
+    for (let i = 0; i < items.length; i++) {
       try {
-        const content = await this.readFile(item.path);
-        const chunks: Chunk[] = [];
-        const chunkParams = {
-          filepath: item.path,
-          contents: content,
-          maxChunkSize: this.embeddingsProvider.maxChunkSize,
-          digest: item.cacheKey,
-        };
-
-        for await (const chunk of chunkDocument(chunkParams)) {
-          if (chunk.content.length === 0) {
-            throw new Error(`did not chunk properly`);
-          }
-
-          chunks.push(chunk);
-          allChunks.push(chunk);
-
-          if (chunks.length > 20) {
-            throw new Error(`too large to index`);
-          }
-        }
-
-        chunkMap.set(item.path, { item, chunks });
+        rowChunkLists.push(await rowChunkPromises[i]);
       } catch (err) {
         console.log(`LanceDBIndex, skipping ${item.path}: ${err}`);
       }
@@ -273,6 +289,9 @@ export class LanceDbIndex implements CodebaseIndex {
       } ${this.formatListPlurality("file", results.compute.length)}`,
       status: "indexing",
     };
+
+    console.log(results.compute);
+
     const dbRows = await this.computeRows(results.compute);
     this.insertRows(sqlite, dbRows);
     await markComplete(results.compute, IndexResultType.Compute);
