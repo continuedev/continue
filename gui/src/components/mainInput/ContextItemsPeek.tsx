@@ -32,6 +32,16 @@ const ContextItemDiv = styled.div`
   }
 `;
 
+export const ItemsUsed = styled.span`
+  margin-left: 5px;
+  font-size: ${getFontSize() - 1}px;
+  color: ${lightGray};
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
 }
@@ -44,6 +54,10 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
   if (!props.contextItems || props.contextItems.length === 0) {
     return null;
   }
+
+  const itemsUsedText = `${props.contextItems.length} ${
+    props.contextItems.length > 1 ? "items" : "item"
+  } used`;
 
   function openContextItem(contextItem: ContextItemWithId) {
     if (contextItem.description.startsWith("http")) {
@@ -99,7 +113,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
             style={{ color: lightGray }}
           ></ChevronDownIcon>
         )}
-        <span className="ms-1">Context Used</span>
+        <ItemsUsed>{itemsUsedText}</ItemsUsed>
       </div>
       {open && (
         <div
