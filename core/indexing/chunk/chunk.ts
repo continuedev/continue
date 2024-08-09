@@ -1,4 +1,4 @@
-import { Chunk, ChunkWithoutID } from "../../index.js";
+import { Chunk, ChunkWithoutID, IDE } from "../../index.js";
 import { countTokens, countTokensAsync } from "../../llm/countTokens.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
 import { basicChunker } from "./basic.js";
@@ -76,4 +76,17 @@ export async function* chunkDocument({
     }
     yield chunk;
   }
+}
+
+export function shouldChunk(pathSep: string, filepath: string, contents: string): boolean {
+  if (contents.length > 1000000) {
+    // if a file has more than 1m characters then skip it
+    return false;
+  }
+  if (contents.length === 0) {
+    return false;
+  }
+  const basename = filepath.split(pathSep).pop();
+  // files without extensions are often binary files, skip it if so
+  return basename?.includes(".") ?? false;
 }

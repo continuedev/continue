@@ -35,16 +35,19 @@ export class CodebaseIndexer {
 
   protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
+    const pathSep = await this.ide.pathSep();
 
     const indexes = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
+        pathSep,
         this.continueServerClient,
         config.embeddingsProvider.maxChunkSize,
       ), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
         this.ide.readFile.bind(this.ide),
+        pathSep,
         this.continueServerClient,
       ),
       new FullTextSearchCodebaseIndex(),

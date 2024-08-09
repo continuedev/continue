@@ -12,7 +12,7 @@ import {
 } from "../index.js";
 import { getBasename } from "../util/index.js";
 import { getLanceDbPath, migrate } from "../util/paths.js";
-import { chunkDocument } from "./chunk/chunk.js";
+import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
@@ -40,6 +40,7 @@ export class LanceDbIndex implements CodebaseIndex {
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly pathSep: string,
     private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
@@ -86,6 +87,9 @@ export class LanceDbIndex implements CodebaseIndex {
 
   private async packToRows(item: PathAndCacheKey): Promise<LanceDbRow[]> {
     const content = await this.readFile(item.path);
+    if (!shouldChunk(this.pathSep, item.path, content)) {
+      return [];
+    }
     const chunks: Chunk[] = [];
     const chunkParams = {
       filepath: item.path,
@@ -99,10 +103,6 @@ export class LanceDbIndex implements CodebaseIndex {
         throw new Error("did not chunk properly");
       }
       chunks.push(chunk);
-      if (chunks.length > 20) {
-        // Too many chunks to index, probably a larger file than we want to include
-        throw new Error("too large to index");
-      }
     }
     const embeddings = await this.chunkListToEmbedding(chunks);
     if (chunks.length !== embeddings.length) {
@@ -265,8 +265,6 @@ export class LanceDbIndex implements CodebaseIndex {
       } ${this.formatListPlurality("file", results.compute.length)}`,
       status: "indexing",
     };
-
-    console.log(results.compute);
 
     const dbRows = await this.computeRows(results.compute);
     await this.insertRows(sqlite, dbRows);
