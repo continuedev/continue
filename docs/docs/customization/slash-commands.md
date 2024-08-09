@@ -107,6 +107,17 @@ The StackOverflow slash command will automatically pull results from StackOverfl
 }
 ```
 
+### `/onboard`
+
+The Onboard slash command helps to familiarize yourself with a new project by analyzing the project structure, READMEs, and dependency files. It identifies key folders, explains their purpose, and highlights popular packages used. Additionally, it offers insights into the project's architecture.
+
+```json
+{
+  "name": "onboard",
+  "description": "Familiarize yourself with the codebase"
+}
+```
+
 ## Custom Slash Commands
 
 There are two ways to add custom slash commands:
