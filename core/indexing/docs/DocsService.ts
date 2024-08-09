@@ -476,9 +476,6 @@ export default class DocsService {
 
       await runSqliteMigrations(db);
 
-      // This next line, setting the journal_mode, can be removed once all databases are back to the default
-      // journal_mode and not using WAL.
-      await db.exec("PRAGMA journal_mode=DELETE;");
       await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title STRING NOT NULL,
