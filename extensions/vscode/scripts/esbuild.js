@@ -19,6 +19,7 @@ const esbuildConfig = {
   // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
   inject: ["./scripts/importMetaUrl.js"],
   define: { "import.meta.url": "importMetaUrl" },
+  supported: { "dynamic-import": false },
 };
 
 (async () => {
