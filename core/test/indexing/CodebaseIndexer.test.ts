@@ -5,8 +5,10 @@ import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ContinueServerClient } from "../../continueServer/stubs/client.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "../../indexing/CodebaseIndexer.js";
+import { getComputeDeleteAddRemove } from "../../indexing/refreshIndex.js";
 import { TestCodebaseIndex } from "../../indexing/TestCodebaseIndex.js";
 import { CodebaseIndex } from "../../indexing/types.js";
+import { walkDir } from "../../indexing/walkDir.js";
 import FileSystemIde from "../../util/filesystem.js";
 import { getIndexSqlitePath } from "../../util/paths.js";
 import {
@@ -105,11 +107,41 @@ describe("CodebaseIndexer", () => {
     return files;
   }
 
+  async function getIndexPlan() {
+    const workspaceFiles = await walkDir(TEST_DIR, ide);
+    const [tag] = await ide.getTags(testIndex.artifactId);
+    const stats = await ide.getLastModified(workspaceFiles);
+
+    const [results, lastUpdated, markComplete] =
+      await getComputeDeleteAddRemove(
+        tag,
+        { ...stats },
+        (filepath) => ide.readFile(filepath),
+        undefined,
+      );
+    return results;
+  }
+
+  async function expectPlan(
+    compute: number,
+    addTag: number,
+    removeTag: number,
+    del: number,
+  ) {
+    const results = await getIndexPlan();
+    expect(results.compute).toHaveLength(compute);
+    expect(results.addTag).toHaveLength(addTag);
+    expect(results.removeTag).toHaveLength(removeTag);
+    expect(results.del).toHaveLength(del);
+  }
+
   test("should index test folder without problem", async () => {
     addToTestDir([
       ["test.ts", TEST_TS],
       ["py/main.py", TEST_PY],
     ]);
+
+    await expectPlan(2, 0, 0, 0);
 
     const updates = await refreshIndex();
     expect(updates.length).toBeGreaterThan(0);
@@ -129,6 +161,8 @@ describe("CodebaseIndexer", () => {
   test("should successfully re-index after adding a file", async () => {
     addToTestDir([["main.rs", TEST_RS]]);
 
+    await expectPlan(1, 0, 0, 0);
+
     const updates = await refreshIndex();
     expect(updates.length).toBeGreaterThan(0);
 
@@ -141,6 +175,8 @@ describe("CodebaseIndexer", () => {
   test("should successfully re-index after deleting a file", async () => {
     fs.rmSync(path.join(TEST_DIR, "main.rs"));
 
+    await expectPlan(0, 0, 0, 1);
+
     const updates = await refreshIndex();
     expect(updates.length).toBeGreaterThan(0);
 
@@ -148,5 +184,9 @@ describe("CodebaseIndexer", () => {
     const files = await getAllIndexedFiles();
     expect(files.length).toBe(2);
     expect(files.every((file) => !file.endsWith("main.rs"))).toBe(true);
+  });
+
+  test("shouldn't index any files when nothing changed", async () => {
+    await expectPlan(0, 0, 0, 0);
   });
 });
