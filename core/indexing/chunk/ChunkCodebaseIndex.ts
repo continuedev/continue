@@ -59,13 +59,16 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     let accumulatedProgress = 0;
 
-    yield {
-      desc: `Chunking ${results.compute.length} ${this.formatListPlurality("file", results.compute.length)}`,
-      status: "indexing",
-      progress: accumulatedProgress,
-    };
-    const chunks = await this.computeChunks(results.compute);
-    await this.insertChunks(db, tagString, chunks);
+    if (results.compute.length > 0) {
+      yield {
+        desc: `Chunking ${results.compute.length} ${this.formatListPlurality("file", results.compute.length)}`,
+        status: "indexing",
+        progress: accumulatedProgress,
+      };
+      const chunks = await this.computeChunks(results.compute);
+      await this.insertChunks(db, tagString, chunks);
+      await markComplete(results.compute, IndexResultType.Compute);
+    }
 
     // Add tag
     for (const item of results.addTag) {
@@ -77,7 +80,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       `,
         [tagString, item.cacheKey, item.path],
       );
-      markComplete([item], IndexResultType.AddTag);
+      await markComplete([item], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 4;
       yield {
         progress: accumulatedProgress,
@@ -99,7 +102,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       `,
         [tagString, item.cacheKey, item.path],
       );
-      markComplete([item], IndexResultType.RemoveTag);
+      await markComplete([item], IndexResultType.RemoveTag);
       accumulatedProgress += 1 / results.removeTag.length / 4;
       yield {
         progress: accumulatedProgress,
@@ -119,7 +122,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         deleted.lastID,
       ]);
 
-      markComplete([item], IndexResultType.Delete);
+      await markComplete([item], IndexResultType.Delete);
       accumulatedProgress += 1 / results.del.length / 4;
       yield {
         progress: accumulatedProgress,
@@ -131,8 +134,6 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
 
   private async createTables(db: DatabaseConnection) {
-    await db.exec("PRAGMA journal_mode=WAL;");
-
     await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       cacheKey TEXT NOT NULL,

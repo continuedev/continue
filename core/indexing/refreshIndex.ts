@@ -408,7 +408,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        () => {},
+        async () => {},
         repoName,
       )) {
       }
@@ -435,7 +435,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     _: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const add = results.addTag;
+    const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
       ...remove.map(({ cacheKey }) => {

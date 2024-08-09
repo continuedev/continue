@@ -11,7 +11,7 @@ export enum IndexResultType {
 export type MarkCompleteCallback = (
   items: PathAndCacheKey[],
   resultType: IndexResultType,
-) => void;
+) => Promise<void>;
 
 export interface CodebaseIndex {
   artifactId: string;

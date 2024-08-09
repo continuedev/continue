@@ -6,7 +6,11 @@ import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
-import { CodebaseIndex, IndexResultType } from "./types.js";
+import {
+  CodebaseIndex,
+  IndexResultType,
+  RefreshIndexResults,
+} from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
 
 export class PauseToken {
@@ -62,12 +66,32 @@ export class CodebaseIndexer {
     }
     const branch = await this.ide.getBranch(workspaceDir);
     const repoName = await this.ide.getRepoName(workspaceDir);
-    for await (const updateDesc of this.indexFiles(
-      workspaceDir,
-      branch,
-      repoName,
-      [file],
-    )) {
+    const indexesToBuild = await this.getIndexesToBuild();
+    const stats = await this.ide.getLastModified([file]);
+    for (const index of indexesToBuild) {
+      const tag = {
+        directory: workspaceDir,
+        branch,
+        artifactId: index.artifactId,
+      };
+      const [results, lastUpdated, markComplete] =
+        await getComputeDeleteAddRemove(
+          tag,
+          { ...stats },
+          (filepath) => this.ide.readFile(filepath),
+          repoName,
+        );
+      // since this is only a single file update / save we do not want to actualy remove anything, we just want to recompute for our single file
+      results.removeTag = [];
+      results.addTag = [];
+      results.del = [];
+      for await (const _ of index.update(
+        tag,
+        results,
+        markComplete,
+        repoName,
+      )) {
+      }
     }
   }
 
@@ -102,12 +126,7 @@ export class CodebaseIndexer {
       };
     }
 
-    const indexesToBuild = await this.getIndexesToBuild();
     let completedDirs = 0;
-    const totalRelativeExpectedTime = indexesToBuild.reduce(
-      (sum, index) => sum + index.relativeExpectedTime,
-      0,
-    );
 
     // Wait until Git Extension has loaded to report progress
     // so we don't appear stuck at 0% while waiting
@@ -127,10 +146,9 @@ export class CodebaseIndexer {
         desc: `Discovering files in ${dirBasename}...`,
         status: "indexing",
       };
-      // compute the number of files in this directory to display an accurate progress bar
-      let totalFileCount = 0;
+      const workspaceFiles = [];
       for await (const p of walkDirAsync(directory, this.ide)) {
-        totalFileCount += 1;
+        workspaceFiles.push(p);
         if (abortSignal.aborted) {
           yield {
             progress: 1,
@@ -146,44 +164,41 @@ export class CodebaseIndexer {
 
       const branch = await this.ide.getBranch(directory);
       const repoName = await this.ide.getRepoName(directory);
-      const batchSize = this.getBatchSize(totalFileCount);
-      let completedFileCount = 0;
+      let nextLogThreshold = 0;
 
-      for await (const files of this.walkDirInBatches(directory, batchSize)) {
-        try {
-          for await (const updateDesc of this.indexFiles(
-            directory,
-            branch,
-            repoName,
-            files,
-          )) {
-            // Handle pausing in this loop because it's the only one really taking time
-            if (abortSignal.aborted) {
-              yield {
-                progress: 1,
-                desc: "Indexing cancelled",
-                status: "disabled",
-              };
-              return;
-            }
-            if (this.pauseToken.paused) {
-              yield* this.yieldUpdateAndPause();
-            }
+      try {
+        for await (const updateDesc of this.indexFiles(
+          directory,
+          workspaceFiles,
+          branch,
+          repoName,
+        )) {
+          // Handle pausing in this loop because it's the only one really taking time
+          if (abortSignal.aborted) {
             yield {
-              progress: progress,
-              desc: updateDesc,
-              status: "indexing",
+              progress: 1,
+              desc: "Indexing cancelled",
+              status: "disabled",
             };
+            return;
           }
-        } catch (err) {
-          yield this.handleErrorAndGetProgressUpdate(err);
-          return;
+          if (this.pauseToken.paused) {
+            yield* this.yieldUpdateAndPause();
+          }
+          yield updateDesc;
+          if (updateDesc.progress >= nextLogThreshold) {
+            // log progress every 2.5%
+            nextLogThreshold += 0.025;
+            this.logProgress(
+              beginTime,
+              Math.floor(workspaceFiles.length * updateDesc.progress),
+              updateDesc.progress,
+            );
+          }
         }
-        completedFileCount += files.length;
-        progress =
-          completedFileCount / totalFileCount / workspaceDirs.length +
-          completedDirs / workspaceDirs.length;
-        this.logProgress(beginTime, completedFileCount, progress);
+      } catch (err) {
+        yield this.handleErrorAndGetProgressUpdate(err);
+        return;
       }
       completedDirs += 1;
     }
@@ -260,36 +275,48 @@ export class CodebaseIndexer {
    * enables the indexing operation to be completed in small batches, this is important in large
    * repositories where indexing can quickly use up all the memory available
    */
-  private async *walkDirInBatches(
-    directory: string,
-    batchSize: number,
-  ): AsyncGenerator<string[]> {
-    let results = [];
-    for await (const p of walkDirAsync(directory, this.ide)) {
-      results.push(p);
-      if (results.length === batchSize) {
-        yield results;
-        results = [];
-      }
-    }
-    if (results.length > 0) {
-      yield results;
+  private *batchRefreshIndexResults(
+    results: RefreshIndexResults,
+    workspaceSize: number,
+  ): Generator<RefreshIndexResults> {
+    let curPos = 0;
+    const batchSize = this.getBatchSize(workspaceSize);
+    while (
+      curPos < results.compute.length ||
+      curPos < results.del.length ||
+      curPos < results.addTag.length ||
+      curPos < results.removeTag.length
+    ) {
+      yield {
+        compute: results.compute.slice(curPos, curPos + batchSize),
+        del: results.del.slice(curPos, curPos + batchSize),
+        addTag: results.addTag.slice(curPos, curPos + batchSize),
+        removeTag: results.removeTag.slice(curPos, curPos + batchSize),
+      };
+      curPos += batchSize;
     }
   }
 
   private async *indexFiles(
     workspaceDir: string,
+    workspaceFiles: string[],
     branch: string,
     repoName: string | undefined,
-    filePaths: string[],
-  ): AsyncGenerator<string> {
-    const stats = await this.ide.getLastModified(filePaths);
+  ): AsyncGenerator<IndexingProgressUpdate> {
+    const stats = await this.ide.getLastModified(workspaceFiles);
     const indexesToBuild = await this.getIndexesToBuild();
+    let completedIndexCount = 0;
+    let progress = 0;
     for (const codebaseIndex of indexesToBuild) {
       const tag: IndexTag = {
         directory: workspaceDir,
         branch,
         artifactId: codebaseIndex.artifactId,
+      };
+      yield {
+        progress: progress,
+        desc: `Planning changes for ${codebaseIndex.artifactId} index...`,
+        status: "indexing",
       };
       const [results, lastUpdated, markComplete] =
         await getComputeDeleteAddRemove(
@@ -298,17 +325,39 @@ export class CodebaseIndexer {
           (filepath) => this.ide.readFile(filepath),
           repoName,
         );
-      for await (const { desc } of codebaseIndex.update(
-        tag,
+      const totalOps =
+        results.compute.length +
+        results.del.length +
+        results.addTag.length +
+        results.removeTag.length;
+      let completedOps = 0;
+      for (const subResult of this.batchRefreshIndexResults(
         results,
-        markComplete,
-        repoName,
+        workspaceFiles.length,
       )) {
-        lastUpdated.forEach((lastUpdated, path) => {
-          markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
-        });
-        yield desc;
+        for await (const { desc } of codebaseIndex.update(
+          tag,
+          subResult,
+          markComplete,
+          repoName,
+        )) {
+          yield {
+            progress: progress,
+            desc,
+            status: "indexing",
+          };
+        }
+        completedOps +=
+          subResult.compute.length +
+          subResult.del.length +
+          subResult.addTag.length +
+          subResult.removeTag.length;
+        progress =
+          (completedIndexCount + completedOps / totalOps) *
+          (1 / indexesToBuild.length);
       }
+      await markComplete(lastUpdated, IndexResultType.UpdateLastUpdated);
+      completedIndexCount += 1;
     }
   }
 

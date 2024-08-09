@@ -17,6 +17,7 @@ import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
+  MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
@@ -47,8 +48,6 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async createSqliteCacheTable(db: DatabaseConnection) {
-    await db.exec("PRAGMA journal_mode=WAL;");
-
     await db.exec(`CREATE TABLE IF NOT EXISTS lance_db_cache (
         uuid TEXT PRIMARY KEY,
         cacheKey TEXT NOT NULL,
@@ -97,12 +96,12 @@ export class LanceDbIndex implements CodebaseIndex {
     for await (const chunk of chunkDocument(chunkParams)) {
       if (chunk.content.length === 0) {
         // File did not chunk properly, let's skip it.
-        throw new Error(`did not chunk properly`);
+        throw new Error("did not chunk properly");
       }
       chunks.push(chunk);
       if (chunks.length > 20) {
         // Too many chunks to index, probably a larger file than we want to include
-        throw new Error(`too large to index`);
+        throw new Error("too large to index");
       }
     }
     const embeddings = await this.chunkListToEmbedding(chunks);
@@ -162,10 +161,7 @@ export class LanceDbIndex implements CodebaseIndex {
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    markComplete: (
-      items: PathAndCacheKey[],
-      resultType: IndexResultType,
-    ) => void,
+    markComplete: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const lancedb = await import("vectordb");
@@ -201,7 +197,7 @@ export class LanceDbIndex implements CodebaseIndex {
       }
 
       // Mark item complete
-      markComplete([pathAndCacheKey], IndexResultType.Compute);
+      await markComplete([pathAndCacheKey], IndexResultType.Compute);
     };
 
     // Check remote cache
@@ -264,9 +260,14 @@ export class LanceDbIndex implements CodebaseIndex {
 
     yield {
       progress: 0,
-      desc: `Computing embeddings for ${results.compute.length} ${this.formatListPlurality("file", results.compute.length)}`,
+      desc: `Computing embeddings for ${
+        results.compute.length
+      } ${this.formatListPlurality("file", results.compute.length)}`,
       status: "indexing",
     };
+
+    console.log(results.compute);
+
     const dbRows = await this.computeRows(results.compute);
     await this.insertRows(sqlite, dbRows);
     await Promise.all(
@@ -277,6 +278,7 @@ export class LanceDbIndex implements CodebaseIndex {
         );
       }),
     );
+    await markComplete(results.compute, IndexResultType.Compute);
     let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache
@@ -311,7 +313,7 @@ export class LanceDbIndex implements CodebaseIndex {
         }
       }
 
-      markComplete([{ path, cacheKey }], IndexResultType.AddTag);
+      await markComplete([{ path, cacheKey }], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 3;
       yield {
         progress: accumulatedProgress,
@@ -335,7 +337,7 @@ export class LanceDbIndex implements CodebaseIndex {
         };
       }
     }
-    markComplete(results.removeTag, IndexResultType.RemoveTag);
+    await markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     // Delete - also remove from sqlite cache
     for (const { path, cacheKey } of results.del) {
@@ -353,7 +355,7 @@ export class LanceDbIndex implements CodebaseIndex {
       };
     }
 
-    markComplete(results.del, IndexResultType.Delete);
+    await markComplete(results.del, IndexResultType.Delete);
     yield {
       progress: 1,
       desc: "Completed Calculating Embeddings",
