@@ -19,7 +19,7 @@ export interface InputDescriptor {
   required?: boolean;
   description?: string;
   [key: string]: any;
-  // the following are used only for WatsonX provider
+  // the following are used only for Watsonx provider
   // these attributes are used to determine whether the input is used in Api Authentication or Credentials section
   isWatsonxAuthenticatedByApiKey?: boolean;
   isWatsonxAuthenticatedByCredentials?: boolean;
@@ -482,7 +482,7 @@ After it's up and running, you can start using Continue.`,
     ],
   },
   watsonx: {
-    title: "WatsonX",
+    title: "Watsonx",
     provider: "watsonx",
     refPage: "watsonX",
     description:
@@ -492,7 +492,7 @@ After it's up and running, you can start using Continue.`,
       {
         inputType: "text",
         key: "watsonxUrl",
-        label: "WatsonX URL",
+        label: "Watsonx URL",
         placeholder: "http://<region>.dataplatform.cloud.ibm.com",
         required: true,
         isWatsonxAuthenticatedByApiKey: true,
@@ -501,7 +501,7 @@ After it's up and running, you can start using Continue.`,
       {
         inputType: "text",
         key: "watsonxApiKey",
-        label: "WatsonX API Key",
+        label: "Watsonx API Key",
         placeholder: "Enter your API key",
         required: true,
         isWatsonxAuthenticatedByApiKey: true,
@@ -509,7 +509,7 @@ After it's up and running, you can start using Continue.`,
       {
         inputType: "text",
         key: "watsonxProjectId",
-        label: "WatsonX Project Id",
+        label: "Watsonx Project Id",
         placeholder: "Enter your project Id",
         required: true,
         isWatsonxAuthenticatedByApiKey: true,
@@ -518,7 +518,7 @@ After it's up and running, you can start using Continue.`,
       {
         inputType: "text",
         key: "watsonxUsername",
-        label: "WatsonX Username",
+        label: "Watsonx Username",
         placeholder: "Enter your Username",
         required: true,
         isWatsonxAuthenticatedByCredentials: true,
@@ -526,7 +526,7 @@ After it's up and running, you can start using Continue.`,
       {
         inputType: "text",
         key: "watsonxPassword",
-        label: "WatsonX Password",
+        label: "Watsonx Password",
         placeholder: "Enter your password",
         required: true,
         isWatsonxAuthenticatedByCredentials: true,
@@ -545,10 +545,16 @@ After it's up and running, you can start using Continue.`,
         placeholder: "ibm/granite-13b-chat-v2",
         isWatsonxAttribute: true,
       },
+      {
+        inputType: "text",
+        key: "watsonxStopToken",
+        label: "Stop Token",
+        placeholder: "<|im_end|>",
+      },
 
       ...completionParamsInputsConfigs,
     ],
-    icon: "WatsonX.png",
+    icon: "Watsonx.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.graniteCode,

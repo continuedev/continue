@@ -175,6 +175,8 @@ class WatsonX extends BaseLLM {
     if (watsonxConfig.accessToken.token === undefined) {
       throw new Error(`Something went wrong. Check your credentials, please.`);
     }
+
+    const stopToken = this.watsonxStopToken ?? (options.model.includes("granite") ? "<|im_end|>" : undefined);
     var streamResponse = await fetch(
       `${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`,
       {
@@ -189,7 +191,8 @@ class WatsonX extends BaseLLM {
             decoding_method: "greedy",
             max_new_tokens: options.maxTokens ?? 1024,
             min_new_tokens: 1,
-            stop_sequences: [],
+            stop_sequences: stopToken ? [stopToken] : [],
+            include_stop_sequence: false,
             repetition_penalty: 1,
           },
           model_id: options.model,
@@ -231,12 +234,10 @@ class WatsonX extends BaseLLM {
                 generatedChunk += result.generated_text || "";
               });
             } catch (e) {
-              throw e;
+              console.error(`Error parsing JSON string: ${dataStr}`, e);
             }
           }
         });
-        generatedChunk = generatedChunk.replaceAll("<|im_end|>", " ");
-        generatedChunk = generatedChunk.replaceAll("<|im_start|> ", "\n");
         yield {
           role: "assistant",
           content: generatedChunk,
