@@ -1,4 +1,5 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
+import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
 import { Table } from "vectordb";
 import { IContinueServerClient } from "../continueServer/interface.js";
@@ -20,7 +21,6 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
-import { RunResult } from "sqlite3";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -269,7 +269,15 @@ export class LanceDbIndex implements CodebaseIndex {
     console.log(results.compute);
 
     const dbRows = await this.computeRows(results.compute);
-    this.insertRows(sqlite, dbRows);
+    await this.insertRows(sqlite, dbRows);
+    await Promise.all(
+      results.compute.map((item) => {
+        addComputedLanceDbRows(
+          item,
+          dbRows.filter((row) => row.path === item.path),
+        );
+      }),
+    );
     await markComplete(results.compute, IndexResultType.Compute);
     let accumulatedProgress = 0;
 

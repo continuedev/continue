@@ -50,22 +50,24 @@ export async function* chunkDocument({
     contents,
     maxChunkSize,
   )) {
-    chunkPromises.push(new Promise(async (resolve) => {
-      if (await countTokensAsync(chunkWithoutId.content) > maxChunkSize) {
-        console.debug(
-          `Chunk with more than ${maxChunkSize} tokens constructed: `,
+    chunkPromises.push(
+      new Promise(async (resolve) => {
+        if ((await countTokensAsync(chunkWithoutId.content)) > maxChunkSize) {
+          console.debug(
+            `Chunk with more than ${maxChunkSize} tokens constructed: `,
+            filepath,
+            countTokens(chunkWithoutId.content),
+          );
+          return resolve(undefined);
+        }
+        resolve({
+          ...chunkWithoutId,
+          digest,
+          index,
           filepath,
-          countTokens(chunkWithoutId.content),
-        );
-        return resolve(undefined);
-      }
-      resolve({
-        ...chunkWithoutId,
-        digest,
-        index,
-        filepath,
-      });
-    }));
+        });
+      }),
+    );
     index++;
   }
   for await (const chunk of chunkPromises) {

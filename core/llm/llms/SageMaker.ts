@@ -1,17 +1,17 @@
 import {
-  SageMakerRuntimeClient,
-  InvokeEndpointWithResponseStreamCommand
+  InvokeEndpointWithResponseStreamCommand,
+  SageMakerRuntimeClient
 } from "@aws-sdk/client-sagemaker-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-const jinja = require("jinja-js");
+// @ts-ignore
+import jinja from "jinja-js";
 
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
-  MessageContent,
-  ModelProvider,
+  ModelProvider
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
