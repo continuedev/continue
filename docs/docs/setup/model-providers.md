@@ -76,6 +76,7 @@ You can run open-source LLMs with cloud services like:
 - [Deepinfra](../reference/Model%20Providers/deepinfra.md)
 - [Groq](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [AWS Bedrock](../reference/Model%20Providers/bedrock.md)
+- [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
 ### Commercial models
 
