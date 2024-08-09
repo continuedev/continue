@@ -143,6 +143,15 @@ export class LanceDbIndex implements CodebaseIndex {
     // Now, get embeddings for all chunks in a single request
     const embeddings = await this.chunkListToEmbedding(allChunks);
 
+    // We probably dont want to blow up all embedding here,
+    // maybe we just filter out the chunks alongside the undefined
+    // embeddings in `chunkListToEmbedding`
+    if (allChunks.length !== embeddings.length) {
+      throw new Error(
+        `Unexpected lengths: chunks and embeddings do not match for ${item.path}`,
+      );
+    }
+
     // Associate embeddings back with their chunks and create LanceDbRows
     const results: LanceDbRow[] = [];
 
@@ -205,7 +214,7 @@ export class LanceDbIndex implements CodebaseIndex {
       }
 
       // Mark item complete
-      markComplete([pathAndCacheKey], IndexResultType.Compute);
+      await markComplete([pathAndCacheKey], IndexResultType.Compute);
     };
 
     // Check remote cache
@@ -273,6 +282,9 @@ export class LanceDbIndex implements CodebaseIndex {
       } ${this.formatListPlurality("file", results.compute.length)}`,
       status: "indexing",
     };
+
+    console.log(results.compute);
+
     const dbRows = await this.computeRows(results.compute);
     this.insertRows(sqlite, dbRows);
     await markComplete(results.compute, IndexResultType.Compute);
