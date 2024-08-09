@@ -16,6 +16,7 @@ import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
+  MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
@@ -168,10 +169,7 @@ export class LanceDbIndex implements CodebaseIndex {
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    markComplete: (
-      items: PathAndCacheKey[],
-      resultType: IndexResultType,
-    ) => void,
+    markComplete: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const lancedb = await import("vectordb");
@@ -277,6 +275,7 @@ export class LanceDbIndex implements CodebaseIndex {
     };
     const dbRows = await this.computeRows(results.compute);
     this.insertRows(sqlite, dbRows);
+    await markComplete(results.compute, IndexResultType.Compute);
     let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache
@@ -311,7 +310,7 @@ export class LanceDbIndex implements CodebaseIndex {
         }
       }
 
-      markComplete([{ path, cacheKey }], IndexResultType.AddTag);
+      await markComplete([{ path, cacheKey }], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 3;
       yield {
         progress: accumulatedProgress,
@@ -335,7 +334,7 @@ export class LanceDbIndex implements CodebaseIndex {
         };
       }
     }
-    markComplete(results.removeTag, IndexResultType.RemoveTag);
+    await markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     // Delete - also remove from sqlite cache
     for (const { path, cacheKey } of results.del) {
@@ -353,7 +352,7 @@ export class LanceDbIndex implements CodebaseIndex {
       };
     }
 
-    markComplete(results.del, IndexResultType.Delete);
+    await markComplete(results.del, IndexResultType.Delete);
     yield {
       progress: 1,
       desc: "Completed Calculating Embeddings",
