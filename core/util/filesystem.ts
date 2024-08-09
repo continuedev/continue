@@ -108,7 +108,7 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  getDiff(): Promise<string> {
+  getDiff(stagedOnly: boolean): Promise<string> {
     return Promise.resolve("");
   }
 

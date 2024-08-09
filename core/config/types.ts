@@ -375,7 +375,7 @@ declare global {
   
   export interface IDE {
     getIdeInfo(): Promise<IdeInfo>;
-    getDiff(): Promise<string>;
+    getDiff(stagedOnly: boolean): Promise<string>;
     isTelemetryEnabled(): Promise<boolean>;
     getUniqueId(): Promise<string>;
     getTerminalContents(): Promise<string>;
