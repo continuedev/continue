@@ -71,6 +71,7 @@ You can run the documentation server locally using either of the following metho
 1. Open your terminal and navigate to the root directory of the project.
 
 2. Run the following command to start the documentation server:
+
    ```bash
    npm run start --prefix docs
    ```
@@ -116,7 +117,7 @@ nvm use
 2. Start debugging:
 
    1. Switch to Run and Debug view
-   2. Select `Extension (VS Code)` from drop down
+   2. Select `Launch extension` from drop down
    3. Hit play button
    4. This will start the extension in debug mode and open a new VS Code window with it installed
       1. The new VS Code window with the extension is referred to as the _Host VS Code_
