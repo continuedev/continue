@@ -1,10 +1,14 @@
+import { jest } from "@jest/globals";
 import fs from "node:fs";
 import path from "node:path";
 import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ContinueServerClient } from "../../continueServer/stubs/client.js";
+import { ControlPlaneClient } from "../../control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "../../indexing/CodebaseIndexer.js";
 import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
+import { TestCodebaseIndex } from "../../indexing/TestCodebaseIndex.js";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { CodebaseIndex } from "../../indexing/types.js";
 import FileSystemIde from "../../util/filesystem.js";
 import {
   getIndexFolderPath,
@@ -17,7 +21,6 @@ import {
   tearDownTestDir,
   TEST_DIR,
 } from "../testUtils/testDir.js";
-import { jest } from "@jest/globals";
 
 jest.useFakeTimers();
 
@@ -50,20 +53,28 @@ struct Foo {
 }
 `;
 
+// A subclass of CodebaseIndexer that adds a new CodebaseIndex
+class TestCodebaseIndexer extends CodebaseIndexer {
+  protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
+    const indexes = await super.getIndexesToBuild();
+    return [...indexes, new TestCodebaseIndex()];
+  }
+}
+
 // These are more like integration tests, whereas we should separately test
 // the individual CodebaseIndex classes
-describe.skip("CodebaseIndexer", () => {
+describe("CodebaseIndexer", () => {
   const ide = new FileSystemIde(TEST_DIR);
   const ideSettingsPromise = ide.getIdeSettings();
   const configHandler = new ConfigHandler(
     ide,
     ideSettingsPromise,
     async (text) => {},
-    undefined as any, // TODO
+    new ControlPlaneClient(Promise.resolve(undefined)),
   );
   const pauseToken = new PauseToken(false);
   const continueServerClient = new ContinueServerClient(undefined, undefined);
-  const codebaseIndexer = new CodebaseIndexer(
+  const codebaseIndexer = new TestCodebaseIndexer(
     configHandler,
     ide,
     pauseToken,
@@ -106,6 +117,16 @@ describe.skip("CodebaseIndexer", () => {
     expect(fs.existsSync(getIndexFolderPath())).toBe(true);
     expect(fs.existsSync(getIndexSqlitePath())).toBe(true);
     expect(fs.existsSync(getLanceDbPath())).toBe(true);
+  });
+
+  test("should have indexed all of the files", async () => {
+    const testIndex = new TestCodebaseIndex();
+    const [tag] = await ide.getTags(testIndex.artifactId);
+    const indexed = await testIndex.getIndexedFilesForTag(tag);
+
+    expect(indexed.length).toBe(2);
+    expect(indexed.some((file) => file.endsWith("test.ts"))).toBe(true);
+    expect(indexed.some((file) => file.endsWith("main.py"))).toBe(true);
   });
 
   test("should be able to query lancedb index", async () => {

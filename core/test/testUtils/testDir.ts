@@ -16,12 +16,15 @@ export function tearDownTestDir() {
 
 export function addToTestDir(paths: (string | string[])[]) {
   for (const p of paths) {
+    const filepath = path.join(TEST_DIR, Array.isArray(p) ? p[0] : p);
+    fs.mkdirSync(path.dirname(filepath), { recursive: true });
+    
     if (Array.isArray(p)) {
-      fs.writeFileSync(path.join(TEST_DIR, p[0]), p[1]);
+      fs.writeFileSync(filepath, p[1]);
     } else if (p.endsWith("/")) {
-      fs.mkdirSync(path.join(TEST_DIR, p), { recursive: true });
+      fs.mkdirSync(filepath, { recursive: true });
     } else {
-      fs.writeFileSync(path.join(TEST_DIR, p), "");
+      fs.writeFileSync(filepath, "");
     }
   }
 }

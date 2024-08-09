@@ -587,7 +587,9 @@ async function loadFullConfigNode(
       // Try config.ts first
       const configJsPath = getConfigJsPath();
       const module = await import(configJsPath);
-      delete require.cache[require.resolve(configJsPath)];
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPath)];
+      }
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }
@@ -604,7 +606,9 @@ async function loadFullConfigNode(
         ideSettings.remoteConfigServerUrl,
       );
       const module = await import(configJsPathForRemote);
-      delete require.cache[require.resolve(configJsPathForRemote)];
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPathForRemote)];
+      }
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }

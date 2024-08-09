@@ -24,12 +24,12 @@ export class PauseToken {
 export class CodebaseIndexer {
   constructor(
     private readonly configHandler: ConfigHandler,
-    private readonly ide: IDE,
+    protected readonly ide: IDE,
     private readonly pauseToken: PauseToken,
     private readonly continueServerClient: IContinueServerClient,
   ) {}
 
-  private async getIndexesToBuild(): Promise<CodebaseIndex[]> {
+  protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
 
     const indexes = [
@@ -62,7 +62,12 @@ export class CodebaseIndexer {
     }
     const branch = await this.ide.getBranch(workspaceDir);
     const repoName = await this.ide.getRepoName(workspaceDir);
-    for await (const updateDesc of this.indexFiles(workspaceDir, branch, repoName, [file])) {
+    for await (const updateDesc of this.indexFiles(
+      workspaceDir,
+      branch,
+      repoName,
+      [file],
+    )) {
     }
   }
 
@@ -120,7 +125,7 @@ export class CodebaseIndexer {
       yield {
         progress,
         desc: `Discovering files in ${dirBasename}...`,
-        status: "indexing"
+        status: "indexing",
       };
       // compute the number of files in this directory to display an accurate progress bar
       let totalFileCount = 0;
@@ -135,7 +140,7 @@ export class CodebaseIndexer {
           return;
         }
         if (this.pauseToken.paused) {
-          yield *this.yieldUpdateAndPause();
+          yield* this.yieldUpdateAndPause();
         }
       }
 
@@ -146,7 +151,12 @@ export class CodebaseIndexer {
 
       for await (const files of this.walkDirInBatches(directory, batchSize)) {
         try {
-          for await (const updateDesc of this.indexFiles(directory, branch, repoName, files)) {
+          for await (const updateDesc of this.indexFiles(
+            directory,
+            branch,
+            repoName,
+            files,
+          )) {
             // Handle pausing in this loop because it's the only one really taking time
             if (abortSignal.aborted) {
               yield {
@@ -157,7 +167,7 @@ export class CodebaseIndexer {
               return;
             }
             if (this.pauseToken.paused) {
-              yield *this.yieldUpdateAndPause();
+              yield* this.yieldUpdateAndPause();
             }
             yield {
               progress: progress,
@@ -170,7 +180,9 @@ export class CodebaseIndexer {
           return;
         }
         completedFileCount += files.length;
-        progress = completedFileCount / totalFileCount / workspaceDirs.length + completedDirs / workspaceDirs.length;
+        progress =
+          completedFileCount / totalFileCount / workspaceDirs.length +
+          completedDirs / workspaceDirs.length;
         this.logProgress(beginTime, completedFileCount, progress);
       }
       completedDirs += 1;
@@ -182,7 +194,9 @@ export class CodebaseIndexer {
     };
   }
 
-  private handleErrorAndGetProgressUpdate(err: unknown): IndexingProgressUpdate {
+  private handleErrorAndGetProgressUpdate(
+    err: unknown,
+  ): IndexingProgressUpdate {
     console.log("error when indexing: ", err);
     if (err instanceof Error) {
       return this.errorToProgressUpdate(err);
@@ -212,15 +226,21 @@ export class CodebaseIndexer {
     };
   }
 
-  private logProgress(beginTime: number, completedFileCount: number, progress: number) {
+  private logProgress(
+    beginTime: number,
+    completedFileCount: number,
+    progress: number,
+  ) {
     const timeTaken = Date.now() - beginTime;
     const seconds = Math.round(timeTaken / 1000);
     const progressPercentage = (progress * 100).toFixed(1);
     const filesPerSec = (completedFileCount / seconds).toFixed(2);
-    console.debug(`Indexing: ${progressPercentage}% complete, elapsed time: ${seconds}s, ${filesPerSec} file/sec`);
+    console.debug(
+      `Indexing: ${progressPercentage}% complete, elapsed time: ${seconds}s, ${filesPerSec} file/sec`,
+    );
   }
 
-  private async* yieldUpdateAndPause(): AsyncGenerator<IndexingProgressUpdate> {
+  private async *yieldUpdateAndPause(): AsyncGenerator<IndexingProgressUpdate> {
     yield {
       progress: 0,
       desc: "Indexing Paused",
@@ -240,7 +260,10 @@ export class CodebaseIndexer {
    * enables the indexing operation to be completed in small batches, this is important in large
    * repositories where indexing can quickly use up all the memory available
    */
-  private async* walkDirInBatches(directory: string, batchSize: number): AsyncGenerator<string[]> {
+  private async *walkDirInBatches(
+    directory: string,
+    batchSize: number,
+  ): AsyncGenerator<string[]> {
     let results = [];
     for await (const p of walkDirAsync(directory, this.ide)) {
       results.push(p);
@@ -254,7 +277,12 @@ export class CodebaseIndexer {
     }
   }
 
-  private async* indexFiles(workspaceDir: string, branch: string, repoName: string | undefined, filePaths: string[]): AsyncGenerator<string> {
+  private async *indexFiles(
+    workspaceDir: string,
+    branch: string,
+    repoName: string | undefined,
+    filePaths: string[],
+  ): AsyncGenerator<string> {
     const stats = await this.ide.getLastModified(filePaths);
     const indexesToBuild = await this.getIndexesToBuild();
     for (const codebaseIndex of indexesToBuild) {
@@ -263,13 +291,19 @@ export class CodebaseIndexer {
         branch,
         artifactId: codebaseIndex.artifactId,
       };
-      const [results, lastUpdated, markComplete] = await getComputeDeleteAddRemove(
+      const [results, lastUpdated, markComplete] =
+        await getComputeDeleteAddRemove(
+          tag,
+          { ...stats },
+          (filepath) => this.ide.readFile(filepath),
+          repoName,
+        );
+      for await (const { desc } of codebaseIndex.update(
         tag,
-        { ...stats },
-        (filepath) => this.ide.readFile(filepath),
+        results,
+        markComplete,
         repoName,
-      );
-      for await (const { desc } of codebaseIndex.update(tag, results, markComplete, repoName)) {
+      )) {
         lastUpdated.forEach((lastUpdated, path) => {
           markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
         });
