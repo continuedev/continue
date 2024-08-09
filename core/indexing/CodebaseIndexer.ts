@@ -1,10 +1,10 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { CodebaseIndex, IndexResultType } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";

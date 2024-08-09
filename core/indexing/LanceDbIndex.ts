@@ -107,7 +107,9 @@ export class LanceDbIndex implements CodebaseIndex {
     }
     const embeddings = await this.chunkListToEmbedding(chunks);
     if (chunks.length !== embeddings.length) {
-      throw new Error(`Unexpected lengths: chunks and embeddings do not match for ${item.path}`);
+      throw new Error(
+        `Unexpected lengths: chunks and embeddings do not match for ${item.path}`,
+      );
     }
     const results = [];
     for (let i = 0; i < chunks.length; i++) {
@@ -119,7 +121,7 @@ export class LanceDbIndex implements CodebaseIndex {
         startLine: chunks[i].startLine,
         endLine: chunks[i].endLine,
         contents: chunks[i].content,
-      })
+      });
     }
     return results;
   }
@@ -127,26 +129,26 @@ export class LanceDbIndex implements CodebaseIndex {
   private async chunkListToEmbedding(chunks: Chunk[]): Promise<number[][]> {
     let embeddings: number[][];
     try {
-      embeddings = await this.embeddingsProvider.embed(chunks.map((c) => c.content));
+      embeddings = await this.embeddingsProvider.embed(
+        chunks.map((c) => c.content),
+      );
     } catch (err) {
       throw new Error(
         `Failed to generate embedding for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}: ${err}`,
-        { cause: err }
+        { cause: err },
       );
     }
     if (embeddings.some((emb) => emb === undefined)) {
       throw new Error(
-        `Empty embedding returned for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}`
+        `Empty embedding returned for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}`,
       );
     }
     return embeddings;
   }
 
-  private async computeRows(
-    items: PathAndCacheKey[],
-  ): Promise<LanceDbRow[]> {
+  private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
     const rowChunkPromises = items.map(this.packToRows.bind(this));
-    const rowChunkLists = []
+    const rowChunkLists = [];
     for (let i = 0; i < items.length; i++) {
       try {
         rowChunkLists.push(await rowChunkPromises[i]);
@@ -266,10 +268,15 @@ export class LanceDbIndex implements CodebaseIndex {
       status: "indexing",
     };
     const dbRows = await this.computeRows(results.compute);
-    this.insertRows(sqlite, dbRows);
-    results.compute.forEach((item) => {
-      addComputedLanceDbRows(item, dbRows.filter((row) => row.path === item.path));
-    });
+    await this.insertRows(sqlite, dbRows);
+    await Promise.all(
+      results.compute.map((item) => {
+        addComputedLanceDbRows(
+          item,
+          dbRows.filter((row) => row.path === item.path),
+        );
+      }),
+    );
     let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache
@@ -428,7 +435,10 @@ export class LanceDbIndex implements CodebaseIndex {
     });
   }
 
-  private async insertRows(db: DatabaseConnection, rows: LanceDbRow[]): Promise<void> {
+  private async insertRows(
+    db: DatabaseConnection,
+    rows: LanceDbRow[],
+  ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       db.db.serialize(() => {
         db.db.exec("BEGIN", (err: Error | null) => {
@@ -437,26 +447,40 @@ export class LanceDbIndex implements CodebaseIndex {
           }
         });
 
-        const sql = "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-        rows.map(r => {
-          db.db.run(sql, [
-            r.uuid,
-            r.cachekey,
-            r.path,
-            this.artifactId,
-            JSON.stringify(r.vector),
-            r.startLine,
-            r.endLine,
-            r.contents,
-          ], (result: RunResult, err: Error) => {
-            if (err) {
-              reject(new Error("error inserting into lance_db_cache table", { cause: err }));
-            }
-          });
+        const sql =
+          "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        rows.map((r) => {
+          db.db.run(
+            sql,
+            [
+              r.uuid,
+              r.cachekey,
+              r.path,
+              this.artifactId,
+              JSON.stringify(r.vector),
+              r.startLine,
+              r.endLine,
+              r.contents,
+            ],
+            (result: RunResult, err: Error) => {
+              if (err) {
+                reject(
+                  new Error("error inserting into lance_db_cache table", {
+                    cause: err,
+                  }),
+                );
+              }
+            },
+          );
         });
         db.db.exec("COMMIT", (err: Error | null) => {
           if (err) {
-            reject(new Error("error while committing insert into lance_db_rows transaction", { cause: err }));
+            reject(
+              new Error(
+                "error while committing insert into lance_db_rows transaction",
+                { cause: err },
+              ),
+            );
           }
         });
         resolve();
