@@ -37,7 +37,7 @@ const MAX_EXPLORE_DEPTH = 2;
 
 const OnboardSlashCommand: SlashCommand = {
   name: "onboard",
-  description: "Help users familiarize themselves with the codebase",
+  description: "Familiarize yourself with the codebase",
   run: async function* ({ llm, ide }) {
     const [workspaceDir] = await ide.getWorkspaceDirs();
 
