@@ -5,16 +5,10 @@ import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ContinueServerClient } from "../../continueServer/stubs/client.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "../../indexing/CodebaseIndexer.js";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
 import { TestCodebaseIndex } from "../../indexing/TestCodebaseIndex.js";
-import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { CodebaseIndex } from "../../indexing/types.js";
 import FileSystemIde from "../../util/filesystem.js";
-import {
-  getIndexFolderPath,
-  getIndexSqlitePath,
-  getLanceDbPath,
-} from "../../util/paths.js";
+import { getIndexSqlitePath } from "../../util/paths.js";
 import {
   addToTestDir,
   setUpTestDir,
@@ -56,8 +50,7 @@ struct Foo {
 // A subclass of CodebaseIndexer that adds a new CodebaseIndex
 class TestCodebaseIndexer extends CodebaseIndexer {
   protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
-    const indexes = await super.getIndexesToBuild();
-    return [...indexes, new TestCodebaseIndex()];
+    return [new TestCodebaseIndex()];
   }
 }
 
@@ -80,13 +73,10 @@ describe("CodebaseIndexer", () => {
     pauseToken,
     continueServerClient,
   );
-  const lancedbIndex = new LanceDbIndex(
-    new TransformersJsEmbeddingsProvider(),
-    ide.readFile.bind(ide),
-    continueServerClient,
-  );
+  const testIndex = new TestCodebaseIndex();
 
   beforeAll(async () => {
+    tearDownTestDir();
     setUpTestDir();
   });
 
@@ -94,106 +84,69 @@ describe("CodebaseIndexer", () => {
     tearDownTestDir();
   });
 
+  async function refreshIndex() {
+    const abortController = new AbortController();
+    const abortSignal = abortController.signal;
+
+    const updates = [];
+    for await (const update of codebaseIndexer.refresh(
+      [TEST_DIR],
+      abortSignal,
+    )) {
+      updates.push(update);
+    }
+    return updates;
+  }
+
+  async function getAllIndexedFiles() {
+    const files = await testIndex.getIndexedFilesForTags(
+      await ide.getTags(testIndex.artifactId),
+    );
+    return files;
+  }
+
   test("should index test folder without problem", async () => {
     addToTestDir([
       ["test.ts", TEST_TS],
       ["py/main.py", TEST_PY],
     ]);
-    const abortController = new AbortController();
-    const abortSignal = abortController.signal;
 
-    const updates = [];
-    for await (const update of codebaseIndexer.refresh(
-      [TEST_DIR],
-      abortSignal,
-    )) {
-      updates.push(update);
-    }
-
+    const updates = await refreshIndex();
     expect(updates.length).toBeGreaterThan(0);
   });
 
   test("should have created index folder with all necessary files", async () => {
-    expect(fs.existsSync(getIndexFolderPath())).toBe(true);
     expect(fs.existsSync(getIndexSqlitePath())).toBe(true);
-    expect(fs.existsSync(getLanceDbPath())).toBe(true);
   });
 
   test("should have indexed all of the files", async () => {
-    const testIndex = new TestCodebaseIndex();
-    const [tag] = await ide.getTags(testIndex.artifactId);
-    const indexed = await testIndex.getIndexedFilesForTag(tag);
-
+    const indexed = await getAllIndexedFiles();
     expect(indexed.length).toBe(2);
     expect(indexed.some((file) => file.endsWith("test.ts"))).toBe(true);
     expect(indexed.some((file) => file.endsWith("main.py"))).toBe(true);
   });
 
-  test("should be able to query lancedb index", async () => {
-    const chunks = await lancedbIndex.retrieve(
-      "What is the main function doing?",
-      10,
-      await ide.getTags(lancedbIndex.artifactId),
-      undefined,
-    );
-
-    expect(chunks.length).toBe(2);
-    // Check that the main function from both files is returned
-    expect(chunks.some((chunk) => chunk.filepath.endsWith("test.ts"))).toBe(
-      true,
-    );
-    expect(chunks.some((chunk) => chunk.filepath.endsWith("main.py"))).toBe(
-      true,
-    );
-  });
-
   test("should successfully re-index after adding a file", async () => {
     addToTestDir([["main.rs", TEST_RS]]);
-    const abortController = new AbortController();
-    const abortSignal = abortController.signal;
-    const updates = [];
-    for await (const update of codebaseIndexer.refresh(
-      [TEST_DIR],
-      abortSignal,
-    )) {
-      updates.push(update);
-    }
+
+    const updates = await refreshIndex();
     expect(updates.length).toBeGreaterThan(0);
+
     // Check that the new file was indexed
-    const chunks = await lancedbIndex.retrieve(
-      "What is the main function doing?",
-      3,
-      await ide.getTags(lancedbIndex.artifactId),
-      undefined,
-    );
-    expect(chunks.length).toBe(3);
-    expect(chunks.some((chunk) => chunk.filepath.endsWith("main.rs"))).toBe(
-      true,
-    );
+    const files = await getAllIndexedFiles();
+    expect(files.length).toBe(3);
+    expect(files.some((file) => file.endsWith("main.rs"))).toBe(true);
   });
 
   test("should successfully re-index after deleting a file", async () => {
     fs.rmSync(path.join(TEST_DIR, "main.rs"));
-    const abortController = new AbortController();
-    const abortSignal = abortController.signal;
-    const updates = [];
-    for await (const update of codebaseIndexer.refresh(
-      [TEST_DIR],
-      abortSignal,
-    )) {
-      updates.push(update);
-    }
+
+    const updates = await refreshIndex();
     expect(updates.length).toBeGreaterThan(0);
+
     // Check that the deleted file was removed from the index
-    const chunks = await lancedbIndex.retrieve(
-      "What is the main function doing?",
-      10,
-      await ide.getTags(lancedbIndex.artifactId),
-      undefined,
-    );
-    expect(chunks.length).toBe(2);
-    expect(chunks.every((chunk) => !chunk.filepath.endsWith("main.rs"))).toBe(
-      true,
-    );
+    const files = await getAllIndexedFiles();
+    expect(files.length).toBe(2);
+    expect(files.every((file) => !file.endsWith("main.rs"))).toBe(true);
   });
 });

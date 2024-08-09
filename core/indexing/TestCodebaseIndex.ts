@@ -53,13 +53,15 @@ export class TestCodebaseIndex implements CodebaseIndex {
     markComplete(results.removeTag, IndexResultType.RemoveTag);
   }
 
-  async getIndexedFilesForTag(tag: IndexTag): Promise<string[]> {
+  async getIndexedFilesForTags(tags: IndexTag[]): Promise<string[]> {
     const db = await SqliteDb.get();
     await TestCodebaseIndex._createTables(db);
 
     const rows = await db.all(
-      `SELECT path FROM test_index WHERE branch = ? AND directory = ?`,
-      [tag.branch, tag.directory],
+      `SELECT path FROM test_index WHERE (branch, directory) IN (VALUES ${tags
+        .map(() => "(?, ?)")
+        .join(", ")})`,
+      tags.flatMap((tag) => [tag.branch, tag.directory]),
     );
 
     return rows.map((row: any) => row.path);
