@@ -133,7 +133,6 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     }
   }
 
-
   private async createTables(db: DatabaseConnection) {
     await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -201,9 +200,10 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         db.db.exec("COMMIT", (err: Error | null) => {
           if (err) {
             reject(new Error("error while committing insert chunks transaction", { cause: err }));
+          } else {
+            resolve();
           }
         });
-        resolve();
       });
     });
   }
