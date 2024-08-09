@@ -91,9 +91,6 @@ export class SqliteDb {
       driver: sqlite3.Database,
     });
 
-    // This next line, setting the journal_mode, can be removed once all databases are back to the default
-    // journal_mode and not using WAL.
-    const result = await SqliteDb.db.exec("PRAGMA journal_mode=DELETE;");
     await SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;
