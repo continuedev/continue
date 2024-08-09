@@ -20,6 +20,7 @@ export interface RetrievalPipelineOptions {
   nRetrieve: number;
   nFinal: number;
   tags: BranchAndDir[];
+  pathSep: string;
   filterDirectory?: string;
 }
 
@@ -30,8 +31,10 @@ export interface IRetrievalPipeline {
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   private lanceDbIndex: LanceDbIndex;
   constructor(protected readonly options: RetrievalPipelineOptions) {
-    this.lanceDbIndex = new LanceDbIndex(options.embeddingsProvider, (path) =>
-      options.ide.readFile(path),
+    this.lanceDbIndex = new LanceDbIndex(
+      options.embeddingsProvider,
+      (path) => options.ide.readFile(path),
+      options.pathSep
     );
   }
 

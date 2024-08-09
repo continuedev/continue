@@ -70,6 +70,7 @@ export async function retrieveContextItemsFromEmbeddings(
     nFinal,
     nRetrieve,
     tags,
+    pathSep: await extras.ide.pathSep(),
     embeddingsProvider: extras.embeddingsProvider,
     reranker: extras.reranker,
     filterDirectory,
