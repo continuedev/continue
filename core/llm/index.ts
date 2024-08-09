@@ -68,6 +68,7 @@ export abstract class BaseLLM implements ILLM {
         this.apiBase?.includes("api.groq.com") ||
         this.apiBase?.includes("api.mistral.ai") ||
         this.apiBase?.includes(":1337") ||
+        this.apiBase?.includes("integrate.api.nvidia.com") ||
         this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
       ) {
         // Jan + Groq + Mistral don't support completions : (

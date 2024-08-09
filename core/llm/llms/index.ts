@@ -36,6 +36,7 @@ import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
+import Nvidia from "./Nvidia";
 
 const LLMs = [
   Anthropic,
@@ -66,6 +67,7 @@ const LLMs = [
   Azure,
   WatsonX,
   OpenRouter,
+  Nvidia,
 ];
 
 export async function llmFromDescription(

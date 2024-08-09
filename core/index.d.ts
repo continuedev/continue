@@ -611,7 +611,8 @@ type ModelProvider =
   | "openai-aiohttp"
   | "msty"
   | "watsonx"
-  | "openrouter";
+  | "openrouter"
+  | "nvidia";
 
 export type ModelName =
   | "AUTODETECT"
