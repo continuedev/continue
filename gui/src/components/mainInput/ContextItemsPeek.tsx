@@ -32,7 +32,7 @@ const ContextItemDiv = styled.div`
   }
 `;
 
-export const ItemsUsed = styled.span`
+export const ContextItems = styled.span`
   margin-left: 5px;
   font-size: ${getFontSize() - 1}px;
   color: ${lightGray};
@@ -51,13 +51,15 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
 
   const [open, setOpen] = React.useState(false);
 
-  if (!props.contextItems || props.contextItems.length === 0) {
+  const ctxItems = props.contextItems;
+
+  if (!ctxItems || ctxItems.length === 0) {
     return null;
   }
 
-  const itemsUsedText = `${props.contextItems.length} ${
-    props.contextItems.length > 1 ? "items" : "item"
-  } used`;
+  const contextItemsText = `${ctxItems.length} context ${
+    ctxItems.length > 1 ? "items" : "item"
+  }`;
 
   function openContextItem(contextItem: ContextItemWithId) {
     if (contextItem.description.startsWith("http")) {
@@ -113,7 +115,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
             style={{ color: lightGray }}
           ></ChevronDownIcon>
         )}
-        <ItemsUsed>{itemsUsedText}</ItemsUsed>
+        <ContextItems>{contextItemsText}</ContextItems>
       </div>
       {open && (
         <div
@@ -121,7 +123,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
             paddingTop: "2px",
           }}
         >
-          {props.contextItems?.map((contextItem, idx) => {
+          {ctxItems?.map((contextItem, idx) => {
             if (contextItem.description.startsWith("http")) {
               return (
                 <a
