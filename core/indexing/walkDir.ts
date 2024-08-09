@@ -6,6 +6,7 @@ import {
   DEFAULT_IGNORE_FILETYPES,
   defaultIgnoreDir,
   defaultIgnoreFile,
+  gitIgArrayFromFile,
 } from "./ignore.js";
 
 export interface WalkerOptions {
@@ -46,7 +47,10 @@ class DFSWalker {
 
   // walk is a depth-first search implementation
   public async *walk(): AsyncGenerator<string> {
-    const fixupFunc = await this.newPathFixupFunc(this.options.returnRelativePaths ? "" : this.path, this.ide);
+    const fixupFunc = await this.newPathFixupFunc(
+      this.options.returnRelativePaths ? "" : this.path,
+      this.ide,
+    );
     const root: WalkContext = {
       walkableEntry: {
         relPath: "",
@@ -105,14 +109,7 @@ class DFSWalker {
     if (ignoreFilesInDir.length === 0) {
       return parentIgnore;
     }
-    const patterns = ignoreFilesInDir
-      .map((c) => {
-        return c
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter((l) => !/^#|^$/.test(l));
-      })
-      .flat();
+    const patterns = ignoreFilesInDir.map((c) => gitIgArrayFromFile(c)).flat();
     return ignore().add(parentIgnore).add(patterns);
   }
 
@@ -157,7 +154,10 @@ class DFSWalker {
 
   // returns a function which will optionally prefix a root path and fixup the paths for the appropriate OS filesystem (i.e. windows)
   // the reason to construct this function once is to avoid the need to call ide.pathSep() multiple times
-  private async newPathFixupFunc(rootPath: string, ide: IDE): Promise<(relPath: string) => string> {
+  private async newPathFixupFunc(
+    rootPath: string,
+    ide: IDE,
+  ): Promise<(relPath: string) => string> {
     const pathSep = await ide.pathSep();
     const prefix = rootPath === "" ? "" : rootPath + pathSep;
     if (pathSep === "/") {
