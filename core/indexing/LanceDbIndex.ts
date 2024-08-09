@@ -31,6 +31,10 @@ interface LanceDbRow {
   [key: string]: any;
 }
 
+type ItemWithChunks = { item: PathAndCacheKey; chunks: Chunk[] };
+
+type ChunkMap = Map<string, ItemWithChunks>;
+
 export class LanceDbIndex implements CodebaseIndex {
   relativeExpectedTime: number = 13;
   get artifactId(): string {
@@ -84,77 +88,89 @@ export class LanceDbIndex implements CodebaseIndex {
     );
   }
 
-  private async chunkListToEmbedding(chunks: Chunk[]): Promise<number[][]> {
-    let embeddings: number[][];
-    try {
-      embeddings = await this.embeddingsProvider.embed(
-        chunks.map((c) => c.content),
-      );
-    } catch (err) {
-      throw new Error(
-        `Failed to generate embedding for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}: ${err}`,
-        { cause: err },
-      );
-    }
-    if (embeddings.some((emb) => emb === undefined)) {
-      throw new Error(
-        `Empty embedding returned for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}`,
-      );
-    }
-    return embeddings;
-  }
-
   private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
-    const allChunks: Chunk[] = [];
-    const chunkMap: Map<string, { item: PathAndCacheKey; chunks: Chunk[] }> =
-      new Map();
+    const chunkMap = await this.collectChunks(items);
+    const allChunks = Array.from(chunkMap.values()).flatMap(
+      ({ chunks }) => chunks,
+    );
+    const embeddings = await this.getEmbeddings(allChunks);
 
-    // First, collect all chunks
-    for (const item of items) {
-      try {
-        const content = await this.readFile(item.path);
-        const chunks: Chunk[] = [];
-        const chunkParams = {
-          filepath: item.path,
-          contents: content,
-          maxChunkSize: this.embeddingsProvider.maxChunkSize,
-          digest: item.cacheKey,
-        };
+    // Remove undefined embeddings and their corresponding chunks
+    for (let i = embeddings.length - 1; i >= 0; i--) {
+      if (embeddings[i] === undefined) {
+        const chunk = allChunks[i];
+        const chunks = chunkMap.get(chunk.filepath)?.chunks;
 
-        for await (const chunk of chunkDocument(chunkParams)) {
-          if (chunk.content.length === 0) {
-            throw new Error("did not chunk properly");
-          }
-
-          chunks.push(chunk);
-          allChunks.push(chunk);
-
-          if (chunks.length > 20) {
-            throw new Error("too large to index");
+        if (chunks) {
+          const index = chunks.findIndex((c) => c === chunk);
+          if (index !== -1) {
+            chunks.splice(index, 1);
           }
         }
 
+        embeddings.splice(i, 1);
+      }
+    }
+
+    return this.createLanceDbRows(chunkMap, embeddings);
+  }
+
+  private async collectChunks(items: PathAndCacheKey[]): Promise<ChunkMap> {
+    const chunkMap: ChunkMap = new Map();
+
+    for (const item of items) {
+      try {
+        const content = await this.readFile(item.path);
+        const chunks = await this.getChunks(item, content);
         chunkMap.set(item.path, { item, chunks });
       } catch (err) {
         console.log(`LanceDBIndex, skipping ${item.path}: ${err}`);
       }
     }
 
-    // Now, get embeddings for all chunks in a single request
-    const embeddings = await this.chunkListToEmbedding(allChunks);
+    return chunkMap;
+  }
 
-    // We probably dont want to blow up all embedding here,
-    // maybe we just filter out the chunks alongside the undefined
-    // embeddings in `chunkListToEmbedding`
-    if (allChunks.length !== embeddings.length) {
-      throw new Error(
-        `Unexpected lengths: chunks and embeddings do not match for ${item.path}`,
-      );
+  private async getChunks(
+    item: PathAndCacheKey,
+    content: string,
+  ): Promise<Chunk[]> {
+    const chunks: Chunk[] = [];
+
+    const chunkParams = {
+      filepath: item.path,
+      contents: content,
+      maxChunkSize: this.embeddingsProvider.maxChunkSize,
+      digest: item.cacheKey,
+    };
+
+    for await (const chunk of chunkDocument(chunkParams)) {
+      if (chunk.content.length === 0) {
+        throw new Error("did not chunk properly");
+      }
+
+      chunks.push(chunk);
     }
 
-    // Associate embeddings back with their chunks and create LanceDbRows
-    const results: LanceDbRow[] = [];
+    return chunks;
+  }
 
+  private async getEmbeddings(chunks: Chunk[]): Promise<number[][]> {
+    try {
+      return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
+    } catch (err) {
+      throw new Error(
+        `Failed to generate embeddings for ${chunks.length} chunks with provider: ${this.embeddingsProvider.id}: ${err}`,
+        { cause: err },
+      );
+    }
+  }
+
+  private createLanceDbRows(
+    chunkMap: ChunkMap,
+    embeddings: number[][],
+  ): LanceDbRow[] {
+    const results: LanceDbRow[] = [];
     let embeddingIndex = 0;
 
     for (const [path, { item, chunks }] of chunkMap) {
@@ -282,8 +298,6 @@ export class LanceDbIndex implements CodebaseIndex {
       } ${this.formatListPlurality("file", results.compute.length)}`,
       status: "indexing",
     };
-
-    console.log(results.compute);
 
     const dbRows = await this.computeRows(results.compute);
     this.insertRows(sqlite, dbRows);

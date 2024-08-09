@@ -26,6 +26,8 @@ export class PauseToken {
 }
 
 export class CodebaseIndexer {
+  batchSize = 100;
+
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
@@ -266,11 +268,6 @@ export class CodebaseIndexer {
     }
   }
 
-  private getBatchSize(workspaceSize: number): number {
-    // at least 10 and as much as 100 (in a repository with 10000 files)
-    return Math.min(100, Math.max(10, Math.floor(workspaceSize / 100)));
-  }
-
   /*
    * enables the indexing operation to be completed in small batches, this is important in large
    * repositories where indexing can quickly use up all the memory available
@@ -280,7 +277,6 @@ export class CodebaseIndexer {
     workspaceSize: number,
   ): Generator<RefreshIndexResults> {
     let curPos = 0;
-    const batchSize = this.getBatchSize(workspaceSize);
     while (
       curPos < results.compute.length ||
       curPos < results.del.length ||
@@ -288,12 +284,12 @@ export class CodebaseIndexer {
       curPos < results.removeTag.length
     ) {
       yield {
-        compute: results.compute.slice(curPos, curPos + batchSize),
-        del: results.del.slice(curPos, curPos + batchSize),
-        addTag: results.addTag.slice(curPos, curPos + batchSize),
-        removeTag: results.removeTag.slice(curPos, curPos + batchSize),
+        compute: results.compute.slice(curPos, curPos + this.batchSize),
+        del: results.del.slice(curPos, curPos + this.batchSize),
+        addTag: results.addTag.slice(curPos, curPos + this.batchSize),
+        removeTag: results.removeTag.slice(curPos, curPos + this.batchSize),
       };
-      curPos += batchSize;
+      curPos += this.batchSize;
     }
   }
 

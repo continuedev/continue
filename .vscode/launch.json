@@ -12,8 +12,7 @@
       "cwd": "${workspaceFolder}/extensions/vscode",
       "args": [
         // Pass a directory to manually test in
-        "${workspaceFolder}/manual-testing-sandbox",
-        "${workspaceFolder}/manual-testing-sandbox/test.js",
+        "${workspaceFolder}/extensions/vscode",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
       "pauseForSourceMap": false,
