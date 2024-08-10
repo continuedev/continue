@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - preview
+  create:
+    tags:
+      - "v*"
+    branches:
+      - dev
 
 jobs:
   build:
