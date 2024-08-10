@@ -3,7 +3,7 @@ name: Publish Preview Extension
 on:
   create:
     tags:
-      - "v*"
+      - "v0.9.*-vscode"
     branches:
       - dev
 
