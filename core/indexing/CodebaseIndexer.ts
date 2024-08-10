@@ -270,8 +270,7 @@ export class CodebaseIndexer {
   }
 
   private getBatchSize(workspaceSize: number): number {
-    // at least 10 and as much as 100 (in a repository with 10000 files)
-    return Math.min(100, Math.max(10, Math.floor(workspaceSize / 100)));
+    return 100;
   }
 
   /*
