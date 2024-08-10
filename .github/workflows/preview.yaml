@@ -1,9 +1,6 @@
 name: Publish Preview Extension
 
 on:
-  push:
-    branches:
-      - preview
   create:
     tags:
       - "v*"
@@ -50,8 +47,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       # 1. Check-out repository
-      - name: Check-out repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # This ensures all tags are fetched
+
+      - name: Checkout tag
+        run: git checkout ${GITHUB_REF#refs/tags/}
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
@@ -163,20 +165,10 @@ jobs:
       # Download the .vsix artifacts
       - uses: actions/download-artifact@v3
 
-      - name: Tag the repository
-        id: tag
-        run: |
-          # See https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
-          TAG=v$(grep -o '"version": "[^"]*' extensions/vscode/package.json | cut -d'"' -f4)-vscode
-          echo "$TAG"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
-          git push origin $TAG
-
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ github.ref_name }}
           files: |
             alpine-x64/*.vsix
             darwin-arm64/*.vsix
@@ -189,36 +181,6 @@ jobs:
           token: ${{ secrets.CI_GITHUB_TOKEN }}
           repository: continuedev/continue
           prerelease: true
-
-  release-branch:
-    runs-on: ubuntu-latest
-    needs:
-      - build
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Create release branch
-        run: |
-          # Set up Git
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-          # Get the current version
-          current_version=$(grep -o '"version": "[^"]*' extensions/vscode/package.json | cut -d'"' -f4)
-
-          # Create a new branch name
-          new_branch="release-${current_version}"
-
-          # Create and checkout the new branch
-          git checkout -b $new_branch
-
-          # Push the new branch to the remote repository
-          git push origin $new_branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     runs-on: ubuntu-latest
