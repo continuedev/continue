@@ -25,7 +25,7 @@ const rootReducer = combineReducers({
 
 export type RootState = ReturnType<typeof rootReducer>;
 
-const windowIDTransform = (windowID) =>
+const windowIDTransform = (windowID: string) =>
   createTransform(
     // transform state on its way to being serialized and persisted.
     (inboundState, key) => {
@@ -34,7 +34,7 @@ const windowIDTransform = (windowID) =>
     // transform state being rehydrated
     (outboundState, key) => {
       return outboundState[windowID] || {};
-    }
+    },
   );
 
 const saveSubsetFilters = [

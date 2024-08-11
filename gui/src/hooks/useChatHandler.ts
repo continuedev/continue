@@ -22,8 +22,8 @@ import resolveEditorContent from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addPromptCompletionPair,
   addContextItems,
+  addPromptCompletionPair,
   clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
@@ -58,6 +58,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     const cancelToken = abortController.signal;
 
     try {
+      if (!defaultModel) {
+        throw new Error("Default model not defined");
+      }
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,
         cancelToken,
@@ -121,6 +124,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   ) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
+
+    if (!defaultModel) {
+      throw new Error("Default model not defined");
+    }
+
     const modelTitle = defaultModel.title;
 
     const checkActiveInterval = setInterval(() => {
@@ -178,7 +186,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
       // Automatically use currently open file
       if (!modifiers.noContext && (history.length === 0 || index === 0)) {
-        const usingFreeTrial = defaultModel.provider === "free-trial";
+        const usingFreeTrial = defaultModel?.provider === "free-trial";
 
         const currentFilePath = await ideMessenger.ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
@@ -259,7 +267,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           contextItems,
         );
       }
-    } catch (e) {
+    } catch (e: any) {
       console.log("Continue: error streaming response: ", e);
       ideMessenger.post("errorPopup", {
         message: `Error streaming response: ${e.message}`,

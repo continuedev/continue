@@ -151,7 +151,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
                           contextItem.description
                             .split(" ")
                             .shift()
-                            .split("#")
+                            ?.split("#")
                             .shift() || ""
                         }
                         height="1.6em"
@@ -181,7 +181,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
                   />
                 ) : (
                   <FileIcon
-                    filename={contextItem.description.split(" ").shift()}
+                    filename={contextItem.description.split(" ").shift()!}
                     height="1.6em"
                     width="1.6em"
                   ></FileIcon>

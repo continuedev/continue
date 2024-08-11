@@ -3,13 +3,16 @@ import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { Button, Input, SecondaryButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { providers } from "../../../pages/AddNewModel/configs/providers";
+import {
+  ProviderInfo,
+  providers,
+} from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
-import QuickSetupListBox from "./QuickSetupListBox";
 import {
   FREE_TRIAL_LIMIT_REQUESTS,
   hasPassedFTL,
 } from "../../../util/freeTrial";
+import QuickSetupListBox from "./QuickSetupListBox";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -17,7 +20,9 @@ interface QuickModelSetupProps {
 }
 
 function QuickModelSetup(props: QuickModelSetupProps) {
-  const [selectedProvider, setSelectedProvider] = useState(providers["openai"]);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
+    providers["openai"]!,
+  );
   const [selectedModel, setSelectedModel] = useState(
     selectedProvider.packages[0],
   );
@@ -91,7 +96,9 @@ function QuickModelSetup(props: QuickModelSetupProps) {
                 if (selectedModel.params.model.startsWith("codestral")) {
                   apiKeyUrl = "https://console.mistral.ai/codestral";
                 }
-                ideMessenger.post("openUrl", apiKeyUrl);
+                if (apiKeyUrl) {
+                  ideMessenger.post("openUrl", apiKeyUrl);
+                }
               }}
             >
               Get API Key
@@ -110,7 +117,8 @@ function QuickModelSetup(props: QuickModelSetupProps) {
             <SecondaryButton
               className="w-full border-2 border-solid"
               onClick={() => {
-                ideMessenger.post("openUrl", selectedProvider.downloadUrl);
+                selectedProvider.downloadUrl &&
+                  ideMessenger.post("openUrl", selectedProvider.downloadUrl);
               }}
             >
               Download {selectedProvider.title}

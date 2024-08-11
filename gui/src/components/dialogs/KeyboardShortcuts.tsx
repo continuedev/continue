@@ -33,7 +33,7 @@ const StyledKeyDiv = styled.div`
   align-items: center;
 `;
 
-const keyToName = {
+const keyToName: { [key: string]: string } = {
   "⌘": "Cmd",
   "⌃": "Ctrl",
   "⇧": "Shift",
