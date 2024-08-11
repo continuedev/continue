@@ -5,6 +5,7 @@ import {
   ChatHistory,
   ChatHistoryItem,
   ChatMessage,
+  ContextItemWithId,
   InputModifiers,
   MessageContent,
   PromptLog,
@@ -21,6 +22,7 @@ import resolveEditorContent from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
+  addContextItems,
   addPromptCompletionPair,
   clearLastResponse,
   initNewActiveMessage,
@@ -56,6 +58,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     const cancelToken = abortController.signal;
 
     try {
+      if (!defaultModel) {
+        throw new Error("Default model not defined");
+      }
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,
         cancelToken,
@@ -115,9 +120,15 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     input: string,
     historyIndex: number,
     selectedCode: RangeInFile[],
+    contextItems: ContextItemWithId[],
   ) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
+
+    if (!defaultModel) {
+      throw new Error("Default model not defined");
+    }
+
     const modelTitle = defaultModel.title;
 
     const checkActiveInterval = setInterval(() => {
@@ -171,10 +182,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers,
         ideMessenger,
       );
+      dispatch(addContextItems(contextItems));
 
       // Automatically use currently open file
       if (!modifiers.noContext && (history.length === 0 || index === 0)) {
-        const usingFreeTrial = defaultModel.provider === "free-trial";
+        const usingFreeTrial = defaultModel?.provider === "free-trial";
 
         const currentFilePath = await ideMessenger.ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
@@ -252,9 +264,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           commandInput,
           historyIndex,
           selectedCode,
+          contextItems,
         );
       }
-    } catch (e) {
+    } catch (e: any) {
       console.log("Continue: error streaming response: ", e);
       ideMessenger.post("errorPopup", {
         message: `Error streaming response: ${e.message}`,

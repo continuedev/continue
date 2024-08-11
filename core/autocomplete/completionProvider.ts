@@ -458,8 +458,8 @@ export class CompletionProvider {
     if (
       !shownGptClaudeWarning &&
       nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-      !llm.model.includes("deepseek") &&
-      !llm.model.includes("codestral")
+      !llm.model.toLowerCase().includes("deepseek") &&
+      !llm.model.toLowerCase().includes("codestral")
     ) {
       shownGptClaudeWarning = true;
       throw new Error(

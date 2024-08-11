@@ -84,11 +84,15 @@ export async function getParserForFile(filepath: string) {
     const parser = new Parser();
 
     const language = await getLanguageForFile(filepath);
+    if (!language) {
+      return undefined;
+    }
+
     parser.setLanguage(language);
 
     return parser;
   } catch (e) {
-    console.error("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file", filepath, e);
     return undefined;
   }
 }
@@ -116,7 +120,7 @@ export async function getLanguageForFile(
     }
     return language;
   } catch (e) {
-    console.error("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file", filepath, e);
     return undefined;
   }
 }

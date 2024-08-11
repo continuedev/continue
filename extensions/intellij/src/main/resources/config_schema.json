@@ -171,6 +171,7 @@
             "anthropic",
             "cohere",
             "bedrock",
+            "sagemaker",
             "together",
             "ollama",
             "huggingface-tgi",
@@ -213,7 +214,7 @@
             "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
             "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
-            "### WatsonX\nWatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks."
+            "### Watsonx\nWatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks."
           ],
           "type": "string"
         },
@@ -726,6 +727,23 @@
           "if": {
             "properties": {
               "provider": {
+                "enum": ["sagemaker"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "markdownDescription": "SageMaker endpoint name"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
                 "enum": ["gemini"]
               }
             },
@@ -1217,10 +1235,13 @@
               "watsonxProjectId": {
                 "type": "string"
               },
+              "watsonxStopToken": {
+                "type": "string"
+              },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
-                  "ibm/granite-13b-instruct-v2",
+                  "ibm/granite-20b-code-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
@@ -1471,46 +1492,6 @@
         }
       },
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "name": {
-                "enum": ["docs"]
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "params": {
-                "properties": {
-                  "sites": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "title": {
-                          "type": "string"
-                        },
-                        "startUrl": {
-                          "type": "string"
-                        },
-                        "rootUrl": {
-                          "type": "string"
-                        },
-                        "maxDepth": {
-                          "type": "integer"
-                        }
-                      },
-                      "required": ["title", "startUrl"]
-                    }
-                  }
-                },
-                "required": ["sites"]
-              }
-            },
-            "required": ["params"]
-          }
-        },
         {
           "if": {
             "properties": {

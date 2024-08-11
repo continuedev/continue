@@ -110,8 +110,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           <TipTapEditor
             editorState={props.editorState}
             onEnter={props.onEnter}
-            isMainInput={props.isMainInput}
-            availableContextProviders={availableContextProviders}
+            isMainInput={props.isMainInput ?? false}
+            availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}
           ></TipTapEditor>
         </GradientBorder>

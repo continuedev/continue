@@ -289,6 +289,7 @@ export interface InputModifiers {
 }
 
 export interface PromptLog {
+  modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
@@ -351,6 +352,7 @@ export interface LLMOptions {
   watsonxUsername?: string;
   watsonxPassword?: string;
   watsonxProjectId?: string;
+  watsonxStopToken?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -592,6 +594,7 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "sagemaker"
   | "deepinfra"
   | "flowise"
   | "groq"

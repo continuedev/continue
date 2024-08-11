@@ -232,7 +232,7 @@ export async function* codeChunker(
 
   const parser = await getParserForFile(filepath);
   if (parser === undefined) {
-    console.warn(`Failed to load parser for file ${filepath}: `);
+    console.debug(`Failed to load parser for file ${filepath}: `);
     return;
   }
 

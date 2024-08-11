@@ -4,7 +4,7 @@ type UiState = {
   bottomMessageCloseTimeout: NodeJS.Timeout | undefined;
   displayBottomMessageOnBottom: boolean;
   showDialog: boolean;
-  dialogMessage: string | JSX.Element;
+  dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
 };
 
@@ -21,13 +21,13 @@ export const uiStateSlice = createSlice({
   reducers: {
     setBottomMessage: (
       state,
-      action: PayloadAction<UiState["bottomMessage"]>
+      action: PayloadAction<UiState["bottomMessage"]>,
     ) => {
       state.bottomMessage = action.payload;
     },
     setBottomMessageCloseTimeout: (
       state,
-      action: PayloadAction<UiState["bottomMessageCloseTimeout"]>
+      action: PayloadAction<UiState["bottomMessageCloseTimeout"]>,
     ) => {
       if (state.bottomMessageCloseTimeout) {
         clearTimeout(state.bottomMessageCloseTimeout);
@@ -36,13 +36,13 @@ export const uiStateSlice = createSlice({
     },
     setDialogMessage: (
       state,
-      action: PayloadAction<UiState["dialogMessage"]>
+      action: PayloadAction<UiState["dialogMessage"]>,
     ) => {
       state.dialogMessage = action.payload;
     },
     setDialogEntryOn: (
       state,
-      action: PayloadAction<UiState["dialogEntryOn"]>
+      action: PayloadAction<UiState["dialogEntryOn"]>,
     ) => {
       state.dialogEntryOn = action.payload;
     },
@@ -51,7 +51,7 @@ export const uiStateSlice = createSlice({
     },
     setDisplayBottomMessageOnBottom: (
       state,
-      action: PayloadAction<UiState["displayBottomMessageOnBottom"]>
+      action: PayloadAction<UiState["displayBottomMessageOnBottom"]>,
     ) => {
       state.displayBottomMessageOnBottom = action.payload;
     },

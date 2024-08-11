@@ -23,6 +23,8 @@ export class SqliteDb {
   static db: DatabaseConnection | null = null;
 
   private static async createTables(db: DatabaseConnection) {
+    await db.exec("PRAGMA journal_mode=WAL;");
+
     await db.exec(
       `CREATE TABLE IF NOT EXISTS tag_catalog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -406,7 +408,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        () => {},
+        async () => {},
         repoName,
       )) {
       }
@@ -433,7 +435,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     _: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const add = results.addTag;
+    const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
       ...remove.map(({ cacheKey }) => {

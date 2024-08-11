@@ -71,6 +71,7 @@ You can run the documentation server locally using either of the following metho
 1. Open your terminal and navigate to the root directory of the project.
 
 2. Run the following command to start the documentation server:
+
    ```bash
    npm run start --prefix docs
    ```
@@ -116,7 +117,7 @@ nvm use
 2. Start debugging:
 
    1. Switch to Run and Debug view
-   2. Select `Extension (VS Code)` from drop down
+   2. Select `Launch extension` from drop down
    3. Hit play button
    4. This will start the extension in debug mode and open a new VS Code window with it installed
       1. The new VS Code window with the extension is referred to as the _Host VS Code_
@@ -161,6 +162,10 @@ For the sake of rapid development, it is also possible to configure this communi
 4. You can now set breakpoints in any of the TypeScript files in VS Code. If you make changes to the code, restart the "Core Binary" debug configuration and reload the _Host IntelliJ_ window.
 
 If you make changes to Kotlin code, they can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes".
+
+### Our Git Workflow
+
+We keep two permanent branches: `main` and `dev`. All contributions should be made as pull requests to the `dev` branch. When we are ready to create a "pre-release" version, we create a tag on the `dev` branch, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will merge its tag into the `main` branch. Creating a tag on the `main` branch will then trigger a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question.
 
 ### Formatting
 

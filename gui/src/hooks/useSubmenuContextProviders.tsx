@@ -197,33 +197,51 @@ function useSubmenuContextProviders() {
       return;
     }
     setLoaded(true);
-    contextProviderDescriptions.forEach(async (description) => {
-      const minisearch = new MiniSearch<ContextSubmenuItem>({
-        fields: ["title", "description"],
-        storeFields: ["id", "title", "description"],
-      });
-      const items = await ideMessenger.request("context/loadSubmenuItems", {
-        title: description.title,
-      });
-      minisearch.addAll(items);
-      setMinisearches((prev) => ({ ...prev, [description.title]: minisearch }));
 
-      if (description.title === "file") {
-        const openFiles = await getOpenFileItems();
-        setFallbackResults((prev) => ({
+    const loadSubmenuItems = async () => {
+      for (const description of contextProviderDescriptions) {
+        const minisearch = new MiniSearch<ContextSubmenuItem>({
+          fields: ["title", "description"],
+          storeFields: ["id", "title", "description"],
+        });
+        const items = await ideMessenger.request("context/loadSubmenuItems", {
+          title: description.title,
+        });
+
+        try {
+          minisearch.addAll(items);
+        } catch (itemError) {
+          console.error(
+            "Error adding item to minisearch:",
+            itemError.message,
+            itemError.stack,
+          );
+        }
+
+        setMinisearches((prev) => ({
           ...prev,
-          file: [
-            ...openFiles,
-            ...items.slice(0, MAX_LENGTH - openFiles.length),
-          ],
+          [description.title]: minisearch,
         }));
-      } else {
-        setFallbackResults((prev) => ({
-          ...prev,
-          [description.title]: items.slice(0, MAX_LENGTH),
-        }));
+
+        if (description.title === "file") {
+          const openFiles = await getOpenFileItems();
+          setFallbackResults((prev) => ({
+            ...prev,
+            file: [
+              ...openFiles,
+              ...items.slice(0, MAX_LENGTH - openFiles.length),
+            ],
+          }));
+        } else {
+          setFallbackResults((prev) => ({
+            ...prev,
+            [description.title]: items.slice(0, MAX_LENGTH),
+          }));
+        }
       }
-    });
+    };
+
+    loadSubmenuItems();
   }, [contextProviderDescriptions, loaded]);
 
   useWebviewListener("configUpdate", async () => {

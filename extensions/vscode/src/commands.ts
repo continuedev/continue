@@ -320,8 +320,6 @@ const commandsMap: (
         // Handle closing the GUI only if we are focused on the input
         if (fullScreenTab) {
           fullScreenPanel?.dispose();
-        } else {
-          vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
         }
       } else {
         // Handle opening the GUI otherwise
@@ -480,11 +478,6 @@ const commandsMap: (
       //Full screen not open - open it
       captureCommandTelemetry("openFullScreen");
 
-      // Close the sidebar.webviews
-      // vscode.commands.executeCommand("workbench.action.closeSidebar");
-      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-      // vscode.commands.executeCommand("workbench.action.toggleZenMode");
-
       //create the full screen panel
       let panel = vscode.window.createWebviewPanel(
         "continue.continueGUIView",
@@ -601,8 +594,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =

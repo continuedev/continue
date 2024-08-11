@@ -1,5 +1,5 @@
 import {
-  ArrowUturnLeftIcon,
+  ArrowPathIcon,
   BarsArrowDownIcon,
   CubeIcon,
   HandThumbDownIcon,
@@ -15,7 +15,6 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-  vscButtonBackground,
   vscInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -123,103 +122,101 @@ function StepContainer(props: StepContainerProps) {
             />
           )}
         </ContentDiv>
-        {(isHovered || typeof feedback !== "undefined") && !active && (
-          <div
-            className="flex gap-1 absolute -bottom-2 right-0"
-            style={{
-              zIndex: 200,
-              color: lightGray,
-              fontSize: getFontSize() - 3,
-            }}
-          >
-            {props.modelTitle && (
-              <div className="flex items-center">
-                <CubeIcon className="w-3 h-4 mr-1 flex-shrink-0" />
-                {props.modelTitle}
-                <div
-                  style={{
-                    backgroundColor: vscButtonBackground,
-                    borderColor: vscButtonBackground,
-                  }}
-                  className="w-px h-full ml-3 mr-1"
-                />
-              </div>
-            )}
-            {truncatedEarly && (
-              <HeaderButtonWithText
-                text="Continue generation"
-                onClick={(e) => {
-                  props.onContinueGeneration();
-                }}
-              >
-                <BarsArrowDownIcon
-                  color={lightGray}
-                  width="1.2em"
-                  height="1.2em"
-                />
-              </HeaderButtonWithText>
-            )}
-
-            <CopyButton
-              text={stripImages(props.item.message.content)}
-              color={lightGray}
-            />
-            <HeaderButtonWithText
-              text="Regenerate"
-              onClick={(e) => {
-                props.onRetry();
+        {(props.isLast || isHovered || typeof feedback !== "undefined") &&
+          !active && (
+            <div
+              className="flex items-center gap-1 absolute -bottom-2 right-1"
+              style={{
+                zIndex: 200,
+                color: lightGray,
+                fontSize: getFontSize() - 3,
               }}
             >
-              <ArrowUturnLeftIcon
+              {props.modelTitle && (
+                <>
+                  <div className="flex items-center">{props.modelTitle}</div>
+                  <div
+                    className="ml-2 mr-1"
+                    style={{
+                      width: "1px",
+                      height: "20px",
+                      backgroundColor: lightGray,
+                    }}
+                  ></div>
+                </>
+              )}
+
+              {truncatedEarly && (
+                <HeaderButtonWithText
+                  text="Continue generation"
+                  onClick={(e) => {
+                    props.onContinueGeneration();
+                  }}
+                >
+                  <BarsArrowDownIcon
+                    color={lightGray}
+                    width="1.2em"
+                    height="1.2em"
+                  />
+                </HeaderButtonWithText>
+              )}
+
+              <CopyButton
+                text={stripImages(props.item.message.content)}
                 color={lightGray}
-                width="1.2em"
-                height="1.2em"
               />
-            </HeaderButtonWithText>
-            {feedback === false || (
-              <HeaderButtonWithText text="Helpful">
-                <HandThumbUpIcon
-                  className={
-                    "cursor-pointer hover:text-green-500" +
-                    (feedback === true ? " text-green-500" : "")
-                  }
-                  width="1.2em"
-                  height="1.2em"
-                  color={lightGray}
-                  onClick={() => {
-                    sendFeedback(true);
-                  }}
-                />
-              </HeaderButtonWithText>
-            )}
-            {feedback === true || (
-              <HeaderButtonWithText text="Unhelpful">
-                <HandThumbDownIcon
-                  className={
-                    "cursor-pointer hover:text-red-500" +
-                    (feedback === false ? " text-red-500" : "")
-                  }
-                  width="1.2em"
-                  height="1.2em"
-                  color={lightGray}
-                  onClick={() => {
-                    sendFeedback(false);
-                  }}
-                />
-              </HeaderButtonWithText>
-            )}
-            <HeaderButtonWithText text="Delete Message">
-              <TrashIcon
-                color={lightGray}
-                width="1.2em"
-                height="1.2em"
-                onClick={() => {
-                  props.onDelete();
+              <HeaderButtonWithText
+                text="Regenerate"
+                onClick={(e) => {
+                  props.onRetry();
                 }}
-              />
-            </HeaderButtonWithText>
-          </div>
-        )}
+              >
+                <ArrowPathIcon color={lightGray} width="1.2em" height="1.2em" />
+              </HeaderButtonWithText>
+              {feedback === false || (
+                <HeaderButtonWithText text="Helpful">
+                  <HandThumbUpIcon
+                    className={
+                      "cursor-pointer hover:text-green-500" +
+                      (feedback === true ? " text-green-500" : "")
+                    }
+                    width="1.2em"
+                    height="1.2em"
+                    color={lightGray}
+                    onClick={() => {
+                      sendFeedback(true);
+                    }}
+                  />
+                </HeaderButtonWithText>
+              )}
+              {feedback === true || (
+                <HeaderButtonWithText text="Unhelpful">
+                  <HandThumbDownIcon
+                    className={
+                      "cursor-pointer hover:text-red-500" +
+                      (feedback === false ? " text-red-500" : "")
+                    }
+                    width="1.2em"
+                    height="1.2em"
+                    color={lightGray}
+                    onClick={() => {
+                      sendFeedback(false);
+                    }}
+                  />
+                </HeaderButtonWithText>
+              )}
+              <HeaderButtonWithText text="Delete Message">
+                <TrashIcon
+                  color={lightGray}
+                  width="1.2em"
+                  height="1.2em"
+                  onClick={() => {
+                    props.onDelete();
+                  }}
+                />
+              </HeaderButtonWithText>
+            </div>
+          )}
       </div>
     </div>
   );

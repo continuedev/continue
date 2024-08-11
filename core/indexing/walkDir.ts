@@ -6,6 +6,7 @@ import {
   DEFAULT_IGNORE_FILETYPES,
   defaultIgnoreDir,
   defaultIgnoreFile,
+  gitIgArrayFromFile,
 } from "./ignore.js";
 
 export interface WalkerOptions {
@@ -46,6 +47,10 @@ class DFSWalker {
 
   // walk is a depth-first search implementation
   public async *walk(): AsyncGenerator<string> {
+    const fixupFunc = await this.newPathFixupFunc(
+      this.options.returnRelativePaths ? "" : this.path,
+      this.ide,
+    );
     const root: WalkContext = {
       walkableEntry: {
         relPath: "",
@@ -73,10 +78,10 @@ class DFSWalker {
           });
           if (this.options.onlyDirs) {
             // when onlyDirs is enabled the walker will only return directory names
-            yield w.relPath;
+            yield fixupFunc(w.relPath);
           }
         } else {
-          yield w.relPath;
+          yield fixupFunc(w.relPath);
         }
       }
     }
@@ -104,14 +109,7 @@ class DFSWalker {
     if (ignoreFilesInDir.length === 0) {
       return parentIgnore;
     }
-    const patterns = ignoreFilesInDir
-      .map((c) => {
-        return c
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter((l) => !/^#|^$/.test(l));
-      })
-      .flat();
+    const patterns = ignoreFilesInDir.map((c) => gitIgArrayFromFile(c)).flat();
     return ignore().add(parentIgnore).add(patterns);
   }
 
@@ -153,6 +151,27 @@ class DFSWalker {
   private entryIsSymlink(entry: Entry) {
     return entry[1] === (64 as FileType.SymbolicLink);
   }
+
+  // returns a function which will optionally prefix a root path and fixup the paths for the appropriate OS filesystem (i.e. windows)
+  // the reason to construct this function once is to avoid the need to call ide.pathSep() multiple times
+  private async newPathFixupFunc(
+    rootPath: string,
+    ide: IDE,
+  ): Promise<(relPath: string) => string> {
+    const pathSep = await ide.pathSep();
+    const prefix = rootPath === "" ? "" : rootPath + pathSep;
+    if (pathSep === "/") {
+      if (rootPath === "") {
+        // return a no-op function in this case to avoid unnecessary string concatentation
+        return (relPath: string) => relPath;
+      }
+      return (relPath: string) => prefix + relPath;
+    }
+    // this serves to 'fix-up' the path on Windows
+    return (relPath: string) => {
+      return prefix + relPath.split("/").join(pathSep);
+    };
+  }
 }
 
 const defaultOptions: WalkerOptions = {
@@ -165,18 +184,18 @@ export async function walkDir(
   ide: IDE,
   _options?: WalkerOptions,
 ): Promise<string[]> {
-  let entries: string[] = [];
-  const options = { ...defaultOptions, ..._options };
-  const dfsWalker = new DFSWalker(path, ide, options);
-  let relativePaths: string[] = [];
-  for await (const e of dfsWalker.walk()) {
-    relativePaths.push(e);
+  let paths: string[] = [];
+  for await (const p of walkDirAsync(path, ide, _options)) {
+    paths.push(p);
   }
-  const pathSep = await ide.pathSep();
-  const prefix = options.returnRelativePaths ? "" : path + pathSep;
+  return paths;
+}
 
-  if (pathSep === "/") {
-    return relativePaths.map((p) => prefix + p);
-  }
-  return relativePaths.map((p) => prefix + p.split("/").join(pathSep));
+export async function* walkDirAsync(
+  path: string,
+  ide: IDE,
+  _options?: WalkerOptions,
+): AsyncGenerator<string> {
+  const options = { ...defaultOptions, ..._options };
+  yield* new DFSWalker(path, ide, options).walk();
 }

@@ -107,11 +107,11 @@ const StepsDiv = styled.div`
   // }
 
   .thread-message {
-    margin: 16px 8px 0 8px;
+    margin: 12px 4px 0 4px;
   }
-  .thread-message:not(:first-child) {
-    border-top: 1px solid ${lightGray}22;
-  }
+  // .thread-message:not(:first-child) {
+  //   border-top: 1px solid ${lightGray}22;
+  // }
 `;
 
 const NewSessionButton = styled.div`
@@ -166,7 +166,7 @@ const ThreadUserName = styled.div`
   color: ${lightGray};
 `;
 
-function fallbackRender({ error, resetErrorBoundary }) {
+function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
   return (
@@ -207,7 +207,7 @@ function GUI() {
   const state = useSelector((state: RootState) => state.state);
 
   const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard"),
+    getLocalStorage("showTutorialCard") ?? true,
   );
 
   const onCloseTutorialCard = () => {
@@ -483,10 +483,7 @@ function GUI() {
                             onDelete={() => {
                               dispatch(deleteMessage(index));
                             }}
-                            modelTitle={
-                              item.promptLogs?.[0]?.completionOptions?.model ??
-                              ""
-                            }
+                            modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
                           />
                         </TimelineItem>
                       </div>

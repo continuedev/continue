@@ -1,28 +1,5 @@
 const Types = `
 declare global {
-  declare global {
-    interface Window {
-      ide?: "vscode";
-      windowId: string;
-      serverUrl: string;
-      vscMachineId: string;
-      vscMediaUrl: string;
-      fullColorTheme?: {
-        rules?: {
-          token?: string;
-          foreground?: string;
-        }[];
-      };
-      colorThemeName?: string;
-      workspacePaths?: string[];
-      postIntellijMessage?: (
-        messageType: string,
-        data: any,
-        messageIde: string,
-      ) => void;
-    }
-  }
-  
   export interface ChunkWithoutID {
     content: string;
     startLine: number;
@@ -507,6 +484,7 @@ declare global {
     | "gemini"
     | "mistral"
     | "bedrock"
+    | "sagemaker"
     | "deepinfra"
     | "flowise"
     | "groq"

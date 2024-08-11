@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { IDE } from "core";
+import { ContinueConfig, IDE } from "core";
 import { walkDir } from "core/indexing/walkDir";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -94,6 +94,104 @@ export class QuickEdit {
     this.initializeFileSearchState();
   }
 
+  /**
+   * Shows the Quick Edit Quick Pick, allowing the user to select an initial item or enter a prompt.
+   * Displays a quick pick for "History" or "ContextProviders" to set the prompt or context provider string.
+   * Displays a quick pick for "Model" to set the current model title.
+   * Appends the entered prompt to the history and streams the edit with input and context.
+   */
+  async show(args?: QuickEditShowParams) {
+    // Clean up state from previous quick picks, e.g. if a user pressed `esc`
+    this.clear();
+
+    const editor = vscode.window.activeTextEditor;
+
+    // We only allow users to interact with a quick edit if there is an open editor
+    if (!editor) {
+      return;
+    }
+
+    // Set state that is unique to each quick pick instance
+    this.setActiveEditorAndPrevInput(editor);
+
+    if (!this.editorWhenOpened) {
+      return;
+    }
+
+    const config = await this.configHandler.loadConfig();
+
+    if (!!args?.initialPrompt) {
+      this.initialPrompt = args.initialPrompt;
+    }
+
+    if (!!args?.range) {
+      this.range = args.range;
+    }
+
+    const selectedLabelOrInputVal = await this._getInitialQuickPickVal();
+
+    if (!selectedLabelOrInputVal) {
+      return;
+    }
+
+    Telemetry.capture("quickEditSelection", {
+      selection: selectedLabelOrInputVal,
+    });
+
+    let prompt: string | undefined = undefined;
+
+    switch (selectedLabelOrInputVal) {
+      case QuickEditInitialItemLabels.History:
+        const historyVal = await getHistoryQuickPickVal(this.context);
+        prompt = historyVal ?? "";
+        break;
+
+      case QuickEditInitialItemLabels.ContextProviders:
+        const contextProviderVal = await getContextProviderQuickPickVal(
+          config,
+          this.ide,
+        );
+        this.contextProviderStr = contextProviderVal ?? "";
+
+        // Recurse back to let the user write their prompt
+        this.show(args);
+
+        break;
+
+      case QuickEditInitialItemLabels.Model:
+        const curModelTitle = await this.getCurModelTitle();
+
+        if (!curModelTitle) {
+          break;
+        }
+
+        const selectedModelTitle = await getModelQuickPickVal(
+          curModelTitle,
+          config,
+        );
+
+        if (selectedModelTitle) {
+          this._curModelTitle = selectedModelTitle;
+        }
+
+        // Recurse back to let the user write their prompt
+        this.show(args);
+
+        break;
+
+      default:
+        // If it wasn't a label we can assume it was user input
+        if (selectedLabelOrInputVal) {
+          prompt = selectedLabelOrInputVal;
+          appendToHistory(selectedLabelOrInputVal, this.context);
+        }
+    }
+
+    if (prompt) {
+      await this._streamEditWithInputAndContext(prompt);
+    }
+  }
+
   private async initializeFileSearchState() {
     const workspaceDirs = await this.ide.getWorkspaceDirs();
 
@@ -123,22 +221,31 @@ export class QuickEdit {
   /**
    * Gets the model title the user has chosen, or their default model
    */
-  private async _getCurModelTitle() {
+  private async getCurModelTitle() {
     const config = await this.configHandler.loadConfig();
 
     if (this._curModelTitle) {
       return this._curModelTitle;
     }
 
-    let defaultModelTitle =
-      config.experimental?.modelRoles?.inlineEdit ??
-      (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
+    const inlineEditModel = config.experimental?.modelRoles?.inlineEdit;
 
-    if (!defaultModelTitle) {
-      defaultModelTitle = config.models[0]?.title!;
+    if (inlineEditModel) {
+      return inlineEditModel;
     }
 
-    return defaultModelTitle;
+    let defaultModelTitle: string | undefined =
+      await this.webviewProtocol.request(
+        "getDefaultModelTitle",
+        undefined,
+        false,
+      );
+
+    if (!defaultModelTitle) {
+      defaultModelTitle = config.models[0].title;
+    }
+
+    return defaultModelTitle || inlineEditModel;
   }
 
   /**
@@ -148,7 +255,7 @@ export class QuickEdit {
    * @example
    * // "Edit myFile.ts", "Edit myFile.ts:5-10", "Edit myFile.ts:15"
    */
-  _getQuickPickTitle = () => {
+  private getQuickPickTitle = () => {
     const { uri } = this.editorWhenOpened.document;
 
     const fileName = vscode.workspace.asRelativePath(uri, true);
@@ -167,7 +274,7 @@ export class QuickEdit {
   };
 
   private async _streamEditWithInputAndContext(prompt: string) {
-    const modelTitle = await this._getCurModelTitle();
+    const modelTitle = await this.getCurModelTitle();
 
     // Extracts all file references from the prompt string,
     // which are denoted by  an '@' symbol followed by
@@ -202,7 +309,13 @@ export class QuickEdit {
   }
 
   async _getInitialQuickPickVal(): Promise<string | undefined> {
-    const modelTitle = await this._getCurModelTitle();
+    const modelTitle = await this.getCurModelTitle();
+
+    if (!modelTitle) {
+      this.ide.infoPopup("Please configure a model to use Quick Edit");
+      return undefined;
+    }
+
     const { uri } = this.editorWhenOpened.document;
 
     const initialItems: vscode.QuickPickItem[] = [
@@ -247,7 +360,7 @@ export class QuickEdit {
     quickPick.items = initialItems;
     quickPick.placeholder =
       "Enter a prompt to edit your code (@ to search files, ⏎ to submit)";
-    quickPick.title = this._getQuickPickTitle();
+    quickPick.title = this.getQuickPickTitle();
     quickPick.ignoreFocusOut = true;
     quickPick.value = this.initialPrompt ?? "";
 
@@ -360,95 +473,5 @@ export class QuickEdit {
   private clear() {
     this.initialPrompt = undefined;
     this.range = undefined;
-  }
-
-  /**
-   * Shows the Quick Edit Quick Pick, allowing the user to select an initial item or enter a prompt.
-   * Displays a quick pick for "History" or "ContextProviders" to set the prompt or context provider string.
-   * Displays a quick pick for "Model" to set the current model title.
-   * Appends the entered prompt to the history and streams the edit with input and context.
-   */
-  async show(args?: QuickEditShowParams) {
-    // Clean up state from previous quick picks, e.g. if a user pressed `esc`
-    this.clear();
-
-    const editor = vscode.window.activeTextEditor;
-
-    // We only allow users to interact with a quick edit if there is an open editor
-    if (!editor) {
-      return;
-    }
-
-    // Set state that is unique to each quick pick instance
-    this.setActiveEditorAndPrevInput(editor);
-
-    if (!this.editorWhenOpened) {
-      return;
-    }
-
-    const config = await this.configHandler.loadConfig();
-
-    if (!!args?.initialPrompt) {
-      this.initialPrompt = args.initialPrompt;
-    }
-
-    if (!!args?.range) {
-      this.range = args.range;
-    }
-
-    const selectedLabelOrInputVal = await this._getInitialQuickPickVal();
-
-    Telemetry.capture("quickEditSelection", {
-      selection: selectedLabelOrInputVal,
-    });
-
-    let prompt: string | undefined = undefined;
-
-    switch (selectedLabelOrInputVal) {
-      case QuickEditInitialItemLabels.History:
-        const historyVal = await getHistoryQuickPickVal(this.context);
-        prompt = historyVal ?? "";
-        break;
-
-      case QuickEditInitialItemLabels.ContextProviders:
-        const contextProviderVal = await getContextProviderQuickPickVal(
-          config,
-          this.ide,
-        );
-        this.contextProviderStr = contextProviderVal ?? "";
-
-        // Recurse back to let the user write their prompt
-        this.show(args);
-
-        break;
-
-      case QuickEditInitialItemLabels.Model:
-        const curModelTitle = await this._getCurModelTitle();
-
-        const selectedModelTitle = await getModelQuickPickVal(
-          curModelTitle,
-          config,
-        );
-
-        if (selectedModelTitle) {
-          this._curModelTitle = selectedModelTitle;
-        }
-
-        // Recurse back to let the user write their prompt
-        this.show(args);
-
-        break;
-
-      default:
-        // If it wasn't a label we can assume it was user input
-        if (selectedLabelOrInputVal) {
-          prompt = selectedLabelOrInputVal;
-          appendToHistory(selectedLabelOrInputVal, this.context);
-        }
-    }
-
-    if (prompt) {
-      await this._streamEditWithInputAndContext(prompt);
-    }
   }
 }

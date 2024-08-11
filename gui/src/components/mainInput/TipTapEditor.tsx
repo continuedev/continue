@@ -196,6 +196,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   const defaultModel = useSelector(defaultModelSelector);
+  const defaultModelRef = useUpdatingRef(defaultModel);
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
@@ -267,16 +268,16 @@ function TipTapEditor(props: TipTapEditorProps) {
             props: {
               handleDOMEvents: {
                 paste(view, event) {
-                  console.log("Pasting image");
+                  const model = defaultModelRef.current;
                   const items = event.clipboardData.items;
                   for (const item of items) {
                     const file = item.getAsFile();
                     file &&
                       modelSupportsImages(
-                        defaultModel.provider,
-                        defaultModel.model,
-                        defaultModel.title,
-                        defaultModel.capabilities,
+                        model.provider,
+                        model.model,
+                        model.title,
+                        model.capabilities,
                       ) &&
                       handleImageFile(file).then((resp) => {
                         if (!resp) return;

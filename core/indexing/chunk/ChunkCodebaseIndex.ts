@@ -1,14 +1,17 @@
+import { RunResult } from "sqlite3";
 import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
 import { getBasename } from "../../util/index.js";
+import { getLanguageForFile } from "../../util/treeSitter.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
 import {
   IndexResultType,
   MarkCompleteCallback,
+  PathAndCacheKey,
   RefreshIndexResults,
   type CodebaseIndex,
 } from "../types.js";
-import { chunkDocument } from "./chunk.js";
+import { chunkDocument, shouldChunk } from "./chunk.js";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
@@ -17,29 +20,11 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly pathSep: string,
     private readonly continueServerClient: IContinueServerClient,
     private readonly maxChunkSize: number,
   ) {
     this.readFile = readFile;
-  }
-
-  private async _createTables(db: DatabaseConnection) {
-    await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      cacheKey TEXT NOT NULL,
-      path TEXT NOT NULL,
-      idx INTEGER NOT NULL,
-      startLine INTEGER NOT NULL,
-      endLine INTEGER NOT NULL,
-      content TEXT NOT NULL
-    )`);
-
-    await db.exec(`CREATE TABLE IF NOT EXISTS chunk_tags (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tag TEXT NOT NULL,
-        chunkId INTEGER NOT NULL,
-        FOREIGN KEY (chunkId) REFERENCES chunks (id)
-    )`);
   }
 
   async *update(
@@ -49,27 +34,8 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
-    await this._createTables(db);
+    await this.createTables(db);
     const tagString = tagToString(tag);
-
-    async function handleChunk(chunk: Chunk) {
-      const { lastID } = await db.run(
-        "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)",
-        [
-          chunk.digest,
-          chunk.filepath,
-          chunk.index,
-          chunk.startLine,
-          chunk.endLine,
-          chunk.content,
-        ],
-      );
-
-      await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
-        lastID,
-        tagString,
-      ]);
-    }
 
     // Check the remote cache
     if (this.continueServerClient.connected) {
@@ -82,9 +48,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         );
 
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {
-          for (const chunk of chunks) {
-            await handleChunk(chunk);
-          }
+          await this.insertChunks(db, tagString, chunks);
         }
         results.compute = results.compute.filter(
           (item) => !resp.files[item.cacheKey],
@@ -94,62 +58,34 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       }
     }
 
-    const progressReservedForTagging = 0.3;
     let accumulatedProgress = 0;
 
-    // Compute chunks for new files
-    const contents = await Promise.all(
-      results.compute.map(({ path }) => this.readFile(path)),
-    );
-    for (let i = 0; i < results.compute.length; i++) {
-      const item = results.compute[i];
-
-      // Insert chunks
-      if (contents.length) {
-        for await (const chunk of chunkDocument({
-          filepath: item.path,
-          contents: contents[i],
-          maxChunkSize: this.maxChunkSize,
-          digest: item.cacheKey,
-        })) {
-          await handleChunk(chunk);
-        }
-      }
-
-      accumulatedProgress =
-        (i / results.compute.length) * (1 - progressReservedForTagging);
+    if (results.compute.length > 0) {
       yield {
-        progress: accumulatedProgress,
-        desc: `Chunking ${getBasename(item.path)}`,
+        desc: `Chunking ${results.compute.length} ${this.formatListPlurality("file", results.compute.length)}`,
         status: "indexing",
+        progress: accumulatedProgress,
       };
-      markComplete([item], IndexResultType.Compute);
+      const chunks = await this.computeChunks(results.compute);
+      await this.insertChunks(db, tagString, chunks);
+      await markComplete(results.compute, IndexResultType.Compute);
     }
 
     // Add tag
-    const addContents = await Promise.all(
-      results.addTag.map(({ path }) => this.readFile(path)),
-    );
-    for (let i = 0; i < results.addTag.length; i++) {
-      const item = results.addTag[i];
-
-      // Insert chunks
-      if (contents.length) {
-        for await (const chunk of chunkDocument({
-          filepath: item.path,
-          contents: contents[i],
-          maxChunkSize: this.maxChunkSize,
-          digest: item.cacheKey,
-        })) {
-          handleChunk(chunk);
-        }
-      }
-
-      markComplete([item], IndexResultType.AddTag);
+    for (const item of results.addTag) {
+      await db.run(
+        `
+        INSERT INTO chunk_tags (chunkId, tag)
+        SELECT id, ? FROM chunks
+        WHERE cacheKey = ? AND path = ?
+      `,
+        [tagString, item.cacheKey, item.path],
+      );
+      await markComplete([item], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 4;
       yield {
         progress: accumulatedProgress,
-        desc: `Chunking ${getBasename(item.path)}`,
+        desc: `Adding ${getBasename(item.path)}`,
         status: "indexing",
       };
     }
@@ -167,7 +103,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       `,
         [tagString, item.cacheKey, item.path],
       );
-      markComplete([item], IndexResultType.RemoveTag);
+      await markComplete([item], IndexResultType.RemoveTag);
       accumulatedProgress += 1 / results.removeTag.length / 4;
       yield {
         progress: accumulatedProgress,
@@ -187,7 +123,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         deleted.lastID,
       ]);
 
-      markComplete([item], IndexResultType.Delete);
+      await markComplete([item], IndexResultType.Delete);
       accumulatedProgress += 1 / results.del.length / 4;
       yield {
         progress: accumulatedProgress,
@@ -195,5 +131,84 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         status: "indexing",
       };
     }
+  }
+
+
+  private async createTables(db: DatabaseConnection) {
+    await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      cacheKey TEXT NOT NULL,
+      path TEXT NOT NULL,
+      idx INTEGER NOT NULL,
+      startLine INTEGER NOT NULL,
+      endLine INTEGER NOT NULL,
+      content TEXT NOT NULL
+    )`);
+
+    await db.exec(`CREATE TABLE IF NOT EXISTS chunk_tags (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        tag TEXT NOT NULL,
+        chunkId INTEGER NOT NULL,
+        FOREIGN KEY (chunkId) REFERENCES chunks (id)
+    )`);
+  }
+
+  private async packToChunks(pack: PathAndCacheKey): Promise<Chunk[]> {
+    const contents = await this.readFile(pack.path);
+    if (!shouldChunk(this.pathSep, pack.path, contents)) {
+      return [];
+    }
+    const chunks: Chunk[] = [];
+    const chunkParams = {
+      filepath: pack.path,
+      contents,
+      maxChunkSize: this.maxChunkSize,
+      digest: pack.cacheKey,
+    };
+    for await (const c of chunkDocument(chunkParams)) {
+      chunks.push(c);
+    }
+    return chunks;
+  }
+
+  private async computeChunks(paths: PathAndCacheKey[]): Promise<Chunk[]> {
+    const chunkLists = await Promise.all(paths.map(p => this.packToChunks(p)));
+    return chunkLists.flat();
+  }
+
+  private async insertChunks(db: DatabaseConnection, tagString: string, chunks: Chunk[]) {
+    await new Promise<void>((resolve, reject) => {
+      db.db.serialize(() => {
+        db.db.exec("BEGIN", (err: Error | null) => {
+          if (err) {
+            reject(new Error("error creating transaction", { cause: err }));
+          }
+        });
+        const chunksSQL = "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)";
+        chunks.map(c => {
+          db.db.run(chunksSQL, [c.digest, c.filepath, c.index, c.startLine, c.endLine, c.content], (result: RunResult, err: Error) => {
+            if (err) {
+              reject(new Error("error inserting into chunks table", { cause: err }));
+            }
+          });
+          const chunkTagsSQL = "INSERT INTO chunk_tags (chunkId, tag) VALUES (last_insert_rowid(), ?)";
+          db.db.run(chunkTagsSQL, [ tagString ], (result: RunResult, err: Error) => {
+            if (err) {
+              reject(new Error("error inserting into chunk_tags table", { cause: err }));
+            }
+          });
+        });
+        db.db.exec("COMMIT", (err: Error | null) => {
+          if (err) {
+            reject(new Error("error while committing insert chunks transaction", { cause: err }));
+          }
+        });
+        resolve();
+      });
+    });
+  }
+
+  private formatListPlurality(word: string, length: number): string {
+    return length <= 1 ? word : `${word}s`;
   }
 }

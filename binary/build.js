@@ -184,7 +184,14 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     entryPoints: ["src/index.ts"],
     bundle: true,
     outfile: esbuildOutputFile,
-    external: ["esbuild", "./xhr-sync-worker.js", "vscode", "./index.node"],
+    external: [
+      "esbuild",
+      "./xhr-sync-worker.js",
+      "llamaTokenizerWorkerPool.mjs",
+      "tiktokenWorkerPool.mjs",
+      "vscode",
+      "./index.node",
+    ],
     format: "cjs",
     platform: "node",
     sourcemap: true,
@@ -203,6 +210,11 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   fs.cpSync(
     "../core/node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
     "out/xhr-sync-worker.js",
+  );
+  fs.cpSync("../core/llm/tiktokenWorkerPool.mjs", "out/tiktokenWorkerPool.mjs");
+  fs.cpSync(
+    "../core/llm/llamaTokenizerWorkerPool.mjs",
+    "out/llamaTokenizerWorkerPool.mjs",
   );
 
   if (esbuildOnly) {

@@ -53,7 +53,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             className="align-middle pr-3"
           />
           <span>
-            Highlight code and press <code>{getMetaKeyLabel() + "L"}</code> o
+            Highlight code and press <code>{getMetaKeyLabel() + "L"}</code> to
             add it to the chat window
           </span>
         </li>

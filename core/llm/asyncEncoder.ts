@@ -5,22 +5,23 @@ import * as path from "path";
 
 export interface AsyncEncoder {
   encode(text: string): Promise<number[]>;
-  decode(tokens: number[]): string;
+  decode(tokens: number[]): Promise<string>;
+  close(): Promise<void>;
 }
 
 export class LlamaAsyncEncoder implements AsyncEncoder {
   private workerPool: workerpool.Pool;
 
   constructor() {
-    this.workerPool = workerpool.pool(path.join(__dirname, "/llamaTokenizerWorkerPool.mjs"));
+    this.workerPool = workerpool.pool(workerCodeFilePath("llamaTokenizerWorkerPool.mjs"));
   }
 
   async encode(text: string): Promise<number[]> {
     return this.workerPool.exec("encode", [text]);
   }
 
-  decode(tokens: number[]): string {
-    return llamaTokenizer.decode(tokens);
+  async decode(tokens: number[]): Promise<string> {
+    return this.workerPool.exec("decode", [tokens]);
   }
 
   // TODO: this should be called somewhere before exit or potentially with a shutdown hook
@@ -31,17 +32,30 @@ export class LlamaAsyncEncoder implements AsyncEncoder {
 
 // this class does not yet do anything asynchronous
 export class GPTAsyncEncoder implements AsyncEncoder {
-  private tiktokenEncoding: Tiktoken;
+  private workerPool: workerpool.Pool;
 
   constructor() {
-    this.tiktokenEncoding = _encodingForModel("gpt-4");
+    this.workerPool = workerpool.pool(workerCodeFilePath("tiktokenWorkerPool.mjs"));
   }
 
   async encode(text: string): Promise<number[]> {
-    return this.tiktokenEncoding.encode(text, "all", []);
+    return this.workerPool.exec("encode", [text]);
   }
 
-  decode(tokens: number[]): string {
-    return this.tiktokenEncoding.decode(tokens);
+  async decode(tokens: number[]): Promise<string> {
+    return this.workerPool.exec("decode", [tokens]);
   }
+
+  // TODO: this should be called somewhere before exit or potentially with a shutdown hook
+  public async close(): Promise<void> {
+    await this.workerPool.terminate();
+  }
+}
+
+function workerCodeFilePath(workerFileName: string): string {
+  if (process.env.NODE_ENV === "test") {
+    // `cross-env` seems to make it so __dirname is the root of the project and not the directory containing this file
+    return path.join(__dirname, "llm", workerFileName);
+  }
+  return path.join(__dirname, workerFileName);
 }

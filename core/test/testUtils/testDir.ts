@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 
-export const TEST_DIR = path.join(__dirname, "testDir");
+// Want this outside of the git repository so we can change branches in tests
+export const TEST_DIR = path.join(__dirname, "..", "..", "testDir");
 
 export function setUpTestDir() {
   if (fs.existsSync(TEST_DIR)) {
@@ -11,17 +12,22 @@ export function setUpTestDir() {
 }
 
 export function tearDownTestDir() {
-  fs.rmSync(TEST_DIR, { recursive: true });
+  if (fs.existsSync(TEST_DIR)) {
+    fs.rmSync(TEST_DIR, { recursive: true });
+  }
 }
 
 export function addToTestDir(paths: (string | string[])[]) {
   for (const p of paths) {
+    const filepath = path.join(TEST_DIR, Array.isArray(p) ? p[0] : p);
+    fs.mkdirSync(path.dirname(filepath), { recursive: true });
+
     if (Array.isArray(p)) {
-      fs.writeFileSync(path.join(TEST_DIR, p[0]), p[1]);
+      fs.writeFileSync(filepath, p[1]);
     } else if (p.endsWith("/")) {
-      fs.mkdirSync(path.join(TEST_DIR, p), { recursive: true });
+      fs.mkdirSync(filepath, { recursive: true });
     } else {
-      fs.writeFileSync(path.join(TEST_DIR, p), "");
+      fs.writeFileSync(filepath, "");
     }
   }
 }

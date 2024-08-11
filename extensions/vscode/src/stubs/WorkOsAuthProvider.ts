@@ -160,7 +160,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       }),
     });
     if (!response.ok) {
-      throw new Error("Network failure");
+      const text = await response.text();
+      throw new Error("Error refreshing token: " + text);
     }
     const data = (await response.json()) as any;
     return {

@@ -161,7 +161,7 @@ function ConfigureProvider() {
           />
           <br />
 
-          {/* The WatsonX Authentication coukd be done by two different ways
+          {/* The Watsonx Authentication coukd be done by two different ways
            1 ==> Using Api key
            2 ==> Using Credentials */}
           {providerName === "watsonx" ? (

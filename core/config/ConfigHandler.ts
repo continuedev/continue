@@ -258,6 +258,7 @@ export class ConfigHandler {
     const newConfig = await this.currentProfile.reloadConfig();
     this.inactiveProfiles.forEach((profile) => profile.clearConfig());
     this.notifyConfigListeners(newConfig);
+    return newConfig;
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
