@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { ConfigHandler } from "../../config/ConfigHandler.js";
@@ -128,11 +129,13 @@ describe("CodebaseIndexer", () => {
     removeTag: number,
     del: number,
   ) {
-    const results = await getIndexPlan();
-    expect(results.compute).toHaveLength(compute);
-    expect(results.addTag).toHaveLength(addTag);
-    expect(results.removeTag).toHaveLength(removeTag);
-    expect(results.del).toHaveLength(del);
+    const plan = await getIndexPlan();
+    console.log("PLAN: ", plan);
+    expect(plan.compute).toHaveLength(compute);
+    expect(plan.addTag).toHaveLength(addTag);
+    expect(plan.removeTag).toHaveLength(removeTag);
+    expect(plan.del).toHaveLength(del);
+    return plan;
   }
 
   test("should index test folder without problem", async () => {
@@ -187,6 +190,30 @@ describe("CodebaseIndexer", () => {
   });
 
   test("shouldn't index any files when nothing changed", async () => {
+    await expectPlan(0, 0, 0, 0);
+    const updates = await refreshIndex();
+    expect(updates.length).toBeGreaterThan(0);
+  });
+
+  test("should create git repo for testing", async () => {
+    execSync(
+      `cd ${TEST_DIR} && git init && git checkout -b main && git add -A && git commit -m "First commit"`,
+    );
+  });
+
+  test.skip("should only re-index the changed files when changing branches", async () => {
+    execSync(`cd ${TEST_DIR} && git checkout -b test2`);
+    // Rewriting the file
+    addToTestDir([["test.ts", "// This is different"]]);
+
+    // Should re-compute test.ts, but just re-tag the .py file
+    await expectPlan(1, 1, 0, 0);
+
+    execSync(`cd ${TEST_DIR} && git add -A && git commit -m "Change .ts file"`);
+  });
+
+  test.skip("shouldn't re-index anything when changing back to original branch", async () => {
+    execSync(`cd ${TEST_DIR} && git checkout main`);
     await expectPlan(0, 0, 0, 0);
   });
 });
