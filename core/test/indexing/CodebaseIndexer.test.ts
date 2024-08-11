@@ -2,16 +2,14 @@ import { jest } from "@jest/globals";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ContinueServerClient } from "../../continueServer/stubs/client.js";
-import { ControlPlaneClient } from "../../control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "../../indexing/CodebaseIndexer.js";
 import { getComputeDeleteAddRemove } from "../../indexing/refreshIndex.js";
 import { TestCodebaseIndex } from "../../indexing/TestCodebaseIndex.js";
 import { CodebaseIndex } from "../../indexing/types.js";
 import { walkDir } from "../../indexing/walkDir.js";
-import FileSystemIde from "../../util/filesystem.js";
 import { getIndexSqlitePath } from "../../util/paths.js";
+import { testConfigHandler, testIde } from "../fixtures.js";
 import {
   addToTestDir,
   setUpTestDir,
@@ -60,19 +58,11 @@ class TestCodebaseIndexer extends CodebaseIndexer {
 // These are more like integration tests, whereas we should separately test
 // the individual CodebaseIndex classes
 describe("CodebaseIndexer", () => {
-  const ide = new FileSystemIde(TEST_DIR);
-  const ideSettingsPromise = ide.getIdeSettings();
-  const configHandler = new ConfigHandler(
-    ide,
-    ideSettingsPromise,
-    async (text) => {},
-    new ControlPlaneClient(Promise.resolve(undefined)),
-  );
   const pauseToken = new PauseToken(false);
   const continueServerClient = new ContinueServerClient(undefined, undefined);
   const codebaseIndexer = new TestCodebaseIndexer(
-    configHandler,
-    ide,
+    testConfigHandler,
+    testIde,
     pauseToken,
     continueServerClient,
   );
@@ -103,21 +93,21 @@ describe("CodebaseIndexer", () => {
 
   async function getAllIndexedFiles() {
     const files = await testIndex.getIndexedFilesForTags(
-      await ide.getTags(testIndex.artifactId),
+      await testIde.getTags(testIndex.artifactId),
     );
     return files;
   }
 
   async function getIndexPlan() {
-    const workspaceFiles = await walkDir(TEST_DIR, ide);
-    const [tag] = await ide.getTags(testIndex.artifactId);
-    const stats = await ide.getLastModified(workspaceFiles);
+    const workspaceFiles = await walkDir(TEST_DIR, testIde);
+    const [tag] = await testIde.getTags(testIndex.artifactId);
+    const stats = await testIde.getLastModified(workspaceFiles);
 
     const [results, lastUpdated, markComplete] =
       await getComputeDeleteAddRemove(
         tag,
         { ...stats },
-        (filepath) => ide.readFile(filepath),
+        (filepath) => testIde.readFile(filepath),
         undefined,
       );
     return results;
