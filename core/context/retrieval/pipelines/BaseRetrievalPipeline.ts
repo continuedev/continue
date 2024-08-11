@@ -7,7 +7,6 @@ import {
 } from "../../../index.js";
 import { chunkDocument } from "../../../indexing/chunk/chunk.js";
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex.js";
-import { MAX_CHUNK_SIZE } from "../../../llm/constants.js";
 import { retrieveFts } from "../fullTextSearch.js";
 import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache.js";
 
@@ -34,7 +33,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     this.lanceDbIndex = new LanceDbIndex(
       options.embeddingsProvider,
       (path) => options.ide.readFile(path),
-      options.pathSep
+      options.pathSep,
     );
   }
 
@@ -63,7 +62,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       const fileChunks = chunkDocument({
         filepath,
         contents,
-        maxChunkSize: MAX_CHUNK_SIZE,
+        maxChunkSize: this.options.embeddingsProvider.maxChunkSize,
         digest: filepath,
       });
 
