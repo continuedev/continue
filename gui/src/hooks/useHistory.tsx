@@ -111,14 +111,14 @@ function useHistory(dispatch: Dispatch) {
     return json;
   }
 
-  async function loadLastSession(): Promise<PersistedSessionInfo> {
+  async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {
     const lastSessionId = getLocalStorage("lastSessionId");
     if (lastSessionId) {
       return await loadSession(lastSessionId);
     }
   }
 
-  function getLastSessionId(): string {
+  function getLastSessionId(): string | undefined {
     return getLocalStorage("lastSessionId");
   }
 

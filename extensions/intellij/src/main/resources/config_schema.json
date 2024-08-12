@@ -2374,7 +2374,19 @@
             "defaultContext": {
               "type": "array",
               "items": {
-                "enum": ["activeFile"]
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/ContextProviderWithParams"
+                  },
+                  {
+                    "properties": {
+                      "query": {
+                        "type": "string",
+                        "description": "Required for certain context providers, like 'url' in order to specify the input, or which of the dropdown items to select."
+                      }
+                    }
+                  }
+                ]
               }
             },
             "modelRoles": {

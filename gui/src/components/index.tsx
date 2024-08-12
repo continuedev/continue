@@ -191,7 +191,7 @@ const TooltipStyles = {
   overflow: "hidden",
 };
 
-export function StyledTooltip(props) {
+export function StyledTooltip(props: any) {
   return <Tooltip {...props} style={TooltipStyles} />;
 }
 

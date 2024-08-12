@@ -1,10 +1,10 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import {
   CodebaseIndex,
@@ -26,27 +26,35 @@ export class PauseToken {
 }
 
 export class CodebaseIndexer {
-  batchSize = 100;
+  /**
+   * We batch for two reasons:
+   * - To limit memory usage for indexes that perform computations locally, e.g. FTS
+   * - To make as few requests as possible to the embeddings providers
+   */
+  filesPerBatch = 1000;
 
   constructor(
     private readonly configHandler: ConfigHandler,
-    private readonly ide: IDE,
+    protected readonly ide: IDE,
     private readonly pauseToken: PauseToken,
     private readonly continueServerClient: IContinueServerClient,
   ) {}
 
-  private async getIndexesToBuild(): Promise<CodebaseIndex[]> {
+  protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
+    const pathSep = await this.ide.pathSep();
 
     const indexes = [
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
+        pathSep,
         this.continueServerClient,
         config.embeddingsProvider.maxChunkSize,
       ), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
         this.ide.readFile.bind(this.ide),
+        pathSep,
         this.continueServerClient,
       ),
       new FullTextSearchCodebaseIndex(),
@@ -269,12 +277,11 @@ export class CodebaseIndexer {
   }
 
   /*
-   * enables the indexing operation to be completed in small batches, this is important in large
+   * Enables the indexing operation to be completed in batches, this is important in large
    * repositories where indexing can quickly use up all the memory available
    */
   private *batchRefreshIndexResults(
     results: RefreshIndexResults,
-    workspaceSize: number,
   ): Generator<RefreshIndexResults> {
     let curPos = 0;
     while (
@@ -284,12 +291,12 @@ export class CodebaseIndexer {
       curPos < results.removeTag.length
     ) {
       yield {
-        compute: results.compute.slice(curPos, curPos + this.batchSize),
-        del: results.del.slice(curPos, curPos + this.batchSize),
-        addTag: results.addTag.slice(curPos, curPos + this.batchSize),
-        removeTag: results.removeTag.slice(curPos, curPos + this.batchSize),
+        compute: results.compute.slice(curPos, curPos + this.filesPerBatch),
+        del: results.del.slice(curPos, curPos + this.filesPerBatch),
+        addTag: results.addTag.slice(curPos, curPos + this.filesPerBatch),
+        removeTag: results.removeTag.slice(curPos, curPos + this.filesPerBatch),
       };
-      curPos += this.batchSize;
+      curPos += this.filesPerBatch;
     }
   }
 

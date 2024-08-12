@@ -871,10 +871,14 @@ interface QuickActionConfig {
   sendToChat: boolean;
 }
 
+export type DefaultContextProvider = ContextProviderWithParams & {
+  query?: string;
+};
+
 interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
-  defaultContext?: "activeFile"[];
+  defaultContext?: DefaultContextProvider[];
   promptPath?: string;
 
   /**

@@ -1,9 +1,11 @@
 name: Publish Preview Extension
 
 on:
-  push:
+  create:
+    tags:
+      - "v0.9.*-vscode"
     branches:
-      - preview
+      - dev
 
 jobs:
   build:
@@ -45,8 +47,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       # 1. Check-out repository
-      - name: Check-out repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # This ensures all tags are fetched
+
+      - name: Checkout tag
+        run: git checkout ${GITHUB_REF#refs/tags/}
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
@@ -90,14 +97,6 @@ jobs:
           cd core
           npm ci
 
-      # 2.25 Run core tests
-      - name: Run core tests
-        run: |
-          cd core
-          npm run test
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
       # 2.5. Pre package
       - name: Set var for environment info
         shell: pwsh
@@ -107,6 +106,14 @@ jobs:
         run: |
           cd extensions/vscode
           npm run prepackage -- --target ${{ env.target }}
+
+      # 2.75 Run core tests
+      - name: Run core tests
+        run: |
+          cd core
+          npm run test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 3. Re-install esbuild (for cases that we force installed for another arch in prepackage.js)
       - name: Re-install esbuild
@@ -158,20 +165,10 @@ jobs:
       # Download the .vsix artifacts
       - uses: actions/download-artifact@v3
 
-      - name: Tag the repository
-        id: tag
-        run: |
-          # See https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
-          TAG=v$(grep -o '"version": "[^"]*' extensions/vscode/package.json | cut -d'"' -f4)-vscode
-          echo "$TAG"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
-          git push origin $TAG
-
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ github.ref_name }}
           files: |
             alpine-x64/*.vsix
             darwin-arm64/*.vsix
@@ -184,36 +181,6 @@ jobs:
           token: ${{ secrets.CI_GITHUB_TOKEN }}
           repository: continuedev/continue
           prerelease: true
-
-  release-branch:
-    runs-on: ubuntu-latest
-    needs:
-      - build
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Create release branch
-        run: |
-          # Set up Git
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-          # Get the current version
-          current_version=$(grep -o '"version": "[^"]*' extensions/vscode/package.json | cut -d'"' -f4)
-
-          # Create a new branch name
-          new_branch="release-${current_version}"
-
-          # Create and checkout the new branch
-          git checkout -b $new_branch
-
-          # Push the new branch to the remote repository
-          git push origin $new_branch
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     runs-on: ubuntu-latest
@@ -232,7 +199,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       - name: Pull latest changes
-        run: git pull origin preview
+        run: git pull origin dev
 
       # 1. Download the artifacts
       - uses: actions/download-artifact@v3

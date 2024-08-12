@@ -92,7 +92,7 @@ export async function getParserForFile(filepath: string) {
 
     return parser;
   } catch (e) {
-    console.error("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file", filepath, e);
     return undefined;
   }
 }
@@ -120,7 +120,7 @@ export async function getLanguageForFile(
     }
     return language;
   } catch (e) {
-    console.error("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file", filepath, e);
     return undefined;
   }
 }

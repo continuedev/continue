@@ -11,7 +11,7 @@ import {
   RefreshIndexResults,
   type CodebaseIndex,
 } from "../types.js";
-import { chunkDocument } from "./chunk.js";
+import { chunkDocument, shouldChunk } from "./chunk.js";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
@@ -20,6 +20,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly pathSep: string,
     private readonly continueServerClient: IContinueServerClient,
     private readonly maxChunkSize: number,
   ) {
@@ -132,7 +133,6 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     }
   }
 
-
   private async createTables(db: DatabaseConnection) {
     await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -154,7 +154,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
   private async packToChunks(pack: PathAndCacheKey): Promise<Chunk[]> {
     const contents = await this.readFile(pack.path);
-    if (!contents.length) {
+    if (!shouldChunk(this.pathSep, pack.path, contents)) {
       return [];
     }
     const chunks: Chunk[] = [];
@@ -200,9 +200,10 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         db.db.exec("COMMIT", (err: Error | null) => {
           if (err) {
             reject(new Error("error while committing insert chunks transaction", { cause: err }));
+          } else {
+            resolve();
           }
         });
-        resolve();
       });
     });
   }

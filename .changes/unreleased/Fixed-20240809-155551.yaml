@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Fixed
+body: Fixed bug causing duplicate indexing work
+time: 2024-08-09T15:55:51.468536-04:00

@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: new /onboard slash command
+time: 2024-08-09T15:56:09.210825-04:00

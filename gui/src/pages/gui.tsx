@@ -166,7 +166,7 @@ const ThreadUserName = styled.div`
   color: ${lightGray};
 `;
 
-function fallbackRender({ error, resetErrorBoundary }) {
+function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
   return (
@@ -207,7 +207,7 @@ function GUI() {
   const state = useSelector((state: RootState) => state.state);
 
   const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard"),
+    getLocalStorage("showTutorialCard") ?? true,
   );
 
   const onCloseTutorialCard = () => {

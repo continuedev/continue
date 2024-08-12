@@ -1,4 +1,5 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
+import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
 import { Table } from "vectordb";
 import { IContinueServerClient } from "../continueServer/interface.js";
@@ -11,7 +12,7 @@ import {
 } from "../index.js";
 import { getBasename } from "../util/index.js";
 import { getLanceDbPath, migrate } from "../util/paths.js";
-import { chunkDocument } from "./chunk/chunk.js";
+import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
@@ -20,7 +21,6 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
-import { RunResult } from "sqlite3";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -44,6 +44,7 @@ export class LanceDbIndex implements CodebaseIndex {
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly pathSep: string,
     private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
@@ -121,6 +122,11 @@ export class LanceDbIndex implements CodebaseIndex {
     for (const item of items) {
       try {
         const content = await this.readFile(item.path);
+
+        if (!shouldChunk(this.pathSep, item.path, content)) {
+          continue;
+        }
+
         const chunks = await this.getChunks(item, content);
         chunkMap.set(item.path, { item, chunks });
       } catch (err) {
@@ -300,7 +306,7 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     const dbRows = await this.computeRows(results.compute);
-    this.insertRows(sqlite, dbRows);
+    await this.insertRows(sqlite, dbRows);
     await markComplete(results.compute, IndexResultType.Compute);
     let accumulatedProgress = 0;
 
@@ -506,9 +512,10 @@ export class LanceDbIndex implements CodebaseIndex {
                 { cause: err },
               ),
             );
+          } else {
+            resolve();
           }
         });
-        resolve();
       });
     });
   }

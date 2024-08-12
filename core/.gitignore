@@ -4,3 +4,4 @@ target
 npm-debug.log*
 .env
 .continue-test
+testDir

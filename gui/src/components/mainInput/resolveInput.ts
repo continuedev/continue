@@ -1,6 +1,7 @@
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
+  DefaultContextProvider,
   InputModifiers,
   MessageContent,
   MessagePart,
@@ -27,6 +28,7 @@ async function resolveEditorContent(
   editorState: JSONContent,
   modifiers: InputModifiers,
   ideMessenger: IIdeMessenger,
+  defaultContextProviders: DefaultContextProvider[],
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
@@ -130,6 +132,20 @@ async function resolveEditorContent(
       contextItemsText += codebaseItem.content + "\n\n";
     }
   }
+
+  // Include default context providers
+  const defaultContextItems = await Promise.all(
+    defaultContextProviders.map(async (provider) => {
+      const items = await ideMessenger.request("context/getContextItems", {
+        name: provider.name,
+        query: provider.query ?? "",
+        fullInput: stripImages(parts),
+        selectedCode,
+      });
+      return items;
+    }),
+  );
+  contextItems.push(...defaultContextItems.flat());
 
   if (contextItemsText !== "") {
     contextItemsText += "\n";

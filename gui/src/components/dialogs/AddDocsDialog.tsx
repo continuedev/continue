@@ -34,7 +34,7 @@ function AddDocsDialog() {
     }, 100);
   }, [ref]);
 
-  function onSubmit(e) {
+  function onSubmit(e: any) {
     e.preventDefault();
 
     const siteIndexingConfig: SiteIndexingConfig = {
