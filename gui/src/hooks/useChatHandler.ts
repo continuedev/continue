@@ -37,6 +37,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
+  const defaultContextProviders = useSelector(
+    (store: RootState) => store.state.config.experimental?.defaultContext ?? [],
+  );
 
   const slashCommands = useSelector(
     (store: RootState) => store.state.config.slashCommands || [],
@@ -181,11 +184,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         editorState,
         modifiers,
         ideMessenger,
+        defaultContextProviders,
       );
-      dispatch(addContextItems(contextItems));
 
       // Automatically use currently open file
-      if (!modifiers.noContext && (history.length === 0 || index === 0)) {
+      if (!modifiers.noContext) {
         const usingFreeTrial = defaultModel?.provider === "free-trial";
 
         const currentFilePath = await ideMessenger.ide.getCurrentFile();
@@ -212,6 +215,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           });
         }
       }
+      dispatch(addContextItems(contextItems));
 
       const message: ChatMessage = {
         role: "user",
