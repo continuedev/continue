@@ -268,14 +268,6 @@ export class LanceDbIndex implements CodebaseIndex {
 
     const dbRows = await this.computeRows(results.compute);
     await this.insertRows(sqlite, dbRows);
-    await Promise.all(
-      results.compute.map((item) => {
-        addComputedLanceDbRows(
-          item,
-          dbRows.filter((row) => row.path === item.path),
-        );
-      }),
-    );
     await markComplete(results.compute, IndexResultType.Compute);
     let accumulatedProgress = 0;
 
@@ -481,9 +473,10 @@ export class LanceDbIndex implements CodebaseIndex {
                 { cause: err },
               ),
             );
+          } else {
+            resolve();
           }
         });
-        resolve();
       });
     });
   }
