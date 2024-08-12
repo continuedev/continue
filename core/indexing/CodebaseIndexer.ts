@@ -334,10 +334,7 @@ export class CodebaseIndexer {
         results.addTag.length +
         results.removeTag.length;
       let completedOps = 0;
-      for (const subResult of this.batchRefreshIndexResults(
-        results,
-        workspaceFiles.length,
-      )) {
+      for (const subResult of this.batchRefreshIndexResults(results)) {
         for await (const { desc } of codebaseIndex.update(
           tag,
           subResult,
