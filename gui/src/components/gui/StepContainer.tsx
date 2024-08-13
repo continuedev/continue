@@ -176,38 +176,6 @@ function StepContainer(props: StepContainerProps) {
                 height="1.2em"
               />
             </HeaderButtonWithText>
-            {feedback === false || (
-              <HeaderButtonWithText text="Helpful">
-                <HandThumbUpIcon
-                  className={
-                    "cursor-pointer hover:text-green-500" +
-                    (feedback === true ? " text-green-500" : "")
-                  }
-                  width="1.2em"
-                  height="1.2em"
-                  color={lightGray}
-                  onClick={() => {
-                    sendFeedback(true);
-                  }}
-                />
-              </HeaderButtonWithText>
-            )}
-            {feedback === true || (
-              <HeaderButtonWithText text="Unhelpful">
-                <HandThumbDownIcon
-                  className={
-                    "cursor-pointer hover:text-red-500" +
-                    (feedback === false ? " text-red-500" : "")
-                  }
-                  width="1.2em"
-                  height="1.2em"
-                  color={lightGray}
-                  onClick={() => {
-                    sendFeedback(false);
-                  }}
-                />
-              </HeaderButtonWithText>
-            )}
             <HeaderButtonWithText text="Delete Message">
               <TrashIcon
                 color={lightGray}
