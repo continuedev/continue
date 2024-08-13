@@ -125,7 +125,6 @@ function ModelCard(props: ModelCardProps) {
         }
       >
         <div
-          className="mb-2"
           style={{
             display: "flex",
             alignItems: "center",
@@ -149,7 +148,7 @@ function ModelCard(props: ModelCardProps) {
 
         {props.tags?.map((tag, i) => <ModelProviderTag key={i} tag={tag} />)}
 
-        <p>{props.description}</p>
+        {props.description && <p className="mt-2">{props.description}</p>}
 
         {props.refUrl && (
           <a

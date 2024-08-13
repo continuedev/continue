@@ -24,7 +24,7 @@ import { providers } from "./configs/providers";
 
 const GridDiv = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: 1fr;
   grid-gap: 2rem;
   padding: 1rem;
   justify-items: center;

@@ -388,7 +388,7 @@ function GUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
-        <div className="max-w-3xl m-auto">
+        <div className="mx-2">
           <StepsDiv>
             {state.history.map((item, index: number) => {
               return (
