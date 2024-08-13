@@ -43,7 +43,7 @@ function Onboarding() {
 
   function onSubmit() {
     ideMessenger.post("completeOnboarding", {
-      mode: "pearai",
+      mode: "custom",
     });
 
     /**
