@@ -14,6 +14,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
+import { usePostHog } from "posthog-js/react";
 
 const STATUS_COLORS = {
   DISABLED: lightGray, // light gray
@@ -76,6 +77,7 @@ const IndexingProgressBar = ({
 }: ProgressBarProps) => {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+  const posthog = usePostHog();
 
   const [paused, setPaused] = useState<boolean | undefined>(undefined);
   const [hovered, setHovered] = useState(false);
@@ -134,6 +136,7 @@ const IndexingProgressBar = ({
                   "less reliable for persistent issues."
                 }
                 onConfirm={() => {
+                  posthog.capture("rebuild_index_clicked");
                   ideMessenger.post("index/forceReIndex", {
                     shouldClearIndexes: true,
                   });
