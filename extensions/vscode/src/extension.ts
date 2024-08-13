@@ -15,7 +15,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
     console.log("Error activating extension: ", e);
     vscode.window
       .showInformationMessage(
-        "Error activating the Continue extension.",
+        "Error activating the PearAI extension.",
         "View Logs",
         "Retry",
       )

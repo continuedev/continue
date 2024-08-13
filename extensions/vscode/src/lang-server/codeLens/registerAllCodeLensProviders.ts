@@ -52,7 +52,7 @@ function registerQuickActionsProvider(
 }
 
 /**
- * Registers all CodeLens providers for the Continue extension.
+ * Registers all CodeLens providers for the PearAI extension.
  *
  * This function disposes of any existing CodeLens providers and registers new ones for:
  * - Vertical per-line diffs
