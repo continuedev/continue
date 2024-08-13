@@ -174,7 +174,7 @@
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Continue: Debug Terminal",
+        "title": "Debug Terminal",
         "group": "Continue"
       },
       {
@@ -199,7 +199,7 @@
       {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
-        "title": "Continue: Select Files as Context",
+        "title": "Select Files as Context",
         "group": "Continue"
       },
       {
