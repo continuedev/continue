@@ -1,6 +1,7 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
+import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
@@ -12,6 +13,7 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
+import * as fs from "fs/promises";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -33,12 +35,40 @@ export class CodebaseIndexer {
    */
   filesPerBatch = 1000;
 
+  // Note that we exclude certain Sqlite errors that we do not want to clear the indexes on,
+  // e.g. a `SQLITE_BUSY` error.
+  errorsRegexesToClearIndexesOn = [
+    /Invalid argument error: Values length (d+) is less than the length ((d+)) multiplied by the value size (d+)/,
+    /SQLITE_CONSTRAINT/,
+    /SQLITE_ERROR/,
+    /SQLITE_CORRUPT/,
+    /SQLITE_IOERR/,
+    /SQLITE_FULL/,
+  ];
+
   constructor(
     private readonly configHandler: ConfigHandler,
     protected readonly ide: IDE,
     private readonly pauseToken: PauseToken,
     private readonly continueServerClient: IContinueServerClient,
   ) {}
+
+  async clearIndexes() {
+    const sqliteFilepath = getIndexSqlitePath();
+    const lanceDbFolder = getLanceDbPath();
+
+    try {
+      await fs.unlink(sqliteFilepath);
+    } catch (error) {
+      console.error(`Error deleting ${sqliteFilepath} folder: ${error}`);
+    }
+
+    try {
+      await fs.rm(lanceDbFolder, { recursive: true, force: true });
+    } catch (error) {
+      console.error(`Error deleting ${lanceDbFolder}: ${error}`);
+    }
+  }
 
   protected async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
@@ -210,7 +240,6 @@ export class CodebaseIndexer {
         yield this.handleErrorAndGetProgressUpdate(err);
         return;
       }
-      completedDirs += 1;
     }
     yield {
       progress: 100,
@@ -234,20 +263,25 @@ export class CodebaseIndexer {
   }
 
   private errorToProgressUpdate(err: Error): IndexingProgressUpdate {
-    const errorRegex =
-      /Invalid argument error: Values length (\d+) is less than the length \((\d+)\) multiplied by the value size \(\d+\)/;
-    const match = err.message.match(errorRegex);
-    let errMsg: string;
-    if (match) {
-      const [_, valuesLength, expectedLength] = match;
-      errMsg = `Generated embedding had length ${valuesLength} but was expected to be ${expectedLength}. This may be solved by deleting ~/.continue/index and refreshing the window to re-index.`;
-    } else {
-      errMsg = `${err}`;
+    let errMsg: string = `${err}`;
+    let shouldClearIndexes = false;
+
+    // Check if any of the error regexes match
+    for (const regexStr of this.errorsRegexesToClearIndexesOn) {
+      const regex = new RegExp(regexStr);
+      const match = err.message.match(regex);
+
+      if (match !== null) {
+        shouldClearIndexes = true;
+        break;
+      }
     }
+
     return {
       progress: 0,
       desc: errMsg,
       status: "failed",
+      shouldClearIndexes,
     };
   }
 

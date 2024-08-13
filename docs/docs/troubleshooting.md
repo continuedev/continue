@@ -49,7 +49,7 @@ On JetBrains, the "pre-release" happens through their Early Access Program (EAP)
 1. Open JetBrains settings (cmd/ctrl+,) and go to "Plugins"
 2. Click the gear icon at the top
 3. Select "Manage Plugin Repositories..."
-4. Add "https://plugins.jetbrains.com/plugins/eap/list" to the list
+4. Add "[https://plugins.jetbrains.com/plugins/eap/list>](https://plugins.jetbrains.com/plugins/eap/list>)" to the list
 5. You'll now always be able to download the latest EAP version from the marketplace
 
 ## Download an Older Version
@@ -107,6 +107,12 @@ By default the Continue window is on the left side of VS Code, but it can be dra
 ### I'm getting a 404 error from OpenAI
 
 If you have entered a valid API key and model, but are still getting a 404 error from OpenAI, this may be because you need to add credits to your billing account. You can do so from the [billing console](https://platform.openai.com/settings/organization/billing/overview). If you just want to check that this is in fact the cause of the error, you can try adding $1 to your account and checking whether the error persists.
+
+### Indexing issues
+
+If you are having persistent errors with indexing, our recommendation is to rebuild your index from scratch. Note that for large codebases this may take some time.
+
+This can be accomplished using the following command: `Continue: Rebuild codebase index`.
 
 ## Still having trouble?
 

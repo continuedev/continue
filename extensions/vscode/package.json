@@ -174,7 +174,7 @@
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Continue: Debug Terminal",
+        "title": "Debug Terminal",
         "group": "Continue"
       },
       {
@@ -199,7 +199,7 @@
       {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
-        "title": "Continue: Select Files as Context",
+        "title": "Select Files as Context",
         "group": "Continue"
       },
       {
@@ -253,6 +253,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.rebuildCodebaseIndex",
+        "category": "Continue",
+        "title": "Rebuild codebase index",
+        "group": "Continue"
+      },
+      {
         "command": "continue.docsIndex",
         "category": "Continue",
         "title": "Docs Index",
@@ -275,11 +281,6 @@
         "command": "continue.focusContinueInputWithoutClear",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
-      },
-      {
-        "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+l",
-        "key": "alt+ctrl+l"
       },
       {
         "command": "continue.acceptDiff",
