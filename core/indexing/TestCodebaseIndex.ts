@@ -25,6 +25,7 @@ export class TestCodebaseIndex implements CodebaseIndex {
   }
 
   async *update(
+    taskId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,

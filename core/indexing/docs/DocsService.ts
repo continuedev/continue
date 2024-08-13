@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import lancedb, { Connection } from "vectordb";
@@ -150,10 +151,11 @@ export default class DocsService {
     }
 
     const docs = await this.list();
+    const taskId = uuidv4();
 
     for (const doc of docs) {
-      const generator = this.indexAndAdd(doc, reIndex);
-      while (!(await generator.next()).done) {}
+      const generator = this.indexAndAdd(taskId, doc, reIndex);
+      while (!(await generator.next()).done) { }
     }
 
     this.ide.infoPopup("Docs indexing completed");
@@ -279,6 +281,7 @@ export default class DocsService {
       );
 
       yield {
+        id: taskId,
         progress: 1,
         desc: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
         status: "failed",
@@ -406,6 +409,7 @@ export default class DocsService {
     }
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
+    const taskId = uuidv4();
 
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
 
@@ -417,7 +421,7 @@ export default class DocsService {
       this.config = newConfig;
 
       if (oldConfig.docs !== newConfig.docs) {
-        await this.syncConfigAndSqlite();
+        await this.syncConfigAndSqlite(taskId);
       }
 
       const shouldReindex = await this.shouldReindexDocsOnNewEmbeddingsProvider(
@@ -426,13 +430,14 @@ export default class DocsService {
 
       if (shouldReindex) {
         await this.reindexDocsOnNewEmbeddingsProvider(
+          taskId,
           newConfig.embeddingsProvider,
         );
       }
     });
   }
 
-  private async syncConfigAndSqlite() {
+  private async syncConfigAndSqlite(taskId: string) {
     this.isSyncing = true;
 
     const sqliteDocs = await this.list();
@@ -455,8 +460,8 @@ export default class DocsService {
       console.log(`Indexing new doc: ${doc.startUrl}`);
       Telemetry.capture("add_docs_config", { url: doc.startUrl });
 
-      const generator = this.indexAndAdd(doc);
-      while (!(await generator.next()).done) {}
+      const generator = this.indexAndAdd(taskId, doc);
+      while (!(await generator.next()).done) { }
     }
 
     for (const doc of deletedDocs) {
@@ -560,7 +565,7 @@ export default class DocsService {
       } else {
         console.trace(
           "No existing Lance DB docs table was found and no initialization " +
-            "vector was passed to create one",
+          "vector was passed to create one",
         );
       }
     }
@@ -731,9 +736,9 @@ export default class DocsService {
     if (isJetBrainsAndPreIndexedDocsProvider) {
       this.ide.errorPopup(
         "The 'transformers.js' embeddings provider currently cannot be used to index " +
-          "documentation in JetBrains. To enable documentation indexing, you can use " +
-          "any of the other providers described in the docs: " +
-          "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+        "documentation in JetBrains. To enable documentation indexing, you can use " +
+        "any of the other providers described in the docs: " +
+        "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
       );
 
       this.globalContext.update(
@@ -768,6 +773,7 @@ export default class DocsService {
    * a per-embeddings-provider table for docs.
    */
   private async reindexDocsOnNewEmbeddingsProvider(
+    taskId: string,
     embeddingsProvider: EmbeddingsProvider,
   ) {
     // We use config as our source of truth here since it contains additional information
@@ -785,9 +791,9 @@ export default class DocsService {
     for (const doc of docs) {
       await this.delete(doc.startUrl);
 
-      const generator = this.indexAndAdd(doc);
+      const generator = this.indexAndAdd(taskId, doc);
 
-      while (!(await generator.next()).done) {}
+      while (!(await generator.next()).done) { }
     }
 
     // Important that this only is invoked after we have successfully

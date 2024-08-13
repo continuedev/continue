@@ -1,3 +1,4 @@
+import { v4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
@@ -87,7 +88,7 @@ export class CodebaseIndexer {
     return indexes;
   }
 
-  public async refreshFile(taskId: string, file: string): Promise<void> {
+  public async refreshFile(file: string): Promise<void> {
     if (this.pauseToken.paused) {
       // NOTE: by returning here, there is a chance that while paused a file is modified and
       // then after unpausing the file is not reindexed
@@ -101,6 +102,7 @@ export class CodebaseIndexer {
     const repoName = await this.ide.getRepoName(workspaceDir);
     const indexesToBuild = await this.getIndexesToBuild();
     const stats = await this.ide.getLastModified([file]);
+    const taskId = v4();
     for (const index of indexesToBuild) {
       const tag = {
         directory: workspaceDir,
