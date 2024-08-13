@@ -26,6 +26,7 @@ import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
+import { TTS } from "./util/tts";
 import { streamDiffLines } from "./util/verticalEdit";
 
 export class Core {
@@ -381,6 +382,11 @@ export class Core {
         }
         yield { content: next.value.content };
         next = await gen.next();
+      }
+
+      const config = await configHandler.loadConfig();
+      if(config.experimental?.readResponseTTS && "completion" in next.value) {
+        TTS.read(next.value?.completion);
       }
 
       return { done: true, content: next.value };

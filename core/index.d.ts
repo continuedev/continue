@@ -887,6 +887,11 @@ interface ExperimentalConfig {
    * function and class declarations.
    */
   quickActions?: QuickActionConfig[];
+  
+  /**
+   * Automatically read LLM chat responses aloud using system TTS models
+   */
+  readResponseTTS?: boolean;
 }
 
 interface AnalyticsConfig {
