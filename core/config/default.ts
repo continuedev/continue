@@ -91,7 +91,15 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [],
+  models: [
+    {
+      "model": "pearai_model",
+      "contextLength": 128000,
+      "title": "PearAI Server",
+      "systemMessage": "You are an expert software developer. You give helpful and concise responses.",
+      "provider": "pearai_server"
+    }
+  ],
   customCommands: [
     {
       name: "test",
@@ -102,7 +110,7 @@ export const defaultConfig: SerializedContinueConfig = {
   ],
   tabAutocompleteModel: {
     title: "Starcoder2 3b",
-    provider: "ollama",
+    provider: "pearai_server",
     model: "starcoder2:3b",
   },
   contextProviders: defaultContextProvidersVsCode,
