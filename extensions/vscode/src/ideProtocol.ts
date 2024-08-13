@@ -89,105 +89,105 @@ class VsCodeIde implements IDE {
       return this.authToken;
     }
 
-    try {
-      // If we haven't asked yet, give explanation of what is happening and why
-      // But don't wait to return this immediately
-      // We will use a callback to refresh the config
-      if (!this.askedForAuth) {
-        vscode.window
-          .showInformationMessage(
-            "Continue will request read access to your GitHub email so that we can prevent abuse of the free trial. If you prefer not to sign in, you can use Continue with your own API keys or local model.",
-            "Sign in",
-            "Use API key / local model",
-            "Learn more",
-          )
-          .then(async (selection) => {
-            if (selection === "Use API key / local model") {
-              await vscode.commands.executeCommand(
-                "continue.continueGUIView.focus",
-              );
-              (await this.vscodeWebviewProtocolPromise).request(
-                "openOnboarding",
-                undefined,
-              );
+  //   try {
+  //     // If we haven't asked yet, give explanation of what is happening and why
+  //     // But don't wait to return this immediately
+  //     // We will use a callback to refresh the config
+  //     if (!this.askedForAuth) {
+  //       vscode.window
+  //         .showInformationMessage(
+  //           "Continue will request read access to your GitHub email so that we can prevent abuse of the free trial. If you prefer not to sign in, you can use Continue with your own API keys or local model.",
+  //           "Sign in",
+  //           "Use API key / local model",
+  //           "Learn more",
+  //         )
+  //         .then(async (selection) => {
+  //           if (selection === "Use API key / local model") {
+  //             await vscode.commands.executeCommand(
+  //               "continue.continueGUIView.focus",
+  //             );
+  //             (await this.vscodeWebviewProtocolPromise).request(
+  //               "openOnboarding",
+  //               undefined,
+  //             );
 
-              // Remove free trial models
-              editConfigJson((config) => {
-                let tabAutocompleteModel = undefined;
-                if (Array.isArray(config.tabAutocompleteModel)) {
-                  tabAutocompleteModel = config.tabAutocompleteModel.filter(
-                    (model) => model.provider !== "free-trial",
-                  );
-                } else if (
-                  config.tabAutocompleteModel?.provider === "free-trial"
-                ) {
-                  tabAutocompleteModel = undefined;
-                }
+  //             // Remove free trial models
+  //             editConfigJson((config) => {
+  //               let tabAutocompleteModel = undefined;
+  //               if (Array.isArray(config.tabAutocompleteModel)) {
+  //                 tabAutocompleteModel = config.tabAutocompleteModel.filter(
+  //                   (model) => model.provider !== "free-trial",
+  //                 );
+  //               } else if (
+  //                 config.tabAutocompleteModel?.provider === "free-trial"
+  //               ) {
+  //                 tabAutocompleteModel = undefined;
+  //               }
 
-                return {
-                  ...config,
-                  models: config.models.filter(
-                    (model) => model.provider !== "free-trial",
-                  ),
-                  tabAutocompleteModel,
-                };
-              });
-            } else if (selection === "Learn more") {
-              vscode.env.openExternal(
-                vscode.Uri.parse(
-                  "https://docs.continue.dev/reference/Model%20Providers/freetrial",
-                ),
-              );
-            } else if (selection === "Sign in") {
-              const session = await vscode.authentication.getSession(
-                "github",
-                [],
-                {
-                  createIfNone: true,
-                },
-              );
-              if (session) {
-                this.authToken = session.accessToken;
-              }
-            }
-          });
-        this.askedForAuth = true;
-        return undefined;
-      }
+  //               return {
+  //                 ...config,
+  //                 models: config.models.filter(
+  //                   (model) => model.provider !== "free-trial",
+  //                 ),
+  //                 tabAutocompleteModel,
+  //               };
+  //             });
+  //           } else if (selection === "Learn more") {
+  //             vscode.env.openExternal(
+  //               vscode.Uri.parse(
+  //                 "https://docs.continue.dev/reference/Model%20Providers/freetrial",
+  //               ),
+  //             );
+  //           } else if (selection === "Sign in") {
+  //             const session = await vscode.authentication.getSession(
+  //               "github",
+  //               [],
+  //               {
+  //                 createIfNone: true,
+  //               },
+  //             );
+  //             if (session) {
+  //               this.authToken = session.accessToken;
+  //             }
+  //           }
+  //         });
+  //       this.askedForAuth = true;
+  //       return undefined;
+  //     }
 
-      const session = await vscode.authentication.getSession("github", [], {
-        silent: this.askedForAuth,
-        createIfNone: !this.askedForAuth,
-      });
-      if (session) {
-        this.authToken = session.accessToken;
-        return session.accessToken;
-      } else if (!this.askedForAuth) {
-        // User cancelled the login prompt
-        // Explain that they can avoid the prompt by removing free trial models from config.json
-        vscode.window
-          .showInformationMessage(
-            "We'll only ask you to log in if using the free trial. To avoid this prompt, make sure to remove free trial models from your config.json",
-            "Remove for me",
-            "Open config.json",
-          )
-          .then((selection) => {
-            if (selection === "Remove for me") {
-              editConfigJson((configJson) => {
-                configJson.models = configJson.models.filter(
-                  (model) => model.provider !== "free-trial",
-                );
-                configJson.tabAutocompleteModel = undefined;
-                return configJson;
-              });
-            } else if (selection === "Open config.json") {
-              this.openFile(getConfigJsonPath());
-            }
-          });
-      }
-    } catch (error) {
-      console.error("Failed to get GitHub authentication session:", error);
-    }
+  //     const session = await vscode.authentication.getSession("github", [], {
+  //       silent: this.askedForAuth,
+  //       createIfNone: !this.askedForAuth,
+  //     });
+  //     if (session) {
+  //       this.authToken = session.accessToken;
+  //       return session.accessToken;
+  //     } else if (!this.askedForAuth) {
+  //       // User cancelled the login prompt
+  //       // Explain that they can avoid the prompt by removing free trial models from config.json
+  //       vscode.window
+  //         .showInformationMessage(
+  //           "We'll only ask you to log in if using the free trial. To avoid this prompt, make sure to remove free trial models from your config.json",
+  //           "Remove for me",
+  //           "Open config.json",
+  //         )
+  //         .then((selection) => {
+  //           if (selection === "Remove for me") {
+  //             editConfigJson((configJson) => {
+  //               configJson.models = configJson.models.filter(
+  //                 (model) => model.provider !== "free-trial",
+  //               );
+  //               configJson.tabAutocompleteModel = undefined;
+  //               return configJson;
+  //             });
+  //           } else if (selection === "Open config.json") {
+  //             this.openFile(getConfigJsonPath());
+  //           }
+  //         });
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to get GitHub authentication session:", error);
+  //   }
     return undefined;
   }
 
