@@ -12,7 +12,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "continue-proxy",
     displayTitle: "Continue Proxy",
-    description: "Retrieve a context item from a Continue for Teams add-on",
+    description: "Retrieve a context item from a PearAI for Teams add-on",
     type: "submenu",
   };
 

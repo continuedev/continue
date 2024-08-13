@@ -15,7 +15,7 @@ class ContinueSettingsComponent: DumbAware {
     val remoteConfigSyncPeriod: JTextField = JTextField()
     val userToken: JTextField = JTextField()
     val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
-    val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable Continue for Teams Beta (requires restart)")
+    val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable PearAI for Teams Beta (requires restart)")
 
     init {
         val constraints = GridBagConstraints()

@@ -42,7 +42,7 @@ export function useAuth(): {
             setDialogMessage(
               <ConfirmationDialog
                 text={
-                  "Welcome to Continue for teams! Using the toggle in the bottom right, you can switch between your local profile (defined by config.json) and team profiles (defined in the Continue for teams web app). Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
+                  "Welcome to PearAI for teams! Using the toggle in the bottom right, you can switch between your local profile (defined by config.json) and team profiles (defined in the PearAI for teams web app). Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
                 }
                 hideCancelButton={true}
                 confirmText="Ok"
