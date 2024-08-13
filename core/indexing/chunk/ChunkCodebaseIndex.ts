@@ -61,8 +61,8 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     let accumulatedProgress = 0;
 
     if (results.compute.length > 0) {
-      const folderPath = results.compute[0].path;
-      const folderName = path.basename(path.dirname(folderPath));
+      const filepath = results.compute[0].path;
+      const folderName = path.basename(path.dirname(filepath));
 
       yield {
         desc: `Chunking files in ${folderName}`,
