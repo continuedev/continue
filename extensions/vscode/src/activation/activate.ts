@@ -31,7 +31,9 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand("continue.focusContinueInput");
   });
 
-  // Load Continue configuration
+  vscode.commands.executeCommand("pearai.focusContinueInput");
+
+  // Load PearAI configuration
   if (!context.globalState.get("hasBeenInstalled")) {
     context.globalState.update("hasBeenInstalled", true);
     Telemetry.capture(
