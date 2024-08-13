@@ -284,11 +284,11 @@ const commandsMap: (
 
       streamInlineEdit("docstring", prompt, false, range);
     },
-    "continue.toggleAuxiliaryBar": () => {
-      vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
-    },
     "continue.codebaseForceReIndex": async () => {
       core.invoke("index/forceReIndex", undefined);
+    },
+    "continue.rebuildCodebaseIndex": async () => {
+      core.invoke("index/forceReIndex", { shouldClearIndexes: true });
     },
     "continue.docsIndex": async () => {
       core.invoke("context/indexDocs", { reIndex: false });

@@ -253,6 +253,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.rebuildCodebaseIndex",
+        "category": "Continue",
+        "title": "Rebuild codebase index",
+        "group": "Continue"
+      },
+      {
         "command": "continue.docsIndex",
         "category": "Continue",
         "title": "Docs Index",
@@ -275,11 +281,6 @@
         "command": "continue.focusContinueInputWithoutClear",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
-      },
-      {
-        "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+l",
-        "key": "alt+ctrl+l"
       },
       {
         "command": "continue.acceptDiff",
