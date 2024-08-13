@@ -65,6 +65,11 @@ import {
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
+
+  // Replace "pearai-server" with "pearai_server" at the beginning
+  // This is to make v0.0.3 backwards compatible with v0.0.2
+  content = content.replace(/"pearai-server"/g, '"pearai_server"');
+  
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
     const env = {
