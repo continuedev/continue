@@ -12,7 +12,7 @@ describe("Extension Test Suite", () => {
 
   test("Get the default model from webview", async () => {
     const continueExtensionApi =
-      vscode.extensions.getExtension("continue.continue");
+      vscode.extensions.getExtension("pearai.pearai");
     const extension: VsCodeExtension = continueExtensionApi?.exports.extension;
     await new Promise((resolve) => setTimeout(resolve, 400));
     await vscode.commands.executeCommand("continue.focusContinueInput");
