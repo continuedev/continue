@@ -302,7 +302,145 @@ function ConfigureProvider() {
             </details>
           )}
 
-          <h3 className="mb-2">Select a model preset</h3>
+        {providerName === "pearai_server" ? (
+            <>
+              <h3>1. Sign Up at <a href="https://trypear.ai/pricing" target="_blank" rel="noopener noreferrer">trypear.ai</a></h3>
+              <h3>2. Login w/ PearAI </h3>
+              <p style={{ color: lightGray }}>After login, the webapp should redirect you back here. If it doesn't, click again.</p>
+              <CustomModelButton
+                className="m-5"
+                disabled={false}
+                onClick={() =>
+                  ideMessenger.post(
+                    "openUrl",
+                    "https://trypear.ai/signin?callback=pearai://pearai.pearai/auth" // Change to http://localhost:3000 and run pear-landing-page repo to test locally
+                  )
+                }
+              >
+                <h3 className="text-center my-2">Login</h3>
+                <img
+                  src={`${window.vscMediaUrl}/logos/${modelInfo?.icon}`}
+                  height="24px"
+                  style={{ marginRight: "5px" }}
+                />
+              </CustomModelButton>
+              <h3>3. Click To Complete </h3>
+              <GridDiv>
+                {modelInfo?.packages.map((pkg, idx) => (
+                  <ModelCard
+                    key={idx}
+                    disabled={disableModelCards()}
+                    title={"Add To Configuration"}
+                    description={""}
+                    tags={pkg.tags}
+                    dimensions={pkg.dimensions}
+                    onClick={(e, dimensionChoices) => {
+                      if (
+                        disableModelCards() &&
+                        enablecardsForApikey() &&
+                        enablecardsForCredentials()
+                      )
+                        return;
+                      let formParams: any = {};
+                      for (const d of modelInfo.collectInputFor || []) {
+                        const val = formMethods.watch(d.key);
+                        if (val === "" || val === undefined || val === null) {
+                          continue;
+                        }
+                        formParams = updatedObj(formParams, {
+                          [d.key]: d.inputType === "text" ? val : parseFloat(val),
+                        });
+                      }
+    
+                      const model = {
+                        ...pkg.params,
+                        ...modelInfo.params,
+                        ..._.merge(
+                          {},
+                          ...(pkg.dimensions?.map((dimension, i) => {
+                            if (!dimensionChoices?.[i]) return {};
+                            return {
+                              ...dimension.options[dimensionChoices[i]],
+                            };
+                          }) || []),
+                        ),
+                        ...formParams,
+                        provider: modelInfo.provider,
+                      };
+                      ideMessenger.post("config/addModel", { model });
+                      dispatch(
+                        setDefaultModel({ title: model.title, force: true }),
+                      );
+                      navigate("/");
+                    }}
+                  />
+                ))}
+              </GridDiv>
+            </>
+            ) : (
+              <>
+              <h3 className="mb-2">Select a model preset</h3>
+              <GridDiv>
+                {modelInfo?.packages.map((pkg, idx) => {
+                  return (
+                    <ModelCard
+                      key={idx}
+                      disabled={
+                        disableModelCards() &&
+                        enablecardsForApikey() &&
+                        enablecardsForCredentials()
+                      }
+                      title={pkg.title}
+                      description={pkg.description}
+                      tags={pkg.tags}
+                      refUrl={pkg.refUrl}
+                      icon={pkg.icon || modelInfo.icon}
+                      dimensions={pkg.dimensions}
+                      onClick={(e, dimensionChoices) => {
+                        if (
+                          disableModelCards() &&
+                          enablecardsForApikey() &&
+                          enablecardsForCredentials()
+                        )
+                          return;
+                        let formParams: any = {};
+                        for (const d of modelInfo.collectInputFor || []) {
+                          const val = formMethods.watch(d.key);
+                          if (val === "" || val === undefined || val === null) {
+                            continue;
+                          }
+                          formParams = updatedObj(formParams, {
+                            [d.key]: d.inputType === "text" ? val : parseFloat(val),
+                          });
+                        }
+      
+                        const model = {
+                          ...pkg.params,
+                          ...modelInfo.params,
+                          ..._.merge(
+                            {},
+                            ...(pkg.dimensions?.map((dimension, i) => {
+                              if (!dimensionChoices?.[i]) return {};
+                              return {
+                                ...dimension.options[dimensionChoices[i]],
+                              };
+                            }) || []),
+                          ),
+                          ...formParams,
+                          provider: modelInfo.provider,
+                        };
+                        ideMessenger.post("config/addModel", { model });
+                        dispatch(
+                          setDefaultModel({ title: model.title, force: true }),
+                        );
+                        navigate("/");
+                      }}
+                    />
+                  );
+                })}
+              </GridDiv>
+            </>
+          )} 
         </div>
         <GridDiv>
           {modelInfo?.packages.map((pkg, idx) => {
