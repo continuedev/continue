@@ -31,6 +31,10 @@ interface LanceDbRow {
   [key: string]: any;
 }
 
+type ItemWithChunks = { item: PathAndCacheKey; chunks: Chunk[] };
+
+type ChunkMap = Map<string, ItemWithChunks>;
+
 export class LanceDbIndex implements CodebaseIndex {
   relativeExpectedTime: number = 13;
   get artifactId(): string {
@@ -85,77 +89,112 @@ export class LanceDbIndex implements CodebaseIndex {
     );
   }
 
-  private async packToRows(item: PathAndCacheKey): Promise<LanceDbRow[]> {
-    const content = await this.readFile(item.path);
-    if (!shouldChunk(this.pathSep, item.path, content)) {
-      return [];
+  private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
+    const chunkMap = await this.collectChunks(items);
+    const allChunks = Array.from(chunkMap.values()).flatMap(
+      ({ chunks }) => chunks,
+    );
+    const embeddings = await this.getEmbeddings(allChunks);
+
+    // Remove undefined embeddings and their corresponding chunks
+    for (let i = embeddings.length - 1; i >= 0; i--) {
+      if (embeddings[i] === undefined) {
+        const chunk = allChunks[i];
+        const chunks = chunkMap.get(chunk.filepath)?.chunks;
+
+        if (chunks) {
+          const index = chunks.findIndex((c) => c === chunk);
+          if (index !== -1) {
+            chunks.splice(index, 1);
+          }
+        }
+
+        embeddings.splice(i, 1);
+      }
     }
+
+    return this.createLanceDbRows(chunkMap, embeddings);
+  }
+
+  private async collectChunks(items: PathAndCacheKey[]): Promise<ChunkMap> {
+    const chunkMap: ChunkMap = new Map();
+
+    for (const item of items) {
+      try {
+        const content = await this.readFile(item.path);
+
+        if (!shouldChunk(this.pathSep, item.path, content)) {
+          continue;
+        }
+
+        const chunks = await this.getChunks(item, content);
+        chunkMap.set(item.path, { item, chunks });
+      } catch (err) {
+        console.log(`LanceDBIndex, skipping ${item.path}: ${err}`);
+      }
+    }
+
+    return chunkMap;
+  }
+
+  private async getChunks(
+    item: PathAndCacheKey,
+    content: string,
+  ): Promise<Chunk[]> {
     const chunks: Chunk[] = [];
+
     const chunkParams = {
       filepath: item.path,
       contents: content,
       maxChunkSize: this.embeddingsProvider.maxChunkSize,
       digest: item.cacheKey,
     };
+
     for await (const chunk of chunkDocument(chunkParams)) {
       if (chunk.content.length === 0) {
-        // File did not chunk properly, let's skip it.
         throw new Error("did not chunk properly");
       }
+
       chunks.push(chunk);
     }
-    const embeddings = await this.chunkListToEmbedding(chunks);
-    if (chunks.length !== embeddings.length) {
-      throw new Error(
-        `Unexpected lengths: chunks and embeddings do not match for ${item.path}`,
-      );
-    }
-    const results = [];
-    for (let i = 0; i < chunks.length; i++) {
-      results.push({
-        path: item.path,
-        cachekey: item.cacheKey,
-        uuid: uuidv4(),
-        vector: embeddings[i],
-        startLine: chunks[i].startLine,
-        endLine: chunks[i].endLine,
-        contents: chunks[i].content,
-      });
-    }
-    return results;
+
+    return chunks;
   }
 
-  private async chunkListToEmbedding(chunks: Chunk[]): Promise<number[][]> {
-    let embeddings: number[][];
+  private async getEmbeddings(chunks: Chunk[]): Promise<number[][]> {
     try {
-      embeddings = await this.embeddingsProvider.embed(
-        chunks.map((c) => c.content),
-      );
+      return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
     } catch (err) {
       throw new Error(
-        `Failed to generate embedding for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}: ${err}`,
+        `Failed to generate embeddings for ${chunks.length} chunks with provider: ${this.embeddingsProvider.id}: ${err}`,
         { cause: err },
       );
     }
-    if (embeddings.some((emb) => emb === undefined)) {
-      throw new Error(
-        `Empty embedding returned for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}`,
-      );
-    }
-    return embeddings;
   }
 
-  private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
-    const rowChunkPromises = items.map(this.packToRows.bind(this));
-    const rowChunkLists = [];
-    for (let i = 0; i < items.length; i++) {
-      try {
-        rowChunkLists.push(await rowChunkPromises[i]);
-      } catch (err) {
-        console.log(`LanceDBIndex, skipping ${items[i].path}: ${err}`);
+  private createLanceDbRows(
+    chunkMap: ChunkMap,
+    embeddings: number[][],
+  ): LanceDbRow[] {
+    const results: LanceDbRow[] = [];
+    let embeddingIndex = 0;
+
+    for (const [path, { item, chunks }] of chunkMap) {
+      for (const chunk of chunks) {
+        results.push({
+          path,
+          cachekey: item.cacheKey,
+          uuid: uuidv4(),
+          vector: embeddings[embeddingIndex],
+          startLine: chunk.startLine,
+          endLine: chunk.endLine,
+          contents: chunk.content,
+        });
+        embeddingIndex++;
       }
     }
-    return rowChunkLists.flat();
+
+    return results;
   }
 
   async *update(

@@ -28,6 +28,13 @@ export class PauseToken {
 }
 
 export class CodebaseIndexer {
+  /**
+   * We batch for two reasons:
+   * - To limit memory usage for indexes that perform computations locally, e.g. FTS
+   * - To make as few requests as possible to the embeddings providers
+   */
+  filesPerBatch = 1000;
+
   // Note that we exclude certain Sqlite errors that we do not want to clear the indexes on,
   // e.g. a `SQLITE_BUSY` error.
   errorsRegexesToClearIndexesOn = [
@@ -303,20 +310,14 @@ export class CodebaseIndexer {
     }
   }
 
-  private getBatchSize(workspaceSize: number): number {
-    return 100;
-  }
-
   /*
-   * enables the indexing operation to be completed in small batches, this is important in large
+   * Enables the indexing operation to be completed in batches, this is important in large
    * repositories where indexing can quickly use up all the memory available
    */
   private *batchRefreshIndexResults(
     results: RefreshIndexResults,
-    workspaceSize: number,
   ): Generator<RefreshIndexResults> {
     let curPos = 0;
-    const batchSize = this.getBatchSize(workspaceSize);
     while (
       curPos < results.compute.length ||
       curPos < results.del.length ||
@@ -324,12 +325,12 @@ export class CodebaseIndexer {
       curPos < results.removeTag.length
     ) {
       yield {
-        compute: results.compute.slice(curPos, curPos + batchSize),
-        del: results.del.slice(curPos, curPos + batchSize),
-        addTag: results.addTag.slice(curPos, curPos + batchSize),
-        removeTag: results.removeTag.slice(curPos, curPos + batchSize),
+        compute: results.compute.slice(curPos, curPos + this.filesPerBatch),
+        del: results.del.slice(curPos, curPos + this.filesPerBatch),
+        addTag: results.addTag.slice(curPos, curPos + this.filesPerBatch),
+        removeTag: results.removeTag.slice(curPos, curPos + this.filesPerBatch),
       };
-      curPos += batchSize;
+      curPos += this.filesPerBatch;
     }
   }
 
@@ -367,10 +368,7 @@ export class CodebaseIndexer {
         results.addTag.length +
         results.removeTag.length;
       let completedOps = 0;
-      for (const subResult of this.batchRefreshIndexResults(
-        results,
-        workspaceFiles.length,
-      )) {
+      for (const subResult of this.batchRefreshIndexResults(results)) {
         for await (const { desc } of codebaseIndex.update(
           tag,
           subResult,
