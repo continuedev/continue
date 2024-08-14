@@ -1,6 +1,6 @@
 ---
 title: Talk To Your Docs
-description: Use the @docs context provider to index documentation sites for querying
+description: Learn how to access and search your project's documentation directly within Continue
 keywords: [documentation, indexing, context provider, embeddings]
 toc_max_heading_level: 5
 ---
