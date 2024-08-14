@@ -98,6 +98,7 @@ fn bubble_sort<T: Ord>(values: &mut[T]) {
 type State = {
   history: ChatHistory;
   contextItems: ContextItemWithId[];
+  ttsActive: boolean;
   active: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
@@ -110,6 +111,7 @@ type State = {
 const initialState: State = {
   history: [],
   contextItems: [],
+  ttsActive: false,
   active: false,
   config: {
     slashCommands: [
@@ -167,6 +169,9 @@ export const stateSlice = createSlice({
       lastHistory.promptLogs = lastHistory.promptLogs
         ? lastHistory.promptLogs.concat(payload)
         : payload;
+    },
+    setTTSActive: (state) => {
+      state.ttsActive = true;
     },
     setActive: (state) => {
       state.active = true;
@@ -328,6 +333,9 @@ export const stateSlice = createSlice({
         return;
       }
       historyItem.contextItems.push(...payload.contextItems);
+    },
+    setTTSInactive: (state) => {
+      state.ttsActive = false;
     },
     setInactive: (state) => {
       state.active = false;
@@ -500,6 +508,7 @@ export const {
   setContextItemsAtIndex,
   addContextItems,
   addContextItemsAtIndex,
+  setTTSInactive,
   setInactive,
   streamUpdate,
   newSession,
@@ -510,6 +519,7 @@ export const {
   setDefaultModel,
   setConfig,
   addPromptCompletionPair,
+  setTTSActive,
   setActive,
   setEditingContextItemAtIndex,
   initNewActiveMessage,

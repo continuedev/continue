@@ -360,6 +360,13 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
+      const config = await configHandler.loadConfig();
+
+      // Stop TTS on new StreamChat
+      if(config.experimental?.readResponseTTS) {
+        TTS.kill();
+      }
+
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
         msg.data.messages,
@@ -384,7 +391,6 @@ export class Core {
         next = await gen.next();
       }
 
-      const config = await configHandler.loadConfig();
       if(config.experimental?.readResponseTTS && "completion" in next.value) {
         TTS.read(next.value?.completion);
       }
@@ -461,6 +467,13 @@ export class Core {
         console.warn(`Error listing Ollama models: ${e}`);
         return undefined;
       }
+    });
+
+    // Provide messenger to TTS so it can set GUI active / inactive state
+    TTS.messenger = this.messenger;
+
+    on("tts/kill", async () => {
+      TTS.kill();
     });
 
     async function* runNodeJsSlashCommand(

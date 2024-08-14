@@ -1,5 +1,7 @@
 import os from "node:os";
 import { exec, ChildProcess } from "child_process";
+import type { IMessenger } from "./messenger";
+import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 
 // The amount of time before a process is declared
 // a zombie after executing .kill()
@@ -43,6 +45,7 @@ function sanitizeMessageForTTS(message: string): string {
 export class TTS {
   static os: string | undefined = undefined;
   static handle: ChildProcess | undefined = undefined;
+  static messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
 
   static async read(message: string) {
     message = sanitizeMessageForTTS(message);
@@ -75,8 +78,14 @@ export class TTS {
         console.log(
           "Text-to-speech is not supported on this operating system.",
         );
-        break;
+        return;
     }
+
+    TTS.messenger.request("setTTSActive", undefined);
+
+    TTS.handle?.once("exit", () => {
+      TTS.messenger.request("setTTSInactive", undefined);
+    });
   }
 
   static async kill(): Promise<void> {

@@ -13,4 +13,6 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
+  setTTSInactive: [undefined, void];
+  setTTSActive: [undefined, void];
 };

@@ -31,6 +31,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setInactive: [undefined, void];
+  setTTSActive: [undefined, void];
+  setTTSInactive: [undefined, void];
   submitMessage: [{ message: any }, void]; // any -> JSONContent from TipTap
   updateSubmenuItems: [
     { provider: string; submenuItems: ContextSubmenuItem[] },
