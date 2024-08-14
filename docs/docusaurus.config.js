@@ -83,6 +83,12 @@ const config = {
             label: "Docs",
           },
           {
+            type: "docSidebar",
+            sidebarId: "referenceSidebar",
+            position: "left",
+            label: "Reference",
+          },
+          {
             to: "https://github.com/continuedev/continue",
             label: "GitHub",
             position: "right",

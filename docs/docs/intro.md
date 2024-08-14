@@ -1,24 +1,36 @@
 ---
-title: 💻 Introduction
-description: Continue is the open-source autopilot for software development
-keywords: [introduction, intro, continue, autopilot, chatgpt]
+title: Introduction
+description: The open-source AI code assistant for developers
+keywords: [continue, AI, code assistant, autocomplete, chat, VS Code, JetBrains]
 ---
 
-# 💻 Introduction
+![Continue Logo](/img/intro.png)
 
-![continue-cover-logo](/img/intro.png)
+## The Open-Source AI Code Assistant
 
-**Continue is the leading open-source AI code assistant. You can connect any models and any context to build custom autocomplete and chat experiences inside [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
+Continue is the leading open-source AI code assistant, designed to enhance your development workflow. It seamlessly integrates with popular IDEs like [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension), providing custom autocomplete and chat experiences.
 
-Some examples of what you can achieve are:
+### Key Features
 
-- [Easily understand code sections](how-to-use-continue.md#easily-understand-code-sections)
-- [Tab to autocomplete code suggestions](how-to-use-continue.md#tab-to-autocomplete-code-suggestions)
-- [Refactor functions where you are coding](how-to-use-continue.md#refactor-functions-where-you-are-coding)
-- [Ask questions about your codebase](how-to-use-continue.md#ask-questions-about-your-codebase)
-- [Quickly use documentation as context](how-to-use-continue.md#quickly-use-documentation-as-context)
-- [Kick off actions with slash commands](how-to-use-continue.md#kick-off-actions-with-slash-commands)
-- [Add classes, files, and more to context](how-to-use-continue.md#add-classes-files-and-more-to-context)
-- [Understand terminal errors immediately](how-to-use-continue.md#understand-terminal-errors-immediately)
+- **Flexible Model Integration**: Use any AI model, whether open-source or commercial, local or remote.
+- **Versatile Applications**: Ideal for chat, autocomplete, and embeddings.
+- **Highly Customizable**: Configure to fit your existing workflows.
 
-Continue enables you to use the right model for the job, whether it's open-source or commercial, running local or remote, and used for chat, autocomplete, or embeddings. And we provide numerous points of configuration, so that you can customize the extension to fit into your existing workflows.
+### What You Can Do with Continue
+
+1. [Understand code sections easily](how-to-use-continue.md#easily-understand-code-sections)
+2. [Autocomplete code with tab](how-to-use-continue.md#tab-to-autocomplete-code-suggestions)
+3. [Refactor functions in-place](how-to-use-continue.md#refactor-functions-where-you-are-coding)
+4. [Query your codebase](how-to-use-continue.md#ask-questions-about-your-codebase)
+5. [Leverage documentation as context](how-to-use-continue.md#quickly-use-documentation-as-context)
+6. [Use slash commands for quick actions](how-to-use-continue.md#kick-off-actions-with-slash-commands)
+7. [Add various elements to context](how-to-use-continue.md#add-classes-files-and-more-to-context)
+8. [Instantly understand terminal errors](how-to-use-continue.md#understand-terminal-errors-immediately)
+
+Explore these features to supercharge your development process with Continue!
+
+## See Continue in Action
+
+<div style={{display: 'flex', justifyContent: 'center', margin: '20px 0'}}>
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/V3Yq6w9QaxI?si=aCewfJHz8CIMTjcM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+</div>

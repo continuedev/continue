@@ -1,12 +1,16 @@
 ---
-title: ❓ Troubleshooting
+title: Troubleshooting
 description: Troubleshooting while waiting for help during beta / alpha testing
 keywords: [reload, delete, manually, logs, server, console]
 ---
 
-# ❓ Troubleshooting
-
 The Continue VS Code extension is currently in beta, and the Intellij extension is in Alpha. If you are having trouble, please follow the steps below.
+
+1. [Check the logs](#check-the-logs)
+2. [Try the latest pre-release](#download-the-latest-pre-release)
+3. [Download an older version](#download-an-older-version)
+4. [Resolve keyboard shortcut issues](#keyboard-shortcuts-not-resolving)
+5. [Check FAQs for common issues](#faqs)
 
 ## Check the logs
 
@@ -116,4 +120,4 @@ This can be accomplished using the following command: `Continue: Rebuild codebas
 
 ## Still having trouble?
 
-Create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), leaving the details of your problem, and we'll be able to more quickly help you out.
+You can also join our Discord community [here](https://discord.gg/vapESyrFmJ) for additional support and discussions. Alternatively, you can create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), providing details of your problem, and we'll be able to help you out more quickly.
