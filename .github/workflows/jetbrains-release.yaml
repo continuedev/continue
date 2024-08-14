@@ -3,9 +3,9 @@
 # See https://plugins.jetbrains.com/docs/intellij/plugin-signing.html for more information.
 
 name: Release
-on:
-  release:
-    types: [prereleased, released]
+# on:
+#   release:
+#     types: [prereleased, released]
 
 defaults:
   run:
