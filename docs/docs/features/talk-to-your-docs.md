@@ -1,5 +1,5 @@
 ---
-title: Talk to your docs
+title: Talk To Your Docs
 description: Use the @docs context provider to index documentation sites for querying
 keywords: [documentation, indexing, context provider, embeddings]
 toc_max_heading_level: 5

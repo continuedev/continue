@@ -56,7 +56,7 @@ Type `@docs` to index and retrieve snippets from any documentation site.
 { "name": "docs" }
 ```
 
-To learn more, visit [Talk to your docs](../features/talk-to-your-docs.md).
+To learn more, visit [Talk To Your Docs](../features/talk-to-your-docs.md).
 
 ### Open Files
 
