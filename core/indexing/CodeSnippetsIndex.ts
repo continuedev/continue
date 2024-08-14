@@ -100,26 +100,30 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     contents: string,
   ): Promise<(ChunkWithoutID & { title: string })[]> {
     const parser = await getParserForFile(filepath);
+
     if (!parser) {
       return [];
     }
+
     const ast = parser.parse(contents);
     const query = await getQueryForFile(filepath, TSQueryType.CodeSnippets);
     const matches = query?.matches(ast.rootNode);
 
-    return (
-      matches?.flatMap((match) => {
-        const node = match.captures[0].node;
-        const title = match.captures[1].node.text;
-        const results = {
-          title,
-          content: node.text,
-          startLine: node.startPosition.row,
-          endLine: node.endPosition.row,
-        };
-        return results;
-      }) ?? []
-    );
+    if (!matches) {
+      return [];
+    }
+
+    return matches.flatMap((match) => {
+      const node = match.captures[0].node;
+      const title = match.captures[1].node.text;
+      const results = {
+        title,
+        content: node.text,
+        startLine: node.startPosition.row,
+        endLine: node.endPosition.row,
+      };
+      return results;
+    });
   }
 
   async *update(
@@ -132,6 +136,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     await CodeSnippetsCodebaseIndex._createTables(db);
     const tagString = tagToString(tag);
 
+    // Compute
     for (let i = 0; i < results.compute.length; i++) {
       const compute = results.compute[i];
 
@@ -174,6 +179,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       markComplete([compute], IndexResultType.Compute);
     }
 
+    // Delete
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
       const deleted = await db.run(
@@ -186,6 +192,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       markComplete([del], IndexResultType.Delete);
     }
 
+    // Add tag
     for (let i = 0; i < results.addTag.length; i++) {
       const addTag = results.addTag[i];
       let snippets: (ChunkWithoutID & { title: string })[] = [];
@@ -220,6 +227,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       markComplete([results.addTag[i]], IndexResultType.AddTag);
     }
 
+    // Remove tag
     for (let i = 0; i < results.removeTag.length; i++) {
       const item = results.removeTag[i];
       await db.run(

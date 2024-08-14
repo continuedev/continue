@@ -4,10 +4,16 @@ import FileSystemIde from "../util/filesystem";
 import { TEST_DIR } from "./testUtils/testDir";
 
 export const testIde = new FileSystemIde(TEST_DIR);
+
 export const ideSettingsPromise = testIde.getIdeSettings();
+
+export const testControlPlaneClient = new ControlPlaneClient(
+  Promise.resolve(undefined),
+);
+
 export const testConfigHandler = new ConfigHandler(
   testIde,
   ideSettingsPromise,
   async (text) => {},
-  new ControlPlaneClient(Promise.resolve(undefined)),
+  testControlPlaneClient,
 );

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import crypto from "node:crypto";
 import * as fs from "node:fs";
 import { open, type Database } from "sqlite";
@@ -111,11 +112,6 @@ async function getSavedItemsForTag(
   );
   const rows = await stmt.all();
   return rows;
-}
-
-interface PathAndOptionalCacheKey {
-  path: string;
-  cacheKey?: string;
 }
 
 enum AddRemoveResultType {
@@ -409,7 +405,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        async () => { },
+        async () => {},
         repoName,
       )) {
       }

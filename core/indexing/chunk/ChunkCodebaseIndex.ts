@@ -238,8 +238,4 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       });
     });
   }
-
-  private formatListPlurality(word: string, length: number): string {
-    return length <= 1 ? word : `${word}s`;
-  }
 }
