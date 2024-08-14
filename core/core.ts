@@ -695,6 +695,7 @@ export class Core {
           "indexing_error",
           {
             error: update.desc,
+            stack: update.debugInfo,
           },
           false,
         );
