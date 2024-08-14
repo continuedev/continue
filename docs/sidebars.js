@@ -14,9 +14,39 @@
 /** @type {import('@docusaurus/plugin-content-docs').SidebarsConfig} */
 const sidebars = {
   docsSidebar: [
-    "intro",
-    "quickstart",
-    "how-to-use-continue",
+    {
+      type: "category",
+      label: "🚀 Install",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        {
+          type: "doc",
+          id: "intro",
+          label: "Introduction",
+        },
+        {
+          type: "doc",
+          id: "install/vscode",
+          label: "VS Code",
+        },
+        {
+          type: "doc",
+          id: "install/jetbrains",
+          label: "JetBrains",
+        },
+        {
+          type: "doc",
+          id: "how-to-use-continue",
+          label: "How to use Continue",
+        },
+        {
+          type: "doc",
+          id: "troubleshooting",
+          label: "Troubleshooting",
+        },
+      ],
+    },
     {
       type: "category",
       label: "🌉 Setup",
@@ -73,7 +103,6 @@ const sidebars = {
         },
       ],
     },
-    "troubleshooting",
     {
       type: "category",
       label: "📖 Reference",
