@@ -50,35 +50,13 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 
 ### Documentation
 
-Type `@docs` to index and retrieve snippets from any documentation site. You can add any site by selecting "Add Docs" in the dropdown, then entering the root URL of the documentation site and a title to remember it by. After the site has been indexed, you can type `@docs`, select your documentation from the dropdown, and Continue will use similarity search to automatically find important sections when answering your question.
+Type `@docs` to index and retrieve snippets from any documentation site.
 
 ```json
 { "name": "docs" }
 ```
 
-Continue also pre-indexes a number of common sites, listed [here](https://github.com/continuedev/continue/blob/main/core/indexing/docs/preIndexedDocs.ts). The embeddings for these sites are hosted by us, but downloaded for local use after the first time. All other indexing occurs entirely locally.
-
-#### Adding a Documentation Site via Configuration
-
-To add a documentation site via configuration, update the `config.json` file as follows:
-
-```json
-{
-  "name": "docs",
-  "params": {
-    "sites": [
-      {
-        "title": "ExampleDocs",
-        "startUrl": "https://exampledocs.com/docs",
-        "rootUrl": "https://exampledocs.com",
-        "maxDepth": 3 // Default
-      }
-    ]
-  }
-}
-```
-
-The docs are indexed when you modify the configuration file, unless indexing is disabled. If you want to manually trigger the indexing, you can use the command `Continue: Docs Index`. For force indexing, you can use the command `Continue: Docs Force Re-Index`. Note that these commands will work even if automatic indexing is disabled.
+To learn more, visit [Talk To Your Docs](../features/talk-to-your-docs.md).
 
 ### Open Files
 
