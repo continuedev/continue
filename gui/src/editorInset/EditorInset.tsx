@@ -25,7 +25,7 @@ function EditorInset() {
 
   useSetup(dispatch);
 
-  const elementRef = useRef(null);
+  const elementRef = useRef<HTMLDivElement | null>(null);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -46,7 +46,7 @@ function EditorInset() {
   return (
     <EditorInsetDiv ref={elementRef}>
       <TipTapEditor
-        availableContextProviders={availableContextProviders}
+        availableContextProviders={availableContextProviders ?? []}
         availableSlashCommands={availableSlashCommands}
         isMainInput={true}
         onEnter={(e, modifiers) => {

@@ -173,6 +173,7 @@ export class Core {
       console.error(err);
       Telemetry.capture("core_messenger_error", {
         message: err.message,
+        stack: err.stack,
       });
       this.messenger.request("errorPopup", { message: err.message });
     });
@@ -638,8 +639,13 @@ export class Core {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
     });
-    on("index/forceReIndex", async (msg) => {
-      const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
+    on("index/forceReIndex", async ({ data }) => {
+      if (data?.shouldClearIndexes) {
+        const codebaseIndexer = await this.codebaseIndexerPromise;
+        await codebaseIndexer.clearIndexes();
+      }
+
+      const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
@@ -690,6 +696,7 @@ export class Core {
           "indexing_error",
           {
             error: update.desc,
+            stack: update.debugInfo,
           },
           false,
         );

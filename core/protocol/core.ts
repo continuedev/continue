@@ -130,7 +130,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
   "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined | string, void];
+  "index/forceReIndex": [
+    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    void,
+  ];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {

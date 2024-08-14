@@ -31,25 +31,24 @@ const sidebars = {
     },
     {
       type: "category",
-      label: "🎨 Customization",
-      collapsible: true,
-      collapsed: true,
-      items: [
-        "customization/overview",
-        "customization/context-providers",
-        "customization/slash-commands",
-      ],
-    },
-    {
-      type: "category",
-      label: "🪄 Features",
+      label: "⭐ Features",
       collapsible: true,
       collapsed: true,
       items: [
         "features/codebase-embeddings",
         "features/tab-autocomplete",
-        "features/prompt-files",
-        "features/quick-actions",
+        "customization/context-providers",
+        "customization/slash-commands",
+        {
+          type: "doc",
+          id: "features/prompt-files",
+          label: "Prompt Files (experimental)",
+        },
+        {
+          type: "doc",
+          id: "features/quick-actions",
+          label: "Quick Actions (experimental)",
+        },
       ],
     },
     {

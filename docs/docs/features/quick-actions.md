@@ -5,8 +5,6 @@ keywords: [experimental, automate, configuration]
 toc_max_heading_level: 5
 ---
 
-## Quick Actions (experimental, VS Code only)
-
 Quick Actions streamline your development workflow by providing a tool to quickly select an entire class or function to perform a quick edit on. Configure custom actions to execute complex operations with a single click.
 
 ![Quick actions example](/img/quick-actions-demo.gif)

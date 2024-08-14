@@ -279,7 +279,6 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
           title: "Groq",
         },
       },
-      ,
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },

@@ -1,4 +1,5 @@
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Message } from "core/util/messenger";
 import { Telemetry } from "core/util/posthog";
 import fs from "node:fs";
@@ -159,6 +160,7 @@ export class VsCodeWebviewProtocol
               {
                 messageType: msg.messageType,
                 errorMsg: message.split("\n\n")[0],
+                stack: extractMinimalStackTraceInfo(e.stack),
               },
               false,
             );

@@ -20,6 +20,10 @@ class Mistral extends OpenAI {
     ) {
       this.apiBase = options.apiBase ?? "https://codestral.mistral.ai/v1/";
     }
+
+    if (!this.apiBase?.endsWith("/")) {
+      this.apiBase += "/";
+    }
   }
 
   private static modelConversion: { [key: string]: string } = {

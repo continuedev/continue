@@ -37,7 +37,9 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
+  shouldClearIndexes?: boolean;
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  debugInfo?: string;
 }
 
 export type PromptTemplate =
@@ -871,10 +873,14 @@ interface QuickActionConfig {
   sendToChat: boolean;
 }
 
+export type DefaultContextProvider = ContextProviderWithParams & {
+  query?: string;
+};
+
 interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
-  defaultContext?: "activeFile"[];
+  defaultContext?: DefaultContextProvider[];
   promptPath?: string;
 
   /**

@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import * as fs from "node:fs";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
+import plimit from "p-limit";
 import { IndexTag, IndexingProgressUpdate } from "../index.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 import {
@@ -143,7 +144,6 @@ async function getAddRemoveForTag(
 
   const saved = await getSavedItemsForTag(tag);
 
-  const add: PathAndCacheKey[] = [];
   const updateNewVersion: PathAndCacheKey[] = [];
   const updateOldVersion: PathAndCacheKey[] = [];
   const remove: PathAndCacheKey[] = [];
@@ -178,15 +178,16 @@ async function getAddRemoveForTag(
     }
   }
 
-  // Any leftover in current files need to be added
-  add.push(
-    ...(await Promise.all(
-      Object.keys(files).map(async (path) => {
-        const fileContents = await readFile(path);
-        return { path, cacheKey: calculateHash(fileContents) };
-      }),
-    )),
-  );
+  // limit to only 10 concurrent file reads to avoid issues such as
+  // "too many file handles". A large number here does not improve
+  // throughput due to the nature of disk or network i/o -- huge
+  // amounts of readers generally does not improve performance
+  const limit = plimit(10);
+  const promises = Object.keys(files).map(async (path) => {
+    const fileContents = await limit(() => readFile(path));
+    return { path, cacheKey: calculateHash(fileContents) };
+  });
+  const add: PathAndCacheKey[] = await Promise.all(promises);
 
   // Create the markComplete callback function
   const db = await SqliteDb.get();
@@ -408,7 +409,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        async () => {},
+        async () => { },
         repoName,
       )) {
       }
