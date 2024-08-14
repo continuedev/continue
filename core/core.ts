@@ -173,6 +173,7 @@ export class Core {
       console.error(err);
       Telemetry.capture("core_messenger_error", {
         message: err.message,
+        stack: err.stack,
       });
       this.messenger.request("errorPopup", { message: err.message });
     });
