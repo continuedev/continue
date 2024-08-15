@@ -39,6 +39,20 @@ function copyConfigSchema() {
   fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
 }
 
+function copyTokenizers() {
+  fs.copyFileSync(
+    path.join(__dirname, "../../../core/llm/llamaTokenizerWorkerPool.mjs"),
+    path.join(__dirname, "../out/llamaTokenizerWorkerPool.mjs"),
+  );
+  console.log("[info] Copied llamaTokenizerWorkerPool");
+
+  fs.copyFileSync(
+    path.join(__dirname, "../../../core/llm/llamaTokenizer.mjs"),
+    path.join(__dirname, "../out/llamaTokenizer.mjs"),
+  );
+  console.log("[info] Copied llamaTokenizer");
+}
+
 function installNodeModules() {
   // Make sure we are in the right directory
   if (!process.cwd().endsWith("vscode")) {
@@ -242,6 +256,7 @@ async function copyNodeModules() {
     "@esbuild",
     "@lancedb",
     "@vscode/ripgrep",
+    "workerpool"
   ];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
@@ -497,4 +512,5 @@ module.exports = {
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
   downloadRipgrepBinary,
+  copyTokenizers
 };
