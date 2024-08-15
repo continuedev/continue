@@ -426,59 +426,60 @@ jobs:
           path: ${{ github.workspace }}/build/reports/pluginVerifier
 
   upload-release:
-    # # Update Unreleased section with the current release note
-    # - name: Patch Changelog
-    #   if: ${{ steps.properties.outputs.changelog != '' }}
-    #   env:
-    #     CHANGELOG: ${{ steps.properties.outputs.changelog }}
-    #   run: |
-    #     ./gradlew patchChangelog --release-note="$CHANGELOG"
+    steps:
+      # # Update Unreleased section with the current release note
+      # - name: Patch Changelog
+      #   if: ${{ steps.properties.outputs.changelog != '' }}
+      #   env:
+      #     CHANGELOG: ${{ steps.properties.outputs.changelog }}
+      #   run: |
+      #     ./gradlew patchChangelog --release-note="$CHANGELOG"
 
-    - name: Download the plugin
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ steps.artifact.outputs.filename }}
-        path: ./build/distributions/
+      - name: Download the plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.filename }}
+          path: ./build/distributions/
 
-    # Upload artifact as a release asset
-    - name: Upload Release Asset
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+      # Upload artifact as a release asset
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
-    # Publish the plugin to JetBrains Marketplace
-    - name: Publish Plugin
-      env:
-        PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
-        CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
-        PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
-        PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
-      run: ./gradlew publishPlugin
+      # Publish the plugin to JetBrains Marketplace
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+        run: ./gradlew publishPlugin
 
-    # Create a pull request
-    - name: Create Pull Request
-      if: ${{ steps.properties.outputs.changelog != '' }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        VERSION="${{ github.event.release.tag_name }}"
-        BRANCH="changelog-update-$VERSION"
-        LABEL="release changelog"
+      # Create a pull request
+      - name: Create Pull Request
+        if: ${{ steps.properties.outputs.changelog != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          BRANCH="changelog-update-$VERSION"
+          LABEL="release changelog"
 
-        git config user.email "action@github.com"
-        git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
 
-        git checkout -b $BRANCH
-        git commit -am "Changelog update - $VERSION"
-        git push --set-upstream origin $BRANCH
+          git checkout -b $BRANCH
+          git commit -am "Changelog update - $VERSION"
+          git push --set-upstream origin $BRANCH
 
-        gh label create "$LABEL" \
-          --description "Pull requests with release changelog update" \
-          --force \
-          || true
+          gh label create "$LABEL" \
+            --description "Pull requests with release changelog update" \
+            --force \
+            || true
 
-        gh pr create \
-          --title "Changelog update - \`$VERSION\`" \
-          --body "Current pull request contains patched \`CHANGELOG.md\` file for the \`$VERSION\` version." \
-          --label "$LABEL" \
-          --head $BRANCH
+          gh pr create \
+            --title "Changelog update - \`$VERSION\`" \
+            --body "Current pull request contains patched \`CHANGELOG.md\` file for the \`$VERSION\` version." \
+            --label "$LABEL" \
+            --head $BRANCH
