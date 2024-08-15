@@ -29,6 +29,8 @@ class BedrockImport extends BaseLLM {
     }
     if (options.profile) {
       this.profile = options.profile;
+    } else {
+      this.profile = "bedrock";
     }
   }
 
