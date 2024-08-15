@@ -306,8 +306,23 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     const dbRows = await this.computeRows(results.compute);
+
     await this.insertRows(sqliteDb, dbRows);
+
+    await Promise.all(
+      results.compute.map((result) => {
+        addComputedLanceDbRows(
+          result,
+          dbRows.filter(
+            (row) =>
+              row.path === result.path && row.cachekey === result.cacheKey,
+          ),
+        );
+      }),
+    );
+
     await markComplete(results.compute, IndexResultType.Compute);
+
     let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache

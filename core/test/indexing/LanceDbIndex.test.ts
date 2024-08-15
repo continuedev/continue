@@ -49,9 +49,16 @@ describe("ChunkCodebaseIndex", () => {
 
     await insertMockChunks();
 
-    // Compute test - only inserts into Sqlite
+    // Compute test - inserts into both LanceDB and Sqlite
     await updateIndexAndAwaitGenerator(index, "compute", mockMarkComplete);
 
+    // Note that we must wait until the first call 'compute' result has been processed.
+    // The current functionality of the `update` function doesn't insert into the Lance DB
+    // table until this point. We need to wait for this event to avoid needing to create a
+    // mock embedding to instantiate the table with.
+    const table = await lanceDb.openTable(lanceTableName);
+
+    expect(await table.countRows()).toBe(1);
     expect((await getAllSqliteLanceDbCache()).length).toBe(1);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
@@ -60,12 +67,6 @@ describe("ChunkCodebaseIndex", () => {
 
     // AddTag test - only inserts into Lance DB
     await updateIndexAndAwaitGenerator(index, "addTag", mockMarkComplete);
-
-    // Note that we must wait until the first call 'addTag' result has been processed.
-    // The current functionality of the `update` function doesn't insert into the Lance DB
-    // table until this point. We need to wait for this event to avoid needing to create a
-    // mock embedding to instantiate the table with.
-    const table = await lanceDb.openTable(lanceTableName);
 
     expect(await table.countRows()).toBe(1);
     expect(mockMarkComplete).toHaveBeenCalledWith(

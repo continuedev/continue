@@ -1,6 +1,8 @@
+import * as fs from "fs/promises";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
+import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
@@ -13,7 +15,6 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
-import * as fs from "fs/promises";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -259,6 +260,7 @@ export class CodebaseIndexer {
       progress: 0,
       desc: `Indexing failed: ${err}`,
       status: "failed",
+      debugInfo: extractMinimalStackTraceInfo((err as any)?.stack),
     };
   }
 
@@ -282,6 +284,7 @@ export class CodebaseIndexer {
       desc: errMsg,
       status: "failed",
       shouldClearIndexes,
+      debugInfo: extractMinimalStackTraceInfo(err.stack),
     };
   }
 
