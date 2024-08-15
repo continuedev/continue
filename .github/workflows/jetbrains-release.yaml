@@ -5,10 +5,9 @@
 name: Release
 
 on:
-  push:
-    # create:
-    #   tags:
-    #     - "v0.0.*-jetbrains"
+  create:
+    tags:
+      - "v0.0.*-jetbrains"
     branches:
       - nate/apple-developer-finally
 
