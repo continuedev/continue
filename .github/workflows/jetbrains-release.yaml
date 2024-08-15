@@ -34,7 +34,7 @@ jobs:
           fi
 
   # Prepare and publish the plugin to JetBrains Marketplace repository
-  release:
+  build:
     needs: check_release_name
     if: needs.check_release_name.outputs.should_run == 'true'
     name: Publish Plugin
