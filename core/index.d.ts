@@ -331,7 +331,7 @@ export interface LLMOptions {
   apiBase?: string;
 
   useLegacyCompletionsEndpoint?: boolean;
-
+  
   // Cloudflare options
   accountId?: string;
 
@@ -902,6 +902,7 @@ export interface SerializedContinueConfig {
   customCommands?: CustomCommand[];
   contextProviders?: ContextProviderWithParams[];
   disableIndexing?: boolean;
+  disablePromptCaching?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
@@ -943,6 +944,8 @@ export interface Config {
   contextProviders?: (CustomContextProvider | ContextProviderWithParams)[];
   /** If set to true, Continue will not index your codebase for retrieval */
   disableIndexing?: boolean;
+  /** If set to true, Continue will not send message caching requests to supported providers (Anthropic). 1st msg costs 25% more, then 90% less for 5 minutes renewed with each message (Beta Pricing 8/15/24). */
+  disablePromptCaching?: boolean;
   /** If set to true, Continue will not make extra requests to the LLM to generate a summary title of each session. */
   disableSessionTitles?: boolean;
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
@@ -975,8 +978,9 @@ export interface ContinueConfig {
   requestOptions?: RequestOptions;
   slashCommands?: SlashCommand[];
   contextProviders?: IContextProvider[];
-  disableSessionTitles?: boolean;
   disableIndexing?: boolean;
+  disablePromptCaching?: boolean;
+  disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModels?: ILLM[];
@@ -997,6 +1001,7 @@ export interface BrowserSerializedContinueConfig {
   slashCommands?: SlashCommandDescription[];
   contextProviders?: ContextProviderDescription[];
   disableIndexing?: boolean;
+  disablePromptCaching?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: string;

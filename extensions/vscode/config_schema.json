@@ -1991,6 +1991,12 @@
           "default": false,
           "type": "boolean"
         },
+        "disablePromptCaching": {
+          "title": "Disable Prompt Caching",
+          "markdownDescription": "If set to `true`, Continue will not send a caching request to supported providers (Anthropic). Cost savings are significant (40-90%) when sending more than 1 message per 5 minutes using chat.",
+          "default": false,
+          "type": "boolean"
+        },
         "disableSessionTitles": {
           "title": "Disable Session Titles",
           "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",

@@ -7,8 +7,15 @@ import {
 import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
+import { ConfigHandler } from "../../config/ConfigHandler.js";
 
 class Anthropic extends BaseLLM {
+  private configHandler: ConfigHandler;
+  constructor(options: LLMOptions, configHandler: ConfigHandler) {
+    super(options);
+    this.configHandler = configHandler;
+  }
+  // give Anthropic the custom sugar and hope caching overtakes batching as industry standard. LFG THE SAVINGS!
   static providerName: ModelProvider = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
     model: "claude-3-5-sonnet-20240620",
@@ -39,13 +46,25 @@ class Anthropic extends BaseLLM {
       .filter((m) => m.role !== "system")
       .map((message) => {
         if (typeof message.content === "string") {
-          return message;
+          return {
+            ...message,
+            content: [
+              {
+                type: "text",
+                text: message.content,
+                cache_control: { type: "ephemeral" },
+              },
+            ],
+          };
         }
         return {
           ...message,
           content: message.content.map((part) => {
             if (part.type === "text") {
-              return part;
+              return {
+                ...part,
+                cache_control: { type: "ephemeral" },
+              };
             }
             return {
               type: "image",
@@ -75,18 +94,37 @@ class Anthropic extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "anthropic-version": "2023-06-01",
+      "x-api-key": this.apiKey as string,
+      "anthropic-beta": ""
+    };
+
+
+  // Elegant caching meant to be destroyed or escalated post-beta
+  // If user leads with /nocache don't, if they /cache then do, otherwise check if the new global cache default has been overwritten, if not lfg cache it
+  const lastMessage = messages[messages.length - 1];
+  const lastContent = typeof lastMessage.content === 'string' ? lastMessage.content : lastMessage.content.find(part => part.type === 'text')?.text ?? '';
+  
+  if (!lastContent.startsWith('/nocache') && (lastContent.startsWith('/cache') || !(await this.configHandler.loadConfig()).disablePromptCaching)) {
+    headers["anthropic-beta"] = "prompt-caching-2024-07-31";
+  }
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.apiKey as string,
-      },
+      headers: headers,
       body: JSON.stringify({
         ...this._convertArgs(options),
         messages: this._convertMessages(messages),
-        system: this.systemMessage,
+        system: this.systemMessage ? [
+          {
+            type: "text",
+            text: this.systemMessage,
+            cache_control: { type: "ephemeral" },
+          },
+        ] : undefined,
       }),
     });
 

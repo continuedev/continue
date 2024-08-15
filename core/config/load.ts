@@ -475,6 +475,7 @@ function finalToBrowserConfig(
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
+    disablePromptCaching: final.disablePromptCaching,
     disableSessionTitles: final.disableSessionTitles,
     userToken: final.userToken,
     embeddingsProvider: final.embeddingsProvider?.id,

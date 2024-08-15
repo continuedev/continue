@@ -704,6 +704,7 @@ declare global {
     customCommands?: CustomCommand[];
     contextProviders?: ContextProviderWithParams[];
     disableIndexing?: boolean;
+    disablePromptCaching?: boolean;
     disableSessionTitles?: boolean;
     userToken?: string;
     embeddingsProvider?: EmbeddingsProviderDescription;
@@ -742,6 +743,8 @@ declare global {
     contextProviders?: (CustomContextProvider | ContextProviderWithParams)[];
     /** If set to true, Continue will not index your codebase for retrieval */
     disableIndexing?: boolean;
+    /** "If set to true, Continue will not send a caching request to supported providers (Anthropic). Cost savings are significant (40-90%) when sending more than 1 message per 5 minutes using chat.",
+    disablePromptCaching?: boolean;
     /** If set to true, Continue will not make extra requests to the LLM to generate a summary title of each session. */
     disableSessionTitles?: boolean;
     /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
@@ -768,6 +771,7 @@ declare global {
     requestOptions?: RequestOptions;
     slashCommands?: SlashCommand[];
     contextProviders?: IContextProvider[];
+    disablePromptCaching?: boolean;
     disableSessionTitles?: boolean;
     disableIndexing?: boolean;
     userToken?: string;
@@ -788,6 +792,7 @@ declare global {
     slashCommands?: SlashCommandDescription[];
     contextProviders?: ContextProviderDescription[];
     disableIndexing?: boolean;
+    disablePromptCaching?: boolean;
     disableSessionTitles?: boolean;
     userToken?: string;
     embeddingsProvider?: string;
