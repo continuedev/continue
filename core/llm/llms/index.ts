@@ -11,6 +11,7 @@ import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
+import BedrockImport from "./BedrockImport";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
@@ -53,6 +54,7 @@ const LLMs = [
   LMStudio,
   Mistral,
   Bedrock,
+  BedrockImport,
   SageMaker,
   DeepInfra,
   Flowise,
