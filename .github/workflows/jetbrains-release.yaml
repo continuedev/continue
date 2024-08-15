@@ -435,9 +435,9 @@ jobs:
 
     - name: Download the plugin
       uses: actions/download-artifact@v4
-       with:
-         name: ${{ steps.artifact.outputs.filename }}
-         path: ./build/distributions/
+      with:
+        name: ${{ steps.artifact.outputs.filename }}
+        path: ./build/distributions/
 
     # Upload artifact as a release asset
     - name: Upload Release Asset
