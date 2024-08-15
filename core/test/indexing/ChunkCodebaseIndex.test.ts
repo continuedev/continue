@@ -18,6 +18,14 @@ describe("ChunkCodebaseIndex", () => {
   let index: ChunkCodebaseIndex;
   let db: DatabaseConnection;
 
+  async function getAllChunks() {
+    return await db.all("SELECT * FROM chunks");
+  }
+
+  async function getAllChunkTags() {
+    return await db.all("SELECT * FROM chunk_tags");
+  }
+
   beforeAll(async () => {
     const pathSep = await testIde.pathSep();
 
@@ -40,54 +48,33 @@ describe("ChunkCodebaseIndex", () => {
 
     // Compute test
     await updateIndexAndAwaitGenerator(index, "compute", mockMarkComplete);
-
-    const computeResult = await db.get(
-      "SELECT * FROM chunks WHERE cacheKey = ?",
-      [mockPathAndCacheKey.cacheKey],
-    );
-
-    expect(computeResult).toBeTruthy();
+    expect((await getAllChunks()).length).toBe(1);
+    expect((await getAllChunkTags()).length).toBe(1);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
       IndexResultType.Compute,
     );
 
-    // AddTag test
-    await updateIndexAndAwaitGenerator(index, "addTag", mockMarkComplete);
-
-    const addTagResult = await db.get(
-      "SELECT * FROM chunk_tags WHERE chunkId = ?",
-      [computeResult.id],
-    );
-
-    expect(addTagResult).toBeTruthy();
-    expect(mockMarkComplete).toHaveBeenCalledWith(
-      [mockPathAndCacheKey],
-      IndexResultType.AddTag,
-    );
-
     // RemoveTag test
     await updateIndexAndAwaitGenerator(index, "removeTag", mockMarkComplete);
-
-    const removeTagResult = await db.get(
-      "SELECT * FROM chunk_tags WHERE id = ?",
-      [addTagResult.id],
-    );
-
-    expect(removeTagResult).toBeFalsy();
+    expect((await getAllChunkTags()).length).toBe(0);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
       IndexResultType.RemoveTag,
     );
 
+    // AddTag test
+    await updateIndexAndAwaitGenerator(index, "addTag", mockMarkComplete);
+    expect((await getAllChunkTags()).length).toBe(1);
+    expect(mockMarkComplete).toHaveBeenCalledWith(
+      [mockPathAndCacheKey],
+      IndexResultType.AddTag,
+    );
+
     // Delete test
     await updateIndexAndAwaitGenerator(index, "del", mockMarkComplete);
-
-    const delResult = await db.get("SELECT * FROM chunks WHERE id = ?", [
-      computeResult.id,
-    ]);
-
-    expect(delResult).toBeFalsy();
+    expect((await getAllChunks()).length).toBe(0);
+    expect((await getAllChunkTags()).length).toBe(0);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
       IndexResultType.Delete,

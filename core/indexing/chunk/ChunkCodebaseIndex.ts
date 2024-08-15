@@ -117,13 +117,16 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      const deleted = await db.run("DELETE FROM chunks WHERE cacheKey = ?", [
-        item.cacheKey,
-      ]);
+      const chunkToDelete = await db.get(
+        "SELECT id FROM chunks WHERE cacheKey = ?",
+        [item.cacheKey],
+      );
+
+      await db.run("DELETE FROM chunks WHERE id = ?", [chunkToDelete.id]);
 
       // Delete from chunk_tags
       await db.run("DELETE FROM chunk_tags WHERE chunkId = ?", [
-        deleted.lastID,
+        chunkToDelete.id,
       ]);
 
       await markComplete([item], IndexResultType.Delete);

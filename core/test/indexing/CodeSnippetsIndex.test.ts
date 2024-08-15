@@ -14,12 +14,20 @@ describe("CodeSnippetsCodebaseIndex", () => {
   let index: CodeSnippetsCodebaseIndex;
   let db: DatabaseConnection;
 
-  beforeEach(async () => {
+  async function getAllSnippets() {
+    return await db.all("SELECT * FROM code_snippets");
+  }
+
+  async function getAllSnippetTags() {
+    return await db.all("SELECT * FROM code_snippets_tags");
+  }
+
+  beforeAll(async () => {
     db = await SqliteDb.get();
     index = new CodeSnippetsCodebaseIndex(testIde);
   });
 
-  it("should update the index and maintain expected database state, following the same processing order of results as the update method", async () => {
+  it("should update the index and maintain expected database state", async () => {
     const mockMarkComplete = jest
       .fn()
       .mockImplementation(() => Promise.resolve()) as any;
@@ -41,75 +49,36 @@ describe("CodeSnippetsCodebaseIndex", () => {
 
     // Compute test
     await updateIndexAndAwaitGenerator(index, "compute", mockMarkComplete);
-
-    const computeResult = await db.get(
-      "SELECT * FROM code_snippets WHERE path = ?",
-      [mockPathAndCacheKey.path],
-    );
-
-    const computeResultTags = await db.get(
-      "SELECT * FROM code_snippets_tags WHERE snippetId = ?",
-      [computeResult.id],
-    );
-
-    expect(computeResult).toBeTruthy();
-    expect(computeResultTags).toBeTruthy();
+    expect((await getAllSnippetTags()).length).toBe(1);
+    expect((await getAllSnippets()).length).toBe(1);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
       IndexResultType.Compute,
     );
 
-    // Delete test
-    await updateIndexAndAwaitGenerator(index, "del", mockMarkComplete);
-
-    const delResult = await db.get("SELECT * FROM code_snippets WHERE id = ?", [
-      computeResult.id,
-    ]);
-
-    const delResultTags = await db.get(
-      "SELECT * FROM code_snippets_tags WHERE id = ?",
-      [computeResultTags.id],
-    );
-
-    expect(delResult).toBeFalsy();
-    expect(delResultTags).toBeFalsy();
+    // RemoveTag test
+    await updateIndexAndAwaitGenerator(index, "removeTag", mockMarkComplete);
+    expect((await getAllSnippetTags()).length).toBe(0);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
-      IndexResultType.Delete,
+      IndexResultType.RemoveTag,
     );
 
     // AddTag test
     await updateIndexAndAwaitGenerator(index, "addTag", mockMarkComplete);
-
-    const addTagResult = await db.get(
-      "SELECT * FROM code_snippets WHERE path = ?",
-      [mockPathAndCacheKey.path],
-    );
-
-    const addTagResultTags = await db.get(
-      "SELECT * FROM code_snippets_tags WHERE snippetId = ?",
-      [addTagResult.id],
-    );
-
-    expect(addTagResult).toBeTruthy();
-    expect(addTagResultTags).toBeTruthy();
+    expect((await getAllSnippetTags()).length).toBe(1);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
       IndexResultType.AddTag,
     );
 
-    // RemoveTag test
-    await updateIndexAndAwaitGenerator(index, "removeTag", mockMarkComplete);
-
-    const removeTagResultTag = await db.get(
-      "SELECT * FROM code_snippets_tags WHERE id = ?",
-      [addTagResultTags.id],
-    );
-
-    expect(removeTagResultTag).toBeFalsy();
+    // Delete test
+    await updateIndexAndAwaitGenerator(index, "del", mockMarkComplete);
+    expect((await getAllSnippetTags()).length).toBe(0);
+    expect((await getAllSnippets()).length).toBe(0);
     expect(mockMarkComplete).toHaveBeenCalledWith(
       [mockPathAndCacheKey],
-      IndexResultType.RemoveTag,
+      IndexResultType.Delete,
     );
   });
 });

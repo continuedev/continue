@@ -200,6 +200,10 @@ export async function migrate(
   callback: () => void | Promise<void>,
   onAlreadyComplete?: () => void,
 ) {
+  if (process.env.NODE_ENV === "test") {
+    return await Promise.resolve(callback());
+  }
+
   const migrationsPath = getMigrationsFolderPath();
   const migrationPath = path.join(migrationsPath, id);
 

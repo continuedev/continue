@@ -91,11 +91,12 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      const { lastID } = await db.run(
-        "DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?",
-        [item.path, item.cacheKey],
-      );
-      await db.run("DELETE FROM fts WHERE rowid = ?", [lastID]);
+      await db.run("DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?", [
+        item.path,
+        item.cacheKey,
+      ]);
+
+      await db.run("DELETE FROM fts WHERE path = ?", [item.path]);
 
       markComplete([item], IndexResultType.Delete);
     }

@@ -21,6 +21,7 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
+import lance from "vectordb";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -48,7 +49,7 @@ export class LanceDbIndex implements CodebaseIndex {
     private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
-  private tableNameForTag(tag: IndexTag) {
+  tableNameForTag(tag: IndexTag) {
     return tagToString(tag).replace(/[^\w-_.]/g, "");
   }
 
@@ -203,36 +204,35 @@ export class LanceDbIndex implements CodebaseIndex {
     markComplete: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const lancedb = await import("vectordb");
-    const tableName = this.tableNameForTag(tag);
-    const db = await lancedb.connect(getLanceDbPath());
+    const sqliteDb = await SqliteDb.get();
+    await this.createSqliteCacheTable(sqliteDb);
 
-    const sqlite = await SqliteDb.get();
-    await this.createSqliteCacheTable(sqlite);
+    const lanceTableName = this.tableNameForTag(tag);
+    const lanceDb = await lance.connect(getLanceDbPath());
+    const existingLanceTables = await lanceDb.tableNames();
+
+    let lanceTable: Table<number[]> | undefined = undefined;
+    let needToCreateLanceTable = !existingLanceTables.includes(lanceTableName);
 
     // Compute
-    let table: Table<number[]> | undefined = undefined;
-    const existingTables = await db.tableNames();
-    let needToCreateTable = !existingTables.includes(tableName);
-
     const addComputedLanceDbRows = async (
       pathAndCacheKey: PathAndCacheKey,
       computedRows: LanceDbRow[],
     ) => {
       // Create table if needed, add computed rows
-      if (table) {
+      if (lanceTable) {
         if (computedRows.length > 0) {
-          await table.add(computedRows);
+          await lanceTable.add(computedRows);
         }
-      } else if (existingTables.includes(tableName)) {
-        table = await db.openTable(tableName);
-        needToCreateTable = false;
+      } else if (existingLanceTables.includes(lanceTableName)) {
+        lanceTable = await lanceDb.openTable(lanceTableName);
+        needToCreateLanceTable = false;
         if (computedRows.length > 0) {
-          await table.add(computedRows);
+          await lanceTable.add(computedRows);
         }
       } else if (computedRows.length > 0) {
-        table = await db.createTable(tableName, computedRows);
-        needToCreateTable = false;
+        lanceTable = await lanceDb.createTable(lanceTableName, computedRows);
+        needToCreateLanceTable = false;
       }
 
       // Mark item complete
@@ -272,7 +272,7 @@ export class LanceDbIndex implements CodebaseIndex {
             };
             rows.push(row);
 
-            await sqlite.run(
+            await sqliteDb.run(
               "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
               row.uuid,
               row.cachekey,
@@ -306,13 +306,13 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     const dbRows = await this.computeRows(results.compute);
-    await this.insertRows(sqlite, dbRows);
+    await this.insertRows(sqliteDb, dbRows);
     await markComplete(results.compute, IndexResultType.Compute);
     let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache
     for (const { path, cacheKey } of results.addTag) {
-      const stmt = await sqlite.prepare(
+      const stmt = await sqliteDb.prepare(
         "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
         cacheKey,
         path,
@@ -330,15 +330,15 @@ export class LanceDbIndex implements CodebaseIndex {
       });
 
       if (lanceRows.length > 0) {
-        if (needToCreateTable) {
-          table = await db.createTable(tableName, lanceRows);
-          needToCreateTable = false;
-        } else if (!table) {
-          table = await db.openTable(tableName);
-          needToCreateTable = false;
-          await table.add(lanceRows);
+        if (needToCreateLanceTable) {
+          lanceTable = await lanceDb.createTable(lanceTableName, lanceRows);
+          needToCreateLanceTable = false;
+        } else if (!lanceTable) {
+          lanceTable = await lanceDb.openTable(lanceTableName);
+          needToCreateLanceTable = false;
+          await lanceTable.add(lanceRows);
         } else {
-          await table?.add(lanceRows);
+          await lanceTable?.add(lanceRows);
         }
       }
 
@@ -352,11 +352,13 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     // Delete or remove tag - remove from lance table)
-    if (!needToCreateTable) {
+    if (!needToCreateLanceTable) {
       const toDel = [...results.removeTag, ...results.del];
       for (const { path, cacheKey } of toDel) {
         // This is where the aforementioned lowercase conversion problem shows
-        await table?.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
+        await lanceTable?.delete(
+          `cachekey = '${cacheKey}' AND path = '${path}'`,
+        );
 
         accumulatedProgress += 1 / toDel.length / 3;
         yield {
@@ -370,7 +372,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Delete - also remove from sqlite cache
     for (const { path, cacheKey } of results.del) {
-      await sqlite.run(
+      await sqliteDb.run(
         "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
         cacheKey,
         path,
