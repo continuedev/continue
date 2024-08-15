@@ -5,15 +5,14 @@
 name: Release
 
 on:
-  create:
-    tags:
-      - "v0.0.*-jetbrains"
-    branches:
-      - nate/apple-developer-finally
+  release:
+    types: [prereleased]
 
 defaults:
   run:
     working-directory: ./extensions/intellij
+
+if: ${{ startsWith(github.event.release.tag_name, 'v') }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}

@@ -1,7 +1,7 @@
 name: Publish Extension
 
 on:
-  create:
+  push:
     tags:
       - "v0.8.*-vscode"
     branches:
