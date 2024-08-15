@@ -12,8 +12,6 @@ defaults:
   run:
     working-directory: ./extensions/intellij
 
-if: ${{ startsWith(github.event.release.tag_name, 'v') }}
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -26,7 +24,7 @@ jobs:
     steps:
       - id: check
         run: |
-          if [[ "${{ github.event.release.name }}" == *-jetbrains ]]; then
+          if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
