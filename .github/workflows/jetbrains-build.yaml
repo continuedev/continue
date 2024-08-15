@@ -110,7 +110,7 @@ jobs:
           npm ci
 
       # npm install binary
-      - name: Install core node_modules
+      - name: Install binary node_modules
         run: |
           cd ../../binary
           npm ci
