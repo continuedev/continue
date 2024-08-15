@@ -425,6 +425,7 @@ jobs:
           path: ${{ github.workspace }}/build/reports/pluginVerifier
 
   upload-release:
+    runs-on: ubuntu-latest
     steps:
       # # Update Unreleased section with the current release note
       # - name: Patch Changelog
