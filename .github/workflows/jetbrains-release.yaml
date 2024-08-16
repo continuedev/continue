@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}
+    working-directory: .
     steps:
       - id: check
         run: |
