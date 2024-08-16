@@ -44,47 +44,48 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
-      - name: Install extension Dependencies
+      - name: extensions/vscode install
         run: |
-          cd extensions/vscode
+          cd 
           npm ci
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: Install gui Dependencies
+      - name: extensions/vscode checks
         run: |
-          cd gui
-          npm ci
+          cd extensions/vscode
+          npx tsc --noEmit
 
-      - name: Install Core Dependencies
+      - name: core install
         run: |
           cd core
-          npm ci
-
-      - name: Install Binary Dependencies
-        run: |
-          cd binary
           npm ci
 
       - name: core checks
         run: |
           cd core
+          npm ci
           npx tsc --noEmit
           npm run lint
           npm run test
 
-      - name: tsc extensions/vscode
+      - name: gui install
         run: |
-          cd extensions/vscode
-          npx tsc --noEmit
+          cd 
+          npm ci
 
-      - name: tsc binary
-        run: |
-          cd binary
-          npx tsc --noEmit
-
-      - name: tsc gui
+      - name: gui checks
         run: |
           cd gui
+          npx tsc --noEmit
+
+      - name: binary install
+        run: |
+          cd 
+          npm ci
+
+      - name: binary checks
+        run: |
+          cd binary
           npx tsc --noEmit
