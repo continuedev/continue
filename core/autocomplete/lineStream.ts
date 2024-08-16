@@ -82,6 +82,7 @@ export const LINES_TO_REMOVE_BEFORE_START = [
   "[CODE]",
   "<START EDITING HERE>",
 ];
+
 export const ENGLISH_START_PHRASES = [
   "here is",
   "here's",
