@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-
 import { jest } from "@jest/globals";
 import {
   insertMockChunks,

@@ -19,13 +19,10 @@ export const allEmbeddingsProviders: Record<
   EmbeddingsProviderConstructor
 > = {
   ollama: OllamaEmbeddingsProvider,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   "transformers.js": TransformersJsEmbeddingsProvider,
   openai: OpenAIEmbeddingsProvider,
   cohere: CohereEmbeddingsProvider,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   "free-trial": FreeTrialEmbeddingsProvider,
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   "huggingface-tei": HuggingFaceTEIEmbeddingsProvider,
   gemini: GeminiEmbeddingsProvider,
   "continue-proxy": ContinueProxyEmbeddingsProvider,
