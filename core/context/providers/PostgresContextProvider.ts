@@ -37,7 +37,7 @@ class PostgresContextProvider extends BaseContextProvider {
     let tablesInfoQuery = `
 SELECT table_schema, table_name
 FROM information_schema.tables`;
-    if (schema != null) {
+    if (schema !== null) {
       tablesInfoQuery += ` WHERE table_schema = '${schema}'`;
     }
     const { rows: tablesInfo } = await pool.query(tablesInfoQuery);

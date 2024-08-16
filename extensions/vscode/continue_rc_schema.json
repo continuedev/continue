@@ -242,6 +242,11 @@
           "default": 2048,
           "type": "integer"
         },
+        "maxStopWords": {
+          "title": "Max Stop Words",
+          "description": "The maximum number of stop words that the API will accept. You can set this if you are receiving an error about the number of stop words, but otherwise should leave it undefined.",
+          "type": "integer"
+        },
         "template": {
           "title": "Template",
           "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here. Choose none if you are using vLLM or another server that automatically handles prompting.",

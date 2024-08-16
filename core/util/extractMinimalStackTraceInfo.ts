@@ -5,7 +5,7 @@
  * @returns A string containing the minimal stack trace information.
  */
 export function extractMinimalStackTraceInfo(stack: unknown): string {
-  if (typeof stack !== "string") return "";
+  if (typeof stack !== "string") {return "";}
   const lines = stack.split("\n");
   const minimalLines = lines.filter((line) => {
     return line.trimStart().startsWith("at ") && !line.includes("node_modules");

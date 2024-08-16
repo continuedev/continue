@@ -74,7 +74,7 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request(`/workspaces`, {
+      const resp = await this.request("/workspaces", {
         method: "GET",
       });
       return (await resp.json()) as any;

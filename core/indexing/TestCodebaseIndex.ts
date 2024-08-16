@@ -35,14 +35,14 @@ export class TestCodebaseIndex implements CodebaseIndex {
 
     for (const item of [...results.compute, ...results.addTag]) {
       await db.run(
-        `INSERT INTO test_index (path, branch, directory) VALUES (?, ?, ?)`,
+        "INSERT INTO test_index (path, branch, directory) VALUES (?, ?, ?)",
         [item.path, tag.branch, tag.directory],
       );
     }
 
     for (const item of [...results.del, ...results.removeTag]) {
       await db.run(
-        `DELETE FROM test_index WHERE path = ? AND branch = ? AND directory = ?`,
+        "DELETE FROM test_index WHERE path = ? AND branch = ? AND directory = ?",
         [item.path, tag.branch, tag.directory],
       );
     }

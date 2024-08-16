@@ -26,7 +26,7 @@ export class HuggingFaceTEIReranker implements Reranker {
 
     const resp = await fetch(new URL("rerank", apiBase), {
       method: "POST",
-      headers: { 'Content-Type': 'application/json' },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: query,
         return_text: false,
