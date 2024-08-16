@@ -216,7 +216,7 @@ export class LanceDbIndex implements CodebaseIndex {
     let needToCreateTable = !existingTables.includes(tableName);
 
     const addComputedLanceDbRows = async (
-      pathAndCacheKey: PathAndCacheKey,
+      pathAndCacheKeys: PathAndCacheKey[],
       computedRows: LanceDbRow[],
     ) => {
       // Create table if needed, add computed rows
@@ -236,7 +236,7 @@ export class LanceDbIndex implements CodebaseIndex {
       }
 
       // Mark item complete
-      await markComplete([pathAndCacheKey], IndexResultType.Compute);
+      await markComplete(pathAndCacheKeys, IndexResultType.Compute);
     };
 
     // Check remote cache
@@ -285,7 +285,7 @@ export class LanceDbIndex implements CodebaseIndex {
             );
           }
 
-          await addComputedLanceDbRows({ cacheKey, path }, rows);
+          await addComputedLanceDbRows([{ cacheKey, path }], rows);
         }
 
         // Remove items that don't need to be recomputed
@@ -307,18 +307,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
     const dbRows = await this.computeRows(results.compute);
     await this.insertRows(sqlite, dbRows);
-    await Promise.all(
-      results.compute.map((result) => {
-        addComputedLanceDbRows(
-          result,
-          dbRows.filter(
-            (row) =>
-              row.path === result.path && row.cachekey === result.cacheKey,
-          ),
-        );
-      }),
-    );
-    await markComplete(results.compute, IndexResultType.Compute);
+    await addComputedLanceDbRows(results.compute, dbRows);
     let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache
