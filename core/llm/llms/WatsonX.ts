@@ -13,7 +13,7 @@ const watsonxConfig = {
   },
 };
 class WatsonX extends BaseLLM {
-  protected maxStopWords: number | undefined = undefined;
+  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);
@@ -176,7 +176,9 @@ class WatsonX extends BaseLLM {
       throw new Error(`Something went wrong. Check your credentials, please.`);
     }
 
-    const stopToken = this.watsonxStopToken ?? (options.model.includes("granite") ? "<|im_end|>" : undefined);
+    const stopToken =
+      this.watsonxStopToken ??
+      (options.model.includes("granite") ? "<|im_end|>" : undefined);
     var streamResponse = await fetch(
       `${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`,
       {
