@@ -1,7 +1,7 @@
 import { ChunkCodebaseIndex } from "../../indexing/chunk/ChunkCodebaseIndex";
 import { IContinueServerClient } from "../../continueServer/interface";
-import { testIde } from "../fixtures";
-import { addToTestDir, TEST_DIR } from "../testUtils/testDir";
+import { testIde } from "./fixtures";
+import { addToTestDir, TEST_DIR } from "./testDir";
 import { IndexTag } from "../..";
 import {
   CodebaseIndex,

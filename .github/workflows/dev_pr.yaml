@@ -1,10 +1,9 @@
-name: TypeScript Check
+name: Dev PR checks
 
 on:
   pull_request:
     branches:
-      - main
-      - preview
+      - dev
 
 jobs:
   tsc-check:
@@ -68,10 +67,12 @@ jobs:
           cd binary
           npm ci
 
-      - name: tsc core
+      - name: core checks
         run: |
           cd core
           npx tsc --noEmit
+          npm run lint
+          npm run test
 
       - name: tsc extensions/vscode
         run: |

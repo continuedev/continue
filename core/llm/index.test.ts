@@ -1,5 +1,5 @@
-import { ChatMessage, LLMOptions, ModelProvider } from "../index.js";
-import { BaseLLM } from "../llm/index.js";
+import { ChatMessage, LLMOptions, ModelProvider } from "..";
+import { BaseLLM } from ".";
 
 class DummyLLM extends BaseLLM {
   static providerName: ModelProvider = "openai";

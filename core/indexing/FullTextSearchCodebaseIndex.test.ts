@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { FullTextSearchCodebaseIndex } from "../../indexing/FullTextSearch";
-import { DatabaseConnection, SqliteDb } from "../../indexing/refreshIndex";
-import { IndexResultType } from "../../indexing/types";
+
+import { jest } from "@jest/globals";
 import {
   insertMockChunks,
-  mockPathAndCacheKey,
   updateIndexAndAwaitGenerator,
-} from "./utils";
-import { jest } from "@jest/globals";
+  mockPathAndCacheKey,
+} from "../test/util/indexing";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex";
+import { DatabaseConnection, SqliteDb } from "./refreshIndex";
+import { IndexResultType } from "./types";
 
 describe("FullTextSearchCodebaseIndex", () => {
   let index: FullTextSearchCodebaseIndex;

@@ -1,5 +1,4 @@
-import llamaTokenizer from "./llamaTokenizer.js";
-import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
+import { encodingForModel as _encodingForModel } from "js-tiktoken";
 import workerpool from "workerpool";
 import * as path from "path";
 
@@ -13,7 +12,9 @@ export class LlamaAsyncEncoder implements AsyncEncoder {
   private workerPool: workerpool.Pool;
 
   constructor() {
-    this.workerPool = workerpool.pool(workerCodeFilePath("llamaTokenizerWorkerPool.mjs"));
+    this.workerPool = workerpool.pool(
+      workerCodeFilePath("llamaTokenizerWorkerPool.mjs"),
+    );
   }
 
   async encode(text: string): Promise<number[]> {
@@ -35,7 +36,9 @@ export class GPTAsyncEncoder implements AsyncEncoder {
   private workerPool: workerpool.Pool;
 
   constructor() {
-    this.workerPool = workerpool.pool(workerCodeFilePath("tiktokenWorkerPool.mjs"));
+    this.workerPool = workerpool.pool(
+      workerCodeFilePath("tiktokenWorkerPool.mjs"),
+    );
   }
 
   async encode(text: string): Promise<number[]> {

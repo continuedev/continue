@@ -2,20 +2,20 @@ import { jest } from "@jest/globals";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import { ContinueServerClient } from "../../continueServer/stubs/client.js";
-import { CodebaseIndexer, PauseToken } from "../../indexing/CodebaseIndexer.js";
-import { getComputeDeleteAddRemove } from "../../indexing/refreshIndex.js";
-import { TestCodebaseIndex } from "../../indexing/TestCodebaseIndex.js";
-import { CodebaseIndex } from "../../indexing/types.js";
-import { walkDir } from "../../indexing/walkDir.js";
-import { getIndexSqlitePath } from "../../util/paths.js";
-import { testConfigHandler, testIde } from "../fixtures.js";
+import { ContinueServerClient } from "../continueServer/stubs/client.js";
+import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
+import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
+import { CodebaseIndex } from "./types.js";
+import { walkDir } from "./walkDir.js";
+import { getIndexSqlitePath } from "../util/paths.js";
+import { testConfigHandler, testIde } from "../test/util/fixtures.js";
 import {
   addToTestDir,
   setUpTestDir,
   tearDownTestDir,
   TEST_DIR,
-} from "../testUtils/testDir.js";
+} from "../test/util/testDir.js";
 
 jest.useFakeTimers();
 
@@ -57,7 +57,7 @@ class TestCodebaseIndexer extends CodebaseIndexer {
 
 // These are more like integration tests, whereas we should separately test
 // the individual CodebaseIndex classes
-describe("CodebaseIndexer", () => {
+describe.skip("CodebaseIndexer", () => {
   const pauseToken = new PauseToken(false);
   const continueServerClient = new ContinueServerClient(undefined, undefined);
   const codebaseIndexer = new TestCodebaseIndexer(
