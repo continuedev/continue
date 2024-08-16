@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_run: ${{ steps.check.outputs.should_run }}
-    working-directory: .
     steps:
       - id: check
+        working-directory: .
         run: |
           if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
