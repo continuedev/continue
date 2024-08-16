@@ -2,19 +2,19 @@ export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
   // Replace smart quotes
-  output = output.replace("“", '"');
-  output = output.replace("”", '"');
+  output = output.replace("“", "\"");
+  output = output.replace("”", "\"");
   output = output.replace("‘", "'");
   output = output.replace("’", "'");
 
   // Remove escapes
-  output = output.replace('\\"', '"');
+  output = output.replace("\\\"", "\"");
   output = output.replace("\\'", "'");
   output = output.replace("\\n", "\n");
   output = output.replace("\\t", "\t");
   output = output.replace("\\\\", "\\");
   while (
-    (output.startsWith('"') && output.endsWith('"')) ||
+    (output.startsWith("\"") && output.endsWith("\"")) ||
     (output.startsWith("'") && output.endsWith("'"))
   ) {
     output = output.slice(1, -1);
@@ -120,7 +120,7 @@ export function getUniqueFilePath(
 }
 
 export function shortestRelativePaths(paths: string[]): string[] {
-  if (paths.length === 0) return [];
+  if (paths.length === 0) {return [];}
 
   const partsLengths = paths.map((x) => x.split(SEP_REGEX).length);
   const currentRelativePaths = paths.map(getBasename);
@@ -135,7 +135,7 @@ export function shortestRelativePaths(paths: string[]): string[] {
     const firstDuplicatedPath = currentRelativePaths.find(
       (x, i) => isDuplicated[i],
     );
-    if (!firstDuplicatedPath) break;
+    if (!firstDuplicatedPath) {break;}
 
     currentRelativePaths.forEach((x, i) => {
       if (x === firstDuplicatedPath) {

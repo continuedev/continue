@@ -9,7 +9,7 @@ describe("mergeJson", () => {
     expect(result).toEqual({ a: 1, b: 3, c: 4 });
   });
 
-  it('should overwrite values when mergeBehavior is "overwrite"', () => {
+  it("should overwrite values when mergeBehavior is \"overwrite\"", () => {
     const first = { a: 1, b: 2 };
     const second = { b: 3, c: 4 };
     const result = mergeJson(first, second, "overwrite");
