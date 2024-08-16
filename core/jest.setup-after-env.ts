@@ -16,14 +16,14 @@ globalThis.Response = Response;
 globalThis.TextEncoder = TextEncoder;
 globalThis.TextDecoder = TextDecoder;
 
-global.beforeAll(() => {
+globalThis.beforeAll(() => {
   // We can ignore TS warnings here since we set this explicitly in `./jest.global-setup.ts`
   if (fs.existsSync(process.env.CONTINUE_GLOBAL_DIR!)) {
     fs.rmSync(process.env.CONTINUE_GLOBAL_DIR!, { recursive: true });
   }
 });
 
-global.afterAll(() => {
+globalThis.afterAll(() => {
   // We can ignore TS warnings here since we set this explicitly in `./jest.global-setup.ts`
   if (fs.existsSync(process.env.CONTINUE_GLOBAL_DIR!)) {
     fs.rmSync(process.env.CONTINUE_GLOBAL_DIR!, { recursive: true });
