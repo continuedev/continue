@@ -3,7 +3,11 @@ import { IContinueServerClient } from "../../continueServer/interface";
 import { testIde } from "../fixtures";
 import { addToTestDir, TEST_DIR } from "../testUtils/testDir";
 import { IndexTag } from "../..";
-import { CodebaseIndex, RefreshIndexResults } from "../../indexing/types";
+import {
+  CodebaseIndex,
+  PathAndCacheKey,
+  RefreshIndexResults,
+} from "../../indexing/types";
 import { jest } from "@jest/globals";
 import { tagToString } from "../../indexing/refreshIndex";
 
@@ -12,6 +16,7 @@ export const mockPathAndCacheKey = {
   path: `${TEST_DIR}/${mockFilename}`,
   cacheKey: "abc123",
 };
+
 export const mockFileContents = `\
 def main():
   print("Hello, world!")
@@ -69,12 +74,13 @@ export async function insertMockChunks() {
 export async function updateIndexAndAwaitGenerator(
   index: CodebaseIndex,
   resultType: keyof RefreshIndexResults,
-  mockMarkComplete: any,
+  markComplete: any,
+  tag: IndexTag = mockTag,
 ) {
   const computeGenerator = index.update(
-    mockTag,
+    tag,
     { ...mockResults, [resultType]: [mockPathAndCacheKey] },
-    mockMarkComplete,
+    markComplete,
     "test-repo",
   );
 

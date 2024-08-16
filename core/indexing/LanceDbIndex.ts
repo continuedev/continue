@@ -310,8 +310,8 @@ export class LanceDbIndex implements CodebaseIndex {
     await this.insertRows(sqliteDb, dbRows);
 
     await Promise.all(
-      results.compute.map((result) => {
-        addComputedLanceDbRows(
+      results.compute.map(async (result) => {
+        await addComputedLanceDbRows(
           result,
           dbRows.filter(
             (row) =>
@@ -335,14 +335,17 @@ export class LanceDbIndex implements CodebaseIndex {
       );
       const cachedItems = await stmt.all();
 
-      const lanceRows: LanceDbRow[] = cachedItems.map((item) => {
-        return {
+      const lanceRows: LanceDbRow[] = cachedItems.map(
+        ({ uuid, vector, startLine, endLine, contents }) => ({
           path,
+          uuid,
+          startLine,
+          endLine,
+          contents,
           cachekey: cacheKey,
-          uuid: item.uuid,
-          vector: JSON.parse(item.vector),
-        };
-      });
+          vector: JSON.parse(vector),
+        }),
+      );
 
       if (lanceRows.length > 0) {
         if (needToCreateLanceTable) {
@@ -369,9 +372,14 @@ export class LanceDbIndex implements CodebaseIndex {
     // Delete or remove tag - remove from lance table)
     if (!needToCreateLanceTable) {
       const toDel = [...results.removeTag, ...results.del];
+
+      if (!lanceTable) {
+        lanceTable = await lanceDb.openTable(lanceTableName);
+      }
+
       for (const { path, cacheKey } of toDel) {
         // This is where the aforementioned lowercase conversion problem shows
-        await lanceTable?.delete(
+        await lanceTable.delete(
           `cachekey = '${cacheKey}' AND path = '${path}'`,
         );
 
@@ -383,6 +391,7 @@ export class LanceDbIndex implements CodebaseIndex {
         };
       }
     }
+
     await markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     // Delete - also remove from sqlite cache
@@ -402,6 +411,7 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     await markComplete(results.del, IndexResultType.Delete);
+
     yield {
       progress: 1,
       desc: "Completed Calculating Embeddings",
@@ -423,8 +433,7 @@ export class LanceDbIndex implements CodebaseIndex {
       return [];
     }
 
-    const table = await db.openTable(tableName);
-    let query = table.search(vector);
+    let query = db.search(vector);
     if (directory) {
       // seems like lancedb is only post-filtering, so have to return a bunch of results and slice after
       query = query.where(`path LIKE '${directory}%'`).limit(300);
@@ -441,12 +450,8 @@ export class LanceDbIndex implements CodebaseIndex {
     tags: BranchAndDir[],
     filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
-    const lancedb = await import("vectordb");
-    if (!lancedb.connect) {
-      throw new Error("LanceDB failed to load a native module");
-    }
     const [vector] = await this.embeddingsProvider.embed([query]);
-    const db = await lancedb.connect(getLanceDbPath());
+    const db = await lance.connect(getLanceDbPath());
 
     let allResults = [];
     for (const tag of tags) {
