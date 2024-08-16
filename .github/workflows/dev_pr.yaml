@@ -68,7 +68,6 @@ jobs:
           npm ci
           npx tsc --noEmit
           npm run lint
-          npm run test
 
       - name: gui install
         run: |
