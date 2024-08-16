@@ -17,7 +17,8 @@ import {
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 0.2;
-  artifactId = "sqliteFts";
+  static artifactId = "sqliteFts";
+  artifactId: string = ChunkCodebaseIndex.artifactId;
 
   private async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
@@ -90,11 +91,12 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      const { lastID } = await db.run(
-        "DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?",
-        [item.path, item.cacheKey],
-      );
-      await db.run("DELETE FROM fts WHERE rowid = ?", [lastID]);
+      await db.run("DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?", [
+        item.path,
+        item.cacheKey,
+      ]);
+
+      await db.run("DELETE FROM fts WHERE path = ?", [item.path]);
 
       markComplete([item], IndexResultType.Delete);
     }
