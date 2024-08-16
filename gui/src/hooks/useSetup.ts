@@ -8,7 +8,6 @@ import {
   addContextItemsAtIndex,
   setConfig,
   setTTSActive,
-  setTTSInactive,
   setInactive,
   setSelectedProfileId,
 } from "../redux/slices/stateSlice";
@@ -83,12 +82,8 @@ function useSetup(dispatch: Dispatch<any>) {
     dispatch(setInactive());
   });
 
-  useWebviewListener("setTTSActive", async () => {
-    dispatch(setTTSActive());
-  });
-
-  useWebviewListener("setTTSInactive", async () => {
-    dispatch(setTTSInactive());
+  useWebviewListener("setTTSActive", async (status) => {
+    dispatch(setTTSActive(status));
   });
 
   useWebviewListener("setColors", async (colors) => {

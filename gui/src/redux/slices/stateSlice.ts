@@ -170,8 +170,8 @@ export const stateSlice = createSlice({
         ? lastHistory.promptLogs.concat(payload)
         : payload;
     },
-    setTTSActive: (state) => {
-      state.ttsActive = true;
+    setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
+      state.ttsActive = payload;
     },
     setActive: (state) => {
       state.active = true;
@@ -333,9 +333,6 @@ export const stateSlice = createSlice({
         return;
       }
       historyItem.contextItems.push(...payload.contextItems);
-    },
-    setTTSInactive: (state) => {
-      state.ttsActive = false;
     },
     setInactive: (state) => {
       state.active = false;
@@ -508,7 +505,6 @@ export const {
   setContextItemsAtIndex,
   addContextItems,
   addContextItemsAtIndex,
-  setTTSInactive,
   setInactive,
   streamUpdate,
   newSession,
