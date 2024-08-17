@@ -29,6 +29,7 @@ import Mistral from "./Mistral";
 import Msty from "./Msty";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
+import OpenRouter from "./OpenRouter";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import TextGenWebUI from "./TextGenWebUI";
@@ -64,6 +65,7 @@ const LLMs = [
   Msty,
   Azure,
   WatsonX,
+  OpenRouter,
 ];
 
 export async function llmFromDescription(

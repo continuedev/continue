@@ -610,7 +610,8 @@ type ModelProvider =
   | "azure"
   | "openai-aiohttp"
   | "msty"
-  | "watsonx";
+  | "watsonx"
+  | "openrouter";
 
 export type ModelName =
   | "AUTODETECT"
