@@ -1,5 +1,5 @@
-import { ChunkWithoutID } from "../../../index.js";
-import { codeChunker } from "../../../indexing/chunk/code.js";
+import { ChunkWithoutID } from "../..";
+import { codeChunker } from "./code";
 
 async function genToArr<T>(generator: AsyncGenerator<T>): Promise<T[]> {
   const result: T[] = [];

@@ -1,17 +1,16 @@
-import { DatabaseConnection, SqliteDb } from "../../indexing/refreshIndex";
-import { IndexResultType } from "../../indexing/types";
-import { testIde } from "../fixtures";
 import { jest } from "@jest/globals";
-import {
-  mockPathAndCacheKey,
-  mockTag,
-  testContinueServerClient,
-  updateIndexAndAwaitGenerator,
-} from "./utils";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex";
-import { testConfigHandler } from "../fixtures";
 import lance from "vectordb";
-import { getLanceDbPath } from "../../util/paths";
+import { testIde, testConfigHandler } from "../test/util/fixtures";
+import {
+  testContinueServerClient,
+  mockTag,
+  updateIndexAndAwaitGenerator,
+  mockPathAndCacheKey,
+} from "../test/util/indexing";
+import { getLanceDbPath } from "../util/paths";
+import { LanceDbIndex } from "./LanceDbIndex";
+import { DatabaseConnection, SqliteDb } from "./refreshIndex";
+import { IndexResultType } from "./types";
 
 jest.useFakeTimers();
 

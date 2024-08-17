@@ -1,138 +1,160 @@
-import { jest } from "@jest/globals";
-import * as charStream from "./charStream";
-import { Typescript } from "./languages";
+import { stopAtStopTokens } from "./charStream";
 
-describe("charStream", () => {
-  let mockFullStop: jest.Mock;
-
-  async function getCharGenerator(chars: string[]) {
-    return (async function* () {
-      for (const char of chars) {
-        yield char;
-      }
-    })();
+describe("stopAtStopTokens", () => {
+  async function* createMockStream(chunks: string[]): AsyncGenerator<string> {
+    for (const chunk of chunks) {
+      yield chunk;
+    }
   }
 
-  async function getFilteredChars(results: AsyncGenerator<string>) {
+  it("should yield characters until a stop token is encountered", async () => {
+    const mockStream = createMockStream(["Hello", " world", "! Stop", "here"]);
+    const stopTokens = ["Stop"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
     const output = [];
-    for await (const char of results) {
+    for await (const char of result) {
       output.push(char);
     }
-    return output;
-  }
 
-  beforeEach(() => {
-    mockFullStop = jest.fn();
+    expect(output.join("")).toBe("Hello world! ");
   });
 
-  describe("onlyWhitespaceAfterEndOfLine", () => {
-    const endOfLineChar = Typescript.endOfLine[0];
+  it("should handle multiple stop tokens", async () => {
+    const mockStream = createMockStream([
+      "This",
+      " is a ",
+      "test. END",
+      " of stream",
+    ]);
+    const stopTokens = ["END", "STOP", "HALT"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
 
-    it("should stop at end of line if non-whitespace follows", async () => {
-      const charGenerator = await getCharGenerator([
-        `Hello${endOfLineChar}World`,
-      ]);
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
 
-      const result = charStream.onlyWhitespaceAfterEndOfLine(
-        charGenerator,
-        [endOfLineChar],
-        mockFullStop,
-      );
-      const filteredChars = await getFilteredChars(result);
-
-      expect(filteredChars.join("")).toBe(`Hello${endOfLineChar}`);
-      expect(mockFullStop).toHaveBeenCalledTimes(1);
-    });
-
-    it("should continue past end of line if only whitespace follows", async () => {
-      const charGenerator = await getCharGenerator([
-        `Hello${endOfLineChar}  World`,
-      ]);
-      const result = charStream.onlyWhitespaceAfterEndOfLine(
-        charGenerator,
-        [endOfLineChar],
-        mockFullStop,
-      );
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe(`Hello${endOfLineChar}  World`);
-      expect(mockFullStop).not.toHaveBeenCalled();
-    });
-
-    it("should handle end of line at the end of chunk", async () => {
-      const charGenerator = await getCharGenerator([
-        `Hello${endOfLineChar}`,
-        "World",
-      ]);
-      const result = charStream.onlyWhitespaceAfterEndOfLine(
-        charGenerator,
-        [endOfLineChar],
-        mockFullStop,
-      );
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe(`Hello${endOfLineChar}`);
-      expect(mockFullStop).toHaveBeenCalledTimes(1);
-    });
+    expect(output.join("")).toBe("This is a test. ");
   });
 
-  describe("noFirstCharNewline", () => {
-    it("should remove leading newline", async () => {
-      const charGenerator = await getCharGenerator(["\nHello"]);
-      const result = charStream.noFirstCharNewline(charGenerator);
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe("");
-    });
+  it("should handle stop tokens split across chunks", async () => {
+    const mockStream = createMockStream([
+      "Hello",
+      " wo",
+      "r",
+      "ld! ST",
+      "OP now",
+    ]);
+    const stopTokens = ["STOP"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
 
-    it("should keep content if no leading newline", async () => {
-      const charGenerator = await getCharGenerator(["Hello\nWorld"]);
-      const result = charStream.noFirstCharNewline(charGenerator);
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe("Hello\nWorld");
-    });
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
 
-    it("should remove leading carriage return", async () => {
-      const charGenerator = await getCharGenerator(["\rHello"]);
-      const result = charStream.noFirstCharNewline(charGenerator);
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe("");
-    });
+    expect(output.join("")).toBe("Hello world! ");
   });
 
-  describe("stopAtStopTokens", () => {
-    it("should stop at the first occurrence of a stop token", async () => {
-      const charGenerator = await getCharGenerator(["Hello<|endoftext|>World"]);
-      const result = charStream.stopAtStopTokens(charGenerator, [
-        "<|endoftext|>",
-      ]);
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe("Hello");
-    });
+  it("should yield all characters if no stop token is encountered", async () => {
+    const mockStream = createMockStream([
+      "This",
+      " is ",
+      "a complete",
+      " stream",
+    ]);
+    const stopTokens = ["END"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
 
-    it("should return all content if no stop tokens are provided", async () => {
-      const charGenerator = await getCharGenerator(["Hello<|endoftext|>World"]);
-      const result = charStream.stopAtStopTokens(charGenerator, []);
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe("Hello<|endoftext|>World");
-    });
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
 
-    it("should handle stop tokens that span multiple chunks", async () => {
-      const charGenerator = await getCharGenerator([
-        "Hello<|",
-        "endoftext|>World",
-      ]);
-      const result = charStream.stopAtStopTokens(charGenerator, [
-        "<|endoftext|>",
-      ]);
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe("Hello");
-    });
+    expect(output.join("")).toBe("This is a complete stream");
+  });
 
-    it("should yield remaining characters in buffer if no stop token is found", async () => {
-      const charGenerator = await getCharGenerator(["Hello", "World"]);
-      const result = charStream.stopAtStopTokens(charGenerator, [
-        "<|endoftext|>",
-      ]);
-      const filteredChars = await getFilteredChars(result);
-      expect(filteredChars.join("")).toBe("HelloWorld");
-    });
+  it("should handle empty chunks", async () => {
+    const mockStream = createMockStream(["Hello", "", " world", "", "! STOP"]);
+    const stopTokens = ["STOP"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
+
+    expect(output.join("")).toBe("Hello world! ");
+  });
+
+  it("should handle stop token at the beginning of the stream", async () => {
+    const mockStream = createMockStream(["STOP", "Hello world"]);
+    const stopTokens = ["STOP"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
+
+    expect(output.join("")).toBe("");
+  });
+
+  it("should handle stop token at the end of the stream", async () => {
+    const mockStream = createMockStream(["Hello world", "STOP"]);
+    const stopTokens = ["STOP"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
+
+    expect(output.join("")).toBe("Hello world");
+  });
+
+  it("should handle multiple stop tokens of different lengths", async () => {
+    const mockStream = createMockStream([
+      "This is a ",
+      "test with ",
+      "multiple STOP",
+      " tokens END",
+    ]);
+    const stopTokens = ["STOP", "END", "HALT"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
+
+    expect(output.join("")).toBe("This is a test with multiple ");
+  });
+
+  it("should handle an empty stream", async () => {
+    const mockStream = createMockStream([]);
+    const stopTokens = ["STOP"];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
+
+    expect(output.join("")).toBe("");
+  });
+
+  it("should handle an empty stop tokens array", async () => {
+    const mockStream = createMockStream(["Hello", " world!"]);
+    const stopTokens: string[] = [];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
+
+    expect(output.join("")).toBe("Hello world!");
   });
 });

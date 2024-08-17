@@ -6,7 +6,7 @@ import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceIn
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
-import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import {

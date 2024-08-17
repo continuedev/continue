@@ -1,16 +1,14 @@
 /**
  * @jest-environment jsdom
  */
-import * as fs from "fs";
-import * as path from "path";
 import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { SiteIndexingConfig } from "../../index.js";
-import DocsService from "../../indexing/docs/DocsService.js";
-import preIndexedDocs from "../../indexing/docs/preIndexedDocs.js";
-import FreeTrialEmbeddingsProvider from "../../indexing/embeddings/FreeTrialEmbeddingsProvider.js";
+import DocsService from "./DocsService.js";
+import preIndexedDocs from "./preIndexedDocs.js";
+import FreeTrialEmbeddingsProvider from "../embeddings/FreeTrialEmbeddingsProvider.js";
 import FileSystemIde from "../../util/filesystem.js";
-import { editConfigJson, getConfigJsonPath } from "../../util/paths.js";
+import { editConfigJson } from "../../util/paths.js";
 
 describe.skip("DocsService Integration Tests", () => {
   let ide: FileSystemIde;
@@ -22,13 +20,6 @@ describe.skip("DocsService Integration Tests", () => {
     title: "Test repo",
     faviconUrl: "https://github.com/favicon.ico",
   };
-
-  async function clearConfigDir() {
-    const configFolder = path.dirname(getConfigJsonPath());
-    if (fs.existsSync(configFolder)) {
-      fs.rmSync(configFolder, { recursive: true, force: true });
-    }
-  }
 
   /**
    * We need to reload config explicitly to handle the scenario where the
@@ -43,8 +34,6 @@ describe.skip("DocsService Integration Tests", () => {
   }
 
   beforeEach(async () => {
-    await clearConfigDir();
-
     ide = new FileSystemIde(process.cwd());
 
     configHandler = new ConfigHandler(
@@ -73,10 +62,6 @@ describe.skip("DocsService Integration Tests", () => {
     docsService = DocsService.createSingleton(configHandler, ide);
 
     await docsService.isInitialized;
-  });
-
-  afterAll(async () => {
-    await clearConfigDir();
   });
 
   test("Indexing, retrieval, and deletion of a new documentation site", async () => {

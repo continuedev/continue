@@ -19,7 +19,10 @@ class WatsonX extends BaseLLM {
     super(options);
   }
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
-    if (this.watsonxUrl !== null && this.watsonxUrl.includes("cloud.ibm.com")) {
+    if (
+      this.watsonxUrl !== null &&
+      this.watsonxUrl!.includes("cloud.ibm.com")
+    ) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(

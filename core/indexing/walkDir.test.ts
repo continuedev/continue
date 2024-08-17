@@ -1,13 +1,12 @@
 import path from "path";
-import ignore, { Ignore } from "ignore";
-import { walkDir, walkDirAsync, WalkerOptions } from "../indexing/walkDir.js";
-import FileSystemIde from "../util/filesystem.js";
+import { walkDir, WalkerOptions } from "../indexing/walkDir";
+import FileSystemIde from "../util/filesystem";
 import {
-  addToTestDir,
+  TEST_DIR,
   setUpTestDir,
   tearDownTestDir,
-  TEST_DIR,
-} from "./testUtils/testDir.js";
+  addToTestDir,
+} from "../test/util/testDir";
 
 const ide = new FileSystemIde(TEST_DIR);
 

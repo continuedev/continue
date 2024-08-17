@@ -1,10 +1,9 @@
-name: TypeScript Check
+name: Dev PR checks
 
 on:
   pull_request:
     branches:
-      - main
-      - preview
+      - dev
 
 jobs:
   tsc-check:
@@ -45,7 +44,7 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
-      - name: Install extension Dependencies
+      - name: extensions/vscode install
         run: |
           cd extensions/vscode
           npm ci
@@ -53,37 +52,41 @@ jobs:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: Install gui Dependencies
+      - name: core install
+        run: |
+          cd core
+          npm ci
+
+      - name: gui install
         run: |
           cd gui
           npm ci
 
-      - name: Install Core Dependencies
-        run: |
-          cd core
-          npm ci
-
-      - name: Install Binary Dependencies
+      - name: binary install
         run: |
           cd binary
           npm ci
 
-      - name: tsc core
-        run: |
-          cd core
-          npx tsc --noEmit
-
-      - name: tsc extensions/vscode
+      - name: extensions/vscode checks
         run: |
           cd extensions/vscode
           npx tsc --noEmit
 
-      - name: tsc binary
+      - name: core checks
         run: |
-          cd binary
+          cd core
+          npm ci
           npx tsc --noEmit
+          npm run lint
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: tsc gui
+      - name: gui checks
         run: |
           cd gui
+          npx tsc --noEmit
+
+      - name: binary checks
+        run: |
+          cd binary
           npx tsc --noEmit

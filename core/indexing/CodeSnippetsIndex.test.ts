@@ -1,14 +1,13 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import { CodeSnippetsCodebaseIndex } from "../../indexing/CodeSnippetsIndex";
-import { DatabaseConnection, SqliteDb } from "../../indexing/refreshIndex";
-import { IndexResultType } from "../../indexing/types";
-import { testIde } from "../fixtures";
+import { jest } from "@jest/globals";
+import { testIde } from "../test/util/fixtures";
 import {
   insertMockChunks,
-  mockPathAndCacheKey,
   updateIndexAndAwaitGenerator,
-} from "./utils";
-import { jest } from "@jest/globals";
+  mockPathAndCacheKey,
+} from "../test/util/indexing";
+import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
+import { DatabaseConnection, SqliteDb } from "./refreshIndex";
+import { IndexResultType } from "./types";
 
 describe("CodeSnippetsCodebaseIndex", () => {
   let index: CodeSnippetsCodebaseIndex;

@@ -1,8 +1,8 @@
-import { ChunkCodebaseIndex } from "../../indexing/chunk/ChunkCodebaseIndex";
-import { DatabaseConnection, SqliteDb } from "../../indexing/refreshIndex";
-import { IndexResultType } from "../../indexing/types";
-import { testIde } from "../fixtures";
-import { addToTestDir } from "../testUtils/testDir";
+import { ChunkCodebaseIndex } from "./ChunkCodebaseIndex";
+import { DatabaseConnection, SqliteDb } from "../refreshIndex";
+import { IndexResultType } from "../types";
+import { testIde } from "../../test/util/fixtures";
+import { addToTestDir } from "../../test/util/testDir";
 import { jest } from "@jest/globals";
 import {
   mockFileContents,
@@ -10,7 +10,7 @@ import {
   mockPathAndCacheKey,
   testContinueServerClient,
   updateIndexAndAwaitGenerator,
-} from "./utils";
+} from "../../test/util/indexing";
 
 jest.useFakeTimers();
 

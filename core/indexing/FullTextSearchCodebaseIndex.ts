@@ -1,19 +1,14 @@
-import {
-  BranchAndDir,
-  Chunk,
-  IndexTag,
-  IndexingProgressUpdate,
-} from "../index.js";
-import { getBasename } from "../util/index.js";
-import { RETRIEVAL_PARAMS } from "../util/parameters.js";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
+import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "../";
+import { getBasename } from "../util/index";
+import { RETRIEVAL_PARAMS } from "../util/parameters";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
   type CodebaseIndex,
-} from "./types.js";
+} from "./types";
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 0.2;
