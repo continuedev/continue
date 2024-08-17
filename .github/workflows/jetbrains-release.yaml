@@ -424,7 +424,12 @@ jobs:
 
   upload-release:
     name: Upload Release
-    needs: build, test-binaries, test, inspectCode, verify
+    needs:
+      - build
+      - test-binaries
+      - test
+      - inspectCode
+      - verify
     runs-on: ubuntu-latest
     steps:
       # # Update Unreleased section with the current release note
