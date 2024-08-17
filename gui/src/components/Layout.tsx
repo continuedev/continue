@@ -29,25 +29,15 @@ import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
+import ShortcutContainer from "./ShortcutContainer";
+
+// check mac or window
+const platform = navigator.userAgent.toLowerCase();
+const isMac = platform.includes("mac");
+const isWindows = platform.includes("win");
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
-
-const LayoutTopDiv = styled(CustomScrollbarDiv)`
-  height: 100%;
-  border-radius: ${defaultBorderRadius};
-  position: relative;
-
-  &::after {
-    position: absolute;
-    content: "";
-    width: 100%;
-    height: 1px;
-    background-color: rgba(136, 136, 136, 0.3);
-    top: 0;
-    left: 0;
-  }
-`;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
   position: fixed;
@@ -77,15 +67,30 @@ const Footer = styled.footer`
   height: ${FOOTER_HEIGHT};
   background-color: transparent;
   backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(136, 136, 136, 0.3);
-  border-bottom: 1px solid rgba(136, 136, 136, 0.3);
   overflow: hidden;
 `;
 
-const GridDiv = styled.div`
+const Header = styled.header`
+  position: sticky;
+  top: 2px;
+  z-index: 500;
+  background-color: ${vscBackground};
+  display: flex;
+  justify-content: right;
+  padding-top: 5px;
+  padding-bottom: 0px;
+  padding-left: 6px;
+  padding-right: 6px;
+  width: calc(100% - 12px);
+  height: ${HEADER_HEIGHT};
+  overflow: hidden;
+`;
+
+const GridDiv = styled.div<{ showHeader: boolean }>`
   display: grid;
-  grid-template-rows: 1fr auto;
-  height: 100vh;
+  grid-template-rows: ${(props) =>
+    props.showHeader ? "auto 1fr auto" : "1fr auto"};
+  min-height: 100vh;
   overflow-x: visible;
 `;
 
@@ -112,6 +117,8 @@ const HIDE_FOOTER_ON_PAGES = [
   "/localOnboarding",
   "/apiKeyOnboarding",
 ];
+
+const SHOW_SHORTCUTS_ON_PAGES = ["/"];
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -245,9 +252,10 @@ const Layout = () => {
   });
 
   return (
-    <LayoutTopDiv>
+    <div>
       <div
         style={{
+          backgroundColor: vscBackground,
           scrollbarGutter: "stable both-edges",
           minHeight: "100%",
           display: "grid",
@@ -265,7 +273,14 @@ const Layout = () => {
           message={dialogMessage}
         />
 
-        <GridDiv>
+        <GridDiv
+          showHeader={SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname)}
+        >
+          {SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname) && (
+            <Header>
+              <ShortcutContainer />
+            </Header>
+          )}
           <PostHogPageView />
           <Outlet />
           <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
@@ -320,7 +335,7 @@ const Layout = () => {
         style={{ fontSize: `${getFontSize() - 4}px` }}
         id="tooltip-portal-div"
       />
-    </LayoutTopDiv>
+    </div>
   );
 };
 

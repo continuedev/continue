@@ -213,7 +213,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
-    let filesize = file.size / 1024 / 1024; // filesize in MB
+    const filesize = file.size / 1024 / 1024; // filesize in MB
     // check image type and size
     if (
       [
@@ -227,15 +227,15 @@ function TipTapEditor(props: TipTapEditorProps) {
       filesize < 10
     ) {
       // check dimensions
-      let _URL = window.URL || window.webkitURL;
-      let img = new window.Image();
+      const _URL = window.URL || window.webkitURL;
+      const img = new window.Image();
       img.src = _URL.createObjectURL(file);
 
       return await new Promise((resolve) => {
         img.onload = function () {
           const dataUrl = getDataUrlForFile(file, img);
 
-          let image = new window.Image();
+          const image = new window.Image();
           image.src = dataUrl;
           image.onload = function () {
             resolve([image, dataUrl]);
@@ -279,7 +279,9 @@ function TipTapEditor(props: TipTapEditorProps) {
                         defaultModel.capabilities,
                       ) &&
                       handleImageFile(file).then((resp) => {
-                        if (!resp) return;
+                        if (!resp) {
+                          return;
+                        }
                         const [img, dataUrl] = resp;
                         const { schema } = view.state;
                         const node = schema.nodes.image.create({
@@ -427,7 +429,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     ],
     editorProps: {
       attributes: {
-        class: "outline-none -mt-1 overflow-hidden",
+        class: "outline-none -mt-1 mb-1 overflow-hidden",
         style: `font-size: ${getFontSize()}px;`,
       },
     },
@@ -442,7 +444,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       }
 
       const json = editor.getJSON();
-      let codeBlock = json.content?.find((el) => el.type === "codeBlock");
+      const codeBlock = json.content?.find((el) => el.type === "codeBlock");
       if (!codeBlock) {
         return;
       }
@@ -482,7 +484,9 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (isWebEnvironment()) {
       const handleKeyDown = async (event: KeyboardEvent) => {
-        if (!editor || !editorFocusedRef.current) return;
+        if (!editor || !editorFocusedRef.current) {
+          return;
+        }
         if ((event.metaKey || event.ctrlKey) && event.key === "x") {
           // Cut
           const selectedText = editor.state.doc.textBetween(
@@ -516,7 +520,9 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
 
     const handleKeyDown = async (event: KeyboardEvent) => {
-      if (!editor || !editorFocusedRef.current) return;
+      if (!editor || !editorFocusedRef.current) {
+        return;
+      }
 
       if (event.metaKey && event.key === "x") {
         document.execCommand("cut");
@@ -745,7 +751,9 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   useEffect(() => {
     const overListener = (event: DragEvent) => {
-      if (event.shiftKey) return;
+      if (event.shiftKey) {
+        return;
+      }
       setShowDragOverMsg(true);
     };
     window.addEventListener("dragover", overListener);
@@ -811,7 +819,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           return;
         }
         setShowDragOverMsg(false);
-        let file = event.dataTransfer.files[0];
+        const file = event.dataTransfer.files[0];
         handleImageFile(file).then(([img, dataUrl]) => {
           const { schema } = editor.state;
           const node = schema.nodes.image.create({ src: dataUrl });
