@@ -75,17 +75,21 @@ class PearAIServer extends BaseLLM {
     if (typeof message.content === "string") {
       return message;
     }
-
-    const parts = message.content.map((part) => {
-      return {
-        type: part.type,
-        text: part.text,
-        image_url: { ...part.imageUrl, detail: "low" },
-      };
-    });
     return {
       ...message,
-      content: parts,
+      content: message.content.map((part) => {
+        if (part.type === "text") {
+          return part;
+        }
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: "image/jpeg",
+            data: part.imageUrl?.url.split(",")[1],
+          },
+        };
+      }),
     };
   }
 
