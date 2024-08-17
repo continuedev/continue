@@ -52,15 +52,25 @@ jobs:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: extensions/vscode checks
-        run: |
-          cd extensions/vscode
-          npx tsc --noEmit
-
       - name: core install
         run: |
           cd core
           npm ci
+
+      - name: gui install
+        run: |
+          cd gui
+          npm ci
+
+      - name: binary install
+        run: |
+          cd binary
+          npm ci
+
+      - name: extensions/vscode checks
+        run: |
+          cd extensions/vscode
+          npx tsc --noEmit
 
       - name: core checks
         run: |
@@ -71,20 +81,10 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
-      - name: gui install
-        run: |
-          cd gui
-          npm ci
-
       - name: gui checks
         run: |
           cd gui
           npx tsc --noEmit
-
-      - name: binary install
-        run: |
-          cd binary
-          npm ci
 
       - name: binary checks
         run: |
