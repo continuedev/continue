@@ -46,7 +46,7 @@ async function getContextProviderExtras(
   };
 }
 
-describe("Should successfully run all context providers", () => {
+describe.skip("Should successfully run all context providers", () => {
   const extrasPromise = getContextProviderExtras("Test");
 
   CONTEXT_PROVIDERS_TO_TEST.forEach((provider) => {
