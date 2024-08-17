@@ -39,7 +39,7 @@ jobs:
     # needs: check_release_name
     # if: needs.check_release_name.outputs.should_run == 'true'
     name: Build Plugin
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     permissions:
       contents: write
       pull-requests: write
