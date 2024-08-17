@@ -6,7 +6,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 // Check if the platform is macOS or Windows
 const platform = navigator.userAgent.toLowerCase();
 const isMac = platform.includes("mac");
-const shortcutsBarFontSize = '10px'
 
 type ShortcutProps = {
   modifiers: string[];
@@ -23,22 +22,23 @@ const Shortcut = ({
   onClick,
 }: ShortcutProps) => {
   const modifierString = modifiers.join(" + ");
+
   return (
     <div
       className="flex gap-1 items-center text-sm text-slate-400 rounded-lg px-1 cursor-pointer select-none m-0 mx-[2px] border-solid shortcut-border border-[1px]"
       onClick={onClick}
     >
-      <span className={`text-[${shortcutsBarFontSize}]`}>{description}</span>
+      <span className={`text-[11px]`}>{description}</span>
       <div
         className="monaco-keybinding "
         aria-label={`${modifierString}+${keyCode}`}
       >
         {modifiers.map((mod, index) => (
-          <span className="monaco-keybinding-key" style={{fontSize: shortcutsBarFontSize}} key={index}>
+          <span className="monaco-keybinding-key" style={{fontSize: '10px'}} key={index}>
             {mod}
           </span>
         ))}
-        <span className="monaco-keybinding-key" style={{fontSize: shortcutsBarFontSize}}>{keyCode}</span>
+        <span className="monaco-keybinding-key" style={{fontSize: '10px'}}>{keyCode}</span>
       </div>
     </div>
   );
