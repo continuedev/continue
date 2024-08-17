@@ -24,18 +24,37 @@ class LlamaEncoding implements Encoding {
   }
 }
 
+class NonWorkerAsyncEncoder implements AsyncEncoder {
+  constructor(private readonly encoding: Encoding) {}
+
+  async close(): Promise<void> {}
+
+  async encode(text: string): Promise<number[]> {
+    return this.encoding.encode(text);
+  }
+
+  async decode(tokens: number[]): Promise<string> {
+    return this.encoding.decode(tokens);
+  }
+}
+
 let gptEncoding: Encoding | null = null;
 const gptAsyncEncoder = new GPTAsyncEncoder();
 const llamaEncoding = new LlamaEncoding();
 const llamaAsyncEncoder = new LlamaAsyncEncoder();
 
 function asyncEncoderForModel(modelName: string): AsyncEncoder {
+  // Temporary due to issues packaging the worker files
+  if (process.env.IS_BINARY) {
+    const encoding = encodingForModel(modelName);
+    return new NonWorkerAsyncEncoder(encoding);
+  }
+
   const modelType = autodetectTemplateType(modelName);
   if (!modelType || modelType === "none") {
     return gptAsyncEncoder;
   }
-  // Temporary due to issues packaging the worker files
-  return process.env.IS_BINARY ? gptAsyncEncoder : llamaAsyncEncoder;
+  return llamaAsyncEncoder;
 }
 
 function encodingForModel(modelName: string): Encoding {

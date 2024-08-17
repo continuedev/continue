@@ -162,6 +162,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     "../core/vendor/tree-sitter.wasm",
     "../core/llm/llamaTokenizerWorkerPool.mjs",
     "../core/llm/llamaTokenizer.mjs",
+    "../core/llm/tiktokenWorkerPool.mjs",
   ];
   for (const f of filesToCopy) {
     fs.copyFileSync(
