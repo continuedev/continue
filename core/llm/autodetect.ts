@@ -44,6 +44,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "bedrock",
   "continue-proxy",
   "mistral",
+  "pearai_server"
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -55,6 +56,8 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "anthropic",
   "bedrock",
   "continue-proxy",
+  // TODO: make images work on pearai server
+  // "pearai_server", 
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -70,7 +73,8 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "sonnet",
   "opus",
   "haiku",
-  "pearai_model",
+  // TODO: make images work on pearai model
+  // "pearai_model",
 ];
 
 function modelSupportsImages(
@@ -203,6 +207,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
   if (lower.includes("neural-chat")) {
     return "neural-chat";
+  }
+
+  if (lower.includes("pearai")) {
+    return "anthropic";
   }
 
   return "chatml";

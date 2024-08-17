@@ -170,13 +170,11 @@ class PearAIServer extends BaseLLM {
       }
 
       if (value.content) {
-        let content = value.content.replaceAll("<|im_end|>", " ");
-        content = value.content.replaceAll("<|im_start|> ", "\n");
         yield {
           role: "assistant",
-          content: content,
+          content: value.content,
         };
-        completion += content;
+        completion += value.content;
       }
     }
     this._countTokens(completion, args.model, false);
