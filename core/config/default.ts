@@ -108,11 +108,12 @@ export const defaultConfig: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "pearai_server",
-    model: "starcoder2:3b",
-  },
+  // TODO: Add this back when we have autocomplete working. 
+  // tabAutocompleteModel: {
+  //   title: "Starcoder2 3b",
+  //   provider: "pearai_server",
+  //   model: "starcoder2:3b",
+  // },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
 };
