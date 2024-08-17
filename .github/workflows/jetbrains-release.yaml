@@ -39,7 +39,7 @@ jobs:
     # needs: check_release_name
     # if: needs.check_release_name.outputs.should_run == 'true'
     name: Build Plugin
-    runs-on: macos-latest
+    runs-on: macos-11
     permissions:
       contents: write
       pull-requests: write
