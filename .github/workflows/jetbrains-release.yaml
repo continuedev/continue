@@ -37,7 +37,7 @@ jobs:
   # Prepare and publish the plugin to JetBrains Marketplace repository
   build:
     # needs: check_release_name
-    if: needs.check_release_name.outputs.should_run == 'true'
+    # if: needs.check_release_name.outputs.should_run == 'true'
     name: Build Plugin
     runs-on: ubuntu-latest
     permissions:
