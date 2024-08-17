@@ -6,9 +6,9 @@ end_commit=$2
 git cherry-pick -X theirs $start_commit^..$end_commit
 
 while [ $? -ne 0 ]; do
-    # Handle files deleted by us but modified by them
+    # Handle files deleted by us but present in theirs
     git status | grep 'deleted by us' | awk '{print $4}' | while read file; do
-        git checkout --theirs -- "$file"
+        git checkout CHERRY_PICK_HEAD -- "$file"
         git add "$file"
     done
 
@@ -23,8 +23,8 @@ while [ $? -ne 0 ]; do
     # Remove files deleted by them
     git status | grep 'deleted by them' | awk '{print $4}' | xargs git rm -f
 
-    # Check if the cherry-pick is empty
-    if git diff --cached --quiet; then
+    # Check if there are any changes to commit
+    if git diff --cached --quiet && git diff --quiet; then
         # The cherry-pick is empty, commit it
         git commit --allow-empty -C $(git rev-parse CHERRY_PICK_HEAD)
     else

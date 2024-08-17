@@ -27,6 +27,12 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
   setGitHubAuthToken: [{ token: string }, void];
+  // for shortcuts bar
+  bigChat: [undefined, void];
+  lastChat: [undefined, void];
+  closeChat: [undefined, void];
+  openHistory: [undefined, void];
+  appendSelected: [undefined, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

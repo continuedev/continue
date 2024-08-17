@@ -108,6 +108,12 @@ export class VsCodeMessenger {
     this.onWebview("toggleFullScreen", (msg) => {
       vscode.commands.executeCommand("continue.toggleFullScreen");
     });
+    this.onWebview("openHistory", (msg) => {
+      vscode.commands.executeCommand("pearai.viewHistory");
+    });
+    this.onWebview("appendSelected", (msg) => {
+      vscode.commands.executeCommand("pearai.focusContinueInputWithoutClear");
+    });
     // History
     this.onWebview("saveFile", async (msg) => {
       return await ide.saveFile(msg.data.filepath);
