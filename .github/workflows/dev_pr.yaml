@@ -46,7 +46,7 @@ jobs:
 
       - name: extensions/vscode install
         run: |
-          cd 
+          cd extensions/vscode
           npm ci
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
@@ -68,10 +68,12 @@ jobs:
           npm ci
           npx tsc --noEmit
           npm run lint
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       - name: gui install
         run: |
-          cd 
+          cd gui
           npm ci
 
       - name: gui checks
@@ -81,7 +83,7 @@ jobs:
 
       - name: binary install
         run: |
-          cd 
+          cd binary
           npm ci
 
       - name: binary checks
