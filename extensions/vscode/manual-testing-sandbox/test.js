@@ -16,6 +16,7 @@ class Calculator {
   multiply(number) {
     this.result *= number;
     return this;
+    }
   }
 
   divide(number) {

@@ -49,7 +49,9 @@ function copyVSCodeSettingsToPearAIDir() {
         }
     });
 
-    copyDirectoryRecursiveSync(vscodeExtensionsDir, pearAIDevExtensionsDir, ['vscode-pylance', 'ritwickdey.liveserver']);
+    const exclusions = ['vscode-pylance', 'ritwickdey.liveserver', 'pearai.pearai', 'continue.continue'] 
+    // Todo: remove liveserver from exclusions once PearAI has priority for shortcuts (Cmd+L)
+    copyDirectoryRecursiveSync(vscodeExtensionsDir, pearAIDevExtensionsDir, exclusions);
     }
   
 function getVSCodeSettingsDir() {

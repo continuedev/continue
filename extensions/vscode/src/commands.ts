@@ -672,6 +672,85 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
+    "pearai.debug2": async () => {
+      const extensionUrl = `${vscode.env.uriScheme}://pearai.pearai/auth?token=TOKEN&refresh=REFRESH`;
+      const extensionUrlParsed = vscode.Uri.parse(extensionUrl);
+      const callbackUri = await vscode.env.asExternalUri(
+        vscode.Uri.parse(extensionUrl),
+      );
+
+      vscode.window.showInformationMessage(`${callbackUri.toString(true)}`);
+
+      const creds = await vscode.commands.executeCommand("pearai.getPearAuth");
+      console.log("auth:", creds);
+    },
+    "pearai.getPearAuth": async () => {
+      // TODO: This may need some work, for now we dont have vscode ExtensionContext access in the ideProtocol.ts so this will do
+      const accessToken = await extensionContext.secrets.get("pearai-token");
+      const refreshToken = await extensionContext.secrets.get("pearai-refresh");
+
+      const creds = {
+        accessToken: accessToken ? accessToken.toString() : null,
+        refreshToken: refreshToken ? refreshToken.toString() : null,
+      };
+
+      return creds;
+    },
+    "pearai.login": async () => {
+      const extensionUrl = `${vscode.env.uriScheme}://pearai.pearai/auth`;
+      const callbackUri = await vscode.env.asExternalUri(
+        vscode.Uri.parse(extensionUrl),
+      );
+
+      // TODO: Open the proxy location with vscode redirect
+      await vscode.env.openExternal(
+        await vscode.env.asExternalUri(
+          vscode.Uri.parse(
+            `https://trypear.ai/signin?callback=${callbackUri.toString()}`, // Change to localhost if running locally
+          ),
+        ),
+      );
+    },
+    "pearai.logout": async () => {
+      await extensionContext.secrets.delete("pearai-token");
+      await extensionContext.secrets.delete("pearai-refresh");
+      vscode.window.showInformationMessage("PearAI: Successfully logged out!");
+    },
+    "pearai.updateUserAuth": async (data: {
+      accessToken: string;
+      refreshToken: string;
+    }) => {
+      // Ensure that refreshToken and accessToken are both present
+      if (!data || !(data.refreshToken && data.accessToken)) {
+        vscode.window.showWarningMessage(
+          "PearAI: Failed to parse user auth request!",
+        );
+        return;
+      }
+
+      extensionContext.secrets.store("pearai-token", data.accessToken);
+      extensionContext.secrets.store("pearai-refresh", data.refreshToken);
+
+      vscode.window.showInformationMessage("PearAI: Successfully logged in!");
+    },
+    "pearai.closeChat": () => {
+      vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+    },
+    "pearai.loadRecentChat": () => {
+      sidebar.webviewProtocol?.request("loadMostRecentChat", undefined);
+      sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+    },
+    "pearai.resizeAuxiliaryBarWidth": () => {
+      vscode.commands.executeCommand(
+        "workbench.action.resizeAuxiliaryBarWidth",
+      );
+    },
+    "pearai.winshortcutResizeAuxiliaryBarWidth": () => {
+      vscode.commands.executeCommand("pearai.resizeAuxiliaryBarWidth");
+    },
+    "pearai.macResizeAuxiliaryBarWidth": () => {
+      vscode.commands.executeCommand("pearai.resizeAuxiliaryBarWidth");
+    },
   };
 };
 

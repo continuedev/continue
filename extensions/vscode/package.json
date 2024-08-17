@@ -262,7 +262,43 @@
         "command": "continue.docsReIndex",
         "category": "Continue",
         "title": "Docs Force Re-Index",
-        "group": "Continue"
+        "group": "PearAI"
+      },
+      {
+        "command": "pearai.login",
+        "category": "PearAI",
+        "title": "Login to PearAI",
+        "group": "PearAI"
+      },
+      {
+        "command": "pearai.logout",
+        "category": "PearAI",
+        "title": "Logout of PearAI",
+        "group": "PearAI"
+      },
+      {
+        "command": "pearai.loadRecentChat",
+        "category": "PearAI",
+        "title": "Load Recent Chat",
+        "group": "PearAI"
+      },
+      {
+        "command": "pearai.resizeAuxiliaryBarWidth",
+        "category": "PearAI",
+        "title": "Resize Chat",
+        "group": "PearAI"
+      },
+      {
+        "command": "pearai.macResizeAuxiliaryBarWidth",
+        "category": "PearAI",
+        "title": "Big Chat - CMD + [",
+        "group": "PearAI"
+      },
+      {
+        "command": "pearai.winResizeAuxiliaryBarWidth",
+        "category": "PearAI",
+        "title": "Big Chat - CTRL + [",
+        "group": "PearAI"
       }
     ],
     "keybindings": [
