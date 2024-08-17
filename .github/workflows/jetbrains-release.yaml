@@ -35,7 +35,7 @@ jobs:
   build:
     needs: check_release_name
     if: needs.check_release_name.outputs.should_run == 'true'
-    name: Publish Plugin
+    name: Build Plugin
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -423,6 +423,8 @@ jobs:
           path: ${{ github.workspace }}/build/reports/pluginVerifier
 
   upload-release:
+    name: Upload Release
+    needs: build, test-binaries, test, inspectCode, verify
     runs-on: ubuntu-latest
     steps:
       # # Update Unreleased section with the current release note

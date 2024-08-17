@@ -302,6 +302,14 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       `${targetDir}/node_sqlite3.node`,
     );
   }
+
+  // Note that this doesn't verify they actually made it into the binary, just that they were in the expected folder before it was built
+  pathsToVerify.push("out/index.js");
+  pathsToVerify.push("out/llamaTokenizerWorkerPool.mjs");
+  pathsToVerify.push("out/tiktokenWorkerPool.mjs");
+  pathsToVerify.push("out/xhr-sync-worker.js");
+  pathsToVerify.push("out/tree-sitter.wasm");
+
   validateFilesPresent(pathsToVerify);
 
   console.log("[info] Done!");
