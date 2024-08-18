@@ -4,8 +4,6 @@ description: Collecting data on how you build software
 keywords: [development data, dev data, LLM-aided development, software development, coding feedback]
 ---
 
-# Development Data
-
 ## Why You Need Development Data
 
 Development data is essential for any organization aiming to optimize its software development process. It provides crucial insights into how software is built by capturing the detailed workflow, context behind decisions, and natural language reasoning used during coding. Collecting and utilizing this data helps in:

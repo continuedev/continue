@@ -4,10 +4,6 @@ description: Learn how Continue collects anonymous usage information and how you
 keywords: [telemetry, anonymous, usage info, opt out]
 ---
 
-# Telemetry
-
-## Overview
-
 Continue collects and reports **anonymous** usage information to help us improve our product. This data enables us to understand user interactions and optimize the user experience effectively. You can opt out of telemetry collection at any time if you prefer not to share your usage information.
 
 We utilize [Posthog](https://posthog.com/), an open-source platform for product analytics, to gather and store this data. For transparency, you can review the implementation code [here](https://github.com/continuedev/continue/blob/main/gui/src/hooks/CustomPostHogProvider.tsx) or read our [official privacy policy](https://continue.dev/privacy).

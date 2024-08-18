@@ -253,6 +253,14 @@ const config = {
             from: "/changelog",
             to: "/community/change-log-vs-code",
           },
+          {
+            from: "/telemetry",
+            to: "/privacy/telemetry",
+          },
+          {
+            from: "/development-data",
+            to: "/privacy/development-data",
+          },
         ],
       },
     ],

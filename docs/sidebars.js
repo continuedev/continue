@@ -105,8 +105,8 @@ const sidebars = {
       collapsible: true,
       collapsed: true,
       items: [
-        "development-data",
-        "telemetry",
+        "privacy/development-data",
+        "privacy/telemetry",
         {
           type: "link",
           label: "Privacy Policy",
