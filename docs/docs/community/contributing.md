@@ -1,10 +1,24 @@
 # Contributing to Continue
 
-## 👋 Continue Contribution Ideas
+## Introduction
+
+Welcome to the Continue contributing guide! We're thrilled that you're interested in contributing to our open-source AI code assistant. Your contributions play a vital role in improving Continue and making it an even more powerful tool for developers worldwide.
+
+Continue is built on the principle of community-driven development, and we value every contribution, whether it's reporting a bug, suggesting an enhancement, improving documentation, or submitting code. Each contribution, no matter how small, helps make Continue better for everyone.
+
+This guide is designed to help you understand how you can contribute to Continue effectively. Whether you're a seasoned open-source contributor or this is your first time contributing to a project, you'll find all the information you need to get started.
+
+We strive to maintain a welcoming and inclusive community, so please read our [Code of Conduct](./code-of-conduct.md) before contributing. We look forward to your contributions and are excited to see what we can build together!
+
+Remember, if you ever have questions or need help, don't hesitate to reach out to us on our [Discord channel](https://discord.gg/NWtdYexhMs) or open an issue on [GitHub](https://github.com/continuedev/continue). Let's make Continue amazing together!
+
+## Ways to Contribute
+
+### 👋 Continue Contribution Ideas
 
 [This GitHub project board](https://github.com/orgs/continuedev/projects/2) is a list of ideas for how you can contribute to Continue. These aren't the only ways, but are a great starting point if you are new to the project.
 
-## 🐛 Report Bugs
+### 🐛 Report Bugs
 
 If you find a bug, please [create an issue](https://github.com/continuedev/continue/issues) to report it! A great bug report includes:
 
@@ -14,7 +28,7 @@ If you find a bug, please [create an issue](https://github.com/continuedev/conti
 - What actually happened
 - Screenshots or videos
 
-## ✨ Suggest Enhancements
+### ✨ Suggest Enhancements
 
 Continue is quickly adding features, and we'd love to hear which are the most important to you. The best ways to suggest an enhancement are
 
@@ -26,15 +40,15 @@ Continue is quickly adding features, and we'd love to hear which are the most im
 
 - Join the [Continue Discord](https://discord.gg/NWtdYexhMs) and tell us about your idea in the `#feedback` channel
 
-## 📖 Updating / Improving Documentation
+### 📖 Improving Documentation
 
 Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation! If you see something out-of-date or missing, you can help by clicking "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev).
 
-### Running the Documentation Server Locally
+#### Running the Documentation Server Locally
 
 You can run the documentation server locally using either of the following methods:
 
-#### Method 1: NPM Script
+##### Method 1: NPM Script
 
 1. Open your terminal and navigate to the root directory of the project.
 
@@ -44,7 +58,7 @@ You can run the documentation server locally using either of the following metho
    npm run start --prefix docs
    ```
 
-#### Method 2: VS Code Task
+##### Method 2: VS Code Task
 
 1. Open VS Code in the root directory of the project.
 
@@ -54,19 +68,17 @@ You can run the documentation server locally using either of the following metho
 
 This will start a local server and you can see the documentation rendered in your default browser, typically accessible at `http://localhost:3000`.
 
-## 🧑‍💻 Contributing Code
+## Development Environment Setup
 
-> Please make PRs to the `dev` branch. We use this to first test changes in a pre-release version of the extension.
-
-### Environment Setup
-
-#### Pre-requisites
+### Pre-requisites
 
 You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
 
 ```bash
 nvm use
 ```
+
+### Repository Setup
 
 #### Fork the Continue Repository with All Branches
 
@@ -78,7 +90,7 @@ nvm use
 
 4. When you're ready to submit your changes, send your pull request specifically to the **dev** branch.
 
-#### VS Code
+### VS Code Setup
 
 1. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
 
@@ -93,7 +105,7 @@ nvm use
 
 3. To package the extension, run `npm run package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-{VERSION}.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
 
-##### Debugging
+#### Debugging in VS Code
 
 **Breakpoints** can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code.
 
@@ -101,14 +113,13 @@ nvm use
 
 Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
 
-#### JetBrains
+### JetBrains Setup
 
 Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 17, as specified in `extensions/intellij/build.gradle.kts`. You should also ensure that you have the Gradle plugin installed.
 
 1. Clone the repository
 2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows. This will install and build all of the necessary dependencies.
-3. To test the plugin, select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button as shown in this screenshot:
-   <!-- ![img](./media/IntelliJRunPluginScreenshot.png) -->
+3. To test the plugin, select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button.
 4. To package the extension, run `./gradlew build` (or `./gradlew.bat build` on Windows) from the `extensions/intellij` directory. This will generate a .zip file in `extensions/intellij/build/distributions` with the version defined in `extensions/intellij/gradle.properties`.
 5. If you make changes, you may need to re-build before running the "Build Plugin" configuration
 
@@ -118,7 +129,7 @@ Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](h
 
    c. Any changes to the Kotlin coded in the `extensions/intellij` directory will be automatically included when you run "Build Plugin"
 
-##### Debugging
+#### Debugging in JetBrains
 
 Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `binary` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
 
@@ -131,13 +142,19 @@ For the sake of rapid development, it is also possible to configure this communi
 
 If you make changes to Kotlin code, they can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes".
 
+## Contributing Code
+
+> Please make PRs to the `dev` branch. We use this to first test changes in a pre-release version of the extension.
+
 ### Our Git Workflow
 
 We keep two permanent branches: `main` and `dev`. All contributions should be made as pull requests to the `dev` branch. When we are ready to create a "pre-release" version, we create a tag on the `dev` branch, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will merge its tag into the `main` branch. Creating a tag on the `main` branch will then trigger a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question.
 
-### Formatting
+### Coding Standands
 
 Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install the Prettier extension in VS Code and enable "Format on Save" in your settings.
+
+## Adding New Features
 
 ### Writing Slash Commands
 
@@ -200,18 +217,20 @@ While any model that works with a supported provider can be used with Continue, 
 
 Continue's @docs context provider lets you easily reference entire documentation sites and then uses embeddings to add the most relevant pages to context. To make the experience as smooth as possible, we pre-index many of the most popular documentation sites. If you'd like to add new documentation to this list, just add an object to the list in [preIndexedDocs.ts](./core/indexing/docs/preIndexedDocs.ts). `startUrl` is where the crawler will start and `rootUrl` will filter out any pages not on that site and under the path of `rootUrl`.
 
-## 📐 Continue Architecture
+## Project Architecture
 
-Continue consists of 2 parts that are split so that it can be extended to work in other IDEs as easily as possible:
+### Continue GUI
 
-1. **Continue GUI** - The Continue GUI is a React application that gives the user control over Continue. It displays the current chat history, allows the user to ask questions, invoke slash commands, and use context providers. The GUI also handles most state and holds as much of the logic as possible so that it can be reused between IDEs.
+The Continue GUI is a React application that gives the user control over Continue. It displays the current chat history, allows the user to ask questions, invoke slash commands, and use context providers. The GUI also handles most state and holds as much of the logic as possible so that it can be reused between IDEs.
 
-2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/debugPanel.ts).
+### Continue Core
 
-### Continue VS Code Extension
+The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/debugPanel.ts).
+
+### VS Code Extension
 
 The starting point for the VS Code extension is [activate.ts](./extensions/vscode/src/activation/activate.ts). The `activateExtension` function here will register all commands and load the Continue GUI in the sidebar of the IDE as a webview.
 
-### Continue JetBrains Extension
+### JetBrains Extension
 
 The JetBrains extension is currently in alpha testing. Please reach out on [Discord](https://discord.gg/vapESyrFmJ) if you are interested in contributing to its development.
