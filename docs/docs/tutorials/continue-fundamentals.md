@@ -13,9 +13,9 @@ The document aims to cover fundamental topics about the Continue AI code assista
 LLM providers are services that supply access to large pre-trained language models, such as Llama 3.1. These models can perform a wide range of natural language processing tasks. Common LLM providers include:
 
 - **Ollama**: A platform that allows you to run language models locally on your machine.
+- **OpenAI, Anthropic**, and others: Providers of commercial LLMs that offer powerful, cloud-based language models via API.
 - **Together AI**: A service for running open-source models with good performance.
 - **Replicate**: A platform for deploying and running models via API.
-- **OpenAI, Anthropic**, and others: Providers of commercial LLMs that offer powerful, cloud-based language models via API.
 
 #### Context Providers
 
@@ -78,14 +78,3 @@ Continue uses code indexing to provide smart, context-aware assistance by unders
 - **Configuration and Providers**: Set up your `config.json` to specify models from different providers based on your requirements.
 - **Context Usage**: Customize context providers to make sure the AI gets the most relevant information during coding sessions.
 - **Code Indexing**: Ensure your codebase is indexed to exploit all of Continue’s advanced coding features effectively.
-
-### Further Reading
-
-To delve deeper into these concepts, you might want to explore specific sections in the documentation related to:
-
-- **Setting Up LLM Providers**: Information on various providers and related configurations.
-- **Customizing Context Providers**: Methods for fine-tuning how context is gathered and used.
-- **Configuring Continue**: Detailed guide on setting up and modifying `config.json`.
-- **Understanding Code Indexing**: Exploring how indexing works and how to configure it for your projects.
-
-These topics collectively form the foundational knowledge necessary for effectively using Continue with Llama 3.1 or any other supported language model.
