@@ -122,6 +122,7 @@ const sidebars = {
     },
   ],
   communitySidebar: [
+    'community/community',
     {
       type: "doc",
       id: "community/code-of-conduct",
