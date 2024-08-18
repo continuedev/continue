@@ -101,6 +101,7 @@ const sidebars = {
         "advanced/custom-llm-provider",
         "advanced/custom-context-provider",
         "advanced/custom-slash-command",
+        "advanced/customizing-the-llm-capability",
       ],
     },
     {
