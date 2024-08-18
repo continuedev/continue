@@ -104,7 +104,7 @@ const sidebars = {
         },
       ],
     },
-    "changelog",
+
   ],
   referenceSidebar: [
     "reference/config",
@@ -120,6 +120,13 @@ const sidebars = {
         },
       ],
     },
+  ],
+  communitySidebar: [
+    // Code of Conduct,
+    // roadmap,
+    // 'contributing',
+    "changelog",
+    // support
   ],
 };
 
