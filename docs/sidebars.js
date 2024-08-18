@@ -122,9 +122,17 @@ const sidebars = {
     },
   ],
   communitySidebar: [
-    // Code of Conduct,
+    {
+      type: "doc",
+      id: "community/code-of-conduct",
+      label: "📜 Code of Conduct",
+    },
     // roadmap,
-    // 'contributing',
+    {
+      type: "doc",
+      id: "community/contributing",
+      label: "🤝 Contributing",
+    },
     "changelog",
     // support
   ],
