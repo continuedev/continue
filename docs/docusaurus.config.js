@@ -261,6 +261,10 @@ const config = {
             from: "/development-data",
             to: "/privacy/development-data",
           },
+          {
+            from: "/customization/overview",
+            to: "/tutorials/how-to-use-config-json",
+          },
         ],
       },
     ],

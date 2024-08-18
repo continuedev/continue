@@ -54,6 +54,7 @@ const sidebars = {
       collapsed: true,
       items: [
         "tutorials/continue-fundamentals",
+        "tutorials/how-to-use-config-json",
         "tutorials/configuration-examples",
         "tutorials/select-an-llm",
         "tutorials/set-up-codestral",
