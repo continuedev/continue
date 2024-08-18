@@ -6,9 +6,7 @@ keywords: [llama, meta, togetherai, ollama, replicate]
 
 The document aims to cover fundamental topics about the Continue AI code assistant. Here’s a broader explanation of some core concepts related to Continue that might provide the foundational knowledge you are looking for:
 
-### Core Concepts
-
-#### Large Language Model (LLM) Providers
+## Large Language Model (LLM) Providers
 
 LLM providers are services that supply access to large pre-trained language models, such as Llama 3.1. These models can perform a wide range of natural language processing tasks. Common LLM providers include:
 
@@ -17,7 +15,7 @@ LLM providers are services that supply access to large pre-trained language mode
 - **Together AI**: A service for running open-source models with good performance.
 - **Replicate**: A platform for deploying and running models via API.
 
-#### Context Providers
+## Context Providers
 
 Context providers enhance the AI's ability to understand code by supplying additional information from your project and environment. This can include:
 
@@ -28,7 +26,7 @@ Context providers enhance the AI's ability to understand code by supplying addit
 
 Continue allows you to customize how context is gathered and presented to the language model to make it as relevant as possible.
 
-#### Configuration (config.json)
+## Configuration (config.json)
 
 Configuration in Continue is handled via a `config.json` file, typically located in `~/.continue/`. This file allows you to specify settings such as:
 
@@ -63,7 +61,7 @@ Configuration in Continue is handled via a `config.json` file, typically located
   }
   ```
 
-#### Code Indexing
+## Code Indexing
 
 Code indexing is the process of parsing and storing structured information about your codebase. This can involve:
 
@@ -73,7 +71,7 @@ Code indexing is the process of parsing and storing structured information about
 
 Continue uses code indexing to provide smart, context-aware assistance by understanding the structure and components of your codebase.
 
-#### Combining Concepts
+## Combining Concepts
 
 - **Configuration and Providers**: Set up your `config.json` to specify models from different providers based on your requirements.
 - **Context Usage**: Customize context providers to make sure the AI gets the most relevant information during coding sessions.
