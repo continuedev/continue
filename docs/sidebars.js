@@ -64,7 +64,7 @@ const sidebars = {
       label: "📚 Tutorials",
       collapsible: true,
       collapsed: true,
-      items: ["walkthroughs/set-up-codestral", "walkthroughs/llama3.1"],
+      items: ["tutorials/set-up-codestral", "tutorials/llama3.1"],
     },
     {
       type: "category",

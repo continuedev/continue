@@ -217,6 +217,14 @@ const config = {
             from: "/walkthroughs/quick-actions",
             to: "/features/quick-actions",
           },
+          {
+            from: "/walkthroughs/set-up-codestral",
+            to: "/tutorials/set-up-codestral",
+          },
+          {
+            from: "/walkthroughs/llama3.1",
+            to: "/tutorials/llama3.1",
+          },
         ],
       },
     ],
