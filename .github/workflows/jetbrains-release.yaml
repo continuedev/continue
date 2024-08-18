@@ -174,11 +174,11 @@ jobs:
           cd ../../binary
           npm run build
 
-      - name: Code sign darwin-arm64 binary
-        run: |
-          echo "Signing executable with keychain: ${{ github.run_id }}"
-          codesign --sign - ../../binary/bin/darwin-x64/continue-binary
-          codesign --sign - ../../binary/bin/darwin-arm64/continue-binary
+      # - name: Code sign darwin binaries
+      #   run: |
+      #     echo "Signing executable with keychain: ${{ github.run_id }}"
+      #     codesign --sign - ../../binary/bin/darwin-x64/continue-binary
+      #     codesign --sign - ../../binary/bin/darwin-arm64/continue-binary
 
       - name: Validate codesigning
         run: |
