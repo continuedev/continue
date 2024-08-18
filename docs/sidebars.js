@@ -61,6 +61,13 @@ const sidebars = {
     },
     {
       type: "category",
+      label: "📚 Tutorials",
+      collapsible: true,
+      collapsed: true,
+      items: ["walkthroughs/set-up-codestral", "walkthroughs/llama3.1"],
+    },
+    {
+      type: "category",
       label: "⭐ Features",
       collapsible: true,
       collapsed: true,
@@ -81,13 +88,6 @@ const sidebars = {
           label: "Quick Actions (experimental)",
         },
       ],
-    },
-    {
-      type: "category",
-      label: "🚶 Walkthroughs",
-      collapsible: true,
-      collapsed: true,
-      items: ["walkthroughs/set-up-codestral", "walkthroughs/llama3.1"],
     },
     {
       type: "category",
