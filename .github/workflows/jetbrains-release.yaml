@@ -140,22 +140,11 @@ jobs:
           cd ../../core
           npm ci
 
-      # npm install binary
-      - name: Install binary node_modules
-        run: |
-          cd ../../binary
-          npm ci
-
       # npm install gui
-      - name: Install gui node_modules
+      - name: Install gui node_modules and build
         run: |
           cd ../../gui
           npm ci
-
-      # build gui
-      - name: Build gui
-        run: |
-          cd ../../gui
           npm run build
 
       # Run prepackage.js script
@@ -167,6 +156,12 @@ jobs:
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      # npm install binary
+      - name: Install binary node_modules
+        run: |
+          cd ../../binary
+          npm ci
 
       # Build binaries
       - name: Build the binaries
@@ -224,6 +219,9 @@ jobs:
         shell: bash
         run: |
           cd ../../extensions/intellij/build/distributions
+          echo "Builds:"
+          ls
+          echo "---"
           FILENAME=`ls *.zip`
           unzip "$FILENAME" -d content
 
