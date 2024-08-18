@@ -1,5 +1,5 @@
 ---
-title: Defining a Custom LLM Provider
+title: Custom LLM Provider
 description: Learn how to define and configure a custom Large Language Model (LLM) provider in Continue, including implementing stream completion functions and setting up model options.
 keywords: [custom LLM, model provider, Continue configuration, stream completion, API integration, LLM setup]
 ---

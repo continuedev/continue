@@ -96,11 +96,7 @@ const sidebars = {
       collapsed: true,
       items: [
         "advanced/authentication",
-        {
-          type: "doc",
-          id: "advanced/custom-llm-provider",
-          label: "Custom LLM Provider",
-        },
+        "advanced/custom-llm-provider",
         "advanced/custom-context-provider",
         "advanced/custom-slash-command",
       ],
