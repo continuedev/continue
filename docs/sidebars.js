@@ -101,6 +101,7 @@ const sidebars = {
           id: "advanced/custom-llm-provider",
           label: "Custom LLM Provider",
         },
+        "advanced/custom-slash-command",
       ],
     },
     {
