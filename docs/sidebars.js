@@ -21,16 +21,8 @@ const sidebars = {
       collapsed: true,
       items: [
         "intro",
-        {
-          type: "doc",
-          id: "install/vscode",
-          label: "VS Code",
-        },
-        {
-          type: "doc",
-          id: "install/jetbrains",
-          label: "JetBrains",
-        },
+        "install/vscode",
+        "install/jetbrains",
         "how-to-use-continue",
         "troubleshooting"
       ],
@@ -65,11 +57,7 @@ const sidebars = {
         "features/context-providers",
         "features/slash-commands",
         "features/prompt-files",
-        {
-          type: "doc",
-          id: "features/quick-actions",
-          label: "Quick Actions (experimental)",
-        },
+        "features/quick-actions",
       ],
     },
     {
@@ -117,18 +105,10 @@ const sidebars = {
     },
   ],
   communitySidebar: [
-    'community/community',
-    {
-      type: "doc",
-      id: "community/code-of-conduct",
-      label: "📜 Code of Conduct",
-    },
-    'community/roadmap',
-    {
-      type: "doc",
-      id: "community/contributing",
-      label: "🤝 Contributing",
-    },
+    "community/community",
+    "community/code-of-conduct",
+    "community/roadmap",
+    "community/contributing",
     {
       type: "category",
       label: "📝 Changelog",
@@ -139,7 +119,7 @@ const sidebars = {
         "community/change-log-intellij",
       ],
     },
-    'community/support',
+    "community/support",
   ],
 };
 

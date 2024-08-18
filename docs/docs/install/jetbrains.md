@@ -1,5 +1,6 @@
 ---
 title: Installing Continue in JetBrains IDEs
+sidebar_label: JetBrains
 description: Instructions for installing the Continue extension in JetBrains IDEs
 keywords: [install, setup, jetbrains, plugin, continue, intellij, pycharm, webstorm]
 ---

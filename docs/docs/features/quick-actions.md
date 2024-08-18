@@ -1,5 +1,6 @@
 ---
 title: Quick Actions (experimental, VS Code only)
+sidebar_label: Quick Actions (experimental)
 description: Quick Actions streamline your development workflow by allowing quick edits on selected classes or functions
 keywords: [experimental, automate, configuration]
 toc_max_heading_level: 5

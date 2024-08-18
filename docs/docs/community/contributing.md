@@ -1,4 +1,7 @@
-# Contributing to Continue
+---
+title: Contributing to Continue
+sidebar_label: 🤝 Contributing
+---
 
 ## Introduction
 

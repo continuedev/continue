@@ -1,4 +1,7 @@
-# Contributor Covenant Code of Conduct
+---
+title: Contributor Covenant Code of Conduct
+sidebar_label: 📜 Code of Conduct
+---
 
 ## Our Pledge
 

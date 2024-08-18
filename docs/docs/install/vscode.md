@@ -1,5 +1,6 @@
 ---
 title: Installing Continue in VS Code
+sidebar_label: VS Code
 description: Instructions for installing the Continue extension in Visual Studio Code
 keywords: [install, setup, vscode, extension, continue, vsix]
 ---
