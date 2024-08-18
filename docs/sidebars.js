@@ -127,7 +127,7 @@ const sidebars = {
       id: "community/code-of-conduct",
       label: "📜 Code of Conduct",
     },
-    // roadmap,
+    'community/roadmap',
     {
       type: "doc",
       id: "community/contributing",
@@ -137,13 +137,13 @@ const sidebars = {
       type: "category",
       label: "📝 Changelog",
       collapsible: true,
-      collapsed: false,
+      collapsed: true,
       items: [
         "community/change-log-vs-code",
         "community/change-log-intellij",
       ],
     },
-    // support
+    'community/support',
   ],
 };
 
