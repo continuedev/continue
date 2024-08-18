@@ -101,8 +101,9 @@ const sidebars = {
         "advanced/custom-llm-provider",
         "advanced/custom-context-provider",
         "advanced/custom-slash-command",
-        "advanced/customizing-the-llm-capability",
+        "advanced/customizing-the-chat-template",
         "advanced/customizing-edit-commands-prompt",
+        "advanced/customizing-the-llm-capability",
       ],
     },
     {

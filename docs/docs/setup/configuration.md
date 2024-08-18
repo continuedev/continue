@@ -121,12 +121,6 @@ If you require a fully air-gapped setup, you may also want to:
 1. For VS Code, manually download the latest .vsix file from the [Open VSX Registry](https://open-vsx.org/extension/Continue/continue) rather than the VS Code Marketplace and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix). For JetBrains, manually download the .zip file from the [JetBrains Plugin Repository](https://plugins.jetbrains.com/plugin/22707-continue) and [install it to your IDE](https://www.jetbrains.com/help/idea/managing-plugins.html#install_plugin_from_disk).
 2. Open `~/.continue/config.json` and set `"allowAnonymousTelemetry": false`. This will stop Continue from attempting requests to PostHog for [anonymous telemetry](../telemetry.md).
 
-## Self-hosting an open-source model
-
-For many cases, either Continue will have a built-in provider or the API you use will be OpenAI-compatible, in which case you can use the "openai" provider and change the "baseUrl" to point to the server.
-
-However, if neither of these are the case, you will need to wire up a new LLM object. Learn how to do this [here](#defining-a-custom-llm-provider).
-
 ## Context Length
 
 Continue by default knows the context length for common models. For example, it will automatically assume 200k tokens for Claude 3. For Ollama, the context length is determined automatically by asking Ollama. If neither of these are sufficient, you can manually specify the context length by using hte `"contextLength"` property in your model in config.json.
@@ -144,45 +138,3 @@ Continue by default knows the context length for common models. For example, it 
   ]
 }
 ```
-
-## Customizing the Chat Template
-
-Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the `template` property to explicitly set the format that you expect. The options are: `["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "openchat", "neural-chat", "none"]`.
-
-If you want to create an entirely new chat template, this can be done in [config.ts](../customization/code-config.md) by defining a function and adding it to the `templateMessages` property of your `LLM`. Here is an example of `templateMessages` for the Alpaca/Vicuna format:
-
-```typescript
-function templateAlpacaMessages(msgs: ChatMessage[]): string {
-  let prompt = "";
-
-  if (msgs[0].role === "system") {
-    prompt += `${msgs[0].content}\n`;
-    msgs.pop(0);
-  }
-
-  prompt += "### Instruction:\n";
-  for (let msg of msgs) {
-    prompt += `${msg.content}\n`;
-  }
-
-  prompt += "### Response:\n";
-
-  return prompt;
-}
-```
-
-It can then be used like this:
-
-```typescript title="~/.continue/config.ts"
-function modifyConfig(config: Config): Config {
-  const model = config.models.find(
-    (model) => model.title === "My Alpaca Model",
-  );
-  if (model) {
-    model.templateMessages = templateAlpacaMessages;
-  }
-  return config;
-}
-```
-
-This exact function and a few other default implementations are available in [`core/llm/templates/chat.ts`](https://github.com/continuedev/continue/blob/main/core/llm/templates/chat.ts).
