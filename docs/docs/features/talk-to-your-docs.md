@@ -5,7 +5,7 @@ keywords: [documentation, indexing, context provider, embeddings]
 toc_max_heading_level: 5
 ---
 
-The [`@docs` context provider](http://localhost:3000/customization/context-providers#documentation) allows you to interact with your documentation directly within Continue. This feature enables you to index any static site or GitHub markdown pages, making it easier to access and utilize your documentation while coding.
+The [`@docs` context provider](../features/context-providers#documentation) allows you to interact with your documentation directly within Continue. This feature enables you to index any static site or GitHub markdown pages, making it easier to access and utilize your documentation while coding.
 
 ## Enabling the `@docs` context provider
 

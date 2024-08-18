@@ -4,7 +4,7 @@ description: Learn how to define and configure a custom Large Language Model (LL
 keywords: [custom LLM, model provider, Continue configuration, stream completion, API integration, LLM setup]
 ---
 
-If you are using an LLM API that isn't already [supported by Continue](./model-providers.md), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
+If you are using an LLM API that isn't already [supported by Continue](../reference/config), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
 
 ```typescript title="~/.continue/config.ts"
 export function modifyConfig(config: Config): Config {

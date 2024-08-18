@@ -50,7 +50,7 @@ You can access both open-source and commercial LLMs via:
 
 You can run open-source LLMs with cloud services like:
 
-- [Codestral API](../walkthroughs/set-up-codestral.md)
+- [Codestral API](../tutorials/set-up-codestral.md)
 - [Together](../reference/Model%20Providers/togetherllm.md)
 - [HuggingFace Inference Endpoints](../reference/Model%20Providers/huggingfaceinferenceapi.md)
 - [Anyscale Endpoints](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
@@ -72,7 +72,7 @@ You can use commercial LLMs via APIs using:
 - [Voyage AI API](../features/codebase-embeddings.md#openai)
 - [Cohere API](../reference/Model%20Providers/cohere.md)
 
-**In addition to selecting providers, you will need to figure out [what models to use](./select-model.md).**
+<!-- **In addition to selecting providers, you will need to figure out [what models to use](./select-model.md).** -->
 
 ## Select models
 
@@ -146,7 +146,7 @@ You likely want to use a model that is 1-15B parameters for autocomplete. You ca
 
 ##### Codestral from Mistral
 
-Our current recommendation for autocomplete, if you are able to choose any model, is `codestral-latest` from [Mistral's API](../walkthroughs/set-up-codestral.md).
+Our current recommendation for autocomplete, if you are able to choose any model, is `codestral-latest` from [Mistral's API](../tutorials/set-up-codestral.md).
 
 #### Open-source LLMs
 

@@ -77,9 +77,9 @@ No modification in `config.json` is necessary.
 
 There are 3 types of context providers: "normal", "query", and "submenu". The "normal" type is the default, and is what we've seen so far.
 
-The **"query"** type is used when you want to display a text box to the user, and then use the contents of that text box to generate the context items. Built-in examples include ["search"](#exact-search) and ["google"](#google). This text is what gets passed to the "query" argument in `getContextItems`. To implement a "query" context provider, simply set `"type": "query"` in your custom context provider object.
+The **"query"** type is used when you want to display a text box to the user, and then use the contents of that text box to generate the context items. Built-in examples include ["search"](../features/context-providers#exact-search) and ["google"](../features/context-providers#google). This text is what gets passed to the "query" argument in `getContextItems`. To implement a "query" context provider, simply set `"type": "query"` in your custom context provider object.
 
-The **"submenu"** type is used when you want to display a list of searchable items in the dropdown. Built-in examples include ["issue"](#github-issues) and ["folder"](#folders). To implement a "submenu" context provider, set `"type": "submenu"` and implement the `loadSubmenuItems` and `getContextItems` functions. Here is an example that shows a list of all README files in the current workspace:
+The **"submenu"** type is used when you want to display a list of searchable items in the dropdown. Built-in examples include ["issue"](../features/context-providers#github-issues) and ["folder"](../features/context-providers#folders). To implement a "submenu" context provider, set `"type": "submenu"` and implement the `loadSubmenuItems` and `getContextItems` functions. Here is an example that shows a list of all README files in the current workspace:
 
 ```typescript title="~/.continue/config.ts"
 const ReadMeContextProvider: CustomContextProvider = {

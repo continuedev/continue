@@ -10,7 +10,7 @@ keywords: [codestral, mistral, model setup]
 
 **Here is a step-by-step guide on how to set up Codestral with Continue using the Mistral AI API:**
 
-1. Install the Continue VS Code or JetBrains extension following the instructions [here](../quickstart.md)
+1. Install the Continue VS Code or JetBrains extension following the instructions [here](../install/vscode.md)
 
 2. Click on the gear icon in the bottom right corner of the Continue window to open `~/.continue/config.json` (MacOS) / `%userprofile%\.continue\config.json` (Windows)
 
@@ -43,7 +43,7 @@ keywords: [codestral, mistral, model setup]
 
 ### Temporary workaround for JetBrains
 
-Mistral AI recently changed the API endpoint to `codestral.mistral.ai` instead of `api.mistral.ai`, and our updated JetBrains extension is waiting on approval from the store. In the meantime, you will have to specify apiBase as "https://codestral.mistral.ai/v1" in the config.json like this:
+Mistral AI recently changed the API endpoint to `codestral.mistral.ai` instead of `api.mistral.ai`, and our updated JetBrains extension is waiting on approval from the store. In the meantime, you will have to specify apiBase as `<https://codestral.mistral.ai/v1>` in the config.json like this:
 
 ```json title="~/.continue/config.json"
 {

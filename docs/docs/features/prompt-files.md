@@ -77,7 +77,7 @@ The following built-in variables are currently available:
 
 ### Context providers
 
-Any [context provider](../customization/context-providers.md) that you have added to your config can be referenced using the name of the context provider. Context providers that receive an input are also supported.
+Any [context provider](../features/context-providers.md) that you have added to your config can be referenced using the name of the context provider. Context providers that receive an input are also supported.
 
 - `{{{ terminal }}}` - The contents of the terminal
 - `{{{ url "https://github.com/continuedev/continue" }}}` - The contents of a URL
