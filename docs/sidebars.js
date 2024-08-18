@@ -68,6 +68,7 @@ const sidebars = {
       items: [
         "advanced/custom-llm-provider",
         "advanced/custom-context-provider",
+        "advanced/custom-embedding-provider",
         "advanced/custom-slash-command",
         "advanced/customizing-the-chat-template",
         "advanced/customizing-edit-commands-prompt"

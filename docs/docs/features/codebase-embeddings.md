@@ -64,33 +64,6 @@ Final number of results to use after re-ranking (default: 5)
 
 Whether to use re-ranking, which will allow initial selection of `nRetrieve` results, then will use an LLM to select the top `nFinal` results (default: true)
 
-
-
-### Writing a custom `EmbeddingsProvider`
-
-If you have your own API capable of generating embeddings, Continue makes it easy to write a custom `EmbeddingsProvider`. All you have to do is write a function that converts strings to arrays of numbers, and add this to your config in `config.ts`. Here's an example:
-
-```ts title="~/.continue/config.ts"
-export function modifyConfig(config: Config): Config {
-  config.embeddingsProvider = {
-    embed: (chunks: string[]) => {
-      return Promise.all(
-        chunks.map(async (chunk) => {
-          const response = await fetch("https://example.com/embeddings", {
-            method: "POST",
-            body: JSON.stringify({ text: chunk }),
-          });
-          const data = await response.json();
-          return data.embedding;
-        }),
-      );
-    },
-  };
-
-  return config;
-}
-```
-
 ## Ignore files during indexing
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
