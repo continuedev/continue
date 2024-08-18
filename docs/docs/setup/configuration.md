@@ -4,8 +4,6 @@ description: Configure your LLM and model provider
 keywords: [configure, llm, provider]
 ---
 
-# Configuration
-
 Want a quick and easy setup for Continue? We've got you covered with some sample `config.json` files for different scenarios. Just copy and paste them into your `config.json` by clicking the gear icon at the bottom right of the Continue sidebar.
 
 ## Quick Setup Options
@@ -233,36 +231,6 @@ function modifyConfig(config: Config): Config {
 ```
 
 You can find all existing templates for /edit in [`core/llm/templates/edit.ts`](https://github.com/continuedev/continue/blob/main/core/llm/templates/edit.ts).
-
-## Defining a Custom LLM Provider
-
-If you are using an LLM API that isn't already [supported by Continue](./model-providers.md), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
-
-```typescript title="~/.continue/config.ts"
-export function modifyConfig(config: Config): Config {
-  config.models.push({
-    options: {
-      title: "My Custom LLM",
-      model: "mistral-7b",
-    },
-    streamCompletion: async function* (
-      prompt: string,
-      options: CompletionOptions,
-      fetch,
-    ) {
-      // Make the API call here
-
-      // Then yield each part of the completion as it is streamed
-      // This is a toy example that will count to 10
-      for (let i = 0; i < 10; i++) {
-        yield `- ${i}\n`;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-    },
-  });
-  return config;
-}
-```
 
 ## Customizing the LLM capability
 
