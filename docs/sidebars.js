@@ -91,6 +91,15 @@ const sidebars = {
     },
     {
       type: "category",
+      label: "🔬 Advanced",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        "advanced/authentication",
+      ],
+    },
+    {
+      type: "category",
       label: "🧑‍💻 Privacy",
       collapsible: true,
       collapsed: true,
@@ -102,15 +111,6 @@ const sidebars = {
           label: "Privacy Policy",
           href: "https://www.continue.dev/privacy",
         },
-      ],
-    },
-    {
-      type: "category",
-      label: "🔬 Advanced",
-      collapsible: true,
-      collapsed: true,
-      items: [
-        "advanced/authentication",
       ],
     },
   ],
