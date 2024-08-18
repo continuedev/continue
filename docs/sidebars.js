@@ -104,6 +104,7 @@ const sidebars = {
       ],
     },
     "reference/embedding-providers",
+    "reference/reranking-providers",
   ],
   communitySidebar: [
     "community/community",
