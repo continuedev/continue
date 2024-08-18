@@ -273,6 +273,10 @@ const config = {
             from: "/quickstart",
             to: "/install/vscode",
           },
+          {
+            from: ['/reference/Model%20Providers/:splat*', '/reference/Model Providers/:splat*'],
+            to: '/reference/llm-providers',
+          }
         ],
       },
     ],
