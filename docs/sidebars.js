@@ -103,6 +103,7 @@ const sidebars = {
         },
       ],
     },
+    "reference/embedding-providers",
   ],
   communitySidebar: [
     "community/community",
