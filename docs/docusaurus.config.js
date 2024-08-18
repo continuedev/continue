@@ -233,6 +233,14 @@ const config = {
             from: "/customization/context-providers",
             to: "/features/context-providers",
           },
+          {
+            from: "/setup/model-providers",
+            to: "/tutorials/select-an-llm",
+          },
+          {
+            from: "/setup/select-model",
+            to: "/tutorials/select-an-llm",
+          },
         ],
       },
     ],

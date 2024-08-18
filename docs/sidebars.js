@@ -55,8 +55,6 @@ const sidebars = {
       items: [
         "setup/overview",
         "setup/configuration",
-        "setup/model-providers",
-        "setup/select-model",
       ],
     },
     {
@@ -64,7 +62,11 @@ const sidebars = {
       label: "📚 Tutorials",
       collapsible: true,
       collapsed: true,
-      items: ["tutorials/set-up-codestral", "tutorials/llama3.1"],
+      items: [
+        "tutorials/select-an-llm",
+        "tutorials/set-up-codestral",
+        "tutorials/llama3.1"
+      ],
     },
     {
       type: "category",

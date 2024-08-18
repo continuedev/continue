@@ -1,36 +1,18 @@
 ---
-title: Model Providers
-description: Configure and integrate various LLM (Large Language Model) providers for chat, autocomplete, and embedding models, whether self-hosted, remote, or via SaaS.
-keywords:
-  [
-    large language models,
-    LLM providers,
-    open-source LLM,
-    commercial LLM,
-    self-hosted LLM,
-    remote LLM,
-    SaaS LLM,
-    AI model configuration,
-    AI providers,
-    OpenAI,
-    Anthropic,
-    Gemini,
-    Ollama,
-    HuggingFace,
-    AWS Bedrock,
-    AWS SageMaker,
-  ]
+title: How to Select an LLM
+description: How to run Continue without Internet
+keywords: [no internet, air-gapped, local model]
 ---
 
-# Model Providers
+## Model Providers
 
 Configure and integrate various LLM (Large Language Model) providers for chat, autocomplete, and embedding models, whether self-hosted, remote, or via SaaS.
 
 To select the ones you want to use, add them to your `config.json`.
 
-## Self-hosted
+### Self-hosted
 
-### Local
+#### Local
 
 You can run a model on your local computer using:
 
@@ -49,7 +31,7 @@ You can run a model on your local computer using:
 - [Watsonx](../reference/Model%20Providers/watsonx.md)
 - [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
-### Remote
+#### Remote
 
 You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
 
@@ -58,13 +40,13 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 - [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
 
-## SaaS
+### SaaS
 
 You can access both open-source and commercial LLMs via:
 
 - [OpenRouter](../reference/Model%20Providers/openrouter.md)
 
-### Open-source models
+#### Open-source models
 
 You can run open-source LLMs with cloud services like:
 
@@ -78,7 +60,7 @@ You can run open-source LLMs with cloud services like:
 - [AWS Bedrock](../reference/Model%20Providers/bedrock.md)
 - [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
-### Commercial models
+#### Commercial models
 
 You can use commercial LLMs via APIs using:
 
@@ -91,3 +73,88 @@ You can use commercial LLMs via APIs using:
 - [Cohere API](../reference/Model%20Providers/cohere.md)
 
 **In addition to selecting providers, you will need to figure out [what models to use](./select-model.md).**
+
+## Select models
+
+Continue makes it easy to use different models for chat, autocomplete, and embeddings. To select the models you want to use, add them to your `config.json`.
+
+### Chat
+
+You likely want to use a model that is 30B+ parameters for chat.
+
+#### Open-source LLMs
+
+_We currently recommend the following open-source models:_
+
+##### Llama 3 from Meta
+
+- Unlimited GPU: `llama3-70b`
+- Limited GPU: `llama3-8B`
+
+##### DeepSeek Coder v2 from DeepSeek
+
+- Unlimited GPU: `deepseek-coder-v2:236b`
+- Limited GPU: `deepseek-coder-v2:16b`
+
+_You can also use other open-source chat models by adding them to your `config.json`._
+
+#### Commercial LLMs
+
+##### Claude 3 from Anthropic
+
+- Unlimited budget: `claude-3-5-sonnet-20240620`
+- Limited budget: `claude-3-5-sonnet-20240620`
+
+##### GPT-4o from OpenAI
+
+- Unlimited budget: `gpt-4o`
+- Limited budget: `gpt-4o-mini`
+
+##### Gemini Pro from Google
+
+- Unlimited budget: `gemini-pro-1.5-latest`
+- Limited budget: `gemini-flash-1.5-latest` or `gemini-pro-1.0`
+
+_You can also use other commercial chat models by adding them to your `config.json`._
+
+### Autocomplete
+
+You likely want to use a model that is 1-15B parameters for autocomplete. You can read more about it [here](../features/tab-autocomplete.md#tab-autocomplete-beta)
+
+#### Commercial LLMs
+
+##### Codestral from Mistral
+
+Our current recommendation for autocomplete, if you are able to choose any model, is `codestral-latest` from [Mistral's API](../walkthroughs/set-up-codestral.md).
+
+#### Open-source LLMs
+
+_We currently recommend the following open-source models:_
+
+##### DeepSeek Coder v2 from DeepSeek
+
+- Unlimited GPU: `deepseek-coder-v2:16b`
+- Limited GPU: `deepseek-coder:6.7b` or `deepseek-coder:1.3b`
+
+##### StarCoder 2 from Hugging Face
+
+- Unlimited GPU: `starcoder-2-7b`
+- Limited GPU: `starcoder-2-3b`
+
+_You can also use other autocomplete models by adding them to your `config.json`._
+
+### Embeddings
+
+We recommend the following embeddings models, which are used for codebase retrieval as described [here](../features/codebase-embeddings.md#embeddings-providers)
+
+#### Open-source models
+
+- `nomic-embed-text`
+
+#### Commercial models
+
+- `voyage-code-2`
+
+_You can also use other embeddings models by adding them to your `config.json`._
+
+**In addition to selecting models, you will need to figure out [what model providers to use](./model-providers.md).**
