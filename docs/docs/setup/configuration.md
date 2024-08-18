@@ -121,27 +121,6 @@ If you require a fully air-gapped setup, you may also want to:
 1. For VS Code, manually download the latest .vsix file from the [Open VSX Registry](https://open-vsx.org/extension/Continue/continue) rather than the VS Code Marketplace and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix). For JetBrains, manually download the .zip file from the [JetBrains Plugin Repository](https://plugins.jetbrains.com/plugin/22707-continue) and [install it to your IDE](https://www.jetbrains.com/help/idea/managing-plugins.html#install_plugin_from_disk).
 2. Open `~/.continue/config.json` and set `"allowAnonymousTelemetry": false`. This will stop Continue from attempting requests to PostHog for [anonymous telemetry](../telemetry.md).
 
-## Setting up chat models
-
-In `config.json`, you'll find the `models` property, a list of the models that you have saved to use with Continue:
-
-```json
-"models": [
-    {
-        "title": "GPT-4o",
-        "provider": "free-trial",
-        "model": "gpt-4o"
-    },
-    {
-        "title": "GPT-4o Mini",
-        "provider": "free-trial",
-        "model": "gpt-4o-mini"
-    }
-]
-```
-
-Just by specifying the `model` and `provider` properties, we will automatically detect prompt templates and other important information, but if you're looking to do something beyond this basic setup, we'll explain a few other options below.
-
 ## Self-hosting an open-source model
 
 For many cases, either Continue will have a built-in provider or the API you use will be OpenAI-compatible, in which case you can use the "openai" provider and change the "baseUrl" to point to the server.

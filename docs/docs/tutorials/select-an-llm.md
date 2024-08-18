@@ -117,6 +117,27 @@ _You can also use other open-source chat models by adding them to your `config.j
 
 _You can also use other commercial chat models by adding them to your `config.json`._
 
+#### Setting up chat models
+
+In `config.json`, you'll find the `models` property, a list of the models that you have saved to use with Continue:
+
+```json
+"models": [
+    {
+        "title": "GPT-4o",
+        "provider": "free-trial",
+        "model": "gpt-4o"
+    },
+    {
+        "title": "GPT-4o Mini",
+        "provider": "free-trial",
+        "model": "gpt-4o-mini"
+    }
+]
+```
+
+Just by specifying the `model` and `provider` properties, we will automatically detect prompt templates and other important information, but if you're looking to do something beyond this basic setup, we'll explain a few other options below.
+
 ### Autocomplete
 
 You likely want to use a model that is 1-15B parameters for autocomplete. You can read more about it [here](../features/tab-autocomplete.md#tab-autocomplete-beta)
