@@ -39,7 +39,7 @@ jobs:
     # needs: check_release_name
     # if: needs.check_release_name.outputs.should_run == 'true'
     name: Build Plugin
-    runs-on: macos-11
+    runs-on: macos-latest
     permissions:
       contents: write
       pull-requests: write
@@ -151,18 +151,18 @@ jobs:
           cd ../../binary
           npm run build
 
-      - name: Sign darwin-arm64 binary
-        uses: lando/code-sign-action@v2
-        with:
-          file: ./binary/bin/darwin-arm64/continue-binary
-          certificate-data: ${{ secrets.APPLE_CERT_DATA }}
-          certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
-          apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
-          apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
-          apple-notary-tool: altool
-          apple-team-id: 43XFLY66ZD
-          apple-product-id: dev.continue.continue-binary
-          options: --options runtime --entitlements entitlements.xml
+      # - name: Sign darwin-arm64 binary
+      #   uses: lando/code-sign-action@v2
+      #   with:
+      #     file: ./binary/bin/darwin-arm64/continue-binary
+      #     certificate-data: ${{ secrets.APPLE_CERT_DATA }}
+      #     certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+      #     apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
+      #     apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
+      #     apple-notary-tool: altool
+      #     apple-team-id: 43XFLY66ZD
+      #     apple-product-id: dev.continue.continue-binary
+      #     options: --options runtime --entitlements entitlements.xml
 
       - name: Sign darwin-x64 binary
         uses: lando/code-sign-action@v2
