@@ -249,6 +249,10 @@ const config = {
             from: "/setup/configuration",
             to: "/tutorials/configuration-examples",
           },
+          {
+            from: "/changelog",
+            to: "/community/change-log-vs-code",
+          },
         ],
       },
     ],
