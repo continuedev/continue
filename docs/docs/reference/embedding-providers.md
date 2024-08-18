@@ -1,5 +1,6 @@
 ---
 title: Embeddings Providers
+sidebar_label: 🔤 Embeddings Providers
 description: Learn about the different embeddings providers supported by Continue, including Cohere, DeepInfra, Free Trial, Gemini, Hugging Face TEI, Ollama, OpenAI, Transformers.js, and Voyage AI.
 toc_max_heading_level: 2
 ---

@@ -1,5 +1,6 @@
 ---
 title: Reranking Providers
+sidebar_label: 🏆 Reranking Providers
 description: Overview of different reranking options available in Continue, including Cohere, Voyage AI, LLM, Hugging Face TEI, and free trial options.
 ---
 

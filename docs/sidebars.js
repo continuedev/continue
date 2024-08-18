@@ -93,7 +93,7 @@ const sidebars = {
     "reference/config",
     {
       type: "category",
-      label: "LLM Providers",
+      label: "🤖 LLM Providers",
       collapsible: true,
       collapsed: true,
       items: [
