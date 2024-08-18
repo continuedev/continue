@@ -13,7 +13,7 @@ While the Continue extension is always free to use, we cannot support infinite f
 
 Ollama is a local service that makes it easy to run language models on your laptop.
 
-1. Download Ollama from https://ollama.ai
+1. Download Ollama from [https://ollama.ai](https://ollama.ai)
 2. Open `~/.continue/config.json`. You can do this by clicking the gear icon in the bottom right corner of the Continue sidebar
 3. Add the following to your `config.json`:
 
@@ -33,7 +33,7 @@ Ollama is a local service that makes it easy to run language models on your lapt
 
 Groq provides lightning fast inference for open-source LLMs like Llama3, up to twice as fast as through other providers.
 
-1. Obtain an API key from https://console.groq.com
+1. Obtain an API key from [Groq's console](https://console.groq.com)
 2. Add the following to your `config.json`:
 
 ```json title="~/.continue/config.json"
@@ -51,7 +51,7 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
 
 ### ✨ OpenAI (highly capable)
 
-1. Copy your API key from https://platform.openai.com/account/api-keys
+1. Copy your API key from [OpenAI's API keys page](https://platform.openai.com/account/api-keys)
 2. Add the following to your `config.json`:
 
 ```json title="~/.continue/config.json"
@@ -66,10 +66,6 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
   ]
 }
 ```
-
-### ⏩ Other options
-
-The above were only a few examples, but Continue can be used with any LLM or provider. You can find [a full list of model providers here](../../setup/model-providers.md).
 
 ## Sign in
 

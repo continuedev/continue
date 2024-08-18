@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "npm run genereate-references && nodemon --watch sidebars.js --watch docusaurus.config.js --exec 'docusaurus start'",
+    "start": "nodemon --exec 'npm run generate-references && docusaurus start'",
     "build": "docusaurus build",
     "build:netlify": "docusaurus build --out-dir build/docs",
     "swizzle": "docusaurus swizzle",
@@ -14,7 +14,7 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "genereate-references": "node generate-references.js"
+    "generate-references": "node generate-references.js"
   },
   "dependencies": {
     "@docusaurus/core": "^3.4.0",
@@ -46,5 +46,14 @@
   "engine-strict": true,
   "engines": {
     "node": ">=20.11.0"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "llm-providers/*",
+      "sidebars.js",
+      "docusaurus.config.js",
+      "generate-references.js"
+    ],
+    "ext": "js,json,jsx,ts,tsx,md,mdx"
   }
 }

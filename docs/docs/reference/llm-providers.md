@@ -239,7 +239,7 @@ While the Continue extension is always free to use, we cannot support infinite f
 
 Ollama is a local service that makes it easy to run language models on your laptop.
 
-1. Download Ollama from https://ollama.ai
+1. Download Ollama from [https://ollama.ai](https://ollama.ai)
 2. Open `~/.continue/config.json`. You can do this by clicking the gear icon in the bottom right corner of the Continue sidebar
 3. Add the following to your `config.json`:
 
@@ -259,7 +259,7 @@ Ollama is a local service that makes it easy to run language models on your lapt
 
 Groq provides lightning fast inference for open-source LLMs like Llama3, up to twice as fast as through other providers.
 
-1. Obtain an API key from https://console.groq.com
+1. Obtain an API key from [Groq's console](https://console.groq.com)
 2. Add the following to your `config.json`:
 
 ```json title="~/.continue/config.json"
@@ -277,7 +277,7 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
 
 #### ✨ OpenAI (highly capable)
 
-1. Copy your API key from https://platform.openai.com/account/api-keys
+1. Copy your API key from [OpenAI's API keys page](https://platform.openai.com/account/api-keys)
 2. Add the following to your `config.json`:
 
 ```json title="~/.continue/config.json"
@@ -292,10 +292,6 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
   ]
 }
 ```
-
-#### ⏩ Other options
-
-The above were only a few examples, but Continue can be used with any LLM or provider. You can find [a full list of model providers here](../../setup/model-providers.md).
 
 ### Sign in
 
@@ -402,8 +398,10 @@ If you would like to reach the Ollama service from another machine, make sure yo
 ```
 
 :::tip
-- For more configuration options regarding completion or authentication, you could refer to [here](./ollama.md#completion-options) for Ollama provider.
+
+- For more configuration options regarding completion or authentication, you could refer to [here](#ollama) for Ollama provider.
 - If you would like to preload the model before your first conversation with that model in Continue, you could refer to [here](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/continue_quickstart.html#pull-and-prepare-the-model) for more information.
+
 :::
 
 
@@ -652,8 +650,7 @@ To force usage of `chat/completions` instead of `completions` endpoint you can s
 "useLegacyCompletionsEndpoint": false
 ```
 
-[^1]: Use the [Vllm Model Provider](./vllm.md) instead.
-
+[^1]: Use the [Vllm Model Provider](#vllm) instead
 
 [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/OpenAI.ts)
 
@@ -800,7 +797,7 @@ Run the OpenAI-compatible server by vLLM using `vllm serve`. See their [server d
 vllm serve NousResearch/Meta-Llama-3-8B-Instruct --max-model-len 1024
 ```
 
-The continue implementation uses [OpenAI](./openai.md) under the hood and automatically selects the available model. You only need to set the `apiBase` like this:
+The continue implementation uses [OpenAI](#openai) under the hood and automatically selects the available model. You only need to set the `apiBase` like this:
 
 ```json title="~/.continue/config.json"
 {

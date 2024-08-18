@@ -41,7 +41,6 @@ To force usage of `chat/completions` instead of `completions` endpoint you can s
 "useLegacyCompletionsEndpoint": false
 ```
 
-[^1]: Use the [Vllm Model Provider](./vllm.md) instead.
-
+[^1]: Use the [Vllm Model Provider](#vllm) instead
 
 [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/OpenAI.ts)
