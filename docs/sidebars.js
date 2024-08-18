@@ -104,7 +104,15 @@ const sidebars = {
         },
       ],
     },
-
+    {
+      type: "category",
+      label: "🔬 Advanced",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        "advanced/authentication",
+      ],
+    },
   ],
   referenceSidebar: [
     "reference/config",
