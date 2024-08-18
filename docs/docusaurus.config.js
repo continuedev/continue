@@ -226,6 +226,10 @@ const config = {
             to: "/tutorials/llama3.1",
           },
           {
+            from: "/walkthroughs/running-continue-without-internet",
+            to: "/tutorials/running-without-internet",
+          },
+          {
             from: "/customization/slash-commands",
             to: "/features/slash-commands",
           },

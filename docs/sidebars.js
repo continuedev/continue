@@ -58,7 +58,8 @@ const sidebars = {
         "tutorials/configuration-examples",
         "tutorials/select-an-llm",
         "tutorials/set-up-codestral",
-        "tutorials/llama3.1"
+        "tutorials/llama3.1",
+        "tutorials/running-without-internet"
       ],
     },
     {
