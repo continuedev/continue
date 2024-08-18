@@ -133,7 +133,16 @@ const sidebars = {
       id: "community/contributing",
       label: "🤝 Contributing",
     },
-    "changelog",
+    {
+      type: "category",
+      label: "📝 Changelog",
+      collapsible: true,
+      collapsed: false,
+      items: [
+        "community/change-log-vs-code",
+        "community/change-log-intellij",
+      ],
+    },
     // support
   ],
 };
