@@ -1,5 +1,5 @@
 ---
-title: Continue Fundaments
+title: Continue Fundamentals
 description: How to use Llama 3.1 with Continue
 keywords: [llama, meta, togetherai, ollama, replicate]
 ---
