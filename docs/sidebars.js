@@ -49,19 +49,11 @@ const sidebars = {
     },
     {
       type: "category",
-      label: "🌉 Setup",
-      collapsible: true,
-      collapsed: true,
-      items: [
-        "setup/overview",
-      ],
-    },
-    {
-      type: "category",
       label: "📚 Tutorials",
       collapsible: true,
       collapsed: true,
       items: [
+        "tutorials/continue-fundamentals",
         "tutorials/configuration-examples",
         "tutorials/select-an-llm",
         "tutorials/set-up-codestral",
