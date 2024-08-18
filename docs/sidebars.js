@@ -20,11 +20,7 @@ const sidebars = {
       collapsible: true,
       collapsed: true,
       items: [
-        {
-          type: "doc",
-          id: "intro",
-          label: "Introduction",
-        },
+        "intro",
         {
           type: "doc",
           id: "install/vscode",
@@ -35,16 +31,8 @@ const sidebars = {
           id: "install/jetbrains",
           label: "JetBrains",
         },
-        {
-          type: "doc",
-          id: "how-to-use-continue",
-          label: "How to use Continue",
-        },
-        {
-          type: "doc",
-          id: "troubleshooting",
-          label: "Troubleshooting",
-        },
+        "how-to-use-continue",
+        "troubleshooting"
       ],
     },
     {
@@ -73,11 +61,7 @@ const sidebars = {
         "features/tab-autocomplete",
         "features/context-providers",
         "features/slash-commands",
-        {
-          type: "doc",
-          id: "features/prompt-files",
-          label: "Prompt Files (experimental)",
-        },
+        "features/prompt-files",
         {
           type: "doc",
           id: "features/quick-actions",

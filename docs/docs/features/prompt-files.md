@@ -1,4 +1,4 @@
-# Prompt files (experimental)
+# Prompt Files (experimental)
 
 Prompt files provide a convenient way to standardize common patterns and share a collection of LLM prompts with your team. They make it easy to build and use these prompts.
 

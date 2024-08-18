@@ -1,5 +1,5 @@
 ---
-title: How to Use Continue
+title: How to use Continue
 description: Utilizing LLMs (Large Language Models) as you code with Continue
 keywords: [how to, edit, refactor, boilerplate, context]
 ---
