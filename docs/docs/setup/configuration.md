@@ -120,21 +120,3 @@ If you require a fully air-gapped setup, you may also want to:
 
 1. For VS Code, manually download the latest .vsix file from the [Open VSX Registry](https://open-vsx.org/extension/Continue/continue) rather than the VS Code Marketplace and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix). For JetBrains, manually download the .zip file from the [JetBrains Plugin Repository](https://plugins.jetbrains.com/plugin/22707-continue) and [install it to your IDE](https://www.jetbrains.com/help/idea/managing-plugins.html#install_plugin_from_disk).
 2. Open `~/.continue/config.json` and set `"allowAnonymousTelemetry": false`. This will stop Continue from attempting requests to PostHog for [anonymous telemetry](../telemetry.md).
-
-## Context Length
-
-Continue by default knows the context length for common models. For example, it will automatically assume 200k tokens for Claude 3. For Ollama, the context length is determined automatically by asking Ollama. If neither of these are sufficient, you can manually specify the context length by using hte `"contextLength"` property in your model in config.json.
-
-```json title="~/.continue/config.json"
-{
-  "models": [
-    {
-      "title": "My Custom Model",
-      "provider": "openai",
-      "model": "my-model",
-      "contextLength": 8192,
-      "apiBase": "http://localhost:8000/v1"
-    }
-  ]
-}
-```
