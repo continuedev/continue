@@ -265,6 +265,10 @@ const config = {
             from: "/customization/overview",
             to: "/tutorials/how-to-use-config-json",
           },
+          {
+            from: "/quickstart",
+            to: "/install/vscode",
+          },
         ],
       },
     ],
