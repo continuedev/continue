@@ -241,6 +241,10 @@ const config = {
             from: "/setup/select-model",
             to: "/tutorials/select-an-llm",
           },
+          {
+            from: "/setup/configuration",
+            to: "/tutorials/configuration-examples",
+          },
         ],
       },
     ],

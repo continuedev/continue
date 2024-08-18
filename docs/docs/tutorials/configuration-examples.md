@@ -1,12 +1,10 @@
 ---
-title: Configuration
+title: Configuration Examples
 description: Configure your LLM and model provider
 keywords: [configure, llm, provider]
 ---
 
 Want a quick and easy setup for Continue? We've got you covered with some sample `config.json` files for different scenarios. Just copy and paste them into your `config.json` by clicking the gear icon at the bottom right of the Continue sidebar.
-
-## Quick Setup Options
 
 You can use Continue in different ways. Here are some quick setups for common uses:
 
@@ -14,7 +12,7 @@ You can use Continue in different ways. Here are some quick setups for common us
 - [Best Overall Experience](#best-overall-experience) - Utilize the hand picked models for the best experience.
 - [Local and Offline](#local-and-offline-configuration) - Use local models for offline use with better privacy.
 
-### Free Trial
+## Free Trial
 
 The `free-trial` lets new users try out Continue with GPT-4o, Llama3, Claude 3.5, and other models using a ContinueDev proxy server that securely makes API calls to these services.
 
@@ -41,7 +39,7 @@ The `free-trial` lets new users try out Continue with GPT-4o, Llama3, Claude 3.5
 }
 ```
 
-### Best Overall Experience
+## Best Overall Experience
 
 This setup uses Claude 3.5 Sonnet for chatting, Codestral for autocomplete, and Voyage AI for embeddings and reranking.
 
@@ -83,7 +81,7 @@ This setup uses Claude 3.5 Sonnet for chatting, Codestral for autocomplete, and 
 }
 ```
 
-### Local and Offline Configuration
+## Local and Offline Configuration
 
 This configuration leverages Ollama for all functionalities - chat, autocomplete, and embeddings - ensuring that no code is transmitted outside your machine, allowing Continue to be run even on an air-gapped computer.
 

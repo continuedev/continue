@@ -54,7 +54,6 @@ const sidebars = {
       collapsed: true,
       items: [
         "setup/overview",
-        "setup/configuration",
       ],
     },
     {
@@ -63,6 +62,7 @@ const sidebars = {
       collapsible: true,
       collapsed: true,
       items: [
+        "tutorials/configuration-examples",
         "tutorials/select-an-llm",
         "tutorials/set-up-codestral",
         "tutorials/llama3.1"
