@@ -50,6 +50,29 @@ jobs:
         # with:
         #   ref: ${{ github.event.release.tag_name }}
 
+      - name: Import Apple certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          keychain: ${{ github.run_id }}
+          keychain-password: ${{ github.run_id }}
+          p12-file-base64: ${{ secrets.APPLE_CERT_DATA }}
+          p12-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+
+      # - name: Download artifact
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     OWNER: continuedev
+      #     REPO: continue
+      #     ARTIFACT_ID: 1822461754
+      #   run: |
+      #     curl -L \
+      #       -H "Authorization: token $GITHUB_TOKEN" \
+      #       -H "Accept: application/vnd.github+json" \
+      #       -o artifact.zip \
+      #       "https://api.github.com/repos/continuedev/continue/actions/artifacts/1822461754/zip"
+      #     unzip artifact.zip
+      #   shell: bash
+
       # Validate wrapper
       - name: Gradle Wrapper Validation
         uses: gradle/actions/wrapper-validation@v3
@@ -151,6 +174,20 @@ jobs:
           cd ../../binary
           npm run build
 
+      - name: Code sign darwin-arm64 binary
+        run: |
+          echo "Signing executable with keychain: ${{ github.run_id }}"
+          codesign --sign - ../../binary/bin/darwin-x64/continue-binary
+          codesign --sign - ../../binary/bin/darwin-arm64/continue-binary
+
+      - name: Validate codesigning
+        run: |
+          echo "Validating codesigning for darwin-x64 binary"
+          codesign -dv --verbose=4 ../../binary/bin/darwin-x64/continue-binary
+
+          echo "Validating codesigning for darwin-arm64 binary"
+          codesign -dv --verbose=4 ../../binary/bin/darwin-arm64/continue-binary
+
       # - name: Sign darwin-arm64 binary
       #   uses: lando/code-sign-action@v2
       #   with:
@@ -164,18 +201,18 @@ jobs:
       #     apple-product-id: dev.continue.continue-binary
       #     options: --options runtime --entitlements entitlements.xml
 
-      - name: Sign darwin-x64 binary
-        uses: lando/code-sign-action@v2
-        with:
-          file: ./binary/bin/darwin-x64/continue-binary
-          certificate-data: ${{ secrets.APPLE_CERT_DATA }}
-          certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
-          apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
-          apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
-          apple-notary-tool: altool
-          apple-team-id: 43XFLY66ZD
-          apple-product-id: dev.continue.continue-binary
-          options: --options runtime --entitlements entitlements.xml
+      # - name: Sign darwin-x64 binary
+      #   uses: lando/code-sign-action@v2
+      #   with:
+      #     file: ./binary/bin/darwin-x64/continue-binary
+      #     certificate-data: ${{ secrets.APPLE_CERT_DATA }}
+      #     certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+      #     apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
+      #     apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
+      #     apple-notary-tool: altool
+      #     apple-team-id: 43XFLY66ZD
+      #     apple-product-id: dev.continue.continue-binary
+      #     options: --options runtime --entitlements entitlements.xml
 
       # Build plugin
       - name: Build plugin
