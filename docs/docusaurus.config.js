@@ -225,6 +225,14 @@ const config = {
             from: "/walkthroughs/llama3.1",
             to: "/tutorials/llama3.1",
           },
+          {
+            from: "/customization/slash-commands",
+            to: "/features/slash-commands",
+          },
+          {
+            from: "/customization/context-providers",
+            to: "/features/context-providers",
+          },
         ],
       },
     ],

@@ -75,8 +75,8 @@ const sidebars = {
         "features/codebase-embeddings",
         "features/talk-to-your-docs",
         "features/tab-autocomplete",
-        "customization/context-providers",
-        "customization/slash-commands",
+        "features/context-providers",
+        "features/slash-commands",
         {
           type: "doc",
           id: "features/prompt-files",
