@@ -45,9 +45,12 @@ const sidebars = {
         "tutorials/how-to-use-config-json",
         "tutorials/configuration-examples",
         "tutorials/select-an-llm",
+        "tutorials/authentication",
         "tutorials/set-up-codestral",
         "tutorials/llama3.1",
-        "tutorials/running-without-internet"
+        "tutorials/running-without-internet",
+        "tutorials/llm-context-length",
+        "tutorials/customizing-the-llm-capability",
       ],
     },
     {
@@ -75,14 +78,11 @@ const sidebars = {
       collapsible: true,
       collapsed: true,
       items: [
-        "advanced/authentication",
         "advanced/custom-llm-provider",
         "advanced/custom-context-provider",
         "advanced/custom-slash-command",
-        "advanced/llm-context-length",
         "advanced/customizing-the-chat-template",
-        "advanced/customizing-edit-commands-prompt",
-        "advanced/customizing-the-llm-capability",
+        "advanced/customizing-edit-commands-prompt"
       ],
     },
     {

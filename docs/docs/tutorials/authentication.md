@@ -1,5 +1,5 @@
 ---
-title: Authentication
+title: Configuring Authentication
 description: Learn how to configure authentication for various LLM providers in Continue, including API keys, custom headers, and client certificates.
 keywords: [authentication, API key, custom headers, client certificate, LLM providers, Ollama]
 ---
