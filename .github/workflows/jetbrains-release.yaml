@@ -11,9 +11,9 @@ on:
   # release:
   #   types: [prereleased]
 
-# defaults:
-#   run:
-#     working-directory: extensions/intellij
+defaults:
+  run:
+    working-directory: extensions/intellij
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -59,40 +59,40 @@ jobs:
           p12-password: ${{ secrets.APPLE_CERT_PASSWORD }}
 
       # Validate wrapper
-      # - name: Gradle Wrapper Validation
-      #   uses: gradle/actions/wrapper-validation@v3
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v3
 
       # # Set up Java environment for the next steps
-      # - name: Setup Java
-      #   uses: actions/setup-java@v4
-      #   with:
-      #     distribution: zulu
-      #     java-version: 17
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
 
       # # Setup Gradle
-      # - name: Setup Gradle
-      #   uses: gradle/actions/setup-gradle@v3
-      #   with:
-      #     gradle-home-cache-cleanup: true
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-home-cache-cleanup: true
 
-      # # Set environment variables
-      # - name: Export Properties
-      #   id: properties
-      #   shell: bash
-      #   run: |
-      #     PROPERTIES="$(./gradlew properties --console=plain -q)"
-      #     VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
-      #     # CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
-      #     CHANGELOG=""
+      # Set environment variables
+      - name: Export Properties
+        id: properties
+        shell: bash
+        run: |
+          PROPERTIES="$(./gradlew properties --console=plain -q)"
+          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
+          # CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
+          CHANGELOG=""
 
-      #     echo "version=$VERSION" >> $GITHUB_OUTPUT
-      #     echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
-      #     echo "changelog<<EOF" >> $GITHUB_OUTPUT
-      #     echo "$CHANGELOG" >> $GITHUB_OUTPUT
-      #     echo "EOF" >> $GITHUB_OUTPUT
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
-      #     ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
 
       # # Setup Node.js
       - name: Use Node.js from .nvmrc
@@ -113,29 +113,29 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
-      # - name: Cache gui node_modules
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: gui/node_modules
-      #     key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+      - name: Cache gui node_modules
+        uses: actions/cache@v3
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
       # npm install core
       - name: Install core node_modules
         run: |
-          cd core
+          cd ../../core
           npm ci
 
       # npm install gui
-      # - name: Install gui node_modules and build
-      #   run: |
-      #     cd ../../gui
-      #     npm ci
-      #     npm run build
+      - name: Install gui node_modules and build
+        run: |
+          cd ../../gui
+          npm ci
+          npm run build
 
       # Run prepackage.js script
       - name: Run prepackage script
         run: |
-          cd extensions/vscode
+          cd ../../extensions/vscode
           npm ci
           npm run prepackage
         env:
@@ -145,13 +145,13 @@ jobs:
       # npm install binary
       - name: Install binary node_modules
         run: |
-          cd binary
+          cd ../../binary
           npm ci
 
       # Build binaries
       - name: Build the binaries
         run: |
-          cd binary
+          cd ../../binary
           npm run build
 
       # - name: Code sign darwin binaries
@@ -167,22 +167,6 @@ jobs:
 
       #     echo "Validating codesigning for darwin-arm64 binary"
       #     codesign -dv --verbose=4 ../../binary/bin/darwin-arm64/continue-binary
-
-      - name: Upload artifact (darwin-arm64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: continue-binary-darwin-arm64
-          path: ./binary/bin/darwin-arm64/
-
-      - name: Upload artifact (darwin-x64)
-        uses: actions/upload-artifact@v4
-        with:
-          name: continue-binary-darwin-x64
-          path: ./binary/bin/darwin-x64/
-
-      - name: Try to run the darwin-arm64 binary
-        run: |
-          ./binary/bin/darwin-arm64/continue-binary
 
       # - name: Sign darwin-arm64 binary
       #   uses: lando/code-sign-action@v2
@@ -211,29 +195,29 @@ jobs:
       #     options: --options runtime --entitlements entitlements.xml
 
       # Build plugin
-      # - name: Build plugin
-      #   run: ./gradlew buildPlugin
+      - name: Build plugin
+        run: ./gradlew buildPlugin
 
-      # # Prepare plugin archive content for creating artifact
-      # - name: Prepare Plugin Artifact
-      #   id: artifact
-      #   shell: bash
-      #   run: |
-      #     cd ../../extensions/intellij/build/distributions
-      #     echo "Builds:"
-      #     ls
-      #     echo "---"
-      #     FILENAME=`ls *.zip`
-      #     unzip "$FILENAME" -d content
+      # Prepare plugin archive content for creating artifact
+      - name: Prepare Plugin Artifact
+        id: artifact
+        shell: bash
+        run: |
+          cd ../../extensions/intellij/build/distributions
+          echo "Builds:"
+          ls
+          echo "---"
+          FILENAME=`ls *.zip`
+          unzip "$FILENAME" -d content
 
-      #     echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
+          echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
 
-      # # Store already-built plugin as an artifact for downloading
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ steps.artifact.outputs.filename }}
-      #     path: ./extensions/intellij/build/distributions/content/*/*
+      # Store already-built plugin as an artifact for downloading
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.filename }}
+          path: ./extensions/intellij/build/distributions/content/*/*
 
       # Upload binaries as artifacts
       - name: Upload artifact (darwin-arm64)
