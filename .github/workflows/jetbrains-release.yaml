@@ -160,31 +160,10 @@ jobs:
       #     codesign --sign - ../../binary/bin/darwin-x64/continue-binary
       #     codesign --sign - ../../binary/bin/darwin-arm64/continue-binary
 
-      # - name: Validate codesigning
-      #   run: |
-      #     echo "Validating codesigning for darwin-x64 binary"
-      #     codesign -dv --verbose=4 ../../binary/bin/darwin-x64/continue-binary
-
-      #     echo "Validating codesigning for darwin-arm64 binary"
-      #     codesign -dv --verbose=4 ../../binary/bin/darwin-arm64/continue-binary
-
       # - name: Sign darwin-arm64 binary
       #   uses: lando/code-sign-action@v2
       #   with:
       #     file: ./binary/bin/darwin-arm64/continue-binary
-      #     certificate-data: ${{ secrets.APPLE_CERT_DATA }}
-      #     certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
-      #     apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
-      #     apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
-      #     apple-notary-tool: altool
-      #     apple-team-id: 43XFLY66ZD
-      #     apple-product-id: dev.continue.continue-binary
-      #     options: --options runtime --entitlements entitlements.xml
-
-      # - name: Sign darwin-x64 binary
-      #   uses: lando/code-sign-action@v2
-      #   with:
-      #     file: ./binary/bin/darwin-x64/continue-binary
       #     certificate-data: ${{ secrets.APPLE_CERT_DATA }}
       #     certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
       #     apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
