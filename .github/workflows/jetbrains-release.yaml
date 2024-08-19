@@ -490,10 +490,10 @@ jobs:
           path: ./build/distributions/
 
       # Upload artifact as a release asset
-      - name: Upload Release Asset
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+      # - name: Upload Release Asset
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
       # Publish the plugin to JetBrains Marketplace
       - name: Publish Plugin
