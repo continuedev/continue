@@ -1234,6 +1234,9 @@
               "watsonxZenApiKeyBase64": {
                 "type": "string"
               },
+              "watsonxApiVersion": {
+                "type": "string"
+              },
               "watsonxUsername": {
                 "type": "string"
               },

@@ -187,7 +187,7 @@ class WatsonX extends BaseLLM {
       this.watsonxStopToken ??
       (options.model.includes("granite") ? "<|im_end|>" : undefined);
     var streamResponse = await fetch(
-      `${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`,
+      `${this.watsonxUrl}/ml/v1/text/generation_stream?version=${this.watsonxApiVersion}`,
       {
         method: "POST",
         headers: {
