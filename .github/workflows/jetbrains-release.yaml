@@ -133,14 +133,14 @@ jobs:
       #     npm run build
 
       # Run prepackage.js script
-      # - name: Run prepackage script
-      #   run: |
-      #     cd ../../extensions/vscode
-      #     npm ci
-      #     npm run prepackage
-      #   env:
-      #     # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
-      #     GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      - name: Run prepackage script
+        run: |
+          cd extensions/vscode
+          npm ci
+          npm run prepackage
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       # npm install binary
       - name: Install binary node_modules
