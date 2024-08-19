@@ -71,6 +71,9 @@ describe("CodebaseIndexer", () => {
   beforeAll(async () => {
     tearDownTestDir();
     setUpTestDir();
+
+    execSync('git config --global user.email "test@example.com"');
+    execSync('git config --global user.name "Test"');
   });
 
   afterAll(async () => {
