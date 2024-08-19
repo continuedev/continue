@@ -1,12 +1,13 @@
 import os from "node:os";
 import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
+import { IdeInfo } from "../index.js";
 
 export class Telemetry {
   // Set to undefined whenever telemetry is disabled
   static client: any = undefined;
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
-  static extensionVersion: string | undefined = undefined;
+  static ideInfo: IdeInfo | undefined = undefined;
 
   static async capture(
     event: string,
@@ -19,7 +20,9 @@ export class Telemetry {
       properties: {
         ...properties,
         os: Telemetry.os,
-        extensionVersion: Telemetry.extensionVersion,
+        extensionVersion: Telemetry.ideInfo?.extensionVersion,
+        ideName: Telemetry.ideInfo?.name,
+        ideType: Telemetry.ideInfo?.ideType,
       },
     });
 
@@ -32,14 +35,10 @@ export class Telemetry {
     Telemetry.client?.shutdown();
   }
 
-  static async setup(
-    allow: boolean,
-    uniqueId: string,
-    extensionVersion: string,
-  ) {
+  static async setup(allow: boolean, uniqueId: string, ideInfo: IdeInfo) {
     Telemetry.uniqueId = uniqueId;
     Telemetry.os = os.platform();
-    Telemetry.extensionVersion = extensionVersion;
+    Telemetry.ideInfo = ideInfo;
 
     if (!allow) {
       Telemetry.client = undefined;
