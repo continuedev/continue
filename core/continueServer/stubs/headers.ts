@@ -6,7 +6,7 @@ export async function getHeaders() {
     key: constants.c,
     timestamp: getTimestamp(),
     v: "1",
-    extensionVersion: Telemetry.extensionVersion ?? "0.0.0",
+    extensionVersion: Telemetry.ideInfo?.extensionVersion ?? "0.0.0",
     os: Telemetry.os ?? "Unknown",
     uniqueId: Telemetry.uniqueId ?? "None",
   };
