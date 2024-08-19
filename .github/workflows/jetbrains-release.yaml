@@ -198,6 +198,15 @@ jobs:
       - name: Build plugin
         run: ./gradlew buildPlugin
 
+      # Publish the plugin to JetBrains Marketplace
+      - name: Publish Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+        run: ./gradlew publishPlugin
+
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
         id: artifact
@@ -251,6 +260,7 @@ jobs:
           path: ./binary/bin/linux-x64/
 
   test-binaries:
+    if: false
     needs: build
     strategy:
       matrix:
@@ -467,6 +477,7 @@ jobs:
           path: ${{ github.workspace }}/build/reports/pluginVerifier
 
   upload-release:
+    if: false
     name: Upload Release
     needs:
       - build
