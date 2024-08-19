@@ -240,7 +240,19 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     execCmdSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
 
     // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
-    fs.writeFileSync(`${targetDir}/package.json`, "");
+    fs.writeFileSync(
+      `${targetDir}/package.json`,
+      JSON.stringify(
+        {
+          name: "binary",
+          version: "1.0.0",
+          author: "Continue Dev, Inc",
+          license: "Apache-2.0",
+        },
+        undefined,
+        2,
+      ),
+    );
 
     // Copy to build directory for testing
     try {

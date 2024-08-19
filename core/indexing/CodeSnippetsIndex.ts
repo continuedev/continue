@@ -17,7 +17,6 @@ import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   IndexResultType,
   MarkCompleteCallback,
-  PathAndCacheKey,
   RefreshIndexResults,
   type CodebaseIndex,
 } from "./types.js";
