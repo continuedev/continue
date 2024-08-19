@@ -11,9 +11,9 @@ on:
   # release:
   #   types: [prereleased]
 
-defaults:
-  run:
-    working-directory: extensions/intellij
+# defaults:
+#   run:
+#     working-directory: extensions/intellij
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -122,7 +122,7 @@ jobs:
       # npm install core
       - name: Install core node_modules
         run: |
-          cd ../../core
+          cd core
           npm ci
 
       # npm install gui
@@ -145,13 +145,13 @@ jobs:
       # npm install binary
       - name: Install binary node_modules
         run: |
-          cd ../../binary
+          cd binary
           npm ci
 
       # Build binaries
       - name: Build the binaries
         run: |
-          cd ../../binary
+          cd binary
           npm run build
 
       # - name: Code sign darwin binaries
@@ -170,7 +170,7 @@ jobs:
 
       - name: Try to run the darwin-arm64 binary
         run: |
-          ../../binary/bin/darwin-arm64/continue-binary
+          ./binary/bin/darwin-arm64/continue-binary
 
       # - name: Sign darwin-arm64 binary
       #   uses: lando/code-sign-action@v2
