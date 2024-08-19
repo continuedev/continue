@@ -2,7 +2,6 @@ import { TRIAL_FIM_MODEL } from "../../config/onboarding.js";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { constants } from "../../deploy/constants.js";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
-import { Telemetry } from "../../util/posthog.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
@@ -29,18 +28,19 @@ class FreeTrial extends BaseLLM {
   }
 
   private async _countTokens(prompt: string, model: string, isPrompt: boolean) {
-    if (!Telemetry.client) {
-      throw new Error(
-        "In order to use the free trial, telemetry must be enabled so that we can monitor abuse. To enable telemetry, set \"allowAnonymousTelemetry\": true in config.json and make sure the box is checked in IDE settings. If you use your own model (local or API key), telemetry will never be required.",
-      );
-    }
-    const event = isPrompt
-      ? "free_trial_prompt_tokens"
-      : "free_trial_completion_tokens";
-    Telemetry.capture(event, {
-      tokens: this.countTokens(prompt),
-      model,
-    });
+    // Removed to reduce PostHog bill
+    // if (!Telemetry.client) {
+    //   throw new Error(
+    //     "In order to use the free trial, telemetry must be enabled so that we can monitor abuse. To enable telemetry, set \"allowAnonymousTelemetry\": true in config.json and make sure the box is checked in IDE settings. If you use your own model (local or API key), telemetry will never be required.",
+    //   );
+    // }
+    // const event = isPrompt
+    //   ? "free_trial_prompt_tokens"
+    //   : "free_trial_completion_tokens";
+    // Telemetry.capture(event, {
+    //   tokens: this.countTokens(prompt),
+    //   model,
+    // });
   }
 
   private _convertArgs(options: CompletionOptions): any {

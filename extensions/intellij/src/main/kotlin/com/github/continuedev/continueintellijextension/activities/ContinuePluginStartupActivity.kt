@@ -9,6 +9,7 @@ import com.github.continuedev.continueintellijextension.listeners.ContinuePlugin
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.SettingsListener
+import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
@@ -206,22 +207,21 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 val targetPath = Paths.get(corePath, target).toString()
                 val continueCorePath = Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
 
-                // Copy targetPath / node_sqlite3.node to core / node_sqlite3.node
-                val nodeSqlite3Path = Paths.get(targetPath, "node_sqlite3.node")
-
-                // Create the build/Release path first
-                File(Paths.get(corePath, "build", "Release").toString()).mkdirs()
-
-                val coreNodeSqlite3Path = Paths.get(corePath, "build", "Release", "node_sqlite3.node")
-                if (!File(coreNodeSqlite3Path.toString()).exists()) {
-                    Files.copy(nodeSqlite3Path, coreNodeSqlite3Path)
-                }
-
                 // esbuild needs permissions
                 val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
 
                 val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient)
                 continuePluginService.coreMessenger = coreMessenger
+
+                coreMessenger.request("config/getSerializedProfileInfo", null, null) { resp ->
+                    val data = resp as? Map<String, Any>
+                    val profileInfo = data?.get("config") as? Map<String, Any>
+                    val allowAnonymousTelemetry = profileInfo?.get("allowAnonymousTelemetry") as? Boolean
+                    val telemetryService = service<TelemetryService>()
+                    if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
+                        telemetryService.setup(getMachineUniqueID())
+                    }
+                }
             }
         }
     }

@@ -1,7 +1,7 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
-import { Table } from "vectordb";
+import lance, { Table } from "vectordb";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import {
   BranchAndDir,
@@ -21,7 +21,6 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
-import lance from "vectordb";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
