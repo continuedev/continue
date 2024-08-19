@@ -13,13 +13,16 @@ const watsonxConfig = {
   },
 };
 class WatsonX extends BaseLLM {
-  protected maxStopWords: number | undefined = undefined;
+  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);
   }
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
-    if (this.watsonxUrl != null && this.watsonxUrl.includes("cloud.ibm.com")) {
+    if (
+      this.watsonxUrl !== null &&
+      this.watsonxUrl!.includes("cloud.ibm.com")
+    ) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
@@ -125,7 +128,9 @@ class WatsonX extends BaseLLM {
   protected _getHeaders() {
     return {
       "Content-Type": "application/json",
-      Authorization: `${watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"} ${watsonxConfig.accessToken.token}`,
+      Authorization: `${
+        watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+      } ${watsonxConfig.accessToken.token}`,
     };
   }
 
@@ -169,21 +174,27 @@ class WatsonX extends BaseLLM {
       watsonxConfig.accessToken = await this.getBearerToken();
     } else {
       console.log(
-        `Reusing token (expires in ${(watsonxConfig.accessToken.expiration - now) / 60} mins)`,
+        `Reusing token (expires in ${
+          (watsonxConfig.accessToken.expiration - now) / 60
+        } mins)`,
       );
     }
     if (watsonxConfig.accessToken.token === undefined) {
-      throw new Error(`Something went wrong. Check your credentials, please.`);
+      throw new Error("Something went wrong. Check your credentials, please.");
     }
 
-    const stopToken = this.watsonxStopToken ?? (options.model.includes("granite") ? "<|im_end|>" : undefined);
+    const stopToken =
+      this.watsonxStopToken ??
+      (options.model.includes("granite") ? "<|im_end|>" : undefined);
     var streamResponse = await fetch(
       `${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `${watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"} ${watsonxConfig.accessToken.token}`,
+          Authorization: `${
+            watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+          } ${watsonxConfig.accessToken.token}`,
         },
         body: JSON.stringify({
           input: messages[messages.length - 1].content,

@@ -1,5 +1,5 @@
 import path from "path";
-import { shouldChunk } from "../../../indexing/chunk/chunk";
+import { shouldChunk } from "./chunk";
 
 describe("shouldChunk", () => {
   test("should chunk a typescript file", () => {

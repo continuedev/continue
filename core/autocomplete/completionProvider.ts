@@ -37,7 +37,7 @@ import {
 import { isOnlyPunctuationAndWhitespace } from "./filter.js";
 import { AutocompleteLanguageInfo } from "./languages.js";
 import {
-  avoidPathLine,
+  avoidPathLineAndEmptyComments,
   noTopLevelKeywordsMidline,
   skipPrefixes,
   stopAtLines,
@@ -478,9 +478,9 @@ export class CompletionProvider {
       const lines = fullPrefix.split("\n");
       fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
         lang.singleLineComment
-      } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
-        lines[lines.length - 1]
-      }`;
+      } ${input.injectDetails
+        .split("\n")
+        .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
     }
 
     const fullSuffix = getRangeInString(fileContents, {
@@ -581,7 +581,10 @@ export class CompletionProvider {
         prefix = `${formattedSnippets}\n\n${prefix}`;
       } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
         // If it's an empty file, include the file name as a comment
-        prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
+        prefix = `${lang.singleLineComment} ${getLastNPathParts(
+          filepath,
+          2,
+        )}\n${prefix}`;
       }
 
       prompt = compiledTemplate({
@@ -689,7 +692,10 @@ export class CompletionProvider {
       let lineGenerator = streamLines(charGenerator);
       lineGenerator = stopAtLines(lineGenerator, fullStop);
       lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-      lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+      lineGenerator = avoidPathLineAndEmptyComments(
+        lineGenerator,
+        lang.singleLineComment,
+      );
       lineGenerator = skipPrefixes(lineGenerator);
       lineGenerator = noTopLevelKeywordsMidline(
         lineGenerator,

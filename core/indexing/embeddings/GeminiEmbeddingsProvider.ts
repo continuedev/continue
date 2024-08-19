@@ -37,9 +37,7 @@ class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
             requests,
           }),
           headers: {
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             "x-goog-api-key": this.options.apiKey,
-            // eslint-disable-next-line @typescript-eslint/naming-convention
             "Content-Type": "application/json",
           },
         }),

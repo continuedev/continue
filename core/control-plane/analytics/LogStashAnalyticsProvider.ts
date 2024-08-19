@@ -30,7 +30,8 @@ export default class LogStashAnalyticsProvider implements IAnalyticsProvider {
 
   async setup(config: Analytics, uniqueId: string): Promise<void> {
     if (!config.url) {
-      throw new Error("Missing url in analytics config");
+      console.warn("LogStashAnalyticsProvider is missing a URL");
+      return;
     }
     const url = new URL(config.url);
     this.host = url.hostname;

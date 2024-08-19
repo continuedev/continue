@@ -113,11 +113,6 @@ async function getSavedItemsForTag(
   return rows;
 }
 
-interface PathAndOptionalCacheKey {
-  path: string;
-  cacheKey?: string;
-}
-
 enum AddRemoveResultType {
   Add = "add",
   Remove = "remove",
@@ -409,7 +404,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        async () => { },
+        async () => {},
         repoName,
       )) {
       }

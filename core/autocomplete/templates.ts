@@ -70,7 +70,9 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
       .join("\n\n");
     return [
-      `${otherFiles}\n\n+++++ ${relativePaths[relativePaths.length - 1]}\n${prefix}`,
+      `${otherFiles}\n\n+++++ ${
+        relativePaths[relativePaths.length - 1]
+      }\n${prefix}`,
       suffix,
     ];
   },
@@ -172,8 +174,10 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       ...snippets.map((snippet) => snippet.filepath),
       filepath,
     ]);
-    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]}\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
-    if (snippets.length == 0) {
+    const baseTemplate = `###PATH:${
+      relativePaths[relativePaths.length - 1]
+    }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
+    if (snippets.length === 0) {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
     const references = `###REFERENCE:\n${snippets
