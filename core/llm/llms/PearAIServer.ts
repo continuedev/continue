@@ -21,7 +21,7 @@ class PearAIServer extends BaseLLM {
   constructor(options: LLMOptions) {
     super(options);
   }
-  
+
   private async _getHeaders() {
     return {
       "Content-Type": "application/json",
@@ -105,52 +105,12 @@ class PearAIServer extends BaseLLM {
       true,
     );
 
-    try {
-      let creds = undefined;
+    await this._checkAndUpdateCredentials();
 
-      if (this.getCredentials) {
-        console.log("Attempting to get credentials...");
-        creds = await this.getCredentials();
-
-
-        if (creds && creds.accessToken && creds.refreshToken) {
-          this.apiKey = creds.accessToken;
-          this.refreshToken = creds.refreshToken;
-        } 
-      }
-
-      const tokens = await checkTokens(this.apiKey, this.refreshToken);
-
-      if (tokens.accessToken !== this.apiKey || tokens.refreshToken !== this.refreshToken) {
-        if (tokens.accessToken !== this.apiKey) {
-          this.apiKey = tokens.accessToken;
-          console.log(
-            "PearAI access token changed from:",
-            this.apiKey,
-            "to:",
-            tokens.accessToken,
-          );
-        }
-      
-        if (tokens.refreshToken !== this.refreshToken) {
-          this.refreshToken = tokens.refreshToken;
-          console.log(
-            "PearAI refresh token changed from:",
-            this.refreshToken,
-            "to:",
-            tokens.refreshToken,
-          );
-        }
-        if (creds) {
-          creds.accessToken = tokens.accessToken
-          creds.refreshToken = tokens.refreshToken
-          this.setCredentials(creds)
-        }
-      }
-    } catch (error) {
-      console.error("Error checking token expiration:", error);
-      // Handle the error (e.g., redirect to login page)
-    }
+    const body = JSON.stringify({
+            messages: messages.map(this._convertMessage),
+            ...args,
+        });
 
     const response = await this.fetch(`${SERVER_URL}/server_chat`, {
       method: "POST",
@@ -158,10 +118,7 @@ class PearAIServer extends BaseLLM {
         ...(await this._getHeaders()),
         Authorization: `Bearer ${this.apiKey}`,
       },
-      body: JSON.stringify({
-        messages: messages.map(this._convertMessage),
-        ...args,
-      }),
+      body: body,
     });
 
     let completion = "";
@@ -188,6 +145,54 @@ class PearAIServer extends BaseLLM {
     return [
       "pearai_model",
     ];
+  }
+
+  private async _checkAndUpdateCredentials(): Promise<void> {
+    try {
+      let creds = undefined;
+
+      if (this.getCredentials) {
+        console.log("Attempting to get credentials...");
+        creds = await this.getCredentials();
+
+        if (creds && creds.accessToken && creds.refreshToken) {
+          this.apiKey = creds.accessToken;
+          this.refreshToken = creds.refreshToken;
+        }
+      }
+
+      const tokens = await checkTokens(this.apiKey, this.refreshToken);
+
+      if (tokens.accessToken !== this.apiKey || tokens.refreshToken !== this.refreshToken) {
+        if (tokens.accessToken !== this.apiKey) {
+          this.apiKey = tokens.accessToken;
+          console.log(
+            "PearAI access token changed from:",
+            this.apiKey,
+            "to:",
+            tokens.accessToken,
+          );
+        }
+
+        if (tokens.refreshToken !== this.refreshToken) {
+          this.refreshToken = tokens.refreshToken;
+          console.log(
+            "PearAI refresh token changed from:",
+            this.refreshToken,
+            "to:",
+            tokens.refreshToken,
+          );
+        }
+        if (creds) {
+          creds.accessToken = tokens.accessToken
+          creds.refreshToken = tokens.refreshToken
+          this.setCredentials(creds)
+        }
+      }
+    } catch (error) {
+      console.error("Error checking token expiration:", error);
+      // Handle the error (e.g., redirect to login page)
+    }
   }
 }
 

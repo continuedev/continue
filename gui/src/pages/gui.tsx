@@ -474,7 +474,7 @@ function GUI() {
                                   messageType: "userInput",
                                   data: {
                                     input:
-                                      "Continue your response exactly where you left off:",
+                                      "Keep going.",
                                   },
                                 },
                                 "*",

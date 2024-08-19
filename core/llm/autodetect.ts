@@ -56,7 +56,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "anthropic",
   "bedrock",
   "continue-proxy",
-  "pearai_server", 
+  "pearai_server",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -208,7 +208,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   }
 
   if (lower.includes("pearai")) {
-    return "anthropic";
+    return "none";
   }
 
   return "chatml";

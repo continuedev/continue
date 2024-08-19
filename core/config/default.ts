@@ -94,7 +94,7 @@ export const defaultConfig: SerializedContinueConfig = {
   models: [
     {
       "model": "pearai_model",
-      "contextLength": 128000,
+      "contextLength": 200000,
       "title": "PearAI Server",
       "systemMessage": "You are an expert software developer. You give helpful and concise responses.",
       "provider": "pearai_server"

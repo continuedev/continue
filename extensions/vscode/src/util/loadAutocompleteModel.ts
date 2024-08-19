@@ -57,7 +57,7 @@ export class TabAutocompleteModel {
       if (!this.shownOllamaWarning) {
         vscode.window
           .showWarningMessage(
-            "Continue failed to connect to Ollama, which is used by default for tab-autocomplete. If you haven't downloaded it yet, you can do so at https://ollama.ai (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs",
+            "PearAI failed to connect to Ollama, which is used by default for tab-autocomplete. If you haven't downloaded it yet, you can do so at https://ollama.ai (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs",
             "Download Ollama",
             "Documentation",
           )
