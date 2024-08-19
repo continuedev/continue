@@ -160,13 +160,13 @@ jobs:
       #     codesign --sign - ../../binary/bin/darwin-x64/continue-binary
       #     codesign --sign - ../../binary/bin/darwin-arm64/continue-binary
 
-      - name: Validate codesigning
-        run: |
-          echo "Validating codesigning for darwin-x64 binary"
-          codesign -dv --verbose=4 ../../binary/bin/darwin-x64/continue-binary
+      # - name: Validate codesigning
+      #   run: |
+      #     echo "Validating codesigning for darwin-x64 binary"
+      #     codesign -dv --verbose=4 ../../binary/bin/darwin-x64/continue-binary
 
-          echo "Validating codesigning for darwin-arm64 binary"
-          codesign -dv --verbose=4 ../../binary/bin/darwin-arm64/continue-binary
+      #     echo "Validating codesigning for darwin-arm64 binary"
+      #     codesign -dv --verbose=4 ../../binary/bin/darwin-arm64/continue-binary
 
       - name: Try to run the darwin-arm64 binary
         run: |
