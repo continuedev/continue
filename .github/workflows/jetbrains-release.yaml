@@ -472,7 +472,6 @@ jobs:
       - build
       - test-binaries
       - test
-      - inspectCode
     runs-on: ubuntu-latest
     steps:
       # # Update Unreleased section with the current release note
