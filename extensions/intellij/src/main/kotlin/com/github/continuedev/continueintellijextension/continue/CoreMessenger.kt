@@ -235,7 +235,16 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
             process!!.onExit().thenRun {
-                val err = process?.errorStream?.bufferedReader()?.readText()?.trim()
+                var err = process?.errorStream?.bufferedReader()?.readText()?.trim()
+                if (err != null) {
+                    // There are often "⚡️Done in Xms" messages, and we want everything after the last one
+                    val delimiter = "⚡️Done in"
+                    val doneIndex = err.lastIndexOf(delimiter)
+                    if (doneIndex != -1) {
+                        err = err.substring(doneIndex + delimiter.length)
+                    }
+                }
+
                 println("Core process exited with output: $err")
                 ideProtocolClient.showMessage("Core process exited with output: $err")
 
