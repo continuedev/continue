@@ -37,6 +37,7 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:2.3.7"){
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
+    implementation("com.posthog.java:posthog:1.+")
 }
 
 

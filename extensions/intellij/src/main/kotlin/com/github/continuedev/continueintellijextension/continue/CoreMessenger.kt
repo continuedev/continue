@@ -1,15 +1,12 @@
 package com.github.continuedev.continueintellijextension.`continue`
+
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
-
-import java.io.*
-
+import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.google.gson.Gson
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import java.io.*
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -241,6 +238,12 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 val err = process?.errorStream?.bufferedReader()?.readText()?.trim()
                 println("Core process exited with output: $err")
                 ideProtocolClient.showMessage("Core process exited with output: $err")
+
+                // Log the cause of the failure
+                val telemetryService = service<TelemetryService>()
+                telemetryService.capture("jetbrains_core_exit", mapOf(
+                    "error" to err
+                ))
             }
 
             Thread {
