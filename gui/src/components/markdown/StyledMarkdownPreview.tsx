@@ -117,18 +117,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypePlugins: [
       rehypeKatex as any,
       {},
-      [
-        rehypeHighlight as any,
-        {
-          // Note: An empty obj is the default behavior, but leaving this here for scaffolding to
-          // add unsupported languages in the future. We will need to install the `lowlight` package
-          // to use the `common` language set in addition to unsupported languages.
-          // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
-          // languages: {},
-        } as Options,
-
-        ,
-      ],
+      rehypeHighlight as any,
+      {
+        // Note: An empty obj is the default behavior, but leaving this here for scaffolding to
+        // add unsupported languages in the future. We will need to install the `lowlight` package
+        // to use the `common` language set in addition to unsupported languages.
+        // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
+        // languages: {},
+      } as Options,
     ],
     rehypeReactOptions: {
       components: {
