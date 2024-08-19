@@ -144,5 +144,8 @@ tasks {
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels.set(listOf(environment("RELEASE_CHANNEL").getOrElse("eap")))
+        
+        // We always hide the stable releases until a few days of EAP have proven them stable
+        hidden = environment("RELEASE_CHANNEL").map { it == "stable" }.getOrElse(false)
     }
 }

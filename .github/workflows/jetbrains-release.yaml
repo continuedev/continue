@@ -199,10 +199,10 @@ jobs:
         shell: bash
         run: |
           cd ../../extensions/intellij/build/distributions
-          echo "Builds:"
+          echo "Contents of distributions folder:"
           ls
           echo "---"
-          FILENAME=`ls *.zip`
+          FILENAME=`ls continue-intellij-extension-*.zip`
           unzip "$FILENAME" -d content
 
           echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
