@@ -1,14 +1,11 @@
 name: Publish Preview Extension
 
 on:
-  push:
+  create:
+    tags:
+      - "v0.9.*-vscode"
     branches:
-      - nate/fix-ci-tests
-  # create:
-  #   tags:
-  #     - "v0.9.*-vscode"
-  #   branches:
-  #     - dev
+      - dev
 
 jobs:
   build:
@@ -55,8 +52,8 @@ jobs:
         with:
           fetch-depth: 0 # This ensures all tags are fetched
 
-      # - name: Checkout tag
-      #   run: git checkout ${GITHUB_REF#refs/tags/}
+      - name: Checkout tag
+        run: git checkout ${GITHUB_REF#refs/tags/}
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
@@ -64,11 +61,11 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      # - name: Cache extension node_modules
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: extensions/vscode/node_modules
-      #     key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
+      - name: Cache extension node_modules
+        uses: actions/cache@v3
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Cache core node_modules
         uses: actions/cache@v3
@@ -76,24 +73,24 @@ jobs:
           path: core/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
-      # - name: Cache gui node_modules
-      #   uses: actions/cache@v3
-      #   with:
-      #     path: gui/node_modules
-      #     key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+      - name: Cache gui node_modules
+        uses: actions/cache@v3
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
-      # - name: Install extension Dependencies
-      #   run: |
-      #     cd extensions/vscode
-      #     npm ci
-      #   env:
-      #     # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
-      #     GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      - name: Install extension Dependencies
+        run: |
+          cd extensions/vscode
+          npm ci
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      # - name: Install gui Dependencies
-      #   run: |
-      #     cd gui
-      #     npm ci
+      - name: Install gui Dependencies
+        run: |
+          cd gui
+          npm ci
 
       # npm ci doesn't end up capturing the @lancedb/... dep because it's not in the package-lock.json
       - name: Install Core Dependencies
@@ -102,16 +99,10 @@ jobs:
           npm ci
           npm i vectordb
 
-      - name: Install lance
-        run: |
-          cd core
-          npm install @lancedb/vectordb-linux-x64-gnu
-        if: matrix.os == 'ubuntu-latest'
-
       - name: Run core tests
         run: |
           cd core
-          npm run test -- ./indexing/CodebaseIndexer.test.ts
+          npm run test
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
