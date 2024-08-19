@@ -120,10 +120,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       [
         rehypeHighlight as any,
         {
-          // Note: This is the default behavior, but leaving this here for scaffolding to
-          // add unsupported languages in the future.
+          // Note: An empty obj is the default behavior, but leaving this here for scaffolding to
+          // add unsupported languages in the future. We will need to install the `lowlight` package
+          // to use the `common` language set in addition to unsupported languages.
           // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
-          languages: { ...common },
+          // languages: {},
         } as Options,
 
         ,
