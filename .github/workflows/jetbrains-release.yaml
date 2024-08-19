@@ -175,12 +175,22 @@ jobs:
         run: ./gradlew buildPlugin
 
       # Publish the plugin to JetBrains Marketplace
-      - name: Publish Plugin
+      - name: Publish EAP Plugin
         env:
           PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
           CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
           PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: eap
+        run: ./gradlew publishPlugin
+
+      - name: Publish Stable Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: default
         run: ./gradlew publishPlugin
 
       # Prepare plugin archive content for creating artifact
