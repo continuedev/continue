@@ -95,10 +95,10 @@ jobs:
       #     ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
 
       # # Setup Node.js
-      # - name: Use Node.js from .nvmrc
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version-file: ".nvmrc"
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
 
       # Cache node_modules
       - name: Cache core node_modules
@@ -167,6 +167,18 @@ jobs:
 
       #     echo "Validating codesigning for darwin-arm64 binary"
       #     codesign -dv --verbose=4 ../../binary/bin/darwin-arm64/continue-binary
+
+      - name: Upload artifact (darwin-arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-darwin-arm64
+          path: ./binary/bin/darwin-arm64/
+
+      - name: Upload artifact (darwin-x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-darwin-x64
+          path: ./binary/bin/darwin-x64/
 
       - name: Try to run the darwin-arm64 binary
         run: |
