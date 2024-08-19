@@ -3,12 +3,6 @@ import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { ContinueServerClient } from "../continueServer/stubs/client.js";
-import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
-import { getComputeDeleteAddRemove } from "./refreshIndex.js";
-import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
-import { CodebaseIndex } from "./types.js";
-import { walkDir } from "./walkDir.js";
-import { getIndexSqlitePath } from "../util/paths.js";
 import { testConfigHandler, testIde } from "../test/util/fixtures.js";
 import {
   addToTestDir,
@@ -16,6 +10,12 @@ import {
   tearDownTestDir,
   TEST_DIR,
 } from "../test/util/testDir.js";
+import { getIndexSqlitePath } from "../util/paths.js";
+import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
+import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
+import { CodebaseIndex } from "./types.js";
+import { walkDir } from "./walkDir.js";
 
 jest.useFakeTimers();
 
@@ -57,7 +57,7 @@ class TestCodebaseIndexer extends CodebaseIndexer {
 
 // These are more like integration tests, whereas we should separately test
 // the individual CodebaseIndex classes
-describe.skip("CodebaseIndexer", () => {
+describe("CodebaseIndexer", () => {
   const pauseToken = new PauseToken(false);
   const continueServerClient = new ContinueServerClient(undefined, undefined);
   const codebaseIndexer = new TestCodebaseIndexer(

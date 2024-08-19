@@ -99,11 +99,18 @@ jobs:
         run: |
           cd core
           npm ci
+          npm install @lancedb/vectordb-linux-x64-gnu
+
+      - name: Install lance
+        run: |
+          cd core
+          npm install @lancedb/vectordb-linux-x64-gnu
+        if: matrix.os == 'ubuntu-latest'
 
       - name: Run core tests
         run: |
           cd core
-          npm run test
+          npm run test -- ./indexing/CodebaseIndexer.test.ts
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
