@@ -94,7 +94,7 @@ const exe = os === "win32" ? ".exe" : "";
     execCmdSync("npm run build");
   }
 
-  // Copy over the dist folder to the Intellij extension //
+  // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(
     "..",
     "extensions",
@@ -114,7 +114,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp("dist", intellijExtensionWebviewPath, (error) => {
       if (error) {
         console.warn(
-          "[error] Error copying React app build to Intellij extension: ",
+          "[error] Error copying React app build to JetBrains extension: ",
           error,
         );
         reject(error);
@@ -136,7 +136,7 @@ const exe = os === "win32" ? ".exe" : "";
     path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
   );
 
-  console.log("[info] Copied gui build to Intellij extension");
+  console.log("[info] Copied gui build to JetBrains extension");
 
   // Then copy over the dist folder to the VSCode extension //
   const vscodeGuiPath = path.join("../extensions/vscode/gui");
@@ -248,7 +248,10 @@ const exe = os === "win32" ? ".exe" : "";
     "../../../core/llm/tiktokenWorkerPool.mjs",
   ];
   for (const f of filesToCopy) {
-    fs.copyFileSync(path.join(__dirname, f), path.join(__dirname, "..", "out", path.basename(f)));
+    fs.copyFileSync(
+      path.join(__dirname, f),
+      path.join(__dirname, "..", "out", path.basename(f)),
+    );
     console.log(`[info] Copied ${path.basename(f)}`);
   }
 

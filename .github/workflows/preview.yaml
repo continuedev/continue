@@ -92,10 +92,12 @@ jobs:
           cd gui
           npm ci
 
+      # npm ci doesn't end up capturing the @lancedb/... dep because it's not in the package-lock.json
       - name: Install Core Dependencies
         run: |
           cd core
           npm ci
+          npm i vectordb
 
       - name: Run core tests
         run: |
