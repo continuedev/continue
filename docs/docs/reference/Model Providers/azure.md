@@ -15,7 +15,7 @@ You can configure Azure OpenAI service through the UI, or you can configure it m
 ```json title="~/.continue/config.json"
 "models": [{
     "title": "Azure OpenAI",
-    "provider": "openai",
+    "provider": "azure",
     "model": "<YOUR_MODEL>",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "engine": "<YOUR_ENGINE>",
@@ -25,10 +25,11 @@ You can configure Azure OpenAI service through the UI, or you can configure it m
 }]
 ```
 
-To find out the information from *Azure AI Studio*, select the model that you would like to connect. Under the *Endpoint* section and capture the Target URI.
-For example, Target URI of https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview
+To find out the information from _Azure AI Studio_, select the model that you would like to connect. Under the _Endpoint_ section and capture the Target URI.
+For example, Target URI of <https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview>
 Maps to:
-* model = gpt-4o
-* engine = gpt-4o
-* apiVersion = 2023-13-15-preview
-* apiBase = just-an-example.openai.azure.com
+
+- model = gpt-4o
+- engine = gpt-4o
+- apiVersion = 2023-13-15-preview
+- apiBase = just-an-example.openai.azure.com
