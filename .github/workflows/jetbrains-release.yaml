@@ -260,7 +260,6 @@ jobs:
           path: ./binary/bin/linux-x64/
 
   test-binaries:
-    if: false
     needs: build
     strategy:
       matrix:
@@ -337,18 +336,18 @@ jobs:
           chmod +x esbuild
         if: ${{ matrix.platform }} != 'win32'
 
-      # # Run tests for binary
-      # - name: Run binary tests
-      #   run: |
-      #     cd ../../binary
-      #     npm run test
+      # Run tests for binary
+      - name: Run binary tests
+        run: |
+          cd ../../binary
+          npm run test
 
-      # - name: Upload logs
-      #   if: ${{ always() }}
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
-      #     path: binary/.continue/logs/core.log
+      - name: Upload logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
+          path: binary/.continue/logs/core.log
 
   # Run tests and upload a code coverage report
   test:
