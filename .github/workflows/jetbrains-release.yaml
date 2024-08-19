@@ -11,9 +11,9 @@ on:
   # release:
   #   types: [prereleased]
 
-# defaults:
-#   run:
-#     working-directory: extensions/intellij
+defaults:
+  run:
+    working-directory: extensions/intellij
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
