@@ -406,6 +406,23 @@ const exe = os === "win32" ? ".exe" : "";
     );
     execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
+
+    // Handle ffmpeg for ARM
+    console.log("[info] Downloading pre-built ffmpeg binary for ARM");
+    const ffmpegPackage = {
+      "darwin-arm64": "@ffmpeg-installer/darwin-arm64",
+      "linux-arm64": "@ffmpeg-installer/linux-arm64",
+      "win32-arm64": "@ffmpeg-installer/win32-arm64",
+    }[target];
+    
+    if (ffmpegPackage) {
+      await installNodeModuleInTempDirAndCopyToCurrent(
+        ffmpegPackage,
+        "@ffmpeg-installer/ffmpeg"
+      );
+    } else {
+      console.warn(`[warn] No pre-built ffmpeg package found for ${target}`);
+    }
   } else {
     // Download esbuild from npm in tmp and copy over
     console.log("npm installing esbuild binary");
@@ -449,16 +466,46 @@ const exe = os === "win32" ? ".exe" : "";
     );
   });
 
+
+  // Special handling for @ffmpeg-installer/ffmpeg
+  console.log("[info] Copying @ffmpeg-installer/ffmpeg");
+  const ffmpegPackage = {
+    "darwin-x64": "@ffmpeg-installer/darwin-x64",
+    "darwin-arm64": "@ffmpeg-installer/darwin-arm64",
+    "linux-x64": "@ffmpeg-installer/linux-x64",
+    "linux-arm64": "@ffmpeg-installer/linux-arm64",
+    "win32-x64": "@ffmpeg-installer/win32-x64",
+    "win32-arm64": "@ffmpeg-installer/win32-ia32",  // Note: There's no specific win32-arm64 package
+  }[target];
+
+  if (ffmpegPackage) {
+    await installNodeModuleInTempDirAndCopyToCurrent(
+      ffmpegPackage,
+      ffmpegPackage
+    );
+
+    // // Copy the ffmpeg binary to the correct location
+    // const ffmpegSrc = path.join(__dirname, `../node_modules/${ffmpegPackage}/ffmpeg` + (target.startsWith("win") ? ".exe" : ""));
+    // const ffmpegDest = path.join(__dirname, `../out/node_modules/${ffmpegPackage}/ffmpeg` + (target.startsWith("win") ? ".exe" : ""));
+    // fs.mkdirSync(path.dirname(ffmpegDest), { recursive: true });
+    // fs.copyFileSync(ffmpegSrc, ffmpegDest);
+  } else {
+    console.warn(`[warn] No pre-built ffmpeg package found for ${target}`);
+  }
+
   // Copy node_modules for pre-built binaries
   const NODE_MODULES_TO_COPY = [
     "esbuild",
     "@esbuild",
     "@lancedb",
     "@vscode/ripgrep",
+    "@ricky0123/vad-node",
+    "@ffmpeg-installer/ffmpeg",
+    ffmpegPackage,
     "workerpool",
   ];
   fs.mkdirSync("out/node_modules", { recursive: true });
-
+  
   await Promise.all(
     NODE_MODULES_TO_COPY.map(
       (mod) =>
@@ -526,6 +573,15 @@ const exe = os === "win32" ? ".exe" : "";
     "models/all-MiniLM-L6-v2/vocab.txt",
     "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
 
+    // Whisper model
+    "models/whisper-tiny.en/config.json",
+    "models/whisper-tiny.en/generation_config.json",
+    "models/whisper-tiny.en/preprocessor_config.json",
+    "models/whisper-tiny.en/tokenizer_config.json",
+    "models/whisper-tiny.en/tokenizer.json",
+    "models/whisper-tiny.en/onnx/encoder_model_quantized.onnx",
+    "models/whisper-tiny.en/onnx/decoder_model_merged_quantized.onnx",
+
     // node_modules (it's a bit confusing why this is necessary)
     `node_modules/@vscode/ripgrep/bin/rg${exe}`,
 
@@ -554,5 +610,6 @@ const exe = os === "win32" ? ".exe" : "";
     }/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
+    `out/node_modules/@ffmpeg-installer/${target}/ffmpeg${target.startsWith("win") ? ".exe" : ""}`,
   ]);
 })();

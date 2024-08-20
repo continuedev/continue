@@ -10,6 +10,7 @@ import {
 import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
 import { Telemetry } from "../../util/posthog.js";
+import { VoiceInput } from "../../util/voiceInput.js";
 import { loadFullConfigNode } from "../load.js";
 
 export default async function doLoadConfig(
@@ -50,6 +51,9 @@ export default async function doLoadConfig(
     await ide.getUniqueId(),
     ideInfo.extensionVersion,
   );
+
+  // TODO: Pass user's preferred whisper model
+  await VoiceInput.setup();
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(

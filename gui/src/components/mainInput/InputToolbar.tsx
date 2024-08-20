@@ -1,11 +1,15 @@
 import {
   PhotoIcon as OutlinePhotoIcon,
+  MicrophoneIcon as OutlineMicrophoneIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
+import {
+  PhotoIcon as SolidPhotoIcon,
+  MicrophoneIcon as SolidMicrophoneIcon,
+} from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useRef, useState } from "react";
+import { useRef, useState, useContext } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -25,6 +29,8 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { RootState } from "../../redux/store";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
@@ -90,9 +96,20 @@ interface InputToolbarProps {
 function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileSelectHovered, setFileSelectHovered] = useState(false);
+  const [speechInputHovered, setSpeechInputHovered] = useState(false);
 
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
+
+  const voiceInputActive = useSelector(
+    (state: RootState) => state.state.voiceInputActive,
+  );
+
+  const voiceInputReady = useSelector(
+    (state: RootState) => state.state.voiceInputReady,
+  );
+
+  const ideMessenger = useContext(IdeMessengerContext);
 
   return (
     <>
@@ -155,6 +172,32 @@ function InputToolbar(props: InputToolbarProps) {
                 )}
               </span>
             )}
+          {voiceInputReady && (
+            <span
+              className="ml-1 mt-px cursor-pointer"
+              onMouseLeave={() => setSpeechInputHovered(false)}
+              onMouseEnter={() => setSpeechInputHovered(true)}
+              onClick={() => {
+                voiceInputActive
+                  ? ideMessenger.post("voice/stopInput", undefined)
+                  : ideMessenger.post("voice/startInput", undefined)
+              }}
+            >
+              {speechInputHovered || voiceInputActive ? (
+                <SolidMicrophoneIcon
+                  width="1.4em"
+                  height="1.4em"
+                  color={voiceInputActive ? "" : lightGray}
+                />
+              ) : (
+                <OutlineMicrophoneIcon
+                  width="1.4em"
+                  height="1.4em"
+                  color={lightGray}
+                />
+              )}
+            </span>
+          )}
         </span>
 
         <span className="flex items-center gap-2 whitespace-nowrap">

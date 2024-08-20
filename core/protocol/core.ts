@@ -110,6 +110,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<MessageContent>,
   ];
+  "voice/startInput": [undefined, void];
+  "voice/stopInput": [undefined, void];
   streamDiffLines: [
     {
       prefix: string;

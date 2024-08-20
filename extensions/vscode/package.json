@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.197",
+  "version": "0.9.201",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -572,7 +572,9 @@
   },
   "dependencies": {
     "@electron/rebuild": "^3.2.10",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@reduxjs/toolkit": "^1.9.3",
+    "@ricky0123/vad-node": "^0.0.3",
     "@types/node-fetch": "^2.6.11",
     "@types/uuid": "^9.0.8",
     "@vscode/ripgrep": "^1.15.9",

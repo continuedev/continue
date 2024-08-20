@@ -434,7 +434,17 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
     content: props.editorState || mainEditorContent || "",
     onFocus: () => setIsEditorFocused(true),
-    onBlur: () => setIsEditorFocused(false),
+    onBlur: () => {
+      setIsEditorFocused(false);
+
+      // TODO: fix possible race condition here when user clicks microphone to stop voice input (causes onBlur & InputToolbar microphone onClick to occur nearly simultaneously)
+      setTimeout(() => {
+        // Deactivate any ongoing voice input when the user clicks away from the input box
+        if (voiceInputActive) {
+          ideMessenger.post("voice/stopInput", undefined);
+        }
+      }, 100);
+    },
     onUpdate: ({ editor, transaction }) => {
       // If /edit is typed and no context items are selected, select the first
 
@@ -474,6 +484,17 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
+
+  const voiceInputActive = useSelector(
+    (state: RootState) => state.state.voiceInputActive,
+  );
+
+  useEffect(() => {
+    // Reset committedContent when we disable voiceInput
+    if (!voiceInputActive) {
+      committedContent = null;
+    }
+  }, [voiceInputActive]);
 
   useEffect(() => {
     if (isJetBrains()) {
@@ -584,6 +605,12 @@ function TipTapEditor(props: TipTapEditorProps) {
       } else if (event.key === "Escape") {
         ideMessenger.post("focusEditor", undefined);
       }
+
+      // Stop voice input when the user begins providing keyboard input
+      if (voiceInputActive) {
+        ideMessenger.post("voice/stopInput", undefined);
+        committedContent = null;
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -591,7 +618,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [voiceInputActive]);
 
   // Re-focus main input after done generating
   useEffect(() => {
@@ -611,6 +638,60 @@ function TipTapEditor(props: TipTapEditorProps) {
       onEnterRef.current({ useCodebase: false, noContext: true });
     },
     [editor, onEnterRef.current, props.isMainInput],
+  );
+
+  // Editor content before the user started speech input; will be updated with our STT as it's committed as final (isFinal == true)
+  let committedContent: JSONContent | null = null;
+
+  useWebviewListener(
+    "newSpeechFromText",
+    async (data) => {
+      if (
+        typeof editor === "undefined" ||
+        !editorFocusedRef.current ||
+        !voiceInputActive ||
+        !data.text
+      ) {
+        return;
+      }
+
+      // Set cursor / focus to the end of the text
+      editor?.commands.focus("end");
+
+      // Get the current editor content before we make updates
+      if (committedContent === null) {
+        committedContent = JSON.parse(JSON.stringify(editor.getJSON()));
+      }
+
+      const curJSON = JSON.parse(JSON.stringify(committedContent));
+      const curContent = curJSON?.content || [];
+      const curContentElm = curContent[curContent.length - 1];
+
+      // Find the last paragraph -> text block, append our new speech text (or create the block)
+      if (
+        typeof curContentElm.content === "undefined" ||
+        curContentElm.content?.length === 0
+      ) {
+        curContentElm.content = [{ type: "text", text: data.text }];
+      } else {
+        const lastTextNode =
+          curContentElm.content[curContentElm.content.length - 1];
+        if (lastTextNode.type === "text") {
+          lastTextNode.text = lastTextNode.text.trimEnd() + " " + data.text;
+        } else {
+          curContentElm.content.push({ type: "text", text: data.text });
+        }
+      }
+
+      // Update the editor content with our new STT
+      editor.commands.setContent(curJSON);
+
+      // The current speech has been finalized and any function call after this will be a new speech utterance + parsed separately by whisper
+      if (data.isFinal) {
+        committedContent = curJSON;
+      }
+    },
+    [editor, props.isMainInput, editorFocusedRef, voiceInputActive],
   );
 
   useWebviewListener("jetbrains/editorInsetRefresh", async () => {

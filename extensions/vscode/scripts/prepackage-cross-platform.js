@@ -175,6 +175,15 @@ async function package(target, os, arch, exe) {
     "models/all-MiniLM-L6-v2/vocab.txt",
     "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
 
+    // Whisper model
+    "models/whisper-tiny.en/config.json",
+    "models/whisper-tiny.en/generation_config.json",
+    "models/whisper-tiny.en/preprocessor_config.json",
+    "models/whisper-tiny.en/tokenizer_config.json",
+    "models/whisper-tiny.en/tokenizer.json",
+    "models/whisper-tiny.en/onnx/encoder_model_quantized.onnx",
+    "models/whisper-tiny.en/onnx/decoder_model_merged_quantized.onnx",
+
     // node_modules (it's a bit confusing why this is necessary)
     `node_modules/@vscode/ripgrep/bin/rg${exe}`,
 

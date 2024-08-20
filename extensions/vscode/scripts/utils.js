@@ -242,6 +242,7 @@ async function copyNodeModules() {
     "@esbuild",
     "@lancedb",
     "@vscode/ripgrep",
+    "@ffmpeg-installer/ffmpeg",
   ];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
