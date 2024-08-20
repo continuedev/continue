@@ -502,7 +502,7 @@ To authenticate to your watsonx.ai Software instance with Continue, you can use 
     - Set **watsonx URL** to your watsonx software endpoint, e.g. \`https://cpd-watsonx.apps.example.com\`.
     - Set **watsonx Project ID** to your watsonx project ID.
     - Set **watsonx Credentials** to your watsonx Username and Password using \`username:password\` as format.
-2. *Option 2*: using API Key authentication:
+2. *Option 2*: using ZenApiKey authentication:
     - Set **watsonx URL** to your watsonx software endpoint, e.g. \`https://cpd-watsonx.apps.example.com\`.
     - Set **watsonx Project ID** to your watsonx project ID.
     - Set **watsonx Credentials** to your watsonx Zen API Key. To generate it:
