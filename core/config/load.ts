@@ -355,9 +355,11 @@ async function intermediateToFinalConfig(
 
   // These context providers are always included, regardless of what, if anything,
   // the user has configured in config.json
+
+  const codebaseContextParams = ((config.contextProviders || []).filter(isContextProviderWithParams).find(cp => cp.name === "codebase") as ContextProviderWithParams | undefined)?.params || {};
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
-    new CodebaseContextProvider({}),
+    new CodebaseContextProvider(codebaseContextParams),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
