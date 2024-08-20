@@ -49,7 +49,7 @@ You can configure Azure OpenAI service through the UI, or you can configure it m
 ```json title="~/.continue/config.json"
 "models": [{
     "title": "Azure OpenAI",
-    "provider": "openai",
+    "provider": "azure",
     "model": "<YOUR_MODEL>",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "engine": "<YOUR_ENGINE>",
@@ -59,13 +59,14 @@ You can configure Azure OpenAI service through the UI, or you can configure it m
 }]
 ```
 
-To find out the information from *Azure AI Studio*, select the model that you would like to connect. Under the *Endpoint* section and capture the Target URI.
-For example, Target URI of https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview
+To find out the information from _Azure AI Studio_, select the model that you would like to connect. Under the _Endpoint_ section and capture the Target URI.
+For example, Target URI of [https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview](https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview)
 Maps to:
-* model = gpt-4o
-* engine = gpt-4o
-* apiVersion = 2023-13-15-preview
-* apiBase = just-an-example.openai.azure.com
+
+- model = gpt-4o
+- engine = gpt-4o
+- apiVersion = 2023-13-15-preview
+- apiBase = just-an-example.openai.azure.com
 
 
 ## AWS Bedrock 
@@ -659,14 +660,14 @@ To force usage of `chat/completions` instead of `completions` endpoint you can s
 
 OpenRouter is a unified interface for commercial and open-source models, giving you access to the best models at the best prices. You can sign up [here](https://openrouter.ai/signup), create your API key on the [keys page](https://openrouter.ai/keys), and then choose a model from the [list of supported models](https://openrouter.ai/models).
 
-Change `~/.continue/config.json` to look like the following. Since OpenRouter is fully API compatible with OpenAI, it is recommended to stick with `"provider": "openai"`, even if they aren't necessarily the upstream provider.
+Change `~/.continue/config.json` to look like the following.
 
 ```json title="~/.continue/config.json"
 {
   "models": [
     {
       "title": "OpenRouter LLaMA 70 8B",
-      "provider": "openai",
+      "provider": "openrouter",
       "model": "meta-llama/llama-3-70b-instruct",
       "apiBase": "https://openrouter.ai/api/v1",
       "apiKey": "..."
@@ -760,7 +761,7 @@ TextGenWebUI is a comprehensive, open-source language model UI and local server.
   "models": [
     {
       "title": "Text Generation WebUI",
-      "provider": "openai",
+      "provider": "text-gen-webui",
       "apiBase": "http://localhost:5000",
       "model": "MODEL_NAME"
     }
