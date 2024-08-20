@@ -348,22 +348,23 @@ function History() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <span
-            className="block px-2 py-1.5 rounded-md z-10 mx-1 my-2 select-none"
+            className="block text-center px-2 py-1.5 rounded-md w-12 mx-1 my-2 select-none cursor-pointer"
             style={{
-              cursor: searchTerm === "*" ? "" : "pointer",
               fontSize: "11px",
-              opacity: searchTerm === "*" ? "50%" : "",
               backgroundColor:
-                searchTerm === "*" ? vscInputBackground : vscBadgeBackground,
+                searchTerm !== "" ? vscInputBackground : vscBadgeBackground,
             }}
             onClick={() => {
-              if (searchInputRef.current.value !== "*") {
+              if (searchInputRef.current.value === "") {
                 searchInputRef.current.value = "*";
                 setSearchTerm("*");
+              } else {
+                searchInputRef.current.value = "";
+                setSearchTerm("");
               }
             }}
           >
-            Show All
+            {searchTerm === "" ? "Show All" : "Clear"}
           </span>
         </SearchBarContainer>
 
