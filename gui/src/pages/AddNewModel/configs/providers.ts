@@ -19,11 +19,6 @@ export interface InputDescriptor {
   required?: boolean;
   description?: string;
   [key: string]: any;
-  // the following are used only for Watsonx provider
-  // these attributes are used to determine whether the input is used in Api Authentication or Credentials section
-  isWatsonxAuthenticatedByApiKey?: boolean;
-  isWatsonxAuthenticatedByCredentials?: boolean;
-  isWatsonxAttribute?: boolean;
 }
 
 export interface ProviderInfo {
@@ -481,54 +476,64 @@ After it's up and running, you can start using Continue.`,
     ],
   },
   watsonx: {
-    title: "Watsonx",
+    title: "IBM watsonx",
     provider: "watsonx",
     refPage: "watsonX",
     description:
       "Explore foundation models from IBM and other third-parties depending on your use case.",
-    longDescription: `Watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.`,
+    longDescription: `**watsonx**, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.
+### Setup
+
+Accessing watsonx models can be done either through watsonx SaaS on IBM Cloud or using a dedicated watsonx Software software instance.
+
+#### watsonx.ai SaaS (IBM Cloud)
+
+To get started with watsonx SaaS, visit the [registration page](https://dataplatform.cloud.ibm.com/registration/stepone?context=wx). If you do not have an existing IBM Cloud account, you can sign up for a free trial.
+
+To authenticate to watsonx.ai SaaS with Continue, you will need to create a project and [setup an API key](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key). Then, in continue:
+- Set **watsonx URL** to your watsonx SaaS endpoint, e.g. \`https://us-south.ml.cloud.ibm.com\` for US South region.
+- Set **watsonx Project ID** to your watsonx project ID.
+- Set **watsonx Credentials** to your watsonx API Key.
+
+#### watsonx.ai Software
+
+To authenticate to your watsonx.ai Software instance with Continue, you can use either \`username/password\` or \`ZenApiKey\` method:
+1. *Option 1*: using username/password authentication:
+    - Set **watsonx URL** to your watsonx software endpoint, e.g. \`https://cpd-watsonx.apps.example.com\`.
+    - Set **watsonx Project ID** to your watsonx project ID.
+    - Set **watsonx Credentials** to your watsonx Username and Password using \`username:password\` as format.
+2. *Option 2*: using API Key authentication:
+    - Set **watsonx URL** to your watsonx software endpoint, e.g. \`https://cpd-watsonx.apps.example.com\`.
+    - Set **watsonx Project ID** to your watsonx project ID.
+    - Set **watsonx Credentials** to your watsonx Zen API Key. To generate it:
+        1. Log in to the CPD web client.
+        2. From the toolbar, click your avatar.
+        3. Click **Profile and settings**.
+        4. Click **API key** > **Generate new key**.
+        5. Click **Generate**.
+        6. Click **Copy** and save your key somewhere safe. You cannot recover this key if you lose it.
+        7. Generate your ZenApiKey by running the following command in your preferred terminal: \`echo "<username>:<apikey>" | base64\`, replacing \`<username>\` with your CPD username and \`<apikey>\` with the API Key you just created.`,
     collectInputFor: [
       {
         inputType: "text",
         key: "watsonxUrl",
-        label: "Watsonx URL",
+        label: "watsonx URL",
         placeholder: "http://<region>.dataplatform.cloud.ibm.com",
-        required: true,
-        isWatsonxAuthenticatedByApiKey: true,
-        isWatsonxAuthenticatedByCredentials: true,
-      },
-      {
-        inputType: "text",
-        key: "watsonxApiKey",
-        label: "Watsonx API Key",
-        placeholder: "Enter your API key",
-        required: true,
-        isWatsonxAuthenticatedByApiKey: true,
+        required: true
       },
       {
         inputType: "text",
         key: "watsonxProjectId",
-        label: "Watsonx Project Id",
-        placeholder: "Enter your project Id",
-        required: true,
-        isWatsonxAuthenticatedByApiKey: true,
-        isWatsonxAuthenticatedByCredentials: true,
+        label: "watsonx Project ID",
+        placeholder: "Enter your project ID",
+        required: true
       },
       {
         inputType: "text",
-        key: "watsonxUsername",
-        label: "Watsonx Username",
-        placeholder: "Enter your Username",
-        required: true,
-        isWatsonxAuthenticatedByCredentials: true,
-      },
-      {
-        inputType: "text",
-        key: "watsonxPassword",
-        label: "Watsonx Password",
-        placeholder: "Enter your password",
-        required: true,
-        isWatsonxAuthenticatedByCredentials: true,
+        key: "watsonxCreds",
+        label: "watsonx Credentials",
+        placeholder: "Enter your Apikey, ZenApikey, or username:password",
+        required: true
       },
       {
         inputType: "text",
@@ -553,7 +558,7 @@ After it's up and running, you can start using Continue.`,
 
       ...completionParamsInputsConfigs,
     ],
-    icon: "Watsonx.png",
+    icon: "watsonx.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.graniteCode,

@@ -19,14 +19,14 @@ class WatsonX extends BaseLLM {
     super(options);
   }
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
+    
     if (
-      this.watsonxUrl !== null &&
-      this.watsonxUrl!.includes("cloud.ibm.com")
+      this.watsonxUrl?.includes("cloud.ibm.com")
     ) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
-          `https://iam.cloud.ibm.com/identity/token?apikey=${this.watsonxApiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
+          `https://iam.cloud.ibm.com/identity/token?apikey=${this.watsonxCreds}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
           {
             method: "POST",
             headers: {
@@ -42,18 +42,18 @@ class WatsonX extends BaseLLM {
       };
     } else {
       // watsonx Software
+      console.log(this.watsonxCreds)
       if (
-        this.watsonxZenApiKeyBase64 &&
-        this.watsonxZenApiKeyBase64 !== "YOUR_WATSONX_ZENAPIKEY"
+        !this.watsonxCreds?.includes(":")
       ) {
         // Using ZenApiKey auth
         return {
-          token: this.watsonxZenApiKeyBase64,
+          token: this.watsonxCreds ?? "",
           expiration: -1,
         };
       } else {
         // Using username/password auth
-
+        const userPass = this.watsonxCreds?.split(":")
         const wxToken = await (
           await fetch(`${this.watsonxUrl}/icp4d-api/v1/authorize`, {
             method: "POST",
@@ -62,8 +62,8 @@ class WatsonX extends BaseLLM {
               Accept: "application/json",
             },
             body: JSON.stringify({
-              username: this.watsonxUsername,
-              password: this.watsonxPassword,
+              username: userPass[0],
+              password: userPass[1],
             }),
           })
         ).json();
@@ -185,7 +185,7 @@ class WatsonX extends BaseLLM {
 
     const stopToken =
       this.watsonxStopToken ??
-      (options.model.includes("granite") ? "<|im_end|>" : undefined);
+      (options.model?.includes("granite") ? "<|im_end|>" : undefined);
     var streamResponse = await fetch(
       `${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`,
       {
