@@ -4,7 +4,7 @@ watsonx, developed by IBM, offers a variety of pre-trained AI foundation models 
 
 ## Setup
 
-Accessing watsonx models can be done either through watsonx SaaS on IBM Cloud or using a dedicated watsonx Software software instance.
+Accessing watsonx models can be done either through watsonx SaaS on IBM Cloud or using a dedicated watsonx.ai Software instance.
 
 ### watsonx.ai SaaS - IBM Cloud
 
