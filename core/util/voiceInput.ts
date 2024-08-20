@@ -47,8 +47,12 @@ const speechWindow: number = 1.5;
 // Threshold time in seconds that we'll consider our user to still be speaking if speech is detected within this threshold of the end of the window
 const doneSpeakingThreshold: number = 1;
 
+// Amount of time in seconds after receiving no speech before we should stop voice input
+const noVoiceInputTimeout: number = 10;
+
 let audioData: Float32Array = new Float32Array();
 let isProcessing: boolean = false;
+let timeSinceSpeech: number = 0;
 let lastMark: number = 0;
 
 export class VoiceInput {
@@ -205,9 +209,19 @@ export class VoiceInput {
     if (voiceEnd >= audioData.length / sampleRate - doneSpeakingThreshold) {
       await VoiceInput.parse(localCopy);
       lastMark = audioData.length / sampleRate;
+
+      timeSinceSpeech = (audioData.length / sampleRate) - voiceEnd;
     } else {
-      // The user has finished speaking; parse one last time and commit it as final with our GUI
+      // The user has finished speaking; parse one last time and commit it as final to the frontend
       await VoiceInput.parse(localCopy, true);
+      
+      timeSinceSpeech += speechWindow;
+
+      // Check if we've passed our noVoiceInputTimeout
+      if(timeSinceSpeech >= noVoiceInputTimeout) {
+        VoiceInput.stop();
+        return;
+      }
 
       // Clear this processed audioData
       audioData = audioData.slice(
