@@ -717,30 +717,6 @@ class IdeProtocolClient (
         return getMachineUniqueID()
     }
 
-    fun onTextSelected(
-        selectedText: String,
-        filepath: String,
-        startLine: Int,
-        startCharacter: Int,
-        endLine: Int,
-        endCharacter: Int
-    ) = coroutineScope.launch {
-//        val jsonMessage = textSelectionStrategy.handleTextSelection(
-//            selectedText,
-//            filepath,
-//            startLine,
-//            startCharacter,
-//            endLine,
-//            endCharacter
-//        )
-//        sendMessage("highlightedCodePush", jsonMessage)
-//        dispatchEventToWebview(
-//            "highlightedCode",
-//            jsonMessage,
-//            continuePluginService.continuePluginWindow.webView
-//        )
-    }
-
     fun readFile(filepath: String): String {
         try {
             val content = ApplicationManager.getApplication().runReadAction<String?> {

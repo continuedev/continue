@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.listeners
 
+import ToolTipComponent
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
 import com.github.continuedev.continueintellijextension.utils.Debouncer
 import com.intellij.openapi.application.ApplicationManager
@@ -20,6 +21,8 @@ class ContinuePluginSelectionListener(
         debouncer.debounce { handleSelection(e) }
     }
 
+    private var toolTipComponent: ToolTipComponent? = null
+
     private fun handleSelection(e: SelectionEvent) {
         ApplicationManager.getApplication().runReadAction {
             val editor = e.editor
@@ -39,14 +42,15 @@ class ContinuePluginSelectionListener(
                 FileDocumentManager.getInstance().getFile(document)
             val filepath = virtualFile?.path ?: "Unknown path"
 
-            ideProtocolClient.onTextSelected(
-                selectedText,
-                filepath,
-                startLine,
-                startCharacter,
-                endLine,
-                endCharacter
-            )
+            ApplicationManager.getApplication().invokeLater {
+                toolTipComponent?.let { editor.contentComponent.remove(it) }
+                toolTipComponent = ToolTipComponent(editor, startLine - 2, selectedText.split("\n")[0].length + 1)
+
+                editor.contentComponent.layout = null
+                editor.contentComponent.add(toolTipComponent)
+                editor.contentComponent.revalidate()
+                editor.contentComponent.repaint()
+            }
         }
     }
 }
