@@ -308,6 +308,18 @@ const commandsMap: (
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       await addHighlightedCodeToContext(sidebar.webviewProtocol);
     },
+    "continue.focusContinueInputWithVoice": async () => {
+      const fullScreenTab = getFullScreenTab();
+      if (!fullScreenTab) {
+        // focus sidebar
+        vscode.commands.executeCommand("continue.continueGUIView.focus");
+      } else {
+        // focus fullscreen
+        fullScreenPanel?.reveal();
+      }
+      sidebar.webviewProtocol?.request("focusContinueInputWithVoice", undefined);
+      await addHighlightedCodeToContext(sidebar.webviewProtocol);
+    },
     "continue.focusContinueInputWithoutClear": async () => {
       const fullScreenTab = getFullScreenTab();
 

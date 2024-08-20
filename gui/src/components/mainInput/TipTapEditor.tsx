@@ -716,6 +716,25 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   useWebviewListener(
+    "focusContinueInputWithVoice",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+      setTimeout(() => {
+        editor?.commands.blur();
+        editor?.commands.focus("end");
+      }, 20);
+
+      // TODO: fix race conditions with onBlur
+      setTimeout(() => {
+        ideMessenger.post("voice/startInput", undefined);
+      }, 100);
+    },
+    [editor, props.isMainInput],
+  );
+
+  useWebviewListener(
     "focusContinueInputWithoutClear",
     async () => {
       if (!props.isMainInput) {

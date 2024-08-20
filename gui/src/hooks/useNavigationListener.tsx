@@ -7,6 +7,7 @@ const openGUITypes: (keyof ToWebviewProtocol)[] = [
   "highlightedCode",
   "newSessionWithPrompt",
   "focusContinueInput",
+  "focusContinueInputWithVoice",
   "focusContinueInputWithoutClear",
   "newSession",
 ];
