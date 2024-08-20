@@ -56,6 +56,7 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
+import { debounce } from "lodash";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -473,6 +474,31 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
+  const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
+  const debouncedShouldHideToolbar = debounce((value) => {
+    setShouldHideToolbar(value);
+  }, 200);
+
+  useEffect(() => {
+    if (editor) {
+      const handleFocus = () => {
+        debouncedShouldHideToolbar(false);
+      }
+
+      const handleBlur = () => {
+        debouncedShouldHideToolbar(true);
+      };
+
+      editor.on('focus', handleFocus);
+      editor.on('blur', handleBlur);
+
+      return () => {
+        editor.off('focus', handleFocus);
+        editor.off('blur', handleBlur);
+      };
+    }
+  }, [editor]);
+
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 
   useEffect(() => {
@@ -831,7 +857,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       />
       <InputToolbar
         showNoContext={optionKeyHeld}
-        hidden={!(editorFocusedRef.current || props.isMainInput)}
+        hidden={shouldHideToolbar && !props.isMainInput}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {
           } else {
