@@ -6,6 +6,7 @@ import {
 } from "../../index.js";
 import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
+import { streamResponse } from "../stream.js";
 const watsonxConfig = {
   accessToken: {
     expiration: 0,
@@ -186,7 +187,7 @@ class WatsonX extends BaseLLM {
     const stopToken =
       this.watsonxStopToken ??
       (options.model?.includes("granite") ? "<|im_end|>" : undefined);
-    var streamResponse = await fetch(
+    var response = await this.fetch(
       `${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`,
       {
         method: "POST",
@@ -212,25 +213,17 @@ class WatsonX extends BaseLLM {
       },
     );
 
-    if (!streamResponse.ok || streamResponse.body === null) {
+    if (!response.ok || response.body === null) {
       throw new Error(
         "Something went wrong. No response received, check your connection",
       );
     } else {
-      const reader = streamResponse.body.getReader();
-      while (true) {
-        const chunk = await reader.read();
-        if (chunk.done) {
-          break;
-        }
+      for await (const value of streamResponse(response)) {
 
-        // Decode the stream
-        const textResponseMsg = new TextDecoder().decode(chunk.value);
-        const lines = textResponseMsg.split(/\r?\n/);
-
+        const lines = value.split("\n");
         let generatedChunk = "";
         let generatedTextIndex = undefined;
-        lines.forEach((el) => {
+        lines.forEach((el: string) => {
           // console.log(`${el}`);
           if (el.startsWith("id:")) {
             generatedTextIndex = parseInt(el.replace(/^id:\s+/, ""));
