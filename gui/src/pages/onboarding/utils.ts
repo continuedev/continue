@@ -10,15 +10,19 @@ export type OnboardingStatus = "Started" | "Completed";
 // If there is no value in local storage for "onboardingStatus",
 // it implies that the user has not begun or completed onboarding.
 export function shouldBeginOnboarding() {
-  // We used to use "onboardingComplete", but switched to "onboardingStatus"
+  // Previously we used "onboardingComplete", but switched to "onboardingStatus"
   const onboardingCompleteLegacyValue =
     localStorage.getItem("onboardingComplete");
+  // debugger;
   if (onboardingCompleteLegacyValue === "true") {
     setLocalStorage("onboardingStatus", "Completed");
     localStorage.removeItem("onboardingComplete");
+
     return false;
   }
+
   const onboardingStatus = getLocalStorage("onboardingStatus");
+  console.log({ onboardingStatus, onboardingCompleteLegacyValue });
 
   return onboardingStatus === undefined;
 }
@@ -34,6 +38,7 @@ export function useOnboarding() {
     const onboardingStatus = getLocalStorage("onboardingStatus");
 
     if (onboardingStatus === "Started") {
+      // debugger;
       setLocalStorage("onboardingStatus", "Completed");
       setLocalStorage("showTutorialCard", true);
       posthog.capture("Onboarding Step", { status: "Completed" });
@@ -46,6 +51,7 @@ export function useOnboarding() {
     if (shouldBeginOnboarding()) {
       setLocalStorage("onboardingStatus", "Started");
       posthog.capture("Onboarding Step", { status: "Started" });
+      // debugger;
     }
   }, []);
 

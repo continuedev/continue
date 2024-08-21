@@ -69,7 +69,7 @@ function Onboarding() {
   }
 
   return (
-    <div className="max-w-96  mx-auto leading-normal">
+    <div className="max-w-96 mx-auto leading-normal">
       <div className="leading-relaxed">
         <h1 className="text-center">Welcome to Continue</h1>
         <p className="text-center ">
