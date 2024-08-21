@@ -27,6 +27,10 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
+import {
+  installChromium,
+  isChromiumInstalled,
+} from "./indexing/docs/installChromium";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -166,6 +170,14 @@ export class Core {
       (e) => {},
       (..._) => Promise.resolve([]),
     );
+
+    try {
+      if (!isChromiumInstalled()) {
+        installChromium();
+      }
+    } catch (err) {
+      console.debug(`Failed to install Chromium: ${err}`);
+    }
 
     const on = this.messenger.on.bind(this.messenger);
 
