@@ -76,6 +76,8 @@ const SITES: { [rootUrl: string]: string[] } = {
     "reference/Model%20Providers/mistral",
   ],
   // Failing
+  // "https://docs.astro.build/en/getting-started/": ["https://docs.astro.build/en/getting-started/"],
+  // Failing
   // "https://docs.nestjs.com/": ["first-steps"],
   // Taking too much time
   // "https://go.dev/doc/": ["install", "tutorial/getting-started", "comment"],
