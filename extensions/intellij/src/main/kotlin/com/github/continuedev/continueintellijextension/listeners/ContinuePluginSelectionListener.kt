@@ -27,7 +27,18 @@ class ContinuePluginSelectionListener(
         ApplicationManager.getApplication().runReadAction {
             val editor = e.editor
             val model: SelectionModel = editor.selectionModel
-            val selectedText = model.selectedText ?: return@runReadAction
+            val selectedText = model.selectedText
+
+            // If selected text is empty, remove the tooltip
+            if (selectedText.isNullOrEmpty()) {
+                ApplicationManager.getApplication().invokeLater {
+                    toolTipComponent?.let { editor.contentComponent.remove(it) }
+                    toolTipComponent = null
+                    editor.contentComponent.revalidate()
+                    editor.contentComponent.repaint()
+                }
+                return@runReadAction
+            }
 
             val document = editor.document
             val startOffset = model.selectionStart
