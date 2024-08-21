@@ -43,7 +43,6 @@ class WatsonX extends BaseLLM {
       };
     } else {
       // watsonx Software
-      console.log(this.watsonxCreds)
       if (
         !this.watsonxCreds?.includes(":")
       ) {
@@ -54,7 +53,7 @@ class WatsonX extends BaseLLM {
         };
       } else {
         // Using username/password auth
-        const userPass = this.watsonxCreds?.split(":")
+        const userPass = this.watsonxCreds?.split(":");
         const wxToken = await (
           await fetch(`${this.watsonxUrl}/icp4d-api/v1/authorize`, {
             method: "POST",

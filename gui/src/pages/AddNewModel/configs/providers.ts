@@ -503,7 +503,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         inputType: "text",
         key: "watsonxCreds",
         label: "watsonx API key",
-        placeholder: "Enter your API Key",
+        placeholder: "Enter your API key (SaaS) or ZenApiKey (Software)",
         required: true
       },
       {
