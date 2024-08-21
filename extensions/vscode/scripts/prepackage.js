@@ -406,12 +406,23 @@ const exe = os === "win32" ? ".exe" : "";
     execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
   } else {
-    // Download esbuild from npm in tmp and copy over
-    console.log("npm installing esbuild binary");
-    await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.17.19",
-      "@esbuild",
-    );
+    const esbuildPath = path.join("node_modules", "esbuild", "package.json");
+    let isCorrectVersion = false;
+
+    if (fs.existsSync(esbuildPath)) {
+      const esbuildPackage = JSON.parse(fs.readFileSync(esbuildPath, "utf8"));
+      isCorrectVersion = esbuildPackage.version === "0.17.19";
+    }
+    if (!isCorrectVersion) {
+      // Download esbuild from npm in tmp and copy over
+      console.log("npm installing esbuild binary");
+      await installNodeModuleInTempDirAndCopyToCurrent(
+        "esbuild@0.17.19",
+        "@esbuild",
+      );
+    } else {
+      console.log("esbuild@0.17.19 is already installed.");
+    }
   }
 
   console.log("[info] Copying sqlite node binding from core");
