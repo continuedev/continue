@@ -9,6 +9,7 @@
     "strict": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
+    "skipLibCheck": true,
     "types": ["mocha"] // This solves conflict between jest and mocha: https://github.com/cypress-io/cypress/issues/7435#issuecomment-631695007
   },
   "include": ["src/**/*", "../../core/**/*.ts", "../../core/**/*.d.ts"],

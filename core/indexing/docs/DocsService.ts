@@ -202,34 +202,6 @@ export default class DocsService {
     let processedPages = 0;
     let maxKnownPages = 1;
 
-    // crawlSite(
-    //   new URL(startUrl),
-    //   siteIndexingConfig.maxDepth,
-    //   async function* (page) {
-    //     processedPages++;
-
-    //     const article = pageToArticle(page);
-
-    //     if (article) {
-    //       articles.push(article);
-    //     }
-
-    //     // Use a heuristic approach for progress calculation
-    //     const progress = Math.min(processedPages / maxKnownPages, 1);
-
-    //     yield {
-    //       progress, // Yield the heuristic progress
-    //       desc: `Finding subpages (${page.path})`,
-    //       status: "indexing",
-    //     };
-
-    //     // Increase maxKnownPages to delay progress reaching 100% too soon
-    //     if (processedPages === maxKnownPages) {
-    //       maxKnownPages *= 2;
-    //     }
-    //   },
-    // );
-
     // Crawl pages and retrieve info as articles
     for await (const page of crawlSite(startUrl)) {
       processedPages++;

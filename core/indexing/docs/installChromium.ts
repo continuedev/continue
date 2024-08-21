@@ -5,8 +5,8 @@ import {
   getChromiumExecutablePath,
   getContinueUtilsChromiumPath,
 } from "../../util/paths";
-import { finished } from "stream/promises";
 import extract from "extract-zip";
+import { Writable } from "stream";
 
 const PACKAGE_ZIP_FILENAME = "package.zip";
 
@@ -54,11 +54,10 @@ async function downloadPackage(): Promise<string> {
     throw new Error("Response body is null");
   }
 
-  const file = fs.createWriteStream(zipPath);
-
-  // https://stackoverflow.com/a/74722818
   // @ts-ignore
-  await finished(response.body.pipe(file));
+  const fileStream = Writable.toWeb(fs.createWriteStream(zipPath));
+
+  await response.body.pipeTo(fileStream);
 
   return zipPath;
 }
@@ -85,6 +84,7 @@ export async function installChromium() {
     console.debug("Installing Chromium");
     const zipPath = await downloadPackage();
     await extractZip(zipPath);
+    console.debug("Successfully installed Chromium");
   } catch (error) {
     console.debug("Chromium installation failed:", error);
     process.exit(1);

@@ -1,8 +1,8 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
-import { Chunk } from "../../index.js";
-import { cleanFragment, cleanHeader } from "../chunk/markdown.js";
-import { PageData } from "./crawlSite.js";
+import { Chunk } from "../../";
+import { cleanFragment, cleanHeader } from "../chunk/markdown";
+import { PageData } from "./crawlSite";
 
 export type ArticleComponent = {
   title: string;

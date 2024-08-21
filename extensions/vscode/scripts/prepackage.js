@@ -241,14 +241,107 @@ const exe = os === "win32" ? ".exe" : "";
     );
   });
 
+  // Crawlee uses a `require.resolve` to check for jquery which
+  // forces us to exclude it from our esbuild, but we still need
+  // to copy it over to prevent build errors
+  // await new Promise((resolve, reject) => {
+  //   ncp(
+  //     path.join(__dirname, "../../../core/node_modules/jquery"),
+  //     path.join(__dirname, "../out/node_modules/jquery"),
+  //     { dereference: true },
+  //     (error) => {
+  //       if (error) {
+  //         console.warn("[error] Error copying jquery files", error);
+  //         reject(error);
+  //       } else {
+  //         resolve();
+  //       }
+  //     },
+  //   );
+  // });
+
+  // await new Promise((resolve, reject) => {
+  //   ncp(
+  //     path.join(__dirname, "../../../core/node_modules/playwright"),
+  //     path.join(__dirname, "../out/node_modules/playwright"),
+  //     { dereference: true },
+  //     (error) => {
+  //       if (error) {
+  //         console.warn("[error] Error copying playwright files", error);
+  //         reject(error);
+  //       } else {
+  //         resolve();
+  //       }
+  //     },
+  //   );
+  // });
+
+  // await new Promise((resolve, reject) => {
+  //   ncp(
+  //     path.join(__dirname, "../../../core/node_modules/playwright-core"),
+  //     path.join(__dirname, "../out/node_modules/playwright-core"),
+  //     { dereference: true },
+  //     (error) => {
+  //       if (error) {
+  //         console.warn("[error] Error copying playwright-core files", error);
+  //         reject(error);
+  //       } else {
+  //         resolve();
+  //       }
+  //     },
+  //   );
+  // });
+
+  // await new Promise((resolve, reject) => {
+  //   ncp(
+  //     path.join(
+  //       __dirname,
+  //       "../../../core/node_modules/header-generator/data_files",
+  //     ),
+  //     path.join(__dirname, "../out/data_files"),
+  //     { dereference: true },
+  //     (error) => {
+  //       if (error) {
+  //         console.warn("[error] Error copying data_files files", error);
+  //         reject(error);
+  //       } else {
+  //         resolve();
+  //       }
+  //     },
+  //   );
+  // });
+
+  // await new Promise((resolve, reject) => {
+  //   ncp(
+  //     path.join(
+  //       __dirname,
+  //       "../../../core/node_modules/fingerprint-generator/data_files",
+  //     ),
+  //     path.join(__dirname, "../out/data_files"),
+  //     { dereference: true },
+  //     (error) => {
+  //       if (error) {
+  //         console.warn("[error] Error copying data_files files", error);
+  //         reject(error);
+  //       } else {
+  //         resolve();
+  //       }
+  //     },
+  //   );
+  // });
+
   const filesToCopy = [
     "../../../core/vendor/tree-sitter.wasm",
     "../../../core/llm/llamaTokenizerWorkerPool.mjs",
     "../../../core/llm/llamaTokenizer.mjs",
     "../../../core/llm/tiktokenWorkerPool.mjs",
   ];
+
   for (const f of filesToCopy) {
-    fs.copyFileSync(path.join(__dirname, f), path.join(__dirname, "..", "out", path.basename(f)));
+    fs.copyFileSync(
+      path.join(__dirname, f),
+      path.join(__dirname, "..", "out", path.basename(f)),
+    );
     console.log(`[info] Copied ${path.basename(f)}`);
   }
 
@@ -457,6 +550,7 @@ const exe = os === "win32" ? ".exe" : "";
     "@vscode/ripgrep",
     "workerpool",
   ];
+
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
@@ -504,8 +598,8 @@ const exe = os === "win32" ? ".exe" : "";
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -544,8 +638,8 @@ const exe = os === "win32" ? ".exe" : "";
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"

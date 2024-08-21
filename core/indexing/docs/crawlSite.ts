@@ -1,6 +1,10 @@
 import { Octokit } from "@octokit/rest";
 import { URL } from "node:url";
-import { PlaywrightCrawler, Configuration, LogLevel } from "crawlee";
+import {
+  PlaywrightCrawler,
+  Configuration,
+  LogLevel,
+} from "@crawlee/playwright";
 import { EventEmitter } from "events";
 import { installChromium, isChromiumInstalled } from "./installChromium";
 import { getChromiumExecutablePath } from "../../util/paths";
