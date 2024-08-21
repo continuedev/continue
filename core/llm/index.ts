@@ -116,6 +116,7 @@ export abstract class BaseLLM implements ILLM {
   watsonxCreds?: string;
   watsonxProjectId?: string;
   watsonxStopToken?: string;
+  watsonxApiVersion?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -175,6 +176,7 @@ export abstract class BaseLLM implements ILLM {
     this.watsonxCreds = options.watsonxCreds;
     this.watsonxProjectId = options.watsonxProjectId;
     this.watsonxStopToken = options.watsonxStopToken;
+    this.watsonxApiVersion = options.watsonxApiVersion;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

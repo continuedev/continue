@@ -1231,13 +1231,7 @@
               "watsonxApiKey": {
                 "type": "string"
               },
-              "watsonxZenApiKeyBase64": {
-                "type": "string"
-              },
-              "watsonxUsername": {
-                "type": "string"
-              },
-              "watsonxPassword": {
+              "watsonxApiVersion": {
                 "type": "string"
               },
               "watsonxProjectId": {

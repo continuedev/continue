@@ -508,6 +508,13 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
       {
         inputType: "text",
+        key: "watsonxApiVersion",
+        label: "watsonx API version",
+        placeholder: "Enter the API Version",
+        defaultValue: "2023-05-29"
+      },
+      {
+        inputType: "text",
         key: "title",
         label: "Model name",
         placeholder: "Granite 13B Chat v2",
