@@ -2,8 +2,10 @@ package com.github.continuedev.continueintellijextension.listeners
 
 import ToolTipComponent
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.utils.Debouncer
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
@@ -37,6 +39,13 @@ class ContinuePluginSelectionListener(
                     editor.contentComponent.revalidate()
                     editor.contentComponent.repaint()
                 }
+                return@runReadAction
+            }
+
+            // Allow user to disable editor tooltip
+            // Note that we still check for empty selected text before this
+            val extensionSettingsService = service<ContinueExtensionSettings>()
+            if (extensionSettingsService.continueState.displayEditorTooltip == false) {
                 return@runReadAction
             }
 
