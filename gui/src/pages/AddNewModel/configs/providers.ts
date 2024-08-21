@@ -513,20 +513,20 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         placeholder: "Enter the API Version",
         defaultValue: "2023-05-29"
       },
-      {
-        inputType: "text",
-        key: "title",
-        label: "Model name",
-        placeholder: "Granite 13B Chat v2",
-        isWatsonxAttribute: true,
-      },
-      {
-        inputType: "text",
-        key: "model",
-        label: "Model Id",
-        placeholder: "ibm/granite-13b-chat-v2",
-        isWatsonxAttribute: true,
-      },
+      // {
+      //   inputType: "text",
+      //   key: "title",
+      //   label: "Model name",
+      //   placeholder: "Granite 13B Chat v2",
+      //   isWatsonxAttribute: true,
+      // },
+      // {
+      //   inputType: "text",
+      //   key: "model",
+      //   label: "Model Id",
+      //   placeholder: "ibm/granite-13b-chat-v2",
+      //   isWatsonxAttribute: true,
+      // },
       {
         inputType: "text",
         key: "watsonxStopToken",
