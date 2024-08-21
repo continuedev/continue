@@ -140,7 +140,7 @@ function ConfigureProvider() {
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={d.label}
+                      placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}
@@ -170,7 +170,7 @@ function ConfigureProvider() {
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={d.label}
+                      placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}
