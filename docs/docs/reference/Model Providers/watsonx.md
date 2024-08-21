@@ -13,7 +13,7 @@ To get started with watsonx SaaS, visit the [registration page](https://dataplat
 To authenticate to watsonx.ai SaaS with Continue, you will need to create a project and [setup an API key](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key). Then, in continue:
 - Set **watsonx URL** to your watsonx SaaS endpoint, e.g. `https://us-south.ml.cloud.ibm.com` for US South region.
 - Set **watsonx Project ID** to your watsonx project ID.
-- Set **watsonx Credentials** to your watsonx API Key.
+- Set **watsonx API Key** to your watsonx API Key.
 
 ### watsonx.ai Software
 
@@ -21,11 +21,11 @@ To authenticate to your watsonx.ai Software instance with Continue, you can use 
 1. *Option 1*: using `username/password` authentication:
     - Set **watsonx URL** to your watsonx software endpoint, e.g. `https://cpd-watsonx.apps.example.com`.
     - Set **watsonx Project ID** to your watsonx project ID.
-    - Set **watsonx Credentials** to your watsonx Username and Password using `username:password` as format.
+    - Set **watsonx API Key** to your watsonx Username and Password using `username:password` as format.
 2. *Option 2*: using `ZenApiKey` authentication:
     - Set **watsonx URL** to your watsonx software endpoint, e.g. `https://cpd-watsonx.apps.example.com`.
     - Set **watsonx Project ID** to your watsonx project ID.
-    - Set **watsonx Credentials** to your watsonx Zen API Key. To generate it:
+    - Set **watsonx API Key** to your watsonx Zen API Key. To generate it:
         1. Log in to the CPD web client.
         2. From the toolbar, click your avatar.
         3. Click **Profile and settings**.
