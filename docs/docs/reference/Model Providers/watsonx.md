@@ -18,11 +18,7 @@ To authenticate to watsonx.ai SaaS with Continue, you will need to create a proj
 ### watsonx.ai Software
 
 To authenticate to your watsonx.ai Software instance with Continue, you can use either `username/password` or `ZenApiKey` method:
-1. *Option 1*: using `username/password` authentication:
-    - Set **watsonx URL** to your watsonx software endpoint, e.g. `https://cpd-watsonx.apps.example.com`.
-    - Set **watsonx Project ID** to your watsonx project ID.
-    - Set **watsonx API Key** to your watsonx Username and Password using `username:password` as format.
-2. *Option 2*: using `ZenApiKey` authentication:
+1. *Option 1* (Recommended): using `ZenApiKey` authentication:
     - Set **watsonx URL** to your watsonx software endpoint, e.g. `https://cpd-watsonx.apps.example.com`.
     - Set **watsonx Project ID** to your watsonx project ID.
     - Set **watsonx API Key** to your watsonx Zen API Key. To generate it:
@@ -33,6 +29,10 @@ To authenticate to your watsonx.ai Software instance with Continue, you can use 
         5. Click **Generate**.
         6. Click **Copy** and save your key somewhere safe. You cannot recover this key if you lose it.
         7. Generate your ZenApiKey by running the following command in your preferred terminal: `echo "<username>:<apikey>" | base64`, replacing `<username>` with your CPD username and `<apikey>` with the API Key you just created.
+2. *Option 2*: using `username/password` authentication:
+    - Set **watsonx URL** to your watsonx software endpoint, e.g. `https://cpd-watsonx.apps.example.com`.
+    - Set **watsonx Project ID** to your watsonx project ID.
+    - Set **watsonx API Key** to your watsonx Username and Password using `username:password` as format.
 
 ## Usage
-![usage-gif](../Model%20Providers/assets/Watsonx1.gif)
+![usage-gif](../Model%20Providers/assets/watsonx1.gif)

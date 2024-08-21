@@ -1231,7 +1231,7 @@
               "watsonxApiKey": {
                 "type": "string"
               },
-             "watsonxApiVersion": {
+              "watsonxApiVersion": {
                 "type": "string"
               },
               "watsonxProjectId": {
