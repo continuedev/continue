@@ -41,13 +41,47 @@ class WatsonX extends BaseLLM {
         token: wxToken["access_token"],
         expiration: wxToken["expiration"],
       };
-    }
-
+    } else {
+      // watsonx Software
+      if (
+        !this.watsonxCreds?.includes(":")
+      ) {
     // Using ZenApiKey auth
     return {
       token: this.watsonxCreds ?? "",
       expiration: -1,
     };
+      } else {
+        // Using username/password auth
+        const userPass = this.watsonxCreds?.split(":");
+        const wxToken = await (
+          await fetch(`${this.watsonxUrl}/icp4d-api/v1/authorize`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              username: userPass[0],
+              password: userPass[1],
+            }),
+          })
+        ).json();
+        const wxTokenExpiry = await (
+          await fetch(`${this.watsonxUrl}/usermgmt/v1/user/tokenExpiry`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${wxToken["token"]}`,
+            },
+          })
+        ).json();
+        return {
+          token: wxToken["token"],
+          expiration: wxTokenExpiry["exp"],
+        };
+      }
+    }
   }
 
   static providerName: ModelProvider = "watsonx";
