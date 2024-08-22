@@ -126,7 +126,7 @@ Perhaps surprisingly, the answer is no. The models that we suggest for autocompl
 
 Follow these steps to ensure that everything is set up correctly:
 
-1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar).
+1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "PearAI" button in the status bar).
 2. Make sure you have downloaded Ollama.
 3. Run `ollama run starcoder:3b` to verify that the model is downloaded.
 4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
@@ -150,13 +150,13 @@ If you're seeing a common pattern of mistake that might be helpful to report, pl
 
 ### VS Code
 
-Click the "Continue" button in the status panel at the bottom right of the screen. The checkmark will become a "cancel" symbol and you will no longer see completions. You can click again to turn it back on.
+Click the "PearAI" button in the status panel at the bottom right of the screen. The checkmark will become a "cancel" symbol and you will no longer see completions. You can click again to turn it back on.
 
-Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
+Alternatively, open VS Code settings, search for "PearAI" and uncheck the box for "Enable Tab Autocomplete".
 
 ### JetBrains
 
-Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocomplete".
+Open Settings -> Tools -> PearAI and uncheck the box for "Enable Tab Autocomplete".
 
 ### Feedback
 

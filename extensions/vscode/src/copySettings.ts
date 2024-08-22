@@ -49,11 +49,10 @@ function copyVSCodeSettingsToPearAIDir() {
         }
     });
 
-    const exclusions = ['vscode-pylance', 'ritwickdey.liveserver', 'pearai.pearai', 'continue.continue'] 
-    // Todo: remove liveserver from exclusions once PearAI has priority for shortcuts (Cmd+L)
+    const exclusions = ['vscode-pylance', 'pearai.pearai', 'continue.continue']
     copyDirectoryRecursiveSync(vscodeExtensionsDir, pearAIDevExtensionsDir, exclusions);
     }
-  
+
 function getVSCodeSettingsDir() {
     const platform = process.platform;
     if (platform === 'win32') {
@@ -72,12 +71,12 @@ function copyDirectoryRecursiveSync(source: string, destination: string, exclusi
     fs.readdirSync(source).forEach(item => {
         const sourcePath = path.join(source, item);
         const destinationPath = path.join(destination, item);
-        
+
         // Check if the current item should be excluded
-        const shouldExclude = exclusions.some(exclusion => 
+        const shouldExclude = exclusions.some(exclusion =>
             sourcePath.toLowerCase().includes(exclusion.toLowerCase())
         );
-        
+
         if (!shouldExclude) {
             if (fs.lstatSync(sourcePath).isDirectory()) {
                 copyDirectoryRecursiveSync(sourcePath, destinationPath, exclusions);
@@ -96,4 +95,3 @@ export function setupSettingsAndInformUser() {
         vscode.window.showInformationMessage('Your VSCode settings and extensions have been transferred over to PearAI! You may need to restart your editor for the changes to take effect.', 'Ok');
     }
 }
-  
