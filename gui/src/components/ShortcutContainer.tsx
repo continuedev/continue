@@ -14,7 +14,6 @@ type ShortcutProps = {
   onClick?: () => void;
 };
 
-
 const Shortcut = ({
   modifiers,
   keyCode,
@@ -34,11 +33,17 @@ const Shortcut = ({
         aria-label={`${modifierString}+${keyCode}`}
       >
         {modifiers.map((mod, index) => (
-          <span className="monaco-keybinding-key" style={{fontSize: '10px'}} key={index}>
+          <span
+            className="monaco-keybinding-key"
+            style={{ fontSize: "10px" }}
+            key={index}
+          >
             {mod}
           </span>
         ))}
-        <span className="monaco-keybinding-key" style={{fontSize: '10px'}}>{keyCode}</span>
+        <span className="monaco-keybinding-key" style={{ fontSize: "10px" }}>
+          {keyCode}
+        </span>
       </div>
     </div>
   );
@@ -112,11 +117,36 @@ const ShortcutContainer = () => {
   };
 
   const shortcuts = [
-    { modifiers: [modifier], keyCode: '[', description: 'Big', onClick: () => ideMessenger.post('bigChat', undefined) },
-    { modifiers: [modifier], keyCode: '0', description: 'Prev', onClick: () => ideMessenger.post('lastChat', undefined) },
-    { modifiers: [modifier], keyCode: 'O', description: 'History', onClick: () => ideMessenger.post('openHistory', undefined) },
-    { modifiers: [modifier], keyCode: ';', description: 'Close', onClick: () => ideMessenger.post('closeChat', undefined) },
-    { modifiers: [modifier, 'Shift'], keyCode: 'L', description: 'Append Selected', onClick: () => ideMessenger.post('appendSelected', undefined) },
+    {
+      modifiers: [modifier],
+      keyCode: "[",
+      description: "Big",
+      onClick: () => ideMessenger.post("bigChat", undefined),
+    },
+    {
+      modifiers: [modifier],
+      keyCode: "0",
+      description: "Prev",
+      onClick: () => ideMessenger.post("lastChat", undefined),
+    },
+    {
+      modifiers: [modifier],
+      keyCode: "O",
+      description: "History",
+      onClick: () => ideMessenger.post("openHistory", undefined),
+    },
+    {
+      modifiers: [modifier],
+      keyCode: ";",
+      description: "Close",
+      onClick: () => ideMessenger.post("closeChat", undefined),
+    },
+    {
+      modifiers: [modifier, "Shift"],
+      keyCode: "L",
+      description: "Append Selected",
+      onClick: () => ideMessenger.post("appendSelected", undefined),
+    },
   ];
 
   return (

@@ -72,13 +72,13 @@ const Footer = styled.footer`
 
 const Header = styled.header`
   position: sticky;
-  top: 2px;
+  top: 0px;
   z-index: 500;
   background-color: ${vscBackground};
   display: flex;
   justify-content: right;
   padding-top: 5px;
-  padding-bottom: 0px;
+  padding-bottom: 1px;
   padding-left: 6px;
   padding-right: 6px;
   width: calc(100% - 12px);
