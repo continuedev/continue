@@ -195,7 +195,7 @@ class InlineEditAction : AnAction(), DumbAware {
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
             margin = JBUI.insets(8)
-            font = Font("Arial", Font.PLAIN, MAIN_FONT_SIZE)
+            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
         }
         textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
 
@@ -260,7 +260,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             isEditable = true
             background = defaultBackground
             foreground = Color(128, 128, 128, 200)
-            font = Font("Arial", Font.PLAIN, 11)
+            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
             border = EmptyBorder(2, 4, 2, 4)
             isOpaque = false
             isEditable = false
@@ -315,7 +315,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             isEditable = true
             background = defaultBackground
             foreground = Color(128, 128, 128, 200)
-            font = Font("Arial", Font.PLAIN, 11)
+            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
             border = EmptyBorder(2, 4, 2, 4)
             isOpaque = false
             isEditable = false
@@ -352,7 +352,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
     private val subPanelC: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
         val leftLabel = JLabel("Enter follow-up instructions").apply {
             foreground = Color(128, 128, 128, 200)
-            font = Font("Arial", Font.PLAIN, 11)
+            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
         }
 
         val leftButton = CustomButton("${getAltKeyLabel()}⇧N") { onReject() }.apply {
@@ -445,7 +445,7 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
         })
 
 //        verticalAlignment = CENTER
-        font = Font("Arial", Font.PLAIN, 11)
+        font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
         border = EmptyBorder(2, 4, 2, 4)
     }
     override fun paintComponent(g: Graphics) {
@@ -477,7 +477,7 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
         // Draw placeholder
         if (text.isEmpty()) {
             g.color = Color(128, 128, 128, 255)
-            g.font = Font("Arial", Font.PLAIN, MAIN_FONT_SIZE)
+            g.font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
             g.drawString("Enter instructions to edit highlighted code", 8, 20)
         }
 
