@@ -2,6 +2,7 @@ import com.github.continuedev.continueintellijextension.actions.focusContinueInp
 import com.github.continuedev.continueintellijextension.editor.openInlineEdit
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.ui.components.JBPanel
 import java.awt.*
 import java.awt.event.ActionEvent
@@ -9,14 +10,14 @@ import java.util.*
 import javax.swing.JButton
 import java.awt.geom.RoundRectangle2D
 
-class StyledButton(text: String) : JButton(text) {
+class StyledButton(text: String, foregroundColor: Color) : JButton(text) {
     init {
         cursor = Cursor(Cursor.HAND_CURSOR)
         isOpaque = false
         isContentAreaFilled = false
         isFocusPainted = false
         border = null // Remove the border
-        foreground = Color.WHITE
+        foreground = foregroundColor
     }
 
     override fun paintComponent(g: Graphics) {
@@ -31,11 +32,11 @@ class StyledButton(text: String) : JButton(text) {
         val h = (height - 2 * padding)
 
         // Draw flat background
-        g2.color = if (model.isPressed) Color(70, 70, 70) else Color(100, 100, 100)
+//        g2.color = if (model.isPressed) Color(70, 70, 70) else Color(100, 100, 100)
 //        g2.fill(RoundRectangle2D.Float(x, y, w, h, arc, arc))
 
         // Draw border
-        g2.color = Color(120, 120, 120)
+//        g2.color = Color(120, 120, 120)
 //        g2.draw(RoundRectangle2D.Float(x, y, w - 1, h - 1, arc, arc))
 
         g2.dispose()
@@ -44,17 +45,28 @@ class StyledButton(text: String) : JButton(text) {
     }
 }
 
-class ToolTipComponent(editor: Editor, line: Int, column: Int) :
+class ToolTipComponent(editor: Editor, x: Int, y: Int) :
     JBPanel<ToolTipComponent>() {
-    private lateinit var addToChatButton: StyledButton
-    private lateinit var editButton: StyledButton
+    private var addToChatButton: StyledButton
+    private var editButton: StyledButton
+    private var backgroundColor: Color
+    private var foregroundColor: Color
 
     init {
         layout = null // Remove the FlowLayout
 
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        backgroundColor = globalScheme.defaultBackground
+        foregroundColor = Color(
+            globalScheme.defaultForeground.red,
+            globalScheme.defaultForeground.green,
+            globalScheme.defaultForeground.blue,
+            200
+        )
+
         val cmdCtrlChar = if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac")) "⌘" else "Ctrl"
-        addToChatButton = StyledButton("${cmdCtrlChar}J Chat")
-        editButton = StyledButton("${cmdCtrlChar}I Edit")
+        addToChatButton = StyledButton("${cmdCtrlChar}J Chat", foregroundColor)
+        editButton = StyledButton("${cmdCtrlChar}I Edit", foregroundColor)
 
         addToChatButton.addActionListener { e: ActionEvent? ->
             focusContinueInput(editor.project)
@@ -72,9 +84,6 @@ class ToolTipComponent(editor: Editor, line: Int, column: Int) :
         add(addToChatButton)
         add(editButton)
 
-        val pos = LogicalPosition(line, column)
-        val y: Int = editor.logicalPositionToXY(pos).y + editor.lineHeight
-        val x: Int = editor.logicalPositionToXY(pos).x
         val totalWidth = addToChatButton.preferredSize.width + editButton.preferredSize.width
         val totalHeight = addToChatButton.preferredSize.height
         setBounds(x, y, totalWidth, totalHeight)
@@ -91,13 +100,14 @@ class ToolTipComponent(editor: Editor, line: Int, column: Int) :
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         // Draw rounded rectangle background
-        g2.color = Color(70, 70, 70, 200)
+        g2.color = backgroundColor
         g2.fill(RoundRectangle2D.Float(0f, 0f, width.toFloat(), height.toFloat(), arc, arc))
 
         // Draw rounded rectangle border
         g2.color = Color(120, 120, 120)
+        val strokeWidth = 1.0f
         g2.stroke = BasicStroke(1.0f)
-        g2.draw(RoundRectangle2D.Float(0f, 0f, width.toFloat(), height.toFloat(), arc, arc))
+        g2.draw(RoundRectangle2D.Float(0f, 0f, width.toFloat() - strokeWidth, height.toFloat() - strokeWidth, arc, arc))
 
         // Draw border between buttons
         g2.color = Color(120, 120, 120)

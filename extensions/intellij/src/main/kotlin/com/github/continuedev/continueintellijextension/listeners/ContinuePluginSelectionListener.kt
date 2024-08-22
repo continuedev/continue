@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.services.ContinueExtensi
 import com.github.continuedev.continueintellijextension.utils.Debouncer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
@@ -13,6 +14,8 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.vfs.VirtualFile
 import kotlinx.coroutines.CoroutineScope
+import kotlin.math.max
+import kotlin.math.min
 
 class ContinuePluginSelectionListener(
     private val ideProtocolClient: IdeProtocolClient,
@@ -64,10 +67,29 @@ class ContinuePluginSelectionListener(
 
             ApplicationManager.getApplication().invokeLater {
                 toolTipComponent?.let { editor.contentComponent.remove(it) }
-                toolTipComponent = ToolTipComponent(editor, startLine - 2, selectedText.split("\n")[0].length + 1)
 
                 editor.contentComponent.layout = null
-                editor.contentComponent.add(toolTipComponent)
+
+                val line = startLine - 2
+                if (line > 0) {
+                    // Get the text on line number "line"
+                    val text = document.getText(document.getLineStartOffset(line), document.getLineEndOffset(line))
+
+                    val pos = LogicalPosition(line, selectedText.split("\n")[0].length + 1)
+                    val y: Int = editor.logicalPositionToXY(pos).y + editor.lineHeight
+                    var x: Int = editor.logicalPositionToXY(pos).x
+
+                    // Check if x is out of bounds
+                    val maxEditorWidth = editor.contentComponent.width
+                    val maxToolTipWidth = 600
+                    x = max(0, min(x, maxEditorWidth - maxToolTipWidth))
+
+                    toolTipComponent = ToolTipComponent(editor, x, y)
+                    editor.contentComponent.add(toolTipComponent)
+                } else {
+                    toolTipComponent = null
+                }
+
                 editor.contentComponent.revalidate()
                 editor.contentComponent.repaint()
             }
