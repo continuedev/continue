@@ -180,21 +180,26 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     }
 
     // Delete
+    //
+    // Should this be deleting all entries that match a given path + cacheKey?
+    //
+    // When renaming a file, we get a `delete` and an `addTag`. Is this correct?
+    // `addTag` is throwing an error since we just deleted the `code_snippets` row
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
 
-      const snippetToDelete = await db.get(
+      const snippetsToDelete = await db.all(
         "SELECT id FROM code_snippets WHERE path = ? AND cacheKey = ?",
         [del.path, del.cacheKey],
       );
 
-      await db.run("DELETE FROM code_snippets WHERE id = ?", [
-        snippetToDelete.id,
-      ]);
+      const snippetIds = snippetsToDelete.map((row) => row.id).join(",");
 
-      await db.run("DELETE FROM code_snippets_tags WHERE snippetId = ?", [
-        snippetToDelete.id,
-      ]);
+      await db.run(`DELETE FROM code_snippets WHERE id IN (${snippetIds})`);
+
+      await db.run(
+        `DELETE FROM code_snippets_tags WHERE snippetId IN (${snippetIds})`,
+      );
 
       markComplete([del], IndexResultType.Delete);
     }
