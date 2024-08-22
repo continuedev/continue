@@ -53,7 +53,7 @@ class ToolTipComponent(editor: Editor, line: Int, column: Int) :
         layout = null // Remove the FlowLayout
 
         val cmdCtrlChar = if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac")) "⌘" else "Ctrl"
-        addToChatButton = StyledButton("${cmdCtrlChar}J Add to chat")
+        addToChatButton = StyledButton("${cmdCtrlChar}J Chat")
         editButton = StyledButton("${cmdCtrlChar}I Edit")
 
         addToChatButton.addActionListener { e: ActionEvent? ->
