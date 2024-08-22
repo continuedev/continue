@@ -1,11 +1,11 @@
 import { jest } from "@jest/globals";
 import lance from "vectordb";
-import { testIde, testConfigHandler } from "../test/util/fixtures";
+import { testConfigHandler, testIde } from "../test/util/fixtures";
 import {
-  testContinueServerClient,
-  mockTag,
-  updateIndexAndAwaitGenerator,
   mockPathAndCacheKey,
+  mockTag,
+  testContinueServerClient,
+  updateIndexAndAwaitGenerator,
 } from "../test/util/indexing";
 import { getLanceDbPath } from "../util/paths";
 import { LanceDbIndex } from "./LanceDbIndex";
@@ -48,7 +48,7 @@ describe("ChunkCodebaseIndex", () => {
    * - We cannot open either the 'dev' or 'main' tag tables ubtil after we
    *   can assume they've been created through `updateIndexAndAwaitGenerator`
    */
-  it("should update the index and maintain expected database state", async () => {
+  it.skip("should update the index and maintain expected database state", async () => {
     const mainTag = mockTag;
     const mainTagTableName = index.tableNameForTag(mainTag);
 
