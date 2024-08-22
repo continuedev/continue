@@ -27,10 +27,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
-import {
-  installChromium,
-  isChromiumInstalled,
-} from "./indexing/docs/installChromium";
+import { verifyOrInstallChromium } from "./indexing/docs/crawlSite";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -172,9 +169,7 @@ export class Core {
     );
 
     try {
-      if (!isChromiumInstalled()) {
-        installChromium();
-      }
+      verifyOrInstallChromium();
     } catch (err) {
       console.debug(`Failed to install Chromium: ${err}`);
     }

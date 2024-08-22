@@ -12,38 +12,8 @@ dotenv.config();
 const CONTINUE_GLOBAL_DIR =
   process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
 
-// https://github.com/microsoft/playwright/blob/release-1.46/packages/playwright-core/src/server/registry/index.ts#L54-L58
-const CHROMIUM_EXECUTABLE_PATHS = {
-  linux: ["chrome-linux", "chrome"],
-  darwin: ["chrome-mac", "Chromium.app", "Contents", "MacOS", "Chromium"],
-  win32: ["chrome-win", "chrome.exe"],
-};
-
-/**
- * Note that unlike most of the other methods in this file, this method
- * does not create the path if it doesn't exist. The intended behavior
- * is just to get the file path.
- */
-export function getChromiumExecutablePath(
-  platform: NodeJS.Platform,
-): string | null {
-  if (platform !== "linux" && platform !== "darwin" && platform !== "win32") {
-    console.error(`Unsupported platform for Chromium install: ${platform}`);
-    return null;
-  }
-
-  const chromiumUtilPath = getContinueUtilsChromiumPath();
-  const executablePath = CHROMIUM_EXECUTABLE_PATHS[platform];
-
-  return path.join(chromiumUtilPath, ...executablePath);
-}
-
-export function getContinueUtilsChromiumPath(): string {
-  const chromiumPath = path.join(getContinueUtilsPath(), "chromium");
-  if (!fs.existsSync(chromiumPath)) {
-    fs.mkdirSync(chromiumPath);
-  }
-  return chromiumPath;
+export function getChromiumPath(): string {
+  return path.join(getContinueUtilsPath(), ".chromium-browser-snapshots");
 }
 
 export function getContinueUtilsPath(): string {

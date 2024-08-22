@@ -1,14 +1,11 @@
 import { Octokit } from "@octokit/rest";
 import { URL } from "node:url";
-import {
-  PlaywrightCrawler,
-  Configuration,
-  LogLevel,
-} from "@crawlee/playwright";
 import { EventEmitter } from "events";
-import { installChromium, isChromiumInstalled } from "./installChromium";
-import { getChromiumExecutablePath } from "../../util/paths";
-import * as os from "os";
+import { getChromiumPath, getContinueUtilsPath } from "../../util/paths";
+import { Page } from "puppeteer";
+// @ts-ignore
+import PCR from "puppeteer-chromium-resolver";
+import * as fs from "fs";
 
 export type PageData = {
   url: string;
@@ -27,6 +24,16 @@ class CrawlEmitter extends EventEmitter {
   emit(event: "data", data: PageData): boolean;
   emit(event: string | symbol, ...args: any[]): boolean {
     return super.emit(event, ...args);
+  }
+}
+
+const PCR_CONFIG = {
+  downloadPath: getContinueUtilsPath(),
+};
+
+export function verifyOrInstallChromium() {
+  if (!fs.existsSync(getChromiumPath())) {
+    PCR(PCR_CONFIG);
   }
 }
 
@@ -105,6 +112,174 @@ async function* crawlGithubRepo(url: URL) {
   }
 }
 
+async function* getLinks(
+  page: Page,
+  url: URL,
+  rootUrl: URL,
+  visitedLinks: Map<string, string>,
+  depthRemaining: number,
+) {
+  if (
+    visitedLinks.has(url.toString()) ||
+    depthRemaining === 0 ||
+    !url.pathname.startsWith(rootUrl.pathname) ||
+    rootUrl.host !== url.host
+  ) {
+    console.warn("Skipping", url.toString());
+    return;
+  }
+
+  await page.goto(url.toString());
+
+  const htmlContent = await page.content();
+
+  visitedLinks.set(url.toString(), htmlContent);
+
+  const x = await page.$$eval("a", (a) => {
+    console.log(a);
+    return a;
+  });
+
+  const aCount = await page.$$eval("a", (as) => as.length);
+
+  const links: any[] = await page.$$eval(
+    "a",
+    (as) =>
+      as.map((a) => {
+        try {
+          debugger;
+          let url = new URL(a.href);
+          url.hash = "";
+          return url.href;
+        } catch (e) {
+          return null;
+        }
+      }),
+    // .filter((l) => l !== null) as string[],
+  );
+
+  const N = 2;
+  const groups = links.reduce((acc, link, i) => {
+    const groupIndex = Math.floor(i / N);
+    if (!acc[groupIndex]) {
+      acc.push([]);
+    }
+    acc[groupIndex].push(link);
+    return acc;
+  }, [] as string[][]);
+
+  yield "" as any;
+
+  for (const group of groups) {
+    await Promise.all(
+      group.map((link) => {
+        return Promise.race([
+          (async () => {
+            try {
+              return await getLinks(
+                page,
+                new URL(link),
+                rootUrl,
+                visitedLinks,
+                depthRemaining - 1,
+              );
+            } catch (e: any) {
+              console.warn("Error getting links from page: ", e.message);
+              return Promise.resolve();
+            }
+          })(),
+          new Promise((resolve) => setTimeout(resolve, 5000)),
+        ]);
+      }),
+    );
+  }
+}
+
+// async function* crawlLinks(
+//   page: Page,
+//   url: URL,
+//   rootUrl: URL,
+//   visitedLinks: Map<string, string>,
+//   depthRemaining: number,
+// ): AsyncGenerator<PageData> {
+//   if (
+//     visitedLinks.has(url.toString()) ||
+//     depthRemaining === 0 ||
+//     !url.pathname.startsWith(rootUrl.pathname) ||
+//     rootUrl.host !== url.host
+//   ) {
+//     console.warn("Skipping", url.toString());
+//     return;
+//   }
+
+//   await page.goto(url.toString());
+
+//   const htmlContent = await page.content();
+//   visitedLinks.set(url.toString(), htmlContent);
+
+//   yield {
+//     url: url.toString(),
+//     path: url.pathname,
+//     content: htmlContent,
+//   };
+
+//   const links: string[] = await page.$$eval(
+//     "a",
+//     (as) =>
+//       as
+//         .map((a) => {
+//           try {
+//             let url = new URL(a.href);
+//             url.hash = "";
+//             return url.href;
+//           } catch (e) {
+//             return null;
+//           }
+//         })
+//         .filter((l) => l !== null) as string[],
+//   );
+
+//   for (const link of links) {
+//     yield* crawlLinks(
+//       page,
+//       new URL(link),
+//       rootUrl,
+//       visitedLinks,
+//       depthRemaining - 1,
+//     );
+//   }
+// }
+
+async function* crawl(
+  startUrl: string,
+  rootUrl: URL,
+): AsyncGenerator<PageData> {
+  console.log(`Crawling ${startUrl}`);
+
+  const stats = await PCR(PCR_CONFIG);
+
+  const browser = await stats.puppeteer.launch({
+    args: [
+      "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
+    ],
+    executablePath: stats.executablePath,
+    headless: false, // TODO
+  });
+
+  const page = await browser.newPage();
+
+  const maxDepth = 3;
+  const visitedLinks = new Map<string, string>();
+
+  try {
+    yield* getLinks(page, new URL(startUrl), rootUrl, visitedLinks, maxDepth);
+  } catch (e) {
+    console.log("Error getting links: ", e);
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function* crawlSite(
   url: string,
   maxRequestsPerCrawl: number = MAX_REQUESTS_PER_CRAWL,
@@ -116,52 +291,50 @@ export async function* crawlSite(
     return;
   }
 
-  if (!isChromiumInstalled()) {
-    await installChromium();
-  }
+  yield* crawl(url, new URL(url));
+  // const emitter = new CrawlEmitter();
 
-  const emitter = new CrawlEmitter();
+  // const crawler = new PlaywrightCrawler(
+  //   {
+  //     async requestHandler({ request, page, enqueueLinks }) {
+  //       const { pathname: path } = new URL(request.loadedUrl);
+  //       const content = await page.content();
 
-  const crawler = new PlaywrightCrawler(
-    {
-      async requestHandler({ request, page, enqueueLinks }) {
-        const { pathname: path } = new URL(request.loadedUrl);
-        const content = await page.content();
+  //       emitter.emit("data", { url, content, path });
 
-        emitter.emit("data", { url, content, path });
+  //       await enqueueLinks();
+  //     },
+  //     maxRequestsPerCrawl,
+  //     launchContext: {
+  //       launchOptions: {
+  //         executablePath: getChromiumExecutablePath(os.platform())!,
+  //       },
+  //     },
+  //   },
+  //   new Configuration({
+  //     persistStorage: false,
+  //     logLevel: process.env.NODE_ENV === "test" ? LogLevel.DEBUG : LogLevel.OFF,
+  //   }),
+  // );
+  // const options = {};
 
-        await enqueueLinks();
-      },
-      maxRequestsPerCrawl,
-      launchContext: {
-        launchOptions: {
-          executablePath: getChromiumExecutablePath(os.platform())!,
-        },
-      },
-    },
-    new Configuration({
-      persistStorage: false,
-      logLevel: process.env.NODE_ENV === "test" ? LogLevel.DEBUG : LogLevel.OFF,
-    }),
-  );
+  // const crawlerPromise = new Promise<typeof IS_DONE_CRAWLING>((resolve) => {
+  //   crawler.run([url]).then(() => {
+  //     resolve(IS_DONE_CRAWLING);
+  //   });
+  // });
 
-  const crawlerPromise = new Promise<typeof IS_DONE_CRAWLING>((resolve) => {
-    crawler.run([url]).then(() => {
-      resolve(IS_DONE_CRAWLING);
-    });
-  });
+  // while (true) {
+  //   const dataPromise = new Promise<PageData>((resolve) => {
+  //     emitter.on("data", resolve);
+  //   });
 
-  while (true) {
-    const dataPromise = new Promise<PageData>((resolve) => {
-      emitter.on("data", resolve);
-    });
+  //   const result = await Promise.race([dataPromise, crawlerPromise]);
 
-    const result = await Promise.race([dataPromise, crawlerPromise]);
+  //   if (result === IS_DONE_CRAWLING) {
+  //     break;
+  //   }
 
-    if (result === IS_DONE_CRAWLING) {
-      break;
-    }
-
-    yield result as PageData;
-  }
+  //   yield result as PageData;
+  // }
 }
