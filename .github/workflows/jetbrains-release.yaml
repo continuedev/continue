@@ -2,14 +2,19 @@
 # Running the publishPlugin task requires all following secrets to be provided: PUBLISH_TOKEN, PRIVATE_KEY, PRIVATE_KEY_PASSWORD, CERTIFICATE_CHAIN.
 # See https://plugins.jetbrains.com/docs/intellij/plugin-signing.html for more information.
 
-name: Release
-# on:
-#   release:
-#     types: [prereleased, released]
+name: JetBrains Release
+
+on:
+  release:
+    types: [prereleased]
 
 defaults:
   run:
-    working-directory: ./extensions/intellij
+    working-directory: extensions/intellij
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   check_release_name:
@@ -18,19 +23,20 @@ jobs:
       should_run: ${{ steps.check.outputs.should_run }}
     steps:
       - id: check
+        working-directory: .
         run: |
-          if [[ "${{ github.event.release.name }}" == *-jetbrains ]]; then
+          if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
           fi
 
   # Prepare and publish the plugin to JetBrains Marketplace repository
-  release:
+  build:
     needs: check_release_name
     if: needs.check_release_name.outputs.should_run == 'true'
-    name: Publish Plugin
-    runs-on: ubuntu-latest
+    name: Build Plugin
+    runs-on: macos-latest
     permissions:
       contents: write
       pull-requests: write
@@ -41,14 +47,26 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
-      # Set up Java environment for the next steps
+      - name: Import Apple certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          keychain: ${{ github.run_id }}
+          keychain-password: ${{ github.run_id }}
+          p12-file-base64: ${{ secrets.APPLE_CERT_DATA }}
+          p12-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+
+      # Validate wrapper
+      - name: Gradle Wrapper Validation
+        uses: gradle/actions/wrapper-validation@v3
+
+      # # Set up Java environment for the next steps
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: 17
 
-      # Setup Gradle
+      # # Setup Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -59,16 +77,21 @@ jobs:
         id: properties
         shell: bash
         run: |
-          CHANGELOG="$(cat << 'EOM' | sed -e 's/^[[:space:]]*$//g' -e '/./,$!d'
-          ${{ github.event.release.body }}
-          EOM
-          )"
+          PROPERTIES="$(./gradlew properties --console=plain -q)"
+          VERSION="$(echo "$PROPERTIES" | grep "^version:" | cut -f2- -d ' ')"
+          # CHANGELOG="$(./gradlew getChangelog --unreleased --no-header --console=plain -q)"
+          CHANGELOG=""
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "pluginVerifierHomeDir=~/.pluginVerifier" >> $GITHUB_OUTPUT
 
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      # Setup Node.js
+          ./gradlew listProductsReleases # prepare list of IDEs for Plugin Verifier
+
+      # # Setup Node.js
       - name: Use Node.js from .nvmrc
         uses: actions/setup-node@v4
         with:
@@ -99,22 +122,11 @@ jobs:
           cd ../../core
           npm ci
 
-      # npm install binary
-      - name: Install core node_modules
-        run: |
-          cd ../../binary
-          npm ci
-
       # npm install gui
-      - name: Install gui node_modules
+      - name: Install gui node_modules and build
         run: |
           cd ../../gui
           npm ci
-
-      # build gui
-      - name: Build gui
-        run: |
-          cd ../../gui
           npm run build
 
       # Run prepackage.js script
@@ -123,26 +135,360 @@ jobs:
           cd ../../extensions/vscode
           npm ci
           npm run prepackage
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      # npm install binary
+      - name: Install binary node_modules
+        run: |
+          cd ../../binary
+          npm ci
 
       # Build binaries
-      - name: Install core node_modules
+      - name: Build the binaries
         run: |
           cd ../../binary
           npm run build
 
-      # Update Unreleased section with the current release note
-      - name: Patch Changelog
-        if: ${{ steps.properties.outputs.changelog != '' }}
+      # - name: Code sign darwin binaries
+      #   run: |
+      #     echo "Signing executable with keychain: ${{ github.run_id }}"
+      #     codesign --sign - ../../binary/bin/darwin-x64/continue-binary
+      #     codesign --sign - ../../binary/bin/darwin-arm64/continue-binary
+
+      # - name: Sign darwin-arm64 binary
+      #   uses: lando/code-sign-action@v2
+      #   with:
+      #     file: ./binary/bin/darwin-arm64/continue-binary
+      #     certificate-data: ${{ secrets.APPLE_CERT_DATA }}
+      #     certificate-password: ${{ secrets.APPLE_CERT_PASSWORD }}
+      #     apple-notary-user: ${{ secrets.APPLE_NOTARY_USER }}
+      #     apple-notary-password: ${{ secrets.APPLE_NOTARY_PASSWORD }}
+      #     apple-notary-tool: altool
+      #     apple-team-id: 43XFLY66ZD
+      #     apple-product-id: dev.continue.continue-binary
+      #     options: --options runtime --entitlements entitlements.xml
+
+      # Build plugin
+      - name: Build plugin
+        run: ./gradlew buildPlugin
+
+      # Publish the plugin to JetBrains Marketplace
+      - name: Publish EAP Plugin
         env:
-          CHANGELOG: ${{ steps.properties.outputs.changelog }}
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: eap
+        run: ./gradlew publishPlugin
+
+      - name: Publish Stable Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: default
+        run: ./gradlew publishPlugin
+
+      # Prepare plugin archive content for creating artifact
+      - name: Prepare Plugin Artifact
+        id: artifact
+        shell: bash
         run: |
-          ./gradlew patchChangelog --release-note="$CHANGELOG"
+          cd ../../extensions/intellij/build/distributions
+          echo "Contents of distributions folder:"
+          ls
+          echo "---"
+          FILENAME=`ls continue-intellij-extension-*.zip`
+          unzip "$FILENAME" -d content
+
+          echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
+
+      # Store already-built plugin as an artifact for downloading
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.filename }}
+          path: ./extensions/intellij/build/distributions/content/*/*
+
+      # Upload binaries as artifacts
+      - name: Upload artifact (darwin-arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-darwin-arm64
+          path: ./binary/bin/darwin-arm64/
+
+      - name: Upload artifact (darwin-x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-darwin-x64
+          path: ./binary/bin/darwin-x64/
+
+      - name: Upload artifact (win32-x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-win32-x64
+          path: ./binary/bin/win32-x64/
+
+      - name: Upload artifact (linux-arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-linux-arm64
+          path: ./binary/bin/linux-arm64/
+
+      - name: Upload artifact (linux-x64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: continue-binary-linux-x64
+          path: ./binary/bin/linux-x64/
+
+  test-binaries:
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
+          # arm64 not actually supported by GitHub
+          # - os: ubuntu-latest
+          #   platform: linux
+          #   arch: arm64
+          #   npm_config_arch: arm64
+          - os: macos-12
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+            npm_config_arch: arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      # 1. Check-out repository
+      - name: Check-out repository
+        uses: actions/checkout@v4
+
+      # 2. Install npm dependencies
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Cache core node_modules
+        uses: actions/cache@v3
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Cache binary node_modules
+        uses: actions/cache@v3
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: Install Core Dependencies
+        run: |
+          cd ../../core
+          npm ci
+
+      - name: Install Binary Dependencies
+        run: |
+          cd ../../binary
+          npm ci
+
+      # Download the binary artifact
+      - name: Download binary artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
+          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
+
+      # Set execute permissions for the binary (non-Windows)
+      - name: Set execute permissions
+        run: |
+          cd ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}
+          chmod +x continue-binary
+          chmod +x build/Release/node_sqlite3.node
+          chmod +x index.node
+          chmod +x esbuild
+        if: ${{ matrix.platform }} != 'win32'
+
+      # Run tests for binary
+      - name: Run binary tests
+        run: |
+          cd ../../binary
+          npm run test
+
+      - name: Upload logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
+          path: binary/.continue/logs/core.log
+
+  # Run tests and upload a code coverage report
+  test:
+    name: Test
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      # Run tests
+      - name: Run Tests
+        run: ./gradlew check
+
+      # Collect Tests Result of failed tests
+      - name: Collect Tests Result
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: tests-result
+          path: ${{ github.workspace }}/extensions/intellij/build/reports/tests
+
+      # Upload the Kover report to CodeCov
+      # - name: Upload Code Coverage Report
+      #   uses: codecov/codecov-action@v4
+      #   with:
+      #     files: ${{ github.workspace }}/build/reports/kover/report.xml
+
+  # Run Qodana inspections and provide report
+  inspectCode:
+    if: false
+    name: Inspect code
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
+    steps:
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          large-packages: false
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Run Qodana inspections
+      - name: Qodana - Code Inspection
+        uses: JetBrains/qodana-action@v2024.1.5
+        with:
+          cache-default-branch-only: true
+
+  # Run plugin structure verification along with IntelliJ Plugin Verifier
+  verify:
+    if: false
+    name: Verify plugin
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      # Free GitHub Actions Environment Disk Space
+      - name: Maximize Build Space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          large-packages: false
+
+      # Check out current repository
+      - name: Fetch Sources
+        uses: actions/checkout@v4
+
+      # Set up Java environment for the next steps
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: 17
+
+      # Setup Gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-home-cache-cleanup: true
+
+      # Cache Plugin Verifier IDEs
+      - name: Setup Plugin Verifier IDEs Cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ needs.build.outputs.pluginVerifierHomeDir }}/ides
+          key: plugin-verifier-${{ hashFiles('build/listProductsReleases.txt') }}
+
+      # Run Verify Plugin task and IntelliJ Plugin Verifier tool
+      - name: Run Plugin Verification tasks
+        run: ./gradlew runPluginVerifier -Dplugin.verifier.home.dir=${{ needs.build.outputs.pluginVerifierHomeDir }}
+
+      # Collect Plugin Verifier Result
+      - name: Collect Plugin Verifier Result
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: pluginVerifier-result
+          path: ${{ github.workspace }}/build/reports/pluginVerifier
+
+  upload-release:
+    if: false
+    name: Upload Release
+    needs:
+      - build
+      - test-binaries
+      - test
+    runs-on: ubuntu-latest
+    steps:
+      # # Update Unreleased section with the current release note
+      # - name: Patch Changelog
+      #   if: ${{ steps.properties.outputs.changelog != '' }}
+      #   env:
+      #     CHANGELOG: ${{ steps.properties.outputs.changelog }}
+      #   run: |
+      #     ./gradlew patchChangelog --release-note="$CHANGELOG"
+
+      - name: Download the plugin
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.filename }}
+          path: ./build/distributions/
 
       # Upload artifact as a release asset
-      - name: Upload Release Asset
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+      # - name: Upload Release Asset
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
       # Publish the plugin to JetBrains Marketplace
       - name: Publish Plugin

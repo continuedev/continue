@@ -292,8 +292,8 @@ export default class DocsService {
       status: "indexing",
     };
 
-    // Clear old index if re-indexing.
-    if (reIndex) {
+    // Delete indexed docs if re-indexing
+    if (reIndex && await this.has(startUrl.toString())) {
       console.log("Deleting old embeddings");
       await this.delete(startUrl);
     }
@@ -724,12 +724,13 @@ export default class DocsService {
       await this.isJetBrainsAndPreIndexedDocsProvider();
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
-      this.ide.errorPopup(
-        "The 'transformers.js' embeddings provider currently cannot be used to index " +
-          "documentation in JetBrains. To enable documentation indexing, you can use " +
-          "any of the other providers described in the docs: " +
-          "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
-      );
+      // A bit noisy for teams users whom have no choice if their admin is the one who didn't setup an embeddingsProvider
+      // this.ide.errorPopup(
+      //   "The 'transformers.js' embeddings provider currently cannot be used to index " +
+      //     "documentation in JetBrains. To enable documentation indexing, you can use " +
+      //     "any of the other providers described in the docs: " +
+      //     "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+      // );
 
       this.globalContext.update(
         "curEmbeddingsProviderId",

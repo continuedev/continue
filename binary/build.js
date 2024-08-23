@@ -162,6 +162,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     "../core/vendor/tree-sitter.wasm",
     "../core/llm/llamaTokenizerWorkerPool.mjs",
     "../core/llm/llamaTokenizer.mjs",
+    "../core/llm/tiktokenWorkerPool.mjs",
   ];
   for (const f of filesToCopy) {
     fs.copyFileSync(
@@ -237,9 +238,20 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     }.tar.gz`;
     execCmdSync(`curl -L -o ${targetDir}/build.tar.gz ${downloadUrl}`);
     execCmdSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
-    fs.copyFileSync(
-      `${targetDir}/build/Release/node_sqlite3.node`,
-      `${targetDir}/node_sqlite3.node`,
+
+    // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
+    fs.writeFileSync(
+      `${targetDir}/package.json`,
+      JSON.stringify(
+        {
+          name: "binary",
+          version: "1.0.0",
+          author: "Continue Dev, Inc",
+          license: "Apache-2.0",
+        },
+        undefined,
+        2,
+      ),
     );
 
     // Copy to build directory for testing
@@ -247,7 +259,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       const [platform, arch] = target.split("-");
       if (platform === currentPlatform && arch === currentArch) {
         fs.copyFileSync(
-          `${targetDir}/node_sqlite3.node`,
+          `${targetDir}/build/Release/node_sqlite3.node`,
           `build/node_sqlite3.node`,
         );
       }
@@ -257,10 +269,6 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     }
 
     fs.unlinkSync(`${targetDir}/build.tar.gz`);
-    fs.rmSync(`${targetDir}/build`, {
-      recursive: true,
-      force: true,
-    });
 
     // Download and unzip prebuilt esbuild binary for the target
     console.log(`[info] Downloading esbuild for ${target}...`);
@@ -299,9 +307,18 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       `${targetDir}/continue-binary${exe}`,
       `${targetDir}/esbuild${exe}`,
       `${targetDir}/index.node`, // @lancedb
-      `${targetDir}/node_sqlite3.node`,
+      "package.json", // Informs of where to look for node_sqlite3.node https://www.npmjs.com/package/bindings#:~:text=The%20searching%20for,file%20is%20found
+      `${targetDir}/build/Release/node_sqlite3.node`,
     );
   }
+
+  // Note that this doesn't verify they actually made it into the binary, just that they were in the expected folder before it was built
+  pathsToVerify.push("out/index.js");
+  pathsToVerify.push("out/llamaTokenizerWorkerPool.mjs");
+  pathsToVerify.push("out/tiktokenWorkerPool.mjs");
+  pathsToVerify.push("out/xhr-sync-worker.js");
+  pathsToVerify.push("out/tree-sitter.wasm");
+
   validateFilesPresent(pathsToVerify);
 
   console.log("[info] Done!");

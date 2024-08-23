@@ -344,19 +344,23 @@ export interface LLMOptions {
   apiVersion?: string;
   apiType?: string;
 
-  // GCP Options
+  // AWS options
+  profile?: string;
+  modelArn?: string;
+
+  // AWS and GCP Options
   region?: string;
+
+  // GCP Options
   projectId?: string;
   capabilities?: ModelCapability;
 
-  // WatsonX options
+  // IBM watsonx options
   watsonxUrl?: string;
-  watsonxApiKey?: string;
-  watsonxZenApiKeyBase64?: string; // Required if using watsonx software with ZenApiKey auth
-  watsonxUsername?: string;
-  watsonxPassword?: string;
+  watsonxCreds?: string;
   watsonxProjectId?: string;
   watsonxStopToken?: string;
+  watsonxApiVersion?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -590,6 +594,7 @@ type ModelProvider =
   | "ollama"
   | "huggingface-tgi"
   | "huggingface-inference-api"
+  | "kindo"
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"
@@ -598,6 +603,7 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "bedrockimport"
   | "sagemaker"
   | "deepinfra"
   | "flowise"
@@ -892,6 +898,11 @@ interface ExperimentalConfig {
    * function and class declarations.
    */
   quickActions?: QuickActionConfig[];
+  
+  /**
+   * Automatically read LLM chat responses aloud using system TTS models
+   */
+  readResponseTTS?: boolean;
 }
 
 interface AnalyticsConfig {

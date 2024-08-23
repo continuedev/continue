@@ -11,5 +11,6 @@ export function setupCoreLogging() {
   console.log = logger;
   console.error = logger;
   console.warn = logger;
+  console.debug = logger;
   console.log("[info] Starting Continue core...");
 }

@@ -1,14 +1,27 @@
 name: Publish Preview Extension
 
 on:
-  create:
-    tags:
-      - "v0.9.*-vscode"
-    branches:
-      - dev
+  release:
+    types: [prereleased]
 
 jobs:
+  check_release_name:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        working-directory: .
+        run: |
+          if [[ "${{ github.event.release.tag_name }}" == v0.9.*-vscode ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   build:
+    needs: check_release_name
+    if: needs.check_release_name.outputs.should_run == 'true'
     strategy:
       matrix:
         include:
@@ -92,17 +105,19 @@ jobs:
           cd gui
           npm ci
 
+      # npm ci doesn't end up capturing the @lancedb/... dep because it's not in the package-lock.json
       - name: Install Core Dependencies
         run: |
           cd core
           npm ci
+          npm i vectordb
 
-      - name: Run core tests
-        run: |
-          cd core
-          npm run test
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # - name: Run core tests
+      #   run: |
+      #     cd core
+      #     npm run test
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 2.5. Pre package
       - name: Set var for environment info

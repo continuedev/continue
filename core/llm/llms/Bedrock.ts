@@ -14,18 +14,23 @@ import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 
 class Bedrock extends BaseLLM {
-  private static PROFILE_NAME: string = "bedrock";
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    contextLength: 200_000,
+    contextLength: 200_000
   };
+  profile?: string | undefined;
 
   constructor(options: LLMOptions) {
     super(options);
     if (!options.apiBase) {
       this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
+    }
+    if (options.profile) {
+      this.profile = options.profile;
+    } else {
+      this.profile = "bedrock";
     }
   }
 
@@ -124,11 +129,11 @@ class Bedrock extends BaseLLM {
   private async _getCredentials() {
     try {
       return await fromIni({
-        profile: Bedrock.PROFILE_NAME,
+        profile: this.profile,
       })();
     } catch (e) {
       console.warn(
-        `AWS profile with name ${Bedrock.PROFILE_NAME} not found in ~/.aws/credentials, using default profile`,
+        `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
       );
       return await fromIni()();
     }

@@ -1,6 +1,5 @@
-import { encodingForModel as _encodingForModel } from "js-tiktoken";
+import path from "path";
 import workerpool from "workerpool";
-import * as path from "path";
 
 export interface AsyncEncoder {
   encode(text: string): Promise<number[]>;

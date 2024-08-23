@@ -10,6 +10,7 @@ import {
 import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider.js";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
 import { Telemetry } from "../../util/posthog.js";
+import { TTS } from "../../util/tts.js";
 import { loadFullConfigNode } from "../load.js";
 
 export default async function doLoadConfig(
@@ -48,8 +49,11 @@ export default async function doLoadConfig(
   await Telemetry.setup(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
-    ideInfo.extensionVersion,
+    ideInfo,
   );
+
+  // TODO: pass config to pre-load non-system TTS models
+  await TTS.setup();
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
