@@ -22,7 +22,7 @@ import {
 import { Telemetry } from "../../util/posthog";
 import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider";
 import { Article, chunkArticle, pageToArticle } from "./article";
-import { crawl } from "./crawl";
+import DocsCrawler from "./DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {
   downloadFromS3,
@@ -172,7 +172,7 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const { startUrl } = siteIndexingConfig;
+    const { startUrl, rootUrl } = siteIndexingConfig;
     const embeddingsProvider = await this.getEmbeddingsProvider();
 
     if (this.docsIndexingQueue.has(startUrl)) {
@@ -202,8 +202,10 @@ export default class DocsService {
     let processedPages = 0;
     let maxKnownPages = 1;
 
+    const docsCrawler = new DocsCrawler(new URL(startUrl));
+
     // Crawl pages and retrieve info as articles
-    for await (const page of crawl(new URL(startUrl))) {
+    for await (const page of docsCrawler.crawl()) {
       processedPages++;
 
       const article = pageToArticle(page);

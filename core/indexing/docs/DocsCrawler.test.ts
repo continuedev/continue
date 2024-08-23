@@ -1,4 +1,4 @@
-import { crawl, PageData } from "./crawl";
+import DocsCrawler, { type PageData } from "./DocsCrawler";
 import preIndexedDocs from "./preIndexedDocs";
 
 // Temporary workaround until we have better caching of Chromium
@@ -15,8 +15,11 @@ describe.skip("crawl", () => {
     let crawlResults: PageData[];
 
     beforeAll(async () => {
+      const docsCrawler = new DocsCrawler(new URL(repoUrl));
+
       crawlResults = [];
-      for await (const page of crawl(new URL(repoUrl))) {
+
+      for await (const page of docsCrawler.crawl()) {
         crawlResults.push(page);
       }
     }, TIMEOUT);
@@ -65,8 +68,12 @@ describe.skip("crawl", () => {
 
         for (const site of TEST_SITES) {
           const crawlResults: PageData[] = [];
+          const docsCrawler = new DocsCrawler(
+            new URL(site),
+            NUM_PAGES_TO_CRAWL,
+          );
 
-          for await (const page of crawl(new URL(site), NUM_PAGES_TO_CRAWL)) {
+          for await (const page of docsCrawler.crawl()) {
             crawlResults.push(page);
           }
 
@@ -94,7 +101,9 @@ describe.skip("crawl", () => {
           let pageFound = false;
 
           try {
-            for await (const page of crawl(new URL(url), 1)) {
+            const docsCrawler = new DocsCrawler(new URL(url), 1);
+
+            for await (const page of docsCrawler.crawl()) {
               if (page.url === url) {
                 pageFound = true;
                 break;
