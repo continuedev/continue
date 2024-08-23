@@ -191,8 +191,14 @@
         "group": "Continue"
       },
       {
-        "command": "continue.toggleTabAutocompleteEnabled",
-        "category": "Continue",
+        "command": "pearai.openPearAiWelcome",
+        "category": "PearAI",
+        "title": "Open Welcome page for PearAI",
+        "group": "PearAI"
+      },
+      {
+        "command": "pearai.toggleTabAutocompleteEnabled",
+        "category": "PearAI",
         "title": "Toggle Autocomplete Enabled",
         "group": "Continue"
       },
