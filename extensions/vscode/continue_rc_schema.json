@@ -2692,6 +2692,11 @@
                 }
               }
             },
+            "readResponseTTS": {
+              "type": "boolean",
+              "default": true,
+              "description": "Automatically read LLM chat responses aloud using system TTS models"
+            },
             "promptPath": {
               "type": "string"
             },
