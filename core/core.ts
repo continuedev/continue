@@ -28,6 +28,7 @@ import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
 import { streamDiffLines } from "./util/verticalEdit";
+import DocsCrawler from "./indexing/docs/DocsCrawler";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -167,6 +168,12 @@ export class Core {
       (e) => {},
       (..._) => Promise.resolve([]),
     );
+
+    try {
+      DocsCrawler.verifyOrInstallChromium();
+    } catch (err) {
+      console.debug(`Failed to install Chromium: ${err}`);
+    }
 
     const on = this.messenger.on.bind(this.messenger);
 

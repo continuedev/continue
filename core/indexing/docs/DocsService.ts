@@ -1,8 +1,8 @@
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import lancedb, { Connection } from "vectordb";
-import { ConfigHandler } from "../../config/ConfigHandler.js";
-import DocsContextProvider from "../../context/providers/DocsContextProvider.js";
+import { ConfigHandler } from "../../config/ConfigHandler";
+import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import {
   Chunk,
   ContinueConfig,
@@ -10,27 +10,27 @@ import {
   IDE,
   IndexingProgressUpdate,
   SiteIndexingConfig,
-} from "../../index.js";
-import { FromCoreProtocol, ToCoreProtocol } from "../../protocol/index.js";
-import { GlobalContext } from "../../util/GlobalContext.js";
-import { IMessenger } from "../../util/messenger.js";
+} from "../..";
+import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
+import { GlobalContext } from "../../util/GlobalContext";
+import { IMessenger } from "../../util/messenger";
 import {
   editConfigJson,
   getDocsSqlitePath,
   getLanceDbPath,
-} from "../../util/paths.js";
-import { Telemetry } from "../../util/posthog.js";
-import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider.js";
-import { Article, chunkArticle, pageToArticle } from "./article.js";
-import { crawlPage } from "./crawl.js";
-import { runLanceMigrations, runSqliteMigrations } from "./migrations.js";
+} from "../../util/paths";
+import { Telemetry } from "../../util/posthog";
+import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider";
+import { Article, chunkArticle, pageToArticle } from "./article";
+import DocsCrawler from "./DocsCrawler";
+import { runLanceMigrations, runSqliteMigrations } from "./migrations";
 import {
   downloadFromS3,
   getS3Filename,
   S3Buckets,
   SiteIndexingResults,
-} from "./preIndexed.js";
-import preIndexedDocs from "./preIndexedDocs.js";
+} from "./preIndexed";
+import preIndexedDocs from "./preIndexedDocs";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -112,8 +112,8 @@ export default class DocsService {
   }
 
   /*
-   * Currently, we generate and host embeddings for pre-indexed docs using transformers.js.
-   * However, we don't ship transformers.js with the JetBrains extension.
+   * Currently, we generate and host embeddings for pre-indexed docs using transformers.
+   * However, we don't ship transformers with the JetBrains extension.
    * So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.
    */
   async canUsePreindexedDocs() {
@@ -202,11 +202,10 @@ export default class DocsService {
     let processedPages = 0;
     let maxKnownPages = 1;
 
+    const docsCrawler = new DocsCrawler(new URL(startUrl));
+
     // Crawl pages and retrieve info as articles
-    for await (const page of crawlPage(
-      new URL(startUrl),
-      siteIndexingConfig.maxDepth,
-    )) {
+    for await (const page of docsCrawler.crawl()) {
       processedPages++;
 
       const article = pageToArticle(page);
@@ -278,6 +277,8 @@ export default class DocsService {
         desc: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
         status: "failed",
       };
+
+      this.docsIndexingQueue.delete(startUrl);
 
       return;
     }
@@ -521,8 +522,9 @@ export default class DocsService {
   private async getLanceTableNameFromEmbeddingsProvider(
     isPreIndexedDoc: boolean,
   ) {
-    const embeddingsProvider =
-      await this.getEmbeddingsProvider(isPreIndexedDoc);
+    const embeddingsProvider = await this.getEmbeddingsProvider(
+      isPreIndexedDoc,
+    );
     const embeddingsProviderId = this.removeInvalidLanceTableNameChars(
       embeddingsProvider.id,
     );
