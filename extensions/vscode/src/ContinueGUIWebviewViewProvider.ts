@@ -1,19 +1,32 @@
 import type { FileEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import * as vscode from "vscode";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import {
+  CancellationToken,
+  ExtensionContext,
+  ExtensionMode,
+  OutputChannel,
+  StatusBarAlignment,
+  StatusBarItem,
+  Uri,
+  Webview,
+  WebviewPanel,
+  WebviewView,
+  WebviewViewProvider,
+  WebviewViewResolveContext,
+  window,
+  workspace,
+} from "vscode";
 
-export class ContinueGUIWebviewViewProvider
-  implements vscode.WebviewViewProvider
-{
-  public static readonly viewType = "continue.continueGUIView";
+export class ContinueGUIWebviewViewProvider implements WebviewViewProvider {
+  public static readonly viewType = "pearai.continueGUIView";
   public webviewProtocol: VsCodeWebviewProtocol;
 
   private updateDebugLogsStatus() {
-    const settings = vscode.workspace.getConfiguration("continue");
+    const settings = workspace.getConfiguration("pearai");
     this.enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
     if (this.enableDebugLogs) {
       this.outputChannel.show(true);
@@ -24,9 +37,9 @@ export class ContinueGUIWebviewViewProvider
 
   // Show or hide the output channel on enableDebugLogs
   private setupDebugLogsListener() {
-    vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('continue.enableDebugLogs')) {
-        const settings = vscode.workspace.getConfiguration("continue");
+    workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("pearai.enableDebugLogs")) {
+        const settings = workspace.getConfiguration("pearai");
         const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
         if (enableDebugLogs) {
           this.outputChannel.show(true);
@@ -36,26 +49,50 @@ export class ContinueGUIWebviewViewProvider
       }
     });
   }
+  public setLoginStatus(isLoggedIn: boolean) {
+    this.updateLoginStatusBar(isLoggedIn);
+  }
 
-  private async handleWebviewMessage(message: any) {
-  if (message.messageType === "log") {
-    const settings = vscode.workspace.getConfiguration("continue");
-    const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
+  private loginStatusBarItem: StatusBarItem | undefined;
 
-    if (message.level === "debug" && !enableDebugLogs) {
-      return; // Skip debug logs if enableDebugLogs is false
+  private updateLoginStatusBar(isLoggedIn: boolean) {
+    if (!this.loginStatusBarItem) {
+      this.loginStatusBarItem = window.createStatusBarItem(
+        StatusBarAlignment.Left,
+      );
+      this.loginStatusBarItem.command = "pearai.login";
     }
 
-    const timestamp = new Date().toISOString().split(".")[0];
-    const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${message.text}`;
-    this.outputChannel.appendLine(logMessage);
+    this.loginStatusBarItem.text = `$(${isLoggedIn ? "check" : "x"}) PearAI: ${
+      isLoggedIn ? "Logged In" : "Not Logged In"
+    }`;
+    this.loginStatusBarItem.tooltip = isLoggedIn
+      ? "Click to view account"
+      : "Click to log in";
+    this.loginStatusBarItem.show();
   }
-}
+
+  private async handleWebviewMessage(message: any) {
+    if (message.messageType === "log") {
+      const settings = workspace.getConfiguration("pearai");
+      const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
+
+      if (message.level === "debug" && !enableDebugLogs) {
+        return; // Skip debug logs if enableDebugLogs is false
+      }
+
+      const timestamp = new Date().toISOString().split(".")[0];
+      const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${
+        message.text
+      }`;
+      this.outputChannel.appendLine(logMessage);
+    }
+  }
 
   resolveWebviewView(
-    webviewView: vscode.WebviewView,
-    _context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken,
+    webviewView: WebviewView,
+    _context: WebviewViewResolveContext,
+    _token: CancellationToken,
   ): void | Thenable<void> {
     this._webview = webviewView.webview;
     this._webview.onDidReceiveMessage((message) =>
@@ -67,9 +104,9 @@ export class ContinueGUIWebviewViewProvider
     );
   }
 
-  private _webview?: vscode.Webview;
-  private _webviewView?: vscode.WebviewView;
-  private outputChannel: vscode.OutputChannel;
+  private _webview?: Webview;
+  private _webviewView?: WebviewView;
+  private outputChannel: OutputChannel;
   private enableDebugLogs: boolean;
 
   get isVisible() {
@@ -95,17 +132,16 @@ export class ContinueGUIWebviewViewProvider
     });
   }
 
-
   constructor(
     private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly windowId: string,
-    private readonly extensionContext: vscode.ExtensionContext,
+    private readonly extensionContext: ExtensionContext,
   ) {
-    this.outputChannel = vscode.window.createOutputChannel("Continue");
+    this.outputChannel = window.createOutputChannel("Continue");
     this.enableDebugLogs = false;
     this.updateDebugLogsStatus();
     this.setupDebugLogsListener();
-
+    this.setLoginStatus(false); // Initially set to not loggedin
     this.webviewProtocol = new VsCodeWebviewProtocol(
       (async () => {
         const configHandler = await this.configHandlerPromise;
@@ -115,8 +151,8 @@ export class ContinueGUIWebviewViewProvider
   }
 
   getSidebarContent(
-    context: vscode.ExtensionContext | undefined,
-    panel: vscode.WebviewPanel | vscode.WebviewView,
+    context: ExtensionContext | undefined,
+    panel: WebviewPanel | WebviewView,
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
     isFullScreen = false,
@@ -125,17 +161,17 @@ export class ContinueGUIWebviewViewProvider
     let scriptUri: string;
     let styleMainUri: string;
     const vscMediaUrl: string = panel.webview
-      .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui"))
+      .asWebviewUri(Uri.joinPath(extensionUri, "gui"))
       .toString();
 
     const inDevelopmentMode =
-      context?.extensionMode === vscode.ExtensionMode.Development;
+      context?.extensionMode === ExtensionMode.Development;
     if (!inDevelopmentMode) {
       scriptUri = panel.webview
-        .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui/assets/index.js"))
+        .asWebviewUri(Uri.joinPath(extensionUri, "gui/assets/index.js"))
         .toString();
       styleMainUri = panel.webview
-        .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui/assets/index.css"))
+        .asWebviewUri(Uri.joinPath(extensionUri, "gui/assets/index.css"))
         .toString();
     } else {
       scriptUri = "http://localhost:5173/src/main.tsx";
@@ -145,8 +181,8 @@ export class ContinueGUIWebviewViewProvider
     panel.webview.options = {
       enableScripts: true,
       localResourceRoots: [
-        vscode.Uri.joinPath(extensionUri, "gui"),
-        vscode.Uri.joinPath(extensionUri, "assets"),
+        Uri.joinPath(extensionUri, "gui"),
+        Uri.joinPath(extensionUri, "assets"),
       ],
       enableCommandUris: true,
       portMapping: [
@@ -160,7 +196,7 @@ export class ContinueGUIWebviewViewProvider
     const nonce = getNonce();
 
     const currentTheme = getTheme();
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("workbench.colorTheme")) {
         // Send new theme to GUI to update embedded Monaco themes
         this.webviewProtocol?.request("setTheme", { theme: getTheme() });
@@ -221,9 +257,7 @@ export class ContinueGUIWebviewViewProvider
         <script>window.fullColorTheme = ${JSON.stringify(currentTheme)}</script>
         <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
-          vscode.workspace.workspaceFolders?.map(
-            (folder) => folder.uri.fsPath,
-          ) || [],
+          workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) || [],
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
 
