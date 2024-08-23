@@ -128,6 +128,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
+  "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [
     undefined | { dir?: string; shouldClearIndexes?: boolean },
