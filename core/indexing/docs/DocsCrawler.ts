@@ -1,10 +1,11 @@
 import { Octokit } from "@octokit/rest";
-import { URL } from "node:url";
-import { getChromiumPath, getContinueUtilsPath } from "../../util/paths";
-import { Page } from "puppeteer";
-// @ts-ignore
-import PCR from "puppeteer-chromium-resolver";
 import * as fs from "fs";
+import { URL } from "node:url";
+import { Page } from "puppeteer";
+import { getChromiumPath, getContinueUtilsPath } from "../../util/paths";
+// @ts-ignore
+// @prettier-ignore
+import PCR from "puppeteer-chromium-resolver";
 
 export type PageData = {
   url: string;
@@ -15,7 +16,7 @@ export type PageData = {
 export default class DocsCrawler {
   LINK_GROUP_SIZE = 2; // Controls parallelization of crawler
   GITHUB_HOST = "github.com";
-  MAX_REQUESTS_PER_CRAWL = 1000;
+  static MAX_REQUESTS_PER_CRAWL = 1000;
   markdownRegex = new RegExp(/\.(md|mdx)$/);
   octokit = new Octokit({
     auth: undefined,
@@ -27,7 +28,7 @@ export default class DocsCrawler {
 
   constructor(
     private readonly startUrl: URL,
-    private readonly maxRequestsPerCrawl: number = this.MAX_REQUESTS_PER_CRAWL,
+    private readonly maxRequestsPerCrawl: number = DocsCrawler.MAX_REQUESTS_PER_CRAWL,
   ) {}
 
   static verifyOrInstallChromium() {
@@ -131,7 +132,6 @@ export default class DocsCrawler {
       url.hash = "";
       return url;
     } catch (err) {
-      console.debug(`Failed to create URL: ${err}`);
       return null;
     }
   }
@@ -192,7 +192,6 @@ export default class DocsCrawler {
     }
 
     if (visitedLinks.has(curUrl.toString())) {
-      console.warn("Already visited, skipping: ", curUrl.toString());
       return;
     }
 
