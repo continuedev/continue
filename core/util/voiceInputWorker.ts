@@ -14,43 +14,49 @@ export class WhisperPipeline {
 
   static async getInstance() {
     if (WhisperPipeline.instance === null) {
-      // TODO: enable user to set custom models in configuration then download + cache them in the background as necessary
-      // if(config.model !== "base...") {
-      //   modelDir = "~/.continue/models/whisper/..."
-      // }
-
       // TODO: add gpu support; either through transformers.js, WASM, whisper.cpp, onnxruntime, etc
 
       // Configure transformersjs to use locally cached model
       env.allowLocalModels = true;
       env.allowRemoteModels = false;
-      env.localModelPath = path.join(
-        typeof __dirname === "undefined"
-          ? // @ts-ignore
-            path.dirname(new URL(import.meta.url).pathname)
-          : __dirname,
-        "..",
-        "models",
-      );
 
-      WhisperPipeline.instance = await pipeline(
-        "automatic-speech-recognition",
-        config.model,
-        {
-          quantized: true,
-          // eslint-disable-next-line @typescript-eslint/naming-convention
-          progress_callback: (p: any) => {
-            if (
-              p.status === "ready" &&
-              p.task === "automatic-speech-recognition"
-            ) {
-              parentPort?.postMessage({
-                type: "whisperReady",
-              });
-            }
+      // allow the user to specify a custom directory to load whisper from
+      if (config.whisperDirPath) {
+        env.localModelPath = config.whisperDirPath;
+      } else {
+        env.localModelPath = path.join(
+          typeof __dirname === "undefined"
+            ? // @ts-ignore
+              path.dirname(new URL(import.meta.url).pathname)
+            : __dirname,
+          "..",
+          "models",
+        );
+      }
+
+      try {
+        WhisperPipeline.instance = await pipeline(
+          "automatic-speech-recognition",
+          config.model,
+          {
+            quantized: config.quantized ?? true,
+            // eslint-disable-next-line @typescript-eslint/naming-convention
+            progress_callback: (p: any) => {
+              if (
+                p.status === "ready" &&
+                p.task === "automatic-speech-recognition"
+              ) {
+                parentPort?.postMessage({
+                  type: "whisperReady",
+                });
+              }
+            },
           },
-        },
-      );
+        );
+      } catch (e) {
+        console.error("Unable to setup whisper", e);
+        console.error("Whisper config during error", config);
+      }
     }
 
     return WhisperPipeline.instance;
@@ -58,7 +64,7 @@ export class WhisperPipeline {
 }
 
 class VoiceInputWorker {
-  static whisper: AutomaticSpeechRecognitionPipeline;
+  static whisper: AutomaticSpeechRecognitionPipeline | null;
 
   static async setup() {
     VoiceInputWorker.whisper = await WhisperPipeline.getInstance();

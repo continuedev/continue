@@ -88,7 +88,6 @@ export class VoiceInput {
   // More robust input detection and debugging
   private static setupInputDevice(formatOnly: boolean = false) {
     console.log("Setting up FFMpeg audio input device and format...");
-
     switch (VoiceInput.os) {
       case "win32":
         VoiceInput.inputFormat = "dshow";
@@ -363,12 +362,20 @@ export class VoiceInput {
     VoiceInput.whisperWorker = new Worker(
       path.resolve(__dirname, "voiceInputWorker.js"),
       {
-        workerData: {
-          model: "whisper-tiny.en", // TODO: allow user to choose different models (ex: "distil-small.en")
-        },
+        workerData: config?.whisperDirPath // only use a custom config when a path is provided
+          ? {
+              model: config.whisperModel,
+              quantized: config.useQuantized,
+              modelPath: config.whisperDirPath, // absolute path to custom whisper model
+            }
+          : {
+              model: "whisper-tiny.en",
+              quantized: true,
+            },
       },
     );
 
+    // TODO: handle errors in loading whisper + custom whisper config (with fallback)
     VoiceInput.whisperWorker.on("message", (message) => {
       if (message.type === "newSpeechFromText") {
         console.log("Transcribed speech:", message.data);
@@ -378,6 +385,7 @@ export class VoiceInput {
         isProcessing = false;
       } else if (message.type === "whisperReady") {
         // Let the UI know we're ready to begin processing speech input
+        console.log("Whisper worker successfully started");
         VoiceInput.whisperIsLoaded = true;
         VoiceInput.messenger?.send("voiceInputReady", true);
       }

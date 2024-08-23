@@ -897,6 +897,9 @@ interface AnalyticsConfig {
 }
 
 export interface VoiceInputConfig {
+  whisperModel: string | undefined;
+  useQuantized: boolean = false;
+  whisperDirPath: string | undefined;
   inputDevice: string | undefined;
   inputFormat: string | undefined;
 }
