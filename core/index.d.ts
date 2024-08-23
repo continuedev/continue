@@ -344,8 +344,14 @@ export interface LLMOptions {
   apiVersion?: string;
   apiType?: string;
 
-  // GCP Options
+  // AWS options
+  profile?: string;
+  modelArn?: string;
+
+  // AWS and GCP Options
   region?: string;
+
+  // GCP Options
   projectId?: string;
   capabilities?: ModelCapability;
 
@@ -597,6 +603,7 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "bedrockimport"
   | "sagemaker"
   | "deepinfra"
   | "flowise"
