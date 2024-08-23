@@ -27,7 +27,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
-import { verifyOrInstallChromium } from "./indexing/docs/crawlSite";
+import { verifyOrInstallChromium } from "./indexing/docs/crawl";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>

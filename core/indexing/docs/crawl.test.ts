@@ -1,4 +1,4 @@
-import { crawlSite, PageData } from "./crawlSite";
+import { crawl, PageData } from "./crawl";
 import preIndexedDocs from "./preIndexedDocs";
 
 // Temporary workaround until we have better caching of Chromium
@@ -7,7 +7,7 @@ const TIMEOUT = 1_000_000;
 
 // Skipped until we have a better way to cache Chromium installs
 // between tests and in CI
-describe.skip("crawlSite", () => {
+describe.skip("crawl", () => {
   describe("GitHub repositories", () => {
     const repoUrl =
       "https://github.com/Patrick-Erichsen/test-github-repo-for-crawling";
@@ -16,7 +16,7 @@ describe.skip("crawlSite", () => {
 
     beforeAll(async () => {
       crawlResults = [];
-      for await (const page of crawlSite(repoUrl)) {
+      for await (const page of crawl(new URL(repoUrl))) {
         crawlResults.push(page);
       }
     }, TIMEOUT);
@@ -66,7 +66,7 @@ describe.skip("crawlSite", () => {
         for (const site of TEST_SITES) {
           const crawlResults: PageData[] = [];
 
-          for await (const page of crawlSite(site, NUM_PAGES_TO_CRAWL)) {
+          for await (const page of crawl(new URL(site), NUM_PAGES_TO_CRAWL)) {
             crawlResults.push(page);
           }
 
@@ -94,7 +94,7 @@ describe.skip("crawlSite", () => {
           let pageFound = false;
 
           try {
-            for await (const page of crawlSite(url, 1)) {
+            for await (const page of crawl(new URL(url), 1)) {
               if (page.url === url) {
                 pageFound = true;
                 break;
