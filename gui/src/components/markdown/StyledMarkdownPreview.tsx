@@ -124,7 +124,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
       {
         // languages: {},
-        aliases: { javascript: "terraform" }, // TODO: test
       } as Options,
     ],
     rehypeReactOptions: {

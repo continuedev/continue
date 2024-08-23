@@ -172,7 +172,7 @@ export default class DocsService {
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const { startUrl, rootUrl } = siteIndexingConfig;
+    const { startUrl } = siteIndexingConfig;
     const embeddingsProvider = await this.getEmbeddingsProvider();
 
     if (this.docsIndexingQueue.has(startUrl)) {
@@ -725,7 +725,7 @@ export default class DocsService {
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
       this.ide.errorPopup(
-        "The 'transformers' embeddings provider currently cannot be used to index " +
+        "The 'transformers.js' embeddings provider currently cannot be used to index " +
           "documentation in JetBrains. To enable documentation indexing, you can use " +
           "any of the other providers described in the docs: " +
           "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
