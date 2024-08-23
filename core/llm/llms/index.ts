@@ -22,6 +22,7 @@ import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
+import Kindo from "./Kindo";
 import LMStudio from "./LMStudio";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
@@ -49,6 +50,7 @@ const LLMs = [
   Together,
   HuggingFaceTGI,
   HuggingFaceInferenceAPI,
+  Kindo,
   LlamaCpp,
   OpenAI,
   LMStudio,

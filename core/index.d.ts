@@ -588,6 +588,7 @@ type ModelProvider =
   | "ollama"
   | "huggingface-tgi"
   | "huggingface-inference-api"
+  | "kindo"
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"

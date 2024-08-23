@@ -13,7 +13,10 @@
       "../../out/tree-sitter-wasms/*",
       "../../node_modules/win-ca/lib/crypt32-ia32.node",
       "../../node_modules/win-ca/lib/crypt32-x64.node",
-      "../../node_modules/win-ca/lib/roots.exe"
+      "../../node_modules/win-ca/lib/roots.exe",
+      "../../out/llamaTokenizer.mjs",
+      "../../out/llamaTokenizerWorkerPool.mjs",
+      "../../out/tiktokenWorkerPool.mjs"
     ],
     "targets": [
       "node18-win-x64"

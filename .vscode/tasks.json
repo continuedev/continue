@@ -164,6 +164,13 @@
       "options": {
         "cwd": "docs"
       }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "problemMatcher": []
     }
   ]
 }

@@ -4,8 +4,8 @@ import * as YAML from "yaml";
 import type { IDE, SlashCommand } from "..";
 import { walkDir } from "../indexing/walkDir";
 import { stripImages } from "../llm/images";
-import { getBasename } from "../util/index";
 import { renderTemplatedString } from "../promptFiles/renderTemplatedString";
+import { getBasename } from "../util/index";
 
 export const DEFAULT_PROMPTS_FOLDER = ".prompts";
 
