@@ -6,6 +6,7 @@ import {
 } from "../../index.js";
 import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
+import { streamResponse } from "../stream.js";
 const watsonxConfig = {
   accessToken: {
     expiration: 0,
@@ -19,14 +20,14 @@ class WatsonX extends BaseLLM {
     super(options);
   }
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
+    
     if (
-      this.watsonxUrl !== null &&
-      this.watsonxUrl!.includes("cloud.ibm.com")
+      this.watsonxUrl?.includes("cloud.ibm.com")
     ) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
-          `https://iam.cloud.ibm.com/identity/token?apikey=${this.watsonxApiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
+          `https://iam.cloud.ibm.com/identity/token?apikey=${this.watsonxCreds}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
           {
             method: "POST",
             headers: {
@@ -43,17 +44,16 @@ class WatsonX extends BaseLLM {
     } else {
       // watsonx Software
       if (
-        this.watsonxZenApiKeyBase64 &&
-        this.watsonxZenApiKeyBase64 !== "YOUR_WATSONX_ZENAPIKEY"
+        !this.watsonxCreds?.includes(":")
       ) {
-        // Using ZenApiKey auth
-        return {
-          token: this.watsonxZenApiKeyBase64,
-          expiration: -1,
-        };
+    // Using ZenApiKey auth
+    return {
+      token: this.watsonxCreds ?? "",
+      expiration: -1,
+    };
       } else {
         // Using username/password auth
-
+        const userPass = this.watsonxCreds?.split(":");
         const wxToken = await (
           await fetch(`${this.watsonxUrl}/icp4d-api/v1/authorize`, {
             method: "POST",
@@ -62,8 +62,8 @@ class WatsonX extends BaseLLM {
               Accept: "application/json",
             },
             body: JSON.stringify({
-              username: this.watsonxUsername,
-              password: this.watsonxPassword,
+              username: userPass[0],
+              password: userPass[1],
             }),
           })
         ).json();
@@ -185,9 +185,9 @@ class WatsonX extends BaseLLM {
 
     const stopToken =
       this.watsonxStopToken ??
-      (options.model.includes("granite") ? "<|im_end|>" : undefined);
-    var streamResponse = await fetch(
-      `${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`,
+      (options.model?.includes("granite") ? "<|im_end|>" : undefined);
+    var response = await this.fetch(
+      `${this.watsonxUrl}/ml/v1/text/generation_stream?version=${this.watsonxApiVersion}`,
       {
         method: "POST",
         headers: {
@@ -207,30 +207,22 @@ class WatsonX extends BaseLLM {
             repetition_penalty: 1,
           },
           model_id: options.model,
-          project_id: this.watsonxProjectId,
+          project_id: this.watsonxProjectId
         }),
       },
     );
 
-    if (!streamResponse.ok || streamResponse.body === null) {
+    if (!response.ok || response.body === null) {
       throw new Error(
         "Something went wrong. No response received, check your connection",
       );
     } else {
-      const reader = streamResponse.body.getReader();
-      while (true) {
-        const chunk = await reader.read();
-        if (chunk.done) {
-          break;
-        }
+      for await (const value of streamResponse(response)) {
 
-        // Decode the stream
-        const textResponseMsg = new TextDecoder().decode(chunk.value);
-        const lines = textResponseMsg.split(/\r?\n/);
-
+        const lines = value.split("\n");
         let generatedChunk = "";
         let generatedTextIndex = undefined;
-        lines.forEach((el) => {
+        lines.forEach((el: string) => {
           // console.log(`${el}`);
           if (el.startsWith("id:")) {
             generatedTextIndex = parseInt(el.replace(/^id:\s+/, ""));

@@ -349,14 +349,12 @@ export interface LLMOptions {
   projectId?: string;
   capabilities?: ModelCapability;
 
-  // WatsonX options
+  // IBM watsonx options
   watsonxUrl?: string;
-  watsonxApiKey?: string;
-  watsonxZenApiKeyBase64?: string; // Required if using watsonx software with ZenApiKey auth
-  watsonxUsername?: string;
-  watsonxPassword?: string;
+  watsonxCreds?: string;
   watsonxProjectId?: string;
   watsonxStopToken?: string;
+  watsonxApiVersion?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
