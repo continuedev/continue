@@ -365,7 +365,7 @@ export class VoiceInput {
         workerData: config?.whisperDirPath // only use a custom config when a path is provided
           ? {
               model: config.whisperModel,
-              quantized: config.useQuantized,
+              quantized: config.useQuantized ?? false,
               modelPath: config.whisperDirPath, // absolute path to custom whisper model
             }
           : {
