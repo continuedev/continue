@@ -91,7 +91,7 @@ export class VoiceInput {
     switch (VoiceInput.os) {
       case "win32":
         VoiceInput.inputFormat = "dshow";
-        VoiceInput.inputDevice = ":audio";
+        // Windows doesn't have a default
         break;
       case "darwin":
         VoiceInput.inputFormat = "avfoundation";
@@ -99,7 +99,7 @@ export class VoiceInput {
         break;
       case "linux":
         VoiceInput.inputFormat = "alsa";
-        VoiceInput.inputDevice = "default";
+        VoiceInput.inputDevice = "hw:0";
         break;
       default:
         VoiceInput.inputFormat = "avfoundation";
@@ -110,28 +110,50 @@ export class VoiceInput {
     exec(
       `${ffmpegPath.path} -list_devices true -f ${VoiceInput.inputFormat} -i dummy`,
       (error, stdout, stderr) => {
-        // Match FFmpeg's audio devices list
-        const audioDeviceList: string | undefined = stderr
-          .match(/(?<=\] )[a-zA-Z0-9]+ audio devices:?[\s\S]*?(?=\n\w|$)/)
-          ?.pop()
-          ?.replace(/\[.* @[^\]]+\] /g, "");
-
-        if(audioDeviceList) {
-          console.log(audioDeviceList);
-        } else {
-          console.log(`No audio device list was found for input format: ${VoiceInput.inputFormat}`);
+        // Extract FFmpeg's devices list
+        const fullDeviceList: string | undefined = stderr.match(/(?<=\[.*@.*\] ).*(?=\n|$)/g)?.join("\n");
+        
+        if(!fullDeviceList) {
+          console.warn("No ffmpeg devices found");
+          return;
         }
 
-        // Get the first device from the list
-        const firstDevice: string | undefined =
-          audioDeviceList?.split("\n")[1]?.trim()?.replace(/\"/g,"") ?? undefined;
+        // Print the output for debug purposes
+        console.log(fullDeviceList);
 
-        if (firstDevice) {
-          const deviceName = firstDevice;
-          console.log(`Found FFmpeg Audio Input device: "${deviceName}" for Input format: ${VoiceInput.inputFormat}`);
-        } else {
-          VoiceInput.inputDevice = null;
-          console.log(`No FFmpeg audio input device was found for input format: ${VoiceInput.inputFormat}.`);
+        // Get the first device; dshow has a different output format
+        if(VoiceInput.inputFormat === "dshow") {
+          const dshowMatch = stderr.match(/(?<=\] )".*?\(audio\)[\s\S]*?(?=\n|$)/)?.pop();
+
+          // For Windows we must explicitly set this as our audio input device
+          if (dshowMatch) {
+            const firstDevice: string | null = dshowMatch.match(/"(.*?)"/)?.pop() ?? null;
+
+            console.log(`Found FFmpeg Audio Input device: "${firstDevice}" for Input format: ${VoiceInput.inputFormat}`);
+            VoiceInput.inputDevice = firstDevice;
+          }
+        } else if(VoiceInput.inputFormat === "avfoundation") {
+          // Get audio device list specific to avfoundation
+          let audioDeviceList: string | undefined = stderr
+            .match(/(?<=\] )[a-zA-Z0-9]+ audio devices:?[\s\S]*?(?=\n\w|$)/)
+            ?.pop()
+            ?.replace(/\[.* @[^\]]+\] /g, "");
+
+          const firstDevice: string | null =
+            audioDeviceList?.split("\n")[1]?.trim()?.replace(/\"/g,"") ?? null;
+
+          if (firstDevice) {
+            console.log(`Found FFmpeg Audio Input device: "${firstDevice}" for Input format: ${VoiceInput.inputFormat}`);
+          } else {
+            VoiceInput.inputDevice = null;
+          }
+        } else if(VoiceInput.inputFormat === "alsa") {
+          // TODO: linux / alsa device detection
+        }
+
+
+        if(!VoiceInput.inputDevice) {
+          console.warn("No ffmpeg audio device found for input format: ${VoiceInput.inputFormat}");
         }
       },
     );
