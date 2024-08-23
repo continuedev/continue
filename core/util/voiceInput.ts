@@ -2,6 +2,7 @@ import os from "node:os";
 import path from "path";
 import { Writable } from "node:stream";
 import { Worker } from "node:worker_threads";
+import { exec } from "child_process";
 import type { IMessenger } from "./messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import fs from "fs";
@@ -59,8 +60,11 @@ export class VoiceInput {
   static os: string | undefined = undefined;
   static messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
 
-  static vad: NonRealTimeVAD;
   static command: ffmpeg.FfmpegCommand | undefined = undefined;
+  static inputDevice: string | null = null;
+  static inputFormat: string | null = null;
+
+  static vad: NonRealTimeVAD;
 
   static whisperIsLoaded: boolean = false;
   static whisperWorker: Worker;
@@ -80,36 +84,73 @@ export class VoiceInput {
     VoiceInput.messenger.request("setVoiceInputIsActive", false);
   }
 
+  // More robust input detection and debugging
+  private static setupInputDevice() {
+    console.log("Setting up FFMpeg audio input device and format...");
+
+    switch (VoiceInput.os) {
+      case "win32":
+        VoiceInput.inputFormat = "dshow";
+        VoiceInput.inputDevice = ":audio";
+        break;
+      case "darwin":
+        VoiceInput.inputFormat = "avfoundation";
+        VoiceInput.inputDevice = ":0";
+        break;
+      case "linux":
+        VoiceInput.inputFormat = "alsa";
+        VoiceInput.inputDevice = "default";
+        break;
+      default:
+        VoiceInput.inputFormat = "avfoundation";
+        VoiceInput.inputDevice = ":0";
+    }
+
+    // Debug output all audio input devices
+    exec(
+      `${ffmpegPath.path} -list_devices true -f ${VoiceInput.inputFormat} -i dummy`,
+      (error, stdout, stderr) => {
+        // Match FFmpeg's audio devices list
+        const audioDeviceList: string | undefined = stderr
+          .match(/(?<=\] )[a-zA-Z0-9]+ audio devices:?[\s\S]*?(?=\n\w|$)/)
+          ?.pop()
+          ?.replace(/\[.* @[^\]]+\] /g, "");
+
+        if(audioDeviceList) {
+          console.log(audioDeviceList);
+        } else {
+          console.log(`No audio device list was found for input format: ${VoiceInput.inputFormat}`);
+        }
+
+        // Get the first device from the list
+        const firstDevice: string | undefined =
+          audioDeviceList?.split("\n")[1]?.trim()?.replace(/\"/g,"") ?? undefined;
+
+        if (firstDevice) {
+          const deviceName = firstDevice;
+          console.log(`Found FFmpeg Audio Input device: "${deviceName}" for Input format: ${VoiceInput.inputFormat}`);
+        } else {
+          VoiceInput.inputDevice = null;
+          console.log(`No FFmpeg audio input device was found for input format: ${VoiceInput.inputFormat}.`);
+        }
+      },
+    );
+  }
+
   private static captureAudio() {
     // Return if we're already processing audio
     if (VoiceInput.command) {
       return;
     }
 
-    let audioInput: string;
-    let inputFormat: string;
-
-    switch (VoiceInput.os) {
-      case "win32":
-        audioInput = "audio=Microphone";
-        inputFormat = "dshow";
-        break;
-      case "darwin":
-        audioInput = ":0";
-        inputFormat = "avfoundation";
-        break;
-      case "linux":
-        audioInput = "default";
-        inputFormat = "alsa";
-        break;
-      default:
-        audioInput = ":0";
-        inputFormat = "avfoundation";
+    if (!VoiceInput.inputDevice || !VoiceInput.inputFormat) {
+      console.warn("ffmpeg input device and format are not set");
+      return;
     }
 
     VoiceInput.command = ffmpeg()
-      .input(audioInput)
-      .inputFormat(inputFormat)
+      .input(VoiceInput.inputDevice)
+      .inputFormat(VoiceInput.inputFormat)
       .audioFrequency(sampleRate)
       .audioChannels(channels)
       .format("f32le")
@@ -246,6 +287,7 @@ export class VoiceInput {
 
   static async setup() {
     VoiceInput.os = os.platform();
+    VoiceInput.setupInputDevice();
 
     // Update silero-vad's default configuration to reduce the minSpeechFrames & increase the pre-speech padding
     const vadOptions: Partial<NonRealTimeVADOptions> = {
