@@ -155,7 +155,10 @@ class PearAIServer extends BaseLLM {
   ): AsyncGenerator<string> {
     options.stream = true;
 
-    await this._checkAndUpdateCredentials();
+    let user_logged_in = await this._checkAndUpdateCredentials();
+    if (!user_logged_in) {
+      return null
+    }
 
     const endpoint = `${SERVER_URL}/server_fim`;
     const resp = await this.fetch(endpoint, {
@@ -196,7 +199,7 @@ class PearAIServer extends BaseLLM {
     return true;
   }
 
-  private async _checkAndUpdateCredentials(): Promise<void> {
+  private async _checkAndUpdateCredentials(): Promise<boolean> {
     try {
       let creds = undefined;
 
@@ -208,6 +211,9 @@ class PearAIServer extends BaseLLM {
         if (creds && creds.accessToken && creds.refreshToken) {
           this.pearAIAccessToken = creds.accessToken;
           this.pearAIRefreshToken = creds.refreshToken;
+        }
+        else {
+          return false;
         }
       }
 
@@ -243,6 +249,7 @@ class PearAIServer extends BaseLLM {
       console.error("Error checking token expiration:", error);
       // Handle the error (e.g., redirect to login page)
     }
+    return true
   }
 }
 
