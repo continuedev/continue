@@ -5,6 +5,7 @@ import { Worker } from "node:worker_threads";
 import { exec } from "child_process";
 import type { IMessenger } from "./messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
+import type { VoiceInputConfig } from "../index.d.ts";
 import fs from "fs";
 
 import ffmpeg from "fluent-ffmpeg";
@@ -85,7 +86,7 @@ export class VoiceInput {
   }
 
   // More robust input detection and debugging
-  private static setupInputDevice() {
+  private static setupInputDevice(formatOnly: boolean = false) {
     console.log("Setting up FFMpeg audio input device and format...");
 
     switch (VoiceInput.os) {
@@ -95,14 +96,27 @@ export class VoiceInput {
         break;
       case "darwin":
         VoiceInput.inputFormat = "avfoundation";
-        VoiceInput.inputDevice = ":0";
         break;
       case "linux":
         VoiceInput.inputFormat = "alsa";
-        VoiceInput.inputDevice = "hw:0";
         break;
       default:
         VoiceInput.inputFormat = "avfoundation";
+    }
+
+    if (formatOnly) {
+      return;
+    }
+
+    // Set default input devices for OS's that have them
+    switch (VoiceInput.os) {
+      case "darwin":
+        VoiceInput.inputDevice = ":0";
+        break;
+      case "linux":
+        VoiceInput.inputDevice = "hw:0";
+        break;
+      default:
         VoiceInput.inputDevice = ":0";
     }
 
@@ -111,9 +125,11 @@ export class VoiceInput {
       `${ffmpegPath.path} -list_devices true -f ${VoiceInput.inputFormat} -i dummy`,
       (error, stdout, stderr) => {
         // Extract FFmpeg's devices list
-        const fullDeviceList: string | undefined = stderr.match(/(?<=\[.*@.*\] ).*(?=\n|$)/g)?.join("\n");
-        
-        if(!fullDeviceList) {
+        const fullDeviceList: string | undefined = stderr
+          .match(/(?<=\[.*@.*\] ).*(?=\n|$)/g)
+          ?.join("\n");
+
+        if (!fullDeviceList) {
           console.warn("No ffmpeg devices found");
           return;
         }
@@ -122,17 +138,22 @@ export class VoiceInput {
         console.log(fullDeviceList);
 
         // Get the first device; dshow has a different output format
-        if(VoiceInput.inputFormat === "dshow") {
-          const dshowMatch = stderr.match(/(?<=\] )".*?\(audio\)[\s\S]*?(?=\n|$)/)?.pop();
+        if (VoiceInput.inputFormat === "dshow") {
+          const dshowMatch = stderr
+            .match(/(?<=\] )".*?\(audio\)[\s\S]*?(?=\n|$)/)
+            ?.pop();
 
           // For Windows we must explicitly set this as our audio input device
           if (dshowMatch) {
-            const firstDevice: string | null = dshowMatch.match(/"(.*?)"/)?.pop() ?? null;
+            const firstDevice: string | null =
+              dshowMatch.match(/"(.*?)"/)?.pop() ?? null;
 
-            console.log(`Found FFmpeg Audio Input device: "${firstDevice}" for Input format: ${VoiceInput.inputFormat}`);
+            console.log(
+              `Found FFmpeg Audio Input device: "${firstDevice}" for Input format: ${VoiceInput.inputFormat}`,
+            );
             VoiceInput.inputDevice = firstDevice;
           }
-        } else if(VoiceInput.inputFormat === "avfoundation") {
+        } else if (VoiceInput.inputFormat === "avfoundation") {
           // Get audio device list specific to avfoundation
           let audioDeviceList: string | undefined = stderr
             .match(/(?<=\] )[a-zA-Z0-9]+ audio devices:?[\s\S]*?(?=\n\w|$)/)
@@ -140,20 +161,23 @@ export class VoiceInput {
             ?.replace(/\[.* @[^\]]+\] /g, "");
 
           const firstDevice: string | null =
-            audioDeviceList?.split("\n")[1]?.trim()?.replace(/\"/g,"") ?? null;
+            audioDeviceList?.split("\n")[1]?.trim()?.replace(/\"/g, "") ?? null;
 
           if (firstDevice) {
-            console.log(`Found FFmpeg Audio Input device: "${firstDevice}" for Input format: ${VoiceInput.inputFormat}`);
+            console.log(
+              `Found FFmpeg Audio Input device: "${firstDevice}" for Input format: ${VoiceInput.inputFormat}`,
+            );
           } else {
             VoiceInput.inputDevice = null;
           }
-        } else if(VoiceInput.inputFormat === "alsa") {
+        } else if (VoiceInput.inputFormat === "alsa") {
           // TODO: linux / alsa device detection
         }
 
-
-        if(!VoiceInput.inputDevice) {
-          console.warn("No ffmpeg audio device found for input format: ${VoiceInput.inputFormat}");
+        if (!VoiceInput.inputDevice) {
+          console.warn(
+            "No ffmpeg audio device found for input format: ${VoiceInput.inputFormat}",
+          );
         }
       },
     );
@@ -195,7 +219,7 @@ export class VoiceInput {
       })
       .on("end", () => {
         console.log("FFmpeg process ended");
-        
+
         VoiceInput.command = undefined;
         // TODO: parse(...) final bit of audio
         audioData = new Float32Array();
@@ -273,15 +297,15 @@ export class VoiceInput {
       await VoiceInput.parse(localCopy);
       lastMark = audioData.length / sampleRate;
 
-      timeSinceSpeech = (audioData.length / sampleRate) - voiceEnd;
+      timeSinceSpeech = audioData.length / sampleRate - voiceEnd;
     } else {
       // The user has finished speaking; parse one last time and commit it as final to the frontend
       await VoiceInput.parse(localCopy, true);
-      
+
       timeSinceSpeech += speechWindow;
 
       // Check if we've passed our noVoiceInputTimeout
-      if(timeSinceSpeech >= noVoiceInputTimeout) {
+      if (timeSinceSpeech >= noVoiceInputTimeout) {
         VoiceInput.stop();
         return;
       }
@@ -307,9 +331,25 @@ export class VoiceInput {
     });
   }
 
-  static async setup() {
+  static async setup(config: VoiceInputConfig | undefined = undefined) {
     VoiceInput.os = os.platform();
-    VoiceInput.setupInputDevice();
+
+    // Allow user to manually provide ffmpeg device configuration
+    if (config?.inputDevice) {
+      VoiceInput.inputDevice = config.inputDevice;
+
+      if (config?.inputFormat) {
+        VoiceInput.inputFormat = config.inputFormat;
+      } else {
+        VoiceInput.setupInputDevice(true);
+      }
+
+      console.log(
+        `Custom ffmpeg input configured by user – Audio Input device: "${VoiceInput.inputDevice}" for Input format: ${VoiceInput.inputFormat}`,
+      );
+    } else {
+      VoiceInput.setupInputDevice();
+    }
 
     // Update silero-vad's default configuration to reduce the minSpeechFrames & increase the pre-speech padding
     const vadOptions: Partial<NonRealTimeVADOptions> = {

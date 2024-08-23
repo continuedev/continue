@@ -896,6 +896,11 @@ interface AnalyticsConfig {
   clientKey?: string;
 }
 
+export interface VoiceInputConfig {
+  inputDevice: string | undefined;
+  inputFormat: string | undefined;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
@@ -992,6 +997,7 @@ export interface ContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  voiceInput?: VoiceInputConfig;
 }
 
 export interface BrowserSerializedContinueConfig {

@@ -52,8 +52,7 @@ export default async function doLoadConfig(
     ideInfo.extensionVersion,
   );
 
-  // TODO: Pass user's preferred whisper model
-  await VoiceInput.setup();
+  await VoiceInput.setup(newConfig.voiceInput);
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
