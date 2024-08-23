@@ -183,18 +183,20 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
 
-      const snippetToDelete = await db.get(
+      const snippets = await db.all(
         "SELECT id FROM code_snippets WHERE path = ? AND cacheKey = ?",
         [del.path, del.cacheKey],
       );
 
-      await db.run("DELETE FROM code_snippets WHERE id = ?", [
-        snippetToDelete.id,
-      ]);
+      if (snippets) {
+        const snippetIds = snippets.map((row) => row.id).join(",");
 
-      await db.run("DELETE FROM code_snippets_tags WHERE snippetId = ?", [
-        snippetToDelete.id,
-      ]);
+        await db.run(`DELETE FROM code_snippets WHERE id IN (${snippetIds})`);
+
+        await db.run(
+          `DELETE FROM code_snippets_tags WHERE snippetId IN (${snippetIds})`,
+        );
+      }
 
       markComplete([del], IndexResultType.Delete);
     }
@@ -202,36 +204,61 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     // Add tag
     for (let i = 0; i < results.addTag.length; i++) {
       const addTag = results.addTag[i];
+      let snippets: (ChunkWithoutID & { title: string })[] = [];
+      try {
+        snippets = await this.getSnippetsInFile(
+          addTag.path,
+          await this.ide.readFile(addTag.path),
+        );
+      } catch (e) {
+        // If can't parse, assume malformatted code
+        console.error(`Error parsing ${addTag.path}:`, e);
+      }
 
-      await db.run(
-        `
-        REPLACE INTO code_snippets_tags (tag, snippetId)
-        SELECT ?, (
-          SELECT id 
-          FROM code_snippets
-          WHERE cacheKey = ? AND path = ?
-        )
-        `,
-        [tagString, addTag.cacheKey, addTag.path],
-      );
+      for (const snippet of snippets) {
+        const { lastID } = await db.run(
+          "INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
+          [
+            addTag.path,
+            addTag.cacheKey,
+            snippet.content,
+            snippet.title,
+            snippet.startLine,
+            snippet.endLine,
+          ],
+        );
+        await db.run(
+          "INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
+          [lastID, tagString],
+        );
+      }
 
       markComplete([results.addTag[i]], IndexResultType.AddTag);
     }
 
     // Remove tag
     for (let i = 0; i < results.removeTag.length; i++) {
-      const item = results.removeTag[i];
-      await db.run(
-        `
-        DELETE FROM code_snippets_tags
-        WHERE tag = ?
-          AND snippetId IN (
-            SELECT id FROM code_snippets
-            WHERE cacheKey = ? AND path = ?
-          )
-      `,
-        [tagString, item.cacheKey, item.path],
+      const removeTag = results.removeTag[i];
+
+      const snippets = await db.get(
+        `SELECT id FROM code_snippets
+            WHERE cacheKey = ? AND path = ?`,
+        [removeTag.cacheKey, removeTag.path],
       );
+
+      if (snippets) {
+        const snippetIds = snippets.map((row: any) => row.id).join(",");
+
+        await db.run(
+          `
+          DELETE FROM code_snippets_tags
+          WHERE tag = ?
+            AND snippetId IN (${snippetIds})
+        `,
+          [tagString],
+        );
+      }
+
       markComplete([results.removeTag[i]], IndexResultType.RemoveTag);
     }
   }

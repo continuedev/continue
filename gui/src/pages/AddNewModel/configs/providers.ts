@@ -19,11 +19,6 @@ export interface InputDescriptor {
   required?: boolean;
   description?: string;
   [key: string]: any;
-  // the following are used only for Watsonx provider
-  // these attributes are used to determine whether the input is used in Api Authentication or Credentials section
-  isWatsonxAuthenticatedByApiKey?: boolean;
-  isWatsonxAuthenticatedByCredentials?: boolean;
-  isWatsonxAttribute?: boolean;
 }
 
 export interface ProviderInfo {
@@ -481,69 +476,57 @@ After it's up and running, you can start using Continue.`,
     ],
   },
   watsonx: {
-    title: "Watsonx",
+    title: "IBM watsonx",
     provider: "watsonx",
     refPage: "watsonX",
     description:
       "Explore foundation models from IBM and other third-parties depending on your use case.",
-    longDescription: `Watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.`,
+    longDescription: `**watsonx**, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.
+
+To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepone?context=wx) on watsonx SaaS, create your first project and setup an [API key](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key).`,
     collectInputFor: [
       {
         inputType: "text",
         key: "watsonxUrl",
-        label: "Watsonx URL",
-        placeholder: "http://<region>.dataplatform.cloud.ibm.com",
-        required: true,
-        isWatsonxAuthenticatedByApiKey: true,
-        isWatsonxAuthenticatedByCredentials: true,
-      },
-      {
-        inputType: "text",
-        key: "watsonxApiKey",
-        label: "Watsonx API Key",
-        placeholder: "Enter your API key",
-        required: true,
-        isWatsonxAuthenticatedByApiKey: true,
+        label: "watsonx URL",
+        placeholder: "e.g. http://us-south.dataplatform.cloud.ibm.com",
+        required: true
       },
       {
         inputType: "text",
         key: "watsonxProjectId",
-        label: "Watsonx Project Id",
-        placeholder: "Enter your project Id",
-        required: true,
-        isWatsonxAuthenticatedByApiKey: true,
-        isWatsonxAuthenticatedByCredentials: true,
+        label: "watsonx Project ID",
+        placeholder: "Enter your project ID",
+        required: true
       },
       {
         inputType: "text",
-        key: "watsonxUsername",
-        label: "Watsonx Username",
-        placeholder: "Enter your Username",
-        required: true,
-        isWatsonxAuthenticatedByCredentials: true,
+        key: "watsonxCreds",
+        label: "watsonx API key",
+        placeholder: "Enter your API key (SaaS) or ZenApiKey (Software)",
+        required: true
       },
       {
         inputType: "text",
-        key: "watsonxPassword",
-        label: "Watsonx Password",
-        placeholder: "Enter your password",
-        required: true,
-        isWatsonxAuthenticatedByCredentials: true,
+        key: "watsonxApiVersion",
+        label: "watsonx API version",
+        placeholder: "Enter the API Version",
+        defaultValue: "2023-05-29"
       },
-      {
-        inputType: "text",
-        key: "title",
-        label: "Model name",
-        placeholder: "Granite 13B Chat v2",
-        isWatsonxAttribute: true,
-      },
-      {
-        inputType: "text",
-        key: "model",
-        label: "Model Id",
-        placeholder: "ibm/granite-13b-chat-v2",
-        isWatsonxAttribute: true,
-      },
+      // {
+      //   inputType: "text",
+      //   key: "title",
+      //   label: "Model name",
+      //   placeholder: "Granite 13B Chat v2",
+      //   isWatsonxAttribute: true,
+      // },
+      // {
+      //   inputType: "text",
+      //   key: "model",
+      //   label: "Model Id",
+      //   placeholder: "ibm/granite-13b-chat-v2",
+      //   isWatsonxAttribute: true,
+      // },
       {
         inputType: "text",
         key: "watsonxStopToken",
@@ -553,7 +536,7 @@ After it's up and running, you can start using Continue.`,
 
       ...completionParamsInputsConfigs,
     ],
-    icon: "Watsonx.png",
+    icon: "watsonx.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.graniteCode,

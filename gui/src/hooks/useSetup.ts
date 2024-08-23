@@ -7,6 +7,7 @@ import { setVscMachineId } from "../redux/slices/configSlice";
 import {
   addContextItemsAtIndex,
   setConfig,
+  setTTSActive,
   setInactive,
   setSelectedProfileId,
 } from "../redux/slices/stateSlice";
@@ -79,6 +80,10 @@ function useSetup(dispatch: Dispatch<any>) {
   // IDE event listeners
   useWebviewListener("setInactive", async () => {
     dispatch(setInactive());
+  });
+
+  useWebviewListener("setTTSActive", async (status) => {
+    dispatch(setTTSActive(status));
   });
 
   useWebviewListener("setColors", async (colors) => {
