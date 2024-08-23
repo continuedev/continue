@@ -9,20 +9,27 @@ import {
 import { SERVER_URL } from "../../util/parameters.js";
 import { Telemetry } from "../../util/posthog.js";
 import { BaseLLM } from "../index.js";
-import { streamResponse, streamJSON } from "../stream.js";
+import { streamSse, streamResponse, streamJSON } from "../stream.js";
 import { checkTokens } from "../../db/token.js";
 import { stripImages } from "../images.js";
+
 
 class PearAIServer extends BaseLLM {
   getCredentials: (() => Promise<PearAuth | undefined>) | undefined = undefined;
   setCredentials: (auth: PearAuth) => Promise<void> = async () => {};
+  pearAIAccessToken: string | undefined = undefined;
+  pearAIRefreshToken: string | undefined = undefined;
+
 
   static providerName: ModelProvider = "pearai_server";
   constructor(options: LLMOptions) {
     super(options);
+    this.pearAIAccessToken = undefined;
+    this.pearAIRefreshToken = undefined;
   }
 
   private async _getHeaders() {
+    await this._checkAndUpdateCredentials();
     return {
       "Content-Type": "application/json",
       ...(await getHeaders()),
@@ -116,7 +123,7 @@ class PearAIServer extends BaseLLM {
       method: "POST",
       headers: {
         ...(await this._getHeaders()),
-        Authorization: `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.pearAIAccessToken}`,
       },
       body: body,
     });
@@ -141,44 +148,87 @@ class PearAIServer extends BaseLLM {
     this._countTokens(completion, args.model, false);
   }
 
+  async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: CompletionOptions
+  ): AsyncGenerator<string> {
+    options.stream = true;
+
+    await this._checkAndUpdateCredentials();
+
+    const endpoint = `${SERVER_URL}/server_fim`;
+    const resp = await this.fetch(endpoint, {
+        method: "POST",
+        body: JSON.stringify({
+        model: options.model,
+          prefix,
+          suffix,
+        max_tokens: options.maxTokens,
+        temperature: options.temperature,
+        top_p: options.topP,
+        frequency_penalty: options.frequencyPenalty,
+        presence_penalty: options.presencePenalty,
+        stop: options.stop,
+        stream: true,
+        }),
+      headers: {
+        ...(await this._getHeaders()),
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Authorization: `Bearer ${this.pearAIAccessToken}`,
+      },
+    });
+    let completion = "";
+    for await (const chunk of streamSse(resp)) {
+      yield chunk.choices[0].delta.content;
+    }
+  this._countTokens(completion, options.model, false);
+  }
+
+
   async listModels(): Promise<string[]> {
     return [
       "pearai_model",
     ];
+  }
+  supportsFim(): boolean {
+    return true;
   }
 
   private async _checkAndUpdateCredentials(): Promise<void> {
     try {
       let creds = undefined;
 
-      if (this.getCredentials) {
+
+      if (this.getCredentials && this.pearAIAccessToken === undefined) {
         console.log("Attempting to get credentials...");
         creds = await this.getCredentials();
 
         if (creds && creds.accessToken && creds.refreshToken) {
-          this.apiKey = creds.accessToken;
-          this.refreshToken = creds.refreshToken;
+          this.pearAIAccessToken = creds.accessToken;
+          this.pearAIRefreshToken = creds.refreshToken;
         }
       }
 
-      const tokens = await checkTokens(this.apiKey, this.refreshToken);
+      const tokens = await checkTokens(this.pearAIAccessToken, this.pearAIRefreshToken);
 
-      if (tokens.accessToken !== this.apiKey || tokens.refreshToken !== this.refreshToken) {
-        if (tokens.accessToken !== this.apiKey) {
-          this.apiKey = tokens.accessToken;
+      if (tokens.accessToken !== this.pearAIAccessToken || tokens.refreshToken !== this.pearAIRefreshToken) {
+        if (tokens.accessToken !== this.pearAIAccessToken) {
+          this.pearAIAccessToken = tokens.accessToken;
           console.log(
             "PearAI access token changed from:",
-            this.apiKey,
+            this.pearAIAccessToken,
             "to:",
             tokens.accessToken,
           );
         }
 
-        if (tokens.refreshToken !== this.refreshToken) {
-          this.refreshToken = tokens.refreshToken;
+        if (tokens.refreshToken !== this.pearAIRefreshToken) {
+          this.pearAIRefreshToken = tokens.refreshToken;
           console.log(
             "PearAI refresh token changed from:",
-            this.refreshToken,
+            this.pearAIRefreshToken,
             "to:",
             tokens.refreshToken,
           );

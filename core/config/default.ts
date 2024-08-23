@@ -109,9 +109,9 @@ export const defaultConfig: SerializedContinueConfig = {
     },
   ],
   tabAutocompleteModel: {
-    title: "Starcoder2 3b",
+    title: "PearAI Autocomplete",
     provider: "pearai_server",
-    model: "starcoder2:3b",
+    model: "pearai_model",
   },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
