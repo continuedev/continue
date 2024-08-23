@@ -34,7 +34,7 @@ export class CodebaseIndexer {
    * - To limit memory usage for indexes that perform computations locally, e.g. FTS
    * - To make as few requests as possible to the embeddings providers
    */
-  filesPerBatch = 1000;
+  filesPerBatch = 500;
 
   // Note that we exclude certain Sqlite errors that we do not want to clear the indexes on,
   // e.g. a `SQLITE_BUSY` error.

@@ -16,6 +16,7 @@ class ContinueSettingsComponent: DumbAware {
     val userToken: JTextField = JTextField()
     val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
     val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable Continue for Teams Beta (requires restart)")
+    val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
 
     init {
         val constraints = GridBagConstraints()
@@ -42,6 +43,8 @@ class ContinueSettingsComponent: DumbAware {
         constraints.gridy++
         panel.add(enableContinueTeamsBeta, constraints)
         constraints.gridy++
+        panel.add(displayEditorTooltip, constraints)
+        constraints.gridy++
 
         // Add a "filler" component that takes up all remaining vertical space
         constraints.weighty = 1.0
@@ -65,6 +68,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var enableTabAutocomplete: Boolean = true
         var ghAuthToken: String? = null
         var enableContinueTeamsBeta: Boolean = false
+        var displayEditorTooltip: Boolean = true
     }
 
     var continueState: ContinueState = ContinueState()
@@ -105,8 +109,9 @@ class ContinueExtensionConfigurable : Configurable {
                 mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
                 mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
                 mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
-                mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta
-        return modified;
+                mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
+                mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip
+        return modified
     }
 
     override fun apply() {
@@ -116,6 +121,7 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.userToken = mySettingsComponent?.userToken?.text
         settings.continueState.enableTabAutocomplete = mySettingsComponent?.enableTabAutocomplete?.isSelected ?: false
         settings.continueState.enableContinueTeamsBeta = mySettingsComponent?.enableContinueTeamsBeta?.isSelected ?: false
+        settings.continueState.displayEditorTooltip = mySettingsComponent?.displayEditorTooltip?.isSelected ?: true
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC).settingsUpdated(settings.continueState)
     }
@@ -127,6 +133,7 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.userToken?.text = settings.continueState.userToken
         mySettingsComponent?.enableTabAutocomplete?.isSelected = settings.continueState.enableTabAutocomplete
         mySettingsComponent?.enableContinueTeamsBeta?.isSelected = settings.continueState.enableContinueTeamsBeta
+        mySettingsComponent?.displayEditorTooltip?.isSelected = settings.continueState.displayEditorTooltip
     }
 
     override fun disposeUIResources() {

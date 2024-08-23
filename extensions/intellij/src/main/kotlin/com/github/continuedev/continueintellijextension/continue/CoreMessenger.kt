@@ -238,7 +238,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 var err = process?.errorStream?.bufferedReader()?.readText()?.trim()
                 if (err != null) {
                     // There are often "⚡️Done in Xms" messages, and we want everything after the last one
-                    val delimiter = "⚡️Done in"
+                    val delimiter = "⚡ Done in"
                     val doneIndex = err.lastIndexOf(delimiter)
                     if (doneIndex != -1) {
                         err = err.substring(doneIndex + delimiter.length)
