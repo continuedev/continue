@@ -21,6 +21,7 @@ import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { updatedObj } from "../../util";
 import type { ProviderInfo } from "./configs/providers";
 import { providers } from "./configs/providers";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 
 const GridDiv = styled.div`
   display: grid;
@@ -73,6 +74,34 @@ function ConfigureProvider() {
       setModelInfo(providers[providerName]);
     }
   }, [providerName]);
+
+  // this runs when user successfully logins pearai
+  useWebviewListener(
+    "addPearAIModel",
+    async () => {
+      const pkg = modelInfo.packages[0];
+      const dimensionChoices =
+        pkg.dimensions?.map((d) => Object.keys(d.options)[0]) || [];
+      const model = {
+        ...pkg.params,
+        ...modelInfo.params,
+        ..._.merge(
+          {},
+          ...(pkg.dimensions?.map((dimension, i) => {
+            if (!dimensionChoices?.[i]) return {};
+            return {
+              ...dimension.options[dimensionChoices[i]],
+            };
+          }) || []),
+        ),
+        provider: modelInfo.provider,
+      };
+      ideMessenger.post("config/addModel", { model });
+      dispatch(setDefaultModel({ title: model.title, force: true }));
+      navigate("/");
+    },
+    [modelInfo, providerName],
+  );
 
   const handleContinue = () => {
     if (!modelInfo) return;
@@ -324,58 +353,6 @@ function ConfigureProvider() {
                   style={{ marginRight: "5px" }}
                 />
               </CustomModelButton>
-              <h3>3. Click To Complete </h3>
-              <GridDiv>
-                {modelInfo?.packages.map((pkg, idx) => (
-                  <ModelCard
-                    key={idx}
-                    disabled={disableModelCards()}
-                    title={"Add To Configuration"}
-                    description={""}
-                    tags={pkg.tags}
-                    dimensions={pkg.dimensions}
-                    onClick={(e, dimensionChoices) => {
-                      if (
-                        disableModelCards() &&
-                        enablecardsForApikey() &&
-                        enablecardsForCredentials()
-                      )
-                        return;
-                      let formParams: any = {};
-                      for (const d of modelInfo.collectInputFor || []) {
-                        const val = formMethods.watch(d.key);
-                        if (val === "" || val === undefined || val === null) {
-                          continue;
-                        }
-                        formParams = updatedObj(formParams, {
-                          [d.key]: d.inputType === "text" ? val : parseFloat(val),
-                        });
-                      }
-    
-                      const model = {
-                        ...pkg.params,
-                        ...modelInfo.params,
-                        ..._.merge(
-                          {},
-                          ...(pkg.dimensions?.map((dimension, i) => {
-                            if (!dimensionChoices?.[i]) return {};
-                            return {
-                              ...dimension.options[dimensionChoices[i]],
-                            };
-                          }) || []),
-                        ),
-                        ...formParams,
-                        provider: modelInfo.provider,
-                      };
-                      ideMessenger.post("config/addModel", { model });
-                      dispatch(
-                        setDefaultModel({ title: model.title, force: true }),
-                      );
-                      navigate("/");
-                    }}
-                  />
-                ))}
-              </GridDiv>
             </>
             ) : (
               <>
