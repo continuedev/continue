@@ -309,14 +309,14 @@
     ],
     "keybindings": [
       {
-        "command": "continue.focusContinueInput",
-        "mac": "cmd+l",
-        "key": "ctrl+l"
-      },
-      {
-        "command": "continue.focusContinueInputWithoutClear",
+        "command": "pearai.focusContinueInput",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
+      },
+      {
+        "command": "pearai.focusContinueInputWithoutClear",
+        "mac": "cmd+l",
+        "key": "ctrl+l"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
