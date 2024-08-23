@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import type { AutocompleteInput } from "../autocomplete/completionProvider.js";
-import { ProfileDescription } from "../config/ConfigHandler.js";
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -16,7 +15,7 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
-} from "../index.js";
+} from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;

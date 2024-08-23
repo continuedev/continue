@@ -75,7 +75,7 @@ export class InProcessMessenger<
     messageId?: string,
   ): ToProtocol[T][1] {
     const listener = this.myTypeListeners.get(messageType);
-    if (!listener) return;
+    if (!listener) {return;}
 
     const msg: Message = {
       messageType: messageType as string,

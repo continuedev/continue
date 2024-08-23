@@ -1,7 +1,6 @@
-import React, { memo, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
-import rehypeHighlight from "rehype-highlight";
+import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import styled from "styled-components";
@@ -12,11 +11,11 @@ import {
   vscEditorBackground,
   vscForeground,
 } from "..";
-import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import LinkableCode from "./LinkableCode";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import { common } from "lowlight";
 import "./katex.css";
 import "./markdown.css";
 
@@ -59,19 +58,9 @@ const StyledMarkdown = styled.div<{
   }
 
   background-color: ${vscBackground};
-  font-family:
-    var(--vscode-font-family),
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
-    "Helvetica Neue",
-    sans-serif;
+  font-family: var(--vscode-font-family), system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Open Sans", "Helvetica Neue", sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   padding-left: 8px;
   padding-right: 8px;
@@ -92,41 +81,19 @@ interface StyledMarkdownPreviewProps {
   scrollLocked?: boolean;
 }
 
-const FadeInWords: React.FC = (props: any) => {
-  const { children, ...otherProps } = props;
+const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
 
-  const active = useSelector((store: RootState) => store.state.active);
+const getLanuageFromClassName = (className: any): string | null => {
+  if (!className || typeof className !== "string") {
+    return null;
+  }
 
-  const [textWhenActiveStarted, setTextWhenActiveStarted] = useState(
-    props.children,
-  );
+  const language = className
+    .split(" ")
+    .find((word) => word.startsWith(HLJS_LANGUAGE_CLASSNAME_PREFIX))
+    ?.split("-")[1];
 
-  useEffect(() => {
-    if (active) {
-      setTextWhenActiveStarted(children);
-    }
-  }, [active]);
-
-  // Split the text into words
-  const words = children
-    .map((child) => {
-      if (typeof child === "string") {
-        return child.split(" ").map((word, index) => (
-          <span className="fade-in-span" key={index}>
-            {word}{" "}
-          </span>
-        ));
-      } else {
-        return <span className="fade-in-span">{child}</span>;
-      }
-    })
-    .flat();
-
-  return active && children !== textWhenActiveStarted ? (
-    <p {...otherProps}>{words}</p>
-  ) : (
-    <p>{children}</p>
-  );
+  return language;
 };
 
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
@@ -147,7 +114,18 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         };
       },
     ],
-    rehypePlugins: [rehypeHighlight as any, {}, rehypeKatex as any, {}],
+    rehypePlugins: [
+      rehypeKatex as any,
+      {},
+      rehypeHighlight as any,
+      // Note: An empty obj is the default behavior, but leaving this here for scaffolding to
+      // add unsupported languages in the future. We will need to install the `lowlight` package
+      // to use the `common` language set in addition to unsupported languages.
+      // https://github.com/highlightjs/highlight.js/blob/main/SUPPORTED_LANGUAGES.md
+      {
+        // languages: {},
+      } as Options,
+    ],
     rehypeReactOptions: {
       components: {
         a: ({ node, ...props }) => {
@@ -158,12 +136,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const language = preProps?.children?.[0]?.props?.className
-            ?.split(" ")
-            .find((word) => word.startsWith("language-"))
-            ?.split("-")[1];
+          const childrenClassName = preProps?.children?.[0]?.props?.className;
+
           return props.showCodeBorder ? (
-            <PreWithToolbar language={language}>
+            <PreWithToolbar
+              language={getLanuageFromClassName(childrenClassName)}
+            >
               <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
             </PreWithToolbar>
           ) : (
@@ -181,31 +159,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             <LinkableCode {...codeProps}>{codeProps.children}</LinkableCode>
           );
         },
-        //   pre: ({ node, ...preProps }) => {
-        //     const codeString =
-        //       preProps.children?.[0]?.props?.children?.[0].trim() || "";
-        //     const monacoEditor = (
-        //       <MonacoCodeBlock
-        //         showBorder={props.showCodeBorder}
-        //         language={
-        //           preProps.children?.[0]?.props?.className?.split("-")[1] ||
-        //           "typescript"
-        //         }
-        //         preProps={preProps}
-        //         codeString={codeString}
-        //       />
-        //     );
-        //     return props.showCodeBorder ? (
-        //       <PreWithToolbar copyvalue={codeString}>
-        //         <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
-        //       </PreWithToolbar>
-        //     ) : (
-        //       <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
-        //     );
-        //   },
-        // p: ({ node, ...props }) => {
-        //   return <FadeInWords {...props}></FadeInWords>;
-        // },
       },
     },
   });

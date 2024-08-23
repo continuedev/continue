@@ -1,4 +1,4 @@
-import { stopAtStopTokens } from "../../autocomplete/charStream.js";
+import { stopAtStopTokens } from "./charStream";
 
 describe("stopAtStopTokens", () => {
   async function* createMockStream(chunks: string[]): AsyncGenerator<string> {

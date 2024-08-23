@@ -91,6 +91,7 @@ export abstract class BaseLLM implements ILLM {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -143,6 +144,7 @@ export abstract class BaseLLM implements ILLM {
     this.systemMessage = options.systemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+    this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",

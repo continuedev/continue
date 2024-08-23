@@ -58,6 +58,7 @@ export interface ILLM extends LLMOptions {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   promptTemplates?: Record<string, PromptTemplate>;
@@ -321,6 +322,7 @@ export interface LLMOptions {
   uniqueId?: string;
   systemMessage?: string;
   contextLength?: number;
+  maxStopWords?: number;
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -608,7 +610,8 @@ type ModelProvider =
   | "azure"
   | "openai-aiohttp"
   | "msty"
-  | "watsonx";
+  | "watsonx"
+  | "openrouter";
 
 export type ModelName =
   | "AUTODETECT"
@@ -747,6 +750,7 @@ export interface ModelDescription {
   apiKey?: string;
   apiBase?: string;
   contextLength?: number;
+  maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;

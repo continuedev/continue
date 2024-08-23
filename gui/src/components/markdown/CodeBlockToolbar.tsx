@@ -72,8 +72,6 @@ function isTerminalCodeBlock(language: string | undefined, text: string) {
 
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-
-  const [copied, setCopied] = useState(false);
   const [applying, setApplying] = useState(false);
 
   return (
@@ -85,8 +83,8 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               isTerminalCodeBlock(props.language, props.text)
                 ? "Run in terminal"
                 : applying
-                  ? "Applying..."
-                  : "Apply to current file"
+                ? "Applying..."
+                : "Apply to current file"
             }
             disabled={applying}
             style={{ backgroundColor: vscEditorBackground }}

@@ -4,7 +4,7 @@ description: Troubleshooting while waiting for help during beta / alpha testing
 keywords: [reload, delete, manually, logs, server, console]
 ---
 
-The Continue VS Code extension is currently in beta, and the Intellij extension is in Alpha. If you are having trouble, please follow the steps below.
+The Continue VS Code extension is currently in beta, and the JetBrains extension is in Alpha. If you are having trouble, please follow the steps below.
 
 1. [Check the logs](#check-the-logs)
 2. [Try the latest pre-release](#download-the-latest-pre-release)

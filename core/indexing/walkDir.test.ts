@@ -1,12 +1,12 @@
 import path from "path";
-import { walkDir, WalkerOptions } from "../indexing/walkDir.js";
-import FileSystemIde from "../util/filesystem.js";
+import { walkDir, WalkerOptions } from "../indexing/walkDir";
+import FileSystemIde from "../util/filesystem";
 import {
-  addToTestDir,
+  TEST_DIR,
   setUpTestDir,
   tearDownTestDir,
-  TEST_DIR,
-} from "./testUtils/testDir.js";
+  addToTestDir,
+} from "../test/util/testDir";
 
 const ide = new FileSystemIde(TEST_DIR);
 
@@ -189,6 +189,22 @@ describe("walkDir", () => {
     ];
     addToTestDir(files);
     await expectPaths(["a.txt"], ["ignored_dir/b.txt", "ignored_dir/c/d.py"]);
+  });
+
+  test("gitignore in sub directory should only apply to subdirectory", async () => {
+    const files = [
+      [".gitignore", "abc"],
+      "a.txt",
+      "abc",
+      "xyz/",
+      ["xyz/.gitignore", "xyz"],
+      "xyz/b.txt",
+      "xyz/c/",
+      "xyz/c/d.py",
+      "xyz/xyz",
+    ];
+    addToTestDir(files);
+    await expectPaths(["a.txt", "xyz/b.txt", "xyz/c/d.py"], ["abc", "xyz/xyz"]);
   });
 
   test("should handle complex patterns in .gitignore", async () => {

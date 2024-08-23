@@ -61,7 +61,7 @@ class Ollama extends BaseLLM {
                   this.completionOptions.stop.push(JSON.parse(value));
                 } catch (e) {
                   console.warn(
-                    'Error parsing stop parameter value "{value}: ${e}',
+                    "Error parsing stop parameter value \"{value}: ${e}",
                   );
                 }
                 break;

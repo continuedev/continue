@@ -49,7 +49,7 @@ export default async function doLoadConfig(
   await Telemetry.setup(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
-    ideInfo.extensionVersion,
+    ideInfo,
   );
 
   await VoiceInput.setup(newConfig.voiceInput);

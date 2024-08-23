@@ -51,12 +51,12 @@ class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  reloadConfig(): Promise<ContinueConfig> {
+  async reloadConfig(): Promise<ContinueConfig> {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.profileLoader.doLoadConfig();
+    return await this.profileLoader.doLoadConfig();
   }
 
   async loadConfig(

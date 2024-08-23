@@ -2,14 +2,14 @@
 
 OpenRouter is a unified interface for commercial and open-source models, giving you access to the best models at the best prices. You can sign up [here](https://openrouter.ai/signup), create your API key on the [keys page](https://openrouter.ai/keys), and then choose a model from the [list of supported models](https://openrouter.ai/models).
 
-Change `~/.continue/config.json` to look like the following. Since OpenRouter is fully API compatible with OpenAI, it is recommended to stick with `"provider": "openai"`, even if they aren't necessarily the upstream provider.
+Change `~/.continue/config.json` to look like the following.
 
 ```json title="~/.continue/config.json"
 {
   "models": [
     {
       "title": "OpenRouter LLaMA 70 8B",
-      "provider": "openai",
+      "provider": "openrouter",
       "model": "meta-llama/llama-3-70b-instruct",
       "apiBase": "https://openrouter.ai/api/v1",
       "apiKey": "..."

@@ -24,6 +24,7 @@ const {
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
+  copyTokenizers,
 } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -103,6 +104,9 @@ async function package(target, os, arch, exe) {
   // Install and copy over native modules
   // *** onnxruntime-node ***
   await copyOnnxRuntimeFromNodeModules(target);
+
+  // copy llama tokenizers to out
+  copyTokenizers();
 
   // *** Install @lancedb binary ***
   const lancePackageToInstall = {
