@@ -28,41 +28,20 @@
 
 ## Easily understand code sections
 
-![understand](docs/static/img/understand.gif)
+![understand](docs/static/img/pearai-CMD+L2.gif)
 
 VS Code: `cmd+L` (MacOS) / `ctrl+L` (Windows)
 
-JetBrains: `cmd+J` (MacOS) / `ctrl+J` (Windows)
+### Refactor functions where you are coding 🛠️
 
-## Tab to autocomplete code suggestions
-
-![autocomplete](docs/static/img/autocomplete.gif)
-
-VS Code: `tab` (MacOS) / `tab` (Windows)
-
-JetBrains: `tab` (MacOS) / `tab` (Windows)
-
-## Refactor functions where you are coding
-
-![inline](docs/static/img/inline.gif)
+![refactor](docs/static/img/pearai-CMD+I.gif)
 
 VS Code: `cmd+I` (MacOS) / `ctrl+I` (Windows)
 
-JetBrains: `cmd+I` (MacOS) / `ctrl+I` (Windows)
+### Ask questions by mentioning a file 📚
 
-## Ask questions about your codebase
-
-![codebase](docs/static/img/codebase.gif)
-
-VS Code: `cmd+enter` (MacOS) / `ctrl+enter` (Windows)
-
-JetBrains: `cmd+enter` (MacOS) / `ctrl+enter` (Windows)
-
-## Quickly use documentation as context
-
-![docs](docs/static/img/docs.gif)
-
-VS Code: `@docs` (MacOS) / `@docs` (Windows)
+<!-- Specific width to match other gifs -->
+<img src="docs/static/img/pearai-@file.gif" alt="file" style="width: 1033px;">
 
 JetBrains: `@docs` (MacOS) / `@docs` (Windows)
 
