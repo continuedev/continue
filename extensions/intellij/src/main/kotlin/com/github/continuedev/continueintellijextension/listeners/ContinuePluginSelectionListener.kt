@@ -73,7 +73,7 @@ class ContinuePluginSelectionListener(
                 val line = startLine - 2
                 if (line > 0) {
                     // Get the text on line number "line"
-                    val text = document.getText(document.getLineStartOffset(line), document.getLineEndOffset(line))
+//                    val text = document.getText(document.getLineStartOffset(line), document.getLineEndOffset(line))
 
                     val pos = LogicalPosition(line, selectedText.split("\n")[0].length + 1)
                     val y: Int = editor.logicalPositionToXY(pos).y + editor.lineHeight
