@@ -121,7 +121,9 @@ const IndexingProgressBar = ({
   function onClick() {
     switch (indexingState.status) {
       case "failed":
-        if (indexingState.shouldClearIndexes) {
+        // For now, we don't show in JetBrains since the reindex command
+        // is not yet implemented
+        if (indexingState.shouldClearIndexes && !isJetBrains()) {
           dispatch(setShowDialog(true));
           dispatch(
             setDialogMessage(
@@ -131,9 +133,8 @@ const IndexingProgressBar = ({
                 text={
                   "Your index appears corrupted. We recommend clearing and rebuilding it, " +
                   "which may take time for large codebases.\n\n" +
-                  "Alternatively, you can close this and use the 'Continue: Force Codebase Re-Indexing' " +
-                  "command to attempt a faster rebuild without clearing data, though it may be " +
-                  "less reliable for persistent issues."
+                  "For a faster rebuild without clearing data, press 'Shift + Command + P' to open " +
+                  "the Command Palette, and type out 'Continue: Force Codebase Re-Indexing'"
                 }
                 onConfirm={() => {
                   posthog.capture("rebuild_index_clicked");

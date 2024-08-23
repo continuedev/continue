@@ -55,7 +55,7 @@ class SageMaker extends BaseLLM {
         let position;
         while ((position = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, position);
-          const data = JSON.parse(line.replace(/^data:/, ''));
+          const data = JSON.parse(line.replace(/^data:/, ""));
           if ("choices" in data) {
             yield data.choices[0].delta.content;
           }
@@ -94,7 +94,7 @@ class SageMaker extends BaseLLM {
         let position;
         while ((position = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, position);
-          const data = JSON.parse(line.replace(/^data:/, ''));
+          const data = JSON.parse(line.replace(/^data:/, ""));
           if ("choices" in data) {
             yield { role: "assistant", content: data.choices[0].delta.content };
           }
@@ -143,7 +143,7 @@ class MessageAPIToolkit implements SageMakerModelToolkit {
       let prompt = jinja.compile(this.sagemaker.completionOptions.chat_template).render(
         { messages: messages, add_generation_prompt: true },
         { autoEscape: false }
-      )
+      );
       const payload = {
         inputs: prompt,
         parameters: this.sagemaker.completionOptions,

@@ -42,7 +42,7 @@ const CHAT_ONLY_MODELS = [
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
 
-  protected maxStopWords: number | undefined = undefined;
+  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);
@@ -104,13 +104,13 @@ class OpenAI extends BaseLLM {
         this.maxStopWords !== undefined
           ? options.stop?.slice(0, this.maxStopWords)
           : url.host === "api.deepseek.com"
-          ? options.stop?.slice(0, 16)
-          : url.port === "1337" ||
-            url.host === "api.openai.com" ||
-            url.host === "api.groq.com" ||
-            this.apiType === "azure"
-          ? options.stop?.slice(0, 4)
-          : options.stop,
+            ? options.stop?.slice(0, 16)
+            : url.port === "1337" ||
+                url.host === "api.openai.com" ||
+                url.host === "api.groq.com" ||
+                this.apiType === "azure"
+              ? options.stop?.slice(0, 4)
+              : options.stop,
     };
 
     return finalOptions;

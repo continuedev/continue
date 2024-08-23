@@ -124,6 +124,11 @@ export class ReverseMessageIde {
       return this.ide.listFolders();
     });
 
+    this.on("getControlPlaneSessionInfo", async (msg) => {
+      // Not supported in testing
+      return undefined;
+    });
+
     this.on("getContinueDir", () => {
       return this.ide.getContinueDir();
     });

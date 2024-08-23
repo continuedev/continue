@@ -50,7 +50,8 @@ class Ollama extends BaseLLM {
             let value = parts[2];
             switch (key) {
               case "num_ctx":
-                this.contextLength = Number.parseInt(value);
+                this.contextLength =
+                  options.contextLength ?? Number.parseInt(value);
                 break;
               case "stop":
                 if (!this.completionOptions.stop) {
@@ -60,7 +61,7 @@ class Ollama extends BaseLLM {
                   this.completionOptions.stop.push(JSON.parse(value));
                 } catch (e) {
                   console.warn(
-                    'Error parsing stop parameter value "{value}: ${e}',
+                    "Error parsing stop parameter value \"{value}: ${e}",
                   );
                 }
                 break;

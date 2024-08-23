@@ -13,7 +13,7 @@ class Deepseek extends OpenAI {
     },
     useLegacyCompletionsEndpoint: false,
   };
-  protected maxStopWords: number | undefined = 16;
+  maxStopWords: number | undefined = 16;
 
   supportsFim(): boolean {
     return true;

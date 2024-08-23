@@ -23,13 +23,20 @@ import useHistory from "../hooks/useHistory";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { getFontSize } from "../util";
 
+const SearchBarContainer = styled.div`
+  display: flex;
+  max-width: 500px;
+  padding: 0 8px 0 8px;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: center;
+`;
+
 const SearchBar = styled.input`
   padding: 4px 8px;
   border-radius: ${defaultBorderRadius};
   border: 0.5px solid #888;
   outline: none;
-  width: 90vw;
-  max-width: 500px;
   margin: 8px auto;
   display: block;
   background-color: ${vscInputBackground};
@@ -60,14 +67,15 @@ const parseDate = (date: string): Date => {
 };
 
 const SectionHeader = styled.tr`
+  display: flex;
+  user-select: none;
   padding: 4px;
-  padding-left: 16px;
-  padding-right: 16px;
   background-color: ${vscInputBackground};
   width: 100%;
   font-weight: bold;
   text-align: center;
   align-items: center;
+  justify-content: center;
   margin: 0;
   position: sticky;
   height: 1.5em;
@@ -150,16 +158,19 @@ function TableRow({
           </div>
 
           <div style={{ color: "#9ca3af" }}>
-            {date.toLocaleString("en-US", {
-              year: "2-digit",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            })}
-            {" | "}
             {lastPartOfPath(session.workspaceDirectory || "")}
+            {!hovered && (
+              <span className="inline-block float-right">
+                {date.toLocaleString("en-US", {
+                  year: "2-digit",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}
+              </span>
+            )}
           </div>
         </TdDiv>
 
@@ -214,7 +225,8 @@ function History() {
     );
   };
 
-  const [filteringByWorkspace, setFilteringByWorkspace] = useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
   const stickyHistoryHeaderRef = React.useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(0);
 
@@ -247,8 +259,12 @@ function History() {
   }, []);
 
   useEffect(() => {
+    // When searchTerm is empty only show sessions from the current workspace
+    let filteringByWorkspace = searchTerm === "";
+
+    // When the searchTerm is wildcard (asterisk) then show ALL sessions, otherwise use minisearch to search for user input
     const sessionIds = minisearch
-      .search(searchTerm, {
+      .search(searchTerm === "*" ? "" : searchTerm, {
         fuzzy: 0.1,
       })
       .map((result) => result.id);
@@ -267,7 +283,11 @@ function History() {
         })
         // Filter by search term
         .filter((session) => {
-          return searchTerm === "" || sessionIds.includes(session.sessionId);
+          return (
+            searchTerm === "*" ||
+            filteringByWorkspace ||
+            sessionIds.includes(session.sessionId)
+          );
         })
         .sort(
           (a, b) =>
@@ -275,7 +295,7 @@ function History() {
             parseDate(a.dateCreated).getTime(),
         ),
     );
-  }, [filteringByWorkspace, sessions, searchTerm, minisearch]);
+  }, [sessions, searchTerm, minisearch]);
 
   useEffect(() => {
     setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
@@ -319,11 +339,34 @@ function History() {
       </div>
 
       <div>
-        <SearchBar
-          placeholder="Search past sessions"
-          type="text"
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
+        <SearchBarContainer className="space-x-2">
+          <SearchBar
+            className="flex-1 w-full"
+            ref={searchInputRef}
+            placeholder="Search past sessions"
+            type="text"
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <span
+            className="block text-center px-2 py-1.5 rounded-md w-12 mx-1 my-2 select-none cursor-pointer"
+            style={{
+              fontSize: "11px",
+              backgroundColor:
+                searchTerm !== "" ? vscInputBackground : vscBadgeBackground,
+            }}
+            onClick={() => {
+              if (searchInputRef.current.value === "") {
+                searchInputRef.current.value = "*";
+                setSearchTerm("*");
+              } else {
+                searchInputRef.current.value = "";
+                setSearchTerm("");
+              }
+            }}
+          >
+            {searchTerm === "" ? "Show All" : "Clear"}
+          </span>
+        </SearchBarContainer>
 
         {filteredAndSortedSessions.length === 0 && (
           <div className="text-center m-4">

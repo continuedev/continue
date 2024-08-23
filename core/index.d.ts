@@ -39,6 +39,7 @@ export interface IndexingProgressUpdate {
   desc: string;
   shouldClearIndexes?: boolean;
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  debugInfo?: string;
 }
 
 export type PromptTemplate =
@@ -57,6 +58,7 @@ export interface ILLM extends LLMOptions {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   promptTemplates?: Record<string, PromptTemplate>;
@@ -320,6 +322,7 @@ export interface LLMOptions {
   uniqueId?: string;
   systemMessage?: string;
   contextLength?: number;
+  maxStopWords?: number;
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -352,14 +355,12 @@ export interface LLMOptions {
   projectId?: string;
   capabilities?: ModelCapability;
 
-  // WatsonX options
+  // IBM watsonx options
   watsonxUrl?: string;
-  watsonxApiKey?: string;
-  watsonxZenApiKeyBase64?: string; // Required if using watsonx software with ZenApiKey auth
-  watsonxUsername?: string;
-  watsonxPassword?: string;
+  watsonxCreds?: string;
   watsonxProjectId?: string;
   watsonxStopToken?: string;
+  watsonxApiVersion?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -593,6 +594,7 @@ type ModelProvider =
   | "ollama"
   | "huggingface-tgi"
   | "huggingface-inference-api"
+  | "kindo"
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"
@@ -614,7 +616,8 @@ type ModelProvider =
   | "azure"
   | "openai-aiohttp"
   | "msty"
-  | "watsonx";
+  | "watsonx"
+  | "openrouter";
 
 export type ModelName =
   | "AUTODETECT"
@@ -753,6 +756,7 @@ export interface ModelDescription {
   apiKey?: string;
   apiBase?: string;
   contextLength?: number;
+  maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;

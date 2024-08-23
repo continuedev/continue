@@ -1,8 +1,8 @@
 import crypto from "node:crypto";
 import * as fs from "node:fs";
+import plimit from "p-limit";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
-import plimit from "p-limit";
 import { IndexTag, IndexingProgressUpdate } from "../index.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 import {
@@ -111,11 +111,6 @@ async function getSavedItemsForTag(
   );
   const rows = await stmt.all();
   return rows;
-}
-
-interface PathAndOptionalCacheKey {
-  path: string;
-  cacheKey?: string;
 }
 
 enum AddRemoveResultType {
@@ -396,7 +391,7 @@ export async function getComputeDeleteAddRemove(
     lastUpdated,
     async (items, resultType) => {
       // Update tag catalog
-      markComplete(items, resultType);
+      await markComplete(items, resultType);
 
       // Update the global cache
       const results: any = {
@@ -409,7 +404,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        async () => { },
+        async () => {},
         repoName,
       )) {
       }

@@ -1,15 +1,38 @@
-# Watsonx
+# IBM watsonx
 
-Watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.
+watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.
 
 ## Setup
 
-To access the Watsonx models, create an instance in the [IBM cloud](https://cloud.ibm.com) which supports watsonx studio. Then to create a project refer [this](https://www.ibm.com/docs/en/watsonx/saas?topic=projects-creating-project).
+Accessing watsonx models can be done either through watsonx SaaS on IBM Cloud or using a dedicated watsonx.ai Software instance.
 
-You can set it up in two different ways :
-1. **Using API** : Create Your IBM cloud API key by referring [this](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key).
-2. **Using Credentials** : Use your Username and Password to authenticate
+### watsonx.ai SaaS - IBM Cloud
 
+To get started with watsonx SaaS, visit the [registration page](https://dataplatform.cloud.ibm.com/registration/stepone?context=wx). If you do not have an existing IBM Cloud account, you can sign up for a free trial.
+
+To authenticate to watsonx.ai SaaS with Continue, you will need to create a project and [setup an API key](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key). Then, in continue:
+- Set **watsonx URL** to your watsonx SaaS endpoint, e.g. `https://us-south.ml.cloud.ibm.com` for US South region.
+- Set **watsonx Project ID** to your watsonx project ID.
+- Set **watsonx API Key** to your watsonx API Key.
+
+### watsonx.ai Software
+
+To authenticate to your watsonx.ai Software instance with Continue, you can use either `username/password` or `ZenApiKey` method:
+1. *Option 1* (Recommended): using `ZenApiKey` authentication:
+    - Set **watsonx URL** to your watsonx software endpoint, e.g. `https://cpd-watsonx.apps.example.com`.
+    - Set **watsonx Project ID** to your watsonx project ID.
+    - Set **watsonx API Key** to your watsonx Zen API Key. To generate it:
+        1. Log in to the CPD web client.
+        2. From the toolbar, click your avatar.
+        3. Click **Profile and settings**.
+        4. Click **API key** > **Generate new key**.
+        5. Click **Generate**.
+        6. Click **Copy** and save your key somewhere safe. You cannot recover this key if you lose it.
+        7. Generate your ZenApiKey by running the following command in your preferred terminal: `echo "<username>:<apikey>" | base64`, replacing `<username>` with your CPD username and `<apikey>` with the API Key you just created.
+2. *Option 2*: using `username/password` authentication:
+    - Set **watsonx URL** to your watsonx software endpoint, e.g. `https://cpd-watsonx.apps.example.com`.
+    - Set **watsonx Project ID** to your watsonx project ID.
+    - Set **watsonx API Key** to your watsonx Username and Password using `username:password` as format.
 
 ## Usage
-![usage-gif](../Model%20Providers/assets/Watsonx1.gif)
+![usage-gif](../Model%20Providers/assets/watsonx1.gif)
