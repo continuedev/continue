@@ -79,9 +79,9 @@ function Onboarding() {
       <div className="leading-relaxed">
         <h1 className="text-center">Welcome to PearAI!</h1>
         <p className="text-center pb-2">
-          Select one of the following providers to get setup! Don't worry, this can always be changed later by clicking the
+           Begin your journey by logging in on the PearAI. You can also add use your own API keys by clicking the
           <Cog6ToothIcon className="inline-block h-5 w-5 align-middle px-1" />
-          icon in the bottom-right corner of PearAI.
+          icon in the bottom-right corner of this panel later.
         </p>
       </div>
 
@@ -94,27 +94,16 @@ function Onboarding() {
       >
         <div className="flex items-center">
           <img src={`${window.vscMediaUrl}/logos/pearai-color.png`} className="mr-1" height="24px"></img>
-          <h3>PearAI Server (Recommended) </h3>
+          <h3>PearAI Server </h3>
         </div>
         <p className="mt-0">
-          Use PearAI's hosted services for convenient, fully-managed integration, with the current best-in-market language models.
+          Convenient, fully-managed integration, with the current best-in-market language models.
         </p>
         <p className="mt-0">
-          Code is not stored, and only passes through our server to the model provider.
+          Code is not stored.
         </p>
       </Div>
       <br></br>
-      <Div
-        selected={false}
-        onClick={() => handleSelect(ModelType.Other)}
-        onMouseEnter={() => setHovered(ModelType.Other)}
-        onMouseLeave={() => setHovered(-1)}
-      >
-        <h3>⚙️ Other Providers</h3>
-        <p>
-          Use your own API key for different cloud, local, and other LLM providers (i.e. OpenAI).
-        </p>
-      </Div>
       </div>
 
       <div className="flex justify-end">
@@ -127,7 +116,7 @@ function Onboarding() {
               dispatch(
                 setDialogMessage(
                   <ConfirmationDialog
-                    text="Are you sure you want to skip onboarding? Unless you are an existing user or already have a config.json we don't recommend this."
+                    text="Are you sure you want to skip setup? Unless you are an existing user or already have a config.json, we don't recommend this."
                     onConfirm={() => {
                       completeOnboarding();
                     }}

@@ -127,7 +127,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌥ ⌘ L",
     windows: "Alt ⌃ L",
-    description: "Toggle Continue Sidebar",
+    description: "Toggle PearAI Sidebar",
   },
   {
     mac: "⌘ ⇧ R",
