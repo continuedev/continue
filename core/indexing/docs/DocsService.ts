@@ -293,7 +293,7 @@ export default class DocsService {
     };
 
     // Delete indexed docs if re-indexing
-    if (reIndex && await this.has(startUrl.toString())) {
+    if (reIndex && (await this.has(startUrl.toString()))) {
       console.log("Deleting old embeddings");
       await this.delete(startUrl);
     }
