@@ -718,6 +718,9 @@
           },
           "then": {
             "properties": {
+              "cacheSystemMessage": {
+                "type": "boolean"
+              },
               "model": {
                 "anyOf": [
                   {
@@ -831,6 +834,9 @@
           },
           "then": {
             "properties": {
+              "cacheSystemMessage": {
+                "type": "boolean"
+              },
               "model": {
                 "enum": [
                   "chat-bison-001",
@@ -1071,6 +1077,9 @@
           },
           "then": {
             "properties": {
+              "cacheSystemMessage": {
+                "type": "boolean"
+              },
               "model": {
                 "enum": [
                   "deepseek-chat",
@@ -1368,13 +1377,7 @@
               "watsonxApiKey": {
                 "type": "string"
               },
-              "watsonxZenApiKeyBase64": {
-                "type": "string"
-              },
-              "watsonxUsername": {
-                "type": "string"
-              },
-              "watsonxPassword": {
+              "watsonxApiVersion": {
                 "type": "string"
               },
               "watsonxProjectId": {
