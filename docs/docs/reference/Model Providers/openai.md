@@ -19,7 +19,7 @@ OpenAI compatible APIs
 - [Anyscale Endpoints](https://github.com/continuedev/deploy-os-code-llm#others)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints)
 
-If you are [using an OpenAI compatible server / API](../../setup/select-provider#local), you can change the `apiBase` like this:
+If you are [using an OpenAI compatible server / API](../../setup/model-providers.md#local), you can change the `apiBase` like this:
 
 ```json title="~/.continue/config.json"
 {
@@ -42,6 +42,5 @@ To force usage of `chat/completions` instead of `completions` endpoint you can s
 ```
 
 [^1]: Use the [Vllm Model Provider](./vllm.md) instead.
-
 
 [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/OpenAI.ts)
