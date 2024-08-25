@@ -361,6 +361,8 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+
+  cacheSystemMessage?: boolean;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -898,7 +900,7 @@ interface ExperimentalConfig {
    * function and class declarations.
    */
   quickActions?: QuickActionConfig[];
-  
+
   /**
    * Automatically read LLM chat responses aloud using system TTS models
    */
