@@ -447,6 +447,7 @@ declare global {
     | "database"
     | "code"
     | "docs"
+    | "rails"
     | "gitlab-mr"
     | "os";
   

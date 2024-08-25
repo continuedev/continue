@@ -557,6 +557,7 @@ type ContextProviderName =
   | "docs"
   | "gitlab-mr"
   | "os"
+  | "rails"
   | "currentFile";
 
 type TemplateType =

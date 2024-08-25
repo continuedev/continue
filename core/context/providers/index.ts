@@ -18,6 +18,7 @@ import OSContextProvider from "./OSContextProvider.js";
 import OpenFilesContextProvider from "./OpenFilesContextProvider.js";
 import PostgresContextProvider from "./PostgresContextProvider.js";
 import ProblemsContextProvider from "./ProblemsContextProvider.js";
+import RailsContextProvider from "./RailsContextProvider.js";
 import SearchContextProvider from "./SearchContextProvider.js";
 import TerminalContextProvider from "./TerminalContextProvider.js";
 import URLContextProvider from "./URLContextProvider.js";
@@ -51,6 +52,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   CurrentFileContextProvider,
   URLContextProvider,
   ContinueProxyContextProvider,
+  RailsContextProvider,
 ];
 
 export function contextProviderClassFromName(

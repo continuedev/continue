@@ -27,6 +27,43 @@ function formatFileTree(tree: Directory, indentation = ""): string {
   return result;
 }
 
+export async function fileTrees(extras: ContextProviderExtras): Promise<string[]> {
+  const workspaceDirs = await extras.ide.getWorkspaceDirs();
+  const trees: string[] = [];
+
+  for (const workspaceDir of workspaceDirs) {
+    const contents = await walkDir(workspaceDir, extras.ide);
+
+    const subDirTree: Directory = {
+      name: splitPath(workspaceDir).pop() ?? "",
+      files: [],
+      directories: [],
+    };
+
+    for (const file of contents) {
+      const parts = splitPath(file, workspaceDir);
+
+      let currentTree = subDirTree;
+      for (const part of parts.slice(0, -1)) {
+        if (!currentTree.directories.some((d) => d.name === part)) {
+          currentTree.directories.push({
+            name: part,
+            files: [],
+            directories: [],
+          });
+        }
+
+        currentTree = currentTree.directories.find((d) => d.name === part)!;
+      }
+
+      currentTree.files.push(parts.pop()!);
+    }
+
+    trees.push(formatFileTree(subDirTree));
+  }
+  return trees;
+}
+
 class FileTreeContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "tree",
@@ -40,39 +77,7 @@ class FileTreeContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const workspaceDirs = await extras.ide.getWorkspaceDirs();
-    const trees = [];
-
-    for (const workspaceDir of workspaceDirs) {
-      const contents = await walkDir(workspaceDir, extras.ide);
-
-      const subDirTree: Directory = {
-        name: splitPath(workspaceDir).pop() ?? "",
-        files: [],
-        directories: [],
-      };
-
-      for (const file of contents) {
-        const parts = splitPath(file, workspaceDir);
-
-        let currentTree = subDirTree;
-        for (const part of parts.slice(0, -1)) {
-          if (!currentTree.directories.some((d) => d.name === part)) {
-            currentTree.directories.push({
-              name: part,
-              files: [],
-              directories: [],
-            });
-          }
-
-          currentTree = currentTree.directories.find((d) => d.name === part)!;
-        }
-
-        currentTree.files.push(parts.pop()!);
-      }
-
-      trees.push(formatFileTree(subDirTree));
-    }
+    const trees = await fileTrees(extras);
 
     return [
       {

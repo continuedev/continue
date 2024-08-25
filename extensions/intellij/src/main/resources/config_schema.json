@@ -1453,6 +1453,7 @@
                 "currentFile",
                 "url",
                 "database",
+                "rails",
                 "os"
               ],
               "markdownEnumDescriptions": [
@@ -1476,6 +1477,7 @@
                 "Reference the contents of the currently active file",
                 "Reference the contents of a page at a URL",
                 "Reference table schemas",
+                "Rails project information",
                 "Operating system and CPU Information"
               ],
               "type": "string"
