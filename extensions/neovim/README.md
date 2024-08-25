@@ -43,26 +43,30 @@ If you want to contribute to the development of this plugin, please follow the i
    - Disable debug logs by setting `debug = false` in `config.lua`.
    - Use `:messages` in Neovim to view logs, or press `ESC` repeatedly to skip floating logs.
    - Open the sidebar with `:ContinueOpenGUI`.
+   - For visualize messages send and receive between Neovim and the core server, you can set a `Logpoint` in VS Code debugger at `continue/binary/src/TcpMessenger.ts` line 161 and 165. My message: `Received message from NeoVim {msg}`, `Send message to NeoVim {messageType} {data} {messageId}`
 
 4. **Additional Debugging Techniques**:
 
    - Use `vim.inspect()` to pretty-print Lua tables and complex data structures.
    - Leverage Neovim's built-in `:lua` command to execute Lua code and inspect variables on the fly.
 
-5. **Performance Profiling**:
+5. **Docs & References**:
+
+   - There's not much API documentation for Continue.dev yet. However, you can deep-dive into the codebase to understand how things work. Or refer to the VS Code or JetBrains plugin code for inspiration.
+
+6. **Performance Profiling**:
 
    - Use `:profile start profile.log` and `:profile func *` to start profiling.
    - Execute your plugin's functions.
    - Use `:profile stop` to end profiling and analyze the results in `profile.log`.
 
-6. **Useful Commands for Development**:
+7. **Useful Commands for Development**:
    - `:luafile %` to quickly reload the current Lua file.
    - `:checkhealth` to diagnose potential issues with Neovim and plugins.
-   - `:ContinueReloadPlugin` (if implemented) to reload the Continue plugin without restarting Neovim.
 
 Remember to frequently test your changes and keep your development environment up-to-date.
 
-7. Configuration
+8. Configuration
 
 The free-trial option is not working yet, so you need to use the custom configuration before starting the core server.
 
