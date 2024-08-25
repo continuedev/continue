@@ -118,6 +118,8 @@ export abstract class BaseLLM implements ILLM {
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
 
+  cacheSystemMessage?: boolean;
+
   private _llmOptions: LLMOptions;
 
   constructor(_options: LLMOptions) {
@@ -177,6 +179,8 @@ export abstract class BaseLLM implements ILLM {
     this.watsonxProjectId = options.watsonxProjectId;
     this.watsonxStopToken = options.watsonxStopToken;
     this.watsonxApiVersion = options.watsonxApiVersion;
+
+    this.cacheSystemMessage = options.cacheSystemMessage;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

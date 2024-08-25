@@ -667,6 +667,9 @@
           },
           "then": {
             "properties": {
+              "cacheSystemMessage": {
+                "type": "boolean"
+              },
               "model": {
                 "anyOf": [
                   {
@@ -761,6 +764,9 @@
           },
           "then": {
             "properties": {
+              "cacheSystemMessage": {
+                "type": "boolean"
+              },
               "model": {
                 "enum": [
                   "chat-bison-001",
@@ -979,6 +985,9 @@
           },
           "then": {
             "properties": {
+              "cacheSystemMessage": {
+                "type": "boolean"
+              },
               "model": {
                 "enum": ["deepseek-chat", "deepseek-coder"]
               }
