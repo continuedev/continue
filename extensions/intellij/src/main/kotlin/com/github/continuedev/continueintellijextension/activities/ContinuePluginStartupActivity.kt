@@ -178,51 +178,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 )
             }
 
-            GlobalScope.async(Dispatchers.IO) {
-                val myPluginId = "com.github.continuedev.continueintellijextension"
-                val pluginDescriptor = PluginManager.getPlugin(PluginId.getId(myPluginId))
-
-                if (pluginDescriptor == null) {
-                    throw Exception("Plugin not found")
-                }
-                val pluginPath = pluginDescriptor.pluginPath
-                val osName = System.getProperty("os.name").toLowerCase()
-                val os = when {
-                    osName.contains("mac") || osName.contains("darwin") -> "darwin"
-                    osName.contains("win") -> "win32"
-                    osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
-                    else -> "linux"
-                }
-                val osArch = System.getProperty("os.arch").toLowerCase()
-                val arch = when {
-                    osArch.contains("aarch64") || (osArch.contains("arm") && osArch.contains("64")) -> "arm64"
-                    osArch.contains("amd64") || osArch.contains("x86_64") -> "x64"
-                    else -> "x64"
-                }
-                val target = "$os-$arch"
-
-                println("Identified OS: $os, Arch: $arch")
-
-                val corePath = Paths.get(pluginPath.toString(), "core").toString()
-                val targetPath = Paths.get(corePath, target).toString()
-                val continueCorePath = Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
-
-                // esbuild needs permissions
-                val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
-
-                val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient)
-                continuePluginService.coreMessenger = coreMessenger
-
-                coreMessenger.request("config/getSerializedProfileInfo", null, null) { resp ->
-                    val data = resp as? Map<String, Any>
-                    val profileInfo = data?.get("config") as? Map<String, Any>
-                    val allowAnonymousTelemetry = profileInfo?.get("allowAnonymousTelemetry") as? Boolean
-                    val telemetryService = service<TelemetryService>()
-                    if (allowAnonymousTelemetry == true || allowAnonymousTelemetry == null) {
-                        telemetryService.setup(getMachineUniqueID())
-                    }
-                }
-            }
+            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient)
+            continuePluginService.coreMessengerManager = coreMessengerManager
         }
     }
 

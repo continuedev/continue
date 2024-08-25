@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
+import com.github.continuedev.continueintellijextension.`continue`.CoreMessengerManager
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
 import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.toolWindow.ContinueBrowser
@@ -23,7 +24,11 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
     var continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
 
     var ideProtocolClient: IdeProtocolClient? = null
-    var coreMessenger: CoreMessenger? = null
+
+    var coreMessengerManager: CoreMessengerManager? = null
+    val coreMessenger: CoreMessenger?
+        get() = coreMessengerManager?.coreMessenger
+
     var workspacePaths: Array<String>? = null
     var windowId: String = UUID.randomUUID().toString()
 
