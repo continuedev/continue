@@ -384,9 +384,9 @@ function M.on_init_success()
   --     print("Indexing progress bar initialized response: " .. response)
   -- end)
 
-  M.request("index/forceReIndex", {}, function(response)
-    -- print("Indexing force reindex response: " .. response)
-  end)
+  -- M.request("index/forceReIndex", {}, function(response)
+  --   -- print("Indexing force reindex response: " .. response)
+  -- end)
 end
 
 M.on_connected = nil
