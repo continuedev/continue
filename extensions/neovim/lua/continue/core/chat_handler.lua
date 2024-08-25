@@ -178,21 +178,21 @@ function ChatHandler:stream_normal_input(title)
   local messages = self:construct_messages()
   log.debug("Chat messages: " .. vim.inspect(messages))
 
-  -- messenger.stream_llm_chat(title, messages, {
-  --   model = state.active_model,
-  --   stream = true,
-  --   log = true,
-  -- }, function(chunk)
-  --   self:push_message("chat_stream", { chunk = chunk })
-  -- end, function(full_response)
-  --   log.debug("Full response: " .. full_response)
-  --   table.insert(state.chat_messages, {
-  --     role = "assistant",
-  --     content = full_response
-  --   })
-  --   self:push_message("finish_response", {})
-  --   state.active = false
-  -- end)
+  messenger.stream_llm_chat(title, messages, {
+    model = state.active_model,
+    stream = true,
+    log = true,
+  }, function(chunk)
+    self:push_message("chat_stream", { chunk = chunk })
+  end, function(full_response)
+    log.debug("Full response: " .. full_response)
+    table.insert(state.chat_messages, {
+      role = "assistant",
+      content = full_response
+    })
+    self:push_message("finish_response", {})
+    state.active = false
+  end)
 end
 
 --- Stream slash command
