@@ -12,6 +12,11 @@ import { BaseLLM } from "../index.js";
 import { streamSse, streamResponse, streamJSON } from "../stream.js";
 import { checkTokens } from "../../db/token.js";
 import { stripImages } from "../images.js";
+import {
+  compileChatMessages,
+  countTokens,
+  pruneRawPromptFromTop,
+} from "./../countTokens.js";
 
 
 class PearAIServer extends BaseLLM {
@@ -77,6 +82,11 @@ class PearAIServer extends BaseLLM {
       yield stripImages(chunk.content);
     }
   }
+
+  countTokens(text: string): number {
+    return countTokens(text, this.model);
+  }
+
 
   protected _convertMessage(message: ChatMessage) {
     if (typeof message.content === "string") {
@@ -186,7 +196,6 @@ class PearAIServer extends BaseLLM {
     for await (const chunk of streamSse(resp)) {
       yield chunk.choices[0].delta.content;
     }
-  this._countTokens(completion, options.model, false);
   }
 
 
@@ -250,6 +259,28 @@ class PearAIServer extends BaseLLM {
       // Handle the error (e.g., redirect to login page)
     }
     return true
+  }
+
+  protected async _sendTokensUsed(
+    kind: string,
+    prompt: string,
+    completion: string,
+  ) {
+    let promptTokens = this.countTokens(prompt);
+    let generatedTokens = this.countTokens(completion);
+
+    const response = await this.fetch(`${SERVER_URL}/log_tokens`, {
+      method: "POST",
+      headers: {
+        ...(await this._getHeaders()),
+        Authorization: `Bearer ${this.pearAIAccessToken}`,
+      },
+      body: JSON.stringify({
+        kind,
+        promptTokens,
+        generatedTokens
+      }),
+    })
   }
 }
 

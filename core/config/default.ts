@@ -111,7 +111,7 @@ export const defaultConfig: SerializedContinueConfig = {
   tabAutocompleteModel: {
     title: "PearAI Autocomplete",
     provider: "pearai_server",
-    model: "pearai_model",
+    model: "pearai_autocomplete",
   },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,

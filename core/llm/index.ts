@@ -44,6 +44,7 @@ import { stripImages } from "./images.js";
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
   static defaultOptions: Partial<LLMOptions> | undefined = undefined;
+  protected async _sendTokensUsed?(kind: string, prompt: string, completion: string): Promise<void>;
 
   get providerName(): ModelProvider {
     return (this.constructor as typeof BaseLLM).providerName;
@@ -59,13 +60,14 @@ export abstract class BaseLLM implements ILLM {
 
   supportsCompletions(): boolean {
     if (this.providerName === "openai") {
-      if (
-        this.apiBase?.includes("api.groq.com") ||
-        this.apiBase?.includes("api.mistral.ai") ||
-        this.apiBase?.includes(":1337") ||
-        this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
-      ) {
-        // Jan + Groq + Mistral don't support completions : (
+      // Check if it is a string before performing on it.
+      const isGroqApi = typeof this.apiBase === "string" && /^https:\/\/(?:[a-zA-Z0-9-]+\.)*api\.groq\.com(?:\/|$)/.test(this.apiBase);
+      const isMistralApi = typeof this.apiBase === "string" && /^https:\/\/(?:[a-zA-Z0-9-]+\.)*api\.mistral\.ai(?:\/|$)/.test(this.apiBase);
+      const isLegacyPort = this.apiBase?.includes(":1337");
+      const usesNewEndpoint = this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false;
+
+      if (isGroqApi || isMistralApi || isLegacyPort || usesNewEndpoint) {
+        // Jan + Groq + Mistral  don't support completions : (
         // Seems to be going out of style...
         return false;
       }
@@ -281,6 +283,9 @@ ${prompt}`;
       promptTokens: promptTokens,
       generatedTokens: generatedTokens,
     });
+    if (this._sendTokensUsed) {
+      this._sendTokensUsed(model, prompt, completion);
+    }
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -414,6 +419,8 @@ ${prompt}`;
       madeUpFimPrompt,
       completion,
     );
+
+
 
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
