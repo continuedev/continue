@@ -60,6 +60,13 @@ function parseSseLine(line: string): { done: boolean; data: any } {
   if (line.startsWith(": ping")) {
     return { done: true, data: undefined };
   }
+  try {
+    // if it's complete JSON i.e gpt4all doesn't support SSE
+    const data = JSON.parse(line);
+    return { done: false, data };
+  } catch (e) {
+    // ignore
+  }
   return { done: false, data: undefined };
 }
 

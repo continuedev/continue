@@ -235,6 +235,10 @@ class OpenAI extends BaseLLM {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
       }
+
+      if (value.choices?.[0]?.message?.content) {
+        yield value.choices[0].message;
+      }
     }
   }
 
