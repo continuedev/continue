@@ -13,26 +13,127 @@ If you want to contribute to the development of this plugin, please follow the i
 
 ### Development & Debugging
 
-1. Run the core debug server in VsCode. Open a VS Code window (we recommend this for a preconfigured Typescript debugging experience) with the `continue` repository. Select the `Core Binary` debug configuration and press play.
-2. Run the plugin in Neovim. Open a terminal and navigate to the root of the `continue` repository.
-   Run:
+1. **Core Debug Server Setup**:
 
-```bash
-nvim -u NONE -c "set rtp+=${PWD}/extensions/neovim" "+set shortmess-=T" "+set verbose=1" -c "lua require('continue')" -c "lua vim.lsp.set_log_level('trace')" --headless ./manual-testing-sandbox/test.js
+   - Open the `continue` repository in VS Code.
+   - Select the `Core Binary` debug configuration.
+   - Start the debugger.
 
+2. **Running the Plugin in Neovim**:
+   Navigate to the `continue` repository root and execute:
+
+   ```bash
+   nvim -u NONE -c "set rtp+=${PWD}/extensions/neovim" "+set shortmess-=T" "+lua require('continue')" -c "lua vim.lsp.set_log_level('trace')" --headless ./manual-testing-sandbox/test.js
+   ```
+
+   Notes:
+
+   - Remove `--headless` to see the Neovim UI.
+   - Remove `-u NONE` to load your own Neovim configuration.
+   - Replace `./manual-testing-sandbox/test.js` with any test file.
+   - Add `"+set verbose=1"` for more detailed output.
+   - After starting Neovim, restart the core server in VS Code to establish the connection.
+
+3. **Debugging the Plugin**:
+   As Neovim lacks advanced debugging tools, use `print` statements in the plugin code. Output appears in the Neovim terminal.
+
+   Tips:
+
+   - Use `--headless` to view output directly in the terminal.
+   - Disable debug logs by setting `debug = false` in `config.lua`.
+   - Use `:messages` in Neovim to view logs, or press `ESC` repeatedly to skip floating logs.
+   - Open the sidebar with `:ContinueOpenGUI`.
+
+4. **Additional Debugging Techniques**:
+
+   - Use `vim.inspect()` to pretty-print Lua tables and complex data structures.
+   - Leverage Neovim's built-in `:lua` command to execute Lua code and inspect variables on the fly.
+
+5. **Performance Profiling**:
+
+   - Use `:profile start profile.log` and `:profile func *` to start profiling.
+   - Execute your plugin's functions.
+   - Use `:profile stop` to end profiling and analyze the results in `profile.log`.
+
+6. **Useful Commands for Development**:
+   - `:luafile %` to quickly reload the current Lua file.
+   - `:checkhealth` to diagnose potential issues with Neovim and plugins.
+   - `:ContinueReloadPlugin` (if implemented) to reload the Continue plugin without restarting Neovim.
+
+Remember to frequently test your changes and keep your development environment up-to-date.
+
+7. Configuration
+
+The free-trial option is not working yet, so you need to use the custom configuration before starting the core server.
+
+Here's my configuration:
+
+```json
+{
+  "models": [
+    {
+      "title": "GPT-4",
+      "provider": "openai",
+      "model": "gpt-4",
+      "apiKey": "${OPENAI_API_KEY}"
+    }
+  ],
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "voyage-code-2",
+    "apiBase": "https://api.voyageai.com/v1/",
+    "apiKey": "<API_KEY>"
+  },
+  "reranker": {
+    "name": "voyage",
+    "params": {
+      "apiKey": "<API_KEY>"
+    }
+  },
+  "slashCommands": [
+    {
+      "name": "edit",
+      "description": "Edit highlighted code"
+    },
+    {
+      "name": "comment",
+      "description": "Write comments for the highlighted code"
+    },
+    {
+      "name": "share",
+      "description": "Export the current chat session to markdown"
+    },
+    {
+      "name": "cmd",
+      "description": "Generate a shell command"
+    }
+  ],
+  "customCommands": [
+    {
+      "name": "test",
+      "prompt": "{{{ input }}}\n\nWrite a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+      "description": "Write unit tests for highlighted code"
+    }
+  ],
+  "contextProviders": [
+    { "name": "diff", "params": {} },
+    {
+      "name": "open",
+      "params": {}
+    },
+    { "name": "terminal", "params": {} }
+  ]
+}
 ```
 
-Note:
-Note:
-
-- The `--headless` flag is optional and can be removed if you want to see the Neovim UI.
-- The `./manual-testing-sandbox/test.js` file is a test file that will be opened in the Neovim buffer. You can replace it with any file you want to test.
-- The `set verbose=1` flag is optional and can be removed if you want to see less output in the terminal.
+Please place this configuration in the `binary/.continue/config.json` file. Then restart the core server in VS Code.
 
 # Features:
 
+- [x] Estiblish connection from Neovim to Continue.dev core
 - [x] Index codebase
-- [ ] Write neovim debug instructions
+- [x] A simple sidebar UI
+- [x] Send and receive messages
 - [ ] Codebase mention
 - [ ] File mention
 - [ ] Slash command
