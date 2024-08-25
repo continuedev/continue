@@ -53,14 +53,14 @@ function M.setup(opts)
     chat_handler:initialize()
 
     -- Send a test message
-    local testMessage = [[
-
-    analyze my @codebase
-
-      ]]
-    chat_handler:handle_chat_input("test", testMessage, {
-      noContext = false
-    })
+    -- local testMessage = [[
+    --
+    -- analyze my @codebase
+    --
+    --   ]]
+    -- chat_handler:handle_chat_input("test", testMessage, {
+    --   noContext = false
+    -- })
     chat_sidebar:set_on_input_submit(function(title, text)
       chat_handler:handle_chat_input(title, text, {
         noContext = true
