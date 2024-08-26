@@ -328,6 +328,8 @@ export interface LLMOptions {
   apiKey?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
+  refreshToken?: string;
+  isDefault?: boolean;
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -748,6 +750,7 @@ export interface ModelDescription {
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   capabilities?: ModelCapability;
+  isDefault?: boolean;
 }
 
 export type EmbeddingsProviderName =
