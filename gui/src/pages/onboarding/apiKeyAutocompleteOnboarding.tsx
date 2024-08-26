@@ -13,7 +13,7 @@ import {
   StyledListboxOptions,
 } from "../../components/modelSelection/quickSetup/StyledListbox";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useOnboarding } from "./utils";
+import { useCompleteOnboarding } from "./utils";
 
 interface AutocompleteOption {
   provider: ModelProvider;
@@ -124,7 +124,7 @@ function ApiKeyAutocompleteOnboarding() {
 
   const [apiKeyValue, setApiKeyValue] = useState<string>("");
 
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding } = useCompleteOnboarding();
 
   return (
     <div className="p-2 max-w-96 mt-16 mx-auto">

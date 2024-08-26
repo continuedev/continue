@@ -5,7 +5,7 @@ import {
   GiftIcon,
 } from "@heroicons/react/24/outline";
 import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { lightGray } from "../../components";
@@ -19,7 +19,9 @@ import {
 import { isJetBrains } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../../util/freeTrial";
 import { Div, StyledButton } from "./components";
-import { useOnboarding } from "./utils";
+import { isNewUserOnboarding, useCompleteOnboarding } from "./utils";
+import { setLocalStorage } from "../../util/localStorage";
+import { usePostHog } from "posthog-js/react";
 
 type OnboardingMode =
   ToCoreFromIdeOrWebviewProtocol["completeOnboarding"][0]["mode"];
@@ -27,6 +29,7 @@ type OnboardingMode =
 function Onboarding() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const posthog = usePostHog();
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [hasSignedIntoGh, setHasSignedIntoGh] = useState(false);
@@ -34,7 +37,7 @@ function Onboarding() {
     OnboardingMode | undefined
   >(undefined);
 
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding } = useCompleteOnboarding();
 
   function onSubmit() {
     ideMessenger.post("completeOnboarding", {
@@ -68,8 +71,15 @@ function Onboarding() {
     }
   }
 
+  useEffect(() => {
+    if (isNewUserOnboarding()) {
+      posthog.capture("Onboarding Step", { status: "Started" });
+      setLocalStorage("onboardingStatus", "Started");
+    }
+  }, []);
+
   return (
-    <div className="max-w-96  mx-auto leading-normal">
+    <div className="max-w-96 mx-auto leading-normal">
       <div className="leading-relaxed">
         <h1 className="text-center">Welcome to Continue</h1>
         <p className="text-center ">
