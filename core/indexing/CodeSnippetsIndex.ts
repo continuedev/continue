@@ -34,6 +34,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         cacheKey TEXT NOT NULL,
         content TEXT NOT NULL,
         title TEXT NOT NULL,
+        signature TEXT,
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL
     )`);
@@ -44,6 +45,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       snippetId INTEGER NOT NULL,
       FOREIGN KEY (snippetId) REFERENCES code_snippets (id)
     )`);
+
+    migrate("add_signature_column", async () => {
+      await db.exec(`
+        ALTER TABLE code_snippets
+        ADD COLUMN signature TEXT;
+      `);
+    });
 
     migrate("delete_duplicate_code_snippets", async () => {
       // Delete duplicate entries in code_snippets
@@ -98,7 +106,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   async getSnippetsInFile(
     filepath: string,
     contents: string,
-  ): Promise<(ChunkWithoutID & { title: string })[]> {
+  ): Promise<(ChunkWithoutID & { title: string; signature: string })[]> {
     const parser = await getParserForFile(filepath);
 
     if (!parser) {
@@ -116,9 +124,12 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     return matches.flatMap((match) => {
       const node = match.captures[0].node;
       const title = match.captures[1].node.text;
+      const signatureNode = node.child(0); // Assuming the first child is the signature
+      const signature = signatureNode ? signatureNode.text : '';
       const results = {
         title,
         content: node.text,
+        signature,
         startLine: node.startPosition.row,
         endLine: node.endPosition.row,
       };
@@ -154,12 +165,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       // Add snippets to sqlite
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          "REPLACE INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
+          "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             compute.path,
             compute.cacheKey,
             snippet.content,
             snippet.title,
+            snippet.signature,
             snippet.startLine,
             snippet.endLine,
           ],
@@ -217,12 +229,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          "REPLACE INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
+          "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             addTag.path,
             addTag.cacheKey,
             snippet.content,
             snippet.title,
+            snippet.signature,
             snippet.startLine,
             snippet.endLine,
           ],
@@ -270,7 +283,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     return {
       name: row.title,
       description: getLastNPathParts(row.path, 2),
-      content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
+      content: `\`\`\`${getBasename(row.path)}\n${row.signature}\n${row.content}\n\`\`\``,
     };
   }
 
