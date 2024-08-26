@@ -5,21 +5,21 @@ import type {
   IDE,
   IndexTag,
   IndexingProgressUpdate,
-} from "../index.js";
-import { getBasename, getLastNPathParts } from "../util/index.js";
-import { migrate } from "../util/paths.js";
+} from "../";
+import { getBasename, getLastNPathParts } from "../util/";
+import { migrate } from "../util/paths";
 import {
   TSQueryType,
   getParserForFile,
   getQueryForFile,
-} from "../util/treeSitter.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
+} from "../util/treeSitter";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
   type CodebaseIndex,
-} from "./types.js";
+} from "./types";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
