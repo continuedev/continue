@@ -141,11 +141,6 @@ function Onboarding() {
     <div className="max-w-96  mx-auto leading-normal">
       <h1 className="text-center">Welcome to PearAI!</h1>
       <h3 className="mx-3">Begin your journey by logging in!</h3>
-
-      <p style={{ color: lightGray }} className="mx-3">
-        After login, the website should redirect you back here.
-      </p>
-      
       <CustomModelButton
         className="m-5"
         disabled={false}
@@ -163,6 +158,9 @@ function Onboarding() {
           style={{ marginRight: "5px" }}
         />
       </CustomModelButton>
+      <p style={{ color: lightGray }} className="mx-3">
+        After login, the website should redirect you back here.
+      </p>
       <small 
         style={{ 
           color: lightGray, 
@@ -199,33 +197,25 @@ function Onboarding() {
         </Div>
         <br></br>
       </div> */}
-
-      {/* <div className="flex justify-end">
-        <div className="flex items-center gap-4 ml-auto">
-          <div
-            className="cursor-pointer"
-            style={{ color: lightGray }}
-            onClick={(e) => {
-              dispatch(setShowDialog(true));
-              dispatch(
-                setDialogMessage(
-                  <ConfirmationDialog
-                    text="Are you sure you want to skip setup? Unless you are an existing user or already have a config.json, we don't recommend this."
-                    onConfirm={() => {
-                      completeOnboarding();
-                    }}
-                  />,
-                ),
-              );
-            }}
-          >
-            Skip
-          </div>
-          <StyledButton disabled={!selectedOnboardingMode} onClick={onSubmit}>
-            Continue
-          </StyledButton>
-        </div>
-      </div> */}
+      <div className="absolute bottom-4 right-4">
+        <StyledButton
+          onClick={(e) => {
+            dispatch(setShowDialog(true));
+            dispatch(
+              setDialogMessage(
+                <ConfirmationDialog
+                  text="Are you sure you want to skip logging in? Unless you are an existing user or already have a config.json, we don't recommend this."
+                  onConfirm={() => {
+                    completeOnboarding();
+                  }}
+                />,
+              ),
+            );
+          }}
+        >
+          Skip
+        </StyledButton>
+      </div>
     </div>
   );
 }
