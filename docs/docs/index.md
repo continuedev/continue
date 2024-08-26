@@ -3,4 +3,4 @@ id: index
 slug: /
 ---
 
-This index page should automatically redirect to [/docs/intro](./intro.md)
+This index page should automatically redirect to [/docs/core-features](./core-features.md)

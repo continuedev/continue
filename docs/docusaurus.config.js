@@ -71,9 +71,10 @@ const config = {
       navbar: {
         title: "Continue",
         logo: {
-          alt: "Continue Logo",
-          src: "img/logo.png",
-          href: "https://continue.dev",
+          alt: "PearAI Logo",
+          src: "img/logo-dark.png",
+          href: "https://trypear.ai",
+          srcDark: "img/logo.png",
         },
         items: [
           {
@@ -89,7 +90,7 @@ const config = {
             className: "github-navbar",
           },
           {
-            to: "https://discord.gg/vapESyrFmJ",
+            to: "https://discord.gg/7QMraJUsQt",
             label: "Discord",
             position: "right",
             className: "discord-navbar",
@@ -117,7 +118,7 @@ const config = {
             items: [
               {
                 label: "Discord",
-                to: "https://discord.gg/vapESyrFmJ",
+                to: "https://discord.gg/7QMraJUsQt",
               },
               {
                 label: "GitHub",
@@ -134,7 +135,7 @@ const config = {
               },
               {
                 label: "LinkedIn",
-                to: "https://linkedin.com/company/continuedev",
+                to: "https://linkedin.com/company/trypearai",
               },
             ],
           },

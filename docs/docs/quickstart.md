@@ -6,28 +6,37 @@ keywords: [quickstart, start, install, vscode, jetbrains]
 
 # ⚡️ Quickstart
 
-## VS Code
+1. Open the app and the chat window should appear on the right side (might load for a brief period on the first time).
 
-1. Click `Install` on the **[Continue extension in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)**
+2. Select PearAI server and log in.
 
-2. This will open the Continue extension page in VS Code, where you will need to click `Install` again
+   :::tip
 
-3. Once you do this, you will see the Continue logo show up on the left side bar. If you click it, the Continue extension will open up:
+   If login issues arise, use `CMD+SHIFT+P` (`CTRL+SHIFT+P` for Windows) and select "Login to PearAI" to authenticate again.
 
-> We strongly recommend moving Continue to VS Code's right sidebar. This helps keep the file explorer open while using Continue, and the sidebar can be toggled with a simple keyboard shortcut. ![move-to-right-sidebar](/img/move-to-right-sidebar.png)
+   :::
 
-4. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs).
+   <video width="400" controls>
+      <source src="/videos/pearai-onboard-login.webm" type="video/webm" />
+      Your browser does not support the video tag.
+   </video>
 
-## JetBrains
+3. You're now ready to start prompting!
 
-1. Open your JetBrains IDE and open settings using `cmd/ctrl + shift + ,`.
+4. Optional: put PearAI in your path so you can open within directories with `pearai .`
 
-2. Select **Plugins** on the sidebar.
+   <img src="/img/pearai-path-dark.webp" alt="pearai path" width="400"/>
 
-3. Search for "Continue" in the marketplace and click `Install`. Once installed you'll see Continue show up on the right toolbar:
+5. Try out the 2 core features below!
 
-![jetbrains-quickstart](/img/jetbrains-quickstart.png)
+   1. `CMD+I` (Inline code editing)
+      <video width="400" controls>
+         <source src="/videos/cmd+i-documentation.webm" type="video/webm" />
+         Your browser does not support the video tag.
+      </video>
 
-4. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ).
-
-> Alternatively, you can install from disk after downloading from the [JetBrains Extension Marketplace](https://plugins.jetbrains.com/plugin/22707-continue-extension).
+   2. `CMD+L` (PearAI chat)
+      <video width="400" controls>
+         <source src="/videos/cmd+l-documentation.webm" type="video/webm" />
+         Your browser does not support the video tag.
+      </video>
