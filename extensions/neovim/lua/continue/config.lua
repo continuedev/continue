@@ -2,7 +2,9 @@ local M = {
   windows = {
     width = 30,
   },
-  debug = true
+  debug = true,
+  -- Dry run mode, don't actually send chat stream to LLM,...
+  dry_run = false,
 }
 
 local default_config = {

@@ -11,13 +11,25 @@ If you want to contribute to the development of this plugin, please follow the i
 - See [../../CONTRIBUTING.md](../../CONTRIBUTING.md) for general prerequisites and setup.
 - A working Neovim installation.
 
+### Git Workflow
+
+To contribute to the plugin, please follow these steps:
+
+- Fork and clone the my fork of the `continue` repository `https://github.com/qtnx/continue` to your local machine.
+- Develop your changes then push them to your fork.
+- Create a pull request from your fork to the `qtnx/continue` repository.
+- Then your changes will be updated to my opening PR.
+- For any questions or help for the NeoVim plugin, please create an issue in the `qtnx/continue` repository.
+
 ### Development & Debugging
 
 1. **Core Debug Server Setup**:
 
-   - Open the `continue` repository in VS Code.
-   - Select the `Core Binary` debug configuration.
-   - Start the debugger.
+To contribute to the plugin, please follow these steps:
+
+- Open the `continue` repository in VS Code.
+- Select the `Core Binary` debug configuration.
+- Start the debugger.
 
 2. **Running the Plugin in Neovim**:
    Navigate to the `continue` repository root and execute:

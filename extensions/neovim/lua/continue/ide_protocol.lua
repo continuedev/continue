@@ -132,7 +132,8 @@ end
 
 M.getIdeInfo = function()
   return {
-    ideType = "neovim",
+    -- Use the same setting as VSCode
+    ideType = "vscode",
     name = "Neovim",
     version = vim.version().major .. '.' .. vim.version().minor .. '.' .. vim.version().patch,
     remoteName = "local",
@@ -285,14 +286,29 @@ M.showDiff = function(data)
   -- This would require implementing a diff view, not included here
 end
 
+-- Helper function to check if a file is a code file
+local function is_code_file(file_path)
+  local code_extensions = {
+    ".lua", ".py", ".js", ".ts", ".html", ".css", ".json", ".xml",
+    ".c", ".cpp", ".h", ".hpp", ".java", ".go", ".rs", ".sh"
+  }
+  local ext = file_path:match("^.+(%..+)$")
+  return ext and vim.tbl_contains(code_extensions, ext:lower())
+end
+
 M.getOpenFiles = function()
   local buffers = vim.api.nvim_list_bufs()
   local open_files = {}
+
   for _, buf in ipairs(buffers) do
     if vim.api.nvim_buf_is_loaded(buf) then
-      table.insert(open_files, vim.api.nvim_buf_get_name(buf))
+      local file_path = vim.api.nvim_buf_get_name(buf)
+      if file_path ~= "" and is_code_file(file_path) then
+        table.insert(open_files, file_path)
+      end
     end
   end
+
   return open_files
 end
 

@@ -1,6 +1,7 @@
-local log  = require('continue.utils.log')
-local M    = {}
-local json = {}
+local log    = require('continue.utils.log')
+local config = require('continue.config')
+local M      = {}
+local json   = {}
 local function logInfo(message)
   log.debug(message)
 end
@@ -89,6 +90,7 @@ end
 -- Write a message to the core process
 ---@param message table
 local function write_to_core(message)
+  log.debug("Writing to core: " .. vim.inspect(message))
   local _message = json.encode(message) .. '\r\n'
   if core_process and not core_process:is_closing() then
     pcall(function()
@@ -133,7 +135,7 @@ local function handle_message(message_str)
         data = result
       })
     else
-      logError("Error executing " .. message_type .. ": " .. tostring(result))
+      logError("[lua] Error executing " .. message_type .. ": " .. tostring(result))
     end
   elseif uiview_protocol and uiview_protocol[message_type] then
     logInfo("Handling uiview message type: " .. message_type)
@@ -185,22 +187,22 @@ end
 ---@param message_type pass_through_to_core_message_type
 ---@param data table
 ---@return any
-function M.async_request(message_type, data)
+M.async_request = function(message_type, data)
   local message_id = generate_message_id()
-  local co = coroutine.running()
-  if not co then
-    error("async_request must be called from a coroutine")
-  end
-  response_listeners[message_id] = function(response)
+  local done = false
+  local response = nil
+  response_listeners[message_id] = function(_response)
     response_listeners[message_id] = nil
-    coroutine.resume(co, response)
+    done = true
+    response = _response
   end
   write_to_core({
     messageId = message_id,
     messageType = message_type,
     data = data
   })
-  return coroutine.yield()
+  vim.wait(6000, function() return done end, 10)
+  return response
 end
 
 -- Register a handler for uiview messages
@@ -331,6 +333,10 @@ function M.stream_llm_chat(model_title, messages, options, on_chunk, on_finish)
   local is_done = false
   manual_remove_listeners[message_id] = true
   local full_response = ""
+  if config.dry_run then
+    logInfo("[Dry Run] stream_llm_chat: " .. vim.inspect(messages))
+    return
+  end
 
 
   -- Set up the response listener
@@ -384,7 +390,9 @@ function M.on_init_success()
   --     print("Indexing progress bar initialized response: " .. response)
   -- end)
 
-  -- M.request("index/forceReIndex", {}, function(response)
+  -- M.request("index/forceReIndex", {
+  --   shouldClearIndexes = true
+  -- }, function(response)
   --   -- print("Indexing force reindex response: " .. response)
   -- end)
 end

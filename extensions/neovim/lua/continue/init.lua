@@ -79,9 +79,11 @@ function M.setup(opts)
     messenger.on_core(method_name, method)
   end
 
-  -- Set up commands
+  -- Force re-indexing
   vim.api.nvim_create_user_command('ContinueIndex', function()
-    messenger.request("index/forceReIndex", {}, function() end)
+    messenger.request("index/forceReIndex", {
+      shouldClearIndexes = true
+    }, function() end)
   end, {})
 
   vim.api.nvim_create_user_command('ContinueOpenGUI', function()

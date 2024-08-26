@@ -1,4 +1,3 @@
-local async = require "continue.utils.async"
 local ChatHandler = {}
 ChatHandler.__index = ChatHandler
 
@@ -6,6 +5,7 @@ local state = {
   chat_messages = {},
   active_model = 'gpt-4o',
   context_items = {},
+  ---@type HistoryItem[]
   history = {},
   active = false
 }
@@ -121,9 +121,9 @@ function ChatHandler:construct_messages()
     end
 
     -- Check if contextItems exists and is a table
-    if historyItem.contextItems and type(historyItem.contextItems) == "table" then
+    if historyItem.context_items and type(historyItem.context_items) == "table" then
       local ctxItems = {}
-      for _, ctxItem in ipairs(historyItem.contextItems) do
+      for _, ctxItem in ipairs(historyItem.context_items) do
         table.insert(ctxItems, { type = "text", text = ctxItem.content .. "\n" })
       end
 
@@ -173,7 +173,6 @@ end
 
 --- Stream normal input
 ---@param title string
----@param text string
 function ChatHandler:stream_normal_input(title)
   local messages = self:construct_messages()
   log.debug("Chat messages: " .. vim.inspect(messages))
@@ -213,9 +212,9 @@ end
 ---@param text string
 ---@param modifiers Modifiers
 function ChatHandler:handle_chat_input(title, text, modifiers)
-  local co = self:resolveEditorContent(text, modifiers)
-
-  local contextItems, selectedCode, parts = async.executeCoroutine(co)
+  log.debug("start Handling chat input")
+  log.debug("Handling chat input")
+  local contextItems, selectedCode, parts = self:resolveEditorContent(text, modifiers)
   log.debug("Resolved editor content: " .. vim.inspect(contextItems))
 
   -- if not success then
@@ -266,126 +265,143 @@ end
 ---@return ContextItemId[], RangeInFile[], MassagePart[]
 ---@async
 function ChatHandler:resolveEditorContent(text, modifiers)
-  local co = coroutine.create(function()
-    ---@type MassagePart[]
-    local parts = {}
-    ---@type MentionAttrs[]
-    local contextItemAttrs = {}
+  ---@type MassagePart[]
+  local parts = {}
+  ---@type MentionAttrs[]
+  local contextItemAttrs = {}
 
-    ---@type RangeInFile[]
-    local selectedCode = {}
+  ---@type RangeInFile[]
+  local selectedCode = {}
 
-    ---@type string|nil
-    local slashCommand = nil
+  ---@type string|nil
+  local slashCommand = nil
 
-    -- Split the input text into paragraphs
-    for paragraph in text:gmatch("[^\n]+") do
-      local text, ctxItems, foundSlashCommand = self:resolveParagraph(paragraph)
+  -- Split the input text into paragraphs
+  for paragraph in text:gmatch("[^\n]+") do
+    local text, ctxItems, foundSlashCommand = self:resolveParagraph(paragraph)
 
-      -- Only take the first slash command
-      if foundSlashCommand and not slashCommand then
-        slashCommand = foundSlashCommand
-      end
-
-      for _, item in ipairs(ctxItems) do
-        table.insert(contextItemAttrs, item)
-      end
-
-      if text ~= "" then
-        if #parts > 0 and parts[#parts].type == "text" then
-          parts[#parts].text = parts[#parts].text .. "\n" .. text
-        else
-          table.insert(parts, { type = "text", text = text })
-        end
-      end
+    -- Only take the first slash command
+    if foundSlashCommand and not slashCommand then
+      slashCommand = foundSlashCommand
     end
 
-    -- Parse code blocks
-    -- TODO fix this?
-    for codeblock in text:gmatch("```(.-)```") do
-      local language, content = codeblock:match("^(%w+)\n(.*)$")
-      if language and content then
-        table.insert(selectedCode, {
-          filepath = "input",
-          range = {
-            start = { line = 0, character = 0 },
-            ["end"] = { line = select(2, content:gsub("\n", "\n")) + 1, character = 0 }
-          }
-        })
-        table.insert(parts, { type = "text", text = "```" .. language .. "\n" .. content .. "\n```" })
-      end
+    for _, item in ipairs(ctxItems) do
+      table.insert(contextItemAttrs, item)
     end
 
-    ---@type ContextItemWithId[]
-    local contextItems = {}
-
-    ---@type string
-    local contextItemsText = ""
-
-    for _, item in ipairs(contextItemAttrs) do
-      local data = {
-        -- item.itemType == "contextProvider" and
-        name = item.id or item.itemType,
-        query = item.query,
-        fullInput = self:stripImages(parts),
-        selectedCode = selectedCode
-      }
-      local resolvedItems = messenger.async_request("context/getContextItems", data)
-      if not resolvedItems then
-        log.debug("Failed to resolve context items")
-        return
+    if text ~= "" then
+      if #parts > 0 and parts[#parts].type == "text" then
+        parts[#parts].text = parts[#parts].text .. "\n" .. text
+      else
+        table.insert(parts, { type = "text", text = text })
       end
+    end
+  end
+
+  -- Parse code blocks
+  -- TODO fix this?
+  for codeblock in text:gmatch("```(.-)```") do
+    local language, content = codeblock:match("^(%w+)\n(.*)$")
+    if language and content then
+      table.insert(selectedCode, {
+        filepath = "input",
+        range = {
+          start = { line = 0, character = 0 },
+          ["end"] = { line = select(2, content:gsub("\n", "\n")) + 1, character = 0 }
+        }
+      })
+      table.insert(parts, { type = "text", text = "```" .. language .. "\n" .. content .. "\n```" })
+    end
+  end
+
+  ---@type ContextItemWithId[]
+  local contextItems = {}
+
+  ---@type string
+  local contextItemsText = ""
+
+  for _, item in ipairs(contextItemAttrs) do
+    local data = {
+      -- item.itemType == "contextProvider" and
+      name = item.id or item.itemType,
+      query = item.query,
+      fullInput = self:stripImages(parts),
+      selectedCode = selectedCode
+    }
+    local resolvedItems = messenger.async_request("context/getContextItems", data)
+    if resolvedItems == nil or next(resolvedItems) == nil then
+      table.insert(contextItems, {
+        content = "[System response] No context found for " ..
+            item.label ..
+            ", there may be an issue while query the indexing database, please tell user to check or try again.",
+      })
+    else
       log.debug("Resolved items: " .. vim.inspect(resolvedItems))
       for _, resolvedItem in ipairs(resolvedItems) do
         table.insert(contextItems, resolvedItem)
         contextItemsText = contextItemsText .. resolvedItem.content .. "\n\n"
       end
     end
+  end
 
-    -- Handle useCodebase modifier
-    if modifiers.useCodebase then
-      local codebaseItems = messenger.async_request("context/getContextItems", {
-        name = "codebase",
-        query = "",
-        fullInput = self:stripImages(parts),
-        selectedCode = selectedCode
+  -- Handle useCodebase modifier
+  if modifiers.useCodebase then
+    local codebaseItems = messenger.async_request("context/getContextItems", {
+      name = "codebase",
+      query = "",
+      fullInput = self:stripImages(parts),
+      selectedCode = selectedCode
+    })
+    if codebaseItems == nil or next(codebaseItems) == nil then
+      table.insert(contextItems, {
+        content = "[System response] No context found for codebase" ..
+            ", there may be an issue while query the indexing database, please tell user to check or try again.",
       })
+    else
       for _, codebaseItem in ipairs(codebaseItems) do
         table.insert(contextItems, codebaseItem)
         contextItemsText = contextItemsText .. codebaseItem.content .. "\n\n"
       end
     end
+  end
 
-    -- Include default context providers
-    for _, provider in ipairs(self.defaultContextProviders or {}) do
-      local items = messenger.async_request("context/getContextItems", {
-        name = provider.name,
-        query = provider.query or "",
-        fullInput = self:stripImages(parts),
-        selectedCode = selectedCode
+  -- Include default context providers
+  for _, provider in ipairs(self.defaultContextProviders or {}) do
+    local items = messenger.async_request("context/getContextItems", {
+      name = provider.name,
+      query = provider.query or "",
+      fullInput = self:stripImages(parts),
+      selectedCode = selectedCode
+    })
+    if items == nil or next(items) == nil then
+      table.insert(contextItems, {
+        content = "[System response] No context found for name:" ..
+            provider.name
+            .. ", query:" .. provider.query ..
+            ", there may be an issue while query the indexing database, please tell user to check or try again.",
       })
+    else
       for _, item in ipairs(items) do
         table.insert(contextItems, item)
       end
     end
+  end
 
-    if contextItemsText ~= "" then
-      contextItemsText = contextItemsText .. "\n"
+  if contextItemsText ~= "" then
+    contextItemsText = contextItemsText .. "\n"
+  end
+
+  if slashCommand then
+    local lastTextIndex = self:findLastIndex(parts, function(part) return part.type == "text" end)
+    local lastPart = slashCommand .. " " .. (parts[lastTextIndex] and parts[lastTextIndex].text or "")
+    if #parts > 0 then
+      parts[lastTextIndex].text = lastPart
+    else
+      parts = { { type = "text", text = lastPart } }
     end
+  end
 
-    if slashCommand then
-      local lastTextIndex = self:findLastIndex(parts, function(part) return part.type == "text" end)
-      local lastPart = slashCommand .. " " .. (parts[lastTextIndex] and parts[lastTextIndex].text or "")
-      if #parts > 0 then
-        parts[lastTextIndex].text = lastPart
-      else
-        parts = { { type = "text", text = lastPart } }
-      end
-    end
-
-    return contextItems, selectedCode, parts
-  end)
-  return co
+  return contextItems, selectedCode, parts
 end
 
 --- Resolve a paragraph
@@ -410,8 +426,8 @@ function ChatHandler:resolveParagraph(paragraph)
   for i, part in ipairs(parts) do
     if part:sub(1, 1) == "@" then
       -- Handle mention
-      local mention = part:sub(2) -- Remove '@'
-      text = text .. mention
+      local mention = part:sub(2)
+      text = text .. " " .. mention
       table.insert(contextItems, { label = mention, id = mention })
     elseif part:sub(1, 1) == "/" and slashCommand == nil then
       -- Handle slash command (only the first one)
