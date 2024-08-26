@@ -39,6 +39,7 @@ export class TeamAnalytics {
     config: Analytics,
     uniqueId: string,
     extensionVersion: string,
+    workspaceId?: string,
   ) {
     TeamAnalytics.uniqueId = uniqueId;
     TeamAnalytics.os = os.platform();
@@ -49,7 +50,7 @@ export class TeamAnalytics {
       TeamAnalytics.provider = undefined;
     } else {
       TeamAnalytics.provider = createAnalyticsProvider(config);
-      await TeamAnalytics.provider?.setup(config, uniqueId);
+      await TeamAnalytics.provider?.setup(config, uniqueId, workspaceId);
     }
   }
 }

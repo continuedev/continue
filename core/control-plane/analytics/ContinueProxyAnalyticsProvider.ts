@@ -7,13 +7,13 @@ export default class ContinueProxyAnalyticsProvider
   implements IAnalyticsProvider
 {
   uniqueId?: string;
-  addOnId?: string;
+  workspaceId?: string;
 
   async capture(
     event: string,
     properties: { [key: string]: any },
   ): Promise<void> {
-    fetch(new URL(`/proxy/analytics/${this.addOnId}`, CONTROL_PLANE_URL), {
+    fetch(new URL(`/proxy/analytics/${this.workspaceId}`, CONTROL_PLANE_URL), {
       method: "POST",
       body: JSON.stringify({
         event,
@@ -23,9 +23,13 @@ export default class ContinueProxyAnalyticsProvider
     });
   }
 
-  async setup(config: Analytics, uniqueId: string): Promise<void> {
+  async setup(
+    config: Analytics,
+    uniqueId: string,
+    workspaceId?: string,
+  ): Promise<void> {
     this.uniqueId = uniqueId;
-    this.addOnId = config.url?.split("/").slice(-1)[0];
+    this.workspaceId = workspaceId;
   }
 
   async shutdown(): Promise<void> {}

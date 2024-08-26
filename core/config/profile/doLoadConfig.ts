@@ -19,6 +19,7 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
+  workspaceId?: string,
 ) {
   let workspaceConfigs: ContinueRcJson[] = [];
   try {
@@ -60,6 +61,7 @@ export default async function doLoadConfig(
       newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
       uniqueId,
       ideInfo.extensionVersion,
+      workspaceId,
     );
   }
 
