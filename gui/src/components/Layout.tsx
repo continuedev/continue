@@ -224,11 +224,6 @@ const Layout = () => {
   );
 
   useEffect(() => {
-    console.log(
-      `\n\n\n\n\n LAYOUT PRE_IF_CHECK onboardingStatus:${localStorage.getItem(
-        "onboardingStatus",
-      )}`,
-    );
     if (
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
