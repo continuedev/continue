@@ -94,3 +94,18 @@ export function getTheme() {
   }
   return undefined;
 }
+
+export function getThemeType() {
+  switch (vscode.window.activeColorTheme.kind) {
+    case vscode.ColorThemeKind.Light:
+      return 'light';
+    case vscode.ColorThemeKind.Dark:
+      return 'dark';
+    case vscode.ColorThemeKind.HighContrast:
+      return 'high-contrast';
+    case vscode.ColorThemeKind.HighContrastLight:
+      return 'high-contrast-light';
+    default:
+      return 'dark'; // Default to dark if unknown
+  }
+}

@@ -7,18 +7,101 @@ import {
   lightGray,
   vscBackground,
   vscForeground,
+  vscInputBackground,
 } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { useContext } from "react";
-
+import { useThemeType } from "../hooks/useVscTheme";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { SecondaryButton } from "../components";
 
+const ResourcesDiv = styled.div`
+  margin: 4px;
+  border-top: 0.5px solid ${lightGray};
+  border-bottom: 0.5px solid ${lightGray};
+`;
+
+const IconDiv = styled.div<{ backgroundColor?: string }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  padding: 12px;
+
+  & > a {
+    color: ${vscForeground};
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+  }
+
+  &:hover {
+    background-color: ${(props) => props.backgroundColor || lightGray};
+  }
+`;
+
+const TutorialButton = styled(Button)`
+  padding: 0px 10px;
+  margin-right: 2px;
+  background-color: transparent;
+  color: ${vscForeground};
+  &:hover {
+    text-decoration: underline;
+  }
+`;
+
+const StyledButton = styled.div<{
+  backgroundColor?: string;
+  hoverBackgroundColor?: string;
+  themeType?: string;
+}>`
+  background-color: ${(props) => props.backgroundColor || vscBackground};
+  border-radius: 0.6rem;
+  box-shadow: 0px 0px 3px
+    ${(props) =>
+      props.themeType === "light"
+        ? "rgba(0, 0, 0, 0.3)"
+        : "rgba(255, 255, 255, 0.3)"};
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.75rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  color: ${vscForeground};
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: ${(props) =>
+      props.hoverBackgroundColor || vscInputBackground};
+    border-color: ${(props) =>
+      props.hoverBackgroundColor || vscInputBackground};
+  }
+`;
+
+const StyledLink = styled(StyledButton).attrs({
+  as: "a",
+})<{ href: string; target?: string }>`
+  white-space: nowrap;
+  text-decoration: none;
+
+  &:hover {
+    color: inherit;
+    text-decoration: none;
+  }
+`;
+
+// Todo: Add demo video
+// Todo: Add documentation link
 function HelpPage() {
   useNavigationListener();
   const navigate = useNavigate();
+  const themeType = useThemeType();
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
@@ -26,7 +109,6 @@ function HelpPage() {
       <div
         className="items-center flex m-0 p-0 sticky top-0"
         style={{
-          borderBottom: `0.5px solid ${lightGray}`,
           backgroundColor: vscBackground,
         }}
       >
@@ -37,101 +119,153 @@ function HelpPage() {
           className="inline-block ml-4 cursor-pointer"
         />
         <h3 className="text-lg font-bold m-2 inline-block">Help</h3>
-        <TutorialButton
+      </div>
+
+      <div className="flex items-center justify-center gap-4 p-0">
+        {/* <TutorialButton
+          className="underline"
           onClick={() => {
             ideMessenger.post("showTutorial", undefined);
             navigate("/onboarding");
           }}
         >
-          Open Tutorial
-        </TutorialButton>
-      </div>
-
-      <h3
-        className="my-0 py-3 mx-auto text-center cursor-pointer"
-        onClick={() => {
-          navigate("/stats");
-        }}
-      >
-        View Usage
-      </h3>
-      <Hr className="my-0" />
-      <h3 className="my-3 mx-auto text-center">Resources</h3>
-      <ResourcesDiv className="border">
-        <IconDiv backgroundColor={"#1bbe84a8"}>
-          <a href="https://trypear.ai/" target="_blank">
-            <svg
-              width="42px"
-              height="42px"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="-2.2 -2 28 28"
-              fill={vscForeground}
-            >
-              <path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c.966 0 1.89.166 2.75.47a.75.75 0 001-.708V4.262a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" />
-            </svg>
-            PearAI Website
-          </a>
-        </IconDiv>
-        <IconDiv backgroundColor="rgb(88, 98, 227)">
-          <a href="https://discord.gg/Uw9mVvFUk3" target="_blank">
-            <svg
-              width="42px"
-              height="42px"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="-5 -5.5 60 60"
-              fill={vscForeground}
-            >
-              <path d="M 41.625 10.769531 C 37.644531 7.566406 31.347656 7.023438 31.078125 7.003906 C 30.660156 6.96875 30.261719 7.203125 30.089844 7.589844 C 30.074219 7.613281 29.9375 7.929688 29.785156 8.421875 C 32.417969 8.867188 35.652344 9.761719 38.578125 11.578125 C 39.046875 11.867188 39.191406 12.484375 38.902344 12.953125 C 38.710938 13.261719 38.386719 13.429688 38.050781 13.429688 C 37.871094 13.429688 37.6875 13.378906 37.523438 13.277344 C 32.492188 10.15625 26.210938 10 25 10 C 23.789063 10 17.503906 10.15625 12.476563 13.277344 C 12.007813 13.570313 11.390625 13.425781 11.101563 12.957031 C 10.808594 12.484375 10.953125 11.871094 11.421875 11.578125 C 14.347656 9.765625 17.582031 8.867188 20.214844 8.425781 C 20.0625 7.929688 19.925781 7.617188 19.914063 7.589844 C 19.738281 7.203125 19.34375 6.960938 18.921875 7.003906 C 18.652344 7.023438 12.355469 7.566406 8.320313 10.8125 C 6.214844 12.761719 2 24.152344 2 34 C 2 34.175781 2.046875 34.34375 2.132813 34.496094 C 5.039063 39.605469 12.972656 40.941406 14.78125 41 C 14.789063 41 14.800781 41 14.8125 41 C 15.132813 41 15.433594 40.847656 15.621094 40.589844 L 17.449219 38.074219 C 12.515625 36.800781 9.996094 34.636719 9.851563 34.507813 C 9.4375 34.144531 9.398438 33.511719 9.765625 33.097656 C 10.128906 32.683594 10.761719 32.644531 11.175781 33.007813 C 11.234375 33.0625 15.875 37 25 37 C 34.140625 37 38.78125 33.046875 38.828125 33.007813 C 39.242188 32.648438 39.871094 32.683594 40.238281 33.101563 C 40.601563 33.515625 40.5625 34.144531 40.148438 34.507813 C 40.003906 34.636719 37.484375 36.800781 32.550781 38.074219 L 34.378906 40.589844 C 34.566406 40.847656 34.867188 41 35.1875 41 C 35.199219 41 35.210938 41 35.21875 41 C 37.027344 40.941406 44.960938 39.605469 47.867188 34.496094 C 47.953125 34.34375 48 34.175781 48 34 C 48 24.152344 43.785156 12.761719 41.625 10.769531 Z M 18.5 30 C 16.566406 30 15 28.210938 15 26 C 15 23.789063 16.566406 22 18.5 22 C 20.433594 22 22 23.789063 22 26 C 22 28.210938 20.433594 30 18.5 30 Z M 31.5 30 C 29.566406 30 28 28.210938 28 26 C 28 23.789063 29.566406 22 31.5 22 C 33.433594 22 35 23.789063 35 26 C 35 28.210938 33.433594 30 31.5 30 Z"></path>
-            </svg>
-            PearAI Discord
-          </a>
-        </IconDiv>
-        <IconDiv>
-          <a href="https://github.com/trypear/pearai-app/" target="_blank">
-            <svg
-              width="42px"
-              height="42px"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="-1.2 -1.2 32 32"
-              fill={vscForeground}
-            >
-              <path d="M15,3C8.373,3,3,8.373,3,15c0,5.623,3.872,10.328,9.092,11.63C12.036,26.468,12,26.28,12,26.047v-2.051 c-0.487,0-1.303,0-1.508,0c-0.821,0-1.551-0.353-1.905-1.009c-0.393-0.729-0.461-1.844-1.435-2.526 c-0.289-0.227-0.069-0.486,0.264-0.451c0.615,0.174,1.125,0.596,1.605,1.222c0.478,0.627,0.703,0.769,1.596,0.769 c0.433,0,1.081-0.025,1.691-0.121c0.328-0.833,0.895-1.6,1.588-1.962c-3.996-0.411-5.903-2.399-5.903-5.098 c0-1.162,0.495-2.286,1.336-3.233C9.053,10.647,8.706,8.73,9.435,8c1.798,0,2.885,1.166,3.146,1.481C13.477,9.174,14.461,9,15.495,9 c1.036,0,2.024,0.174,2.922,0.483C18.675,9.17,19.763,8,21.565,8c0.732,0.731,0.381,2.656,0.102,3.594 c0.836,0.945,1.328,2.066,1.328,3.226c0,2.697-1.904,4.684-5.894,5.097C18.199,20.49,19,22.1,19,23.313v2.734 c0,0.104-0.023,0.179-0.035,0.268C23.641,24.676,27,20.236,27,15C27,8.373,21.627,3,15,3z"></path>
-            </svg>
-            PearAI GitHub
-          </a>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 items-center w-full">
-          <div className="col-span-2">
-            <h3 className="my-0">Join the community!</h3>
-            <p>
-              Join us on Discord to stay up-to-date on the latest developments
-            </p>
-          </div>
-          <a
-            href="https://discord.gg/vapESyrFmJ"
-            target="_blank"
-            className="no-underline"
+          Add another model
+      </TutorialButton> */}
+        <div className="ml-auto">
+          <TutorialButton
+            className="underline tracking-wide"
+            onClick={() => {
+              ideMessenger.post("showTutorial", undefined);
+              navigate("/onboarding");
+            }}
           >
-            <SecondaryButton className="grid grid-flow-col items-center gap-2 w-full">
-              <svg
-                width="42px"
-                height="42px"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="-5 -5.5 60 60"
-                fill={vscForeground}
-              >
-                <path d="M 41.625 10.769531 C 37.644531 7.566406 31.347656 7.023438 31.078125 7.003906 C 30.660156 6.96875 30.261719 7.203125 30.089844 7.589844 C 30.074219 7.613281 29.9375 7.929688 29.785156 8.421875 C 32.417969 8.867188 35.652344 9.761719 38.578125 11.578125 C 39.046875 11.867188 39.191406 12.484375 38.902344 12.953125 C 38.710938 13.261719 38.386719 13.429688 38.050781 13.429688 C 37.871094 13.429688 37.6875 13.378906 37.523438 13.277344 C 32.492188 10.15625 26.210938 10 25 10 C 23.789063 10 17.503906 10.15625 12.476563 13.277344 C 12.007813 13.570313 11.390625 13.425781 11.101563 12.957031 C 10.808594 12.484375 10.953125 11.871094 11.421875 11.578125 C 14.347656 9.765625 17.582031 8.867188 20.214844 8.425781 C 20.0625 7.929688 19.925781 7.617188 19.914063 7.589844 C 19.738281 7.203125 19.34375 6.960938 18.921875 7.003906 C 18.652344 7.023438 12.355469 7.566406 8.320313 10.8125 C 6.214844 12.761719 2 24.152344 2 34 C 2 34.175781 2.046875 34.34375 2.132813 34.496094 C 5.039063 39.605469 12.972656 40.941406 14.78125 41 C 14.789063 41 14.800781 41 14.8125 41 C 15.132813 41 15.433594 40.847656 15.621094 40.589844 L 17.449219 38.074219 C 12.515625 36.800781 9.996094 34.636719 9.851563 34.507813 C 9.4375 34.144531 9.398438 33.511719 9.765625 33.097656 C 10.128906 32.683594 10.761719 32.644531 11.175781 33.007813 C 11.234375 33.0625 15.875 37 25 37 C 34.140625 37 38.78125 33.046875 38.828125 33.007813 C 39.242188 32.648438 39.871094 32.683594 40.238281 33.101563 C 40.601563 33.515625 40.5625 34.144531 40.148438 34.507813 C 40.003906 34.636719 37.484375 36.800781 32.550781 38.074219 L 34.378906 40.589844 C 34.566406 40.847656 34.867188 41 35.1875 41 C 35.199219 41 35.210938 41 35.21875 41 C 37.027344 40.941406 44.960938 39.605469 47.867188 34.496094 C 47.953125 34.34375 48 34.175781 48 34 C 48 24.152344 43.785156 12.761719 41.625 10.769531 Z M 18.5 30 C 16.566406 30 15 28.210938 15 26 C 15 23.789063 16.566406 22 18.5 22 C 20.433594 22 22 23.789063 22 26 C 22 28.210938 20.433594 30 18.5 30 Z M 31.5 30 C 29.566406 30 28 28.210938 28 26 C 28 23.789063 29.566406 22 31.5 22 C 33.433594 22 35 23.789063 35 26 C 35 28.210938 33.433594 30 31.5 30 Z"></path>
-              </svg>
-              Continue Discord
-            </SecondaryButton>
-          </a>
+            Open Tutorial
+          </TutorialButton>
+          <TutorialButton
+            className="underline tracking-wide"
+            onClick={() => {
+              ideMessenger.post("showTutorial", undefined);
+              navigate("/onboarding");
+            }}
+          >
+            Login to PearAI
+          </TutorialButton>
         </div>
       </div>
 
+      <div className="flex items-center justify-center m-4 gap-4 p-0">
+        <StyledLink
+          href="https://trypear.ai/"
+          target="_blank"
+          themeType={themeType}
+        >
+          PearAI Website
+        </StyledLink>
+
+        <StyledButton
+          className="inline-flex flex-shrink-0"
+          themeType={themeType}
+          onClick={() => {
+            navigate("/stats");
+          }}
+        >
+          View Usage
+        </StyledButton>
+      </div>
+      <div className="flex items-center justify-center m-4 gap-4 p-0">
+        <StyledLink
+          className="flex items-center justify-center gap-2"
+          href="https://discord.gg/Uw9mVvFUk3"
+          target="_blank"
+          themeType={themeType}
+        >
+          <DiscordSVG />
+          Discord
+        </StyledLink>
+        <StyledLink
+          className="flex items-center justify-center gap-2"
+          href="https://github.com/trypear/pearai-app/"
+          target="_blank"
+          themeType={themeType}
+        >
+          <GithubSVG />
+          Github
+        </StyledLink>
+      </div>
       <KeyboardShortcutsDialog />
     </div>
   );
 }
+
+const GithubSVG = () => {
+  return (
+    <svg
+      width="25px"
+      height="25px"
+      viewBox="0 0 20 20"
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="#000000"
+    >
+      <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+      <g
+        id="SVGRepo_tracerCarrier"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      ></g>
+      <g id="SVGRepo_iconCarrier">
+        {" "}
+        <title>github [#6e6e6e]</title> <desc>Created with Sketch.</desc>{" "}
+        <defs> </defs>{" "}
+        <g
+          id="Page-1"
+          stroke="none"
+          stroke-width="1"
+          fill="none"
+          fill-rule="evenodd"
+        >
+          {" "}
+          <g
+            id="Dribbble-Light-Preview"
+            transform="translate(-140.000000, -7559.000000)"
+            fill="#6e6e6e"
+          >
+            {" "}
+            <g id="icons" transform="translate(56.000000, 160.000000)">
+              {" "}
+              <path
+                d="M94,7399 C99.523,7399 104,7403.59 104,7409.253 C104,7413.782 101.138,7417.624 97.167,7418.981 C96.66,7419.082 96.48,7418.762 96.48,7418.489 C96.48,7418.151 96.492,7417.047 96.492,7415.675 C96.492,7414.719 96.172,7414.095 95.813,7413.777 C98.04,7413.523 100.38,7412.656 100.38,7408.718 C100.38,7407.598 99.992,7406.684 99.35,7405.966 C99.454,7405.707 99.797,7404.664 99.252,7403.252 C99.252,7403.252 98.414,7402.977 96.505,7404.303 C95.706,7404.076 94.85,7403.962 94,7403.958 C93.15,7403.962 92.295,7404.076 91.497,7404.303 C89.586,7402.977 88.746,7403.252 88.746,7403.252 C88.203,7404.664 88.546,7405.707 88.649,7405.966 C88.01,7406.684 87.619,7407.598 87.619,7408.718 C87.619,7412.646 89.954,7413.526 92.175,7413.785 C91.889,7414.041 91.63,7414.493 91.54,7415.156 C90.97,7415.418 89.522,7415.871 88.63,7414.304 C88.63,7414.304 88.101,7413.319 87.097,7413.247 C87.097,7413.247 86.122,7413.234 87.029,7413.87 C87.029,7413.87 87.684,7414.185 88.139,7415.37 C88.139,7415.37 88.726,7417.2 91.508,7416.58 C91.513,7417.437 91.522,7418.245 91.522,7418.489 C91.522,7418.76 91.338,7419.077 90.839,7418.982 C86.865,7417.627 84,7413.783 84,7409.253 C84,7403.59 88.478,7399 94,7399"
+                id="github-[#6e6e6e]"
+              >
+                {" "}
+              </path>{" "}
+            </g>{" "}
+          </g>{" "}
+        </g>{" "}
+      </g>
+    </svg>
+  );
+};
+
+const DiscordSVG = () => {
+  return (
+    <svg
+      width="25px"
+      height="25px"
+      viewBox="0 -28.5 256 256"
+      version="1.1"
+      xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid"
+    >
+      <g>
+        <path
+          d="M216.856339,16.5966031 C200.285002,8.84328665 182.566144,3.2084988 164.041564,0 C161.766523,4.11318106 159.108624,9.64549908 157.276099,14.0464379 C137.583995,11.0849896 118.072967,11.0849896 98.7430163,14.0464379 C96.9108417,9.64549908 94.1925838,4.11318106 91.8971895,0 C73.3526068,3.2084988 55.6133949,8.86399117 39.0420583,16.6376612 C5.61752293,67.146514 -3.4433191,116.400813 1.08711069,164.955721 C23.2560196,181.510915 44.7403634,191.567697 65.8621325,198.148576 C71.0772151,190.971126 75.7283628,183.341335 79.7352139,175.300261 C72.104019,172.400575 64.7949724,168.822202 57.8887866,164.667963 C59.7209612,163.310589 61.5131304,161.891452 63.2445898,160.431257 C105.36741,180.133187 151.134928,180.133187 192.754523,160.431257 C194.506336,161.891452 196.298154,163.310589 198.110326,164.667963 C191.183787,168.842556 183.854737,172.420929 176.223542,175.320965 C180.230393,183.341335 184.861538,190.991831 190.096624,198.16893 C211.238746,191.588051 232.743023,181.531619 254.911949,164.955721 C260.227747,108.668201 245.831087,59.8662432 216.856339,16.5966031 Z M85.4738752,135.09489 C72.8290281,135.09489 62.4592217,123.290155 62.4592217,108.914901 C62.4592217,94.5396472 72.607595,82.7145587 85.4738752,82.7145587 C98.3405064,82.7145587 108.709962,94.5189427 108.488529,108.914901 C108.508531,123.290155 98.3405064,135.09489 85.4738752,135.09489 Z M170.525237,135.09489 C157.88039,135.09489 147.510584,123.290155 147.510584,108.914901 C147.510584,94.5396472 157.658606,82.7145587 170.525237,82.7145587 C183.391518,82.7145587 193.761324,94.5189427 193.539891,108.914901 C193.539891,123.290155 183.391518,135.09489 170.525237,135.09489 Z"
+          fill="#6e6e6e"
+          fill-rule="nonzero"
+        ></path>
+      </g>
+    </svg>
+  );
+};
 
 export default HelpPage;

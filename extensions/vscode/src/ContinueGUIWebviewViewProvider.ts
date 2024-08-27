@@ -1,6 +1,6 @@
 import type { FileEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { getTheme } from "./util/getTheme";
+import { getTheme, getThemeType } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -200,6 +200,7 @@ export class ContinueGUIWebviewViewProvider implements WebviewViewProvider {
       if (e.affectsConfiguration("workbench.colorTheme")) {
         // Send new theme to GUI to update embedded Monaco themes
         this.webviewProtocol?.request("setTheme", { theme: getTheme() });
+        this.webviewProtocol?.request("setThemeType", { themeType: getThemeType() });
       }
     });
 

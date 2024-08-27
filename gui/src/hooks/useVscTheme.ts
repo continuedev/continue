@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { parseHexColor } from "../components";
 import { useWebviewListener } from "./useWebviewListener";
 
@@ -160,4 +160,14 @@ export function useVscTheme() {
   });
 
   return theme;
+}
+
+export function useThemeType() {
+  const [themeType, setThemeType] = useState('dark');
+  useWebviewListener("setThemeType", async (data) => {
+    console.log("setThemeType", data);
+    setThemeType(data.themeType);
+  });
+
+  return themeType;
 }
