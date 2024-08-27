@@ -247,6 +247,10 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       );
 
       if (snippets) {
+        if (!Array.isArray(snippets)) {
+          snippets = [snippets];
+        }
+
         const snippetIds = snippets.map((row: any) => row.id).join(",");
 
         await db.run(
