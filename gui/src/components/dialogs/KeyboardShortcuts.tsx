@@ -123,8 +123,8 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Quick Edit Selected code",
   },
   {
-    mac: "CMD [",
-    windows: "CTRL [",
+    mac: "CMD \\",
+    windows: "CTRL \\",
     description: "Big Chat",
   },
   {
