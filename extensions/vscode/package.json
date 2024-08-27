@@ -381,6 +381,21 @@
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "pearai.loadRecentChat",
+        "mac": "cmd+0",
+        "key": "ctrl+0"
+      },
+      {
+        "command": "pearai.resizeAuxiliaryBarWidth",
+        "mac": "cmd+\\",
+        "key": "ctrl+\\"
+      },
+      {
+        "command": "pearai.viewHistory",
+        "mac": "cmd+o",
+        "key": "ctrl+o"
       }
     ],
     "submenus": [

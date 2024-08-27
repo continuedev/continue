@@ -12,7 +12,7 @@ Begin your journey by logging in on the PearAI panel (Cmd/Ctrl+;)
 |------------------------------------|---------------------------------------------|
 | New Chat / Add Selected            | <kbd>Cmd/Ctrl</kbd> + <kbd>L</kbd>          |
 | Close Pear Chat                    | <kbd>Cmd/Ctrl</kbd> + <kbd>;</kbd>          |
-| Toggle Big Chat                    | <kbd>Cmd/Ctrl</kbd> + <kbd>[</kbd>          |
+| Toggle Big Chat                    | <kbd>Cmd/Ctrl</kbd> + <kbd>\\</kbd>          |
 | Append Selected                    | <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> |
 | Inline Prompting                   | <kbd>Cmd/Ctrl</kbd> + <kbd>I</kbd>          |
 | Add Latest Terminal Error to Chat  | <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> |
