@@ -299,23 +299,30 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.removeTag.length; i++) {
       const removeTag = results.removeTag[i];
 
-      const snippet = await db.get(
+      let snippets = await db.get(
         `SELECT id FROM code_snippets
             WHERE cacheKey = ? AND path = ?`,
         [removeTag.cacheKey, removeTag.path],
       );
+
       if (!Array.isArray(snippets)) {
         snippets = [snippets];
       }
 
-      if (snippet) {
+      if (snippets) {
+        if (!Array.isArray(snippets)) {
+          snippets = [snippets];
+        }
+
+        const snippetIds = snippets.map((row: any) => row.id).join(",");
+
         await db.run(
           `
           DELETE FROM code_snippets_tags
           WHERE tag = ?
-            AND snippetId = ?
+            AND snippetId IN (${snippetIds})
         `,
-          [tagString, snippet.id],
+          [tagString],
         );
       }
 

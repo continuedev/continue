@@ -20,7 +20,7 @@ class RepoMapContextProvider extends BaseContextProvider {
   REPO_MAX_CONTEXT_LENGTH_RATIO = 0.5;
 
   static description: ContextProviderDescription = {
-    title: "repo_map",
+    title: "repo-map",
     displayTitle: "Repository Map",
     description: "List of files and signatures",
     type: "normal",
