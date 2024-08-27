@@ -1,3 +1,4 @@
+import * as path from "path";
 import { RunResult } from "sqlite3";
 import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
@@ -11,7 +12,6 @@ import {
   type CodebaseIndex,
 } from "../types.js";
 import { chunkDocument, shouldChunk } from "./chunk.js";
-import * as path from "path";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
@@ -122,12 +122,16 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         [item.cacheKey],
       );
 
-      await db.run("DELETE FROM chunks WHERE id = ?", [chunkToDelete.id]);
+      if (chunkToDelete) {
+        await db.run("DELETE FROM chunks WHERE id = ?", [chunkToDelete.id]);
 
-      // Delete from chunk_tags
-      await db.run("DELETE FROM chunk_tags WHERE chunkId = ?", [
-        chunkToDelete.id,
-      ]);
+        // Delete from chunk_tags
+        await db.run("DELETE FROM chunk_tags WHERE chunkId = ?", [
+          chunkToDelete.id,
+        ]);
+      } else {
+        console.debug("Chunk to delete wasn't found in the table: ", item.path);
+      }
 
       await markComplete([item], IndexResultType.Delete);
       accumulatedProgress += 1 / results.del.length / 4;
