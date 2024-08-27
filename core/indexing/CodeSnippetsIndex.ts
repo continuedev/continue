@@ -367,7 +367,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
   static async *getAllPathsAndSignatures(
     workspaceDir: string,
-    batchSize: number = 1000,
+    batchSize: number = 100,
   ): AsyncGenerator<{ [path: string]: string[] }> {
     const db = await SqliteDb.get();
     await CodeSnippetsCodebaseIndex._createTables(db);
