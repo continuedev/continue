@@ -217,7 +217,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          "INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
+          "REPLACE INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
           [
             addTag.path,
             addTag.cacheKey,
