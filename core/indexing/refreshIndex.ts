@@ -226,7 +226,7 @@ async function getAddRemoveForTag(
           break;
         case AddRemoveResultType.Add:
           await db.run(
-            "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
+            "REPLACE INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
             path,
             cacheKey,
             newLastUpdatedTimestamp,
