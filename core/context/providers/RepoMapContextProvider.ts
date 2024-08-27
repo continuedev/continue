@@ -1,21 +1,26 @@
 import * as fs from "fs";
+import * as path from "path";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-  ContextSubmenuItem,
-  LoadSubmenuItemsArgs,
-} from "../../index.js";
+} from "../../";
 import { CodeSnippetsCodebaseIndex } from "../../indexing/CodeSnippetsIndex.js";
-import { BaseContextProvider } from "../index.js";
-import { getRepoMapFilePath } from "../../util/paths.js";
+import { getRepoMapFilePath } from "../../util/paths";
+import { BaseContextProvider } from "..";
 
 class RepoMapContextProvider extends BaseContextProvider {
+  repoMapPreamble =
+    "Below is a repository map. \n" +
+    "For each file in the codebase, " +
+    "this map contains the name of the file, and the signature for any " +
+    "classes, methods, or functions in the file.\n\n";
+
   static description: ContextProviderDescription = {
     title: "repo_map",
     displayTitle: "Repository Map",
     description: "Overview of the repository structure",
-    type: "default",
+    type: "normal",
   };
 
   async getContextItems(
@@ -23,12 +28,11 @@ class RepoMapContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const repoMapPath = getRepoMapFilePath();
-    
-    if (!fs.existsSync(repoMapPath)) {
-      await this.generateRepoMap();
-    }
+
+    await this.generateRepoMap(extras);
 
     const content = fs.readFileSync(repoMapPath, "utf8");
+
     return [
       {
         name: "Repository Map",
@@ -38,21 +42,29 @@ class RepoMapContextProvider extends BaseContextProvider {
     ];
   }
 
-  private async generateRepoMap(): Promise<void> {
+  private async generateRepoMap(extras: ContextProviderExtras): Promise<void> {
     const repoMapPath = getRepoMapFilePath();
-    
+    const [workspaceDir] = await extras.ide.getWorkspaceDirs();
+
     if (fs.existsSync(repoMapPath)) {
       console.log(`Overwriting existing repo map at ${repoMapPath}`);
     }
 
     const writeStream = fs.createWriteStream(repoMapPath);
-    writeStream.write("Repository Map:\n\n");
+    writeStream.write(this.repoMapPreamble);
 
-    for await (const { path, signatures } of CodeSnippetsCodebaseIndex.getAllPathsAndSignatures()) {
-      writeStream.write(`${path}:\n`);
+    for await (const {
+      path: absolutePath,
+      signatures,
+    } of CodeSnippetsCodebaseIndex.getAllPathsAndSignatures(workspaceDir)) {
+      const relativePath = path.relative(workspaceDir, absolutePath);
+
+      writeStream.write(`${relativePath}:\n`);
+
       for (const signature of signatures) {
         writeStream.write(`  ${signature}\n`);
       }
+
       writeStream.write("\n");
     }
 
