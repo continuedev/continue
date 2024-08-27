@@ -343,4 +343,41 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       return [];
     }
   }
+
+  static async getAllPathsAndSignatures(batchSize: number = 1000): AsyncGenerator<{ path: string; signatures: string[] }> {
+    const db = await SqliteDb.get();
+    await CodeSnippetsCodebaseIndex._createTables(db);
+
+    let offset = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const rows = await db.all(
+        `SELECT path, signature
+         FROM code_snippets
+         ORDER BY path
+         LIMIT ? OFFSET ?`,
+        [batchSize, offset]
+      );
+
+      if (rows.length === 0) {
+        hasMore = false;
+        continue;
+      }
+
+      const groupedByPath: { [path: string]: string[] } = {};
+      for (const row of rows) {
+        if (!groupedByPath[row.path]) {
+          groupedByPath[row.path] = [];
+        }
+        groupedByPath[row.path].push(row.signature);
+      }
+
+      for (const [path, signatures] of Object.entries(groupedByPath)) {
+        yield { path, signatures };
+      }
+
+      offset += batchSize;
+    }
+  }
 }

@@ -7,6 +7,7 @@ import {
 } from "../../index.js";
 import { CodeSnippetsCodebaseIndex } from "../../indexing/CodeSnippetsIndex.js";
 import { BaseContextProvider } from "../index.js";
+import RepoMapContextProvider from "./RepoMapContextProvider.js";
 
 const MAX_SUBMENU_ITEMS = 10_000;
 
@@ -18,10 +19,20 @@ class CodeContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
+  private repoMapProvider: RepoMapContextProvider;
+
+  constructor() {
+    super();
+    this.repoMapProvider = new RepoMapContextProvider();
+  }
+
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    if (query === "repo_map") {
+      return this.repoMapProvider.getContextItems(query, extras);
+    }
     // Assume the query is the id as returned by loadSubmenuItems
     return [
       await CodeSnippetsCodebaseIndex.getForId(Number.parseInt(query, 10)),
@@ -38,7 +49,14 @@ class CodeContextProvider extends BaseContextProvider {
       tags.map((tag) => CodeSnippetsCodebaseIndex.getAll(tag)),
     );
 
-    const submenuItems: ContextSubmenuItem[] = [];
+    const submenuItems: ContextSubmenuItem[] = [
+      {
+        title: "Repository Map",
+        description: "Overview of the repository structure",
+        id: "repo_map",
+      },
+    ];
+
     for (const snippetList of snippets.slice(-MAX_SUBMENU_ITEMS)) {
       submenuItems.push(...snippetList);
     }
