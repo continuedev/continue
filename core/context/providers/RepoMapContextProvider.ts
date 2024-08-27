@@ -16,10 +16,13 @@ class RepoMapContextProvider extends BaseContextProvider {
     "this map contains the name of the file, and the signature for any " +
     "classes, methods, or functions in the file.\n\n";
 
+  // The max percent of the context window we will take
+  REPO_MAX_CONTEXT_LENGTH_RATIO = 0.5;
+
   static description: ContextProviderDescription = {
     title: "repo_map",
     displayTitle: "Repository Map",
-    description: "Overview of the repository structure",
+    description: "List of files and signatures",
     type: "normal",
   };
 
@@ -27,49 +30,79 @@ class RepoMapContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const repoMapPath = getRepoMapFilePath();
-
-    await this.generateRepoMap(extras);
-
-    const content = fs.readFileSync(repoMapPath, "utf8");
-
     return [
       {
         name: "Repository Map",
         description: "Overview of the repository structure",
-        content,
+        content: await this.generateRepoMap(extras),
       },
     ];
   }
 
-  private async generateRepoMap(extras: ContextProviderExtras): Promise<void> {
+  private indentMultilineString(str: string) {
+    return str
+      .split("\n")
+      .map((line: any) => "\t" + line)
+      .join("\n");
+  }
+
+  private async generateRepoMap({ llm, ide }: ContextProviderExtras) {
     const repoMapPath = getRepoMapFilePath();
-    const [workspaceDir] = await extras.ide.getWorkspaceDirs();
+    const [workspaceDir] = await ide.getWorkspaceDirs();
+    const maxRepoMapTokens =
+      llm.contextLength * this.REPO_MAX_CONTEXT_LENGTH_RATIO;
 
     if (fs.existsSync(repoMapPath)) {
-      console.log(`Overwriting existing repo map at ${repoMapPath}`);
+      console.debug(`Overwriting existing repo map at ${repoMapPath}`);
     }
 
     const writeStream = fs.createWriteStream(repoMapPath);
     writeStream.write(this.repoMapPreamble);
 
-    for await (const {
-      path: absolutePath,
-      signatures,
-    } of CodeSnippetsCodebaseIndex.getAllPathsAndSignatures(workspaceDir)) {
-      const relativePath = path.relative(workspaceDir, absolutePath);
+    let curTokens = llm.countTokens(this.repoMapPreamble);
 
-      writeStream.write(`${relativePath}:\n`);
+    for await (const pathsAndSignatures of CodeSnippetsCodebaseIndex.getAllPathsAndSignatures(
+      workspaceDir,
+    )) {
+      let content = "";
 
-      for (const signature of signatures) {
-        writeStream.write(`  ${signature}\n`);
+      for (const [absolutePath, signatures] of Object.entries(
+        pathsAndSignatures,
+      )) {
+        const relativePath = path.relative(workspaceDir, absolutePath);
+        content += `${relativePath}:\n`;
+
+        for (const signature of signatures.slice(0, -1)) {
+          content += `${this.indentMultilineString(signature)}\n\t...\n`;
+        }
+
+        // Don't add the trailing elipsis for the last entry
+        content += `${this.indentMultilineString(
+          signatures[signatures.length - 1],
+        )}\n\n`;
       }
 
-      writeStream.write("\n");
+      curTokens += llm.countTokens(content);
+
+      if (curTokens >= maxRepoMapTokens) {
+        break;
+      }
+
+      writeStream.write(content);
     }
 
     writeStream.end();
-    console.log(`Generated repo map at ${repoMapPath}`);
+    console.debug(`Generated repo map at ${repoMapPath}`);
+
+    if (curTokens >= maxRepoMapTokens) {
+      console.debug(
+        "Full repo map was unable to be genereated due to context window limitations",
+      );
+    }
+
+    const repoMap = fs.readFileSync(repoMapPath, "utf8");
+
+    return repoMap;
   }
 }
 

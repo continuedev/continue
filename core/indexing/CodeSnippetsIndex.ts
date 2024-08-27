@@ -37,7 +37,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         cacheKey TEXT NOT NULL,
         content TEXT NOT NULL,
         title TEXT NOT NULL,
-        signature TEXT NOT NULL,
+        signature TEXT,
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL
     )`);
@@ -107,45 +107,56 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   }
 
   private getSnippetsFromMatch(match: Parser.QueryMatch): SnippetChunk {
+    const bodyTypesToTreatAsSignatures = [
+      "interface_declaration", // TypeScript, Java
+      "struct_item", // Rust
+      "type_spec", // Go
+    ];
+
+    const bodyCaptureGroupPrefixes = ["definition", "reference"];
+
     let title = "",
       content = "",
       signature = "",
-      parameters = "",
-      returnType = "",
       startLine = 0,
-      endLine = 0;
+      endLine = 0,
+      hasSeenBody = false;
 
-    const nodeTypesToTreatAsSignatures = ["interface_declaration"];
-
+    // This loop assumes that the ordering of the capture groups is represenatative
+    // of the structure of the language, e.g. for a TypeScript match on a function,
+    // `function myFunc(param: string): string`, the first capture would be the `myFunc`
+    // the second capture would be the `(param: string)`, etc
     for (const { name, node } of match.captures) {
+      // Assume we are capturing groups using a dot syntax for more precise groupings
+      // However, for this case, we only care about the first substring
+      const trimmedCaptureName = name.split(".")[0];
+
       const nodeText = node.text;
       const nodeType = node.type;
 
-      switch (name) {
-        case "name":
+      if (bodyCaptureGroupPrefixes.includes(trimmedCaptureName)) {
+        if (bodyTypesToTreatAsSignatures.includes(nodeType)) {
+          // Note we override whatever existing value there is here
+          signature = nodeText;
+          hasSeenBody = true;
+        }
+
+        content = nodeText;
+        startLine = node.startPosition.row;
+        endLine = node.endPosition.row;
+      } else {
+        if (trimmedCaptureName === "name") {
           title = nodeText;
-          break;
-        case "body":
-          if (nodeTypesToTreatAsSignatures.includes(nodeType)) {
-            signature = nodeText;
+        }
+
+        if (!hasSeenBody) {
+          signature += nodeText + " ";
+
+          if (trimmedCaptureName === "comment") {
+            signature += "\n";
           }
-
-          content = nodeText;
-          startLine = node.startPosition.row;
-          endLine = node.endPosition.row;
-
-          break;
-        case "parameters":
-          parameters = nodeText;
-          break;
-        case "return_type":
-          returnType = nodeText;
-          break;
+        }
       }
-    }
-
-    if (signature === "") {
-      signature = `${title}${parameters}${returnType}`;
     }
 
     return { title, content, signature, startLine, endLine };
@@ -347,7 +358,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   static async *getAllPathsAndSignatures(
     workspaceDir: string,
     batchSize: number = 1000,
-  ): AsyncGenerator<{ path: string; signatures: string[] }> {
+  ): AsyncGenerator<{ [path: string]: string[] }> {
     const db = await SqliteDb.get();
     await CodeSnippetsCodebaseIndex._createTables(db);
 
@@ -378,9 +389,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         groupedByPath[row.path].push(row.signature);
       }
 
-      for (const [path, signatures] of Object.entries(groupedByPath)) {
-        yield { path, signatures };
-      }
+      yield groupedByPath;
 
       offset += batchSize;
     }
