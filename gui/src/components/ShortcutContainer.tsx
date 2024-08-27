@@ -131,7 +131,7 @@ const ShortcutContainer = () => {
     },
     {
       modifiers: [modifier],
-      keyCode: "O",
+      keyCode: "H",
       description: "History",
       onClick: () => ideMessenger.post("openHistory", undefined),
     },
