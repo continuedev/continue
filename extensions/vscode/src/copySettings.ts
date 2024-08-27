@@ -51,7 +51,15 @@ function copyVSCodeSettingsToPearAIDir() {
         }
     });
 
-    const exclusions = ['vscode-pylance', 'pearai.pearai', 'continue.continue']
+
+    const exclusions = ['pearai.pearai', 'continue.continue']
+    const platform = process.platform;
+    const arch = process.arch;
+
+    if (platform === "darwin" && arch === "arm64") {
+        exclusions.push('vscode-pylance');
+    }
+
     copyDirectoryRecursiveSync(vscodeExtensionsDir, pearAIDevExtensionsDir, exclusions);
     }
 

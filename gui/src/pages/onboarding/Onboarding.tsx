@@ -140,7 +140,7 @@ function Onboarding() {
   return (
     <div className="max-w-96  mx-auto leading-normal">
       <h1 className="text-center">Welcome to PearAI!</h1>
-      <h3 className="mx-3">Begin your journey by logging in!</h3>
+      <h3 className="mx-3 text-center">Begin your journey by logging in!</h3>
       <CustomModelButton
         className="m-5"
         disabled={false}
@@ -161,12 +161,12 @@ function Onboarding() {
       <p style={{ color: lightGray }} className="mx-3">
         After login, the website should redirect you back here.
       </p>
-      <small 
-        style={{ 
-          color: lightGray, 
-          fontSize: '0.85em', 
-          display: 'block' 
-        }} 
+      <small
+        style={{
+          color: lightGray,
+          fontSize: '0.85em',
+          display: 'block'
+        }}
         className="mx-3"
       >
         Note: Having trouble logging in? Open PearAI from the dashboard on the {' '}
@@ -216,6 +216,7 @@ function Onboarding() {
           Skip
         </StyledButton>
       </div>
+
     </div>
   );
 }

@@ -94,8 +94,8 @@ export const defaultConfig: SerializedContinueConfig = {
   models: [
     {
       model: "pearai_model",
-      contextLength: 128000,
-      title: "pearai-server",
+      contextLength: 300000,
+      title: "PearAI Model",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
       provider: "pearai_server",
@@ -103,8 +103,8 @@ export const defaultConfig: SerializedContinueConfig = {
     },
     {
       model: "gpt-4o",
-      contextLength: 128000,
-      title: "gpt4o-pear",
+      contextLength: 300000,
+      title: "GPT-4o (PearAI)",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
       provider: "pearai_server",
@@ -112,8 +112,8 @@ export const defaultConfig: SerializedContinueConfig = {
     },
     {
       model: "claude-3-5-sonnet-20240620",
-      contextLength: 128000,
-      title: "claude3.5-pear",
+      contextLength: 3000000,
+      title: "Claude 3.5 Sonnet (PearAI)",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
       provider: "pearai_server",
@@ -128,11 +128,12 @@ export const defaultConfig: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "PearAI Autocomplete",
-    provider: "pearai_server",
-    model: "pearai_autocomplete",
-  },
+  // Todo: Add autocomplete by default
+  // tabAutocompleteModel: {
+  //   title: "PearAI Autocomplete",
+  //   provider: "pearai_server",
+  //   model: "pearai_autocomplete",
+  // },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
 };
