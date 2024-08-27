@@ -12,7 +12,7 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { shouldBeginOnboarding } from "../pages/onboarding/utils";
+import { isNewUserOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -30,7 +30,6 @@ import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 
-// #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
@@ -105,8 +104,6 @@ const ProfileDropdownPortalDiv = styled.div`
   font-size: ${getFontSize() - 2};
 `;
 
-// #endregion
-
 const HIDE_FOOTER_ON_PAGES = [
   "/onboarding",
   "/localOnboarding",
@@ -127,7 +124,6 @@ const Layout = () => {
   );
 
   const defaultModel = useSelector(defaultModelSelector);
-  // #region Selectors
 
   const bottomMessage = useSelector(
     (state: RootState) => state.uiState.bottomMessage,
@@ -137,8 +133,6 @@ const Layout = () => {
   );
 
   const timeline = useSelector((state: RootState) => state.state.history);
-
-  // #endregion
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
@@ -231,7 +225,7 @@ const Layout = () => {
 
   useEffect(() => {
     if (
-      shouldBeginOnboarding() &&
+      isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
       navigate("/onboarding");

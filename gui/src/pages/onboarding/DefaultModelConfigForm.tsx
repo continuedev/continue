@@ -7,7 +7,7 @@ import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { models } from "../AddNewModel/configs/models";
 import { providers } from "../AddNewModel/configs/providers";
 import { StyledButton } from "./components";
-import { useOnboarding } from "./utils";
+import { useCompleteOnboarding } from "./utils";
 
 const HelperText = styled.p`
   font-size: 0.8rem;
@@ -23,7 +23,7 @@ function DefaultModelConfigForm() {
   const [mistralApiKey, setMistralApiKey] = useState("");
   const [anthropicApiKey, setAnthropicApiKey] = useState("");
 
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding } = useCompleteOnboarding();
 
   const isFormComplete = !!mistralApiKey && !!anthropicApiKey;
 
