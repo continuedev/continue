@@ -240,7 +240,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.removeTag.length; i++) {
       const removeTag = results.removeTag[i];
 
-      const snippets = await db.get(
+      let snippets = await db.get(
         `SELECT id FROM code_snippets
             WHERE cacheKey = ? AND path = ?`,
         [removeTag.cacheKey, removeTag.path],
