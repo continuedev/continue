@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
 import { IDE, SlashCommand } from "../..";
 import * as fs from "fs/promises";
 import * as path from "path";

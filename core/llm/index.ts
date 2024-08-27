@@ -91,6 +91,7 @@ export abstract class BaseLLM implements ILLM {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -110,15 +111,12 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
 
-  // For WatsonX only.
-
+  // For IBM watsonx only.
   watsonxUrl?: string;
-  watsonxApiKey?: string;
-  watsonxZenApiKeyBase64?: string = "YOUR_WATSONX_ZENAPIKEY"; // Required if using watsonx software with ZenApiKey auth
-  watsonxUsername?: string;
-  watsonxPassword?: string;
+  watsonxCreds?: string;
   watsonxProjectId?: string;
   watsonxStopToken?: string;
+  watsonxApiVersion?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -143,6 +141,7 @@ export abstract class BaseLLM implements ILLM {
     this.systemMessage = options.systemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+    this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
@@ -171,13 +170,13 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+
     // for watsonx only
     this.watsonxUrl = options.watsonxUrl;
-    this.watsonxApiKey = options.watsonxApiKey;
+    this.watsonxCreds = options.watsonxCreds;
     this.watsonxProjectId = options.watsonxProjectId;
-    this.watsonxUsername = options.watsonxUsername;
-    this.watsonxPassword = options.watsonxPassword;
     this.watsonxStopToken = options.watsonxStopToken;
+    this.watsonxApiVersion = options.watsonxApiVersion;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

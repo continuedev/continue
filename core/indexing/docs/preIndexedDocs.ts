@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import { SiteIndexingConfig } from "../../index.js";
+import { SiteIndexingConfig } from "../../";
 
 const preIndexedDocs: Record<
   SiteIndexingConfig["startUrl"],

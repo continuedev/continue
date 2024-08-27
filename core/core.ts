@@ -26,7 +26,9 @@ import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
+import { TTS } from "./util/tts";
 import { streamDiffLines } from "./util/verticalEdit";
+import DocsCrawler from "./indexing/docs/DocsCrawler";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -167,12 +169,19 @@ export class Core {
       (..._) => Promise.resolve([]),
     );
 
+    try {
+      DocsCrawler.verifyOrInstallChromium();
+    } catch (err) {
+      console.debug(`Failed to install Chromium: ${err}`);
+    }
+
     const on = this.messenger.on.bind(this.messenger);
 
     this.messenger.onError((err) => {
       console.error(err);
       Telemetry.capture("core_messenger_error", {
         message: err.message,
+        stack: err.stack,
       });
       this.messenger.request("errorPopup", { message: err.message });
     });
@@ -359,6 +368,13 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
+      const config = await configHandler.loadConfig();
+
+      // Stop TTS on new StreamChat
+      if(config.experimental?.readResponseTTS) {
+        TTS.kill();
+      }
+
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
         msg.data.messages,
@@ -381,6 +397,10 @@ export class Core {
         }
         yield { content: next.value.content };
         next = await gen.next();
+      }
+
+      if(config.experimental?.readResponseTTS && "completion" in next.value) {
+        TTS.read(next.value?.completion);
       }
 
       return { done: true, content: next.value };
@@ -455,6 +475,13 @@ export class Core {
         console.warn(`Error listing Ollama models: ${e}`);
         return undefined;
       }
+    });
+
+    // Provide messenger to TTS so it can set GUI active / inactive state
+    TTS.messenger = this.messenger;
+
+    on("tts/kill", async () => {
+      TTS.kill();
     });
 
     async function* runNodeJsSlashCommand(
@@ -638,8 +665,13 @@ export class Core {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
     });
-    on("index/forceReIndex", async (msg) => {
-      const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
+    on("index/forceReIndex", async ({ data }) => {
+      if (data?.shouldClearIndexes) {
+        const codebaseIndexer = await this.codebaseIndexerPromise;
+        await codebaseIndexer.clearIndexes();
+      }
+
+      const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
@@ -690,6 +722,7 @@ export class Core {
           "indexing_error",
           {
             error: update.desc,
+            stack: update.debugInfo,
           },
           false,
         );

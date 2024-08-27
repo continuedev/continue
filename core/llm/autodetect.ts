@@ -80,7 +80,7 @@ function modelSupportsImages(
   title: string | undefined,
   capabilities: ModelCapability | undefined
 ): boolean {
-  if (capabilities?.uploadImage !== undefined) return capabilities.uploadImage
+  if (capabilities?.uploadImage !== undefined) {return capabilities.uploadImage;}
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }

@@ -2,13 +2,19 @@ import { IndexingProgressUpdate } from "core";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { RootState } from "../../redux/store";
 import { getFontSize, isJetBrains } from "../../util";
 import StatusDot from "./StatusDot";
+import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
+import { usePostHog } from "posthog-js/react";
 
 const STATUS_COLORS = {
   DISABLED: lightGray, // light gray
@@ -69,16 +75,36 @@ interface ProgressBarProps {
 const IndexingProgressBar = ({
   indexingState: indexingStateProp,
 }: ProgressBarProps) => {
+  const dispatch = useDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+  const posthog = usePostHog();
+
+  const [paused, setPaused] = useState<boolean | undefined>(undefined);
+  const [hovered, setHovered] = useState(false);
+
+  const embeddingsProvider = useSelector(
+    (state: RootState) => state.state.config.embeddingsProvider,
+  );
+
   // If sidebar is opened before extension initiates, define a default indexingState
   const defaultIndexingState: IndexingProgressUpdate = {
     status: "loading",
     progress: 0,
     desc: "",
   };
+
   const indexingState = indexingStateProp || defaultIndexingState;
+
+  const fillPercentage = Math.min(
+    100,
+    Math.max(0, indexingState.progress * 100),
+  );
+
+  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   // If sidebar is opened after extension initializes, retrieve saved states.
   let initialized = false;
+
   useEffect(() => {
     if (!initialized) {
       // Triggers retrieval for possible non-default states set prior to IndexingProgressBar initialization
@@ -87,58 +113,80 @@ const IndexingProgressBar = ({
     }
   }, []);
 
-  const fillPercentage = Math.min(
-    100,
-    Math.max(0, indexingState.progress * 100),
-  );
-
-  const ideMessenger = useContext(IdeMessengerContext);
-
-  const embeddingsProvider = useSelector(
-    (state: RootState) => state.state.config.embeddingsProvider,
-  );
-
-  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
-
-  const [paused, setPaused] = useState<boolean | undefined>(undefined);
-  const [hovered, setHovered] = useState(false);
-
   useEffect(() => {
     if (paused === undefined) return;
     ideMessenger.post("index/setPaused", paused);
   }, [paused]);
+
+  function onClick() {
+    switch (indexingState.status) {
+      case "failed":
+        // For now, we don't show in JetBrains since the reindex command
+        // is not yet implemented
+        if (indexingState.shouldClearIndexes && !isJetBrains()) {
+          dispatch(setShowDialog(true));
+          dispatch(
+            setDialogMessage(
+              <ConfirmationDialog
+                title="Rebuild codebase index"
+                confirmText="Rebuild"
+                text={
+                  "Your index appears corrupted. We recommend clearing and rebuilding it, " +
+                  "which may take time for large codebases.\n\n" +
+                  "For a faster rebuild without clearing data, press 'Shift + Command + P' to open " +
+                  "the Command Palette, and type out 'Continue: Force Codebase Re-Indexing'"
+                }
+                onConfirm={() => {
+                  posthog.capture("rebuild_index_clicked");
+                  ideMessenger.post("index/forceReIndex", {
+                    shouldClearIndexes: true,
+                  });
+                }}
+              />,
+            ),
+          );
+        } else {
+          ideMessenger.post("index/forceReIndex", undefined);
+        }
+
+        break;
+      case "indexing":
+      case "paused":
+        if (indexingState.progress < 1 && indexingState.progress >= 0) {
+          setPaused((prev) => !prev);
+        } else {
+          ideMessenger.post("index/forceReIndex", undefined);
+        }
+
+        break;
+      default:
+        ideMessenger.post("index/forceReIndex", undefined);
+        break;
+    }
+  }
 
   function getIndexingErrMsg(msg: string): string {
     if (
       isJetBrains() &&
       embeddingsProvider === TransformersJsEmbeddingsProvider.model
     ) {
-      return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers";
+      return (
+        "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. " +
+        "To enable codebase indexing, you can use any of the other providers described " +
+        "in the docs: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers"
+      );
     }
+
     return msg;
   }
 
   return (
-    <div
-      onClick={() => {
-        if (
-          indexingState.status !== "failed" &&
-          indexingState.progress < 1 &&
-          indexingState.progress >= 0
-        ) {
-          setPaused((prev) => !prev);
-        } else {
-          ideMessenger.post("index/forceReIndex", undefined);
-        }
-      }}
-      className="cursor-pointer"
-    >
+    <div onClick={onClick} className="cursor-pointer">
       {indexingState.status === "failed" ? (
         <FlexDiv data-tooltip-id="indexingFailed_dot">
           <StatusDot color={STATUS_COLORS.FAILED}></StatusDot>
           <div>
             <StatusHeading>Indexing error - click to retry</StatusHeading>
-            {/* <StatusInfo>{getIndexingErrMsg(indexingState.desc)}</StatusInfo> */}
           </div>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(

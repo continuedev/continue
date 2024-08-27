@@ -8,8 +8,21 @@ import Types from "../config/types.js";
 import { IdeType, SerializedContinueConfig } from "../index.js";
 
 dotenv.config();
+
 const CONTINUE_GLOBAL_DIR =
   process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
+
+export function getChromiumPath(): string {
+  return path.join(getContinueUtilsPath(), ".chromium-browser-snapshots");
+}
+
+export function getContinueUtilsPath(): string {
+  const utilsPath = path.join(getContinueGlobalPath(), ".utils");
+  if (!fs.existsSync(utilsPath)) {
+    fs.mkdirSync(utilsPath);
+  }
+  return utilsPath;
+}
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
@@ -200,6 +213,10 @@ export async function migrate(
   callback: () => void | Promise<void>,
   onAlreadyComplete?: () => void,
 ) {
+  if (process.env.NODE_ENV === "test") {
+    return await Promise.resolve(callback());
+  }
+
   const migrationsPath = getMigrationsFolderPath();
   const migrationPath = path.join(migrationsPath, id);
 

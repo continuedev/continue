@@ -94,7 +94,7 @@ const exe = os === "win32" ? ".exe" : "";
     execCmdSync("npm run build");
   }
 
-  // Copy over the dist folder to the Intellij extension //
+  // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(
     "..",
     "extensions",
@@ -114,7 +114,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp("dist", intellijExtensionWebviewPath, (error) => {
       if (error) {
         console.warn(
-          "[error] Error copying React app build to Intellij extension: ",
+          "[error] Error copying React app build to JetBrains extension: ",
           error,
         );
         reject(error);
@@ -136,7 +136,7 @@ const exe = os === "win32" ? ".exe" : "";
     path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
   );
 
-  console.log("[info] Copied gui build to Intellij extension");
+  console.log("[info] Copied gui build to JetBrains extension");
 
   // Then copy over the dist folder to the VSCode extension //
   const vscodeGuiPath = path.join("../extensions/vscode/gui");
@@ -247,8 +247,12 @@ const exe = os === "win32" ? ".exe" : "";
     "../../../core/llm/llamaTokenizer.mjs",
     "../../../core/llm/tiktokenWorkerPool.mjs",
   ];
+
   for (const f of filesToCopy) {
-    fs.copyFileSync(path.join(__dirname, f), path.join(__dirname, "..", "out", path.basename(f)));
+    fs.copyFileSync(
+      path.join(__dirname, f),
+      path.join(__dirname, "..", "out", path.basename(f)),
+    );
     console.log(`[info] Copied ${path.basename(f)}`);
   }
 
@@ -457,6 +461,7 @@ const exe = os === "win32" ? ".exe" : "";
     "@vscode/ripgrep",
     "workerpool",
   ];
+
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
@@ -504,8 +509,8 @@ const exe = os === "win32" ? ".exe" : "";
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -544,8 +549,8 @@ const exe = os === "win32" ? ".exe" : "";
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"

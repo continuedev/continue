@@ -100,26 +100,30 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     contents: string,
   ): Promise<(ChunkWithoutID & { title: string })[]> {
     const parser = await getParserForFile(filepath);
+
     if (!parser) {
       return [];
     }
+
     const ast = parser.parse(contents);
     const query = await getQueryForFile(filepath, TSQueryType.CodeSnippets);
     const matches = query?.matches(ast.rootNode);
 
-    return (
-      matches?.flatMap((match) => {
-        const node = match.captures[0].node;
-        const title = match.captures[1].node.text;
-        const results = {
-          title,
-          content: node.text,
-          startLine: node.startPosition.row,
-          endLine: node.endPosition.row,
-        };
-        return results;
-      }) ?? []
-    );
+    if (!matches) {
+      return [];
+    }
+
+    return matches.flatMap((match) => {
+      const node = match.captures[0].node;
+      const title = match.captures[1].node.text;
+      const results = {
+        title,
+        content: node.text,
+        startLine: node.startPosition.row,
+        endLine: node.endPosition.row,
+      };
+      return results;
+    });
   }
 
   async *update(
@@ -132,6 +136,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     await CodeSnippetsCodebaseIndex._createTables(db);
     const tagString = tagToString(tag);
 
+    // Compute
     for (let i = 0; i < results.compute.length; i++) {
       const compute = results.compute[i];
 
@@ -174,18 +179,29 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       markComplete([compute], IndexResultType.Compute);
     }
 
+    // Delete
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
-      const deleted = await db.run(
-        "DELETE FROM code_snippets WHERE path = ? AND cacheKey = ?",
+
+      const snippets = await db.all(
+        "SELECT id FROM code_snippets WHERE path = ? AND cacheKey = ?",
         [del.path, del.cacheKey],
       );
-      await db.run("DELETE FROM code_snippets_tags WHERE snippetId = ?", [
-        deleted.lastID,
-      ]);
+
+      if (snippets) {
+        const snippetIds = snippets.map((row) => row.id).join(",");
+
+        await db.run(`DELETE FROM code_snippets WHERE id IN (${snippetIds})`);
+
+        await db.run(
+          `DELETE FROM code_snippets_tags WHERE snippetId IN (${snippetIds})`,
+        );
+      }
+
       markComplete([del], IndexResultType.Delete);
     }
 
+    // Add tag
     for (let i = 0; i < results.addTag.length; i++) {
       const addTag = results.addTag[i];
       let snippets: (ChunkWithoutID & { title: string })[] = [];
@@ -220,19 +236,33 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       markComplete([results.addTag[i]], IndexResultType.AddTag);
     }
 
+    // Remove tag
     for (let i = 0; i < results.removeTag.length; i++) {
-      const item = results.removeTag[i];
-      await db.run(
-        `
-        DELETE FROM code_snippets_tags
-        WHERE tag = ?
-          AND snippetId IN (
-            SELECT id FROM code_snippets
-            WHERE cacheKey = ? AND path = ?
-          )
-      `,
-        [tagString, item.cacheKey, item.path],
+      const removeTag = results.removeTag[i];
+
+      let snippets = await db.get(
+        `SELECT id FROM code_snippets
+            WHERE cacheKey = ? AND path = ?`,
+        [removeTag.cacheKey, removeTag.path],
       );
+
+      if (snippets) {
+        if (!Array.isArray(snippets)) {
+          snippets = [snippets];
+        }
+
+        const snippetIds = snippets.map((row: any) => row.id).join(",");
+
+        await db.run(
+          `
+          DELETE FROM code_snippets_tags
+          WHERE tag = ?
+            AND snippetId IN (${snippetIds})
+        `,
+          [tagString],
+        );
+      }
+
       markComplete([results.removeTag[i]], IndexResultType.RemoveTag);
     }
   }

@@ -36,7 +36,7 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
   return (
     <div className="p-4">
       <h3>{props.title ?? "Confirmation"}</h3>
-      <p>{props.text}</p>
+      <p style={{ whiteSpace: "pre-wrap" }}>{props.text}</p>
 
       <GridDiv>
         {!!props.hideCancelButton || (

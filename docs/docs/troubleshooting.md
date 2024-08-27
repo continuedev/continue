@@ -1,12 +1,16 @@
 ---
-title: ❓ Troubleshooting
+title: Troubleshooting
 description: Troubleshooting while waiting for help during beta / alpha testing
 keywords: [reload, delete, manually, logs, server, console]
 ---
 
-# ❓ Troubleshooting
+The Continue VS Code extension is currently in beta, and the JetBrains extension is in Alpha. If you are having trouble, please follow the steps below.
 
-The Continue VS Code extension is currently in beta, and the Intellij extension is in Alpha. If you are having trouble, please follow the steps below.
+1. [Check the logs](#check-the-logs)
+2. [Try the latest pre-release](#download-the-latest-pre-release)
+3. [Download an older version](#download-an-older-version)
+4. [Resolve keyboard shortcut issues](#keyboard-shortcuts-not-resolving)
+5. [Check FAQs for common issues](#faqs)
 
 ## Check the logs
 
@@ -32,7 +36,7 @@ If you're getting a response from the LLM that doesn't seem to make sense, you c
 
 ### JetBrains
 
-Open `~/.continue/core.log`. The most recent logs are found at the bottom of the file.
+Open `~/.continue/logs/core.log`. The most recent logs are found at the bottom of the file.
 
 ## Download the latest pre-release
 
@@ -49,7 +53,7 @@ On JetBrains, the "pre-release" happens through their Early Access Program (EAP)
 1. Open JetBrains settings (cmd/ctrl+,) and go to "Plugins"
 2. Click the gear icon at the top
 3. Select "Manage Plugin Repositories..."
-4. Add "https://plugins.jetbrains.com/plugins/eap/list" to the list
+4. Add "[https://plugins.jetbrains.com/plugins/eap/list>](https://plugins.jetbrains.com/plugins/eap/list>)" to the list
 5. You'll now always be able to download the latest EAP version from the marketplace
 
 ## Download an Older Version
@@ -108,6 +112,12 @@ By default the Continue window is on the left side of VS Code, but it can be dra
 
 If you have entered a valid API key and model, but are still getting a 404 error from OpenAI, this may be because you need to add credits to your billing account. You can do so from the [billing console](https://platform.openai.com/settings/organization/billing/overview). If you just want to check that this is in fact the cause of the error, you can try adding $1 to your account and checking whether the error persists.
 
+### Indexing issues
+
+If you are having persistent errors with indexing, our recommendation is to rebuild your index from scratch. Note that for large codebases this may take some time.
+
+This can be accomplished using the following command: `Continue: Rebuild codebase index`.
+
 ## Still having trouble?
 
-Create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), leaving the details of your problem, and we'll be able to more quickly help you out.
+You can also join our Discord community [here](https://discord.gg/vapESyrFmJ) for additional support and discussions. Alternatively, you can create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), providing details of your problem, and we'll be able to help you out more quickly.

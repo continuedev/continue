@@ -6,16 +6,12 @@
     "outDir": "out/tsc/src",
     "sourceMap": true,
     "rootDir": "../../",
-    "strict": true /* enable all strict type-checking options */,
-    /* Additional Checks */
-    // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */
-    // "noFallthroughCasesInSwitch": true, /* Report errors for fallthrough cases in switch statement. */
-    // "noUnusedParameters": true,  /* Report errors on unused parameters. */
-    "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
-    "resolveJsonModule": true /* Enable importing .json files */,
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
     "types": ["mocha"] // This solves conflict between jest and mocha: https://github.com/cypress-io/cypress/issues/7435#issuecomment-631695007
   },
   "include": ["src/**/*", "../../core/**/*.ts", "../../core/**/*.d.ts"],
   // core/test uses @types/jest, which conflicts with @types/mocha
-  "exclude": ["../../core/dist/**/*", "../../core/test/**/*"]
+  "exclude": ["../../core/dist/**/*", "../../core/**/*.test.ts"]
 }

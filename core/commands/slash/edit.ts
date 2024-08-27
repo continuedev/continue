@@ -5,18 +5,18 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream.js";
-import { streamLines } from "../../diff/util.js";
-import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/images.js";
+} from "../../autocomplete/lineStream";
+import { streamLines } from "../../diff/util";
+import { ContextItemWithId, ILLM, SlashCommand } from "../../";
+import { stripImages } from "../../llm/images";
 import {
   dedentAndGetCommonWhitespace,
   getMarkdownLanguageTagForFile,
-} from "../../util/index.js";
+} from "../../util/";
 import {
   contextItemToRangeInFileWithContents,
   type RangeInFileWithContents,
-} from "../util.js";
+} from "../util";
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -61,13 +61,6 @@ export async function getPromptParts(
   tokenLimit: number | undefined,
 ) {
   const maxTokens = Math.floor(model.contextLength / 2);
-
-  const TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = tokenLimit ?? 1200;
-  // if (model.countTokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE) {
-  //   throw new Error(
-  //     "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
-  //   );
-  // }
 
   const BUFFER_FOR_FUNCTIONS = 400;
   let totalTokens =

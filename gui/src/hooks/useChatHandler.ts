@@ -1,5 +1,4 @@
 import { Dispatch } from "@reduxjs/toolkit";
-
 import { JSONContent } from "@tiptap/react";
 import {
   ChatHistory,
@@ -37,6 +36,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
+  const defaultContextProviders = useSelector(
+    (store: RootState) => store.state.config.experimental?.defaultContext ?? [],
+  );
 
   const slashCommands = useSelector(
     (store: RootState) => store.state.config.slashCommands || [],
@@ -177,28 +179,30 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
 
       // Resolve context providers and construct new history
-      const [contextItems, selectedCode, content] = await resolveEditorContent(
-        editorState,
-        modifiers,
-        ideMessenger,
-      );
-      dispatch(addContextItems(contextItems));
+      const [selectedContextItems, selectedCode, content] =
+        await resolveEditorContent(
+          editorState,
+          modifiers,
+          ideMessenger,
+          defaultContextProviders,
+        );
 
       // Automatically use currently open file
-      if (!modifiers.noContext && (history.length === 0 || index === 0)) {
+      if (!modifiers.noContext) {
         const usingFreeTrial = defaultModel?.provider === "free-trial";
 
         const currentFilePath = await ideMessenger.ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
-          let currentFileContents =
-            await ideMessenger.ide.readFile(currentFilePath);
+          let currentFileContents = await ideMessenger.ide.readFile(
+            currentFilePath,
+          );
           if (usingFreeTrial) {
             currentFileContents = currentFileContents
               .split("\n")
               .slice(0, 1000)
               .join("\n");
           }
-          contextItems.unshift({
+          selectedContextItems.unshift({
             content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
               currentFilePath,
               await ideMessenger.ide.getWorkspaceDirs(),
@@ -212,6 +216,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           });
         }
       }
+      dispatch(addContextItems(contextItems));
 
       const message: ChatMessage = {
         role: "user",
@@ -219,7 +224,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       };
       const historyItem: ChatHistoryItem = {
         message,
-        contextItems,
+        contextItems: selectedContextItems,
         // : typeof index === "number"
         //   ? history[index].contextItems
         //   : contextItems,
@@ -232,7 +237,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         setMessageAtIndex({
           message,
           index: historyIndex,
-          contextItems,
+          contextItems: selectedContextItems,
         }),
       );
 
@@ -254,17 +259,26 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
+        let updatedContextItems = [];
         posthog.capture("step run", {
           step_name: slashCommand.name,
           params: {},
         });
+
+        // For edit and comment slash commands, including the selected code in the context from store and for other commands, including the selected context alone
+        if (slashCommand.name === "edit" || slashCommand.name === "comment") {
+          updatedContextItems = [...contextItems];
+        } else {
+          updatedContextItems = [...selectedContextItems];
+        }
+
         await _streamSlashCommand(
           messages,
           slashCommand,
           commandInput,
           historyIndex,
           selectedCode,
-          contextItems,
+          updatedContextItems,
         );
       }
     } catch (e: any) {

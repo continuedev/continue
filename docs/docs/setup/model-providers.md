@@ -46,7 +46,7 @@ You can run a model on your local computer using:
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
 - [IPEX-LLM](../reference/Model%20Providers/ipex_llm.md) (Local LLM on Intel GPU)
 - [Msty](../reference/Model%20Providers/msty.md)
-- [Watsonx](../reference/Model%20Providers/watsonx.md)
+- [IBM watsonx](../reference/Model%20Providers/watsonx.md)
 - [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
 ### Remote
@@ -63,6 +63,7 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 You can access both open-source and commercial LLMs via:
 
 - [OpenRouter](../reference/Model%20Providers/openrouter.md)
+- [Kindo](../reference/Model%20Providers/kindo.md)
 
 ### Open-source models
 

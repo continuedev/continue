@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import type { AutocompleteInput } from "../autocomplete/completionProvider.js";
-import { ProfileDescription } from "../config/ConfigHandler.js";
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -16,7 +15,7 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
-} from "../index.js";
+} from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -129,8 +128,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
+  "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined | string, void];
+  "index/forceReIndex": [
+    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    void,
+  ];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {

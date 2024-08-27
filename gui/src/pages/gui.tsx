@@ -134,38 +134,6 @@ const NewSessionButton = styled.div`
   cursor: pointer;
 `;
 
-const ThreadHead = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 18px 6px 0 6px;
-`;
-
-const THREAD_AVATAR_SIZE = 15;
-
-const ThreadAvatar = styled.div`
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: rgba(248, 248, 248, 0.75);
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(136, 136, 136, 0.3);
-`;
-
-const ThreadUserTitle = styled.div`
-  text-transform: capitalize;
-  font-weight: 500;
-  margin-bottom: 2px;
-`;
-
-const ThreadUserName = styled.div`
-  font-size: ${getFontSize() - 3}px;
-  color: ${lightGray};
-`;
-
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
@@ -195,6 +163,7 @@ function GUI() {
 
   const defaultModel = useSelector(defaultModelSelector);
 
+  const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
   const active = useSelector((state: RootState) => state.state.active);
 
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
@@ -549,6 +518,16 @@ function GUI() {
           trackVisibility={active}
         />
       </TopGuiDiv>
+      {ttsActive && (
+        <StopButton
+          className="mt-2 mb-4"
+          onClick={() => {
+            ideMessenger.post("tts/kill", undefined);
+          }}
+        >
+          ■ Stop TTS
+        </StopButton>
+      )}
       {active && (
         <StopButton
           className="mt-auto mb-4"

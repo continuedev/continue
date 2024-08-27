@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "docusaurus start",
+    "start": "nodemon --watch sidebars.js --watch docusaurus.config.js --exec 'docusaurus start'",
     "build": "docusaurus build",
     "build:netlify": "docusaurus build --out-dir build/docs",
     "swizzle": "docusaurus swizzle",
@@ -27,7 +27,8 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "^3.2.1"
+    "@docusaurus/module-type-aliases": "^3.2.1",
+    "nodemon": "^3.1.4"
   },
   "browserslist": {
     "production": [

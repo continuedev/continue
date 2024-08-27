@@ -84,12 +84,12 @@ class FileSystemIde implements IDE {
   }
 
   async getTags(artifactId: string): Promise<IndexTag[]> {
-    const directory =(await this.getWorkspaceDirs())[0]
+    const directory =(await this.getWorkspaceDirs())[0];
     return [{
       artifactId,
       branch: await this.getBranch(directory),
       directory
-    }]
+    }];
   }
 
   getIdeInfo(): Promise<IdeInfo> {

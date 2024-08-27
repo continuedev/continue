@@ -293,7 +293,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.core.invoke("index/forceReIndex", dir);
+                  this.core.invoke("index/forceReIndex", { dir });
                 }
               }
 
