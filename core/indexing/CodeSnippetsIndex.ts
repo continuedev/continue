@@ -1,3 +1,4 @@
+import Parser from "web-tree-sitter";
 import type {
   ChunkWithoutID,
   ContextItem,
@@ -21,6 +22,8 @@ import {
   type CodebaseIndex,
 } from "./types";
 
+type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
+
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
   artifactId = "codeSnippets";
@@ -34,7 +37,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         cacheKey TEXT NOT NULL,
         content TEXT NOT NULL,
         title TEXT NOT NULL,
-        signature TEXT,
+        signature TEXT NOT NULL,
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL
     )`);
@@ -103,10 +106,55 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     });
   }
 
+  private getSnippetsFromMatch(match: Parser.QueryMatch): SnippetChunk {
+    let title = "",
+      content = "",
+      signature = "",
+      parameters = "",
+      returnType = "",
+      startLine = 0,
+      endLine = 0;
+
+    const nodeTypesToTreatAsSignatures = ["interface_declaration"];
+
+    for (const { name, node } of match.captures) {
+      const nodeText = node.text;
+      const nodeType = node.type;
+
+      switch (name) {
+        case "name":
+          title = nodeText;
+          break;
+        case "body":
+          if (nodeTypesToTreatAsSignatures.includes(nodeType)) {
+            signature = nodeText;
+          }
+
+          content = nodeText;
+          startLine = node.startPosition.row;
+          endLine = node.endPosition.row;
+
+          break;
+        case "parameters":
+          parameters = nodeText;
+          break;
+        case "return_type":
+          returnType = nodeText;
+          break;
+      }
+    }
+
+    if (signature === "") {
+      signature = `${title}${parameters}${returnType}`;
+    }
+
+    return { title, content, signature, startLine, endLine };
+  }
+
   async getSnippetsInFile(
     filepath: string,
     contents: string,
-  ): Promise<(ChunkWithoutID & { title: string; signature: string })[]> {
+  ): Promise<SnippetChunk[]> {
     const parser = await getParserForFile(filepath);
 
     if (!parser) {
@@ -121,20 +169,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       return [];
     }
 
-    return matches.flatMap((match) => {
-      const node = match.captures[0].node;
-      const title = match.captures[1].node.text;
-      const signatureNode = node.child(0); // Assuming the first child is the signature
-      const signature = signatureNode ? signatureNode.text : '';
-      const results = {
-        title,
-        content: node.text,
-        signature,
-        startLine: node.startPosition.row,
-        endLine: node.endPosition.row,
-      };
-      return results;
-    });
+    return matches.map(this.getSnippetsFromMatch);
   }
 
   async *update(
@@ -151,7 +186,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.compute.length; i++) {
       const compute = results.compute[i];
 
-      let snippets: (ChunkWithoutID & { title: string })[] = [];
+      let snippets: SnippetChunk[] = [];
       try {
         snippets = await this.getSnippetsInFile(
           compute.path,
@@ -216,7 +251,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     // Add tag
     for (let i = 0; i < results.addTag.length; i++) {
       const addTag = results.addTag[i];
-      let snippets: (ChunkWithoutID & { title: string })[] = [];
+      let snippets: SnippetChunk[] = [];
       try {
         snippets = await this.getSnippetsInFile(
           addTag.path,
@@ -253,22 +288,20 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.removeTag.length; i++) {
       const removeTag = results.removeTag[i];
 
-      const snippets = await db.get(
+      const snippet = await db.get(
         `SELECT id FROM code_snippets
             WHERE cacheKey = ? AND path = ?`,
         [removeTag.cacheKey, removeTag.path],
       );
 
-      if (snippets) {
-        const snippetIds = snippets.map((row: any) => row.id).join(",");
-
+      if (snippet) {
         await db.run(
           `
           DELETE FROM code_snippets_tags
           WHERE tag = ?
-            AND snippetId IN (${snippetIds})
+            AND snippetId = ?
         `,
-          [tagString],
+          [tagString, snippet.id],
         );
       }
 
@@ -283,7 +316,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     return {
       name: row.title,
       description: getLastNPathParts(row.path, 2),
-      content: `\`\`\`${getBasename(row.path)}\n${row.signature}\n${row.content}\n\`\`\``,
+      content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
     };
   }
 
