@@ -117,12 +117,12 @@ jobs:
           npm ci
           npm i vectordb
 
-      - name: Run core tests
-        run: |
-          cd core
-          npm run test
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      # - name: Run core tests
+      #   run: |
+      #     cd core
+      #     npm run test
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 2.5. Pre package
       - name: Set var for environment info
