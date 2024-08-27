@@ -489,6 +489,7 @@ declare global {
     | "flowise"
     | "groq"
     | "custom"
+    | "nvidia"
     | "msty";
   
   export type ModelName =
