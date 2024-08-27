@@ -205,7 +205,8 @@ class PearAIServer extends BaseLLM {
     ];
   }
   supportsFim(): boolean {
-    return true;
+    // Todo: Change to true when server is ready
+    return false;
   }
 
   private async _checkAndUpdateCredentials(): Promise<boolean> {
