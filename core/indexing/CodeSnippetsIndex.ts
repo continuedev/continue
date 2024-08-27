@@ -304,6 +304,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
             WHERE cacheKey = ? AND path = ?`,
         [removeTag.cacheKey, removeTag.path],
       );
+      if (!Array.isArray(snippets)) {
+        snippets = [snippets];
+      }
 
       if (snippet) {
         await db.run(

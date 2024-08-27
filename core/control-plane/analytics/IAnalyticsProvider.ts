@@ -6,6 +6,10 @@ export interface AnalyticsMetadata {
 
 export interface IAnalyticsProvider {
   capture(event: string, properties: { [key: string]: any }): Promise<void>;
-  setup(config: Analytics, uniqueId: string): Promise<void>;
+  setup(
+    config: Analytics,
+    uniqueId: string,
+    workspaceId?: string,
+  ): Promise<void>;
   shutdown(): Promise<void>;
 }
