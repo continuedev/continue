@@ -365,43 +365,43 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     }
   }
 
-  static async *getAllPathsAndSignatures(
-    workspaceDir: string,
+  static async getPathsAndSignatures(
+    workspaceDirs: string[],
+    offset: number = 0,
     batchSize: number = 100,
-  ): AsyncGenerator<{ [path: string]: string[] }> {
+  ): Promise<{
+    groupedByPath: { [path: string]: string[] };
+    hasMore: boolean;
+  }> {
     const db = await SqliteDb.get();
     await CodeSnippetsCodebaseIndex._createTables(db);
 
-    let offset = 0;
-    let hasMore = true;
+    const likePatterns = workspaceDirs.map((dir) => `${dir}%`);
+    const placeholders = likePatterns.map(() => "?").join(" OR path LIKE ");
 
-    while (hasMore) {
-      const rows = await db.all(
-        `SELECT path, signature
-         FROM code_snippets
-         WHERE path LIKE ?
-         ORDER BY path
-         LIMIT ? OFFSET ?`,
-        [`${workspaceDir}%`, batchSize, offset],
-      );
+    const query = `
+  SELECT path, signature
+  FROM code_snippets
+  WHERE path LIKE ${placeholders}
+  ORDER BY path
+  LIMIT ? OFFSET ?
+`;
 
-      if (rows.length === 0) {
-        hasMore = false;
-        continue;
+    const rows = await db.all(query, [...likePatterns, batchSize, offset]);
+
+    const validRows = rows.filter((row) => row.path && row.signature !== null);
+
+    const groupedByPath: { [path: string]: string[] } = {};
+
+    for (const { path, signature } of validRows) {
+      if (!groupedByPath[path]) {
+        groupedByPath[path] = [];
       }
-
-      const groupedByPath: { [path: string]: string[] } = {};
-
-      for (const row of rows) {
-        if (!groupedByPath[row.path]) {
-          groupedByPath[row.path] = [];
-        }
-        groupedByPath[row.path].push(row.signature);
-      }
-
-      yield groupedByPath;
-
-      offset += batchSize;
+      groupedByPath[path].push(signature);
     }
+
+    const hasMore = rows.length === batchSize;
+
+    return { groupedByPath, hasMore };
   }
 }

@@ -48,7 +48,7 @@ class RepoMapContextProvider extends BaseContextProvider {
 
   private async generateRepoMap({ llm, ide }: ContextProviderExtras) {
     const repoMapPath = getRepoMapFilePath();
-    const [workspaceDir] = await ide.getWorkspaceDirs();
+    const workspaceDirs = await ide.getWorkspaceDirs();
     const maxRepoMapTokens =
       llm.contextLength * this.REPO_MAX_CONTEXT_LENGTH_RATIO;
 
@@ -60,15 +60,23 @@ class RepoMapContextProvider extends BaseContextProvider {
     writeStream.write(this.repoMapPreamble);
 
     let curTokens = llm.countTokens(this.repoMapPreamble);
+    let offset = 0;
+    const batchSize = 100;
 
-    for await (const pathsAndSignatures of CodeSnippetsCodebaseIndex.getAllPathsAndSignatures(
-      workspaceDir,
-    )) {
+    while (true) {
+      const { groupedByPath, hasMore } =
+        await CodeSnippetsCodebaseIndex.getPathsAndSignatures(
+          workspaceDirs,
+          offset,
+          batchSize,
+        );
+
       let content = "";
 
-      for (const [absolutePath, signatures] of Object.entries(
-        pathsAndSignatures,
-      )) {
+      for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
+        const workspaceDir =
+          workspaceDirs.find((dir) => absolutePath.startsWith(dir)) || "";
+
         const relativePath = path.relative(workspaceDir, absolutePath);
         content += `${relativePath}:\n`;
 
@@ -76,10 +84,12 @@ class RepoMapContextProvider extends BaseContextProvider {
           content += `${this.indentMultilineString(signature)}\n\t...\n`;
         }
 
-        // Don't add the trailing elipsis for the last entry
-        content += `${this.indentMultilineString(
-          signatures[signatures.length - 1],
-        )}\n\n`;
+        if (signatures.length > 0) {
+          // Don't add the trailing ellipsis for the last entry
+          content += `${this.indentMultilineString(
+            signatures[signatures.length - 1],
+          )}\n\n`;
+        }
       }
 
       curTokens += llm.countTokens(content);
@@ -89,6 +99,12 @@ class RepoMapContextProvider extends BaseContextProvider {
       }
 
       writeStream.write(content);
+
+      if (!hasMore) {
+        break;
+      }
+
+      offset += batchSize;
     }
 
     writeStream.end();
