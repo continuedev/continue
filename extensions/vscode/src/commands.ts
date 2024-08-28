@@ -710,9 +710,8 @@ const commandsMap: (
       const callbackUri = await vscode.env.asExternalUri(
         vscode.Uri.parse(extensionUrl),
       );
-      // TODO: Open the proxy location with vscode redirect
-      sidebar.setLoginStatus(false);
 
+      // TODO: Open the proxy location with vscode redirect
       await vscode.env.openExternal(
         await vscode.env.asExternalUri(
           vscode.Uri.parse(
@@ -724,7 +723,6 @@ const commandsMap: (
     "pearai.logout": async () => {
       await extensionContext.secrets.delete("pearai-token");
       await extensionContext.secrets.delete("pearai-refresh");
-      sidebar.setLoginStatus(false);
       vscode.window.showInformationMessage("PearAI: Successfully logged out!");
     },
     "pearai.updateUserAuth": async (data: {
@@ -741,7 +739,7 @@ const commandsMap: (
 
       extensionContext.secrets.store("pearai-token", data.accessToken);
       extensionContext.secrets.store("pearai-refresh", data.refreshToken);
-      sidebar.setLoginStatus(true);
+
       sidebar.webviewProtocol?.request("addPearAIModel", undefined);
       vscode.window.showInformationMessage("PearAI: Successfully logged in!");
     },
@@ -770,9 +768,7 @@ export function registerAllCommands(
   context: vscode.ExtensionContext,
   ide: IDE,
   extensionContext: vscode.ExtensionContext,
-  sidebar: ContinueGUIWebviewViewProvider & {
-    setLoginStatus: (isLoggedIn: boolean) => void;
-  },
+  sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
