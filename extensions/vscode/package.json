@@ -129,6 +129,12 @@
     },
     "commands": [
       {
+        "command": "continue.test",
+        "category": "Continue",
+        "title": "Test",
+        "group": "Continue"
+      },
+      {
         "command": "continue.acceptDiff",
         "category": "Continue",
         "title": "Accept Diff",
@@ -272,6 +278,11 @@
       }
     ],
     "keybindings": [
+      {
+        "command": "continue.test",
+        "mac": "cmd+shift+i",
+        "key": "ctrl+shift+i"
+      },
       {
         "command": "continue.focusContinueInput",
         "mac": "cmd+l",
@@ -615,6 +626,7 @@
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.20",
     "vscode-languageclient": "^8.0.2",
+    "vscode-position-tracking": "^0.1.0",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"
   }
