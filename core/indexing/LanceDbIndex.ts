@@ -12,6 +12,7 @@ import {
 } from "../index.js";
 import { getBasename } from "../util/index.js";
 import { getLanceDbPath, migrate } from "../util/paths.js";
+import { Telemetry } from "../util/posthog.js";
 import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
@@ -414,6 +415,15 @@ export class LanceDbIndex implements CodebaseIndex {
     const tableNames = await db.tableNames();
     if (!tableNames.includes(tableName)) {
       console.warn("Table not found in LanceDB", tableName);
+      return [];
+    }
+
+    if (!db.search) {
+      // Unclear why this is happening
+      console.debug(
+        "Error retrieving from vectordb: db.search isn't a function",
+      );
+      Telemetry.capture("db_search_not_a_function", {}, false);
       return [];
     }
 
