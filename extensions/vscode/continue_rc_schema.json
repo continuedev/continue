@@ -194,7 +194,8 @@
             "azure",
             "msty",
             "watsonx",
-            "openrouter"
+            "openrouter",
+            "nvidia"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -222,7 +223,8 @@
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
             "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
-            "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys)."
+            "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
+            "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)"
           ],
           "type": "string"
         },
