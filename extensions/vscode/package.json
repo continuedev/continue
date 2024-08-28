@@ -299,18 +299,6 @@
         "when": "continue.diffVisible"
       },
       {
-        "command": "continue.quickEditHistoryUp",
-        "mac": "up",
-        "key": "up",
-        "when": "false && continue.quickEditHistoryFocused"
-      },
-      {
-        "command": "continue.quickEditHistoryDown",
-        "mac": "down",
-        "key": "down",
-        "when": "false && continue.quickEditHistoryFocused"
-      },
-      {
         "command": "continue.acceptVerticalDiffBlock",
         "mac": "alt+cmd+y",
         "key": "alt+ctrl+y"

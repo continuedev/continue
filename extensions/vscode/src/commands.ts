@@ -339,9 +339,144 @@ const commandsMap: (
         await addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
+    // "continue.quickEdit": async (args: QuickEditShowParams) => {
+    //   captureCommandTelemetry("quickEdit");
+    //   quickEdit.show(args);
+    // },
+    /**
+     * Notes:
+     * - Copy/paste should be feasible by overriding the editor action to store
+     *   a copy of the content and then add indentation when pasting.
+     *   See this example: https://github.com/stringham/copy-with-imports/blob/4463e9c668b6b0a73ff03eb7c8768e5b9d3a6bdf/src/extension.ts
+     * - "Enter" should submit the prompt, but for ease of testing, it currently does a newline
+     */
     "continue.quickEdit": async (args: QuickEditShowParams) => {
       captureCommandTelemetry("quickEdit");
-      quickEdit.show(args);
+
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showErrorMessage("No active editor found");
+        return;
+      }
+
+      try {
+        const { selection, document } = editor;
+
+        const selectionStartPos = new vscode.Position(selection.start.line, 0);
+
+        const position = editor.selection.active;
+        const lineText = document.lineAt(position.line).text;
+        const indentMatch = lineText.match(/^\s*/);
+        const indent = indentMatch ? indentMatch[0] : "";
+
+        await editor.edit((editBuilder) => {
+          editBuilder.insert(selectionStartPos, `${indent}\n`);
+        });
+
+        const newCursorPos = new vscode.Position(
+          selection.start.line,
+          indent.length,
+        );
+
+        editor.selection = new vscode.Selection(newCursorPos, newCursorPos);
+
+        // Create a decoration type with a white background color
+        const decorationType = vscode.window.createTextEditorDecorationType({
+          isWholeLine: true,
+          backgroundColor: "white",
+          color: "green",
+        });
+
+        // Apply the decoration to the new line
+        let newLineRange = new vscode.Range(
+          selectionStartPos,
+          selectionStartPos,
+        );
+
+        let ignoreDocumentChange = false;
+
+        editor.setDecorations(decorationType, [newLineRange]);
+
+        const enterKey = vscode.workspace.onDidChangeTextDocument(
+          async (event) => {
+            if (event.document === editor.document) {
+              const pressedKey = event.contentChanges[0]?.text;
+              const newlineRegex = /\n/;
+
+              // Note sure why we can't just check for equality to "\n"
+              if (newlineRegex.test(pressedKey) && !ignoreDocumentChange) {
+                // Insert new indented line at the cursor position
+                const cursorPosition = editor.selection.active;
+                const line = cursorPosition.line;
+                const lineText = editor.document.lineAt(line).text;
+                const endOfLinePosition = new vscode.Position(
+                  line,
+                  lineText.length,
+                );
+
+                // TODO: Add without infinite loop
+
+                // await editor.edit((editBuilder) => {
+                //   editBuilder.insert(endOfLinePosition, `\n${indent}`);
+                // });
+
+                const newCursorPos = new vscode.Position(
+                  endOfLinePosition.line + 1,
+                  indent.length,
+                );
+
+                editor.selection = new vscode.Selection(
+                  newCursorPos,
+                  newCursorPos,
+                );
+
+                // Update the decoration range
+                newLineRange = new vscode.Range(
+                  selectionStartPos,
+                  newCursorPos,
+                );
+
+                editor.setDecorations(decorationType, [newLineRange]);
+              }
+            }
+          },
+        );
+
+        // // Function to clean up the decoration and the new line
+        // const cleanup = async () => {
+        //   editor.setDecorations(decorationType, []);
+        //   await editor.edit((editBuilder) => {
+        //     editBuilder.delete(
+        //       new vscode.Range(
+        //         selectionStartPos,
+        //         selectionStartPos.translate(1, 0),
+        //       ),
+        //     );
+        //   });
+        // };
+
+        // // Register key event listeners
+        // const escapeKey = vscode.workspace.onDidChangeTextDocument(
+        //   async (event) => {
+        //     if (event.document === editor.document) {
+        //       const pressedKey = event.contentChanges[0]?.text;
+        //       if (pressedKey === "\n" || pressedKey === "") {
+        //         // Handle Enter (new line) and Escape
+        //         await cleanup();
+        //         escapeKey.dispose(); // Dispose listener after cleanup
+        //         enterKey.dispose(); // Dispose listener after cleanup
+        //       }
+        //     }
+        //   },
+        // );
+
+        // extensionContext.subscriptions.push(escapeKey);
+        // extensionContext.subscriptions.push(enterKey);
+      } catch (error: any) {
+        vscode.window.showErrorMessage(
+          "Error inserting new line: " + error.message,
+        );
+      }
     },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
