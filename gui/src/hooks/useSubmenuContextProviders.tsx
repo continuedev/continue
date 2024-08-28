@@ -237,12 +237,6 @@ function useSubmenuContextProviders() {
         contextProviderDescriptions,
       );
 
-      const loadTimeout = setTimeout(() => {
-        console.error("loadSubmenuItems timed out");
-        setInitialLoadComplete(true);
-        setIsLoading(false);
-      }, 30000); // 30 seconds timeout
-
       try {
         const disableIndexing = getLocalStorage("disableIndexing") ?? false;
 
@@ -264,14 +258,12 @@ function useSubmenuContextProviders() {
                 storeFields: ["id", "title", "description"],
               });
               console.debug(`Requesting items for ${description.title}`);
-              const result = (await Promise.race([
-                ideMessenger.request("context/loadSubmenuItems", {
+              const result = (await ideMessenger.request(
+                "context/loadSubmenuItems",
+                {
                   title: description.title,
-                }),
-                new Promise<never>((_, reject) =>
-                  setTimeout(() => reject(new Error("Request timeout")), 30000),
-                ),
-              ])) as WebviewMessengerResult<"context/loadSubmenuItems">;
+                },
+              )) as WebviewMessengerResult<"context/loadSubmenuItems">;
 
               console.debug(
                 `Received result for ${description.title}:`,
@@ -320,7 +312,6 @@ function useSubmenuContextProviders() {
               }
             } catch (error) {
               console.error(`Error processing ${description.title}:`, error);
-              // Add more detailed error logging here
               console.error(
                 "Error details:",
                 JSON.stringify(error, Object.getOwnPropertyNames(error)),
@@ -331,7 +322,6 @@ function useSubmenuContextProviders() {
       } catch (error) {
         console.error("Error in loadSubmenuItems:", error);
       } finally {
-        clearTimeout(loadTimeout);
         console.debug("Finished loadSubmenuItems");
         console.debug("Final minisearches:", Object.keys(minisearches));
         console.debug("Final fallbackResults:", Object.keys(fallbackResults));
