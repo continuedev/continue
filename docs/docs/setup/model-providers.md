@@ -60,6 +60,8 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 
 ## SaaS
 
+### Open-source and commercial models 
+
 You can access both open-source and commercial LLMs via:
 
 - [OpenRouter](../reference/Model%20Providers/openrouter.md)
