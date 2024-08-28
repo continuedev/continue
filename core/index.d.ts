@@ -777,7 +777,8 @@ export type EmbeddingsProviderName =
   | "free-trial"
   | "gemini"
   | "continue-proxy"
-  | "deepinfra";
+  | "deepinfra"
+  | "voyage";
 
 export interface EmbedOptions {
   apiBase?: string;
