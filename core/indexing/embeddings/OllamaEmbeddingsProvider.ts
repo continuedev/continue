@@ -1,4 +1,8 @@
-import { EmbedOptions, FetchFunction } from "../../index.js";
+import {
+  EmbeddingsProviderName,
+  EmbedOptions,
+  FetchFunction,
+} from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 import BaseEmbeddingsProvider, {
   IBaseEmbeddingsProvider,
@@ -22,6 +26,9 @@ async function embedOne(
         model: options.model,
         prompt: chunk,
       }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (!resp.ok) {
@@ -41,6 +48,7 @@ async function embedOne(
 }
 
 class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static providerName: EmbeddingsProviderName = "ollama";
   static defaultOptions: IBaseEmbeddingsProvider["defaultOptions"] = {
     apiBase: "http://localhost:11434/",
     model: "nomic-embed-text",

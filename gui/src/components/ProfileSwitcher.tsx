@@ -7,7 +7,7 @@ import {
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -21,6 +21,7 @@ import {
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
@@ -127,6 +128,11 @@ function ProfileSwitcher(props: {}) {
   const { session, logout, login } = useAuth();
   const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
 
+  const dispatch = useDispatch();
+  const lastControlServerBetaEnabledStatus = useSelector(
+    (state: RootState) => state.misc.lastControlServerBetaEnabledStatus,
+  );
+
   const selectedProfileId = useSelector(
     (store: RootState) => store.state.selectedProfileId,
   );
@@ -135,13 +141,25 @@ function ProfileSwitcher(props: {}) {
     useState(false);
 
   useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then((settings) => {
-      setControlServerBetaEnabled(settings.enableControlServerBeta);
+    ideMessenger.ide.getIdeSettings().then(({ enableControlServerBeta }) => {
+      const shouldShowPopup =
+        !lastControlServerBetaEnabledStatus && enableControlServerBeta;
+
+      if (shouldShowPopup) {
+        ideMessenger.ide.infoPopup("Continue for Teams enabled");
+      }
+
+      setControlServerBetaEnabled(enableControlServerBeta);
+      dispatch(setLastControlServerBetaEnabledStatus(enableControlServerBeta));
     });
   }, []);
 
   useEffect(() => {
-    ideMessenger.request("config/listProfiles", undefined).then(setProfiles);
+    ideMessenger
+      .request("config/listProfiles", undefined)
+      .then(
+        (result) => result.status === "success" && setProfiles(result.content),
+      );
   }, []);
 
   useWebviewListener(
@@ -160,65 +178,65 @@ function ProfileSwitcher(props: {}) {
 
   return (
     <>
-      {controlServerBetaEnabled &&
-        profiles.some((profile) => profile.id !== "local") && (
-          <StyledListbox
-            value={"GPT-4"}
-            onChange={(id: string) => {
-              ideMessenger.request("didChangeSelectedProfile", { id });
-            }}
-          >
-            <div className="relative">
-              <StyledListboxButton>
-                <div>{selectedProfile()?.title}</div>
-                <div className="pointer-events-none flex items-center">
-                  <ChevronUpDownIcon
-                    className="h-4 w-4 text-gray-400"
-                    aria-hidden="true"
-                  />
-                </div>
-              </StyledListboxButton>
-              {topDiv &&
-                ReactDOM.createPortal(
-                  <Transition
-                    as={Fragment}
-                    leave="transition ease-in duration-100"
-                    leaveFrom="opacity-100"
-                    leaveTo="opacity-0"
-                  >
-                    <StyledListboxOptions>
-                      {profiles.map((option, idx) => (
-                        <ListBoxOption
-                          selected={option.id === selectedProfileId}
-                          option={option}
-                          idx={idx}
-                          key={idx}
-                          showDelete={profiles.length > 1}
-                        />
-                      ))}
-                      <div
-                        className="px-2 py-1"
-                        style={{
-                          color: lightGray,
-                          fontSize: getFontSize() - 2,
-                        }}
-                      >
-                        {profiles.length === 0 ? (
-                          <i>No workspaces found</i>
-                        ) : (
-                          "Select workspace"
-                        )}
-                      </div>
-                    </StyledListboxOptions>
-                  </Transition>,
-                  topDiv,
-                )}
-            </div>
-          </StyledListbox>
-        )}
+      {controlServerBetaEnabled && session?.account?.id && (
+        <StyledListbox
+          value={"GPT-4"}
+          onChange={(id: string) => {
+            ideMessenger.request("didChangeSelectedProfile", { id });
+          }}
+        >
+          <div className="relative">
+            <StyledListboxButton>
+              <div>{selectedProfile()?.title}</div>
+              <div className="pointer-events-none flex items-center">
+                <ChevronUpDownIcon
+                  className="h-4 w-4 text-gray-400"
+                  aria-hidden="true"
+                />
+              </div>
+            </StyledListboxButton>
+            {topDiv &&
+              ReactDOM.createPortal(
+                <Transition
+                  as={Fragment}
+                  leave="transition ease-in duration-100"
+                  leaveFrom="opacity-100"
+                  leaveTo="opacity-0"
+                >
+                  <StyledListboxOptions>
+                    {profiles.map((option, idx) => (
+                      <ListBoxOption
+                        selected={option.id === selectedProfileId}
+                        option={option}
+                        idx={idx}
+                        key={idx}
+                        showDelete={profiles.length > 1}
+                      />
+                    ))}
+                    <div
+                      className="px-2 py-1"
+                      style={{
+                        color: lightGray,
+                        fontSize: getFontSize() - 2,
+                      }}
+                    >
+                      {profiles.length === 0 ? (
+                        <i>No workspaces found</i>
+                      ) : (
+                        "Select workspace"
+                      )}
+                    </div>
+                  </StyledListboxOptions>
+                </Transition>,
+                topDiv,
+              )}
+          </div>
+        </StyledListbox>
+      )}
 
       {/* Settings button (either opens config.json or /settings page in control plane) */}
       <HeaderButtonWithText
+        tooltipPlacement="top-end"
         onClick={() => {
           if (selectedProfileId === "local") {
             ideMessenger.post("openConfigJson", undefined);
@@ -237,6 +255,7 @@ function ProfileSwitcher(props: {}) {
       {/* Only show login if beta explicitly enabled */}
       {controlServerBetaEnabled && (
         <HeaderButtonWithText
+          tooltipPlacement="top-end"
           text={
             session?.account
               ? `Logged in as ${session.account.label}`

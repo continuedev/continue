@@ -1,6 +1,6 @@
 import { RequestOptions } from "../../../index.js";
-const { convert: adf2md } = require("adf-to-md");
-
+// @ts-ignore
+import adf2md from "adf-to-md";
 interface JiraClientOptions {
   domain: string;
   username: string;

@@ -13,12 +13,12 @@ const CodeBlockComponent = ({
   selected,
   editor,
   updateAttributes,
-}) => {
+}: any) => {
   const dispatch = useDispatch();
   const item: ContextItemWithId = node.attrs.item;
 
   const contextItems = useSelector(
-    (state: RootState) => state.state.contextItems
+    (state: RootState) => state.state.contextItems,
   );
   return (
     <NodeViewWrapper className="code-block-with-content" as="p">
@@ -27,8 +27,8 @@ const CodeBlockComponent = ({
           item.id === contextItems[0]?.id
             ? "#d0d"
             : selected
-            ? vscBadgeBackground
-            : undefined
+              ? vscBadgeBackground
+              : undefined
         }
         item={item}
         onDelete={() => {

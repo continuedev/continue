@@ -1,6 +1,6 @@
-import { IDE, Location } from "..";
-import { LANGUAGES } from "./languages";
-import { getSymbolsForSnippet } from "./ranking";
+import { IDE, Location } from "../index.js";
+import { LANGUAGES } from "./languages.js";
+import { getSymbolsForSnippet } from "./ranking.js";
 
 interface FileInfo {
   filepath: string;

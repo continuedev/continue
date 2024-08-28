@@ -4,6 +4,7 @@ import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
+import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import {
   ContextItemWithId,
@@ -13,6 +14,8 @@ import {
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
+import { debounce } from "lodash";
+import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -54,12 +57,11 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
-import { usePostHog } from "posthog-js/react";
 
 const InputBoxDiv = styled.div`
   resize: none;
 
-  padding: 8px;
+  padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
@@ -138,7 +140,6 @@ interface TipTapEditorProps {
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
   onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
-
   editorState?: JSONContent;
 }
 
@@ -156,6 +157,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { saveSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -195,6 +197,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   const defaultModel = useSelector(defaultModelSelector);
+  const defaultModelRef = useUpdatingRef(defaultModel);
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
@@ -260,7 +263,41 @@ function TipTapEditor(props: TipTapEditorProps) {
     extensions: [
       Document,
       History,
-      Image,
+      Image.extend({
+        addProseMirrorPlugins() {
+          const plugin = new Plugin({
+            props: {
+              handleDOMEvents: {
+                paste(view, event) {
+                  const model = defaultModelRef.current;
+                  const items = event.clipboardData.items;
+                  for (const item of items) {
+                    const file = item.getAsFile();
+                    file &&
+                      modelSupportsImages(
+                        model.provider,
+                        model.model,
+                        model.title,
+                        model.capabilities,
+                      ) &&
+                      handleImageFile(file).then((resp) => {
+                        if (!resp) return;
+                        const [img, dataUrl] = resp;
+                        const { schema } = view.state;
+                        const node = schema.nodes.image.create({
+                          src: dataUrl,
+                        });
+                        const tr = view.state.tr.insert(0, node);
+                        view.dispatch(tr);
+                      });
+                  }
+                },
+              },
+            },
+          });
+          return [plugin];
+        },
+      }),
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
@@ -397,6 +434,8 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
     },
     content: props.editorState || mainEditorContent || "",
+    onFocus: () => setIsEditorFocused(true),
+    onBlur: () => setIsEditorFocused(false),
     onUpdate: ({ editor, transaction }) => {
       // If /edit is typed and no context items are selected, select the first
 
@@ -434,6 +473,31 @@ function TipTapEditor(props: TipTapEditorProps) {
       }
     },
   });
+
+  const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
+  const debouncedShouldHideToolbar = debounce((value) => {
+    setShouldHideToolbar(value);
+  }, 200);
+
+  useEffect(() => {
+    if (editor) {
+      const handleFocus = () => {
+        debouncedShouldHideToolbar(false);
+      };
+
+      const handleBlur = () => {
+        debouncedShouldHideToolbar(true);
+      };
+
+      editor.on("focus", handleFocus);
+      editor.on("blur", handleBlur);
+
+      return () => {
+        editor.off("focus", handleFocus);
+        editor.off("blur", handleBlur);
+      };
+    }
+  }, [editor]);
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 
@@ -768,6 +832,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             defaultModel.provider,
             defaultModel.model,
             defaultModel.title,
+            defaultModel.capabilities,
           )
         ) {
           return;
@@ -792,7 +857,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       />
       <InputToolbar
         showNoContext={optionKeyHeld}
-        hidden={!(editorFocusedRef.current || props.isMainInput)}
+        hidden={shouldHideToolbar && !props.isMainInput}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {
           } else {
@@ -816,6 +881,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           defaultModel.provider,
           defaultModel.model,
           defaultModel.title,
+          defaultModel.capabilities,
         ) && (
           <>
             <HoverDiv></HoverDiv>

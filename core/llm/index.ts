@@ -7,6 +7,7 @@ import {
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
+  ModelCapability,
   ModelName,
   ModelProvider,
   PromptLog,
@@ -37,8 +38,8 @@ import {
   countTokens,
   pruneRawPromptFromTop,
 } from "./countTokens.js";
-import CompletionOptionsForModels from "./templates/options.js";
 import { stripImages } from "./images.js";
+import CompletionOptionsForModels from "./templates/options.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
@@ -53,7 +54,12 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsImages(): boolean {
-    return modelSupportsImages(this.providerName, this.model, this.title);
+    return modelSupportsImages(
+      this.providerName,
+      this.model,
+      this.title,
+      this.capabilities,
+    );
   }
 
   supportsCompletions(): boolean {
@@ -85,6 +91,7 @@ export abstract class BaseLLM implements ILLM {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -94,6 +101,7 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  capabilities?: ModelCapability;
 
   engine?: string;
   apiVersion?: string;
@@ -102,6 +110,15 @@ export abstract class BaseLLM implements ILLM {
   projectId?: string;
   accountId?: string;
   aiGatewaySlug?: string;
+
+  // For IBM watsonx only.
+  watsonxUrl?: string;
+  watsonxCreds?: string;
+  watsonxProjectId?: string;
+  watsonxStopToken?: string;
+  watsonxApiVersion?: string;
+
+  cacheSystemMessage?: boolean;
 
   private _llmOptions: LLMOptions;
 
@@ -126,6 +143,7 @@ export abstract class BaseLLM implements ILLM {
     this.systemMessage = options.systemMessage;
     this.contextLength =
       options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+    this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
@@ -154,10 +172,21 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+
+    // for watsonx only
+    this.watsonxUrl = options.watsonxUrl;
+    this.watsonxCreds = options.watsonxCreds;
+    this.watsonxProjectId = options.watsonxProjectId;
+    this.watsonxStopToken = options.watsonxStopToken;
+    this.watsonxApiVersion = options.watsonxApiVersion;
+
+    this.cacheSystemMessage = options.cacheSystemMessage;
+
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
     }
     this.accountId = options.accountId;
+    this.capabilities = options.capabilities;
 
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;
@@ -445,7 +474,12 @@ ${prompt}`;
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
 
-    return { prompt, completion, completionOptions };
+    return {
+      modelTitle: this.title ?? completionOptions.model,
+      prompt,
+      completion,
+      completionOptions,
+    };
   }
 
   async complete(_prompt: string, options: LLMFullCompletionOptions = {}) {
@@ -542,6 +576,7 @@ ${prompt}`;
     }
 
     return {
+      modelTitle: this.title ?? completionOptions.model,
       prompt,
       completion,
       completionOptions,

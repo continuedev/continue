@@ -1,5 +1,5 @@
-import { Chunk } from "../..";
-import { deduplicateArray } from "../../util";
+import { Chunk } from "../../index.js";
+import { deduplicateArray } from "../../util/index.js";
 
 export function deduplicateChunks(chunks: Chunk[]): Chunk[] {
   return deduplicateArray(chunks, (a, b) => {

@@ -6,6 +6,7 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
+import getDatabaseAdapter from "dbinfoz";
 
 class DatabaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -30,10 +31,9 @@ class DatabaseContextProvider extends BaseContextProvider {
 
     const [connectionName, table] = query.split(".");
 
-    const getDatabaseAdapter = await require("dbinfoz");
-
     for (const connection of connections) {
       if (connection.name === connectionName) {
+        // @ts-ignore (incorrect typings on module's declaration file)
         const adapter = getDatabaseAdapter(
           connection.connection_type,
           connection.connection,
@@ -87,9 +87,8 @@ class DatabaseContextProvider extends BaseContextProvider {
       return contextItems;
     }
 
-    const getDatabaseAdapter = await require("dbinfoz");
-
     for (const connection of connections) {
+      // @ts-ignore (incorrect typings on module's declaration file)
       const adapter = getDatabaseAdapter(
         connection.connection_type,
         connection.connection,

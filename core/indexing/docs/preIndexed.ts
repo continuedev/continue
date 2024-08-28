@@ -1,17 +1,28 @@
-import { Chunk } from "../../index.js";
+import { Chunk } from "../../";
+import request from "request";
 
-const request = require("request");
+export function getS3Filename(
+  embeddingsProviderId: string,
+  title: string,
+): string {
+  return `${embeddingsProviderId}/${title}`;
+}
+
+export enum S3Buckets {
+  continueIndexedDocs = "continue-indexed-docs",
+}
+
+const AWS_REGION = "us-west-1";
 
 export async function downloadFromS3(
   bucket: string,
   fileName: string,
-  region: string,
 ): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     let data = "";
 
     const download = request({
-      url: `https://${bucket}.s3.${region}.amazonaws.com/${fileName}`,
+      url: `https://${bucket}.s3.${AWS_REGION}.amazonaws.com/${fileName}`,
     });
     download.on("response", (response: any) => {
       if (response.statusCode !== 200) {

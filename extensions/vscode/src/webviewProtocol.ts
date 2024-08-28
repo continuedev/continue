@@ -1,5 +1,8 @@
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import { WebviewMessengerResult } from "core/protocol/util";
+import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Message } from "core/util/messenger";
+import { Telemetry } from "core/util/posthog";
 import fs from "node:fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -71,7 +74,7 @@ export class VsCodeWebviewProtocol
         throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
       }
 
-      const respond = (message: any) =>
+      const respond = (message: WebviewMessengerResult<any>) =>
         this.send(msg.messageType, message, msg.messageId);
 
       const handlers = this.listeners.get(msg.messageType) || [];
@@ -87,12 +90,16 @@ export class VsCodeWebviewProtocol
               respond(next.value);
               next = await response.next();
             }
-            respond({ done: true, content: next.value?.content });
+            respond({
+              done: true,
+              content: next.value?.content,
+              status: "success",
+            });
           } else {
-            respond(response || {});
+            respond({ done: true, content: response || {}, status: "success" });
           }
         } catch (e: any) {
-          respond({ done: true, error: e });
+          respond({ done: true, error: e, status: "error" });
 
           console.error(
             `Error handling webview message: ${JSON.stringify(
@@ -153,6 +160,15 @@ export class VsCodeWebviewProtocol
                 }
               });
           } else {
+            Telemetry.capture(
+              "webview_protocol_error",
+              {
+                messageType: msg.messageType,
+                errorMsg: message.split("\n\n")[0],
+                stack: extractMinimalStackTraceInfo(e.stack),
+              },
+              false,
+            );
             vscode.window
               .showErrorMessage(
                 message.split("\n\n")[0],
@@ -194,29 +210,37 @@ export class VsCodeWebviewProtocol
   public request<T extends keyof ToWebviewProtocol>(
     messageType: T,
     data: ToWebviewProtocol[T][0],
+    retry: boolean = true,
   ): Promise<ToWebviewProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise(async (resolve) => {
-      let i = 0;
-      while (!this.webview) {
-        if (i >= 10) {
-          resolve(undefined);
-          return;
-        } else {
-          await new Promise((res) => setTimeout(res, i >= 5 ? 1000 : 500));
-          i++;
+      if (retry) {
+        let i = 0;
+        while (!this.webview) {
+          if (i >= 10) {
+            resolve(undefined);
+            return;
+          } else {
+            await new Promise((res) => setTimeout(res, i >= 5 ? 1000 : 500));
+            i++;
+          }
         }
       }
 
       this.send(messageType, data, messageId);
-      const disposable = this.webview.onDidReceiveMessage(
-        (msg: Message<ToWebviewProtocol[T][1]>) => {
-          if (msg.messageId === messageId) {
-            resolve(msg.data);
-            disposable?.dispose();
-          }
-        },
-      );
+
+      if (this.webview) {
+        const disposable = this.webview.onDidReceiveMessage(
+          (msg: Message<ToWebviewProtocol[T][1]>) => {
+            if (msg.messageId === messageId) {
+              resolve(msg.data);
+              disposable?.dispose();
+            }
+          },
+        );
+      } else if (!retry) {
+        resolve(undefined);
+      }
     });
   }
 }

@@ -51,12 +51,12 @@ class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  reloadConfig(): Promise<ContinueConfig> {
+  async reloadConfig(): Promise<ContinueConfig> {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.profileLoader.doLoadConfig();
+    return await this.profileLoader.doLoadConfig();
   }
 
   async loadConfig(
@@ -104,6 +104,37 @@ export class ConfigHandler {
   private additionalContextProviders: IContextProvider[] = [];
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string;
+
+  constructor(
+    private readonly ide: IDE,
+    private ideSettingsPromise: Promise<IdeSettings>,
+    private readonly writeLog: (text: string) => Promise<void>,
+    private controlPlaneClient: ControlPlaneClient,
+  ) {
+    this.ide = ide;
+    this.ideSettingsPromise = ideSettingsPromise;
+    this.writeLog = writeLog;
+
+    // Set local profile as default
+    const localProfileLoader = new LocalProfileLoader(
+      ide,
+      ideSettingsPromise,
+      controlPlaneClient,
+      writeLog,
+    );
+    this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
+    this.selectedProfileId = localProfileLoader.profileId;
+
+    // Always load local profile immediately in case control plane doesn't load
+    try {
+      this.loadConfig();
+    } catch (e) {
+      console.error("Failed to load config: ", e);
+    }
+
+    // Load control plane profiles
+    this.fetchControlPlaneProfiles();
+  }
 
   // This will be the local profile
   private get fallbackProfile() {
@@ -163,37 +194,6 @@ export class ConfigHandler {
     });
   }
 
-  constructor(
-    private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
-    private readonly writeLog: (text: string) => Promise<void>,
-    private controlPlaneClient: ControlPlaneClient,
-  ) {
-    this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
-    this.writeLog = writeLog;
-
-    // Set local profile as default
-    const localProfileLoader = new LocalProfileLoader(
-      ide,
-      ideSettingsPromise,
-      controlPlaneClient,
-      writeLog,
-    );
-    this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
-    this.selectedProfileId = localProfileLoader.profileId;
-
-    // Always load local profile immediately in case control plane doesn't load
-    try {
-      this.loadConfig();
-    } catch (e) {
-      console.error("Failed to load config: ", e);
-    }
-
-    // Load control plane profiles
-    this.fetchControlPlaneProfiles();
-  }
-
   async setSelectedProfile(profileId: string) {
     this.selectedProfileId = profileId;
     const newConfig = await this.loadConfig();
@@ -225,7 +225,9 @@ export class ConfigHandler {
     this.controlPlaneClient = new ControlPlaneClient(
       Promise.resolve(sessionInfo),
     );
-    this.fetchControlPlaneProfiles();
+    this.fetchControlPlaneProfiles().catch((e) => {
+      console.error("Failed to fetch control plane profiles: ", e);
+    });
   }
 
   private profilesListeners: ((profiles: ProfileDescription[]) => void)[] = [];
@@ -258,6 +260,7 @@ export class ConfigHandler {
     const newConfig = await this.currentProfile.reloadConfig();
     this.inactiveProfiles.forEach((profile) => profile.clearConfig());
     this.notifyConfigListeners(newConfig);
+    return newConfig;
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

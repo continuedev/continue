@@ -1,21 +1,19 @@
+import { BaseContextProvider } from "../";
 import {
   Chunk,
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
-  EmbeddingsProvider,
   LoadSubmenuItemsArgs,
-  Reranker,
-} from "../../index.js";
-import { DocsService } from "../../indexing/docs/DocsService.js";
-import preIndexedDocs from "../../indexing/docs/preIndexedDocs.js";
-import { Telemetry } from "../../util/posthog.js";
-import { BaseContextProvider } from "../index.js";
+} from "../..";
+import DocsService from "../../indexing/docs/DocsService";
+import preIndexedDocs from "../../indexing/docs/preIndexedDocs";
+import { Telemetry } from "../../util/posthog";
 
 class DocsContextProvider extends BaseContextProvider {
-  static DEFAULT_N_RETRIEVE = 30;
-  static DEFAULT_N_FINAL = 15;
+  static nRetrieve = 30;
+  static nFinal = 15;
   static description: ContextProviderDescription = {
     title: "docs",
     displayTitle: "Docs",
@@ -23,11 +21,8 @@ class DocsContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
-  private docsService: DocsService;
-
   constructor(options: any) {
     super(options);
-    this.docsService = DocsService.getInstance();
   }
 
   private async _rerankChunks(
@@ -46,14 +41,14 @@ class DocsContextProvider extends BaseContextProvider {
 
       chunksCopy = chunksCopy.splice(
         0,
-        this.options?.nFinal ?? DocsContextProvider.DEFAULT_N_FINAL,
+        this.options?.nFinal ?? DocsContextProvider.nFinal,
       );
     } catch (e) {
       console.warn(`Failed to rerank docs results: ${e}`);
 
       chunksCopy = chunksCopy.splice(
         0,
-        this.options?.nFinal ?? DocsContextProvider.DEFAULT_N_FINAL,
+        this.options?.nFinal ?? DocsContextProvider.nFinal,
       );
     }
 
@@ -84,14 +79,15 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const ideInfo = await extras.ide.getIdeInfo();
-    const isJetBrains = ideInfo.ideType === "jetbrains";
+    const docsService = DocsService.getSingleton();
+
+    if (!docsService) {
+      console.error(`${DocsService.name} has not been initialized`);
+      return [];
+    }
 
     const isJetBrainsAndPreIndexedDocsProvider =
-      this.docsService.isJetBrainsAndPreIndexedDocsProvider(
-        ideInfo,
-        extras.embeddingsProvider.id,
-      );
+      await docsService.isJetBrainsAndPreIndexedDocsProvider();
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
       extras.ide.errorPopup(
@@ -106,28 +102,24 @@ class DocsContextProvider extends BaseContextProvider {
 
     const preIndexedDoc = preIndexedDocs[query];
 
-    let embeddingsProvider: EmbeddingsProvider;
-
-    if (!!preIndexedDoc && !isJetBrains) {
-      // Pre-indexed docs should be filtered out in `loadSubmenuItems`,
-      // for JetBrains users, but we sanity check that here
+    if (!!preIndexedDoc) {
       Telemetry.capture("docs_pre_indexed_doc_used", {
         doc: preIndexedDoc["title"],
       });
-
-      embeddingsProvider = DocsService.preIndexedDocsEmbeddingsProvider;
-    } else {
-      embeddingsProvider = extras.embeddingsProvider;
     }
+
+    const embeddingsProvider =
+      await docsService.getEmbeddingsProvider(!!preIndexedDoc);
 
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
-    let chunks = await this.docsService.retrieve(
+    let chunks = await docsService.retrieveChunks(
       query,
       vector,
-      this.options?.nRetrieve ?? DocsContextProvider.DEFAULT_N_RETRIEVE,
-      embeddingsProvider.id,
+      this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
     );
+
+    const favicon = await docsService.getFavicon(query);
 
     if (extras.reranker) {
       chunks = await this._rerankChunks(
@@ -140,6 +132,7 @@ class DocsContextProvider extends BaseContextProvider {
     return [
       ...chunks
         .map((chunk) => ({
+          icon: favicon,
           name: chunk.filepath.includes("/tree/main") // For display of GitHub files
             ? chunk.filepath
                 .split("/")
@@ -168,17 +161,19 @@ class DocsContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const ideInfo = await args.ide.getIdeInfo();
-    const isJetBrains = ideInfo.ideType === "jetbrains";
-    const configSites = [
-      ...new Set([...(this.options?.sites || []), ...(args.config.docs || [])]),
-    ];
+    const docsService = DocsService.getSingleton();
+
+    if (!docsService) {
+      console.error(`${DocsService.name} has not been initialized`);
+      return [];
+    }
+
+    const docs = (await docsService.list()) ?? [];
+    const canUsePreindexedDocs = await docsService.canUsePreindexedDocs();
+
     const submenuItemsMap = new Map<string, ContextSubmenuItem>();
 
-    if (!isJetBrains) {
-      // Currently, we generate and host embeddings for pre-indexed docs using transformers.js.
-      // However, we don't ship transformers.js with the JetBrains extension.
-      // So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.
+    if (canUsePreindexedDocs) {
       for (const { startUrl, title } of Object.values(preIndexedDocs)) {
         submenuItemsMap.set(startUrl, {
           title,
@@ -191,25 +186,18 @@ class DocsContextProvider extends BaseContextProvider {
       }
     }
 
-    for (const { title, baseUrl } of await this.docsService.list()) {
-      submenuItemsMap.set(baseUrl, {
-        title,
-        id: baseUrl,
-        description: new URL(baseUrl).hostname,
-      });
-    }
-
-    for (const { startUrl, title } of configSites) {
+    for (const { startUrl, title, favicon } of docs) {
       submenuItemsMap.set(startUrl, {
         title,
         id: startUrl,
         description: new URL(startUrl).hostname,
+        icon: favicon,
       });
     }
 
     const submenuItems = Array.from(submenuItemsMap.values());
 
-    if (!isJetBrains) {
+    if (canUsePreindexedDocs) {
       return this._sortByPreIndexedDocs(submenuItems);
     }
 

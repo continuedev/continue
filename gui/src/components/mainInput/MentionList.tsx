@@ -2,12 +2,9 @@ import {
   ArrowRightIcon,
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
-  BeakerIcon,
   BookOpenIcon,
   CodeBracketIcon,
-  Cog6ToothIcon,
   CommandLineIcon,
-  CubeIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
@@ -15,10 +12,11 @@ import {
   GlobeAltIcon,
   HashtagIcon,
   MagnifyingGlassIcon,
-  PaintBrushIcon,
+  PencilIcon,
   PlusIcon,
   SparklesIcon,
   TrashIcon,
+  BoltIcon,
 } from "@heroicons/react/24/outline";
 import { Editor } from "@tiptap/react";
 import {
@@ -62,16 +60,11 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   docs: BookOpenIcon,
   issue: ExclamationCircleIcon,
   trash: TrashIcon,
-  "/edit": PaintBrushIcon,
+  "/edit": PencilIcon,
   "/clear": TrashIcon,
-  "/test": BeakerIcon,
-  "/config": Cog6ToothIcon,
   "/comment": HashtagIcon,
   "/share": ArrowUpOnSquareIcon,
   "/cmd": CommandLineIcon,
-  "/codebase": SparklesIcon,
-  "/so": GlobeAltIcon,
-  "/issue": ExclamationCircleIcon,
 };
 
 function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
@@ -81,50 +74,46 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     );
   }
 
-  const provider =
-    props.item.type === "contextProvider"
-      ? props.item.id
-      : props.item.type === "slashCommand"
-        ? props.item.id
-        : props.item.type;
+  const provider = (() => {
+    switch (props.item.type) {
+      case "contextProvider":
+      case "slashCommand":
+        return props.item.id;
+      default:
+        return props.item.type;
+    }
+  })();
 
-  const iconClass = `${props.className} flex-shrink-0`;
+  const IconComponent =
+    ICONS_FOR_DROPDOWN[provider] ??
+    (props.item.type === "contextProvider" ? AtSymbolIcon : BoltIcon);
 
-  let fallbackIcon;
-  const Icon = ICONS_FOR_DROPDOWN[provider];
-  if (!Icon) {
-    fallbackIcon =
-      props.item.type === "contextProvider" ? (
-        <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
-      ) : (
-        <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
-      );
-  } else {
-    fallbackIcon = <Icon className={iconClass} height="1.2em" width="1.2em" />;
+  const fallbackIcon = (
+    <IconComponent
+      className={`${props.className} flex-shrink-0`}
+      height="1.2em"
+      width="1.2em"
+    />
+  );
+
+  if (!props.item.icon) {
+    return fallbackIcon;
   }
 
-  if (false && props.item.iconUrl) {
-    try {
-      return (
-        <SafeImg
-          className="flex-shrink-0 pr-2"
-          src={props.item.iconUrl}
-          height="18em"
-          width="18em"
-          fallback={fallbackIcon}
-        />
-      );
-    } catch (e) {}
-  }
-
-  return fallbackIcon;
+  return (
+    <SafeImg
+      className="flex-shrink-0 pr-2"
+      src={props.item.icon}
+      height="18em"
+      width="18em"
+      fallback={fallbackIcon}
+    />
+  );
 }
 
 const ItemsDiv = styled.div`
   border-radius: ${defaultBorderRadius};
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0px 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;
@@ -216,6 +205,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
         description: "Add a new documentation source",
       });
     }
+
     setAllItems(items);
   }, [subMenuTitle, props.items, props.editor]);
 

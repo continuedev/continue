@@ -126,7 +126,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                props.onEdit();
+                props.onEdit?.();
               }}
               {...(props.editing && { color: "#f0f4" })}
             >
@@ -137,7 +137,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             text="Delete"
             onClick={(e) => {
               e.stopPropagation();
-              props.onDelete();
+              props.onDelete?.();
             }}
           >
             <XMarkIcon width="1.1em" height="1.1em" />
@@ -161,7 +161,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         />
       </div>
 
-      {codeBlockRef.current?.scrollHeight > MAX_PREVIEW_HEIGHT && (
+      {(codeBlockRef.current?.scrollHeight ?? 0) > MAX_PREVIEW_HEIGHT && (
         <HeaderButtonWithText
           className="bottom-1 right-1 absolute"
           text={collapsed ? "Expand" : "Collapse"}

@@ -18,6 +18,7 @@ keywords:
     Ollama,
     HuggingFace,
     AWS Bedrock,
+    AWS SageMaker,
   ]
 ---
 
@@ -45,6 +46,8 @@ You can run a model on your local computer using:
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
 - [IPEX-LLM](../reference/Model%20Providers/ipex_llm.md) (Local LLM on Intel GPU)
 - [Msty](../reference/Model%20Providers/msty.md)
+- [IBM watsonx](../reference/Model%20Providers/watsonx.md)
+- [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
 ### Remote
 
@@ -60,6 +63,7 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 You can access both open-source and commercial LLMs via:
 
 - [OpenRouter](../reference/Model%20Providers/openrouter.md)
+- [Kindo](../reference/Model%20Providers/kindo.md)
 
 ### Open-source models
 
@@ -73,6 +77,7 @@ You can run open-source LLMs with cloud services like:
 - [Deepinfra](../reference/Model%20Providers/deepinfra.md)
 - [Groq](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [AWS Bedrock](../reference/Model%20Providers/bedrock.md)
+- [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
 ### Commercial models
 
@@ -83,7 +88,7 @@ You can use commercial LLMs via APIs using:
 - [Azure OpenAI Service](../reference/Model%20Providers/openai.md)
 - [Google Gemini API](../reference/Model%20Providers/geminiapi.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
-- [Voyage AI API](../walkthroughs/codebase-embeddings.md#openai)
+- [Voyage AI API](../features/codebase-embeddings.md#openai)
 - [Cohere API](../reference/Model%20Providers/cohere.md)
 
 **In addition to selecting providers, you will need to figure out [what models to use](./select-model.md).**

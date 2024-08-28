@@ -13,7 +13,7 @@ import {
   StyledListboxOptions,
 } from "../../components/modelSelection/quickSetup/StyledListbox";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useOnboarding } from "./utils";
+import { useCompleteOnboarding } from "./utils";
 
 interface AutocompleteOption {
   provider: ModelProvider;
@@ -80,7 +80,7 @@ function AutocompleteModelDropdown({
               <StyledListboxOption
                 selected={selectedProvider.title === option.title}
                 key={index}
-                className={({ active }) =>
+                className={({ active }: { active: boolean }) =>
                   `relative cursor-default select-none py-2 pl-10 pr-4 ${
                     active ? "bg-amber-100 text-amber-900" : "text-gray-900"
                   }`
@@ -124,7 +124,7 @@ function ApiKeyAutocompleteOnboarding() {
 
   const [apiKeyValue, setApiKeyValue] = useState<string>("");
 
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding } = useCompleteOnboarding();
 
   return (
     <div className="p-2 max-w-96 mt-16 mx-auto">

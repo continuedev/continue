@@ -1,6 +1,6 @@
-import { IDE } from "..";
-import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide";
-import { Message } from "./messenger";
+import { IDE } from "../index.js";
+import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
+import { Message } from "./messenger.js";
 
 export class ReverseMessageIde {
   private on<T extends keyof ToIdeFromWebviewOrCoreProtocol>(
@@ -122,6 +122,11 @@ export class ReverseMessageIde {
 
     this.on("listFolders", () => {
       return this.ide.listFolders();
+    });
+
+    this.on("getControlPlaneSessionInfo", async (msg) => {
+      // Not supported in testing
+      return undefined;
     });
 
     this.on("getContinueDir", () => {

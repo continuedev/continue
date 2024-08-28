@@ -274,9 +274,29 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
           title: "Groq",
         },
       },
-      ,
     ],
     apiKeyUrl: "https://console.groq.com/keys",
+  },
+  deepseek: {
+    title: "DeepSeek",
+    provider: "deepseek",
+    icon: "deepseek.png",
+    description:
+      "DeepSeek provides cheap inference of its DeepSeek Coder v2 and other impressive open-source models.",
+    longDescription:
+      "To get started with DeepSeek, obtain an API key from their website [here](https://platform.deepseek.com/api_keys).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your DeepSeek API key",
+        required: true,
+      },
+    ],
+    packages: [models.deepseekCoderApi, models.deepseekChatApi],
+    apiKeyUrl: "https://platform.deepseek.com/api_keys",
   },
   together: {
     title: "TogetherAI",
@@ -453,6 +473,76 @@ After it's up and running, you can start using Continue.`,
         },
       },
       ...openSourceModels,
+    ],
+  },
+  watsonx: {
+    title: "IBM watsonx",
+    provider: "watsonx",
+    refPage: "watsonX",
+    description:
+      "Explore foundation models from IBM and other third-parties depending on your use case.",
+    longDescription: `**watsonx**, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.
+
+To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepone?context=wx) on watsonx SaaS, create your first project and setup an [API key](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key).`,
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "watsonxUrl",
+        label: "watsonx URL",
+        placeholder: "e.g. http://us-south.dataplatform.cloud.ibm.com",
+        required: true
+      },
+      {
+        inputType: "text",
+        key: "watsonxProjectId",
+        label: "watsonx Project ID",
+        placeholder: "Enter your project ID",
+        required: true
+      },
+      {
+        inputType: "text",
+        key: "watsonxCreds",
+        label: "watsonx API key",
+        placeholder: "Enter your API key (SaaS) or ZenApiKey (Software)",
+        required: true
+      },
+      {
+        inputType: "text",
+        key: "watsonxApiVersion",
+        label: "watsonx API version",
+        placeholder: "Enter the API Version",
+        defaultValue: "2023-05-29"
+      },
+      // {
+      //   inputType: "text",
+      //   key: "title",
+      //   label: "Model name",
+      //   placeholder: "Granite 13B Chat v2",
+      //   isWatsonxAttribute: true,
+      // },
+      // {
+      //   inputType: "text",
+      //   key: "model",
+      //   label: "Model Id",
+      //   placeholder: "ibm/granite-13b-chat-v2",
+      //   isWatsonxAttribute: true,
+      // },
+      {
+        inputType: "text",
+        key: "watsonxStopToken",
+        label: "Stop Token",
+        placeholder: "<|im_end|>",
+      },
+
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "watsonx.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [
+      models.graniteCode,
+      models.graniteChat,
+      models.MistralLarge,
+      models.MetaLlama3,
     ],
   },
   "free-trial": {

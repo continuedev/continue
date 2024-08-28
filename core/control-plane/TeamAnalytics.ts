@@ -1,9 +1,9 @@
 import { Analytics } from "@continuedev/config-types";
 import os from "node:os";
-import ContinueProxyAnalyticsProvider from "./analytics/ContinueProxyAnalyticsProvider";
-import { IAnalyticsProvider } from "./analytics/IAnalyticsProvider";
-import LogStashAnalyticsProvider from "./analytics/LogStashAnalyticsProvider";
-import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider";
+import ContinueProxyAnalyticsProvider from "./analytics/ContinueProxyAnalyticsProvider.js";
+import { IAnalyticsProvider } from "./analytics/IAnalyticsProvider.js";
+import LogStashAnalyticsProvider from "./analytics/LogStashAnalyticsProvider.js";
+import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider.js";
 
 function createAnalyticsProvider(
   config: Analytics,
@@ -39,6 +39,7 @@ export class TeamAnalytics {
     config: Analytics,
     uniqueId: string,
     extensionVersion: string,
+    workspaceId?: string,
   ) {
     TeamAnalytics.uniqueId = uniqueId;
     TeamAnalytics.os = os.platform();
@@ -49,7 +50,7 @@ export class TeamAnalytics {
       TeamAnalytics.provider = undefined;
     } else {
       TeamAnalytics.provider = createAnalyticsProvider(config);
-      await TeamAnalytics.provider?.setup(config, uniqueId);
+      await TeamAnalytics.provider?.setup(config, uniqueId, workspaceId);
     }
   }
 }

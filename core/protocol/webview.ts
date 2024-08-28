@@ -1,4 +1,4 @@
-import type { ContextItemWithId, IndexingProgressUpdate } from "..";
+import type { ContextItemWithId, IndexingProgressUpdate } from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];
@@ -13,4 +13,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
+  setTTSActive: [boolean, void];
 };

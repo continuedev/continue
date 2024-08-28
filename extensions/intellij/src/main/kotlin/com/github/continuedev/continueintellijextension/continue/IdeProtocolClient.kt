@@ -31,6 +31,7 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.progress.DumbProgressIndicator
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.DumbAware
@@ -44,6 +45,8 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.content.ContentManagerUtil
+import com.intellij.util.concurrency.annotations.RequiresEdt
 import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
@@ -605,8 +608,10 @@ class IdeProtocolClient (
                         respond(currentFile)
                     }
                     "getPinnedFiles" -> {
-                        val openFiles = visibleFiles()
-                        respond(openFiles)
+                        ApplicationManager.getApplication().invokeLater {
+                            val pinnedFiles = pinnedFiles()
+                            respond(pinnedFiles)
+                        }
                     }
                     "insertAtCursor" -> {
                         val msg = data as Map<String, String>;
@@ -715,30 +720,6 @@ class IdeProtocolClient (
 
     fun uniqueId(): String {
         return getMachineUniqueID()
-    }
-
-    fun onTextSelected(
-        selectedText: String,
-        filepath: String,
-        startLine: Int,
-        startCharacter: Int,
-        endLine: Int,
-        endCharacter: Int
-    ) = coroutineScope.launch {
-//        val jsonMessage = textSelectionStrategy.handleTextSelection(
-//            selectedText,
-//            filepath,
-//            startLine,
-//            startCharacter,
-//            endLine,
-//            endCharacter
-//        )
-//        sendMessage("highlightedCodePush", jsonMessage)
-//        dispatchEventToWebview(
-//            "highlightedCode",
-//            jsonMessage,
-//            continuePluginService.continuePluginWindow.webView
-//        )
     }
 
     fun readFile(filepath: String): String {
@@ -962,6 +943,14 @@ class IdeProtocolClient (
     private fun visibleFiles(): List<String> {
         val fileEditorManager = FileEditorManager.getInstance(project)
         return fileEditorManager.openFiles.toList().map { it.path }
+    }
+
+    @RequiresEdt
+    private fun pinnedFiles(): List<String> {
+        val fileEditorManager = FileEditorManager.getInstance(project) as? FileEditorManagerImpl ?: return listOf()
+        val openFiles = fileEditorManager.openFiles.map { it.path }.toList()
+        val pinnedFiles = fileEditorManager.windows.flatMap { window -> window.files.filter { window.isFilePinned(it) } }.map { it.path }.toSet()
+        return openFiles.intersect(pinnedFiles).toList()
     }
 
     private fun currentFile(): String? {

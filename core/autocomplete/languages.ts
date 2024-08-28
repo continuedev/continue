@@ -1,4 +1,4 @@
-import type { LineFilter } from "./lineStream";
+import type { LineFilter } from "./lineStream.js";
 
 export interface AutocompleteLanguageInfo {
   name: string;
@@ -26,7 +26,7 @@ export const Python = {
   name: "Python",
   // """"#" is for .ipynb files, where we add '"""' surrounding markdown blocks.
   // This stops the model from trying to complete the start of a new markdown block
-  topLevelKeywords: ["def", "class", '"""#'],
+  topLevelKeywords: ["def", "class", "\"\"\"#"],
   singleLineComment: "#",
   endOfLine: [],
 };

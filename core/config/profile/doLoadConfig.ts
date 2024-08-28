@@ -1,14 +1,17 @@
+import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker.js";
+import { ControlPlaneClient } from "../../control-plane/client.js";
+import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import {
   ContinueRcJson,
   IDE,
   IdeSettings,
   SerializedContinueConfig,
-} from "../..";
-import { ControlPlaneClient } from "../../control-plane/client";
-import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
-import { Telemetry } from "../../util/posthog";
-import { loadFullConfigNode } from "../load";
+} from "../../index.js";
+import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider.js";
+import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
+import { Telemetry } from "../../util/posthog.js";
+import { TTS } from "../../util/tts.js";
+import { loadFullConfigNode } from "../load.js";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -16,6 +19,7 @@ export default async function doLoadConfig(
   controlPlaneClient: ControlPlaneClient,
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
+  workspaceId?: string,
 ) {
   let workspaceConfigs: ContinueRcJson[] = [];
   try {
@@ -46,14 +50,18 @@ export default async function doLoadConfig(
   await Telemetry.setup(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
-    ideInfo.extensionVersion,
+    ideInfo,
   );
+
+  // TODO: pass config to pre-load non-system TTS models
+  await TTS.setup();
 
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
       newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
       uniqueId,
       ideInfo.extensionVersion,
+      workspaceId,
     );
   }
 
@@ -64,6 +72,17 @@ export default async function doLoadConfig(
       }
     },
   );
+
+  if (newConfig.embeddingsProvider?.providerName === "continue-proxy") {
+    (
+      newConfig.embeddingsProvider as ContinueProxyEmbeddingsProvider
+    ).workOsAccessToken = workOsAccessToken;
+  }
+
+  if (newConfig.reranker?.name === "continue-proxy") {
+    (newConfig.reranker as ContinueProxyReranker).workOsAccessToken =
+      workOsAccessToken;
+  }
 
   return newConfig;
 }

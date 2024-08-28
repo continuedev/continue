@@ -1,7 +1,5 @@
 <!-- Plugin description -->
 
-![readme](media/readme.png)
-
 <h1 align="center">Continue</h1>
 
 <div align="center">
@@ -14,25 +12,17 @@
 
 ## Easily understand code sections
 
-![understand](docs/static/img/understand.gif)
-
 `cmd+J` (MacOS) / `ctrl+J` (Windows)
 
 ## Tab to autocomplete code suggestions
-
-![autocomplete](docs/static/img/autocomplete.gif)
 
 `tab` (MacOS) / `tab` (Windows)
 
 ## Refactor functions where you are coding
 
-![inline](docs/static/img/inline.gif)
-
 `cmd+I` (MacOS) / `ctrl+I` (Windows)
 
 ## Quickly use documentation as context
-
-![docs](docs/static/img/docs.gif)
 
 `@docs` (MacOS) / `@docs` (Windows)
 
@@ -46,6 +36,6 @@ Learn more about the models and providers [here](https://continue.dev/docs/setup
 
 ## License
 
-[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
+[Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
 
 <!-- Plugin description end -->

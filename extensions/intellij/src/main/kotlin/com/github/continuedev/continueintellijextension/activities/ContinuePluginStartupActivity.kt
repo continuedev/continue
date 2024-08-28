@@ -9,6 +9,7 @@ import com.github.continuedev.continueintellijextension.listeners.ContinuePlugin
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.SettingsListener
+import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
@@ -177,52 +178,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 )
             }
 
-            GlobalScope.async(Dispatchers.IO) {
-                val myPluginId = "com.github.continuedev.continueintellijextension"
-                val pluginDescriptor = PluginManager.getPlugin(PluginId.getId(myPluginId))
-
-                if (pluginDescriptor == null) {
-                    throw Exception("Plugin not found")
-                }
-                val pluginPath = pluginDescriptor.pluginPath
-                val osName = System.getProperty("os.name").toLowerCase()
-                val os = when {
-                    osName.contains("mac") || osName.contains("darwin") -> "darwin"
-                    osName.contains("win") -> "win32"
-                    osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
-                    else -> "linux"
-                }
-                val osArch = System.getProperty("os.arch").toLowerCase()
-                val arch = when {
-                    osArch.contains("aarch64") || (osArch.contains("arm") && osArch.contains("64")) -> "arm64"
-                    osArch.contains("amd64") || osArch.contains("x86_64") -> "x64"
-                    else -> "x64"
-                }
-                val target = "$os-$arch"
-
-                println("Identified OS: $os, Arch: $arch")
-
-                val corePath = Paths.get(pluginPath.toString(), "core").toString()
-                val targetPath = Paths.get(corePath, target).toString()
-                val continueCorePath = Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
-
-                // Copy targetPath / node_sqlite3.node to core / node_sqlite3.node
-                val nodeSqlite3Path = Paths.get(targetPath, "node_sqlite3.node")
-
-                // Create the build/Release path first
-                File(Paths.get(corePath, "build", "Release").toString()).mkdirs()
-
-                val coreNodeSqlite3Path = Paths.get(corePath, "build", "Release", "node_sqlite3.node")
-                if (!File(coreNodeSqlite3Path.toString()).exists()) {
-                    Files.copy(nodeSqlite3Path, coreNodeSqlite3Path)
-                }
-
-                // esbuild needs permissions
-                val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
-
-                val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient)
-                continuePluginService.coreMessenger = coreMessenger
-            }
+            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient)
+            continuePluginService.coreMessengerManager = coreMessengerManager
         }
     }
 

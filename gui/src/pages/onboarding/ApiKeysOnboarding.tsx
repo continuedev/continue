@@ -6,7 +6,7 @@ import Toggle from "../../components/modelSelection/Toggle";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getLocalStorage } from "../../util/localStorage";
 import DefaultModelConfigForm from "./DefaultModelConfigForm";
-import { useOnboarding } from "./utils";
+import { useCompleteOnboarding } from "./utils";
 
 function ApiKeysOnboarding() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -14,7 +14,7 @@ function ApiKeysOnboarding() {
 
   const [isBestToggle, setIsBestToggle] = useState(true);
 
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding } = useCompleteOnboarding();
 
   return (
     <div className="p-8 overflow-y-scroll">

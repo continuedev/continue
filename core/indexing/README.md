@@ -18,13 +18,13 @@ The indexing process does the following:
 
 ## Existing `CodebaseIndex`es
 
-All indexes must be returned by `getIndexesToBuild` in [`indexCodebase.ts`](./indexCodebase.ts) if they are to be used.
+All indexes must be returned by `getIndexesToBuild` in [`CodebaseIndexer.ts`](./CodebaseIndexer.ts) if they are to be used.
 
 `CodeSnippetsCodebaseIndex`: uses tree-sitter queries to get a list of functions, classes, and other top-level code objects in each file
 `FullTextSearchCodebaseIndex`: creates a full-text search index using SQLite FTS5
 `ChunkCodebaseIndex`: chunks files recursively by code structure, for use in other embeddings providers like `LanceDbCodebaseIndex`
-`LanceDbCodebaseIndex`: calculates embeddings for each chunk and adds them to the LanceDB vector database, with metadata going into SQLite
+`LanceDbCodebaseIndex`: calculates embeddings for each chunk and adds them to the LanceDB vector database, with metadata going into SQLite. Note that for each branch, a unique table is created in LanceDB.
 
-## Known problems:
+## Known problems
 
 - `FullTextSearchCodebaseIndex` doesn't differentiate between tags (branch, repo), so results may come from any branch/repo. LanceDB does this by creating separate tables for each tag (see `tableNameForTag`). The chunk index does this with a second table

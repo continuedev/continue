@@ -54,7 +54,6 @@ interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
   onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
-
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
   hidden?: boolean;
@@ -111,8 +110,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           <TipTapEditor
             editorState={props.editorState}
             onEnter={props.onEnter}
-            isMainInput={props.isMainInput}
-            availableContextProviders={availableContextProviders}
+            isMainInput={props.isMainInput ?? false}
+            availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}
           ></TipTapEditor>
         </GradientBorder>

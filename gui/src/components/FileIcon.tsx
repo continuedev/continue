@@ -1,7 +1,15 @@
 import DOMPurify from "dompurify";
 import { themeIcons } from "seti-file-icons";
 
-const FileIcon = ({ filename, height, width }) => {
+const FileIcon = ({
+  filename,
+  height,
+  width,
+}: {
+  filename: string;
+  height: string;
+  width: string;
+}) => {
   const filenameParts = filename.includes(" (")
     ? filename.split(" ")
     : [filename, ""];

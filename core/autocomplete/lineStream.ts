@@ -1,11 +1,106 @@
 import { distance } from "fastest-levenshtein";
-import { LineStream } from "../diff/util.js";
-import { DiffLine } from "../index.js";
+import { LineStream } from "../diff/util";
+import { DiffLine } from "../";
 
 export type LineFilter = (args: {
   lines: LineStream;
   fullStop: () => void;
 }) => LineStream;
+
+function isBracketEnding(line: string): boolean {
+  return line
+    .trim()
+    .split("")
+    .some((char) => BRACKET_ENDING_CHARS.includes(char));
+}
+
+function commonPrefixLength(a: string, b: string): number {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) {
+    i++;
+  }
+  return i;
+}
+
+function isEnglishFirstLine(line: string) {
+  line = line.trim().toLowerCase();
+
+  if (
+    line.endsWith(":") &&
+    !CODE_KEYWORDS_ENDING_IN_SEMICOLON.some((keyword) =>
+      line.startsWith(keyword),
+    )
+  ) {
+    return true;
+  }
+
+  return ENGLISH_START_PHRASES.some((phrase) => line.startsWith(phrase));
+}
+
+function isEnglishPostExplanation(line: string): boolean {
+  const lower = line.toLowerCase();
+  return ENGLISH_POST_PHRASES.some((phrase) => lower.startsWith(phrase));
+}
+
+function shouldRemoveLineBeforeStart(line: string): boolean {
+  return (
+    line.trimStart().startsWith("```") ||
+    LINES_TO_REMOVE_BEFORE_START.some((l) => line.trim() === l)
+  );
+}
+
+function shouldChangeLineAndStop(line: string): string | undefined {
+  if (line.trimStart() === "```") {
+    return line;
+  }
+
+  if (line.includes(CODE_START_BLOCK)) {
+    return line.split(CODE_START_BLOCK)[0].trimEnd();
+  }
+
+  return undefined;
+}
+
+function isUselessLine(line: string): boolean {
+  const trimmed = line.trim().toLowerCase();
+  const hasUselessLine = USELESS_LINES.some(
+    (uselessLine) => trimmed === uselessLine,
+  );
+
+  return hasUselessLine || trimmed.startsWith("// end");
+}
+
+export const USELESS_LINES = ["", "```"];
+export const CODE_KEYWORDS_ENDING_IN_SEMICOLON = ["def"];
+export const CODE_START_BLOCK = "[/CODE]";
+export const BRACKET_ENDING_CHARS = [")", "]", "}", ";"];
+export const PREFIXES_TO_SKIP = ["<COMPLETION>"];
+export const LINES_TO_STOP_AT = ["# End of file.", "<STOP EDITING HERE"];
+export const LINES_TO_SKIP = ["</START EDITING HERE>"];
+export const LINES_TO_REMOVE_BEFORE_START = [
+  "<COMPLETION>",
+  "[CODE]",
+  "<START EDITING HERE>",
+];
+
+export const ENGLISH_START_PHRASES = [
+  "here is",
+  "here's",
+  "sure, here",
+  "sure thing",
+  "sure!",
+  "to fill",
+  "certainly",
+  "of course",
+  "the code should",
+];
+
+export const ENGLISH_POST_PHRASES = [
+  "explanation:",
+  "here is",
+  "here's how",
+  "the above",
+];
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,
@@ -15,6 +110,7 @@ export async function* noTopLevelKeywordsMidline(
   for await (const line of lines) {
     for (const keyword of topLevelKeywords) {
       const indexOf = line.indexOf(`${keyword} `);
+      // TODO: What is this second clause for?
       if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
         yield line.slice(0, indexOf);
         fullStop();
@@ -25,7 +121,14 @@ export async function* noTopLevelKeywordsMidline(
   }
 }
 
-export async function* avoidPathLine(
+/**
+ * Filters out unwanted lines from a LineStream, specifically those starting with '// Path: <PATH>' or empty comments.
+ *
+ * @param {LineStream} stream - The input stream of lines to filter.
+ * @param {string} comment - The comment syntax to filter (e.g., '//' for JavaScript-style comments).
+ * @yields {string} The filtered lines, excluding unwanted path lines and empty comments.
+ */
+export async function* avoidPathLineAndEmptyComments(
   stream: LineStream,
   comment: string,
 ): LineStream {
@@ -40,6 +143,12 @@ export async function* avoidPathLine(
   }
 }
 
+/**
+ * Transforms a LineStream by adding newline characters between lines.
+ *
+ * @param {LineStream} stream - The input stream of lines.
+ * @yields {string} The lines from the input stream with newline characters added between them.
+ */
 export async function* streamWithNewLines(stream: LineStream): LineStream {
   let firstLine = true;
   for await (const nextLine of stream) {
@@ -51,22 +160,19 @@ export async function* streamWithNewLines(stream: LineStream): LineStream {
   }
 }
 
-const bracketEnding = [")", "]", "}", ";"];
-function isBracketEnding(line: string): boolean {
-  return line
-    .trim()
-    .split("")
-    .some((char) => bracketEnding.includes(char));
-}
-
-function commonPrefixLength(a: string, b: string): number {
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) {
-    i++;
-  }
-  return i;
-}
-
+/**
+ * Determines if two lines of text are considered repeated or very similar.
+ *
+ * @param {string} a - The first line of text to compare.
+ * @param {string} b - The second line of text to compare.
+ * @returns {boolean} True if the lines are considered repeated, false otherwise.
+ *
+ * @description
+ * This function checks if two lines are repeated or very similar based on two criteria:
+ * 1. They have a common prefix longer than 12 characters.
+ * 2. The Levenshtein distance between them is less than 10% of the length of the second line.
+ * Lines shorter than 5 characters are never considered repeated.
+ */
 export function lineIsRepeated(a: string, b: string): boolean {
   if (a.length <= 4 || b.length <= 4) {
     return false;
@@ -80,6 +186,21 @@ export function lineIsRepeated(a: string, b: string): boolean {
   );
 }
 
+/**
+ * Filters a LineStream, stopping when a line similar to the provided one is encountered.
+ *
+ * @param {LineStream} stream - The input stream of lines to filter.
+ * @param {string} line - The line to compare against for similarity.
+ * @param {() => void} fullStop - Function to call when stopping the stream.
+ * @yields {string} Filtered lines until a similar line is encountered.
+ *
+ * @description
+ * This generator function processes the input stream, yielding lines until it encounters:
+ * 1. An exact match to the provided line.
+ * 2. A line that is considered repeated or very similar to the provided line.
+ * 3. For lines ending with brackets, it allows exact matches of trimmed content.
+ * When any of these conditions are met, it calls the fullStop function and stops yielding.
+ */
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string,
@@ -87,6 +208,7 @@ export async function* stopAtSimilarLine(
 ): AsyncGenerator<string> {
   const trimmedLine = line.trim();
   const lineIsBracketEnding = isBracketEnding(trimmedLine);
+
   for await (const nextLine of stream) {
     if (nextLine === line) {
       fullStop();
@@ -102,12 +224,17 @@ export async function* stopAtSimilarLine(
       fullStop();
       break;
     }
+
     yield nextLine;
   }
 }
 
-const LINES_TO_STOP_AT = ["# End of file.", "<STOP EDITING HERE"];
-
+/**
+ * Filters a LineStream, stopping when a line contains any of the specified stop phrases.
+ * @param {LineStream} stream - The input stream of lines.
+ * @param {() => void} fullStop - Function to call when stopping.
+ * @yields {string} Filtered lines until a stop phrase is encountered.
+ */
 export async function* stopAtLines(
   stream: LineStream,
   fullStop: () => void,
@@ -121,7 +248,11 @@ export async function* stopAtLines(
   }
 }
 
-const PREFIXES_TO_SKIP = ["<COMPLETION>"];
+/**
+ * Filters a LineStream, skipping specified prefixes on the first line.
+ * @param {LineStream} lines - The input stream of lines.
+ * @yields {string} Filtered lines with prefixes removed from the first line if applicable.
+ */
 export async function* skipPrefixes(lines: LineStream): LineStream {
   let isFirstLine = true;
   for await (const line of lines) {
@@ -137,8 +268,11 @@ export async function* skipPrefixes(lines: LineStream): LineStream {
   }
 }
 
-const LINES_TO_SKIP = ["</START EDITING HERE>"];
-
+/**
+ * Filters out lines starting with specified prefixes from a LineStream.
+ * @param {LineStream} stream - The input stream of lines.
+ * @yields {string} Filtered lines that don't start with any of the LINES_TO_SKIP prefixes.
+ */
 export async function* skipLines(stream: LineStream): LineStream {
   for await (const line of stream) {
     if (!LINES_TO_SKIP.some((skipAt) => line.startsWith(skipAt))) {
@@ -147,34 +281,21 @@ export async function* skipLines(stream: LineStream): LineStream {
   }
 }
 
-const LINES_TO_REMOVE_BEFORE_START = [
-  "<COMPLETION>",
-  "[CODE]",
-  "<START EDITING HERE>",
-];
-
-function shouldRemoveLineBeforeStart(line: string): boolean {
-  return (
-    line.trimStart().startsWith("```") ||
-    LINES_TO_REMOVE_BEFORE_START.some((l) => line.trim() === l)
-  );
-}
-
-function shouldChangeLineAndStop(line: string): string | undefined {
-  if (line.trimStart() === "```") {
-    return line;
-  }
-
-  if (line.includes("[/CODE]")) {
-    return line.split("[/CODE]")[0].trimEnd();
-  }
-
-  return undefined;
-}
-
+/**
+ * Filters and processes lines from a code block, removing unnecessary markers and handling edge cases.
+ *
+ * @param {LineStream} rawLines - The input stream of lines to filter.
+ * @yields {string} Filtered and processed lines from the code block.
+ *
+ * @description
+ * This generator function performs the following tasks:
+ * 1. Removes initial lines that should be removed before the actual code starts.
+ * 2. Filters out ending code block markers (```) unless they are the last line.
+ * 3. Handles special cases where lines should be changed and the stream should stop.
+ * 4. Yields processed lines that are part of the actual code block content.
+ */
 export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
   let seenValidLine = false;
-
   let waitingToSeeIfLineIsLast = undefined;
 
   for await (const line of rawLines) {
@@ -206,28 +327,19 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
   }
 }
 
-function isEnglishFirstLine(line: string) {
-  line = line.trim().toLowerCase();
-  if (line.endsWith(":") && !line.trimStart().startsWith("def")) {
-    return true;
-  }
-  if (
-    line.startsWith("here is") ||
-    line.startsWith("here's") ||
-    line.startsWith("sure, here") ||
-    line.startsWith("sure thing") ||
-    line.startsWith("sure!") ||
-    line.startsWith("to fill") ||
-    line.startsWith("certainly") ||
-    line.startsWith("of course") ||
-    line.startsWith("the code should")
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
+/**
+ * Filters out English explanations at the start of a code block.
+ *
+ * @param {LineStream} lines - The input stream of lines.
+ * @yields {string} Filtered lines with English explanations removed from the start.
+ *
+ * @description
+ * This generator function performs the following tasks:
+ * 1. Skips initial blank lines.
+ * 2. Removes the first line if it's identified as an English explanation.
+ * 3. Removes a subsequent blank line if the first line was an English explanation.
+ * 4. Yields all remaining lines.
+ */
 export async function* filterEnglishLinesAtStart(lines: LineStream) {
   let i = 0;
   let wasEnglishFirstLine = false;
@@ -235,6 +347,7 @@ export async function* filterEnglishLinesAtStart(lines: LineStream) {
     if (i === 0 && line.trim() === "") {
       continue;
     }
+
     if (i === 0) {
       if (isEnglishFirstLine(line)) {
         wasEnglishFirstLine = true;
@@ -250,18 +363,14 @@ export async function* filterEnglishLinesAtStart(lines: LineStream) {
   }
 }
 
-function isEnglishPostExplanation(line: string): boolean {
-  const lower = line.toLowerCase();
-  return (
-    lower.startsWith("explanation:") ||
-    lower.startsWith("here is") ||
-    lower.startsWith("here's how") ||
-    lower.startsWith("the above")
-  );
-}
-
+/**
+ * Filters out English explanations at the end of a code block.
+ * @param {LineStream} lines - The input stream of lines.
+ * @yields {string} Lines up to the end of the code block or start of English explanation.
+ */
 export async function* filterEnglishLinesAtEnd(lines: LineStream) {
   let finishedCodeBlock = false;
+
   for await (const line of lines) {
     if (line.trim() === "```") {
       finishedCodeBlock = true;
@@ -273,8 +382,14 @@ export async function* filterEnglishLinesAtEnd(lines: LineStream) {
   }
 }
 
+/**
+ * Removes leading indentation from the first line of a CodeLlama output.
+ * @param {LineStream} lines - The input stream of lines.
+ * @yields {string} Lines with the first line's indentation fixed if necessary.
+ */
 export async function* fixCodeLlamaFirstLineIndentation(lines: LineStream) {
   let isFirstLine = true;
+
   for await (const line of lines) {
     if (isFirstLine && line.startsWith("  ")) {
       yield line.slice(2);
@@ -285,23 +400,36 @@ export async function* fixCodeLlamaFirstLineIndentation(lines: LineStream) {
   }
 }
 
-function isUselessLine(line: string): boolean {
-  const trimmed = line.trim().toLowerCase();
-  return trimmed === "" || trimmed === "```" || trimmed.startsWith("// end");
-}
-
+/**
+ * Filters leading and trailing blank line insertions from a stream of diff lines.
+ *
+ * @param {AsyncGenerator<DiffLine>} diffLines - An async generator that yields DiffLine objects.
+ * @yields {DiffLine} Filtered DiffLine objects, with leading and trailing blank line insertions removed.
+ *
+ * @description
+ * This generator function processes a stream of diff lines, removing leading and trailing
+ * blank line insertions. It performs the following tasks:
+ * 1. Skips the first blank line insertion if it occurs at the beginning.
+ * 2. Buffers subsequent blank line insertions.
+ * 3. Yields buffered blank lines when a non-blank insertion is encountered.
+ * 4. Clears the buffer when an old line is encountered.
+ * 5. Yields all non-blank insertions and old lines.
+ */
 export async function* filterLeadingAndTrailingNewLineInsertion(
   diffLines: AsyncGenerator<DiffLine>,
 ): AsyncGenerator<DiffLine> {
   let isFirst = true;
   let buffer: DiffLine[] = [];
+
   for await (const diffLine of diffLines) {
     const isBlankLineInsertion =
       diffLine.type === "new" && isUselessLine(diffLine.line);
+
     if (isFirst && isBlankLineInsertion) {
       isFirst = false;
       continue;
     }
+
     isFirst = false;
 
     if (isBlankLineInsertion) {
@@ -319,31 +447,38 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
   }
 }
 
+/**
+ * Filters a LineStream, stopping when a line repeats more than a specified number of times.
+ *
+ * @param {LineStream} lines - The input stream of lines to filter.
+ * @param {() => void} fullStop - Function to call when stopping the stream.
+ * @yields {string} Filtered lines until excessive repetition is detected.
+ *
+ * @description
+ * This function yields lines from the input stream until a line is repeated
+ * for a maximum of 3 consecutive times. When this limit is reached, it calls
+ * the fullStop function and stops yielding. Only the first of the repeating
+ * lines is yieled.
+ */
 export async function* stopAtRepeatingLines(
   lines: LineStream,
   fullStop: () => void,
 ): LineStream {
-  const repeatedLines: string[] = [];
+  let previousLine: string | undefined;
+  let repeatCount = 0;
+  const MAX_REPEATS = 3;
+
   for await (const line of lines) {
-    if (repeatedLines.length === 0) {
-      repeatedLines.push(line);
-    } else if (repeatedLines.length < 3) {
-      if (repeatedLines[repeatedLines.length - 1] === line) {
-        repeatedLines.push(line);
-      } else {
-        while (repeatedLines.length > 0) {
-          yield repeatedLines.shift()!;
-        }
-        yield line;
+    if (line === previousLine) {
+      repeatCount++;
+      if (repeatCount === MAX_REPEATS) {
+        fullStop();
+        return;
       }
     } else {
-      yield repeatedLines[0];
-      fullStop();
-      return;
+      yield line;
+      repeatCount = 1;
     }
-  }
-
-  while (repeatedLines.length > 0) {
-    yield repeatedLines.shift()!;
+    previousLine = line;
   }
 }

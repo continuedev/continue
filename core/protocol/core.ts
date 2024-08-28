@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/naming-convention */
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -14,9 +15,7 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
-} from "..";
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import { ProfileDescription } from "../config/ConfigHandler";
+} from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -68,7 +67,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
-  "context/removeDocs": [{ baseUrl: string }, void];
+  "context/removeDocs": [Pick<SiteIndexingConfig, "startUrl">, void];
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
@@ -129,8 +128,12 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
+  "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined | string, void];
+  "index/forceReIndex": [
+    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    void,
+  ];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {

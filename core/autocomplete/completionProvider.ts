@@ -37,7 +37,7 @@ import {
 import { isOnlyPunctuationAndWhitespace } from "./filter.js";
 import { AutocompleteLanguageInfo } from "./languages.js";
 import {
-  avoidPathLine,
+  avoidPathLineAndEmptyComments,
   noTopLevelKeywordsMidline,
   skipPrefixes,
   stopAtLines,
@@ -52,6 +52,7 @@ import { getTemplateForModel } from "./templates.js";
 import { GeneratorReuseManager } from "./util.js";
 // @prettier-ignore
 import Handlebars from "handlebars";
+import { getConfigJsonPath } from "../util/paths.js";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -249,6 +250,11 @@ export class CompletionProvider {
         ...config.tabAutocompleteOptions,
       };
 
+      // Check whether we're in the continue config.json file
+      if (input.filepath === getConfigJsonPath()) {
+        return undefined;
+      }
+
       // Check whether autocomplete is disabled for this file
       if (options.disableInFiles) {
         // Relative path needed for `ignore`
@@ -266,7 +272,8 @@ export class CompletionProvider {
           filepath = getBasename(filepath);
         }
 
-        const pattern = ignore().add(options.disableInFiles);
+        // @ts-ignore
+        const pattern = ignore.default().add(options.disableInFiles);
         if (pattern.ignores(filepath)) {
           return undefined;
         }
@@ -451,12 +458,12 @@ export class CompletionProvider {
     if (
       !shownGptClaudeWarning &&
       nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-      !llm.model.includes("deepseek") &&
-      !llm.model.includes("codestral")
+      !llm.model.toLowerCase().includes("deepseek") &&
+      !llm.model.toLowerCase().includes("codestral")
     ) {
       shownGptClaudeWarning = true;
       throw new Error(
-        `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
+        `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
       );
     }
 
@@ -471,9 +478,9 @@ export class CompletionProvider {
       const lines = fullPrefix.split("\n");
       fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
         lang.singleLineComment
-      } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
-        lines[lines.length - 1]
-      }`;
+      } ${input.injectDetails
+        .split("\n")
+        .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
     }
 
     const fullSuffix = getRangeInString(fileContents, {
@@ -574,7 +581,10 @@ export class CompletionProvider {
         prefix = `${formattedSnippets}\n\n${prefix}`;
       } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
         // If it's an empty file, include the file name as a comment
-        prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
+        prefix = `${lang.singleLineComment} ${getLastNPathParts(
+          filepath,
+          2,
+        )}\n${prefix}`;
       }
 
       prompt = compiledTemplate({
@@ -586,7 +596,14 @@ export class CompletionProvider {
       });
     } else {
       // Let the template function format snippets
-      prompt = template(prefix, suffix, filepath, reponame, snippets);
+      prompt = template(
+        prefix,
+        suffix,
+        filepath,
+        reponame,
+        lang.name,
+        snippets,
+      );
     }
 
     // Completion
@@ -675,7 +692,10 @@ export class CompletionProvider {
       let lineGenerator = streamLines(charGenerator);
       lineGenerator = stopAtLines(lineGenerator, fullStop);
       lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-      lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+      lineGenerator = avoidPathLineAndEmptyComments(
+        lineGenerator,
+        lang.singleLineComment,
+      );
       lineGenerator = skipPrefixes(lineGenerator);
       lineGenerator = noTopLevelKeywordsMidline(
         lineGenerator,

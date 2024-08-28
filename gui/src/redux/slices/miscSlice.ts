@@ -5,6 +5,7 @@ export const miscSlice = createSlice({
   initialState: {
     takenAction: false,
     serverStatusMessage: "Continue Server Starting",
+    lastControlServerBetaEnabledStatus: false,
   },
   reducers: {
     setTakenActionTrue: (state) => {
@@ -13,8 +14,18 @@ export const miscSlice = createSlice({
     setServerStatusMessage: (state, action: PayloadAction<string>) => {
       state.serverStatusMessage = action.payload;
     },
+    setLastControlServerBetaEnabledStatus: (
+      state,
+      action: PayloadAction<boolean>,
+    ) => {
+      state.lastControlServerBetaEnabledStatus = action.payload;
+    },
   },
 });
 
-export const { setTakenActionTrue, setServerStatusMessage } = miscSlice.actions;
+export const {
+  setTakenActionTrue,
+  setServerStatusMessage,
+  setLastControlServerBetaEnabledStatus,
+} = miscSlice.actions;
 export default miscSlice.reducer;

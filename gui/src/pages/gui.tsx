@@ -87,6 +87,7 @@ const StopButton = styled.div`
 `;
 
 const StepsDiv = styled.div`
+  padding-bottom: 8px;
   position: relative;
   background-color: transparent;
 
@@ -106,11 +107,11 @@ const StepsDiv = styled.div`
   // }
 
   .thread-message {
-    margin: 16px 8px 0 8px;
+    margin: 12px 4px 0 4px;
   }
-  .thread-message:not(:first-child) {
-    border-top: 1px solid ${lightGray}22;
-  }
+  // .thread-message:not(:first-child) {
+  //   border-top: 1px solid ${lightGray}22;
+  // }
 `;
 
 const NewSessionButton = styled.div`
@@ -133,39 +134,7 @@ const NewSessionButton = styled.div`
   cursor: pointer;
 `;
 
-const ThreadHead = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 18px 6px 0 6px;
-`;
-
-const THREAD_AVATAR_SIZE = 15;
-
-const ThreadAvatar = styled.div`
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background-color: rgba(248, 248, 248, 0.75);
-  color: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(136, 136, 136, 0.3);
-`;
-
-const ThreadUserTitle = styled.div`
-  text-transform: capitalize;
-  font-weight: 500;
-  margin-bottom: 2px;
-`;
-
-const ThreadUserName = styled.div`
-  font-size: ${getFontSize() - 3}px;
-  color: ${lightGray};
-`;
-
-function fallbackRender({ error, resetErrorBoundary }) {
+function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
   return (
@@ -194,6 +163,7 @@ function GUI() {
 
   const defaultModel = useSelector(defaultModelSelector);
 
+  const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
   const active = useSelector((state: RootState) => state.state.active);
 
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
@@ -206,7 +176,7 @@ function GUI() {
   const state = useSelector((state: RootState) => state.state);
 
   const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard"),
+    getLocalStorage("showTutorialCard") ?? true,
   );
 
   const onCloseTutorialCard = () => {
@@ -482,10 +452,7 @@ function GUI() {
                             onDelete={() => {
                               dispatch(deleteMessage(index));
                             }}
-                            subtext={
-                              item.promptLogs?.[0]?.completionOptions?.model ??
-                              ""
-                            }
+                            modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
                           />
                         </TimelineItem>
                       </div>
@@ -510,26 +477,32 @@ function GUI() {
               <br />
             </>
           ) : state.history.length > 0 ? (
-            <NewSessionButton
-              onClick={() => {
-                saveSession();
-              }}
-              className="mr-auto"
-            >
-              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
-            </NewSessionButton>
+            <div className="mt-2">
+              <NewSessionButton
+                onClick={() => {
+                  saveSession();
+                }}
+                className="mr-auto"
+              >
+                New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+              </NewSessionButton>{" "}
+            </div>
           ) : (
             <>
               {getLastSessionId() ? (
-                <NewSessionButton
-                  onClick={async () => {
-                    loadLastSession();
-                  }}
-                  className="mr-auto flex items-center gap-1"
-                >
-                  <ArrowLeftIcon width="11px" height="11px" />
-                  Last Session
-                </NewSessionButton>
+                <div className="mt-2">
+                  <NewSessionButton
+                    onClick={async () => {
+                      loadLastSession().catch((e) =>
+                        console.error(`Failed to load last session: ${e}`),
+                      );
+                    }}
+                    className="mr-auto flex items-center gap-2"
+                  >
+                    <ArrowLeftIcon width="11px" height="11px" />
+                    Last Session
+                  </NewSessionButton>
+                </div>
               ) : null}
 
               {!!showTutorialCard && (
@@ -547,9 +520,19 @@ function GUI() {
           trackVisibility={active}
         />
       </TopGuiDiv>
+      {ttsActive && (
+        <StopButton
+          className="mt-2 mb-4"
+          onClick={() => {
+            ideMessenger.post("tts/kill", undefined);
+          }}
+        >
+          ■ Stop TTS
+        </StopButton>
+      )}
       {active && (
         <StopButton
-          className="mt-auto"
+          className="mt-auto mb-4"
           onClick={() => {
             dispatch(setInactive());
             if (

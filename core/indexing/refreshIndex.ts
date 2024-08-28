@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import * as fs from "node:fs";
+import plimit from "p-limit";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { IndexTag, IndexingProgressUpdate } from "../index.js";
@@ -23,6 +24,8 @@ export class SqliteDb {
   static db: DatabaseConnection | null = null;
 
   private static async createTables(db: DatabaseConnection) {
+    await db.exec("PRAGMA journal_mode=WAL;");
+
     await db.exec(
       `CREATE TABLE IF NOT EXISTS tag_catalog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -110,18 +113,13 @@ async function getSavedItemsForTag(
   return rows;
 }
 
-interface PathAndOptionalCacheKey {
-  path: string;
-  cacheKey?: string;
-}
-
 enum AddRemoveResultType {
   Add = "add",
   Remove = "remove",
   UpdateNewVersion = "updateNewVersion",
   UpdateOldVersion = "updateOldVersion",
   UpdateLastUpdated = "updateLastUpdated",
-  Compute = "compute"
+  Compute = "compute",
 }
 
 async function getAddRemoveForTag(
@@ -141,7 +139,6 @@ async function getAddRemoveForTag(
 
   const saved = await getSavedItemsForTag(tag);
 
-  const add: PathAndCacheKey[] = [];
   const updateNewVersion: PathAndCacheKey[] = [];
   const updateOldVersion: PathAndCacheKey[] = [];
   const remove: PathAndCacheKey[] = [];
@@ -176,15 +173,16 @@ async function getAddRemoveForTag(
     }
   }
 
-  // Any leftover in current files need to be added
-  add.push(
-    ...(await Promise.all(
-      Object.keys(files).map(async (path) => {
-        const fileContents = await readFile(path);
-        return { path, cacheKey: calculateHash(fileContents) };
-      }),
-    )),
-  );
+  // limit to only 10 concurrent file reads to avoid issues such as
+  // "too many file handles". A large number here does not improve
+  // throughput due to the nature of disk or network i/o -- huge
+  // amounts of readers generally does not improve performance
+  const limit = plimit(10);
+  const promises = Object.keys(files).map(async (path) => {
+    const fileContents = await limit(() => readFile(path));
+    return { path, cacheKey: calculateHash(fileContents) };
+  });
+  const add: PathAndCacheKey[] = await Promise.all(promises);
 
   // Create the markComplete callback function
   const db = await SqliteDb.get();
@@ -228,7 +226,7 @@ async function getAddRemoveForTag(
           break;
         case AddRemoveResultType.Add:
           await db.run(
-            "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
+            "REPLACE INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
             path,
             cacheKey,
             newLastUpdatedTimestamp,
@@ -393,7 +391,7 @@ export async function getComputeDeleteAddRemove(
     lastUpdated,
     async (items, resultType) => {
       // Update tag catalog
-      markComplete(items, resultType);
+      await markComplete(items, resultType);
 
       // Update the global cache
       const results: any = {
@@ -406,7 +404,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        () => {},
+        async () => {},
         repoName,
       )) {
       }
@@ -433,7 +431,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     _: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const add = results.addTag;
+    const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
       ...remove.map(({ cacheKey }) => {
@@ -451,7 +449,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     tag: IndexTag,
   ): Promise<void> {
     await this.db.run(
-      "INSERT INTO global_cache (cacheKey, dir, branch, artifactId) VALUES (?, ?, ?, ?)",
+      "REPLACE INTO global_cache (cacheKey, dir, branch, artifactId) VALUES (?, ?, ?, ?)",
       cacheKey,
       tag.directory,
       tag.branch,

@@ -37,7 +37,9 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
+  shouldClearIndexes?: boolean;
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  debugInfo?: string;
 }
 
 export type PromptTemplate =
@@ -56,6 +58,7 @@ export interface ILLM extends LLMOptions {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   promptTemplates?: Record<string, PromptTemplate>;
@@ -127,6 +130,7 @@ export interface ContextProviderDescription {
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 
 export interface ContextProviderExtras {
+  config: ContinueConfig;
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
   reranker: Reranker | undefined;
@@ -161,21 +165,21 @@ export interface ContextSubmenuItem {
   id: string;
   title: string;
   description: string;
-  iconUrl?: string;
+  icon?: string;
   metadata?: any;
 }
 
 export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl: string;
   title: string;
+  startUrl: string;
+  rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
 }
 
 export interface SiteIndexingConfig {
   startUrl: string;
-  rootUrl: string;
+  rootUrl?: string;
   title: string;
   maxDepth?: number;
 }
@@ -269,6 +273,7 @@ export interface ContextItem {
   description: string;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface ContextItemWithId {
@@ -278,6 +283,7 @@ export interface ContextItemWithId {
   id: ContextItemId;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface InputModifiers {
@@ -286,6 +292,7 @@ export interface InputModifiers {
 }
 
 export interface PromptLog {
+  modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
@@ -315,6 +322,7 @@ export interface LLMOptions {
   uniqueId?: string;
   systemMessage?: string;
   contextLength?: number;
+  maxStopWords?: number;
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -336,9 +344,25 @@ export interface LLMOptions {
   apiVersion?: string;
   apiType?: string;
 
-  // GCP Options
+  // AWS options
+  profile?: string;
+  modelArn?: string;
+
+  // AWS and GCP Options
   region?: string;
+
+  // GCP Options
   projectId?: string;
+  capabilities?: ModelCapability;
+
+  // IBM watsonx options
+  watsonxUrl?: string;
+  watsonxCreds?: string;
+  watsonxProjectId?: string;
+  watsonxStopToken?: string;
+  watsonxApiVersion?: string;
+
+  cacheSystemMessage?: boolean;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -572,6 +596,7 @@ type ModelProvider =
   | "ollama"
   | "huggingface-tgi"
   | "huggingface-inference-api"
+  | "kindo"
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"
@@ -580,6 +605,8 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "bedrockimport"
+  | "sagemaker"
   | "deepinfra"
   | "flowise"
   | "groq"
@@ -590,7 +617,9 @@ type ModelProvider =
   | "deepseek"
   | "azure"
   | "openai-aiohttp"
-  | "msty";
+  | "msty"
+  | "watsonx"
+  | "openrouter";
 
 export type ModelName =
   | "AUTODETECT"
@@ -718,6 +747,10 @@ interface BaseCompletionOptions {
   stream?: boolean;
 }
 
+export interface ModelCapability {
+  uploadImage?: boolean;
+}
+
 export interface ModelDescription {
   title: string;
   provider: ModelProvider;
@@ -725,11 +758,13 @@ export interface ModelDescription {
   apiKey?: string;
   apiBase?: string;
   contextLength?: number;
+  maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
+  capabilities?: ModelCapability;
 }
 
 export type EmbeddingsProviderName =
@@ -739,7 +774,9 @@ export type EmbeddingsProviderName =
   | "openai"
   | "cohere"
   | "free-trial"
-  | "gemini";
+  | "gemini"
+  | "continue-proxy"
+  | "deepinfra";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -758,6 +795,7 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  providerName: EmbeddingsProviderName;
   maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
@@ -767,7 +805,8 @@ export type RerankerName =
   | "voyage"
   | "llm"
   | "free-trial"
-  | "huggingface-tei";
+  | "huggingface-tei"
+  | "continue-proxy";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -846,10 +885,14 @@ interface QuickActionConfig {
   sendToChat: boolean;
 }
 
+export type DefaultContextProvider = ContextProviderWithParams & {
+  query?: string;
+};
+
 interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
-  defaultContext?: "activeFile"[];
+  defaultContext?: DefaultContextProvider[];
   promptPath?: string;
 
   /**
@@ -857,6 +900,11 @@ interface ExperimentalConfig {
    * function and class declarations.
    */
   quickActions?: QuickActionConfig[];
+
+  /**
+   * Automatically read LLM chat responses aloud using system TTS models
+   */
+  readResponseTTS?: boolean;
 }
 
 interface AnalyticsConfig {
@@ -886,6 +934,7 @@ export interface SerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";

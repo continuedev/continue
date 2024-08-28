@@ -91,7 +91,6 @@ async function addHighlightedCodeToContext(
     if (selection.isEmpty) {
       return;
     }
-
     // adjust starting position to include indentation
     const start = new vscode.Position(selection.start.line, 0);
     const range = new vscode.Range(start, selection.end);
@@ -285,11 +284,11 @@ const commandsMap: (
 
       streamInlineEdit("docstring", prompt, false, range);
     },
-    "continue.toggleAuxiliaryBar": () => {
-      vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
-    },
     "continue.codebaseForceReIndex": async () => {
       core.invoke("index/forceReIndex", undefined);
+    },
+    "continue.rebuildCodebaseIndex": async () => {
+      core.invoke("index/forceReIndex", { shouldClearIndexes: true });
     },
     "continue.docsIndex": async () => {
       core.invoke("context/indexDocs", { reIndex: false });
@@ -321,8 +320,6 @@ const commandsMap: (
         // Handle closing the GUI only if we are focused on the input
         if (fullScreenTab) {
           fullScreenPanel?.dispose();
-        } else {
-          vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
         }
       } else {
         // Handle opening the GUI otherwise
@@ -481,11 +478,6 @@ const commandsMap: (
       //Full screen not open - open it
       captureCommandTelemetry("openFullScreen");
 
-      // Close the sidebar.webviews
-      // vscode.commands.executeCommand("workbench.action.closeSidebar");
-      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-      // vscode.commands.executeCommand("workbench.action.toggleZenMode");
-
       //create the full screen panel
       let panel = vscode.window.createWebviewPanel(
         "continue.continueGUIView",
@@ -602,8 +594,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =

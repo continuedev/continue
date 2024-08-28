@@ -18,8 +18,10 @@ import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
 export const AUTH_TYPE = "continue";
 const AUTH_NAME = "Continue";
-const CLIENT_ID = "client_01J0FW6XN8N2XJAECF7NE0Y65J"; // Production
-// const CLIENT_ID = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ"; // Staging
+const CLIENT_ID =
+  process.env.CONTROL_PLANE_ENV === "local"
+    ? "client_01J0FW6XCPMJMQ3CG51RB4HBZQ"
+    : "client_01J0FW6XN8N2XJAECF7NE0Y65J";
 const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`;
 
 class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
@@ -140,7 +142,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     if (this._sessions[0].expiresIn) {
       setTimeout(
         () => this._refreshSessions(),
-        (this._sessions[0].expiresIn * 1000 * 2) / 3,
+        (this._sessions[0].expiresIn * 2) / 3,
       );
     }
   }
@@ -158,7 +160,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       }),
     });
     if (!response.ok) {
-      throw new Error("Network failure");
+      const text = await response.text();
+      throw new Error("Error refreshing token: " + text);
     }
     const data = (await response.json()) as any;
     return {

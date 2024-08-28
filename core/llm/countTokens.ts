@@ -1,10 +1,14 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+import {
+  AsyncEncoder,
+  GPTAsyncEncoder,
+  LlamaAsyncEncoder,
+} from "./asyncEncoder.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
-import llamaTokenizer from "./llamaTokenizer.js";
-import { AsyncEncoder, GPTAsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
 import { stripImages } from "./images.js";
+import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -20,12 +24,32 @@ class LlamaEncoding implements Encoding {
   }
 }
 
+class NonWorkerAsyncEncoder implements AsyncEncoder {
+  constructor(private readonly encoding: Encoding) {}
+
+  async close(): Promise<void> {}
+
+  async encode(text: string): Promise<number[]> {
+    return this.encoding.encode(text);
+  }
+
+  async decode(tokens: number[]): Promise<string> {
+    return this.encoding.decode(tokens);
+  }
+}
+
 let gptEncoding: Encoding | null = null;
 const gptAsyncEncoder = new GPTAsyncEncoder();
 const llamaEncoding = new LlamaEncoding();
 const llamaAsyncEncoder = new LlamaAsyncEncoder();
 
 function asyncEncoderForModel(modelName: string): AsyncEncoder {
+  // Temporary due to issues packaging the worker files
+  if (process.env.IS_BINARY) {
+    const encoding = encodingForModel(modelName);
+    return new NonWorkerAsyncEncoder(encoding);
+  }
+
   const modelType = autodetectTemplateType(modelName);
   if (!modelType || modelType === "none") {
     return gptAsyncEncoder;
@@ -61,7 +85,7 @@ async function countTokensAsync(
 ): Promise<number> {
   const encoding = asyncEncoderForModel(modelName);
   if (Array.isArray(content)) {
-    const promises = content.map(async part => {
+    const promises = content.map(async (part) => {
       if (part.type === "imageUrl") {
         return countImageTokens(part);
       }

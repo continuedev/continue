@@ -12,9 +12,9 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "noEmitOnError": false,
-    "types": ["node"],
+    "types": ["node", "jest"],
     "outDir": "dist",
     "declaration": true
     // "sourceMap": true

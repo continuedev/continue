@@ -42,7 +42,7 @@ const CHAT_ONLY_MODELS = [
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
 
-  protected maxStopWords: number | undefined = undefined;
+  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);
@@ -139,7 +139,7 @@ class OpenAI extends BaseLLM {
     return completion;
   }
 
-  private _getEndpoint(
+  protected _getEndpoint(
     endpoint: "chat/completions" | "completions" | "models",
   ) {
     if (this.apiType === "azure") {

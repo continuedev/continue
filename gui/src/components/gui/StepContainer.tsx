@@ -1,6 +1,7 @@
 import {
-  ArrowUturnLeftIcon,
+  ArrowPathIcon,
   BarsArrowDownIcon,
+  CubeIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
   TrashIcon,
@@ -35,36 +36,17 @@ interface StepContainerProps {
   isFirst: boolean;
   isLast: boolean;
   index: number;
-  subtext?: string;
+  modelTitle?: string;
 }
 
-// #region styled components
-
-const ButtonsDiv = styled.div`
-  display: flex;
-  gap: 2px;
-  align-items: center;
-  background-color: ${vscBackground};
-  box-shadow: 1px 1px 10px ${vscBackground};
-  border-radius: ${defaultBorderRadius};
-  z-index: 100;
-  position: absolute;
-  right: 8px;
-  top: 16px;
-  height: 0;
-`;
-
 const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
-  padding: 2px;
-  padding-right: 0px;
+  padding: 4px 0px 8px 0px;
   background-color: ${(props) =>
     props.isUserInput ? vscInputBackground : vscBackground};
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   // border-radius: ${defaultBorderRadius};
   overflow: hidden;
 `;
-
-// #endregion
 
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -140,18 +122,30 @@ function StepContainer(props: StepContainerProps) {
             />
           )}
         </ContentDiv>
-        {(isHovered || typeof feedback !== "undefined") && !active && (
-          <div
-            className="flex items-center justify-between absolute -bottom-2 w-full"
-            style={{ zIndex: 200 }}
-          >
+        {(props.isLast || isHovered || typeof feedback !== "undefined") &&
+          !active && (
             <div
-              className="pl-2"
-              style={{ color: lightGray, fontSize: getFontSize() - 3 }}
+              className="flex items-center gap-1 absolute -bottom-2 right-1"
+              style={{
+                zIndex: 200,
+                color: lightGray,
+                fontSize: getFontSize() - 3,
+              }}
             >
-              {props.subtext ?? ""}
-            </div>
-            <div className="flex items-center gap-2 pr-2">
+              {props.modelTitle && (
+                <>
+                  <div className="flex items-center">{props.modelTitle}</div>
+                  <div
+                    className="ml-2 mr-1"
+                    style={{
+                      width: "1px",
+                      height: "20px",
+                      backgroundColor: lightGray,
+                    }}
+                  ></div>
+                </>
+              )}
+
               {truncatedEarly && (
                 <HeaderButtonWithText
                   text="Continue generation"
@@ -177,11 +171,7 @@ function StepContainer(props: StepContainerProps) {
                   props.onRetry();
                 }}
               >
-                <ArrowUturnLeftIcon
-                  color={lightGray}
-                  width="1.2em"
-                  height="1.2em"
-                />
+                <ArrowPathIcon color={lightGray} width="1.2em" height="1.2em" />
               </HeaderButtonWithText>
               {feedback === false || (
                 <HeaderButtonWithText text="Helpful">
@@ -226,8 +216,7 @@ function StepContainer(props: StepContainerProps) {
                 />
               </HeaderButtonWithText>
             </div>
-          </div>
-        )}
+          )}
       </div>
     </div>
   );

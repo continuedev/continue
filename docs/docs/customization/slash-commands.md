@@ -44,11 +44,11 @@ Type "/share" to generate a shareable markdown transcript of your current chat h
 {
   "name": "share",
   "description": "Export the current chat session to markdown",
-  "params": { "ouputDir": "~/.continue/session-transcripts" }
+  "params": { "outputDir": "~/.continue/session-transcripts" }
 }
 ```
 
-Use the `ouputDir` parameter to specify where you want to the markdown file to be saved.
+Use the `outputDir` parameter to specify where you want to the markdown file to be saved.
 
 ### `/cmd`
 
@@ -104,6 +104,17 @@ The StackOverflow slash command will automatically pull results from StackOverfl
 {
   "name": "so",
   "description": "Reference StackOverflow to answer the question"
+}
+```
+
+### `/onboard`
+
+The Onboard slash command helps to familiarize yourself with a new project by analyzing the project structure, READMEs, and dependency files. It identifies key folders, explains their purpose, and highlights popular packages used. Additionally, it offers insights into the project's architecture.
+
+```json
+{
+  "name": "onboard",
+  "description": "Familiarize yourself with the codebase"
 }
 ```
 
