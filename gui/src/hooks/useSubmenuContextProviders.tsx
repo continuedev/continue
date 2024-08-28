@@ -248,9 +248,12 @@ function useSubmenuContextProviders() {
 
         await Promise.all(
           contextProviderDescriptions.map(async (description) => {
-            if (description.title === "file" && disableIndexing) {
+            if (
+              ["file", "folder", "tree"].includes(description.title) &&
+              disableIndexing
+            ) {
               console.debug(
-                "Skipping file context provider due to disabled indexing",
+                `Skipping ${description.title} provider due to disabled indexing`,
               );
               return;
             }
