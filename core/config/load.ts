@@ -147,6 +147,46 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
+  config = addMandatoryModels(config)
+  return config;
+}
+
+function addMandatoryModels(config: SerializedContinueConfig): SerializedContinueConfig {
+  const mandatoryModels: ModelDescription[] = [
+    {
+      model: "pearai_model",
+      contextLength: 300000,
+      title: "PearAI Model",
+      systemMessage: "You are an expert software developer. You give helpful and concise responses.",
+      provider: "pearai_server",
+      isDefault: true
+    },
+    {
+      model: "gpt-4o",
+      contextLength: 300000,
+      title: "GPT-4o (PearAI)",
+      systemMessage: "You are an expert software developer. You give helpful and concise responses.",
+      provider: "pearai_server",
+      isDefault: true
+    },
+    {
+      model: "claude-3-5-sonnet-20240620",
+      contextLength: 3000000,
+      title: "Claude 3.5 Sonnet (PearAI)",
+      systemMessage: "You are an expert software developer. You give helpful and concise responses.",
+      provider: "pearai_server",
+      isDefault: true
+    }
+  ];
+
+  const existingModelTitles = new Set(config.models.map(m => m.title));
+
+  for (const mandatoryModel of mandatoryModels) {
+    if (!existingModelTitles.has(mandatoryModel.title)) {
+      config.models.push(mandatoryModel);
+    }
+  }
+
   return config;
 }
 
