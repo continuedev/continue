@@ -14,6 +14,7 @@ import {
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
+import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -56,7 +57,6 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
-import { debounce } from "lodash";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -483,18 +483,18 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (editor) {
       const handleFocus = () => {
         debouncedShouldHideToolbar(false);
-      }
+      };
 
       const handleBlur = () => {
         debouncedShouldHideToolbar(true);
       };
 
-      editor.on('focus', handleFocus);
-      editor.on('blur', handleBlur);
+      editor.on("focus", handleFocus);
+      editor.on("blur", handleBlur);
 
       return () => {
-        editor.off('focus', handleFocus);
-        editor.off('blur', handleBlur);
+        editor.off("focus", handleFocus);
+        editor.off("blur", handleBlur);
       };
     }
   }, [editor]);

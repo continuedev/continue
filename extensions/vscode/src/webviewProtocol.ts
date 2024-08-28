@@ -1,4 +1,5 @@
 import { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import { WebviewMessengerResult } from "core/protocol/util";
 import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Message } from "core/util/messenger";
 import { Telemetry } from "core/util/posthog";
@@ -73,7 +74,7 @@ export class VsCodeWebviewProtocol
         throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
       }
 
-      const respond = (message: any) =>
+      const respond = (message: WebviewMessengerResult<any>) =>
         this.send(msg.messageType, message, msg.messageId);
 
       const handlers = this.listeners.get(msg.messageType) || [];
@@ -89,12 +90,16 @@ export class VsCodeWebviewProtocol
               respond(next.value);
               next = await response.next();
             }
-            respond({ done: true, content: next.value?.content });
+            respond({
+              done: true,
+              content: next.value?.content,
+              status: "success",
+            });
           } else {
-            respond(response || {});
+            respond({ done: true, content: response || {}, status: "success" });
           }
         } catch (e: any) {
-          respond({ done: true, error: e });
+          respond({ done: true, error: e, status: "error" });
 
           console.error(
             `Error handling webview message: ${JSON.stringify(

@@ -15,6 +15,7 @@ import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
+import DocsCrawler from "./indexing/docs/DocsCrawler";
 import DocsService from "./indexing/docs/DocsService";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -28,7 +29,6 @@ import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
 import { streamDiffLines } from "./util/verticalEdit";
-import DocsCrawler from "./indexing/docs/DocsCrawler";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -371,7 +371,7 @@ export class Core {
       const config = await configHandler.loadConfig();
 
       // Stop TTS on new StreamChat
-      if(config.experimental?.readResponseTTS) {
+      if (config.experimental?.readResponseTTS) {
         TTS.kill();
       }
 
@@ -399,7 +399,7 @@ export class Core {
         next = await gen.next();
       }
 
-      if(config.experimental?.readResponseTTS && "completion" in next.value) {
+      if (config.experimental?.readResponseTTS && "completion" in next.value) {
         TTS.read(next.value?.completion);
       }
 

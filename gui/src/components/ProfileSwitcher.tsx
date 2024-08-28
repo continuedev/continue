@@ -155,7 +155,11 @@ function ProfileSwitcher(props: {}) {
   }, []);
 
   useEffect(() => {
-    ideMessenger.request("config/listProfiles", undefined).then(setProfiles);
+    ideMessenger
+      .request("config/listProfiles", undefined)
+      .then(
+        (result) => result.status === "success" && setProfiles(result.content),
+      );
   }, []);
 
   useWebviewListener(
