@@ -91,15 +91,15 @@
                 description="View Continue Server Logs">
             <!-- No shortcut defined -->
         </action>
-
+       
         <action id="pearai.focusContinueInputWithoutClear"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"
                 description="Focus Continue Input With Edit">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="ctrl J"/>
+                               first-keystroke="ctrl shift J"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta J"/>
+                               first-keystroke="meta shift J"/>
         </action>
 
 <!--        <action id="InsertLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction" />-->
@@ -123,9 +123,9 @@
                 text="Add selected code to context"
                 description="Focus Continue Input">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="ctrl shift J"/>
+                               first-keystroke="ctrl J"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta shift J"/>
+                               first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
         </action>
 
