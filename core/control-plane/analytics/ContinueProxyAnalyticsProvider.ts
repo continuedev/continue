@@ -1,6 +1,6 @@
 import { Analytics } from "@continuedev/config-types";
 import fetch from "node-fetch";
-import { CONTROL_PLANE_URL } from "../client.js";
+import { CONTROL_PLANE_URL, ControlPlaneClient } from "../client.js";
 import { IAnalyticsProvider } from "./IAnalyticsProvider.js";
 
 export default class ContinueProxyAnalyticsProvider
@@ -9,17 +9,26 @@ export default class ContinueProxyAnalyticsProvider
   uniqueId?: string;
   workspaceId?: string;
 
+  controlPlaneClient?: ControlPlaneClient;
+
   async capture(
     event: string,
     properties: { [key: string]: any },
   ): Promise<void> {
-    fetch(new URL(`/proxy/analytics/${this.workspaceId}`, CONTROL_PLANE_URL), {
+    const url = new URL(
+      `proxy/analytics/${this.workspaceId}/capture`,
+      CONTROL_PLANE_URL,
+    ).toString();
+    fetch(url, {
       method: "POST",
       body: JSON.stringify({
         event,
         properties,
         uniqueId: this.uniqueId,
       }),
+      headers: {
+        Authorization: `Bearer ${await this.controlPlaneClient?.getAccessToken()}`,
+      },
     });
   }
 
