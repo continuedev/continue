@@ -24,7 +24,7 @@
 
 ## Quickly use documentation as context
 
-`@docs` (MacOS) / `@docs` (Windows)
+`@docs`
 
 </div>
 
