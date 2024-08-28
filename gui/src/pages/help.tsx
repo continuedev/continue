@@ -121,39 +121,18 @@ function HelpPage() {
         <h3 className="text-lg font-bold m-2 inline-block">Help</h3>
       </div>
 
-      <div className="flex items-center justify-center gap-4 p-0">
-        {/* <TutorialButton
-          className="underline"
+      <div className="flex flex-col items-center justify-center">
+      <div className="flex items-center justify-center m-4 gap-4 p-0">
+        <StyledButton
+          className="inline-flex flex-shrink-0"
+          themeType={themeType}
           onClick={() => {
-            ideMessenger.post("showTutorial", undefined);
-            navigate("/onboarding");
+            ideMessenger.post("pearaiLogin", undefined);
+            navigate("/");
           }}
         >
-          Add another model
-      </TutorialButton> */}
-        <div className="ml-auto">
-          <TutorialButton
-            className="underline tracking-wide"
-            onClick={() => {
-              ideMessenger.post("showTutorial", undefined);
-              navigate("/onboarding");
-            }}
-          >
-            Open Tutorial
-          </TutorialButton>
-          <TutorialButton
-            className="underline tracking-wide"
-            onClick={() => {
-              ideMessenger.post("showTutorial", undefined);
-              navigate("/onboarding");
-            }}
-          >
-            Login to PearAI
-          </TutorialButton>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center m-4 gap-4 p-0">
+          Login to PearAI
+        </StyledButton>
         <StyledLink
           href="https://trypear.ai/"
           target="_blank"
@@ -161,7 +140,9 @@ function HelpPage() {
         >
           PearAI Website
         </StyledLink>
+      </div>
 
+      <div className="flex items-center justify-center m-4 gap-4 p-0">
         <StyledButton
           className="inline-flex flex-shrink-0"
           themeType={themeType}
@@ -171,17 +152,19 @@ function HelpPage() {
         >
           View Usage
         </StyledButton>
-      </div>
-      <div className="flex items-center justify-center m-4 gap-4 p-0">
-        <StyledLink
-          className="flex items-center justify-center gap-2"
-          href="https://discord.gg/Uw9mVvFUk3"
-          target="_blank"
+        <StyledButton
+          className="inline-flex flex-shrink-0"
           themeType={themeType}
+          onClick={() => {
+            ideMessenger.post("showTutorial", undefined);
+            navigate("/onboarding");
+          }}
         >
-          <DiscordSVG />
-          Discord
-        </StyledLink>
+          Open Tutorial
+        </StyledButton>
+      </div>
+
+      <div className="flex items-center justify-center m-4 gap-4 p-0">
         <StyledLink
           className="flex items-center justify-center gap-2"
           href="https://github.com/trypear/pearai-app/"
@@ -191,7 +174,18 @@ function HelpPage() {
           <GithubSVG />
           Github
         </StyledLink>
+        <StyledLink
+          className="flex items-center justify-center gap-2"
+          href="https://discord.gg/Uw9mVvFUk3"
+          target="_blank"
+          themeType={themeType}
+        >
+          <DiscordSVG />
+          Discord
+        </StyledLink>
       </div>
+    </div>
+
       <KeyboardShortcutsDialog />
     </div>
   );

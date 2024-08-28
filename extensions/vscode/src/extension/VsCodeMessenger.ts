@@ -106,7 +106,18 @@ export class VsCodeMessenger {
       vscode.commands.executeCommand("workbench.action.focusActiveEditorGroup");
     });
     this.onWebview("toggleFullScreen", (msg) => {
-      vscode.commands.executeCommand("continue.toggleFullScreen");
+      vscode.commands.executeCommand("pearai.toggleFullScreen");
+    });
+    this.onWebview("bigChat", (msg) => {
+      vscode.commands.executeCommand("pearai.resizeAuxiliaryBarWidth");
+    });this.onWebview("pearaiLogin", (msg) => {
+      vscode.commands.executeCommand("pearai.login");
+    });
+    this.onWebview("lastChat", (msg) => {
+      vscode.commands.executeCommand("pearai.loadRecentChat");
+    });
+    this.onWebview("closeChat", (msg) => {
+      vscode.commands.executeCommand("pearai.closeChat");
     });
     this.onWebview("openHistory", (msg) => {
       vscode.commands.executeCommand("pearai.viewHistory");
