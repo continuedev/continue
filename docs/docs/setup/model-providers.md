@@ -51,12 +51,13 @@ You can run a model on your local computer using:
 
 ### Remote
 
-You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
+You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), [Lambda](https://lambdalabs.com/), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
 
 - [HuggingFace TGI](https://github.com/continuedev/deploy-os-code-llm#tgi)
 - [vLLM](https://github.com/continuedev/deploy-os-code-llm#vllm)
 - [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
+- [Lambda](https://github.com/continuedev/deploy-os-code-llm#lambda)
 
 ## SaaS
 
