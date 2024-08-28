@@ -34,6 +34,7 @@ describe("CodeSnippetsCodebaseIndex", () => {
     const mockSnippet = {
       title: "",
       content: "",
+      signature: "",
       startLine: 0,
       endLine: 1,
     };

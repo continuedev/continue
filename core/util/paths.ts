@@ -341,3 +341,7 @@ export function readAllGlobalPromptFiles(
 
   return promptFiles;
 }
+
+export function getRepoMapFilePath(): string {
+  return path.join(getContinueUtilsPath(), "repo_map.txt");
+}

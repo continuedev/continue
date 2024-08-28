@@ -25,6 +25,7 @@ export interface ChunkWithoutID {
   content: string;
   startLine: number;
   endLine: number;
+  signature?: string;
   otherMetadata?: { [key: string]: any };
 }
 
