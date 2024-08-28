@@ -114,7 +114,7 @@ Voyage AI offers the best embeddings for code with their voyage-code-2 model. Af
 ```json title="~/.continue/config.json"
 {
   "embeddingsProvider": {
-    "provider": "openai",
+    "provider": "voyage",
     "model": "voyage-code-2",
     "apiBase": "https://api.voyageai.com/v1/",
     "apiKey": "<VOYAGE_API_KEY>"
