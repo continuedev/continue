@@ -11,6 +11,8 @@ import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
 import { useWebviewListener } from "./useWebviewListener";
+import { WebviewMessengerResult } from "core/protocol/util";
+import { getLocalStorage } from "../util/localStorage";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -32,6 +34,9 @@ function useSubmenuContextProviders() {
   );
 
   const [loaded, setLoaded] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -50,10 +55,16 @@ function useSubmenuContextProviders() {
   }
 
   useWebviewListener("refreshSubmenuItems", async (data) => {
-    setLoaded(false);
+    console.debug("refreshSubmenuItems called with data:", data);
+    if (!isLoading) {
+      setLoaded(false);
+      setInitialLoadComplete(false);
+      setAutoLoadTriggered((prev) => !prev); // Toggle to trigger effect
+    }
   });
 
   useWebviewListener("updateSubmenuItems", async (data) => {
+    console.debug("updateSubmenuItems called with data:", data);
     const minisearch = new MiniSearch<ContextSubmenuItem>({
       fields: ["title", "description"],
       storeFields: ["id", "title", "description"],
@@ -165,89 +176,177 @@ function useSubmenuContextProviders() {
           "Limit:",
           limit,
         );
+        console.debug("Current fallbackResults:", fallbackResults);
+        console.debug("Current minisearches:", Object.keys(minisearches));
 
-        const results = getSubmenuSearchResults(providerTitle, query);
-        if (results.length === 0) {
-          const fallbackItems = (fallbackResults[providerTitle] ?? [])
-            .slice(0, limit)
-            .map((result) => {
-              return {
-                ...result,
-                providerTitle,
-              };
-            });
-          console.debug("Using fallback results:", fallbackItems.length);
-          return fallbackItems;
+        if (!initialLoadComplete) {
+          console.debug("Initial load not complete, returning loading state");
+          return [
+            {
+              id: "loading",
+              title: "Loading...",
+              description: "Please wait while items are being loaded",
+              providerTitle: providerTitle || "unknown",
+            },
+          ];
         }
-        const limitedResults = results.slice(0, limit).map((result) => {
-          return {
-            id: result.id,
-            title: result.title,
-            description: result.description,
-            providerTitle: result.providerTitle,
-          };
-        });
-        return limitedResults;
+
+        try {
+          const results = getSubmenuSearchResults(providerTitle, query);
+          if (results.length === 0) {
+            const fallbackItems = (fallbackResults[providerTitle] ?? [])
+              .slice(0, limit)
+              .map((result) => {
+                return {
+                  ...result,
+                  providerTitle,
+                };
+              });
+            console.debug("Using fallback results:", fallbackItems.length);
+            console.debug("Fallback items:", fallbackItems);
+            return fallbackItems;
+          }
+          const limitedResults = results.slice(0, limit).map((result) => {
+            return {
+              id: result.id,
+              title: result.title,
+              description: result.description,
+              providerTitle: result.providerTitle,
+            };
+          });
+          return limitedResults;
+        } catch (error) {
+          console.error("Error in getSubmenuContextItems:", error);
+          return [];
+        }
       },
-    [fallbackResults, getSubmenuSearchResults],
+    [fallbackResults, getSubmenuSearchResults, initialLoadComplete],
   );
 
   useEffect(() => {
-    if (contextProviderDescriptions.length === 0 || loaded) {
+    if (contextProviderDescriptions.length === 0 || loaded || isLoading) {
       return;
     }
     setLoaded(true);
+    setIsLoading(true);
 
     const loadSubmenuItems = async () => {
-      for (const description of contextProviderDescriptions) {
-        const minisearch = new MiniSearch<ContextSubmenuItem>({
-          fields: ["title", "description"],
-          storeFields: ["id", "title", "description"],
-        });
-        const result = await ideMessenger.request("context/loadSubmenuItems", {
-          title: description.title,
-        });
+      console.debug("Starting loadSubmenuItems");
+      console.debug(
+        "contextProviderDescriptions:",
+        contextProviderDescriptions,
+      );
 
-        if (result.status === "error") {
-          continue;
-        }
-        const items = result.content;
+      const loadTimeout = setTimeout(() => {
+        console.error("loadSubmenuItems timed out");
+        setInitialLoadComplete(true);
+        setIsLoading(false);
+      }, 30000); // 30 seconds timeout
 
-        try {
-          minisearch.addAll(items);
-        } catch (itemError) {
-          console.error(
-            "Error adding item to minisearch:",
-            itemError.message,
-            itemError.stack,
-          );
-        }
+      try {
+        const disableIndexing = getLocalStorage("disableIndexing") ?? false;
 
-        setMinisearches((prev) => ({
-          ...prev,
-          [description.title]: minisearch,
-        }));
+        await Promise.all(
+          contextProviderDescriptions.map(async (description) => {
+            if (description.title === "file" && disableIndexing) {
+              console.debug(
+                "Skipping file context provider due to disabled indexing",
+              );
+              return;
+            }
+            console.debug(`Processing provider: ${description.title}`);
+            try {
+              const minisearch = new MiniSearch<ContextSubmenuItem>({
+                fields: ["title", "description"],
+                storeFields: ["id", "title", "description"],
+              });
+              console.debug(`Requesting items for ${description.title}`);
+              const result = (await Promise.race([
+                ideMessenger.request("context/loadSubmenuItems", {
+                  title: description.title,
+                }),
+                new Promise<never>((_, reject) =>
+                  setTimeout(() => reject(new Error("Request timeout")), 30000),
+                ),
+              ])) as WebviewMessengerResult<"context/loadSubmenuItems">;
 
-        if (description.title === "file") {
-          const openFiles = await getOpenFileItems();
-          setFallbackResults((prev) => ({
-            ...prev,
-            file: [
-              ...openFiles,
-              ...items.slice(0, MAX_LENGTH - openFiles.length),
-            ],
-          }));
-        } else {
-          setFallbackResults((prev) => ({
-            ...prev,
-            [description.title]: items.slice(0, MAX_LENGTH),
-          }));
-        }
+              console.debug(
+                `Received result for ${description.title}:`,
+                result,
+              );
+
+              if (result.status === "error") {
+                console.error(
+                  `Error loading items for ${description.title}:`,
+                  result.error,
+                );
+                return;
+              }
+              const items = result.content;
+
+              console.debug(
+                `Adding ${items.length} items to minisearch for ${description.title}`,
+              );
+              minisearch.addAll(items);
+
+              console.debug(`Updating minisearches for ${description.title}`);
+              setMinisearches((prev) => ({
+                ...prev,
+                [description.title]: minisearch,
+              }));
+
+              if (description.title === "file") {
+                console.debug("Processing file provider");
+                const openFiles = await getOpenFileItems();
+                console.debug(`Got ${openFiles.length} open files`);
+                setFallbackResults((prev) => ({
+                  ...prev,
+                  file: [
+                    ...openFiles,
+                    ...items.slice(0, MAX_LENGTH - openFiles.length),
+                  ],
+                }));
+              } else {
+                console.debug(
+                  `Updating fallbackResults for ${description.title}`,
+                );
+                setFallbackResults((prev) => ({
+                  ...prev,
+                  [description.title]: items.slice(0, MAX_LENGTH),
+                }));
+              }
+            } catch (error) {
+              console.error(`Error processing ${description.title}:`, error);
+              // Add more detailed error logging here
+              console.error(
+                "Error details:",
+                JSON.stringify(error, Object.getOwnPropertyNames(error)),
+              );
+            }
+          }),
+        );
+      } catch (error) {
+        console.error("Error in loadSubmenuItems:", error);
+      } finally {
+        clearTimeout(loadTimeout);
+        console.debug("Finished loadSubmenuItems");
+        console.debug("Final minisearches:", Object.keys(minisearches));
+        console.debug("Final fallbackResults:", Object.keys(fallbackResults));
+        setInitialLoadComplete(true);
+        setIsLoading(false);
       }
     };
 
-    loadSubmenuItems();
-  }, [contextProviderDescriptions, loaded]);
+    loadSubmenuItems()
+      .then(() => {
+        console.debug("loadSubmenuItems completed successfully");
+      })
+      .catch((error) => {
+        console.error("Error in loadSubmenuItems:", error);
+        setInitialLoadComplete(true);
+        setIsLoading(false);
+      });
+  }, [contextProviderDescriptions, loaded, autoLoadTriggered]);
 
   useWebviewListener("configUpdate", async () => {
     // When config is updated (for example switching to a different workspace)
