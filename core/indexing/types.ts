@@ -5,7 +5,7 @@ export enum IndexResultType {
   Delete = "del",
   AddTag = "addTag",
   RemoveTag = "removeTag",
-  UpdateLastUpdated = "updateLastUpdated"
+  UpdateLastUpdated = "updateLastUpdated",
 }
 
 export type MarkCompleteCallback = (
