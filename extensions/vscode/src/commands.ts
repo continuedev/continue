@@ -517,6 +517,10 @@ const commandsMap: (
       firstUri: vscode.Uri,
       uris: vscode.Uri[],
     ) => {
+      if (uris === undefined) {
+        throw new Error("No files were selected");
+      }
+
       vscode.commands.executeCommand("continue.continueGUIView.focus");
 
       for (const uri of uris) {
