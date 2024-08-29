@@ -16,7 +16,7 @@ Begin your journey by logging in on the PearAI panel (Cmd/Ctrl+;)
 | Append Selected                    | <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> |
 | Inline Prompting                   | <kbd>Cmd/Ctrl</kbd> + <kbd>I</kbd>          |
 | Add Latest Terminal Error to Chat  | <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> |
-| Open History                       | <kbd>Cmd/Ctrl</kbd> + <kbd>O</kbd>          |
+| Open History                       | <kbd>Cmd/Ctrl</kbd> + <kbd>H</kbd>          |
 | Previous Chat                      | <kbd>Cmd/Ctrl</kbd> + <kbd>0</kbd>          |
 | Switch Model                       | <kbd>Cmd/Ctrl</kbd> + <kbd>'</kbd>          |
 
