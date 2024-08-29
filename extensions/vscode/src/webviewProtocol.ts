@@ -8,6 +8,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { IMessenger } from "../../../core/util/messenger";
+import { showFreeTrialLoginMessage } from "./util/messages";
 import { getExtensionUri } from "./util/vscode";
 
 export async function showTutorial() {
@@ -140,25 +141,9 @@ export class VsCodeWebviewProtocol
                 }
               });
           } else if (message.includes("Please sign in with GitHub")) {
-            vscode.window
-              .showInformationMessage(
-                message,
-                "Sign In",
-                "Use API key / local model",
-              )
-              .then((selection) => {
-                if (selection === "Sign In") {
-                  vscode.authentication
-                    .getSession("github", [], {
-                      createIfNone: true,
-                    })
-                    .then(() => {
-                      this.reloadConfig();
-                    });
-                } else if (selection === "Use API key / local model") {
-                  this.request("openOnboarding", undefined);
-                }
-              });
+            showFreeTrialLoginMessage(message, this.reloadConfig, () =>
+              this.request("openOnboarding", undefined),
+            );
           } else {
             Telemetry.capture(
               "webview_protocol_error",
