@@ -2410,6 +2410,9 @@
               "properties": {
                 "inlineEdit": {
                   "type": "string"
+                },
+                "applyCodeBlock": {
+                  "type": "string"
                 }
               }
             },
