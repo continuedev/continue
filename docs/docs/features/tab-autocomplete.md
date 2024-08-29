@@ -12,6 +12,7 @@ If you want to have the best autocomplete experience, we recommend using Codestr
     "title": "Codestral",
     "provider": "mistral",
     "model": "codestral-latest",
+    "apiBase": "https://api.mistral.ai/v1",
     "apiKey": "YOUR_API_KEY"
   }
 }
