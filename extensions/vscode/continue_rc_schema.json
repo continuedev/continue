@@ -2252,7 +2252,8 @@
                 "openai",
                 "cohere",
                 "free-trial",
-                "gemini"
+                "gemini",
+                "voyage"
               ]
             },
             "model": {
@@ -2286,7 +2287,8 @@
                 "properties": {
                   "provider": {
                     "enum": [
-                      "cohere"
+                      "cohere",
+                      "voyage"
                     ]
                   }
                 },
