@@ -19,6 +19,8 @@ enum IndexedProvider {
   File = "file",
   Folder = "folder",
   Tree = "tree",
+  RepoMap = "repo-map",
+  Code = "code",
 }
 
 const MINISEARCH_OPTIONS = {
