@@ -729,8 +729,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-            ? StatusBarStatus.Paused
-            : StatusBarStatus.Disabled;
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -800,8 +800,32 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
+    "continue.test": () => {
+      toggleState = !toggleState;
+      const p = path.join(
+        os.homedir(),
+        "Library",
+        "Application Support",
+        "Code - Insiders",
+        "User",
+        "settings.json",
+      );
+      const settingsRaw = fs.readFileSync(p);
+      const settings = JSON.parse(settingsRaw.toString());
+      settings["workbench.colorCustomizations"] = toggleState
+        ? {
+            "editorError.foreground": "#00000000",
+            "editorWarning.foreground": "#00000000",
+            "editorInfo.foreground": "#00000000",
+            "editorOverviewRuler.errorForeground": "#00000000",
+          }
+        : null;
+      fs.writeFileSync(p, JSON.stringify(settings, undefined, 2));
+    },
   };
 };
+
+let toggleState = false;
 
 export function registerAllCommands(
   context: vscode.ExtensionContext,
