@@ -15,7 +15,9 @@ export async function showTutorial() {
   // Ensure keyboard shortcuts match OS
   if (process.platform !== "darwin") {
     let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
-    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
+    tutorialContent = tutorialContent
+      .replaceAll("⌘", "^")
+      .replaceAll("Cmd", "Ctrl");
     fs.writeFileSync(tutorialPath, tutorialContent);
   }
 
@@ -114,7 +116,7 @@ export class VsCodeWebviewProtocol
             }
           }
           // PearAI login issues
-          else if (message.includes("401") && message.includes("PearAI")) {            
+          else if (message.includes("401") && message.includes("PearAI")) {
             vscode.window
               .showErrorMessage(
                 message,
@@ -137,7 +139,7 @@ export class VsCodeWebviewProtocol
               });
           }
           // PearAI Free trial ended case
-          else if (message.includes("403") && message.includes("PearAI")) {            
+          else if (message.includes("403") && message.includes("PearAI")) {
             vscode.window
               .showErrorMessage(
                 message,

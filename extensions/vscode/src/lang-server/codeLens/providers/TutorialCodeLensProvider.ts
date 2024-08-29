@@ -114,32 +114,54 @@ export class TutorialCodeLensProvider implements vscode.CodeLensProvider {
       }
     }
 
-    const lineOf11 = lines.findIndex((line) =>
+    const lineOf10 = lines.findIndex((line) =>
       line.includes("Step 1: Highlight the function below"),
     );
-    if (lineOf11 >= 0) {
-      const range = new vscode.Range(lineOf11, 0, lineOf11 + 1, 0);
+    if (lineOf10 >= 0) {
+      const range = new vscode.Range(lineOf10, 0, lineOf10 + 1, 0);
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Highlight the function",
-          command: "continue.selectRange",
-          arguments: [lineOf11 + 3, lineOf11 + 11],
+          command: "pearai.selectRange",
+          arguments: [lineOf10 + 1, lineOf10 + 8],
         }),
       );
     }
-    const lineOf21 = lines.findIndex((line) =>
+    const lineOf30 = lines.findIndex((line) =>
       line.includes("Step 1: Highlight this code"),
     );
-    if (lineOf21 >= 0) {
-      const range = new vscode.Range(lineOf21, 0, lineOf21 + 1, 0);
+    if (lineOf30 >= 0) {
+      const range = new vscode.Range(lineOf30, 0, lineOf30 + 1, 0);
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "Highlight the function",
-          command: "continue.selectRange",
-          arguments: [lineOf21 + 3, lineOf21 + 14],
+          command: "pearai.selectRange",
+          arguments: [lineOf30 + 1, lineOf30 + 12],
         }),
       );
     }
+
+    // Folding of the tutorial
+    // const regionLines = lines
+    //   .map((line, i) => [line, i])
+    //   .filter(([line, i]) => (line as string).startsWith("# region "))
+    //   .map(([line, i]) => i);
+    // for (const lineOfRegion of regionLines as number[]) {
+    //   const range = new vscode.Range(lineOfRegion, 0, lineOfRegion + 1, 0);
+
+    //   const linesToFold = regionLines
+    //     .filter((i) => lineOfRegion !== i)
+    //     .flatMap((i) => {
+    //       return [i, (i as number) + 1];
+    //     });
+    //   codeLenses.push(
+    //     new vscode.CodeLens(range, {
+    //       title: `Begin Section`,
+    //       command: "pearai.foldAndUnfold",
+    //       arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
+    //     }),
+    //   );
+    // }
 
     return codeLenses;
   }
