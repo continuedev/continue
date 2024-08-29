@@ -55,6 +55,25 @@ const TutorialButton = styled(Button)`
   }
 `;
 
+const ButtonContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem 0.5rem;
+  margin: 0.75rem auto;
+  width: 75%;
+  max-width: 600px;
+
+  @media (min-width: 726px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  @media (max-width: 400px) {
+    width: 90%;
+    
+  }
+`;
+
+
 const StyledButton = styled.div<{
   backgroundColor?: string;
   hoverBackgroundColor?: string;
@@ -67,14 +86,22 @@ const StyledButton = styled.div<{
       props.themeType === "light"
         ? "rgba(0, 0, 0, 0.3)"
         : "rgba(255, 255, 255, 0.3)"};
+  display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.75rem;
+  padding: 0.25rem  0.5rem;
   text-align: center;
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 3.65vw, 1rem);
   font-weight: 500;
   color: ${vscForeground};
   cursor: pointer;
+  width: 85%;
+  height: 50px;
+
+  @media (max-width: 400px) {
+    height: clamp(35px, 12vw, 50px);
+    padding: 0.3rem 0.25rem;
+  }
 
   &:hover:not(:disabled) {
     background-color: ${(props) =>
@@ -94,6 +121,11 @@ const StyledLink = styled(StyledButton).attrs({
     color: inherit;
     text-decoration: none;
   }
+
+  @media (max-width: 400px) {
+    .icon {
+      display: none;
+    }
 `;
 
 // Todo: Add demo video
@@ -121,8 +153,8 @@ function HelpPage() {
         <h3 className="text-lg font-bold m-2 inline-block">Help</h3>
       </div>
 
-      <div className="flex flex-col items-center justify-center">
-      <div className="flex items-center justify-center m-4 gap-4 p-0">
+      <div className="flex flex-col items-center justify-center w-full">
+      <ButtonContainer>
         <StyledButton
           className="inline-flex flex-shrink-0"
           themeType={themeType}
@@ -140,9 +172,7 @@ function HelpPage() {
         >
           PearAI Website
         </StyledLink>
-      </div>
 
-      <div className="flex items-center justify-center m-4 gap-4 p-0">
         <StyledButton
           className="inline-flex flex-shrink-0"
           themeType={themeType}
@@ -162,16 +192,13 @@ function HelpPage() {
         >
           Open Tutorial
         </StyledButton>
-      </div>
-
-      <div className="flex items-center justify-center m-4 gap-4 p-0">
         <StyledLink
           className="flex items-center justify-center gap-2"
           href="https://github.com/trypear/pearai-app/"
           target="_blank"
           themeType={themeType}
         >
-          <GithubSVG />
+          <span className="icon"><GithubSVG /></span>
           Github
         </StyledLink>
         <StyledLink
@@ -180,10 +207,10 @@ function HelpPage() {
           target="_blank"
           themeType={themeType}
         >
-          <DiscordSVG />
+          <span className="icon"><DiscordSVG /></span>
           Discord
         </StyledLink>
-      </div>
+      </ButtonContainer>
     </div>
 
       <KeyboardShortcutsDialog />
