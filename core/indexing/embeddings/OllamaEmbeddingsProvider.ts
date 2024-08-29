@@ -20,11 +20,11 @@ async function embedOne(
       apiBase += "/";
     }
 
-    const resp = await customFetch(new URL("api/embeddings", apiBase), {
+    const resp = await customFetch(new URL("api/embed", apiBase), {
       method: "POST",
       body: JSON.stringify({
         model: options.model,
-        prompt: chunk,
+        input: chunk,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -36,7 +36,7 @@ async function embedOne(
     }
 
     const data = await resp.json();
-    const embedding = data.embedding;
+    const embedding = data.embeddings[0];
 
     if (!embedding || embedding.length === 0) {
       throw new Error("Ollama generated empty embedding");
