@@ -6,13 +6,20 @@ import {
   groupByLastNPathParts,
 } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
 import { useWebviewListener } from "./useWebviewListener";
 import { WebviewMessengerResult } from "core/protocol/util";
 import { getLocalStorage } from "../util/localStorage";
+
+// Add this enum definition
+enum IndexedProvider {
+  File = "file",
+  Folder = "folder",
+  Tree = "tree",
+}
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -40,19 +47,19 @@ function useSubmenuContextProviders() {
 
   const ideMessenger = useContext(IdeMessengerContext);
 
-  async function getOpenFileItems() {
-    const openFiles = await ideMessenger.ide.getOpenFiles();
-    const openFileGroups = groupByLastNPathParts(openFiles, 2);
+  const memoizedGetOpenFileItems = useMemo(() => {
+    return async () => {
+      const openFiles = await ideMessenger.ide.getOpenFiles();
+      const openFileGroups = groupByLastNPathParts(openFiles, 2);
 
-    return openFiles.map((file) => {
-      return {
+      return openFiles.map((file) => ({
         id: file,
         title: getBasename(file),
         description: getUniqueFilePath(file, openFileGroups),
         providerTitle: "file",
-      };
-    });
-  }
+      }));
+    };
+  }, [ideMessenger]);
 
   useWebviewListener("refreshSubmenuItems", async (data) => {
     console.debug("refreshSubmenuItems called with data:", data);
@@ -75,7 +82,7 @@ function useSubmenuContextProviders() {
     setMinisearches((prev) => ({ ...prev, [data.provider]: minisearch }));
 
     if (data.provider === "file") {
-      const openFiles = await getOpenFileItems();
+      const openFiles = await memoizedGetOpenFileItems();
       setFallbackResults((prev) => ({
         ...prev,
         file: [
@@ -91,17 +98,21 @@ function useSubmenuContextProviders() {
     }
   });
 
-  function addItem(providerTitle: string, item: ContextSubmenuItem) {
-    if (!minisearches[providerTitle]) {
-      return;
-    }
-    minisearches[providerTitle].add(item);
-  }
+  const addItem = useCallback(
+    (providerTitle: string, item: ContextSubmenuItem) => {
+      if (!minisearches[providerTitle]) {
+        return;
+      }
+      minisearches[providerTitle].add(item);
+    },
+    [minisearches],
+  );
 
   useEffect(() => {
-    // Refresh open files periodically
-    const interval = setInterval(async () => {
-      const openFiles = await getOpenFileItems();
+    let isMounted = true;
+    const refreshOpenFiles = async () => {
+      if (!isMounted) return;
+      const openFiles = await memoizedGetOpenFileItems();
       setFallbackResults((prev) => ({
         ...prev,
         file: deduplicateArray(
@@ -109,12 +120,17 @@ function useSubmenuContextProviders() {
           (a, b) => a.id === b.id,
         ),
       }));
-    }, 2_000);
+    };
+
+    const interval = setInterval(refreshOpenFiles, 2000);
+
+    refreshOpenFiles(); // Initial call
 
     return () => {
+      isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [memoizedGetOpenFileItems]);
 
   const getSubmenuSearchResults = useMemo(
     () =>
@@ -243,7 +259,9 @@ function useSubmenuContextProviders() {
         await Promise.all(
           contextProviderDescriptions.map(async (description) => {
             if (
-              ["file", "folder", "tree"].includes(description.title) &&
+              Object.values(IndexedProvider).includes(
+                description.title as IndexedProvider,
+              ) &&
               disableIndexing
             ) {
               console.debug(
@@ -292,7 +310,7 @@ function useSubmenuContextProviders() {
 
               if (description.title === "file") {
                 console.debug("Processing file provider");
-                const openFiles = await getOpenFileItems();
+                const openFiles = await memoizedGetOpenFileItems();
                 console.debug(`Got ${openFiles.length} open files`);
                 setFallbackResults((prev) => ({
                   ...prev,
