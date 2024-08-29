@@ -305,10 +305,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         [removeTag.cacheKey, removeTag.path],
       );
 
-      if (!Array.isArray(snippets)) {
-        snippets = [snippets];
-      }
-
       if (snippets) {
         if (!Array.isArray(snippets)) {
           snippets = [snippets];
