@@ -770,6 +770,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "bedrock"
   | "huggingface-tei"
   | "transformers.js"
   | "ollama"
@@ -790,6 +791,11 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxChunkSize?: number;
+  // AWS options
+  profile?: string;
+
+  // AWS and GCP Options
+  region?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {

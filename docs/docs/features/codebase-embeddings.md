@@ -202,6 +202,21 @@ As of May 2024, the only available embedding model from Gemini is [`text-embeddi
 }
 ```
 
+### AWS Bedrock
+
+As of August 30, 2024 the only tested model is [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazon.com/bedrock/latest/devguide/models.html#amazon.titan-embed-text-v2-0).
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+      "title": "Embeddings Model",
+      "provider": "bedrock",
+      "model": "amazon.titan-embed-text-v2:0",
+      "region": "us-west-2"
+    },
+}
+```
+
 ### Writing a custom `EmbeddingsProvider`
 
 If you have your own API capable of generating embeddings, Continue makes it easy to write a custom `EmbeddingsProvider`. All you have to do is write a function that converts strings to arrays of numbers, and add this to your config in `config.ts`. Here's an example:
