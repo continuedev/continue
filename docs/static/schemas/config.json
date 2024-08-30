@@ -2411,10 +2411,13 @@
               "type": "object",
               "properties": {
                 "inlineEdit": {
-                  "type": "string"
+                  "$ref": "#/definitions/ModelTitle"
                 },
                 "applyCodeBlock": {
-                  "type": "string"
+                  "$ref": "#/definitions/ModelTitle"
+                },
+                "repoMapFileSelection": {
+                  "$ref": "#/definitions/ModelTitle"
                 }
               }
             },
@@ -2476,6 +2479,12 @@
             }
           }
         }
+      }
+    },
+    "ModelTitle": {
+      "type": "string",
+      "enum": {
+        "$data": "/models/title"
       }
     }
   }

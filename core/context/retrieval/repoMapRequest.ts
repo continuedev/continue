@@ -1,12 +1,19 @@
-import { Chunk, IDE, ILLM } from "../..";
+import { Chunk, ContinueConfig, IDE, ILLM } from "../..";
 import { stripImages } from "../../llm/images";
 import generateRepoMap from "../../util/repoMap";
 
 export async function requestFilesFromRepoMap(
-  llm: ILLM,
+  defaultLlm: ILLM,
+  config: ContinueConfig,
   ide: IDE,
   input: string,
 ): Promise<Chunk[]> {
+  const llm =
+    config.models.find(
+      (model) =>
+        model.title === config.experimental?.modelRoles?.repoMapFileSelection,
+    ) ?? defaultLlm;
+
   // Only supported for Claude models right now
   if (!llm.model.toLowerCase().includes("claude")) {
     return [];

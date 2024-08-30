@@ -27,6 +27,7 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     const repoMapChunks = await requestFilesFromRepoMap(
       this.options.llm,
+      this.options.config,
       this.options.ide,
       input,
     );

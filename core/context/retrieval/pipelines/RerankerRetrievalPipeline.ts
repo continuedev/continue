@@ -17,6 +17,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     const repoMapChunks = await requestFilesFromRepoMap(
       this.options.llm,
+      this.options.config,
       this.options.ide,
       input,
     );
@@ -35,11 +36,14 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   }
 
   private async _rerank(input: string, chunks: Chunk[]): Promise<Chunk[]> {
-    if (!this.options.reranker) {
+    if (!this.options.config.reranker) {
       throw new Error("No reranker provided");
     }
 
-    let scores: number[] = await this.options.reranker.rerank(input, chunks);
+    let scores: number[] = await this.options.config.reranker.rerank(
+      input,
+      chunks,
+    );
 
     // Filter out low-scoring results
     let results = chunks;

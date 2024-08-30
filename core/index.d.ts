@@ -861,6 +861,7 @@ interface ContextMenuConfig {
 interface ModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
+  repoMapFileSelection?: string;
 }
 
 /**
