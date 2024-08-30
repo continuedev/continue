@@ -475,6 +475,9 @@ export default class DocsService {
         driver: sqlite3.Database,
       });
 
+      await db.exec("PRAGMA journal_mode=WAL;");
+      await db.exec("PRAGMA busy_timeout = 3000;");
+
       await runSqliteMigrations(db);
 
       await db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (

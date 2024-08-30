@@ -24,8 +24,6 @@ export class SqliteDb {
   static db: DatabaseConnection | null = null;
 
   private static async createTables(db: DatabaseConnection) {
-    await db.exec("PRAGMA journal_mode=WAL;");
-
     await db.exec(
       `CREATE TABLE IF NOT EXISTS tag_catalog (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -91,6 +89,9 @@ export class SqliteDb {
       filename: SqliteDb.indexSqlitePath,
       driver: sqlite3.Database,
     });
+
+    await SqliteDb.db.exec("PRAGMA journal_mode=WAL;");
+    await SqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
 
     await SqliteDb.createTables(SqliteDb.db);
 

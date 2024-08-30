@@ -79,6 +79,9 @@ export class DevDataSqliteDb {
       driver: sqlite3.Database,
     });
 
+    await DevDataSqliteDb.db.exec("PRAGMA journal_mode=WAL;");
+    await DevDataSqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
+
     await DevDataSqliteDb.createTables(DevDataSqliteDb.db!);
 
     return DevDataSqliteDb.db;
