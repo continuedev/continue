@@ -3,6 +3,7 @@ import {
   Chunk,
   EmbeddingsProvider,
   IDE,
+  ILLM,
   Reranker,
 } from "../../../index.js";
 import { chunkDocument } from "../../../indexing/chunk/chunk.js";
@@ -11,6 +12,7 @@ import { retrieveFts } from "../fullTextSearch.js";
 import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache.js";
 
 export interface RetrievalPipelineOptions {
+  llm: ILLM;
   ide: IDE;
   embeddingsProvider: EmbeddingsProvider;
   reranker: Reranker | undefined;

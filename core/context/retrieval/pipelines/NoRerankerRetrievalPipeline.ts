@@ -1,4 +1,5 @@
 import { Chunk } from "../../../index.js";
+import { requestFilesFromRepoMap } from "../repoMapRequest.js";
 import { deduplicateChunks } from "../util.js";
 import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
 
@@ -24,10 +25,17 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
     const recentlyEditedFilesChunks =
       await this.retrieveAndChunkRecentlyEditedFiles(recentlyEditedNFinal);
 
+    const repoMapChunks = await requestFilesFromRepoMap(
+      this.options.llm,
+      this.options.ide,
+      input,
+    );
+
     retrievalResults.push(
       ...recentlyEditedFilesChunks,
       ...ftsChunks,
       ...embeddingsChunks,
+      ...repoMapChunks,
     );
 
     const deduplicatedRetrievalResults: Chunk[] =
