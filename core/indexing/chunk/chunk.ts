@@ -1,5 +1,5 @@
 import { Chunk, ChunkWithoutID } from "../../index.js";
-import { countTokens, countTokensAsync } from "../../llm/countTokens.js";
+import { countTokensAsync } from "../../llm/countTokens.js";
 import { extractMinimalStackTraceInfo } from "../../util/extractMinimalStackTraceInfo.js";
 import { Telemetry } from "../../util/posthog.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
@@ -58,11 +58,11 @@ export async function* chunkDocument({
     chunkPromises.push(
       new Promise(async (resolve) => {
         if ((await countTokensAsync(chunkWithoutId.content)) > maxChunkSize) {
-          console.debug(
-            `Chunk with more than ${maxChunkSize} tokens constructed: `,
-            filepath,
-            countTokens(chunkWithoutId.content),
-          );
+          // console.debug(
+          //   `Chunk with more than ${maxChunkSize} tokens constructed: `,
+          //   filepath,
+          //   countTokens(chunkWithoutId.content),
+          // );
           return resolve(undefined);
         }
         resolve({

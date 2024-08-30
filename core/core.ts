@@ -714,10 +714,22 @@ export class Core {
       dirs,
       this.indexingCancellationController.signal,
     )) {
-      this.messenger.request("indexProgress", update);
-      this.indexingState = update;
+      let updateToSend = { ...update };
+      if (update.status === "failed") {
+        updateToSend.status = "done";
+        updateToSend.desc = "Indexing complete";
+        updateToSend.progress = 1.0;
+      }
+
+      this.messenger.request("indexProgress", updateToSend);
+      this.indexingState = updateToSend;
 
       if (update.status === "failed") {
+        console.debug(
+          "Indexing failed with error: ",
+          update.desc,
+          update.debugInfo,
+        );
         Telemetry.capture(
           "indexing_error",
           {
