@@ -359,10 +359,7 @@ class IdeProtocolClient (
                     }
 
                     "getTerminalContents" -> {
-                        val content = project.service<TerminalActivityTrackingService>().latest()?.run {
-                            TerminalUtils.getTextInTerminal(terminalPanel)
-                        } ?: ""
-                        respond(content)
+                        respond(terminalContents())
                     }
 
                     "visibleFiles" -> {
@@ -1025,6 +1022,25 @@ class IdeProtocolClient (
 
 //            markupModel.addRangeHighlighter(startIdx, endIdx, 0, textAttributes, HighlighterTargetArea.EXACT_RANGE)
         }
+    }
+
+    private fun terminalContents(): String {
+        val contents = project.service<TerminalActivityTrackingService>().latest()?.run {
+            TerminalUtils.getTextInTerminal(terminalPanel)
+        } ?: ""
+
+        var lines = contents.split("\n").dropLastWhile { it.isEmpty() }
+        val lastLine = lines.lastOrNull()?.trim()
+        if (lastLine != null) {
+            lines = lines.dropLast(1)
+            var i = lines.size - 1
+            while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
+                i--
+            }
+            return lines.subList(maxOf(i, 0), lines.size).joinToString("\n")
+        }
+
+        return contents
     }
 }
 
