@@ -96,7 +96,7 @@ function ConfigureProvider() {
         ),
         provider: modelInfo.provider,
       };
-      ideMessenger.post("config/addModel", { model });
+      // ideMessenger.post("config/addModel", { model });
       dispatch(setDefaultModel({ title: model.title, force: true }));
       navigate("/");
     },
@@ -188,7 +188,7 @@ function ConfigureProvider() {
             className="mt-2"
             source={modelInfo?.longDescription || modelInfo?.description}
           />
-          
+
           {/* The WatsonX Authentication coukd be done by two different ways
            1 ==> Using Api key
            2 ==> Using Credentials */}
@@ -332,7 +332,7 @@ function ConfigureProvider() {
 
         {providerName === "pearai_server" ? (
             <>
-        
+
                 <CustomModelButton
                   className="m-5"
                   disabled={false}
@@ -353,12 +353,12 @@ function ConfigureProvider() {
                 <p style={{ color: lightGray }} className="mx-3">
                   After login, the website should redirect you back here.
                 </p>
-                <small 
-                  style={{ 
-                    color: lightGray, 
-                    fontSize: '0.85em', 
-                    display: 'block' 
-                  }} 
+                <small
+                  style={{
+                    color: lightGray,
+                    fontSize: '0.85em',
+                    display: 'block'
+                  }}
                   className="mx-3"
                 >
                   Note: Having trouble logging in? Open PearAI from the dashboard on the {' '}
@@ -403,7 +403,7 @@ function ConfigureProvider() {
                             [d.key]: d.inputType === "text" ? val : parseFloat(val),
                           });
                         }
-      
+
                         const model = {
                           ...pkg.params,
                           ...modelInfo.params,
@@ -430,7 +430,7 @@ function ConfigureProvider() {
                 })}
               </GridDiv>
             </>
-          )} 
+          )}
         </div>
         <GridDiv>
           {modelInfo?.packages.map((pkg, idx) => {
