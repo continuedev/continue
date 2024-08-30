@@ -146,6 +146,6 @@ tasks {
         channels.set(listOf(environment("RELEASE_CHANNEL").getOrElse("eap")))
         
         // We always hide the stable releases until a few days of EAP have proven them stable
-        hidden = environment("RELEASE_CHANNEL").map { it == "stable" }.getOrElse(false)
+//        hidden = environment("RELEASE_CHANNEL").map { it == "stable" }.getOrElse(false)
     }
 }

@@ -106,43 +106,48 @@ async function resolveEditorContent(
       fullInput: stripImages(parts),
       selectedCode,
     };
-    const resolvedItems = await ideMessenger.request(
-      "context/getContextItems",
-      data,
-    );
-    contextItems.push(...resolvedItems);
-    for (const resolvedItem of resolvedItems) {
-      contextItemsText += resolvedItem.content + "\n\n";
+    const result = await ideMessenger.request("context/getContextItems", data);
+    if (result.status === "success") {
+      const resolvedItems = result.content;
+      contextItems.push(...resolvedItems);
+      for (const resolvedItem of resolvedItems) {
+        contextItemsText += resolvedItem.content + "\n\n";
+      }
     }
   }
 
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {
-    const codebaseItems = await ideMessenger.request(
-      "context/getContextItems",
-      {
-        name: "codebase",
-        query: "",
-        fullInput: stripImages(parts),
-        selectedCode,
-      },
-    );
-    contextItems.push(...codebaseItems);
-    for (const codebaseItem of codebaseItems) {
-      contextItemsText += codebaseItem.content + "\n\n";
+    const result = await ideMessenger.request("context/getContextItems", {
+      name: "codebase",
+      query: "",
+      fullInput: stripImages(parts),
+      selectedCode,
+    });
+
+    if (result.status === "success") {
+      const codebaseItems = result.content;
+      contextItems.push(...codebaseItems);
+      for (const codebaseItem of codebaseItems) {
+        contextItemsText += codebaseItem.content + "\n\n";
+      }
     }
   }
 
   // Include default context providers
   const defaultContextItems = await Promise.all(
     defaultContextProviders.map(async (provider) => {
-      const items = await ideMessenger.request("context/getContextItems", {
+      const result = await ideMessenger.request("context/getContextItems", {
         name: provider.name,
         query: provider.query ?? "",
         fullInput: stripImages(parts),
         selectedCode,
       });
-      return items;
+      if (result.status === "success") {
+        return result.content;
+      } else {
+        return [];
+      }
     }),
   );
   contextItems.push(...defaultContextItems.flat());

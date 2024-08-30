@@ -177,6 +177,7 @@ export class VsCodeExtension {
           this.configHandler,
           this.ide,
           this.tabAutocompleteModel,
+          this.sidebar.webviewProtocol,
         ),
       ),
     );

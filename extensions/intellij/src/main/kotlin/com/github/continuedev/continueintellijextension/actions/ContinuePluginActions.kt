@@ -2,13 +2,13 @@ package com.github.continuedev.continueintellijextension.actions
 
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.google.gson.Gson
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
@@ -19,8 +19,10 @@ import javax.swing.event.DocumentListener
 import com.intellij.ui.components.JBScrollPane
 import java.awt.BorderLayout
 
-fun pluginServiceFromActionEvent(e: AnActionEvent): ContinuePluginService? {
-    val project = e.project ?: return null
+fun getPluginService(project: Project?): ContinuePluginService? {
+    if (project == null) {
+        return null
+    }
     return ServiceManager.getService(
             project,
             ContinuePluginService::class.java
@@ -34,7 +36,7 @@ class AcceptDiffAction : AnAction() {
     }
 
     private fun acceptHorizontalDiff(e: AnActionEvent) {
-        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+        val continuePluginService = getPluginService(e.project) ?: return
         continuePluginService.ideProtocolClient?.diffManager?.acceptDiff(null)
     }
 
@@ -53,7 +55,7 @@ class RejectDiffAction : AnAction() {
     }
 
     private fun rejectHorizontalDiff(e: AnActionEvent) {
-        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+        val continuePluginService = getPluginService(e.project) ?: return
         continuePluginService.ideProtocolClient?.diffManager?.rejectDiff(null)
     }
 
@@ -131,7 +133,7 @@ class RejectDiffAction : AnAction() {
 
 class QuickTextEntryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+        val continuePluginService = getPluginService(e.project) ?: return
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
 
          // Create and show the dialog
@@ -140,7 +142,7 @@ class QuickTextEntryAction : AnAction() {
 
          // Show the text entered by the user
          if (text != null) {
-             val service = pluginServiceFromActionEvent(e)
+             val service = getPluginService(e.project)
              service?.ideProtocolClient?.sendMainUserInput(text)
 
              val project = e.project
@@ -172,27 +174,29 @@ class ViewLogsAction : AnAction() {
     }
 }
 
+fun focusContinueInput(project: Project?) {
+    if (project != null) {
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow("Continue")
 
+        if (toolWindow != null) {
+            if (!toolWindow.isVisible) {
+                toolWindow.activate(null)
+            }
+        }
+    }
+
+    val continuePluginService = getPluginService(project) ?: return
+    continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
+    continuePluginService.sendToWebview("focusContinueInputWithoutClear", null)
+
+    continuePluginService.ideProtocolClient?.sendHighlightedCode()
+}
 
 class FocusContinueInputWithoutClearAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project
-        if (project != null) {
-            val toolWindowManager = ToolWindowManager.getInstance(project)
-            val toolWindow = toolWindowManager.getToolWindow("Continue")
-
-            if (toolWindow != null) {
-                if (!toolWindow.isVisible) {
-                    toolWindow.activate(null)
-                }
-            }
-        }
-
-        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
-        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.sendToWebview("focusContinueInputWithoutClear", null)
-
-        continuePluginService.ideProtocolClient?.sendHighlightedCode()
+        focusContinueInput(project)
     }
 }
 
@@ -210,7 +214,7 @@ class FocusContinueInputAction : AnAction() {
             }
         }
 
-        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+        val continuePluginService = getPluginService(e.project) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         continuePluginService.sendToWebview("focusContinueInput", null)
@@ -233,7 +237,7 @@ class NewContinueSessionAction : AnAction() {
             }
         }
 
-        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+        val continuePluginService = getPluginService(e.project) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
@@ -248,7 +252,7 @@ class ViewHistoryAction : AnAction() {
             val toolWindow = toolWindowManager.getToolWindow("Continue")
         }
 
-        val continuePluginService = pluginServiceFromActionEvent(e) ?: return
+        val continuePluginService = getPluginService(e.project) ?: return
 
         continuePluginService.sendToWebview("viewHistory", null)
     }

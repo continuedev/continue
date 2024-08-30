@@ -225,7 +225,9 @@ export class ConfigHandler {
     this.controlPlaneClient = new ControlPlaneClient(
       Promise.resolve(sessionInfo),
     );
-    this.fetchControlPlaneProfiles();
+    this.fetchControlPlaneProfiles().catch((e) => {
+      console.error("Failed to fetch control plane profiles: ", e);
+    });
   }
 
   private profilesListeners: ((profiles: ProfileDescription[]) => void)[] = [];

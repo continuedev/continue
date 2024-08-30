@@ -587,7 +587,7 @@ class IdeProtocolClient (
                     "listFolders" -> {
                         val workspacePath = workspacePath ?: return@launch
                         val workspaceDir = File(workspacePath)
-                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.name } ?: emptyList()
+                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath } ?: emptyList()
                         respond(folders)
                     }
 
@@ -717,30 +717,6 @@ class IdeProtocolClient (
 
     fun uniqueId(): String {
         return getMachineUniqueID()
-    }
-
-    fun onTextSelected(
-        selectedText: String,
-        filepath: String,
-        startLine: Int,
-        startCharacter: Int,
-        endLine: Int,
-        endCharacter: Int
-    ) = coroutineScope.launch {
-//        val jsonMessage = textSelectionStrategy.handleTextSelection(
-//            selectedText,
-//            filepath,
-//            startLine,
-//            startCharacter,
-//            endLine,
-//            endCharacter
-//        )
-//        sendMessage("highlightedCodePush", jsonMessage)
-//        dispatchEventToWebview(
-//            "highlightedCode",
-//            jsonMessage,
-//            continuePluginService.continuePluginWindow.webView
-//        )
     }
 
     fun readFile(filepath: String): String {

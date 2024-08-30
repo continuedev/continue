@@ -163,6 +163,7 @@ function GUI() {
 
   const defaultModel = useSelector(defaultModelSelector);
 
+  const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
   const active = useSelector((state: RootState) => state.state.active);
 
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
@@ -492,7 +493,9 @@ function GUI() {
                 <div className="mt-2">
                   <NewSessionButton
                     onClick={async () => {
-                      loadLastSession();
+                      loadLastSession().catch((e) =>
+                        console.error(`Failed to load last session: ${e}`),
+                      );
                     }}
                     className="mr-auto flex items-center gap-2"
                   >
@@ -517,6 +520,16 @@ function GUI() {
           trackVisibility={active}
         />
       </TopGuiDiv>
+      {ttsActive && (
+        <StopButton
+          className="mt-2 mb-4"
+          onClick={() => {
+            ideMessenger.post("tts/kill", undefined);
+          }}
+        >
+          ■ Stop TTS
+        </StopButton>
+      )}
       {active && (
         <StopButton
           className="mt-auto mb-4"

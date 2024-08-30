@@ -75,6 +75,9 @@ class Anthropic extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    const shouldCacheSystemMessage =
+      !!this.systemMessage && !!this.cacheSystemMessage;
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
@@ -82,11 +85,22 @@ class Anthropic extends BaseLLM {
         Accept: "application/json",
         "anthropic-version": "2023-06-01",
         "x-api-key": this.apiKey as string,
+        ...(shouldCacheSystemMessage
+          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
+          : {}),
       },
       body: JSON.stringify({
         ...this._convertArgs(options),
         messages: this._convertMessages(messages),
-        system: this.systemMessage,
+        system: shouldCacheSystemMessage
+          ? [
+              {
+                type: "text",
+                text: this.systemMessage,
+                cache_control: { type: "ephemeral" },
+              },
+            ]
+          : this.systemMessage,
       }),
     });
 
