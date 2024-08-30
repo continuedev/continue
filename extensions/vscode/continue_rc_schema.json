@@ -1625,7 +1625,8 @@
                 "currentFile",
                 "url",
                 "database",
-                "os"
+                "os",
+                "repo-map"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1648,7 +1649,8 @@
                 "Reference the contents of the currently active file",
                 "Reference the contents of a page at a URL",
                 "Reference table schemas",
-                "Operating system and CPU Information"
+                "Operating system and CPU Information",
+                "Map of files in the repository with important code highlights"
               ],
               "type": "string"
             },
