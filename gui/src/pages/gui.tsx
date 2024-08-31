@@ -493,7 +493,9 @@ function GUI() {
                 <div className="mt-2">
                   <NewSessionButton
                     onClick={async () => {
-                      loadLastSession();
+                      loadLastSession().catch((e) =>
+                        console.error(`Failed to load last session: ${e}`),
+                      );
                     }}
                     className="mr-auto flex items-center gap-2"
                   >

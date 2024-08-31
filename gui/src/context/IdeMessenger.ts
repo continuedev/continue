@@ -1,5 +1,6 @@
 import { ChatMessage, IDE, LLMFullCompletionOptions, PromptLog } from "core";
 import type { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import { WebviewMessengerResult } from "core/protocol/util";
 import { MessageIde } from "core/util/messageIde";
 import { Message } from "core/util/messenger";
 import { createContext } from "react";
@@ -30,7 +31,7 @@ export interface IIdeMessenger {
   request<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
-  ): Promise<FromWebviewProtocol[T][1]>;
+  ): Promise<WebviewMessengerResult<T>>;
 
   streamRequest<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -52,7 +53,16 @@ export class IdeMessenger implements IIdeMessenger {
   ide: IDE;
 
   constructor() {
-    this.ide = new MessageIde(this.request.bind(this), () => {});
+    this.ide = new MessageIde(
+      async (messageType, data) => {
+        const result = await this.request(messageType, data);
+        if (result.status === "error") {
+          throw new Error(result.error);
+        }
+        return result.content;
+      },
+      () => {},
+    );
   }
 
   private _postToIde(messageType: string, data: any, messageId?: string) {
@@ -121,7 +131,7 @@ export class IdeMessenger implements IIdeMessenger {
   request<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
-  ): Promise<FromWebviewProtocol[T][1]> {
+  ): Promise<WebviewMessengerResult<T>> {
     const messageId = uuidv4();
 
     return new Promise((resolve) => {

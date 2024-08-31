@@ -61,6 +61,7 @@ export default async function doLoadConfig(
       newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
       uniqueId,
       ideInfo.extensionVersion,
+      controlPlaneClient,
       workspaceId,
     );
   }

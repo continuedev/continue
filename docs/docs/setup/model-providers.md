@@ -51,19 +51,23 @@ You can run a model on your local computer using:
 
 ### Remote
 
-You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
+You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), [Lambda](https://lambdalabs.com/), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
 
 - [HuggingFace TGI](https://github.com/continuedev/deploy-os-code-llm#tgi)
 - [vLLM](https://github.com/continuedev/deploy-os-code-llm#vllm)
 - [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
+- [Lambda](https://github.com/continuedev/deploy-os-code-llm#lambda)
 
 ## SaaS
+
+### Open-source and commercial models 
 
 You can access both open-source and commercial LLMs via:
 
 - [OpenRouter](../reference/Model%20Providers/openrouter.md)
 - [Kindo](../reference/Model%20Providers/kindo.md)
+- [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
 ### Open-source models
 
@@ -77,7 +81,6 @@ You can run open-source LLMs with cloud services like:
 - [Deepinfra](../reference/Model%20Providers/deepinfra.md)
 - [Groq](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [AWS Bedrock](../reference/Model%20Providers/bedrock.md)
-- [Nvidia NIMS](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
 ### Commercial models
 

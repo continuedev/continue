@@ -76,6 +76,7 @@ export async function retrieveContextItemsFromEmbeddings(
     filterDirectory,
     ide: extras.ide,
     input: extras.fullInput,
+    llm: extras.llm,
   };
 
   const pipeline = new pipelineType(pipelineOptions);

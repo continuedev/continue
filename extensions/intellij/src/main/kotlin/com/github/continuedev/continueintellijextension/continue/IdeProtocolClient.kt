@@ -590,7 +590,7 @@ class IdeProtocolClient (
                     "listFolders" -> {
                         val workspacePath = workspacePath ?: return@launch
                         val workspaceDir = File(workspacePath)
-                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.name } ?: emptyList()
+                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath } ?: emptyList()
                         respond(folders)
                     }
 

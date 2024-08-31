@@ -25,14 +25,19 @@ export function useAuth(): {
   useEffect(() => {
     ideMessenger
       .request("getControlPlaneSessionInfo", { silent: true })
-      .then(setSession);
+      .then(
+        (result) => result.status === "success" && setSession(result.content),
+      );
   }, []);
 
   const login = () => {
-    console.log("login");
     ideMessenger
       .request("getControlPlaneSessionInfo", { silent: false })
-      .then((session) => {
+      .then((result) => {
+        if (result.status === "error") {
+          return;
+        }
+        const session = result.content;
         setSession(session);
 
         // If this is the first time the user has logged in, explain how profiles work

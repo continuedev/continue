@@ -1,8 +1,22 @@
-(class_declaration
-  name: (_) @name) @body
+(
+  (comment)? @comment
+  (class_declaration
+    name: (_) @name
+  ) @definition
+)
 
-(function_declaration
-  name: (_) @name) @body
+(
+  (comment)? @comment
+  (function_declaration
+    name: (_) @name
+    parameters: (_) @parameters
+  ) @definition
+)
 
-(method_definition
-  name: (_) @name) @body
+(
+  (comment)? @comment
+  (method_definition
+    name: (_) @name
+    parameters: (_) @parameters
+  ) @definition
+)

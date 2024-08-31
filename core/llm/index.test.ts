@@ -104,6 +104,9 @@ describe("BaseLLM", () => {
       baseLLM.apiBase = "api.groq.com";
       expect(baseLLM.supportsCompletions()).toBe(false);
 
+      baseLLM.apiBase = "integrate.api.nvidia.com";
+      expect(baseLLM.supportsCompletions()).toBe(false);
+
       baseLLM.apiBase = "api.mistral.ai";
       expect(baseLLM.supportsCompletions()).toBe(false);
 
