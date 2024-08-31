@@ -621,7 +621,8 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "openrouter"
-  | "nvidia";
+  | "nvidia"
+  | "vllm";
 
 export type ModelName =
   | "AUTODETECT"
