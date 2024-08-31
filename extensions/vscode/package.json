@@ -279,6 +279,11 @@
     ],
     "keybindings": [
       {
+        "command": "continue.exitQuickEdit",
+        "key": "escape",
+        "when": "continue.isInQuickEdit"
+      },
+      {
         "command": "continue.test",
         "mac": "cmd+shift+i",
         "key": "ctrl+shift+i"

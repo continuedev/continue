@@ -26,6 +26,7 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import QuickEditInline from "./quickEdit/QuickEditInline";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -264,6 +265,8 @@ const commandsMap: (
     // Passthrough for telemetry purposes
     "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
       captureCommandTelemetry("defaultQuickAction");
+
+      // TODO: Re-map
       vscode.commands.executeCommand("continue.quickEdit", args);
     },
     "continue.customQuickActionSendToChat": async (
@@ -352,131 +355,12 @@ const commandsMap: (
      */
     "continue.quickEdit": async (args: QuickEditShowParams) => {
       captureCommandTelemetry("quickEdit");
-
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showErrorMessage("No active editor found");
-        return;
-      }
-
-      try {
-        const { selection, document } = editor;
-
-        const selectionStartPos = new vscode.Position(selection.start.line, 0);
-
-        const position = editor.selection.active;
-        const lineText = document.lineAt(position.line).text;
-        const indentMatch = lineText.match(/^\s*/);
-        const indent = indentMatch ? indentMatch[0] : "";
-
-        await editor.edit((editBuilder) => {
-          editBuilder.insert(selectionStartPos, `${indent}\n`);
-        });
-
-        const newCursorPos = new vscode.Position(
-          selection.start.line,
-          indent.length,
-        );
-
-        editor.selection = new vscode.Selection(newCursorPos, newCursorPos);
-
-        // Create a decoration type with a white background color
-        const decorationType = vscode.window.createTextEditorDecorationType({
-          isWholeLine: true,
-          backgroundColor: "white",
-          color: "green",
-        });
-
-        // Apply the decoration to the new line
-        let newLineRange = new vscode.Range(
-          selectionStartPos,
-          selectionStartPos,
-        );
-
-        let ignoreDocumentChange = false;
-
-        editor.setDecorations(decorationType, [newLineRange]);
-
-        const enterKey = vscode.workspace.onDidChangeTextDocument(
-          async (event) => {
-            if (event.document === editor.document) {
-              const pressedKey = event.contentChanges[0]?.text;
-              const newlineRegex = /\n/;
-
-              // Note sure why we can't just check for equality to "\n"
-              if (newlineRegex.test(pressedKey) && !ignoreDocumentChange) {
-                // Insert new indented line at the cursor position
-                const cursorPosition = editor.selection.active;
-                const line = cursorPosition.line;
-                const lineText = editor.document.lineAt(line).text;
-                const endOfLinePosition = new vscode.Position(
-                  line,
-                  lineText.length,
-                );
-
-                // TODO: Add without infinite loop
-
-                // await editor.edit((editBuilder) => {
-                //   editBuilder.insert(endOfLinePosition, `\n${indent}`);
-                // });
-
-                const newCursorPos = new vscode.Position(
-                  endOfLinePosition.line + 1,
-                  indent.length,
-                );
-
-                editor.selection = new vscode.Selection(
-                  newCursorPos,
-                  newCursorPos,
-                );
-
-                // Update the decoration range
-                newLineRange = new vscode.Range(
-                  selectionStartPos,
-                  newCursorPos,
-                );
-
-                editor.setDecorations(decorationType, [newLineRange]);
-              }
-            }
-          },
-        );
-
-        // // Function to clean up the decoration and the new line
-        // const cleanup = async () => {
-        //   editor.setDecorations(decorationType, []);
-        //   await editor.edit((editBuilder) => {
-        //     editBuilder.delete(
-        //       new vscode.Range(
-        //         selectionStartPos,
-        //         selectionStartPos.translate(1, 0),
-        //       ),
-        //     );
-        //   });
-        // };
-
-        // // Register key event listeners
-        // const escapeKey = vscode.workspace.onDidChangeTextDocument(
-        //   async (event) => {
-        //     if (event.document === editor.document) {
-        //       const pressedKey = event.contentChanges[0]?.text;
-        //       if (pressedKey === "\n" || pressedKey === "") {
-        //         // Handle Enter (new line) and Escape
-        //         await cleanup();
-        //         escapeKey.dispose(); // Dispose listener after cleanup
-        //         enterKey.dispose(); // Dispose listener after cleanup
-        //       }
-        //     }
-        //   },
-        // );
-
-        // extensionContext.subscriptions.push(escapeKey);
-        // extensionContext.subscriptions.push(enterKey);
-      } catch (error: any) {
-        vscode.window.showErrorMessage(
-          "Error inserting new line: " + error.message,
-        );
-      }
+      QuickEditInline.add();
+    },
+    // TODO: Should this only work if you are clicked into the quick editor?
+    "continue.exitQuickEdit": async (args: QuickEditShowParams) => {
+      captureCommandTelemetry("exitQuickEdit");
+      QuickEditInline.remove();
     },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
@@ -729,8 +613,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -800,32 +684,8 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
-    "continue.test": () => {
-      toggleState = !toggleState;
-      const p = path.join(
-        os.homedir(),
-        "Library",
-        "Application Support",
-        "Code - Insiders",
-        "User",
-        "settings.json",
-      );
-      const settingsRaw = fs.readFileSync(p);
-      const settings = JSON.parse(settingsRaw.toString());
-      settings["workbench.colorCustomizations"] = toggleState
-        ? {
-            "editorError.foreground": "#00000000",
-            "editorWarning.foreground": "#00000000",
-            "editorInfo.foreground": "#00000000",
-            "editorOverviewRuler.errorForeground": "#00000000",
-          }
-        : null;
-      fs.writeFileSync(p, JSON.stringify(settings, undefined, 2));
-    },
   };
 };
-
-let toggleState = false;
 
 export function registerAllCommands(
   context: vscode.ExtensionContext,
