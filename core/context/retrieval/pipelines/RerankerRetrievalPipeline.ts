@@ -6,9 +6,9 @@ import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(): Promise<Chunk[]> {
-    const { input, nRetrieve } = this.options;
+    const { input, nRetrieve, filterDirectory } = this.options;
 
-    const retrievalResults: Chunk[] = [];
+    let retrievalResults: Chunk[] = [];
 
     const ftsChunks = await this.retrieveFts(input, nRetrieve);
     const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
@@ -20,6 +20,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       this.options.config,
       this.options.ide,
       input,
+      filterDirectory,
     );
 
     retrievalResults.push(
@@ -28,6 +29,13 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       ...embeddingsChunks,
       ...repoMapChunks,
     );
+
+    if (filterDirectory) {
+      // Backup if the individual retrieval methods don't listen
+      retrievalResults = retrievalResults.filter((chunk) =>
+        chunk.filepath.startsWith(filterDirectory),
+      );
+    }
 
     const deduplicatedRetrievalResults: Chunk[] =
       deduplicateChunks(retrievalResults);

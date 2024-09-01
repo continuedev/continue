@@ -7,6 +7,7 @@ export async function requestFilesFromRepoMap(
   config: ContinueConfig,
   ide: IDE,
   input: string,
+  filterDirectory?: string,
 ): Promise<Chunk[]> {
   const llm =
     config.models.find(
@@ -20,7 +21,10 @@ export async function requestFilesFromRepoMap(
   }
 
   try {
-    const repoMap = await generateRepoMap(llm, ide, { signatures: false });
+    const repoMap = await generateRepoMap(llm, ide, {
+      signatures: false,
+      dirs: filterDirectory ? [filterDirectory] : undefined,
+    });
 
     const prompt = `${repoMap}
 
@@ -41,13 +45,16 @@ This is the question that you should select relevant files for: "${input}"`;
       return [];
     }
 
+    const pathSep = await ide.pathSep();
+    const subDirPrefix = filterDirectory ? filterDirectory + pathSep : "";
     const files =
       content
         .split("<results>")[1]
         ?.split("</results>")[0]
         ?.split("\n")
         .filter(Boolean)
-        .map((file) => file.trim()) ?? [];
+        .map((file) => file.trim())
+        .map((file) => subDirPrefix + file) ?? [];
 
     const chunks = await Promise.all(
       files.map(async (file) => {

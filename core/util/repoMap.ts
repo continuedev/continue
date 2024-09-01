@@ -24,17 +24,18 @@ function indentMultilineString(str: string) {
 
 export interface RepoMapOptions {
   signatures?: boolean;
+  dirs?: string[];
 }
 
 async function generateRepoMap(llm: ILLM, ide: IDE, options?: RepoMapOptions) {
   const repoMapPath = getRepoMapFilePath();
-  const workspaceDirs = await ide.getWorkspaceDirs();
+  const dirs = options?.dirs ?? (await ide.getWorkspaceDirs());
   const maxRepoMapTokens = llm.contextLength * REPO_MAX_CONTEXT_LENGTH_RATIO;
 
   const pathsWithoutSnippets = new Set<string>();
-  for (const workspaceDir of workspaceDirs) {
-    for await (const filepath of walkDirAsync(workspaceDir, ide)) {
-      pathsWithoutSnippets.add(filepath.replace(workspaceDir, "").slice(1));
+  for (const dir of dirs) {
+    for await (const filepath of walkDirAsync(dir, ide)) {
+      pathsWithoutSnippets.add(filepath.replace(dir, "").slice(1));
     }
   }
 
@@ -52,7 +53,7 @@ async function generateRepoMap(llm: ILLM, ide: IDE, options?: RepoMapOptions) {
   while (true) {
     const { groupedByPath, hasMore } =
       await CodeSnippetsCodebaseIndex.getPathsAndSignatures(
-        workspaceDirs,
+        dirs,
         offset,
         batchSize,
       );
@@ -61,7 +62,7 @@ async function generateRepoMap(llm: ILLM, ide: IDE, options?: RepoMapOptions) {
 
     for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
       const workspaceDir =
-        workspaceDirs.find((dir) => absolutePath.startsWith(dir)) || "";
+        dirs.find((dir) => absolutePath.startsWith(dir)) || "";
 
       const relativePath = path.relative(workspaceDir, absolutePath);
 
