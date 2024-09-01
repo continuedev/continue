@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as vscode from "vscode";
 
 type EditorLinePos = "start" | "middle" | "end";
@@ -37,33 +38,168 @@ class ContextCompletionItemProvider implements vscode.CompletionItemProvider {
   }
 }
 
-export default class QuickEditInline {
-  static quickEditors: QuickEditInline[] = [];
-  static completionsProvider?: vscode.Disposable;
-
-  private startLine: number;
-  private endLine: number;
-  private indentation: string;
-
+class DecorationManager {
   private decorations: vscode.TextEditorDecorationType[] = [];
-  private editorBaseStyle: vscode.DecorationRenderOptions = {
+  private defaultLineHeight = 12;
+
+  private static readonly BASE_STYLE: vscode.DecorationRenderOptions = {
     isWholeLine: true,
     backgroundColor: new vscode.ThemeColor("input.background"),
     borderColor: new vscode.ThemeColor("input.border"),
     borderStyle: "solid",
-    borderWidth: "2.5px 2.5px 0 2.5px",
     color: new vscode.ThemeColor("input.foreground"),
   };
-  private enterButtonStyle: vscode.DecorationRenderOptions = {
-    after: {
-      contentText: "⏎", // Unicode for the enter symbol
-      color: new vscode.ThemeColor("editorLink.activeForeground"),
-      margin: "0 0 0 1em",
-    },
+
+  private static readonly BORDER_WIDTHS: Record<EditorLinePos, string> = {
+    start: "2.5px 2.5px 0 2.5px",
+    middle: "0 2.5px 0 2.5px",
+    end: "0 2.5px 2.5px 2.5px",
   };
 
-  // We create three initial lines since a single line
-  // is too tight
+  constructor(private editor: vscode.TextEditor) {}
+
+  updateDecorations(startLine: number, endLine: number) {
+    this.disposeExistingDecorations();
+    this.createBorderDecorations(startLine, endLine);
+    this.createEnterButtonDecoration(startLine, endLine - startLine + 1);
+  }
+
+  private disposeExistingDecorations() {
+    this.decorations.forEach((d) => d.dispose());
+    this.decorations = [];
+  }
+
+  private createBorderDecorations(startLine: number, endLine: number) {
+    for (let i = startLine; i <= endLine; i++) {
+      const line = this.editor.document.lineAt(i);
+      const linePos: EditorLinePos =
+        i === startLine ? "start" : i === endLine ? "end" : "middle";
+      const decoration = this.createBorderDecoration(linePos);
+      this.editor.setDecorations(decoration, [line.range]);
+      this.decorations.push(decoration);
+    }
+  }
+
+  private createBorderDecoration(
+    linePos: EditorLinePos,
+  ): vscode.TextEditorDecorationType {
+    return vscode.window.createTextEditorDecorationType({
+      ...DecorationManager.BASE_STYLE,
+      borderWidth: DecorationManager.BORDER_WIDTHS[linePos],
+    });
+  }
+
+  private createEnterButtonDecoration(startLine: number, totalLines: number) {
+    const enterRange = new vscode.Range(
+      startLine,
+      0,
+      startLine,
+      Number.MAX_SAFE_INTEGER,
+    );
+    const enterDecorator = vscode.window.createTextEditorDecorationType({
+      after: {
+        contentText: "↵ Enter",
+        color: new vscode.ThemeColor("foreground"),
+        backgroundColor: new vscode.ThemeColor(
+          "editorGroupHeader.tabsBackground",
+        ),
+        border: "none",
+        margin: `${this.calculateTopMargin(totalLines)}px 0 0 65vw`,
+        height: "22px",
+      },
+    });
+
+    this.editor.setDecorations(enterDecorator, [{ range: enterRange }]);
+    this.decorations.push(enterDecorator);
+  }
+
+  private calculateTopMargin(totalLines: number): number {
+    const lineHeight = this.getLineHeight();
+    const buttonHeight = 22;
+    return lineHeight * (totalLines - 1) - buttonHeight / 2;
+  }
+
+  private getLineHeight(): number {
+    return (
+      vscode.workspace.getConfiguration("editor").get("lineHeight") ||
+      vscode.workspace.getConfiguration("editor").get("fontSize") ||
+      this.defaultLineHeight
+    );
+  }
+
+  dispose() {
+    this.disposeExistingDecorations();
+  }
+}
+
+class SettingsManager {
+  private originalSettings: Record<string, any> = {};
+
+  async enableEditModeSettings() {
+    const config = vscode.workspace.getConfiguration("workbench");
+    const currentCustomizations = config.get("colorCustomizations") as Record<
+      string,
+      any
+    >;
+
+    // Store original settings
+    this.originalSettings = {
+      colorCustomizations: {
+        "editorError.foreground":
+          currentCustomizations["editorError.foreground"] || "",
+        "editorWarning.foreground":
+          currentCustomizations["editorWarning.foreground"] || "",
+        "editorInfo.foreground":
+          currentCustomizations["editorInfo.foreground"] || "",
+        "editorOverviewRuler.errorForeground":
+          currentCustomizations["editorOverviewRuler.errorForeground"] || "",
+      },
+    };
+
+    // Set new settings
+    await config.update(
+      "colorCustomizations",
+      {
+        ...currentCustomizations,
+        "editorError.foreground": "#00000000",
+        "editorWarning.foreground": "#00000000",
+        "editorInfo.foreground": "#00000000",
+        "editorOverviewRuler.errorForeground": "#00000000",
+      },
+      vscode.ConfigurationTarget.Global,
+    );
+  }
+
+  async restoreOriginalSettings() {
+    const config = vscode.workspace.getConfiguration("workbench");
+    const currentCustomizations = config.get("colorCustomizations") as Record<
+      string,
+      any
+    >;
+
+    // Restore original settings
+    await config.update(
+      "colorCustomizations",
+      {
+        ...currentCustomizations,
+        ...this.originalSettings.colorCustomizations,
+      },
+      vscode.ConfigurationTarget.Global,
+    );
+  }
+}
+
+export default class QuickEditInline {
+  private static quickEditors: QuickEditInline[] = [];
+  private static commandTitle = "continue.isInQuickEdit";
+  private static completionsProvider?: vscode.Disposable;
+  private static settingsManager = new SettingsManager();
+
+  private startLine: number;
+  private endLine: number;
+  private indentation: string;
+  private decorationManager: DecorationManager;
+
   private numInitialLines = 3;
 
   constructor(
@@ -73,11 +209,12 @@ export default class QuickEditInline {
     this.startLine = initialCursorPos.line;
     this.endLine = initialCursorPos.line;
     this.indentation = this.getIndentation();
+    this.decorationManager = new DecorationManager(editor);
 
     this.init();
   }
 
-  static add() {
+  static async add() {
     const editor = vscode.window.activeTextEditor;
 
     if (!editor) {
@@ -87,6 +224,8 @@ export default class QuickEditInline {
 
     if (QuickEditInline.quickEditors.length === 0) {
       QuickEditInline.setIsInQuickEdit(true);
+
+      await QuickEditInline.settingsManager.enableEditModeSettings();
 
       QuickEditInline.completionsProvider =
         vscode.languages.registerCompletionItemProvider(
@@ -144,17 +283,20 @@ export default class QuickEditInline {
     this.editor.selection = new vscode.Selection(pos, pos);
   }
 
-  private static setIsInQuickEdit(isInQuickEdit: boolean) {
+  private static async setIsInQuickEdit(isInQuickEdit: boolean) {
     vscode.commands.executeCommand(
       "setContext",
-      "continue.isInQuickEdit",
+      QuickEditInline.commandTitle,
       isInQuickEdit,
     );
+
+    if (!isInQuickEdit) {
+      await QuickEditInline.settingsManager.restoreOriginalSettings();
+    }
   }
 
   private async cleanup() {
-    // this.decorator?.dispose();
-    this.decorations.forEach((d) => d.dispose());
+    this.decorationManager.dispose();
 
     await this.removeQuickEditorLines();
     this.moveCursor(
@@ -183,117 +325,7 @@ export default class QuickEditInline {
   private updateCursorAndDecoration(newEndLine: number, cursorLine: number) {
     this.moveCursor(cursorLine);
     this.endLine = newEndLine;
-    this.updateDecorations();
-  }
-
-  private createBorderDecoration(line: EditorLinePos) {
-    const borderWidths: Record<EditorLinePos, string> = {
-      start: "2.5px 2.5px 0 2.5px",
-      middle: "0 2.5px 0 2.5px",
-      end: "0 2.5px 2.5px 2.5px",
-    };
-
-    return vscode.window.createTextEditorDecorationType({
-      ...this.editorBaseStyle,
-      borderWidth: borderWidths[line],
-    });
-  }
-
-  private updateDecorations() {
-    this.disposeExistingDecorations();
-    this.createEnterButtonDecoration();
-    this.createEditorLinesDecorations();
-  }
-
-  private disposeExistingDecorations() {
-    this.decorations.forEach((d) => d.dispose());
-    this.decorations = [];
-  }
-
-  private createEnterButtonDecoration() {
-    // We use the start line because of issues applying a
-    // bottom margin. Otherwise it would be simpler just
-    // to use the endLine, since we align the enter button
-    // to the last line of text.
-    const enterRange = new vscode.Range(
-      this.startLine,
-      0,
-      this.startLine,
-      Number.MAX_SAFE_INTEGER,
-    );
-
-    const enterDecorator = vscode.window.createTextEditorDecorationType(
-      this.enterButtonStyle,
-    );
-
-    this.decorations.push(enterDecorator);
-    this.editor.setDecorations(enterDecorator, [
-      this.getEnterButtonRenderOptions(enterRange),
-    ]);
-  }
-
-  private getEnterButtonRenderOptions(
-    range: vscode.Range,
-  ): vscode.DecorationOptions {
-    const lineHeight = this.getLineHeight();
-    const height = 22;
-    return {
-      range,
-      renderOptions: {
-        after: {
-          contentText: "↵ Enter",
-          color: new vscode.ThemeColor("foreground"),
-          backgroundColor: new vscode.ThemeColor(
-            "editorGroupHeader.tabsBackground",
-          ),
-          border: "none",
-          margin: `${this.calculateTopMargin(lineHeight, height)}px 0 0 65vw`,
-          height: `${height}px`,
-        },
-      },
-    };
-  }
-
-  private getLineHeight(): number {
-    return (vscode.workspace.getConfiguration("editor").get("lineHeight") ||
-      vscode.workspace.getConfiguration("editor").get("fontSize"))!;
-  }
-
-  private calculateTopMargin(lineHeight: number, height: number): number {
-    return lineHeight * (this.endLine - this.startLine) - height / 2;
-  }
-
-  private createEditorLinesDecorations() {
-    const decorations: [vscode.Range, vscode.TextEditorDecorationType][] = [];
-
-    for (let i = this.startLine; i <= this.endLine; i++) {
-      const line = this.editor.document.lineAt(i);
-      const decoration = this.createBorderDecorationForLine(i);
-      this.decorations.push(decoration);
-      decorations.push([line.range, decoration]);
-    }
-
-    this.applyRangeDecorations(decorations);
-  }
-
-  private createBorderDecorationForLine(
-    lineNumber: number,
-  ): vscode.TextEditorDecorationType {
-    if (lineNumber === this.startLine) {
-      return this.createBorderDecoration("start");
-    } else if (lineNumber === this.endLine) {
-      return this.createBorderDecoration("end");
-    } else {
-      return this.createBorderDecoration("middle");
-    }
-  }
-
-  private applyRangeDecorations(
-    decorations: [vscode.Range, vscode.TextEditorDecorationType][],
-  ) {
-    decorations.forEach(([range, decoration]) => {
-      this.editor.setDecorations(decoration, [range]);
-    });
+    this.decorationManager.updateDecorations(this.startLine, this.endLine);
   }
 
   private isNewlineText(event: vscode.TextDocumentChangeEvent): boolean {
