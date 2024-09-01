@@ -28,6 +28,7 @@ import LMStudio from "./LMStudio";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import Mistral from "./Mistral";
+import Mock from "./Mock";
 import Msty from "./Msty";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
@@ -74,6 +75,7 @@ const LLMs = [
   OpenRouter,
   Nvidia,
   Vllm,
+  Mock,
 ];
 
 export async function llmFromDescription(

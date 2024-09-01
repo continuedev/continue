@@ -622,7 +622,8 @@ type ModelProvider =
   | "watsonx"
   | "openrouter"
   | "nvidia"
-  | "vllm";
+  | "vllm"
+  | "mock";
 
 export type ModelName =
   | "AUTODETECT"
