@@ -49,6 +49,9 @@ const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
   white-space: nowrap;
   cursor: default;
 
+  display: flex;
+  flex-direction: column;
+
   border-radius: ${defaultBorderRadius};
   border: 0.5px solid ${lightGray};
   background-color: ${vscInputBackground};
@@ -251,48 +254,52 @@ function ModelSelect() {
           </span>
         </StyledListboxButton>
         <StyledListboxOptions showAbove={showAbove}>
-          {options.map((option, idx) => (
-            <ModelOption
-              option={option}
-              idx={idx}
-              key={idx}
-              showDelete={options.length > 1}
-            />
-          ))}
+          <div className={`max-h-[${MAX_HEIGHT_PX}px] overflow-y-auto`}>
+            {options.map((option, idx) => (
+              <ModelOption
+                option={option}
+                idx={idx}
+                key={idx}
+                showDelete={options.length > 1}
+              />
+            ))}
+          </div>
 
-          {selectedProfileId === "local" && (
-            <>
-              {options.length > 0 && <Divider />}
+          <div className="mt-auto">
+            {selectedProfileId === "local" && (
+              <>
+                {options.length > 0 && <Divider />}
 
-              <StyledListboxOption
-                key={options.length}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  navigate("/addModel");
-                }}
-                value={"addModel" as any}
-              >
-                <div className="flex items-center">
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Add Model
-                </div>
-              </StyledListboxOption>
-            </>
-          )}
+                <StyledListboxOption
+                  key={options.length}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    navigate("/addModel");
+                  }}
+                  value={"addModel" as any}
+                >
+                  <div className="flex items-center">
+                    <PlusIcon className="w-4 h-4 mr-2" />
+                    Add Model
+                  </div>
+                </StyledListboxOption>
+              </>
+            )}
 
-          <Divider />
+            <Divider />
 
-          <i
-            style={{
-              color: lightGray,
-              padding: "4px",
-              marginTop: "4px",
-              display: "block",
-            }}
-          >
-            {getMetaKeyLabel()}' to toggle
-          </i>
+            <i
+              style={{
+                color: lightGray,
+                padding: "4px",
+                marginTop: "4px",
+                display: "block",
+              }}
+            >
+              {getMetaKeyLabel()}' to toggle
+            </i>
+          </div>
         </StyledListboxOptions>
       </div>
     </Listbox>
