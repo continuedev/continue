@@ -10,6 +10,8 @@ import com.github.continuedev.continueintellijextension.services.ContinueExtensi
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.SettingsListener
 import com.github.continuedev.continueintellijextension.services.TelemetryService
+import com.github.continuedev.continueintellijextension.services.TerminalActivityTrackingService
+import com.github.continuedev.continueintellijextension.utils.isNotAvailable
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
@@ -31,6 +33,10 @@ import javax.swing.*
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.wm.ToolWindowManager
+import com.intellij.openapi.wm.ex.ToolWindowManagerListener
+import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
+import org.jetbrains.plugins.terminal.TerminalView
 
 fun showTutorial(project: Project) {
     ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
@@ -61,6 +67,21 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
+
+        project.messageBus.connect().subscribe(
+            ToolWindowManagerListener.TOPIC,
+            object : ToolWindowManagerListener {
+                override fun stateChanged(toolWindowManager: ToolWindowManager) {
+                    if (toolWindowManager.activeToolWindowId == TerminalToolWindowFactory.TOOL_WINDOW_ID
+                        || TerminalView.getInstance(project).isNotAvailable()
+                    ) {
+                        project.service<TerminalActivityTrackingService>().update(
+                            TerminalView.getInstance(project).widgets
+                        )
+                    }
+                }
+            }
+        )
 
        ApplicationManager.getApplication().executeOnPooledThread {
            initializePlugin(project)
