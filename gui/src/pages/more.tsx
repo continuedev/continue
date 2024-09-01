@@ -1,23 +1,28 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { useContext } from "react";
+import { IndexingProgressUpdate } from "core";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
-import {
-  Button,
-  Hr,
-  lightGray,
-  vscBackground,
-  vscForeground,
-} from "../components";
+import { lightGray, SecondaryButton, vscBackground } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
+import IndexingProgressBar from "../components/loaders/IndexingProgressBar";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-import { SecondaryButton } from "../components";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 
-function HelpPage() {
+function MorePage() {
   useNavigationListener();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
+
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
+    desc: "Loading indexing config",
+    progress: 0.0,
+    status: "loading",
+  });
+
+  useWebviewListener("indexProgress", async (data) => {
+    setIndexingState(data);
+  });
 
   return (
     <div className="overflow-y-scroll overflow-x-hidden">
@@ -34,9 +39,28 @@ function HelpPage() {
           onClick={() => navigate("/")}
           className="inline-block ml-4 cursor-pointer"
         />
-        <h3 className="text-lg font-bold m-2 inline-block">Help Center</h3>
+        <h3 className="text-lg font-bold m-2 inline-block">More</h3>
       </div>
 
+      <h3 className="my-3 mx-auto text-center">Codebase Indexing</h3>
+      <div
+        className="p-6 flex flex-col gap-6"
+        style={{
+          borderTop: `0.5px solid ${lightGray}`,
+        }}
+      >
+        <IndexingProgressBar indexingState={indexingState} />
+      </div>
+
+      <h3
+        className="mb-3 mx-auto text-center py-3"
+        style={{
+          borderTop: `0.5px solid ${lightGray}`,
+          borderBottom: `0.5px solid ${lightGray}`,
+        }}
+      >
+        Help Center
+      </h3>
       <div className="p-6 flex flex-col gap-6">
         <div className="grid grid-cols-3 gap-4 items-center">
           <div className="col-span-2">
@@ -126,9 +150,18 @@ function HelpPage() {
         </div>
       </div>
 
+      <h3
+        className="my-3 mx-auto text-center py-3"
+        style={{
+          borderTop: `0.5px solid ${lightGray}`,
+          borderBottom: `0.5px solid ${lightGray}`,
+        }}
+      >
+        Keyboard Shortcuts
+      </h3>
       <KeyboardShortcutsDialog />
     </div>
   );
 }
 
-export default HelpPage;
+export default MorePage;

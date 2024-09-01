@@ -27,7 +27,6 @@ const StatusDot = styled.div<{
   height: ${(props) => props.diameter ?? DEFAULT_DIAMETER}px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.75);
-  margin: 0 4px 0 8px;
   ${(props) => (props.shouldBlink ?? false) && blinkAnimation};
 `;
 
