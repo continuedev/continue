@@ -87,7 +87,6 @@ const StopButton = styled.div`
 `;
 
 const StepsDiv = styled.div`
-  padding-bottom: 8px;
   position: relative;
   background-color: transparent;
 
@@ -107,7 +106,8 @@ const StepsDiv = styled.div`
   // }
 
   .thread-message {
-    margin: 12px 4px 0 4px;
+    margin: 8px 4px 0 4px;
+    padding-bottom: 8px;
   }
   // .thread-message:not(:first-child) {
   //   border-top: 1px solid ${lightGray}22;
