@@ -5,7 +5,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -25,6 +25,7 @@ import {
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
+const MAX_HEIGHT_PX = 300;
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
   display: flex;
@@ -40,7 +41,7 @@ const StyledListboxButton = styled(Listbox.Button)`
   }
 `;
 
-const StyledListboxOptions = styled(Listbox.Options)`
+const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
   margin-top: 4px;
   position: absolute;
   list-style: none;
@@ -52,8 +53,10 @@ const StyledListboxOptions = styled(Listbox.Options)`
   border: 0.5px solid ${lightGray};
   background-color: ${vscInputBackground};
 
-  max-height: 300px;
+  max-height: ${MAX_HEIGHT_PX}px;
   overflow-y: auto;
+
+  ${(props) => (props.showAbove ? "bottom: 100%;" : "top: 100%;")}
 `;
 
 const StyledListboxOption = styled(Listbox.Option)`
@@ -207,6 +210,26 @@ function ModelSelect() {
 
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const [showAbove, setShowAbove] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  const calculatePosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      const dropdownHeight = MAX_HEIGHT_PX;
+
+      setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+    }
+  };
+
+  useEffect(() => {
+    const handleResize = () => calculatePosition();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <Listbox
       onChange={async (val: string) => {
@@ -217,15 +240,17 @@ function ModelSelect() {
     >
       <div className="relative">
         <StyledListboxButton
+          ref={buttonRef}
           className="h-[18px] overflow-hidden"
           style={{ padding: 0 }}
+          onClick={calculatePosition}
         >
           <span className="hover:underline">
             {modelSelectTitle(defaultModel) || "Select model"}{" "}
             <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
           </span>
         </StyledListboxButton>
-        <StyledListboxOptions>
+        <StyledListboxOptions showAbove={showAbove}>
           {options.map((option, idx) => (
             <ModelOption
               option={option}
