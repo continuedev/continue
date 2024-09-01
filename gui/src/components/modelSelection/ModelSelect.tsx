@@ -205,11 +205,14 @@ function ModelSelect() {
     };
   }, [options, defaultModel]);
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   return (
     <Listbox
-      onChange={(val: string) => {
+      onChange={async (val: string) => {
         if (val === defaultModel?.title) return;
         dispatch(setDefaultModel({ title: val }));
+        await ideMessenger.request("update/modelChange", val);
       }}
     >
       <div className="relative">
