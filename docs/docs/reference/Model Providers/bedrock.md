@@ -1,4 +1,4 @@
-# AWS Bedrock
+# Amazon Bedrock
 
 To setup Bedrock, add the following to your `config.json` file:
 
@@ -6,11 +6,11 @@ To setup Bedrock, add the following to your `config.json` file:
 {
   "models": [
     {
-      "title": "Bedrock: Claude 3 Sonnet",
+      "title": "Bedrock: Claude 3.5 Sonnet",
       "provider": "bedrock",
-      "model": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "model": "anthropic.claude-3-5-sonnet-20240620-v1:0",
       "region": "us-east-1",
-      "profile": "bedrock",
+      "profile": "bedrock"
     }
   ]
 }
