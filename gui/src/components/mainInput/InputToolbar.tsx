@@ -43,11 +43,20 @@ const StyledDiv = styled.div<{ isHidden: boolean }>`
     flex: 0 0 auto;
   }
 
-  /* Add a media query to hide the right-hand set of components */
-  @media (max-width: 400px) {
-    & > span:last-child {
+  /* Hide the "Use codebase" span first */
+  @media (max-width: 450px) {
+    & > span:last-child > span:nth-last-child(2) {
       display: none;
     }
+  }
+`;
+
+const SecondToDisappearContainer = styled.span`
+  display: flex;
+  align-items: center;
+
+  @media (max-width: 350px) {
+    display: none;
   }
 `;
 
@@ -103,58 +112,62 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <span className="flex gap-2 items-center whitespace-nowrap">
           <ModelSelect />
-          <StyledSpan
-            onClick={(e) => {
-              props.onAddContextItem();
-            }}
-            className="hover:underline cursor-pointer"
-          >
-            Add Context <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
-          </StyledSpan>
-          {defaultModel &&
-            modelSupportsImages(
-              defaultModel.provider,
-              defaultModel.model,
-              defaultModel.title,
-              defaultModel.capabilities,
-            ) && (
-              <span
-                className="ml-1 mt-0.5 cursor-pointer"
-                onMouseLeave={() => setFileSelectHovered(false)}
-                onMouseEnter={() => setFileSelectHovered(true)}
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
-                  onChange={(e) => {
-                    for (const file of e.target.files) {
-                      props.onImageFileSelected(file);
-                    }
-                  }}
-                />
-                {fileSelectHovered ? (
-                  <SolidPhotoIcon
-                    width="1.4em"
-                    height="1.4em"
-                    color={lightGray}
-                    onClick={(e) => {
-                      fileInputRef.current?.click();
+
+          <SecondToDisappearContainer>
+            <StyledSpan
+              onClick={(e) => {
+                props.onAddContextItem();
+              }}
+              className="hover:underline cursor-pointer"
+            >
+              Add Context{" "}
+              <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
+            </StyledSpan>
+            {defaultModel &&
+              modelSupportsImages(
+                defaultModel.provider,
+                defaultModel.model,
+                defaultModel.title,
+                defaultModel.capabilities,
+              ) && (
+                <span
+                  className="ml-1 -mb-0.5 cursor-pointer"
+                  onMouseLeave={() => setFileSelectHovered(false)}
+                  onMouseEnter={() => setFileSelectHovered(true)}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                    onChange={(e) => {
+                      for (const file of e.target.files) {
+                        props.onImageFileSelected(file);
+                      }
                     }}
                   />
-                ) : (
-                  <OutlinePhotoIcon
-                    width="1.4em"
-                    height="1.4em"
-                    color={lightGray}
-                    onClick={(e) => {
-                      fileInputRef.current?.click();
-                    }}
-                  />
-                )}
-              </span>
-            )}
+                  {fileSelectHovered ? (
+                    <SolidPhotoIcon
+                      width="1.4em"
+                      height="1.4em"
+                      color={lightGray}
+                      onClick={(e) => {
+                        fileInputRef.current?.click();
+                      }}
+                    />
+                  ) : (
+                    <OutlinePhotoIcon
+                      width="1.4em"
+                      height="1.4em"
+                      color={lightGray}
+                      onClick={(e) => {
+                        fileInputRef.current?.click();
+                      }}
+                    />
+                  )}
+                </span>
+              )}
+          </SecondToDisappearContainer>
         </span>
 
         <span className="flex items-center gap-2 whitespace-nowrap">

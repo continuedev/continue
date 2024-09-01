@@ -67,7 +67,7 @@ const InputBoxDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   margin: 0;
   height: auto;
-  width: calc(100% - 18px);
+  width: calc(100% - 24px);
   background-color: ${vscInputBackground};
   color: ${vscForeground};
   z-index: 1;
