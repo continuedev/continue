@@ -760,6 +760,7 @@ export interface ModelDescription {
   model: string;
   apiKey?: string;
   apiBase?: string;
+  maxTokens?: number;
   contextLength?: number;
   maxStopWords?: number;
   template?: TemplateType;

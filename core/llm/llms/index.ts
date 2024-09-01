@@ -107,6 +107,7 @@ export async function llmFromDescription(
       ...finalCompletionOptions,
       model: (desc.model || cls.defaultOptions?.model) ?? "codellama-7b",
       maxTokens:
+        desc.maxTokens ??
         finalCompletionOptions.maxTokens ??
         cls.defaultOptions?.completionOptions?.maxTokens ??
         DEFAULT_MAX_TOKENS,
