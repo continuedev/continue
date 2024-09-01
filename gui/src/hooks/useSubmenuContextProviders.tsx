@@ -204,9 +204,14 @@ function useSubmenuContextProviders() {
           fields: ["title", "description"],
           storeFields: ["id", "title", "description"],
         });
-        const items = await ideMessenger.request("context/loadSubmenuItems", {
+        const result = await ideMessenger.request("context/loadSubmenuItems", {
           title: description.title,
         });
+
+        if (result.status === "error") {
+          continue;
+        }
+        const items = result.content;
 
         try {
           minisearch.addAll(items);

@@ -9,6 +9,7 @@ import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { Core } from "core/core";
+import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
@@ -25,6 +26,7 @@ import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
+import { uriFromFilePath } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -511,14 +513,32 @@ const commandsMap: (
     "continue.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
     },
-    "continue.selectFilesAsContext": (
+    "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
       uris: vscode.Uri[],
     ) => {
+      if (uris === undefined) {
+        throw new Error("No files were selected");
+      }
+
       vscode.commands.executeCommand("continue.continueGUIView.focus");
 
       for (const uri of uris) {
-        addEntireFileToContext(uri, false, sidebar.webviewProtocol);
+        // If it's a folder, add the entire folder contents recursively by using walkDir (to ignore ignored files)
+        const isDirectory = await vscode.workspace.fs
+          .stat(uri)
+          ?.then((stat) => stat.type === vscode.FileType.Directory);
+        if (isDirectory) {
+          for await (const filepath of walkDirAsync(uri.fsPath, ide)) {
+            addEntireFileToContext(
+              uriFromFilePath(filepath),
+              false,
+              sidebar.webviewProtocol,
+            );
+          }
+        } else {
+          addEntireFileToContext(uri, false, sidebar.webviewProtocol);
+        }
       }
     },
     "continue.logAutocompleteOutcome": (
@@ -594,8 +614,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-            ? StatusBarStatus.Paused
-            : StatusBarStatus.Disabled;
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =

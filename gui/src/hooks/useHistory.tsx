@@ -30,7 +30,11 @@ function useHistory(dispatch: Dispatch) {
     offset?: number,
     limit?: number,
   ): Promise<SessionInfo[]> {
-    return await ideMessenger.request("history/list", { offset, limit });
+    const result = await ideMessenger.request("history/list", {
+      offset,
+      limit,
+    });
+    return result.status === "success" ? result.content : [];
   }
 
   async function saveSession() {
@@ -86,11 +90,11 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function getSession(id: string): Promise<PersistedSessionInfo> {
-    const json: PersistedSessionInfo = await ideMessenger.request(
-      "history/load",
-      { id },
-    );
-    return json;
+    const result = await ideMessenger.request("history/load", { id });
+    if (result.status === "error") {
+      throw new Error(result.error);
+    }
+    return result.content;
   }
 
   async function updateSession(sessionInfo: PersistedSessionInfo) {
@@ -103,10 +107,11 @@ function useHistory(dispatch: Dispatch) {
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
     setLocalStorage("lastSessionId", state.sessionId);
-    const json: PersistedSessionInfo = await ideMessenger.request(
-      "history/load",
-      { id },
-    );
+    const result = await ideMessenger.request("history/load", { id });
+    if (result.status === "error") {
+      throw new Error(result.error);
+    }
+    const json = result.content;
     dispatch(newSession(json));
     return json;
   }

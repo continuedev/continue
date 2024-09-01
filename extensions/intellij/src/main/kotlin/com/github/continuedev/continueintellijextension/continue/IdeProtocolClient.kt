@@ -1,18 +1,18 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
-import com.github.continuedev.continueintellijextension.constants.*
+import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
+import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
+import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.services.TerminalActivityTrackingService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
-import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
@@ -20,7 +20,6 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
@@ -32,8 +31,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
-import com.intellij.openapi.progress.DumbProgressIndicator
-import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
@@ -43,11 +40,13 @@ import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiDocumentManager
+import com.intellij.terminal.TerminalUtils
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
-import com.intellij.ui.content.ContentManagerUtil
 import com.intellij.util.concurrency.annotations.RequiresEdt
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.*
@@ -360,9 +359,7 @@ class IdeProtocolClient (
                     }
 
                     "getTerminalContents" -> {
-                        respond(
-                            mapOf("contents" to "Terminal cannot be accessed in JetBrains IDE")
-                        )
+                        respond(terminalContents())
                     }
 
                     "visibleFiles" -> {
@@ -590,7 +587,7 @@ class IdeProtocolClient (
                     "listFolders" -> {
                         val workspacePath = workspacePath ?: return@launch
                         val workspaceDir = File(workspacePath)
-                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.name } ?: emptyList()
+                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath } ?: emptyList()
                         respond(folders)
                     }
 
@@ -720,30 +717,6 @@ class IdeProtocolClient (
 
     fun uniqueId(): String {
         return getMachineUniqueID()
-    }
-
-    fun onTextSelected(
-        selectedText: String,
-        filepath: String,
-        startLine: Int,
-        startCharacter: Int,
-        endLine: Int,
-        endCharacter: Int
-    ) = coroutineScope.launch {
-//        val jsonMessage = textSelectionStrategy.handleTextSelection(
-//            selectedText,
-//            filepath,
-//            startLine,
-//            startCharacter,
-//            endLine,
-//            endCharacter
-//        )
-//        sendMessage("highlightedCodePush", jsonMessage)
-//        dispatchEventToWebview(
-//            "highlightedCode",
-//            jsonMessage,
-//            continuePluginService.continuePluginWindow.webView
-//        )
     }
 
     fun readFile(filepath: String): String {
@@ -1025,6 +998,25 @@ class IdeProtocolClient (
 
 //            markupModel.addRangeHighlighter(startIdx, endIdx, 0, textAttributes, HighlighterTargetArea.EXACT_RANGE)
         }
+    }
+
+    private fun terminalContents(): String {
+        val contents = project.service<TerminalActivityTrackingService>().latest()?.run {
+            TerminalUtils.getTextInTerminal(terminalPanel)
+        } ?: ""
+
+        var lines = contents.split("\n").dropLastWhile { it.isEmpty() }
+        val lastLine = lines.lastOrNull()?.trim()
+        if (lastLine != null) {
+            lines = lines.dropLast(1)
+            var i = lines.size - 1
+            while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
+                i--
+            }
+            return lines.subList(maxOf(i, 0), lines.size).joinToString("\n")
+        }
+
+        return contents
     }
 }
 

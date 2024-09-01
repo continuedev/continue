@@ -13,5 +13,9 @@
   },
   "include": ["src/**/*", "../../core/**/*.ts", "../../core/**/*.d.ts"],
   // core/test uses @types/jest, which conflicts with @types/mocha
-  "exclude": ["../../core/dist/**/*", "../../core/**/*.test.ts"]
+  "exclude": [
+    "../../core/dist/**/*",
+    "../../core/**/*.test.ts",
+    "../../core/**/*.skip.ts"
+  ]
 }

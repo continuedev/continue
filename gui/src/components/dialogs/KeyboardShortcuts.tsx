@@ -15,8 +15,6 @@ const GridDiv = styled.div`
   padding: 1rem;
   justify-items: center;
   align-items: center;
-
-  border-top: 0.5px solid ${lightGray};
 `;
 
 const StyledKeyDiv = styled.div`
@@ -206,23 +204,20 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
 
 function KeyboardShortcutsDialog() {
   return (
-    <div className="p-2">
-      <h3 className="my-3 mx-auto text-center">Keyboard Shortcuts</h3>
-      <GridDiv>
-        {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
-          (shortcut, i) => {
-            return (
-              <KeyboardShortcut
-                key={i}
-                mac={shortcut.mac}
-                windows={shortcut.windows}
-                description={shortcut.description}
-              />
-            );
-          },
-        )}
-      </GridDiv>
-    </div>
+    <GridDiv>
+      {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
+        (shortcut, i) => {
+          return (
+            <KeyboardShortcut
+              key={i}
+              mac={shortcut.mac}
+              windows={shortcut.windows}
+              description={shortcut.description}
+            />
+          );
+        },
+      )}
+    </GridDiv>
   );
 }
 

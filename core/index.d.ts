@@ -25,6 +25,7 @@ export interface ChunkWithoutID {
   content: string;
   startLine: number;
   endLine: number;
+  signature?: string;
   otherMetadata?: { [key: string]: any };
 }
 
@@ -361,6 +362,8 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+
+  cacheSystemMessage?: boolean;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -617,7 +620,10 @@ type ModelProvider =
   | "openai-aiohttp"
   | "msty"
   | "watsonx"
-  | "openrouter";
+  | "openrouter"
+  | "nvidia"
+  | "vllm"
+  | "mock";
 
 export type ModelName =
   | "AUTODETECT"
@@ -774,7 +780,8 @@ export type EmbeddingsProviderName =
   | "free-trial"
   | "gemini"
   | "continue-proxy"
-  | "deepinfra";
+  | "deepinfra"
+  | "voyage";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -856,6 +863,7 @@ interface ContextMenuConfig {
 interface ModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
+  repoMapFileSelection?: string;
 }
 
 /**
@@ -898,7 +906,7 @@ interface ExperimentalConfig {
    * function and class declarations.
    */
   quickActions?: QuickActionConfig[];
-  
+
   /**
    * Automatically read LLM chat responses aloud using system TTS models
    */

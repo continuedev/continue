@@ -1,6 +1,5 @@
-import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
-import { IndexingProgressUpdate } from "core";
-import { useContext, useEffect, useState } from "react";
+import { EllipsisHorizontalCircleIcon } from "@heroicons/react/24/outline";
+import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -12,7 +11,7 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { shouldBeginOnboarding } from "../pages/onboarding/utils";
+import { isNewUserOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -25,12 +24,10 @@ import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import TextDialog from "./dialogs";
 import HeaderButtonWithText from "./HeaderButtonWithText";
-import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 
-// #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
@@ -105,8 +102,6 @@ const ProfileDropdownPortalDiv = styled.div`
   font-size: ${getFontSize() - 2};
 `;
 
-// #endregion
-
 const HIDE_FOOTER_ON_PAGES = [
   "/onboarding",
   "/localOnboarding",
@@ -127,7 +122,6 @@ const Layout = () => {
   );
 
   const defaultModel = useSelector(defaultModelSelector);
-  // #region Selectors
 
   const bottomMessage = useSelector(
     (state: RootState) => state.uiState.bottomMessage,
@@ -137,8 +131,6 @@ const Layout = () => {
   );
 
   const timeline = useSelector((state: RootState) => state.state.history);
-
-  // #endregion
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {
@@ -185,10 +177,6 @@ const Layout = () => {
     [location, navigate],
   );
 
-  useWebviewListener("indexProgress", async (data) => {
-    setIndexingState(data);
-  });
-
   useWebviewListener(
     "addApiKey",
     async () => {
@@ -231,18 +219,12 @@ const Layout = () => {
 
   useEffect(() => {
     if (
-      shouldBeginOnboarding() &&
+      isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
       navigate("/onboarding");
     }
   }, [location]);
-
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Loading indexing config",
-    progress: 0.0,
-    status: "loading",
-  });
 
   return (
     <LayoutTopDiv>
@@ -273,20 +255,18 @@ const Layout = () => {
           {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
             <Footer>
               <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
-                {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
-                  defaultModel?.provider === "free-trial" && (
-                    <ProgressBar
-                      completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={FREE_TRIAL_LIMIT_REQUESTS}
-                    />
-                  )}
-                <IndexingProgressBar indexingState={indexingState} />
+                {defaultModel?.provider === "free-trial" && (
+                  <ProgressBar
+                    completed={parseInt(localStorage.getItem("ftc") || "0")}
+                    total={FREE_TRIAL_LIMIT_REQUESTS}
+                  />
+                )}
               </div>
 
               <ProfileSwitcher />
               <HeaderButtonWithText
                 tooltipPlacement="top-end"
-                text="Help"
+                text="More"
                 onClick={() => {
                   if (location.pathname === "/help") {
                     navigate("/");
@@ -295,7 +275,7 @@ const Layout = () => {
                   }
                 }}
               >
-                <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+                <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
               </HeaderButtonWithText>
             </Footer>
           )}

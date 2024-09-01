@@ -72,8 +72,9 @@ describe("CodebaseIndexer", () => {
     tearDownTestDir();
     setUpTestDir();
 
-    execSync('git config --global user.email "test@example.com"');
-    execSync('git config --global user.name "Test"');
+    execSync("git init", { cwd: TEST_DIR });
+    execSync('git config user.email "test@example.com"', { cwd: TEST_DIR });
+    execSync('git config user.name "Test"', { cwd: TEST_DIR });
   });
 
   afterAll(async () => {

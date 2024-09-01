@@ -35,6 +35,7 @@ import {
   ControlPlaneSessionInfo,
 } from "core/control-plane/client";
 import crypto from "crypto";
+import { SecretStorage } from "./SecretStorage";
 
 // Function to generate a random string of specified length
 function generateRandomString(length: number): string {
@@ -84,6 +85,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 5; // 5 minutes
 
+  private secretStorage: SecretStorage;
+
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
       authentication.registerAuthenticationProvider(
@@ -94,6 +97,25 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       ),
       window.registerUriHandler(this._uriHandler),
     );
+
+    this.secretStorage = new SecretStorage(context);
+  }
+
+  private async storeSessions(value: ContinueAuthenticationSession[]) {
+    const data = JSON.stringify(value, null, 2);
+    await this.secretStorage.store(SESSIONS_SECRET_KEY, data);
+  }
+
+  public async getSessions(
+    scopes?: string[],
+  ): Promise<ContinueAuthenticationSession[]> {
+    const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
+    if (!data) {
+      return [];
+    }
+
+    const value = JSON.parse(data) as ContinueAuthenticationSession[];
+    return value;
   }
 
   get onDidChangeSessions() {
@@ -107,8 +129,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   async initialize() {
-    let sessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
-    this._sessions = sessions ? JSON.parse(sessions) : [];
+    this._sessions = await this.getSessions();
     await this._refreshSessions();
   }
 
@@ -129,10 +150,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         }
       }
     }
-    await this.context.secrets.store(
-      SESSIONS_SECRET_KEY,
-      JSON.stringify(this._sessions),
-    );
+    await this.storeSessions(this._sessions);
     this._sessionChangeEmitter.fire({
       added: [],
       removed: [],
@@ -172,23 +190,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   /**
-   * Get the existing sessions
-   * @param scopes
-   * @returns
-   */
-  public async getSessions(
-    scopes?: string[],
-  ): Promise<readonly ContinueAuthenticationSession[]> {
-    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
-
-    if (allSessions) {
-      return JSON.parse(allSessions) as ContinueAuthenticationSession[];
-    }
-
-    return [];
-  }
-
-  /**
    * Create a new auth session
    * @param scopes
    * @returns
@@ -219,10 +220,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         scopes: [],
       };
 
-      await this.context.secrets.store(
-        SESSIONS_SECRET_KEY,
-        JSON.stringify([session]),
-      );
+      await this.storeSessions([session]);
 
       this._sessionChangeEmitter.fire({
         added: [session],
@@ -242,25 +240,19 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
    * @param sessionId
    */
   public async removeSession(sessionId: string): Promise<void> {
-    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
-    if (allSessions) {
-      let sessions = JSON.parse(allSessions) as ContinueAuthenticationSession[];
-      const sessionIdx = sessions.findIndex((s) => s.id === sessionId);
-      const session = sessions[sessionIdx];
-      sessions.splice(sessionIdx, 1);
+    const sessions = await this.getSessions();
+    const sessionIdx = sessions.findIndex((s) => s.id === sessionId);
+    const session = sessions[sessionIdx];
+    sessions.splice(sessionIdx, 1);
 
-      await this.context.secrets.store(
-        SESSIONS_SECRET_KEY,
-        JSON.stringify(sessions),
-      );
+    await this.storeSessions(sessions);
 
-      if (session) {
-        this._sessionChangeEmitter.fire({
-          added: [],
-          removed: [session],
-          changed: [],
-        });
-      }
+    if (session) {
+      this._sessionChangeEmitter.fire({
+        added: [],
+        removed: [session],
+        changed: [],
+      });
     }
   }
 
