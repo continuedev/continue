@@ -35,6 +35,8 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "llm/streamComplete",
     "llm/streamChat",
     "llm/listModels",
+    "voice/startInput",
+    "voice/stopInput",
     "streamDiffLines",
     "stats/getTokensPerDay",
     "stats/getTokensPerModel",
@@ -58,5 +60,8 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "refreshSubmenuItems",
     "isContinueInputFocused",
     "didChangeAvailableProfiles",
+    "setVoiceInputIsActive",
+    "newSpeechFromText",
+    "voiceInputReady",
     "setTTSActive",
   ];

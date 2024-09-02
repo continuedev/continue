@@ -29,6 +29,7 @@ import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
 import { streamDiffLines } from "./util/verticalEdit";
+import { VoiceInput } from "./util/voiceInput";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -701,6 +702,16 @@ export class Core {
     on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
       recentlyEditedFilesCache.set(filepath, filepath);
     });
+
+    on("voice/startInput", () => {
+      VoiceInput.start();
+    });
+    
+    on("voice/stopInput", () => {
+      VoiceInput.stop();
+    });
+
+    VoiceInput.messenger = this.messenger;
   }
 
   private indexingCancellationController: AbortController | undefined;

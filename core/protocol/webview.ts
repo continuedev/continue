@@ -13,5 +13,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
+  setVoiceInputIsActive: [boolean, void];
+  voiceInputReady: [boolean, void];
+  newSpeechFromText: [{ text: string; isFinal: boolean }, void];
   setTTSActive: [boolean, void];
 };

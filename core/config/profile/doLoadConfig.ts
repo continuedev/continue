@@ -11,6 +11,7 @@ import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueP
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
 import { Telemetry } from "../../util/posthog.js";
 import { TTS } from "../../util/tts.js";
+import { VoiceInput } from "../../util/voiceInput.js";
 import { loadFullConfigNode } from "../load.js";
 
 export default async function doLoadConfig(
@@ -52,6 +53,10 @@ export default async function doLoadConfig(
     await ide.getUniqueId(),
     ideInfo,
   );
+
+  if (newConfig.experimental?.voiceInput?.enabled) {
+    await VoiceInput.setup(newConfig.experimental.voiceInput);
+  }
 
   // TODO: pass config to pre-load non-system TTS models
   await TTS.setup();

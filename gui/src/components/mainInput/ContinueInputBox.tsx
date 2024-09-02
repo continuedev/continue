@@ -24,12 +24,26 @@ const GradientBorder = styled.div<{
   borderColor?: string;
   isFirst: boolean;
   isLast: boolean;
+  isMainInput: boolean;
   loading: 0 | 1;
+  voiceInputActive: boolean;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
   padding: 1px;
-  background: ${(props) =>
-    props.borderColor
+  background: ${(props) => {
+    if (props.isMainInput && props.voiceInputActive) {
+      // Indicate voice input is active
+      return `repeating-linear-gradient(
+        101.79deg,
+        #FFA500 0%,
+        #FFBF00 25%,
+        #FFD700 50%,
+        #FFBF00 75%,
+        #FFA500 100%
+      )`;
+    }
+
+    return props.borderColor
       ? props.borderColor
       : `repeating-linear-gradient(
       101.79deg,
@@ -40,8 +54,11 @@ const GradientBorder = styled.div<{
       #BE1B55 67%,
       #331BBE 85%,
       #1BBE84 99%
-    )`};
-  animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
+    )`;
+  }};
+  animation: ${(props) =>
+      props.loading || props.voiceInputActive ? gradient : ""}
+    6s linear infinite;
   background-size: 200% 200%;
   width: 100%;
   display: flex;
@@ -66,6 +83,10 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
+  );
+
+  const voiceInputActive = useSelector(
+    (state: RootState) => state.state.voiceInputActive,
   );
 
   useWebviewListener(
@@ -100,8 +121,10 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       >
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}
+          voiceInputActive={voiceInputActive}
           isFirst={false}
           isLast={false}
+          isMainInput={props.isMainInput}
           borderColor={
             active && props.isLastUserInput ? undefined : vscBackground
           }

@@ -1,11 +1,15 @@
 import {
+  MicrophoneIcon as OutlineMicrophoneIcon,
   PhotoIcon as OutlinePhotoIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
+import {
+  MicrophoneIcon as SolidMicrophoneIcon,
+  PhotoIcon as SolidPhotoIcon,
+} from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -16,8 +20,10 @@ import {
   vscForeground,
   vscInputBackground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { RootState } from "../../redux/store";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -99,9 +105,25 @@ interface InputToolbarProps {
 function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileSelectHovered, setFileSelectHovered] = useState(false);
+  const [speechInputHovered, setSpeechInputHovered] = useState(false);
 
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
+
+  const voiceInputEnabled = useSelector(
+    (state: RootState) =>
+      state.state.config.experimental?.voiceInput?.enabled === true,
+  );
+
+  const voiceInputActive = useSelector(
+    (state: RootState) => state.state.voiceInputActive,
+  );
+
+  const voiceInputReady = useSelector(
+    (state: RootState) => state.state.voiceInputReady,
+  );
+
+  const ideMessenger = useContext(IdeMessengerContext);
 
   return (
     <>
@@ -167,6 +189,33 @@ function InputToolbar(props: InputToolbarProps) {
                   )}
                 </span>
               )}
+
+            {voiceInputEnabled && voiceInputReady && (
+              <span
+                className="ml-1 mt-px cursor-pointer"
+                onMouseLeave={() => setSpeechInputHovered(false)}
+                onMouseEnter={() => setSpeechInputHovered(true)}
+                onClick={() => {
+                  voiceInputActive
+                    ? ideMessenger.post("voice/stopInput", undefined)
+                    : ideMessenger.post("voice/startInput", undefined);
+                }}
+              >
+                {speechInputHovered || voiceInputActive ? (
+                  <SolidMicrophoneIcon
+                    width="1.4em"
+                    height="1.4em"
+                    color={voiceInputActive ? "" : lightGray}
+                  />
+                ) : (
+                  <OutlineMicrophoneIcon
+                    width="1.4em"
+                    height="1.4em"
+                    color={lightGray}
+                  />
+                )}
+              </span>
+            )}
           </SecondToDisappearContainer>
         </span>
 

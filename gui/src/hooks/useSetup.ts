@@ -10,6 +10,8 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  setVoiceInputIsActive,
+  voiceInputReady,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -88,6 +90,14 @@ function useSetup(dispatch: Dispatch<any>) {
   // IDE event listeners
   useWebviewListener("setInactive", async () => {
     dispatch(setInactive());
+  });
+
+  useWebviewListener("setVoiceInputIsActive", async (isActive) => {
+    dispatch(setVoiceInputIsActive(isActive));
+  });
+
+  useWebviewListener("voiceInputReady", async (isReady) => {
+    dispatch(voiceInputReady(isReady));
   });
 
   useWebviewListener("setTTSActive", async (status) => {

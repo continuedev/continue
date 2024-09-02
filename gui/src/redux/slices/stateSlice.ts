@@ -100,6 +100,8 @@ type State = {
   contextItems: ContextItemWithId[];
   ttsActive: boolean;
   active: boolean;
+  voiceInputActive: boolean;
+  voiceInputReady: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
   sessionId: string;
@@ -113,6 +115,8 @@ const initialState: State = {
   contextItems: [],
   ttsActive: false,
   active: false,
+  voiceInputActive: false,
+  voiceInputReady: false,
   config: {
     slashCommands: [
       {
@@ -175,6 +179,12 @@ export const stateSlice = createSlice({
     },
     setActive: (state) => {
       state.active = true;
+    },
+    setVoiceInputIsActive: (state, { payload }: PayloadAction<boolean>) => {
+      state.voiceInputActive = payload;
+    },
+    voiceInputReady: (state, { payload }: PayloadAction<boolean>) => {
+      state.voiceInputReady = payload;
     },
     clearLastResponse: (state) => {
       if (state.history.length < 2) {
@@ -517,6 +527,8 @@ export const {
   addPromptCompletionPair,
   setTTSActive,
   setActive,
+  setVoiceInputIsActive,
+  voiceInputReady,
   setEditingContextItemAtIndex,
   initNewActiveMessage,
   setMessageAtIndex,
