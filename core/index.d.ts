@@ -911,6 +911,8 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
+
+  voiceInput?: VoiceInputConfig;
 }
 
 interface AnalyticsConfig {
@@ -920,6 +922,7 @@ interface AnalyticsConfig {
 }
 
 export interface VoiceInputConfig {
+  enabled: boolean | undefined;
   whisperModel: string | undefined;
   useQuantized: boolean | undefined;
   whisperDirPath: string | undefined;
@@ -1023,7 +1026,6 @@ export interface ContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  voiceInput?: VoiceInputConfig;
 }
 
 export interface BrowserSerializedContinueConfig {

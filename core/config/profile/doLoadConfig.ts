@@ -54,7 +54,10 @@ export default async function doLoadConfig(
     ideInfo,
   );
 
-  await VoiceInput.setup(newConfig.voiceInput);
+  if (newConfig.experimental?.voiceInput?.enabled) {
+    await VoiceInput.setup(newConfig.experimental.voiceInput);
+  }
+
   // TODO: pass config to pre-load non-system TTS models
   await TTS.setup();
 

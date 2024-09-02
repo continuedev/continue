@@ -9,6 +9,8 @@ import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline.js";
 import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline.js";
 
+const DEFAULT_MAX_N_FINAL = 30;
+
 export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
   options: any | undefined,
@@ -44,7 +46,8 @@ export async function retrieveContextItemsFromEmbeddings(
   const contextLength = extras.llm.contextLength;
   const tokensPerSnippet = 512;
   const nFinal =
-    options?.nFinal ?? Math.min(50, contextLength / tokensPerSnippet / 2);
+    options?.nFinal ??
+    Math.min(DEFAULT_MAX_N_FINAL, contextLength / tokensPerSnippet / 2);
   const useReranking = !!extras.reranker;
   const nRetrieve = useReranking ? options?.nRetrieve || 2 * nFinal : nFinal;
 

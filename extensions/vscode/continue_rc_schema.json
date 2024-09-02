@@ -2724,6 +2724,33 @@
               "default": true,
               "description": "Automatically read LLM chat responses aloud using system TTS models"
             },
+            "voiceInput": {
+              "type": "object",
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "whisperModel": {
+                  "type": "string"
+                },
+                "useQuantized": {
+                  "type": [
+                    "boolean",
+                    "null"
+                  ]
+                },
+                "whisperDirPath": {
+                  "type": "string"
+                },
+                "inputDevice": {
+                  "type": "string"
+                },
+                "inputFormat": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
             "promptPath": {
               "type": "string"
             },

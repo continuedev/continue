@@ -110,6 +110,11 @@ function InputToolbar(props: InputToolbarProps) {
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
 
+  const voiceInputEnabled = useSelector(
+    (state: RootState) =>
+      state.state.config.experimental?.voiceInput?.enabled === true,
+  );
+
   const voiceInputActive = useSelector(
     (state: RootState) => state.state.voiceInputActive,
   );
@@ -185,7 +190,7 @@ function InputToolbar(props: InputToolbarProps) {
                 </span>
               )}
 
-            {voiceInputReady && (
+            {voiceInputEnabled && voiceInputReady && (
               <span
                 className="ml-1 mt-px cursor-pointer"
                 onMouseLeave={() => setSpeechInputHovered(false)}
