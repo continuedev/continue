@@ -4,9 +4,11 @@ import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
+import com.intellij.injected.editor.VirtualFileWindow
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.invokeLater
+import com.intellij.openapi.application.runReadAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
@@ -15,6 +17,8 @@ import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.WindowManager
+import com.intellij.psi.PsiDocumentManager
+import com.intellij.psi.PsiElement
 
 data class PendingCompletion (
         val editor: Editor,
@@ -22,6 +26,15 @@ data class PendingCompletion (
         val completionId: String,
         var text: String?
 )
+
+
+fun PsiElement.isInjectedText(): Boolean {
+    val virtualFile = this.containingFile.virtualFile ?: return false
+    if (virtualFile is VirtualFileWindow) {
+        return true
+    }
+    return false
+}
 
 @Service(Service.Level.PROJECT)
 class AutocompleteService(private val project: Project) {
@@ -97,6 +110,9 @@ class AutocompleteService(private val project: Project) {
         if (text.isEmpty()) {
             return
         }
+
+        if (isInjectedFile(editor)) return
+
         // Don't render completions when code completion dropdown is visible
         if (!autocompleteLookupListener.isLookupEmpty()) {
             return
@@ -195,6 +211,8 @@ class AutocompleteService(private val project: Project) {
     }
 
     fun clearCompletions(editor: Editor) {
+        if (isInjectedFile(editor)) return
+
         if (pendingCompletion != null) {
             cancelCompletion(pendingCompletion!!)
             pendingCompletion = null
@@ -211,7 +229,18 @@ class AutocompleteService(private val project: Project) {
         }
     }
 
+    private fun isInjectedFile(editor: Editor): Boolean {
+        val psiFile = runReadAction { PsiDocumentManager.getInstance(project).getPsiFile(editor.document) }
+        if (psiFile == null) {
+            return false
+        }
+        val response = runReadAction { psiFile.isInjectedText() }
+        return response
+    }
+
     fun hideCompletions(editor: Editor) {
+        if (isInjectedFile(editor)) return
+
         editor.inlayModel.getInlineElementsInRange(0, editor.document.textLength).forEach {
             if (it.renderer is ContinueCustomElementRenderer) {
                 it.dispose()

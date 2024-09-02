@@ -13,7 +13,7 @@ import {
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 0.2;
   static artifactId = "sqliteFts";
-  artifactId: string = ChunkCodebaseIndex.artifactId;
+  artifactId: string = FullTextSearchCodebaseIndex.artifactId;
 
   private async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(

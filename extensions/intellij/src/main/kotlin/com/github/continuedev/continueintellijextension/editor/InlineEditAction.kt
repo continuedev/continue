@@ -4,13 +4,13 @@ import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
-import com.google.gson.Gson
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
@@ -32,14 +32,199 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
-import javax.swing.plaf.ComboBoxUI
-import javax.swing.plaf.basic.BasicArrowButton
 import javax.swing.plaf.basic.BasicComboBoxUI
 import kotlin.math.max
 
 
 const val SHADOW_SIZE = 7
 const val MAIN_FONT_SIZE = 13
+
+fun makeTextArea(): JTextArea {
+    val textArea = CustomTextArea( 2, 40).apply {
+        lineWrap = true
+        wrapStyleWord = true
+        isOpaque = false
+        background = GetTheme().getSecondaryDark()
+        maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
+        margin = JBUI.insets(8)
+        font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
+    }
+    textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
+
+    return textArea
+}
+
+fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, comboBoxRef: Ref<JComboBox<String>>, leftInset: Int, modelTitles: List<String>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
+    val topPanel = ShadowPanel(MigLayout("wrap 1, insets 4 $leftInset 2 2, gap 0!")).apply {
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        val defaultBackground = globalScheme.defaultBackground
+//            background = defaultBackground
+        background =  JBColor(0x20888888.toInt(), 0x20888888.toInt())
+        isOpaque = false
+    }
+
+    val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx"), project, modelTitles, comboBoxRef, onEnter, onCancel, onAccept, onReject).apply {
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        val defaultBackground = globalScheme.defaultBackground
+        background = defaultBackground
+        add(textArea, "grow, gap 0!, height 100%")
+
+        putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
+        preferredSize = textArea.preferredSize
+        isOpaque = false
+        setup()
+
+        val shadow = DropShadowBorder()
+        shadow.shadowColor = JBColor(0xb0b0b0, 0x505050)
+        shadow.isShowRightShadow = true
+        shadow.isShowBottomShadow = true
+        shadow.shadowSize = SHADOW_SIZE
+        border = shadow
+    }
+    customPanelRef.set(panel)
+
+    textArea.addComponentListener(object : ComponentAdapter() {
+        override fun componentResized(e: ComponentEvent?) {
+            panel.revalidate()
+            panel.repaint()
+        }
+    })
+
+    topPanel.add(panel, "grow, gap 0!")
+
+    return topPanel
+}
+
+fun openInlineEdit(project: Project?, editor: Editor) {
+    if (project == null) return
+
+    val manager = EditorComponentInlaysManager.from(editor)
+
+    // Get list of model titles
+    val continuePluginService = project.service<ContinuePluginService>()
+    val modelTitles = mutableListOf<String>()
+    continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
+        val config = response as Map<String, Any>
+        val models = (config["config"] as Map<String, Any>)["models"] as List<Map<String, Any>>
+        modelTitles.addAll(models.map { it["title"] as String })
+    }
+    val maxWaitTime = 200
+    val startTime = System.currentTimeMillis()
+    while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
+        Thread.sleep(20)
+    }
+
+    // Get highlighted range
+    val selectionModel = editor.selectionModel
+    val startLineNumber = editor.document.getLineNumber(selectionModel.selectionStart)
+    val endLineNumber = editor.document.getLineNumber(selectionModel.selectionEnd)
+    val start = editor.document.getLineStartOffset(startLineNumber)
+    val end = editor.document.getLineEndOffset(endLineNumber)
+    val prefix = editor.document.getText(TextRange(0, start))
+    val highlighted = editor.document.getText(TextRange(start, end))
+    val suffix = editor.document.getText(TextRange(end, editor.document.textLength))
+
+    val startLineNum = editor.document.getLineNumber(start)
+    val endLineNum = editor.document.getLineNumber(end)
+    val lineNumber = max(0, startLineNum - 1)
+
+    // Un-highlight the selected text
+    selectionModel.removeSelection()
+
+    // Get indentation width in pixels
+    val indentationLineNum = lineNumber + 1
+    val lineStart = editor.document.getLineStartOffset(indentationLineNum)
+    val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
+    val text = editor.document.getText(TextRange(lineStart, lineEnd))
+    val indentation = text.takeWhile { it == ' ' }.length
+    val charWidth = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN)).charWidth(' ')
+    val leftInset = indentation * charWidth * 2 / 3
+
+    val inlayRef = Ref<Disposable>()
+    val customPanelRef = Ref<CustomPanel>()
+
+    // Create text area, attach key listener
+    val textArea = makeTextArea()
+
+    // Create diff stream handler
+    val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum, {
+        inlayRef.get().dispose()
+    }, {
+        customPanelRef.get().finish()
+    })
+    val diffStreamService = project.service<DiffStreamService>()
+    diffStreamService.register(diffStreamHandler, editor)
+
+    diffStreamHandler.setup()
+
+    val comboBoxRef = Ref<JComboBox<String>>()
+
+    fun onEnter() {
+        customPanelRef.get().enter()
+        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, comboBoxRef.get().selectedItem as String)
+    }
+
+    val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
+        diffStreamService.reject(editor)
+        selectionModel.setSelection(start, end)
+    }, {
+        diffStreamService.accept(editor)
+        inlayRef.get().dispose()
+    }, {
+        diffStreamService.reject(editor)
+        inlayRef.get().dispose()
+    })
+    val inlay = manager.insertAfter(lineNumber, panel)
+    panel.revalidate()
+    inlayRef.set(inlay)
+    val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
+    viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
+
+    // Add key listener to text area
+    textArea.addKeyListener(object : KeyAdapter() {
+        override fun keyPressed(e: KeyEvent) {
+            if (e.keyCode == KeyEvent.VK_ESCAPE) {
+                diffStreamService.reject(editor)
+
+                // Re-highlight the selected text
+                selectionModel.setSelection(start, end)
+            } else if (e.keyCode == KeyEvent.VK_ENTER) {
+                if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
+                    textArea.document.insertString(textArea.caretPosition, "\n", null)
+                } else if (e.modifiersEx == 0) {
+                    onEnter()
+                    e.consume()
+                }
+            }
+        }
+    })
+
+    // Listen for changes to textarea line count
+    textArea.document.addDocumentListener(object : DocumentListener {
+        private var lastNumLines: Int = 0
+        private fun updateSize() {
+            val numLines = textArea.text.lines().size
+            if (numLines != lastNumLines) {
+                lastNumLines = numLines
+                viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
+            }
+        }
+        override fun insertUpdate(e: DocumentEvent?) {
+            updateSize()
+        }
+
+        override fun removeUpdate(e: DocumentEvent?) {
+            updateSize()
+        }
+
+        override fun changedUpdate(e: DocumentEvent?) {
+            updateSize()
+        }
+    })
+
+
+    textArea.requestFocus()
+}
 
 /**
  * Adapted from https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/InlineEditAction.kt
@@ -55,192 +240,9 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 
     override fun actionPerformed(e: AnActionEvent) {
-        if (e.project == null) return
-
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
         val project = e.getData(PlatformDataKeys.PROJECT) ?: return
-        val manager = EditorComponentInlaysManager.from(editor)
-
-        // Get list of model titles
-        val continuePluginService = project.service<ContinuePluginService>()
-        val modelTitles = mutableListOf<String>()
-        continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
-            val config = response as Map<String, Any>
-            val models = (config["config"] as Map<String, Any>)["models"] as List<Map<String, Any>>
-            modelTitles.addAll(models.map { it["title"] as String })
-        }
-        val maxWaitTime = 200
-        val startTime = System.currentTimeMillis()
-        while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
-            Thread.sleep(20)
-        }
-
-        // Get highlighted range
-        val selectionModel = editor.selectionModel
-        val startLineNumber = editor.document.getLineNumber(selectionModel.selectionStart)
-        val endLineNumber = editor.document.getLineNumber(selectionModel.selectionEnd)
-        val start = editor.document.getLineStartOffset(startLineNumber)
-        val end = editor.document.getLineEndOffset(endLineNumber)
-        val prefix = editor.document.getText(TextRange(0, start))
-        val highlighted = editor.document.getText(TextRange(start, end))
-        val suffix = editor.document.getText(TextRange(end, editor.document.textLength))
-
-        val startLineNum = editor.document.getLineNumber(start)
-        val endLineNum = editor.document.getLineNumber(end)
-        val lineNumber = max(0, startLineNum - 1)
-
-        // Un-highlight the selected text
-        selectionModel.removeSelection()
-
-        // Get indentation width in pixels
-        val indentationLineNum = lineNumber + 1
-        val lineStart = editor.document.getLineStartOffset(indentationLineNum)
-        val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
-        val text = editor.document.getText(TextRange(lineStart, lineEnd))
-        val indentation = text.takeWhile { it == ' ' }.length
-        val charWidth = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN)).charWidth(' ')
-        val leftInset = indentation * charWidth * 2 / 3
-
-        val inlayRef = Ref<Disposable>()
-        val customPanelRef = Ref<CustomPanel>()
-
-        // Create text area, attach key listener
-        val textArea = makeTextArea()
-
-        // Create diff stream handler
-        val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum, {
-            inlayRef.get().dispose()
-        }, {
-            customPanelRef.get().finish()
-        })
-        val diffStreamService = project.service<DiffStreamService>()
-        diffStreamService.register(diffStreamHandler, editor)
-
-        diffStreamHandler.setup()
-
-        val comboBoxRef = Ref<JComboBox<String>>()
-
-        fun onEnter() {
-            customPanelRef.get().enter()
-            diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, comboBoxRef.get().selectedItem as String)
-        }
-
-        val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
-            diffStreamService.reject(editor)
-            selectionModel.setSelection(start, end)
-        }, {
-            diffStreamService.accept(editor)
-            inlayRef.get().dispose()
-        }, {
-            diffStreamService.reject(editor)
-            inlayRef.get().dispose()
-        })
-        val inlay = manager.insertAfter(lineNumber, panel)
-        panel.revalidate()
-        inlayRef.set(inlay)
-        val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
-        viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
-
-        // Add key listener to text area
-        textArea.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    diffStreamService.reject(editor)
-
-                    // Re-highlight the selected text
-                    selectionModel.setSelection(start, end)
-                } else if (e.keyCode == KeyEvent.VK_ENTER) {
-                    if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
-                        textArea.document.insertString(textArea.caretPosition, "\n", null)
-                    } else if (e.modifiersEx == 0) {
-                        onEnter()
-                        e.consume()
-                    }
-                }
-            }
-        })
-
-        // Listen for changes to textarea line count
-        textArea.document.addDocumentListener(object : DocumentListener {
-            private var lastNumLines: Int = 0
-            private fun updateSize() {
-                val numLines = textArea.text.lines().size
-                if (numLines != lastNumLines) {
-                    lastNumLines = numLines
-                    viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
-                }
-            }
-            override fun insertUpdate(e: DocumentEvent?) {
-                updateSize()
-            }
-
-            override fun removeUpdate(e: DocumentEvent?) {
-                updateSize()
-            }
-
-            override fun changedUpdate(e: DocumentEvent?) {
-                updateSize()
-            }
-        })
-
-
-        textArea.requestFocus()
-    }
-
-    fun makeTextArea(): JTextArea {
-        val textArea = CustomTextArea( 2, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-            isOpaque = false
-            background = GetTheme().getSecondaryDark()
-            maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-            margin = JBUI.insets(8)
-            font = Font("Arial", Font.PLAIN, MAIN_FONT_SIZE)
-        }
-        textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
-
-        return textArea
-    }
-
-    fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, comboBoxRef: Ref<JComboBox<String>>, leftInset: Int, modelTitles: List<String>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
-        val topPanel = ShadowPanel(MigLayout("wrap 1, insets 4 $leftInset 2 2, gap 0!")).apply {
-            val globalScheme = EditorColorsManager.getInstance().globalScheme
-            val defaultBackground = globalScheme.defaultBackground
-//            background = defaultBackground
-            background =  JBColor(0x20888888.toInt(), 0x20888888.toInt())
-            isOpaque = false
-        }
-
-        val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx"), project, modelTitles, comboBoxRef, onEnter, onCancel, onAccept, onReject).apply {
-            val globalScheme = EditorColorsManager.getInstance().globalScheme
-            val defaultBackground = globalScheme.defaultBackground
-            background = defaultBackground
-            add(textArea, "grow, gap 0!, height 100%")
-
-            putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
-            preferredSize = textArea.preferredSize
-            isOpaque = false
-            setup()
-
-            val shadow = DropShadowBorder()
-            shadow.shadowColor = JBColor(0xb0b0b0, 0x505050)
-            shadow.isShowRightShadow = true
-            shadow.isShowBottomShadow = true
-            shadow.shadowSize = SHADOW_SIZE
-            border = shadow
-        }
-        customPanelRef.set(panel)
-
-        textArea.addComponentListener(object : ComponentAdapter() {
-            override fun componentResized(e: ComponentEvent?) {
-                panel.revalidate()
-                panel.repaint()
-            }
-        })
-
-        topPanel.add(panel, "grow, gap 0!")
-
-        return topPanel
+        openInlineEdit(project, editor)
     }
 }
 
@@ -260,7 +262,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             isEditable = true
             background = defaultBackground
             foreground = Color(128, 128, 128, 200)
-            font = Font("Arial", Font.PLAIN, 11)
+            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
             border = EmptyBorder(2, 4, 2, 4)
             isOpaque = false
             isEditable = false
@@ -315,7 +317,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             isEditable = true
             background = defaultBackground
             foreground = Color(128, 128, 128, 200)
-            font = Font("Arial", Font.PLAIN, 11)
+            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
             border = EmptyBorder(2, 4, 2, 4)
             isOpaque = false
             isEditable = false
@@ -352,7 +354,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
     private val subPanelC: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
         val leftLabel = JLabel("Enter follow-up instructions").apply {
             foreground = Color(128, 128, 128, 200)
-            font = Font("Arial", Font.PLAIN, 11)
+            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
         }
 
         val leftButton = CustomButton("${getAltKeyLabel()}⇧N") { onReject() }.apply {
@@ -445,7 +447,7 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
         })
 
 //        verticalAlignment = CENTER
-        font = Font("Arial", Font.PLAIN, 11)
+        font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
         border = EmptyBorder(2, 4, 2, 4)
     }
     override fun paintComponent(g: Graphics) {
@@ -477,7 +479,7 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
         // Draw placeholder
         if (text.isEmpty()) {
             g.color = Color(128, 128, 128, 255)
-            g.font = Font("Arial", Font.PLAIN, MAIN_FONT_SIZE)
+            g.font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
             g.drawString("Enter instructions to edit highlighted code", 8, 20)
         }
 

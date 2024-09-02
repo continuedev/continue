@@ -1,3 +1,5 @@
+import { SerializedContinueConfig } from "core";
+// import Mock from "core/llm/llms/Mock.js";
 import { FromIdeProtocol, ToIdeProtocol } from "core/protocol/index.js";
 import FileSystemIde from "core/util/filesystem";
 import { IMessenger } from "core/util/messenger";
@@ -46,6 +48,10 @@ function autodetectPlatformAndArch() {
 }
 
 const CONTINUE_GLOBAL_DIR = path.join(__dirname, "..", ".continue");
+if (fs.existsSync(CONTINUE_GLOBAL_DIR)) {
+  fs.rmSync(CONTINUE_GLOBAL_DIR, { recursive: true, force: true });
+}
+fs.mkdirSync(CONTINUE_GLOBAL_DIR);
 
 describe("Test Suite", () => {
   let messenger: IMessenger<ToIdeProtocol, FromIdeProtocol>;
@@ -127,7 +133,7 @@ describe("Test Suite", () => {
     }
   });
 
-  it("should properly edit config", async () => {
+  it("should return valid config object", async () => {
     const { config } = await messenger.request(
       "config/getSerializedProfileInfo",
       undefined,
@@ -136,5 +142,72 @@ describe("Test Suite", () => {
     expect(config).toHaveProperty("embeddingsProvider");
     expect(config).toHaveProperty("contextProviders");
     expect(config).toHaveProperty("slashCommands");
+  });
+
+  it("should properly handle history requests", async () => {
+    const sessionId = "test-session-id";
+    await messenger.request("history/save", {
+      history: [],
+      sessionId,
+      title: "test-title",
+
+      workspaceDirectory: "test-workspace-directory",
+    });
+    const sessions = await messenger.request("history/list", {});
+    expect(sessions.length).toBeGreaterThan(0);
+
+    const session = await messenger.request("history/load", {
+      id: sessionId,
+    });
+    expect(session).toHaveProperty("history");
+
+    await messenger.request("history/delete", {
+      id: sessionId,
+    });
+    const sessionsAfterDelete = await messenger.request("history/list", {});
+    expect(sessionsAfterDelete.length).toBe(sessions.length - 1);
+  });
+
+  it("should add and delete a model from config.json", async () => {
+    const model: SerializedContinueConfig["models"][number] = {
+      title: "Test Model",
+      provider: "openai",
+      model: "gpt-3.5-turbo",
+    };
+    await messenger.request("config/addModel", {
+      model,
+    });
+    const { config } = await messenger.request(
+      "config/getSerializedProfileInfo",
+      undefined,
+    );
+    expect(config.models.some((m) => m.title === model.title)).toBe(true);
+
+    await messenger.request("config/deleteModel", { title: model.title });
+    const { config: configAfterDelete } = await messenger.request(
+      "config/getSerializedProfileInfo",
+      undefined,
+    );
+    expect(configAfterDelete.models.some((m) => m.title === model.title)).toBe(
+      false,
+    );
+  });
+
+  it("should make an LLM completion", async () => {
+    const model: SerializedContinueConfig["models"][number] = {
+      title: "Test Model",
+      provider: "mock",
+      model: "gpt-3.5-turbo",
+    };
+    await messenger.request("config/addModel", {
+      model,
+    });
+
+    const resp = await messenger.request("llm/complete", {
+      prompt: "Say 'Hello' and nothing else",
+      completionOptions: {},
+      title: "Test Model",
+    });
+    expect(resp).toBe("Test Completion");
   });
 });

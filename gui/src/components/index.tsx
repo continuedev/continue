@@ -192,7 +192,12 @@ const TooltipStyles = {
 };
 
 export function StyledTooltip(props: any) {
-  return <Tooltip {...props} style={TooltipStyles} />;
+  const combinedStyles = {
+    ...TooltipStyles,
+    ...props.style, // Merge any additional styles passed via props
+  };
+
+  return <Tooltip {...props} style={combinedStyles} />;
 }
 
 export const TextArea = styled.textarea`
@@ -363,7 +368,7 @@ export const HeaderButton = styled.button<{
   &:hover {
     background-color: ${({ inverted, hoverBackgroundColor }) =>
       typeof inverted === "undefined" || inverted
-        ? hoverBackgroundColor ?? vscInputBackground
+        ? (hoverBackgroundColor ?? vscInputBackground)
         : "transparent"};
   }
   display: flex;

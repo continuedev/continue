@@ -14,20 +14,27 @@ export class Telemetry {
     properties: { [key: string]: any },
     sendToTeam: boolean = false,
   ) {
-    Telemetry.client?.capture({
-      distinctId: Telemetry.uniqueId,
-      event,
-      properties: {
-        ...properties,
-        os: Telemetry.os,
-        extensionVersion: Telemetry.ideInfo?.extensionVersion,
-        ideName: Telemetry.ideInfo?.name,
-        ideType: Telemetry.ideInfo?.ideType,
-      },
-    });
+    if (process.env.NODE_ENV === "test") {
+      return;
+    }
+    try {
+      Telemetry.client?.capture({
+        distinctId: Telemetry.uniqueId,
+        event,
+        properties: {
+          ...properties,
+          os: Telemetry.os,
+          extensionVersion: Telemetry.ideInfo?.extensionVersion,
+          ideName: Telemetry.ideInfo?.name,
+          ideType: Telemetry.ideInfo?.ideType,
+        },
+      });
 
-    if (sendToTeam) {
-      TeamAnalytics.capture(event, properties);
+      if (sendToTeam) {
+        TeamAnalytics.capture(event, properties);
+      }
+    } catch (e) {
+      console.error(`Failed to capture event: ${e}`);
     }
   }
 
@@ -40,7 +47,7 @@ export class Telemetry {
     Telemetry.os = os.platform();
     Telemetry.ideInfo = ideInfo;
 
-    if (!allow) {
+    if (!allow || process.env.NODE_ENV === "test") {
       Telemetry.client = undefined;
     } else {
       try {

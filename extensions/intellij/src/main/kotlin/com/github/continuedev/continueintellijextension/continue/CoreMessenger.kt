@@ -146,7 +146,8 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "setGitHubAuthToken",
         "pathSep",
         "getControlPlaneSessionInfo",
-        "logoutOfControlPlane"
+        "logoutOfControlPlane",
+        "getTerminalContents"
     )
 
     private val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
@@ -178,6 +179,11 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         if (posixPermissions.contains("w")) perms.add(PosixFilePermission.OWNER_WRITE)
         if (posixPermissions.contains("x")) perms.add(PosixFilePermission.OWNER_EXECUTE)
         Files.setPosixFilePermissions(Paths.get(path), perms)
+    }
+
+    private val exitCallbacks: MutableList<() -> Unit> = mutableListOf()
+    fun onDidExit(callback: () -> Unit) {
+        exitCallbacks.add(callback)
     }
 
     init {
@@ -235,10 +241,11 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
             process!!.onExit().thenRun {
+                exitCallbacks.forEach { it() }
                 var err = process?.errorStream?.bufferedReader()?.readText()?.trim()
                 if (err != null) {
                     // There are often "⚡️Done in Xms" messages, and we want everything after the last one
-                    val delimiter = "⚡️Done in"
+                    val delimiter = "⚡ Done in"
                     val doneIndex = err.lastIndexOf(delimiter)
                     if (doneIndex != -1) {
                         err = err.substring(doneIndex + delimiter.length)
@@ -253,6 +260,11 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 telemetryService.capture("jetbrains_core_exit", mapOf(
                     "error" to err
                 ))
+
+                // Clean up all resources
+                writer?.close()
+                reader?.close()
+                process?.destroy()
             }
 
             Thread {

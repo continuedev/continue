@@ -5,7 +5,7 @@ Prompt files provide a convenient way to standardize common patterns and share a
 ## Quick start
 
 :::tip[Prompt library]
-To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-example). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
+To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-examples). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
 :::
 
 Below is a quick example of setting up a prompt file to write unit tests using Jest.

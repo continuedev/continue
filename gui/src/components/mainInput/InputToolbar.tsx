@@ -1,15 +1,15 @@
 import {
-  PhotoIcon as OutlinePhotoIcon,
   MicrophoneIcon as OutlineMicrophoneIcon,
+  PhotoIcon as OutlinePhotoIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import {
-  PhotoIcon as SolidPhotoIcon,
   MicrophoneIcon as SolidMicrophoneIcon,
+  PhotoIcon as SolidPhotoIcon,
 } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useRef, useState, useContext } from "react";
+import { useContext, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -20,8 +20,10 @@ import {
   vscForeground,
   vscInputBackground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { RootState } from "../../redux/store";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -29,8 +31,6 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { RootState } from "../../redux/store";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
@@ -49,11 +49,20 @@ const StyledDiv = styled.div<{ isHidden: boolean }>`
     flex: 0 0 auto;
   }
 
-  /* Add a media query to hide the right-hand set of components */
-  @media (max-width: 400px) {
-    & > span:last-child {
+  /* Hide the "Use codebase" span first */
+  @media (max-width: 450px) {
+    & > span:last-child > span:nth-last-child(2) {
       display: none;
     }
+  }
+`;
+
+const SecondToDisappearContainer = styled.span`
+  display: flex;
+  align-items: center;
+
+  @media (max-width: 350px) {
+    display: none;
   }
 `;
 
@@ -120,84 +129,89 @@ function InputToolbar(props: InputToolbarProps) {
       >
         <span className="flex gap-2 items-center whitespace-nowrap">
           <ModelSelect />
-          <StyledSpan
-            onClick={(e) => {
-              props.onAddContextItem();
-            }}
-            className="hover:underline cursor-pointer"
-          >
-            Add Context <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
-          </StyledSpan>
-          {defaultModel &&
-            modelSupportsImages(
-              defaultModel.provider,
-              defaultModel.model,
-              defaultModel.title,
-              defaultModel.capabilities,
-            ) && (
-              <span
-                className="ml-1 mt-0.5 cursor-pointer"
-                onMouseLeave={() => setFileSelectHovered(false)}
-                onMouseEnter={() => setFileSelectHovered(true)}
-              >
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
-                  onChange={(e) => {
-                    for (const file of e.target.files) {
-                      props.onImageFileSelected(file);
-                    }
-                  }}
-                />
-                {fileSelectHovered ? (
-                  <SolidPhotoIcon
-                    width="1.4em"
-                    height="1.4em"
-                    color={lightGray}
-                    onClick={(e) => {
-                      fileInputRef.current?.click();
+
+          <SecondToDisappearContainer>
+            <StyledSpan
+              onClick={(e) => {
+                props.onAddContextItem();
+              }}
+              className="hover:underline cursor-pointer"
+            >
+              Add Context{" "}
+              <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
+            </StyledSpan>
+            {defaultModel &&
+              modelSupportsImages(
+                defaultModel.provider,
+                defaultModel.model,
+                defaultModel.title,
+                defaultModel.capabilities,
+              ) && (
+                <span
+                  className="ml-1 -mb-0.5 cursor-pointer"
+                  onMouseLeave={() => setFileSelectHovered(false)}
+                  onMouseEnter={() => setFileSelectHovered(true)}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    style={{ display: "none" }}
+                    accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                    onChange={(e) => {
+                      for (const file of e.target.files) {
+                        props.onImageFileSelected(file);
+                      }
                     }}
                   />
+                  {fileSelectHovered ? (
+                    <SolidPhotoIcon
+                      width="1.4em"
+                      height="1.4em"
+                      color={lightGray}
+                      onClick={(e) => {
+                        fileInputRef.current?.click();
+                      }}
+                    />
+                  ) : (
+                    <OutlinePhotoIcon
+                      width="1.4em"
+                      height="1.4em"
+                      color={lightGray}
+                      onClick={(e) => {
+                        fileInputRef.current?.click();
+                      }}
+                    />
+                  )}
+                </span>
+              )}
+
+            {voiceInputReady && (
+              <span
+                className="ml-1 mt-px cursor-pointer"
+                onMouseLeave={() => setSpeechInputHovered(false)}
+                onMouseEnter={() => setSpeechInputHovered(true)}
+                onClick={() => {
+                  voiceInputActive
+                    ? ideMessenger.post("voice/stopInput", undefined)
+                    : ideMessenger.post("voice/startInput", undefined);
+                }}
+              >
+                {speechInputHovered || voiceInputActive ? (
+                  <SolidMicrophoneIcon
+                    width="1.4em"
+                    height="1.4em"
+                    color={voiceInputActive ? "" : lightGray}
+                  />
                 ) : (
-                  <OutlinePhotoIcon
+                  <OutlineMicrophoneIcon
                     width="1.4em"
                     height="1.4em"
                     color={lightGray}
-                    onClick={(e) => {
-                      fileInputRef.current?.click();
-                    }}
                   />
                 )}
               </span>
             )}
-          {voiceInputReady && (
-            <span
-              className="ml-1 mt-px cursor-pointer"
-              onMouseLeave={() => setSpeechInputHovered(false)}
-              onMouseEnter={() => setSpeechInputHovered(true)}
-              onClick={() => {
-                voiceInputActive
-                  ? ideMessenger.post("voice/stopInput", undefined)
-                  : ideMessenger.post("voice/startInput", undefined)
-              }}
-            >
-              {speechInputHovered || voiceInputActive ? (
-                <SolidMicrophoneIcon
-                  width="1.4em"
-                  height="1.4em"
-                  color={voiceInputActive ? "" : lightGray}
-                />
-              ) : (
-                <OutlineMicrophoneIcon
-                  width="1.4em"
-                  height="1.4em"
-                  color={lightGray}
-                />
-              )}
-            </span>
-          )}
+          </SecondToDisappearContainer>
         </span>
 
         <span className="flex items-center gap-2 whitespace-nowrap">

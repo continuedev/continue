@@ -6,7 +6,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { CheckMarkHeader } from "./CheckMarkHeader";
 import { StyledButton } from "./components";
 import { CopyToTerminalButton } from "./CopyToTerminalButton";
-import { useOnboarding } from "./utils";
+import { useCompleteOnboarding } from "./utils";
 
 type OllamaConnectionStatuses =
   | "waiting_to_download"
@@ -35,7 +35,7 @@ function LocalOnboarding() {
 
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
 
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding } = useCompleteOnboarding();
 
   const isOllamaConnected = ollamaConnectionStatus === "verified";
 

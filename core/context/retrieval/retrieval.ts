@@ -71,11 +71,11 @@ export async function retrieveContextItemsFromEmbeddings(
     nRetrieve,
     tags,
     pathSep: await extras.ide.pathSep(),
-    embeddingsProvider: extras.embeddingsProvider,
-    reranker: extras.reranker,
     filterDirectory,
     ide: extras.ide,
     input: extras.fullInput,
+    llm: extras.llm,
+    config: extras.config,
   };
 
   const pipeline = new pipelineType(pipelineOptions);

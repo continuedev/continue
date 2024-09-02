@@ -1,11 +1,11 @@
 import { jest } from "@jest/globals";
 import lance from "vectordb";
-import { testIde, testConfigHandler } from "../test/util/fixtures";
+import { testConfigHandler, testIde } from "../test/util/fixtures";
 import {
-  testContinueServerClient,
-  mockTag,
-  updateIndexAndAwaitGenerator,
   mockPathAndCacheKey,
+  mockTag,
+  testContinueServerClient,
+  updateIndexAndAwaitGenerator,
 } from "../test/util/indexing";
 import { getLanceDbPath } from "../util/paths";
 import { LanceDbIndex } from "./LanceDbIndex";

@@ -30,6 +30,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "autocomplete/cancel",
     "autocomplete/accept",
     "command/run",
+    "tts/kill",
     "llm/complete",
     "llm/streamComplete",
     "llm/streamChat",
@@ -62,4 +63,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "setVoiceInputIsActive",
     "newSpeechFromText",
     "voiceInputReady",
+    "setTTSActive",
   ];

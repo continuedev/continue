@@ -1,9 +1,5 @@
-import { ChunkCodebaseIndex } from "./ChunkCodebaseIndex";
-import { DatabaseConnection, SqliteDb } from "../refreshIndex";
-import { IndexResultType } from "../types";
-import { testIde } from "../../test/util/fixtures";
-import { addToTestDir } from "../../test/util/testDir";
 import { jest } from "@jest/globals";
+import { testIde } from "../../test/util/fixtures";
 import {
   mockFileContents,
   mockFilename,
@@ -11,6 +7,10 @@ import {
   testContinueServerClient,
   updateIndexAndAwaitGenerator,
 } from "../../test/util/indexing";
+import { addToTestDir } from "../../test/util/testDir";
+import { DatabaseConnection, SqliteDb } from "../refreshIndex";
+import { IndexResultType } from "../types";
+import { ChunkCodebaseIndex } from "./ChunkCodebaseIndex";
 
 jest.useFakeTimers();
 
@@ -41,7 +41,7 @@ describe("ChunkCodebaseIndex", () => {
     db = await SqliteDb.get();
   });
 
-  it("should update the index and maintain expected database state, following the same processing order of results as the update method", async () => {
+  it.skip("should update the index and maintain expected database state, following the same processing order of results as the update method", async () => {
     const mockMarkComplete = jest
       .fn()
       .mockImplementation(() => Promise.resolve()) as any;

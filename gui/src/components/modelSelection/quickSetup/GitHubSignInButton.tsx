@@ -62,12 +62,14 @@ function GitHubSignInButton(props: GitHubSignInButtonProps) {
     <div className="flex justify-center">
       <SecondaryButton
         onClick={async () => {
-          const token = await ideMessenger.request(
+          const result = await ideMessenger.request(
             "getGitHubAuthToken",
             undefined,
           );
-          setLocalStorage("signedInToGh", true);
-          props.onComplete(token);
+          if (result.status === "success") {
+            setLocalStorage("signedInToGh", true);
+            props.onComplete(result.content);
+          }
         }}
         className="grid grid-flow-col items-center gap-2"
       >

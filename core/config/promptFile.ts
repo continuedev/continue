@@ -99,6 +99,9 @@ export function slashCommandFromPromptFile(
     name,
     description,
     run: async function* (context) {
+      const originalSystemMessage = context.llm.systemMessage;
+      context.llm.systemMessage = systemMessage;
+
       const userInput = extractUserInput(context.input, name);
       const renderedPrompt = await renderPrompt(prompt, context, userInput);
       const messages = updateChatHistory(
@@ -111,6 +114,8 @@ export function slashCommandFromPromptFile(
       for await (const chunk of context.llm.streamChat(messages)) {
         yield stripImages(chunk.content);
       }
+
+      context.llm.systemMessage = originalSystemMessage;
     },
   };
 }

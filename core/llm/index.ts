@@ -68,6 +68,7 @@ export abstract class BaseLLM implements ILLM {
         this.apiBase?.includes("api.groq.com") ||
         this.apiBase?.includes("api.mistral.ai") ||
         this.apiBase?.includes(":1337") ||
+        this.apiBase?.includes("integrate.api.nvidia.com") ||
         this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
       ) {
         // Jan + Groq + Mistral don't support completions : (
@@ -111,15 +112,14 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
 
-  // For WatsonX only.
-
+  // For IBM watsonx only.
   watsonxUrl?: string;
-  watsonxApiKey?: string;
-  watsonxZenApiKeyBase64?: string = "YOUR_WATSONX_ZENAPIKEY"; // Required if using watsonx software with ZenApiKey auth
-  watsonxUsername?: string;
-  watsonxPassword?: string;
+  watsonxCreds?: string;
   watsonxProjectId?: string;
   watsonxStopToken?: string;
+  watsonxApiVersion?: string;
+
+  cacheSystemMessage?: boolean;
 
   private _llmOptions: LLMOptions;
 
@@ -173,13 +173,15 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+
     // for watsonx only
     this.watsonxUrl = options.watsonxUrl;
-    this.watsonxApiKey = options.watsonxApiKey;
+    this.watsonxCreds = options.watsonxCreds;
     this.watsonxProjectId = options.watsonxProjectId;
-    this.watsonxUsername = options.watsonxUsername;
-    this.watsonxPassword = options.watsonxPassword;
     this.watsonxStopToken = options.watsonxStopToken;
+    this.watsonxApiVersion = options.watsonxApiVersion;
+
+    this.cacheSystemMessage = options.cacheSystemMessage;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

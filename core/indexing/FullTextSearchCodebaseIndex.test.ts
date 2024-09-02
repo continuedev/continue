@@ -1,8 +1,8 @@
 import { jest } from "@jest/globals";
 import {
   insertMockChunks,
-  updateIndexAndAwaitGenerator,
   mockPathAndCacheKey,
+  updateIndexAndAwaitGenerator,
 } from "../test/util/indexing";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
