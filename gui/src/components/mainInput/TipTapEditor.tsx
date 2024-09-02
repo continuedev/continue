@@ -176,7 +176,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     inSubmenuRef.current = providerId;
 
     // to trigger refresh of suggestions
-    editor.commands.insertContent(" ");
+    editor.commands.insertContent(":");
     editor.commands.deleteRange({
       from: editor.state.selection.anchor - 1,
       to: editor.state.selection.anchor,
