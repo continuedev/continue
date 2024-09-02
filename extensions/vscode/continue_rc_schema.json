@@ -2616,6 +2616,12 @@
               "type": "boolean",
               "description": "If set to true, we will display the model output as raw markdown.",
               "default": false
+            },
+            "showChatScrollbar": {
+              "title": "Show Chat Scrollbar",
+              "markdownDescription": "If set to `true`, a scrollbar will be displayed in the chat window to navigate through messages.",
+              "default": false,
+              "type": "boolean"
             }
           }
         },
