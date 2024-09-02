@@ -115,7 +115,7 @@ function MorePage() {
           </SecondaryButton>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 items-center">
+        <div className="grid grid-cols-3 gap-4 items-center w-full">
           <div className="col-span-2">
             <h3 className="my-0">Have an issue?</h3>
             <p>Let us know on GitHub and we'll do our best to resolve it.</p>
@@ -125,7 +125,7 @@ function MorePage() {
             target="_blank"
             className="no-underline"
           >
-            <SecondaryButton className="grid grid-flow-col items-center gap-2">
+            <SecondaryButton className="grid grid-flow-col items-center gap-2 w-full">
               Create a GitHub issue
             </SecondaryButton>
           </a>
