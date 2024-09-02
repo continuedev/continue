@@ -301,6 +301,18 @@ Type `@locals` to reference the contents of the local variables with top n level
 }
 ```
 
+### Repository map
+
+Provides an overview of all files and the call signatures of top-level classes, functions, and methods. This helps the model better understand how a particular piece of code relates to the rest of the codebase.
+
+This context provider is inpsired by [Aider's repository map](https://aider.chat/2023/10/22/repomap.html).
+
+```json
+{
+  "name": "repo-map"
+}
+```
+
 ### Operating System
 
 Type `@os` to reference the architecture and platform of your current operating system.

@@ -25,6 +25,7 @@ export interface ChunkWithoutID {
   content: string;
   startLine: number;
   endLine: number;
+  signature?: string;
   otherMetadata?: { [key: string]: any };
 }
 
@@ -619,7 +620,10 @@ type ModelProvider =
   | "openai-aiohttp"
   | "msty"
   | "watsonx"
-  | "openrouter";
+  | "openrouter"
+  | "nvidia"
+  | "vllm"
+  | "mock";
 
 export type ModelName =
   | "AUTODETECT"
@@ -776,7 +780,8 @@ export type EmbeddingsProviderName =
   | "free-trial"
   | "gemini"
   | "continue-proxy"
-  | "deepinfra";
+  | "deepinfra"
+  | "voyage";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -845,6 +850,7 @@ export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
   displayRawMarkdown?: boolean;
+  showChatScrollbar?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -858,6 +864,7 @@ interface ContextMenuConfig {
 interface ModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
+  repoMapFileSelection?: string;
 }
 
 /**

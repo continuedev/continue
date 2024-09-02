@@ -53,6 +53,11 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
         ...config,
         apiBase: "https://api.groq.com/openai/v1/",
       });
+    case "nvidia":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://integrate.api.nvidia.com/v1/",
+      });
     case "fireworks":
       return new OpenAIApi({
         ...config,

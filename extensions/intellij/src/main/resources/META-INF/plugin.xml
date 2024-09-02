@@ -4,6 +4,8 @@
     <name>Continue</name>
     <vendor>continue-dev</vendor>
     <depends>com.intellij.modules.platform</depends>
+    <depends>org.jetbrains.plugins.terminal</depends>
+<!--    <depends>com.intellij.modules.json</depends>-->
     <idea-version since-build="223.0"/>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">

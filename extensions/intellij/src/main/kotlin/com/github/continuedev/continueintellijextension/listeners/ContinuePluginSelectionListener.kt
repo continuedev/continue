@@ -71,7 +71,7 @@ class ContinuePluginSelectionListener(
                 editor.contentComponent.layout = null
 
                 val line = startLine - 2
-                if (line > 0) {
+                if (line > 0 && startLine < endLine) {
                     // Get the text on line number "line"
 //                    val text = document.getText(document.getLineStartOffset(line), document.getLineEndOffset(line))
 

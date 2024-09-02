@@ -17,7 +17,7 @@ Below we share some of the easiest ways to get up and running, depending on your
 Ollama is the fastest way to get up and running with local language models. We recommend trying Llama 3.1 8b, which is impressive for its size and will perform well on most hardware.
 
 1. Download Ollama [here](https://ollama.ai/) (it should walk you through the rest of these steps)
-2. Open a terminal and run `ollama run llama3.1-8b`
+2. Open a terminal and run `ollama run llama3.1:8b`
 3. Change your Continue config file like this:
 
 ```json title="~/.continue/config.json"

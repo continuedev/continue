@@ -1,35 +1,59 @@
 import { IndexingProgressUpdate } from "core";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useState } from "react";
-import ReactDOM from "react-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import { StyledTooltip, lightGray, vscForeground } from "..";
+import { Button, lightGray, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { RootState } from "../../redux/store";
-import { getFontSize, isJetBrains } from "../../util";
-import StatusDot from "./StatusDot";
-import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { usePostHog } from "posthog-js/react";
+import { RootState } from "../../redux/store";
+import { getFontSize, isJetBrains } from "../../util";
+import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import StatusDot from "./StatusDot";
 
-const STATUS_COLORS = {
-  DISABLED: lightGray, // light gray
-  LOADING: "#00B8D9", // ice blue
-  INDEXING: "#6554C0", // purple
-  PAUSED: "#FFAB00", // yellow
-  DONE: "#36B37E", // green
-  FAILED: "#FF5630", // red
+const STATUS_COLORS: Record<IndexingProgressUpdate["status"], string> = {
+  disabled: lightGray, // light gray
+  loading: "#00B8D9", // ice blue
+  indexing: "#6554C0", // purple
+  paused: "#FFAB00", // yellow
+  done: "#36B37E", // green
+  failed: "#FF5630", // red
+};
+
+const STATUS_MESSAGES: Record<IndexingProgressUpdate["status"], string> = {
+  done: "Indexing complete",
+  loading: "Initializing",
+  indexing: "Indexing in progress",
+  paused: "Indexing paused",
+  failed: "Indexing error",
+  disabled: "Indexing disabled",
+};
+
+const BUTTON_MESSAGES: Record<
+  IndexingProgressUpdate["status"],
+  string | undefined
+> = {
+  done: "Re-index",
+  loading: undefined,
+  indexing: "Pause",
+  paused: "Resume",
+  failed: "Retry",
+  disabled: "Enable",
 };
 
 const ProgressBarWrapper = styled.div`
-  width: 100px;
+  width: 100%;
   height: 6px;
   border-radius: 6px;
   border: 0.5px solid ${lightGray};
+
+  margin-top: 8px;
+  margin-bottom: 8px;
+  margin-right: 8px;
 `;
 
 const ProgressBarFill = styled.div<{ completed: number; color?: string }>`
@@ -66,6 +90,11 @@ const StatusInfo = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   margin-top: 2px;
+`;
+
+const StyledButton = styled(Button)`
+  padding: 6px 8px;
+  border-radius: 3px;
 `;
 
 interface ProgressBarProps {
@@ -121,34 +150,6 @@ const IndexingProgressBar = ({
   function onClick() {
     switch (indexingState.status) {
       case "failed":
-        // For now, we don't show in JetBrains since the reindex command
-        // is not yet implemented
-        if (indexingState.shouldClearIndexes && !isJetBrains()) {
-          dispatch(setShowDialog(true));
-          dispatch(
-            setDialogMessage(
-              <ConfirmationDialog
-                title="Rebuild codebase index"
-                confirmText="Rebuild"
-                text={
-                  "Your index appears corrupted. We recommend clearing and rebuilding it, " +
-                  "which may take time for large codebases.\n\n" +
-                  "For a faster rebuild without clearing data, press 'Shift + Command + P' to open " +
-                  "the Command Palette, and type out 'Continue: Force Codebase Re-Indexing'"
-                }
-                onConfirm={() => {
-                  posthog.capture("rebuild_index_clicked");
-                  ideMessenger.post("index/forceReIndex", {
-                    shouldClearIndexes: true,
-                  });
-                }}
-              />,
-            ),
-          );
-        } else {
-          ideMessenger.post("index/forceReIndex", undefined);
-        }
-
         break;
       case "indexing":
       case "paused":
@@ -157,7 +158,6 @@ const IndexingProgressBar = ({
         } else {
           ideMessenger.post("index/forceReIndex", undefined);
         }
-
         break;
       default:
         ideMessenger.post("index/forceReIndex", undefined);
@@ -181,93 +181,116 @@ const IndexingProgressBar = ({
   }
 
   return (
-    <div onClick={onClick} className="cursor-pointer">
-      {indexingState.status === "failed" ? (
-        <FlexDiv data-tooltip-id="indexingFailed_dot">
-          <StatusDot color={STATUS_COLORS.FAILED}></StatusDot>
-          <div>
-            <StatusHeading>Indexing error - click to retry</StatusHeading>
-          </div>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="indexingFailed_dot" place="top">
-                {getIndexingErrMsg(indexingState.desc)}
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </FlexDiv>
-      ) : indexingState.status === "loading" ? (
-        <FlexDiv>
-          <StatusDot shouldBlink color={STATUS_COLORS.LOADING}></StatusDot>
-          <StatusHeading>Initializing</StatusHeading>
-        </FlexDiv>
-      ) : indexingState.status === "done" ? (
+    <div>
+      <i
+        style={{
+          color: lightGray,
+          fontSize: getFontSize() - 2,
+        }}
+      >
+        Indexing generates embeddings used for codebase retrieval. The index is
+        stored entirely locally.
+      </i>
+
+      <ProgressBarWrapper>
+        <ProgressBarFill completed={fillPercentage} />
+      </ProgressBarWrapper>
+
+      <div className="flex justify-between">
         <FlexDiv data-tooltip-id="indexingDone_dot">
-          <StatusDot color={STATUS_COLORS.DONE}></StatusDot>
+          <StatusDot color={STATUS_COLORS[indexingState.status]}></StatusDot>
           <div>
-            <StatusHeading>Index up to date</StatusHeading>
+            <StatusHeading>
+              {STATUS_MESSAGES[indexingState.status]}
+            </StatusHeading>
           </div>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="indexingDone_dot" place="top">
-                Index up to date
-                <br />
-                Click to force re-indexing
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
         </FlexDiv>
-      ) : indexingState.status === "disabled" ? (
-        <FlexDiv data-tooltip-id="indexingDisabled_dot">
-          <StatusDot color={STATUS_COLORS.DISABLED}></StatusDot>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="indexingDisabled_dot" place="top">
-                {indexingState.desc}
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </FlexDiv>
-      ) : indexingState.status === "paused" ||
-        (paused && indexingState.status === "indexing") ? (
-        <FlexDiv>
-          <StatusDot
-            color={STATUS_COLORS.PAUSED}
-            onClick={(e) => {
-              ideMessenger.post("index/setPaused", false);
-            }}
-          ></StatusDot>
-          <StatusHeading>
-            Indexing paused ({Math.trunc(indexingState.progress * 100)}
-            %)
-          </StatusHeading>
-        </FlexDiv>
-      ) : indexingState.status === "indexing" ? (
-        <FlexDiv
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-          onClick={(e) => {
-            ideMessenger.post("index/setPaused", true);
+        <p
+          style={{
+            color: lightGray,
+            fontSize: getFontSize() - 2,
+            margin: 0,
           }}
         >
-          <StatusDot shouldBlink color={STATUS_COLORS.INDEXING}></StatusDot>
-          <div>
-            <FlexDiv>
-              <ProgressBarWrapper>
-                <ProgressBarFill completed={fillPercentage} />
-              </ProgressBarWrapper>
+          {Math.trunc(indexingState.progress)}%
+        </p>
+      </div>
 
-              <StatusHeading
-                style={{ fontSize: `${getFontSize() - 3}px` }}
-              >{`${Math.trunc(indexingState.progress * 100)}%`}</StatusHeading>
-            </FlexDiv>
-
-            <StatusInfo>
-              {hovered ? "Click to pause" : indexingState.desc}
-            </StatusInfo>
-          </div>
-        </FlexDiv>
+      {indexingState.status === "disabled" ? null : indexingState.status ===
+        "done" ? (
+        <StyledButton
+          onClick={() => {
+            ideMessenger.post("index/forceReIndex", undefined);
+          }}
+        >
+          Re-index
+        </StyledButton>
+      ) : indexingState.status === "failed" ? (
+        <StyledButton
+          onClick={() => {
+            // For now, we don't show in JetBrains since the reindex command
+            // is not yet implemented
+            if (indexingState.shouldClearIndexes && !isJetBrains()) {
+              dispatch(setShowDialog(true));
+              dispatch(
+                setDialogMessage(
+                  <ConfirmationDialog
+                    title="Rebuild codebase index"
+                    confirmText="Rebuild"
+                    text={
+                      "Your index appears corrupted. We recommend clearing and rebuilding it, " +
+                      "which may take time for large codebases.\n\n" +
+                      "For a faster rebuild without clearing data, press 'Shift + Command + P' to open " +
+                      "the Command Palette, and type out 'Continue: Force Codebase Re-Indexing'"
+                    }
+                    onConfirm={() => {
+                      posthog.capture("rebuild_index_clicked");
+                      ideMessenger.post("index/forceReIndex", {
+                        shouldClearIndexes: true,
+                      });
+                    }}
+                  />,
+                ),
+              );
+            } else {
+              ideMessenger.post("index/forceReIndex", undefined);
+            }
+          }}
+        >
+          Retry
+        </StyledButton>
+      ) : indexingState.status === "indexing" ? (
+        <StyledButton
+          onClick={() => {
+            if (indexingState.progress < 1 && indexingState.progress >= 0) {
+              setPaused((prev) => !prev);
+            } else {
+              ideMessenger.post("index/forceReIndex", undefined);
+            }
+          }}
+        >
+          Pause
+        </StyledButton>
+      ) : indexingState.status === "loading" ? null : indexingState.status ===
+        "paused" ? (
+        <StyledButton
+          onClick={() => {
+            if (indexingState.progress < 1 && indexingState.progress >= 0) {
+              setPaused((prev) => !prev);
+            } else {
+              ideMessenger.post("index/forceReIndex", undefined);
+            }
+          }}
+        >
+          Resume
+        </StyledButton>
       ) : null}
+
+      {indexingState.status === "failed" && (
+        <p style={{ color: "red", fontSize: getFontSize() - 2 }}>
+          {getIndexingErrMsg(indexingState.desc)}
+        </p>
+      )}
     </div>
   );
 };
