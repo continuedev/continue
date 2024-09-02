@@ -250,7 +250,7 @@ export const stateSlice = createSlice({
       state.active = true;
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
-      const index = action.payload + 1;
+      const index = action.payload;
 
       if (index >= 0 && index < state.history.length) {
         // Delete the current message
