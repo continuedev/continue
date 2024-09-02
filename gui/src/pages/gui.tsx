@@ -58,17 +58,16 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
-const TopGuiDiv = styled.div`
-  overflow-y: scroll;
-
-  scrollbar-width: none; /* Firefox */
-
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
+const TopGuiDiv = styled.div<{
+  showScrollbar?: boolean;
+}>`
+  overflow-y: auto;
   height: 100%;
+  scrollbar-width: ${(props) => (props.showScrollbar ? "thin" : "none")};
+
+  &::-webkit-scrollbar {
+    display: ${(props) => (props.showScrollbar ? "block" : "none")};
+  }
 `;
 
 const StopButton = styled.div`
@@ -356,7 +355,11 @@ function GUI() {
 
   return (
     <>
-      <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
+      <TopGuiDiv
+        ref={topGuiDivRef}
+        onScroll={handleScroll}
+        showScrollbar={state.config.ui?.showChatScrollbar || false}
+      >
         <div className="max-w-3xl m-auto">
           <StepsDiv>
             {state.history.map((item, index: number) => {

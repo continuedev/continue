@@ -121,6 +121,7 @@ export const uiOptionsSchema = z.object({
   codeBlockToolbarPosition: z.enum(["top", "bottom"]).optional(),
   fontSize: z.number().optional(),
   displayRawMarkdown: z.boolean().optional(),
+  showChatScrollbar: z.boolean().optional(),
 });
 export type UiOptions = z.infer<typeof uiOptionsSchema>;
 
