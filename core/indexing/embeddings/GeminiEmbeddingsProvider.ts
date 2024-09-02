@@ -55,10 +55,10 @@ class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    const batches = GeminiEmbeddingsProvider.getBatchedChunks(chunks);
+    const batchedChunks = this.getBatchedChunks(chunks);
 
     const results = await Promise.all(
-      batches.map((batch) => this.getSingleBatchEmbedding(batch)),
+      batchedChunks.map((batch) => this.getSingleBatchEmbedding(batch)),
     );
     return results.flat();
   }

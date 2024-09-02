@@ -792,6 +792,7 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxChunkSize?: number;
+  maxBatchSize?: number;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
