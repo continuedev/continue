@@ -56,10 +56,10 @@ const actions: TutorialCodeLensItems[] = [
         title: "Run the file",
         command: "continue.sendToTerminal",
         arguments: [
-          `python ${path.join(
+          `python "${path.join(
             getExtensionUri().fsPath,
             "continue_tutorial.py",
-          )}\n`,
+          )}"\n`,
         ],
       },
     ],

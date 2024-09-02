@@ -12,7 +12,6 @@ import {
 } from "../index.js";
 import { getBasename } from "../util/index.js";
 import { getLanceDbPath, migrate } from "../util/paths.js";
-import { Telemetry } from "../util/posthog.js";
 import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
@@ -418,16 +417,8 @@ export class LanceDbIndex implements CodebaseIndex {
       return [];
     }
 
-    if (!db.search) {
-      // Unclear why this is happening
-      console.debug(
-        "Error retrieving from vectordb: db.search isn't a function",
-      );
-      Telemetry.capture("db_search_not_a_function", {}, false);
-      return [];
-    }
-
-    let query = db.search(vector);
+    const table = await db.openTable(tableName);
+    let query = table.search(vector);
     if (directory) {
       // seems like lancedb is only post-filtering, so have to return a bunch of results and slice after
       query = query.where(`path LIKE '${directory}%'`).limit(300);

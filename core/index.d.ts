@@ -621,7 +621,9 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "openrouter"
-  | "nvidia";
+  | "nvidia"
+  | "vllm"
+  | "mock";
 
 export type ModelName =
   | "AUTODETECT"
@@ -861,6 +863,7 @@ interface ContextMenuConfig {
 interface ModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
+  repoMapFileSelection?: string;
 }
 
 /**

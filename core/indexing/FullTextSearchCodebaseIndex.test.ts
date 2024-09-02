@@ -25,7 +25,7 @@ describe("FullTextSearchCodebaseIndex", () => {
     index = new FullTextSearchCodebaseIndex();
   });
 
-  it.skip("should update the index and maintain expected database state", async () => {
+  it("should update the index and maintain expected database state", async () => {
     const mockMarkComplete = jest
       .fn()
       .mockImplementation(() => Promise.resolve()) as any;

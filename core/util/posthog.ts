@@ -14,6 +14,9 @@ export class Telemetry {
     properties: { [key: string]: any },
     sendToTeam: boolean = false,
   ) {
+    if (process.env.NODE_ENV === "test") {
+      return;
+    }
     try {
       Telemetry.client?.capture({
         distinctId: Telemetry.uniqueId,
@@ -44,7 +47,7 @@ export class Telemetry {
     Telemetry.os = os.platform();
     Telemetry.ideInfo = ideInfo;
 
-    if (!allow) {
+    if (!allow || process.env.NODE_ENV === "test") {
       Telemetry.client = undefined;
     } else {
       try {

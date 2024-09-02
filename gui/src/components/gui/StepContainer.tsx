@@ -1,7 +1,6 @@
 import {
   ArrowPathIcon,
   BarsArrowDownIcon,
-  CubeIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
   TrashIcon,
@@ -127,7 +126,6 @@ function StepContainer(props: StepContainerProps) {
             <div
               className="flex items-center gap-1 absolute -bottom-2 right-1"
               style={{
-                zIndex: 200,
                 color: lightGray,
                 fontSize: getFontSize() - 3,
               }}

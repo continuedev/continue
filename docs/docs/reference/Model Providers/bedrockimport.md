@@ -1,4 +1,4 @@
-# AWS Bedrock Custom Imported Models
+# Amazon Bedrock Custom Imported Models
 
 To setup Bedrock using custom imported models, add the following to your `config.json` file:
 

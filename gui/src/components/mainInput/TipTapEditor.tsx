@@ -67,7 +67,7 @@ const InputBoxDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   margin: 0;
   height: auto;
-  width: calc(100% - 18px);
+  width: calc(100% - 24px);
   background-color: ${vscInputBackground};
   color: ${vscForeground};
   z-index: 1;
@@ -176,7 +176,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     inSubmenuRef.current = providerId;
 
     // to trigger refresh of suggestions
-    editor.commands.insertContent(" ");
+    editor.commands.insertContent(":");
     editor.commands.deleteRange({
       from: editor.state.selection.anchor - 1,
       to: editor.state.selection.anchor,
