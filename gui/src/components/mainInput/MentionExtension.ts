@@ -63,7 +63,7 @@ export const Mention = Node.create<MentionOptions>({
           const allow = !!$from.parent.type.contentMatch.matchType(type);
 
           // Check if there's a space after the "@"
-          const textFrom = range.from - 1;
+          const textFrom = range.from;
           const textTo = state.selection.$to.pos;
           const text = state.doc.textBetween(textFrom, textTo);
           const hasSpace = text.includes(" ");
