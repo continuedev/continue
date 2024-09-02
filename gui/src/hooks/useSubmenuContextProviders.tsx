@@ -14,15 +14,6 @@ import { useWebviewListener } from "./useWebviewListener";
 import { WebviewMessengerResult } from "core/protocol/util";
 import { getLocalStorage } from "../util/localStorage";
 
-// Add this enum definition
-enum IndexedProvider {
-  File = "file",
-  Folder = "folder",
-  Tree = "tree",
-  RepoMap = "repo-map",
-  Code = "code",
-}
-
 const MINISEARCH_OPTIONS = {
   prefix: true,
   fuzzy: 2,
@@ -260,18 +251,18 @@ function useSubmenuContextProviders() {
 
         await Promise.all(
           contextProviderDescriptions.map(async (description) => {
-            if (
-              Object.values(IndexedProvider).includes(
-                description.title as IndexedProvider,
-              ) &&
-              disableIndexing
-            ) {
+            const shouldSkipProvider =
+              description.dependsOnIndexing && disableIndexing;
+
+            if (shouldSkipProvider) {
               console.debug(
                 `Skipping ${description.title} provider due to disabled indexing`,
               );
               return;
             }
+
             console.debug(`Processing provider: ${description.title}`);
+
             try {
               const minisearch = new MiniSearch<ContextSubmenuItem>({
                 fields: ["title", "description"],
