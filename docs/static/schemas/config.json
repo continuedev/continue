@@ -1881,6 +1881,12 @@
       "title": "config.json",
       "type": "object",
       "properties": {
+        "disableHeadlessCrawling": {
+          "title": "Disable Headless Crawling",
+          "description": "Disable headless crawling. This is useful if you're running into issues with Chromium or Playwright, or do not want to install Chromium.",
+          "default": false,
+          "type": "boolean"
+        },
         "docs": {
           "title": "Docs",
           "description": "A list of documentation sites to be indexed",

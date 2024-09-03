@@ -15,7 +15,6 @@ import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
-import DocsCrawler from "./indexing/docs/DocsCrawler";
 import DocsService from "./indexing/docs/DocsService";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -168,12 +167,6 @@ export class Core {
       (e) => {},
       (..._) => Promise.resolve([]),
     );
-
-    try {
-      DocsCrawler.verifyOrInstallChromium();
-    } catch (err) {
-      console.debug(`Failed to install Chromium: ${err}`);
-    }
 
     const on = this.messenger.on.bind(this.messenger);
 
