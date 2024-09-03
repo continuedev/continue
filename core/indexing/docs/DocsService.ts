@@ -383,7 +383,7 @@ export default class DocsService {
 
   private async init(configHandler: ConfigHandler) {
     this.config = await configHandler.loadConfig();
-    this.docsCrawler = new DocsCrawler(this.config.disableHeadlessCrawling);
+    this.docsCrawler = new DocsCrawler();
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
 

@@ -1,5 +1,7 @@
+import { SpiedFunction } from "jest-mock";
 import DocsCrawler, { ChromiumCrawler, type PageData } from "./DocsCrawler";
 import preIndexedDocs from "./preIndexedDocs";
+import { jest } from "@jest/globals";
 
 // Temporary workaround until we have better caching of Chromium
 // download between test runs
@@ -20,7 +22,7 @@ describe.skip("crawl", () => {
     let crawlResults: PageData[];
 
     beforeAll(async () => {
-      const docsCrawler = new DocsCrawler(false);
+      const docsCrawler = new DocsCrawler();
 
       crawlResults = [];
 
@@ -69,7 +71,7 @@ describe.skip("crawl", () => {
             let pageFound = false;
 
             try {
-              const docsCrawler = new DocsCrawler(false);
+              const docsCrawler = new DocsCrawler();
 
               for await (const page of docsCrawler.crawl(new URL(url), 1)) {
                 if (page.url === url) {
@@ -113,7 +115,7 @@ describe.skip("crawl", () => {
 
         for (const site of TEST_SITES) {
           const crawlResults: PageData[] = [];
-          const docsCrawler = new DocsCrawler(false);
+          const docsCrawler = new DocsCrawler();
 
           for await (const page of docsCrawler.crawl(
             new URL(site),
@@ -134,6 +136,18 @@ describe.skip("crawl", () => {
   });
 
   describe("Cheerio Crawler", () => {
+    let mockVerifyOrInstallChromium: SpiedFunction<() => Promise<boolean>>;
+
+    beforeAll(() => {
+      mockVerifyOrInstallChromium = jest
+        .spyOn(ChromiumCrawler, "verifyOrInstallChromium")
+        .mockResolvedValue(false);
+    });
+
+    afterAll(() => {
+      mockVerifyOrInstallChromium.mockRestore();
+    });
+
     it(
       "succeeds in crawling a basic site",
       async () => {
@@ -141,7 +155,7 @@ describe.skip("crawl", () => {
         const site = "https://amplified.dev/";
 
         const crawlResults: PageData[] = [];
-        const docsCrawler = new DocsCrawler(false);
+        const docsCrawler = new DocsCrawler();
 
         for await (const page of docsCrawler.crawl(
           new URL(site),

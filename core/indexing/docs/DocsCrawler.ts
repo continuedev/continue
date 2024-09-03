@@ -12,7 +12,7 @@ import {
 import PCR from "puppeteer-chromium-resolver";
 import * as cheerio from "cheerio";
 import fetch from "node-fetch";
-import { ContinueConfig } from "../..";
+import { GlobalContext } from "../../util/GlobalContext";
 
 export type PageData = {
   url: string;
@@ -25,12 +25,8 @@ class DocsCrawler {
   private readonly GITHUB_HOST = "github.com";
   private useChromiumPromise: Promise<boolean> | undefined = undefined;
 
-  constructor(
-    private readonly disableHeadlessCrawling: ContinueConfig["disableHeadlessCrawling"],
-  ) {
-    if (!disableHeadlessCrawling) {
-      this.useChromiumPromise = ChromiumCrawler.verifyOrInstallChromium();
-    }
+  constructor() {
+    this.useChromiumPromise = ChromiumCrawler.verifyOrInstallChromium();
   }
 
   async *crawl(
@@ -401,6 +397,13 @@ class ChromiumCrawler {
   }
 
   static async verifyOrInstallChromium() {
+    const globalContext = new GlobalContext();
+
+    // If we previously failed to install Chromium, don't try again
+    if (globalContext.get("didPrevChromiumInstallFail")) {
+      return false;
+    }
+
     if (fs.existsSync(getChromiumPath())) {
       return true;
     }
@@ -411,13 +414,10 @@ class ChromiumCrawler {
     } catch (error) {
       console.debug("Error installing Chromium : ", error);
       console.debug(
-        "Setting `disableHeadlessCrawling` to `true` in config.json",
+        `Setting 'didPrevChromiumInstallFail' to 'true' in ${globalContext.constructor.name}`,
       );
 
-      editConfigJson((config) => ({
-        ...config,
-        disableHeadlessCrawling: true,
-      }));
+      globalContext.update("didPrevChromiumInstallFail", true);
 
       return false;
     }

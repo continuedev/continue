@@ -933,7 +933,6 @@ export interface SerializedContinueConfig {
   contextProviders?: ContextProviderWithParams[];
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
-  disableHeadlessCrawling?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
   tabAutocompleteModel?: ModelDescription | ModelDescription[];
@@ -976,8 +975,6 @@ export interface Config {
   disableIndexing?: boolean;
   /** If set to true, Continue will not make extra requests to the LLM to generate a summary title of each session. */
   disableSessionTitles?: boolean;
-  /** Disable headless crawling. This is useful if you're running into issues with Chromium or Playwright, or do not want to install Chromium. */
-  disableHeadlessCrawling?: boolean;
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
   userToken?: string;
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
@@ -1009,7 +1006,6 @@ export interface ContinueConfig {
   slashCommands?: SlashCommand[];
   contextProviders?: IContextProvider[];
   disableSessionTitles?: boolean;
-  disableHeadlessCrawling?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
   embeddingsProvider: EmbeddingsProvider;
@@ -1032,7 +1028,6 @@ export interface BrowserSerializedContinueConfig {
   contextProviders?: ContextProviderDescription[];
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
-  disableHeadlessCrawling?: boolean;
   userToken?: string;
   embeddingsProvider?: string;
   ui?: ContinueUIConfig;
