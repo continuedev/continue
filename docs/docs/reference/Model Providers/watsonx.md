@@ -77,4 +77,4 @@ Add the full watsonx URL to `watsonxFullUrl` if you are using a custom endpoint.
 ```
 
 ## Usage
-![usage-gif](../Model%20Providers/assets/watsonx1.gif)
+![usage-gif](../Model%20Providers/assets/watsonx2.gif)
