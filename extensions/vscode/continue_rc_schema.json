@@ -1390,6 +1390,9 @@
               "watsonxStopToken": {
                 "type": "string"
               },
+              "watsonxFullUrl": {
+                "type": "string"
+              },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
