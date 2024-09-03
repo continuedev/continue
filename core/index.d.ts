@@ -126,6 +126,7 @@ export interface ContextProviderDescription {
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
+  dependsOnIndexing?: boolean;
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
