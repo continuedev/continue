@@ -24,7 +24,6 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { TOAST_FN_BY_TYPE } from "../util/ideUtils";
 
 /**
  * A shared messenger class between Core and Webview
