@@ -475,7 +475,7 @@ export default class DocsService {
         driver: sqlite3.Database,
       });
 
-      db.exec("PRAGMA busy_timeout = 3000;");
+      await db.exec("PRAGMA busy_timeout = 3000;");
 
       await runSqliteMigrations(db);
 

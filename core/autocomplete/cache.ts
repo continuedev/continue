@@ -20,7 +20,7 @@ export class AutocompleteLruCache {
       driver: sqlite3.Database,
     });
 
-    db.exec("PRAGMA busy_timeout = 3000;");
+    await db.exec("PRAGMA busy_timeout = 3000;");
 
     await db.run(`
       CREATE TABLE IF NOT EXISTS cache (
