@@ -8,6 +8,7 @@ import ReviewMessageCommand from "./review";
 import ShareSlashCommand from "./share";
 import StackOverflowSlashCommand from "./stackOverflow";
 import OnboardSlashCommand from "./onboard";
+import ToolsCommand from "./tools";
 
 export default [
   DraftIssueCommand,
@@ -20,4 +21,5 @@ export default [
   CommitMessageCommand,
   ReviewMessageCommand,
   OnboardSlashCommand,
+  ToolsCommand,
 ];

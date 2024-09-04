@@ -263,6 +263,20 @@ export interface ChatMessage {
   content: MessageContent;
 }
 
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  parameters: {
+    type: string;
+    properties: Record<string, unknown>;
+    required: string[];
+  };
+}
+export interface Tool {
+  function: ToolDefinition;
+  type: "function";
+}
+
 export interface ContextItemId {
   providerTitle: string;
   itemId: string;
