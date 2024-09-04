@@ -49,12 +49,8 @@ export class ReverseMessageIde {
       return this.ide.listDir(data.dir);
     });
 
-    this.on("infoPopup", (data) => {
-      return this.ide.infoPopup(data.message);
-    });
-
-    this.on("errorPopup", (data) => {
-      return this.ide.errorPopup(data.message);
+    this.on("showToast", (data) => {
+      return this.ide.showToast(...data);
     });
 
     this.on("getRepoName", (data) => {

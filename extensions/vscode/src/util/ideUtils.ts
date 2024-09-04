@@ -1,4 +1,4 @@
-import type { FileEdit, RangeInFile, Thread } from "core";
+import type { FileEdit, RangeInFile, Thread, ToastType } from "core";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
@@ -651,3 +651,14 @@ export class VsCodeIdeUtils {
     return rangeInFiles;
   }
 }
+
+export const TOAST_FN_BY_TYPE: {
+  [type in ToastType]:
+    | typeof vscode.window.showInformationMessage
+    | typeof vscode.window.showWarningMessage
+    | typeof vscode.window.showInformationMessage;
+} = {
+  info: vscode.window.showInformationMessage,
+  warning: vscode.window.showWarningMessage,
+  error: vscode.window.showErrorMessage,
+};

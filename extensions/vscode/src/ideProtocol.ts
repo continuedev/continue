@@ -13,6 +13,7 @@ import type {
   Problem,
   RangeInFile,
   Thread,
+  ToastType,
 } from "core";
 import { Range } from "core";
 import { walkDir } from "core/indexing/walkDir";
@@ -25,7 +26,7 @@ import * as vscode from "vscode";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
-import { VsCodeIdeUtils } from "./util/ideUtils";
+import { TOAST_FN_BY_TYPE, VsCodeIdeUtils } from "./util/ideUtils";
 import {
   getExtensionUri,
   openEditorAndRevealRange,
@@ -42,6 +43,7 @@ class VsCodeIde implements IDE {
   ) {
     this.ideUtils = new VsCodeIdeUtils();
   }
+
   pathSep(): Promise<string> {
     return Promise.resolve(this.ideUtils.path.sep);
   }
@@ -191,13 +193,11 @@ class VsCodeIde implements IDE {
     return undefined;
   }
 
-  async infoPopup(message: string): Promise<void> {
-    vscode.window.showInformationMessage(message);
-  }
-
-  async errorPopup(message: string): Promise<void> {
-    vscode.window.showErrorMessage(message);
-  }
+  showToast: IDE["showToast"] = async (...params) => {
+    const [type, message, ...otherParams] = params;
+    const toastFn = TOAST_FN_BY_TYPE[type];
+    return toastFn(message, ...otherParams);
+  };
 
   async getRepoName(dir: string): Promise<string | undefined> {
     const repo = await this.getRepo(vscode.Uri.file(dir));

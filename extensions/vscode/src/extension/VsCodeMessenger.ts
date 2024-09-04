@@ -24,6 +24,7 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { TOAST_FN_BY_TYPE } from "../util/ideUtils";
 
 /**
  * A shared messenger class between Core and Webview
@@ -282,18 +283,19 @@ export class VsCodeMessenger {
       const { filepath, startLine, endLine } = msg.data;
       return ide.showLines(filepath, startLine, endLine);
     });
-    // Other
-    this.onWebviewOrCore("errorPopup", (msg) => {
-      vscode.window
-        .showErrorMessage(msg.data.message, "Show Logs")
-        .then((selection) => {
+    this.onWebviewOrCore("showToast", (msg) => {
+      const [type, message, ...otherParams] = msg.data;
+      const toastFn = TOAST_FN_BY_TYPE[type];
+
+      if (type === "error") {
+        toastFn(message, "Show Logs").then((selection) => {
           if (selection === "Show Logs") {
             vscode.commands.executeCommand("workbench.action.toggleDevTools");
           }
         });
-    });
-    this.onWebviewOrCore("infoPopup", (msg) => {
-      vscode.window.showInformationMessage(msg.data.message);
+      } else {
+        toastFn(message, ...otherParams);
+      }
     });
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
       ide.getGitHubAuthToken(),

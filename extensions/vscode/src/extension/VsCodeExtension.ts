@@ -233,6 +233,7 @@ export class VsCodeExtension {
           "showConfigUpdateToast",
           true,
         );
+
         if (showToast) {
           vscode.window
             .showInformationMessage("Config updated", "Don't show again")
