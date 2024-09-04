@@ -17,15 +17,143 @@ const sidebars = {
         },
         {
           type: "doc",
-          label: "Overview",
           id: "quickstart/overview",
+          label: "Overview",
         },
       ],
     },
-    "chat",
-    "autocomplete",
-    "edit",
-    "actions",
+    {
+      type: "category",
+      label: "Chat",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        {
+          type: "doc",
+          id: "chat/how-to-use-it",
+          label: "How to use it",
+        },
+        {
+          type: "doc",
+          id: "chat/model-setup",
+          label: "Model setup",
+        },
+        {
+          type: "doc",
+          id: "chat/context-selection",
+          label: "Context selection",
+        },
+        {
+          type: "doc",
+          id: "chat/how-it-works",
+          label: "How it works",
+        },
+        {
+          type: "doc",
+          id: "chat/advanced-configuration",
+          label: "Advanced configuration",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Autocomplete",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        {
+          type: "doc",
+          id: "autocomplete/how-to-use-it",
+          label: "How to use it",
+        },
+        {
+          type: "doc",
+          id: "autocomplete/model-setup",
+          label: "Model setup",
+        },
+        {
+          type: "doc",
+          id: "autocomplete/context-selection",
+          label: "Context selection",
+        },
+        {
+          type: "doc",
+          id: "autocomplete/how-it-works",
+          label: "How it works",
+        },
+        {
+          type: "doc",
+          id: "autocomplete/advanced-configuration",
+          label: "Advanced configuration",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Edit",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        {
+          type: "doc",
+          id: "edit/how-to-use-it",
+          label: "How to use it",
+        },
+        {
+          type: "doc",
+          id: "edit/model-setup",
+          label: "Model setup",
+        },
+        {
+          type: "doc",
+          id: "edit/context-selection",
+          label: "Context selection",
+        },
+        {
+          type: "doc",
+          id: "edit/how-it-works",
+          label: "How it works",
+        },
+        {
+          type: "doc",
+          id: "edit/advanced-configuration",
+          label: "Advanced configuration",
+        },
+      ],
+    },
+    {
+      type: "category",
+      label: "Actions",
+      collapsible: true,
+      collapsed: true,
+      items: [
+        {
+          type: "doc",
+          id: "actions/how-to-use-it",
+          label: "How to use it",
+        },
+        {
+          type: "doc",
+          id: "actions/model-setup",
+          label: "Model setup",
+        },
+        {
+          type: "doc",
+          id: "actions/context-selection",
+          label: "Context selection",
+        },
+        {
+          type: "doc",
+          id: "actions/how-it-works",
+          label: "How it works",
+        },
+        {
+          type: "doc",
+          id: "actions/advanced-configuration",
+          label: "Advanced configuration",
+        },
+      ],
+    },
     "changelog",
   ],
   referenceSidebar: [

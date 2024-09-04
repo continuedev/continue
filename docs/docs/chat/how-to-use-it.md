@@ -1,7 +1,7 @@
 ---
-title: How to use
+title: How to use it
 description: How to use
 keywords: [how]
 ---
 
-# How to use
+# How to use it
