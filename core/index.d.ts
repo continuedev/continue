@@ -50,6 +50,26 @@ export type PromptTemplate =
       otherData: Record<string, string>,
     ) => string | ChatMessage[]);
 
+export type IconName =
+  | "file"
+  | "code"
+  | "terminal"
+  | "diff"
+  | "search"
+  | "url"
+  | "open"
+  | "codebase"
+  | "problems"
+  | "folder"
+  | "docs"
+  | "issue"
+  | "trash"
+  | "/edit"
+  | "/clear"
+  | "/comment"
+  | "/share"
+  | "/cmd";
+
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -126,6 +146,7 @@ export interface ContextProviderDescription {
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
+  icon?: IconName;
   dependsOnIndexing?: boolean;
 }
 
@@ -154,6 +175,7 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+  icon?: IconName;
   getContextItems(
     query: string,
     extras: ContextProviderExtras,

@@ -45,8 +45,9 @@ import HeaderButtonWithText from "../HeaderButtonWithText";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem } from "./types";
+import { IconName } from "core";
 
-const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
+const ICONS_FOR_DROPDOWN: { [key in IconName]: any } = {
   file: FolderIcon,
   code: CodeBracketIcon,
   terminal: CommandLineIcon,
@@ -84,29 +85,50 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     }
   })();
 
+  // Use custom icon if provided
+  if (props.item.contextProvider?.icon) {
+    if (props.item.contextProvider.icon in ICONS_FOR_DROPDOWN) {
+      const IconComponent =
+        ICONS_FOR_DROPDOWN[props.item.contextProvider.icon as IconName];
+      return (
+        <IconComponent
+          className={`${props.className} flex-shrink-0`}
+          height="1.2em"
+          width="1.2em"
+        />
+      );
+    } else {
+      return (
+        <SafeImg
+          className={`${props.className} flex-shrink-0`}
+          src={props.item.icon}
+          height="1.2em"
+          width="1.2em"
+          fallback={
+            <AtSymbolIcon
+              className={props.className}
+              height="1.2em"
+              width="1.2em"
+            />
+          }
+        />
+      );
+    }
+  }
+
   const IconComponent =
     ICONS_FOR_DROPDOWN[provider] ??
-    (props.item.type === "contextProvider" ? AtSymbolIcon : BoltIcon);
+    (props.item.type === "contextProvider"
+      ? AtSymbolIcon
+      : props.item.contextProvider?.icon
+      ? ICONS_FOR_DROPDOWN[props.item.contextProvider.icon]
+      : BoltIcon);
 
-  const fallbackIcon = (
+  return (
     <IconComponent
       className={`${props.className} flex-shrink-0`}
       height="1.2em"
       width="1.2em"
-    />
-  );
-
-  if (!props.item.icon) {
-    return fallbackIcon;
-  }
-
-  return (
-    <SafeImg
-      className="flex-shrink-0 pr-2"
-      src={props.item.icon}
-      height="18em"
-      width="18em"
-      fallback={fallbackIcon}
     />
   );
 }
