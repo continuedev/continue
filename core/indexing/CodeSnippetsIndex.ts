@@ -50,10 +50,17 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     )`);
 
     migrate("add_signature_column", async () => {
-      await db.exec(`
+      const tableInfo = await db.all("PRAGMA table_info(code_snippets)");
+      const signatureColumnExists = tableInfo.some(
+        (column) => column.name === "signature",
+      );
+
+      if (!signatureColumnExists) {
+        await db.exec(`
         ALTER TABLE code_snippets
         ADD COLUMN signature TEXT;
       `);
+      }
     });
 
     migrate("delete_duplicate_code_snippets", async () => {
@@ -304,10 +311,6 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
             WHERE cacheKey = ? AND path = ?`,
         [removeTag.cacheKey, removeTag.path],
       );
-
-      if (!Array.isArray(snippets)) {
-        snippets = [snippets];
-      }
 
       if (snippets) {
         if (!Array.isArray(snippets)) {

@@ -126,6 +126,7 @@ export interface ContextProviderDescription {
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
+  dependsOnIndexing?: boolean;
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
@@ -621,7 +622,9 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "openrouter"
-  | "nvidia";
+  | "nvidia"
+  | "vllm"
+  | "mock";
 
 export type ModelName =
   | "AUTODETECT"
@@ -854,6 +857,7 @@ export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
   displayRawMarkdown?: boolean;
+  showChatScrollbar?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -867,6 +871,7 @@ interface ContextMenuConfig {
 interface ModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
+  repoMapFileSelection?: string;
 }
 
 /**

@@ -1,28 +1,35 @@
-import DocsCrawler, { type PageData } from "./DocsCrawler";
+import { SpiedFunction } from "jest-mock";
+import DocsCrawler, { ChromiumCrawler, type PageData } from "./DocsCrawler";
 import preIndexedDocs from "./preIndexedDocs";
+import { jest } from "@jest/globals";
 
 // Temporary workaround until we have better caching of Chromium
 // download between test runs
-const TIMEOUT = 1_000_000;
+const TIMEOUT_MS = 1_000_000_000;
 
 // Skipped until we have a better way to cache Chromium installs
 // between tests and in CI
 describe.skip("crawl", () => {
-  describe("GitHub repositories", () => {
+  beforeAll(async () => {
+    // Make sure we have Chromium pulled down before beginning tests
+    await ChromiumCrawler.verifyOrInstallChromium();
+  }, TIMEOUT_MS);
+
+  describe("GitHub Crawler", () => {
     const repoUrl =
       "https://github.com/Patrick-Erichsen/test-github-repo-for-crawling";
 
     let crawlResults: PageData[];
 
     beforeAll(async () => {
-      const docsCrawler = new DocsCrawler(new URL(repoUrl));
+      const docsCrawler = new DocsCrawler();
 
       crawlResults = [];
 
-      for await (const page of docsCrawler.crawl()) {
+      for await (const page of docsCrawler.crawl(new URL(repoUrl))) {
         crawlResults.push(page);
       }
-    }, TIMEOUT);
+    }, TIMEOUT_MS);
 
     test("finds expected markdown files", async () => {
       expect(crawlResults.some((page) => page.path.endsWith("README.md"))).toBe(
@@ -50,7 +57,47 @@ describe.skip("crawl", () => {
     });
   });
 
-  describe.only("Non-Github repository sites", () => {
+  describe("Chromium Crawler", () => {
+    it("Pre-indexed Docs", () => {
+      const results: { [url: string]: boolean } = {};
+      let totalTests = 0;
+      let passedTests = 0;
+
+      Object.keys(preIndexedDocs).forEach((url) => {
+        it(
+          `Crawl test for ${url}`,
+          async () => {
+            totalTests++;
+            let pageFound = false;
+
+            try {
+              const docsCrawler = new DocsCrawler();
+
+              for await (const page of docsCrawler.crawl(new URL(url), 1)) {
+                if (page.url === url) {
+                  pageFound = true;
+                  break;
+                }
+              }
+            } catch (error) {
+              console.error(`Error crawling ${url}:`, error);
+            }
+
+            results[url] = pageFound;
+            if (pageFound) {
+              passedTests++;
+              console.log(`✅ ${url}`);
+            } else {
+              console.log(`❌ ${url}`);
+            }
+
+            expect(pageFound).toBe(true);
+          },
+          TIMEOUT_MS,
+        );
+      });
+    });
+
     it(
       "succeeds in crawling a list of common sites",
       async () => {
@@ -68,12 +115,12 @@ describe.skip("crawl", () => {
 
         for (const site of TEST_SITES) {
           const crawlResults: PageData[] = [];
-          const docsCrawler = new DocsCrawler(
+          const docsCrawler = new DocsCrawler();
+
+          for await (const page of docsCrawler.crawl(
             new URL(site),
             NUM_PAGES_TO_CRAWL,
-          );
-
-          for await (const page of docsCrawler.crawl()) {
+          )) {
             crawlResults.push(page);
           }
 
@@ -84,47 +131,42 @@ describe.skip("crawl", () => {
           );
         }
       },
-      TIMEOUT,
+      TIMEOUT_MS,
     );
   });
 
-  describe("Pre-indexed Docs", () => {
-    const results: { [url: string]: boolean } = {};
-    let totalTests = 0;
-    let passedTests = 0;
+  describe("Cheerio Crawler", () => {
+    let mockVerifyOrInstallChromium: SpiedFunction<() => Promise<boolean>>;
 
-    Object.keys(preIndexedDocs).forEach((url) => {
-      test(
-        `Crawl test for ${url}`,
-        async () => {
-          totalTests++;
-          let pageFound = false;
-
-          try {
-            const docsCrawler = new DocsCrawler(new URL(url), 1);
-
-            for await (const page of docsCrawler.crawl()) {
-              if (page.url === url) {
-                pageFound = true;
-                break;
-              }
-            }
-          } catch (error) {
-            console.error(`Error crawling ${url}:`, error);
-          }
-
-          results[url] = pageFound;
-          if (pageFound) {
-            passedTests++;
-            console.log(`✅ ${url}`);
-          } else {
-            console.log(`❌ ${url}`);
-          }
-
-          expect(pageFound).toBe(true);
-        },
-        TIMEOUT,
-      );
+    beforeAll(() => {
+      mockVerifyOrInstallChromium = jest
+        .spyOn(ChromiumCrawler, "verifyOrInstallChromium")
+        .mockResolvedValue(false);
     });
+
+    afterAll(() => {
+      mockVerifyOrInstallChromium.mockRestore();
+    });
+
+    it(
+      "succeeds in crawling a basic site",
+      async () => {
+        const NUM_PAGES_TO_CRAWL = 1;
+        const site = "https://amplified.dev/";
+
+        const crawlResults: PageData[] = [];
+        const docsCrawler = new DocsCrawler();
+
+        for await (const page of docsCrawler.crawl(
+          new URL(site),
+          NUM_PAGES_TO_CRAWL,
+        )) {
+          crawlResults.push(page);
+        }
+
+        expect(crawlResults.length).toBeGreaterThanOrEqual(NUM_PAGES_TO_CRAWL);
+      },
+      TIMEOUT_MS,
+    );
   });
 });

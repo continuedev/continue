@@ -314,7 +314,11 @@ class VsCodeIde implements IDE {
     for (const workspaceDir of workspaceDirs) {
       const files = await vscode.workspace.fs.readDirectory(workspaceDir);
       for (const [filename, type] of files) {
-        if (type === vscode.FileType.File && filename === ".continuerc.json") {
+        if (
+          (type === vscode.FileType.File ||
+            type === vscode.FileType.SymbolicLink) &&
+          filename === ".continuerc.json"
+        ) {
           const contents = await this.ideUtils.readFile(
             vscode.Uri.joinPath(workspaceDir, filename).fsPath,
           );

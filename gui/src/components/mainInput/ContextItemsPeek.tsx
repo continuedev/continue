@@ -18,6 +18,7 @@ const ContextItemDiv = styled.div`
   cursor: pointer;
   padding: 6px 10px 6px 6px;
   margin-left: 4px;
+  margin-right: 12px;
   display: flex;
   align-items: center;
   border-radius: ${defaultBorderRadius};

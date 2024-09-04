@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.201",
+  "version": "0.9.206",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -56,7 +56,6 @@
     "onView:continueGUIView"
   ],
   "main": "./out/extension.js",
-  "browser": "./out/extension.js",
   "contributes": {
     "languages": [
       {

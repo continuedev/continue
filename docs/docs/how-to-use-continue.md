@@ -37,8 +37,8 @@ Refactoring is a crucial part of maintaining and improving your code. With Conti
 
 Continue allows you to ask questions about your entire codebase, which can be extremely useful for getting quick answers and making informed decisions.
 
-- **VS Code**: Type `@codebase` followed by your query (works on both MacOS and Windows).
-- **JetBrains**: This feature will be available soon.
+- **VS Code**: Type `@codebase` followed by your query, or use `cmd+Enter`
+- **JetBrains**: Type `@codebase` followed by your query, or use `cmd+Enter`
 
 ![codebase](/img/codebase.gif)
 

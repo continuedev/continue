@@ -15,7 +15,6 @@ import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
-import DocsCrawler from "./indexing/docs/DocsCrawler";
 import DocsService from "./indexing/docs/DocsService";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -168,12 +167,6 @@ export class Core {
       (e) => {},
       (..._) => Promise.resolve([]),
     );
-
-    try {
-      DocsCrawler.verifyOrInstallChromium();
-    } catch (err) {
-      console.debug(`Failed to install Chromium: ${err}`);
-    }
 
     const on = this.messenger.on.bind(this.messenger);
 
@@ -714,10 +707,22 @@ export class Core {
       dirs,
       this.indexingCancellationController.signal,
     )) {
-      this.messenger.request("indexProgress", update);
-      this.indexingState = update;
+      let updateToSend = { ...update };
+      if (update.status === "failed") {
+        updateToSend.status = "done";
+        updateToSend.desc = "Indexing complete";
+        updateToSend.progress = 1.0;
+      }
+
+      this.messenger.request("indexProgress", updateToSend);
+      this.indexingState = updateToSend;
 
       if (update.status === "failed") {
+        console.debug(
+          "Indexing failed with error: ",
+          update.desc,
+          update.debugInfo,
+        );
         Telemetry.capture(
           "indexing_error",
           {

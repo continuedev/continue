@@ -8,6 +8,8 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { showFreeTrialLoginMessage } from "../util/messages";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import {
@@ -31,6 +33,15 @@ export class ContinueCompletionProvider
     if (e.message.includes("https://ollama.ai")) {
       options.push("Download Ollama");
     }
+
+    if (e.message.includes("Please sign in with GitHub")) {
+      showFreeTrialLoginMessage(
+        e.message,
+        this.configHandler.reloadConfig.bind(this.configHandler),
+        () => this.webviewProtocol.request("openOnboarding", undefined),
+      );
+      return;
+    }
     vscode.window.showErrorMessage(e.message, ...options).then((val) => {
       if (val === "Documentation") {
         vscode.env.openExternal(
@@ -51,6 +62,7 @@ export class ContinueCompletionProvider
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly tabAutocompleteModel: TabAutocompleteModel,
+    private readonly webviewProtocol: VsCodeWebviewProtocol,
   ) {
     this.completionProvider = new CompletionProvider(
       this.configHandler,

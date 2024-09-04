@@ -28,7 +28,9 @@ import LMStudio from "./LMStudio";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import Mistral from "./Mistral";
+import Mock from "./Mock";
 import Msty from "./Msty";
+import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
@@ -36,9 +38,9 @@ import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
-import Nvidia from "./Nvidia";
 
 const LLMs = [
   Anthropic,
@@ -72,6 +74,8 @@ const LLMs = [
   WatsonX,
   OpenRouter,
   Nvidia,
+  Vllm,
+  Mock,
 ];
 
 export async function llmFromDescription(

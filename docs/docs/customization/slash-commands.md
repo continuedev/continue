@@ -6,7 +6,7 @@ keywords: [slash command, custom commands, step]
 
 # Slash Commands
 
-Slash commands are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command let you stream edits directly into your editor.
+Slash commands are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
 
 ![slash-commands](/img/slash-commands.png)
 

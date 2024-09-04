@@ -1,32 +1,22 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
 import com.github.continuedev.continueintellijextension.activities.showTutorial
-import com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
-import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.util.io.StreamUtil
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.jcef.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import java.io.File
-import java.io.IOException
-import java.nio.charset.StandardCharsets
-import java.nio.file.Paths
 
 class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false) {
     private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
@@ -118,13 +108,20 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
             val ide = continuePluginService.ideProtocolClient;
 
             val respond = fun(data: Any?) {
-                val jsonData = mutableMapOf(
-                        "messageId" to messageId,
-                        "data" to data,
-                        "messageType" to messageType
-                )
-                val jsonString = Gson().toJson(jsonData)
-                sendToWebview(messageType, data, messageId ?: uuid())
+                // This matches the way that we expect receive messages in IdeMessenger.ts (gui)
+                // and the way they are sent in VS Code (webviewProtocol.ts)
+                var result: Map<String, Any?>? = null
+                if (MessageTypes.generatorTypes.contains(messageType)) {
+                    result = data as? Map<String, Any?>
+                } else {
+                    result = mutableMapOf(
+                        "status" to "success",
+                        "done" to false,
+                        "content" to data
+                    )
+                }
+
+                sendToWebview(messageType, result, messageId ?: uuid())
             }
 
             if (PASS_THROUGH_TO_CORE.contains(messageType)) {

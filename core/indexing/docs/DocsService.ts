@@ -75,16 +75,14 @@ export default class DocsService {
   private config!: ContinueConfig;
   private sqliteDb?: Database;
 
-  // If we are instantiating a new DocsService from `getContextItems()`,
-  // we have access to the direct config object.
-  // When instantiating the DocsService from core, we have access
-  // to a ConfigHandler instance.
+  private docsCrawler!: DocsCrawler;
+
   constructor(
-    configOrHandler: ConfigHandler,
+    configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
   ) {
-    this.isInitialized = this.init(configOrHandler);
+    this.isInitialized = this.init(configHandler);
   }
 
   static getSingleton() {
@@ -92,11 +90,11 @@ export default class DocsService {
   }
 
   static createSingleton(
-    configOrHandler: ConfigHandler,
+    configHandler: ConfigHandler,
     ide: IDE,
     messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
   ) {
-    const docsService = new DocsService(configOrHandler, ide, messenger);
+    const docsService = new DocsService(configHandler, ide, messenger);
     DocsService.instance = docsService;
     return docsService;
   }
@@ -202,10 +200,8 @@ export default class DocsService {
     let processedPages = 0;
     let maxKnownPages = 1;
 
-    const docsCrawler = new DocsCrawler(new URL(startUrl));
-
     // Crawl pages and retrieve info as articles
-    for await (const page of docsCrawler.crawl()) {
+    for await (const page of this.docsCrawler.crawl(new URL(startUrl))) {
       processedPages++;
 
       const article = pageToArticle(page);
@@ -385,19 +381,9 @@ export default class DocsService {
     return favicon;
   }
 
-  /**
-   * A ConfigHandler is passed to the DocsService in `core` when
-   * we don't yet have access to the config object. This handler
-   * is used to set up a single instance of the DocsService that
-   * subscribes to config updates, e.g. to trigger re-indexing
-   * on a new embeddings provider.
-   */
   private async init(configHandler: ConfigHandler) {
-    if (configHandler instanceof ConfigHandler) {
-      this.config = await configHandler.loadConfig();
-    } else {
-      this.config = configHandler;
-    }
+    this.config = await configHandler.loadConfig();
+    this.docsCrawler = new DocsCrawler();
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
 
