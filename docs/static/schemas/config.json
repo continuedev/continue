@@ -2256,7 +2256,7 @@
         "tabAutocompleteOptions": {
           "title": "TabAutocompleteOptions",
           "type": "object",
-          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/features/tab-autocomplete#configuration-options).",
+          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://trypear.ai/docs/tab-autocomplete).",
           "properties": {
             "disable": {
               "type": "boolean",
