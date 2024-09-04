@@ -177,7 +177,7 @@ const config = {
           },
           {
             from: "/getting-started",
-            to: "/quickstart",
+            to: "/quickstart/overview",
           },
           {
             from: "/model-setup/overview",
