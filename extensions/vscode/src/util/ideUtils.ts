@@ -651,14 +651,3 @@ export class VsCodeIdeUtils {
     return rangeInFiles;
   }
 }
-
-export const TOAST_FN_BY_TYPE: {
-  [type in ToastType]:
-    | typeof vscode.window.showInformationMessage
-    | typeof vscode.window.showWarningMessage
-    | typeof vscode.window.showInformationMessage;
-} = {
-  info: vscode.window.showInformationMessage,
-  warning: vscode.window.showWarningMessage,
-  error: vscode.window.showErrorMessage,
-};

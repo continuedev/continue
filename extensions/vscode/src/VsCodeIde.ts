@@ -26,7 +26,7 @@ import * as vscode from "vscode";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
-import { TOAST_FN_BY_TYPE, VsCodeIdeUtils } from "./util/ideUtils";
+import { VsCodeIdeUtils } from "./util/ideUtils";
 import {
   getExtensionUri,
   openEditorAndRevealRange,
@@ -195,8 +195,21 @@ class VsCodeIde implements IDE {
 
   showToast: IDE["showToast"] = async (...params) => {
     const [type, message, ...otherParams] = params;
-    const toastFn = TOAST_FN_BY_TYPE[type];
-    return toastFn(message, ...otherParams);
+    const { showErrorMessage, showWarningMessage, showInformationMessage } =
+      vscode.window;
+
+    switch (type) {
+      case "error":
+        return showErrorMessage(message, "Show logs").then((selection) => {
+          if (selection === "Show logs") {
+            vscode.commands.executeCommand("workbench.action.toggleDevTools");
+          }
+        });
+      case "info":
+        return showInformationMessage(message, ...otherParams);
+      case "warning":
+        return showWarningMessage(message, ...otherParams);
+    }
   };
 
   async getRepoName(dir: string): Promise<string | undefined> {

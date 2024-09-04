@@ -176,7 +176,7 @@ export class Core {
         message: err.message,
         stack: err.stack,
       });
-      this.messenger.request("showToast", ["error", err.message]);
+      this.ide.showToast("error", err.message);
     });
 
     // New
