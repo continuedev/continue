@@ -5,7 +5,7 @@ import OpenAI from "../OpenAI.js";
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
     this.apiKey = value.workOsAccessToken;
-    this.apiBase = new URL("openai/v1", value.controlPlaneProxyUrl).toString();
+    this.apiBase = new URL("openai/v1/", value.controlPlaneProxyUrl).toString();
   }
 
   static providerName: ModelProvider = "continue-proxy";
