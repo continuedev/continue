@@ -1,5 +1,6 @@
 ---
 title: How it works
+sidebar_position: 4
 description: How Edit works
 keywords: [edit, cmd l, works]
 ---

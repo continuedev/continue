@@ -1,5 +1,6 @@
 ---
 title: Advanced configuration
+sidebar_position: 5
 description: Advanced configuration for Edit
 keywords: [edit, cmd l, works]
 ---

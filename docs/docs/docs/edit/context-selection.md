@@ -1,5 +1,6 @@
 ---
 title: Context selection
+sidebar_position: 3
 description: How to select context for Edit
 keywords: [edit, cmd l, works]
 ---

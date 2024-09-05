@@ -1,5 +1,6 @@
 ---
 title: Model setup
+sidebar_position: 2
 description: How to set up an Edit model
 keywords: [edit, cmd l, model]
 ---
