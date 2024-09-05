@@ -125,4 +125,14 @@ World
     `;
     expect(result).toBe("Hello\r\n  World");
   });
+
+  it("should not count empty lines in the minimum indentation", () => {
+    const result = dedent`
+      Hello
+
+      World
+    `;
+
+    expect(result).toBe("Hello\n\nWorld");
+  });
 });

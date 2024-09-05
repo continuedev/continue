@@ -294,6 +294,10 @@ export function dedent(strings: TemplateStringsArray, ...values: any[]) {
   }
 
   const minIndent = lines.reduce((min, line) => {
+    if (line.trim() === "") {
+      // Don't consider empty lines when calculating indentation
+      return min;
+    }
     const match = line.match(/^\s*/);
     return Math.min(min, match ? match[0].length : Infinity);
   }, Infinity);
