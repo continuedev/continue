@@ -43,6 +43,7 @@ import {
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
+  getMetaKeyLabel,
   isJetBrains,
   isMetaEquivalentKeyPressed,
   isWebEnvironment,
@@ -302,7 +303,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         placeholder: () =>
           historyLengthRef.current === 0
             ? "Ask anything, '/' for slash commands, '@' to add context"
-            : "Ask a follow-up",
+            : `Ask a follow-up (${getMetaKeyLabel()}⇧L)`,
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {
