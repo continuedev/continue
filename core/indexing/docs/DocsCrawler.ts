@@ -1,17 +1,17 @@
 import { Octokit } from "@octokit/rest";
+import * as cheerio from "cheerio";
 import * as fs from "fs";
+import fetch from "node-fetch";
 import { URL } from "node:url";
 import { Handler, HTTPResponse, Page } from "puppeteer";
 import {
+  editConfigJson,
   getChromiumPath,
   getContinueUtilsPath,
-  editConfigJson,
 } from "../../util/paths";
 // @ts-ignore
 // @prettier-ignore
 import PCR from "puppeteer-chromium-resolver";
-import * as cheerio from "cheerio";
-import fetch from "node-fetch";
 import { ContinueConfig, IDE } from "../..";
 
 export type PageData = {
@@ -60,11 +60,11 @@ class DocsCrawler {
 
       // We assume that if we failed to crawl a single page,
       // it was due to an error that using Chromium can resolve
-      const shouldAttemptChromiumInstall =
+      const shouldProposeUseChromium =
         !didCrawlSinglePage &&
-        this.chromiumInstaller.shouldInstallOnCrawlFailure();
+        this.chromiumInstaller.shouldProposeUseChromiumOnCrawlFailure();
 
-      if (shouldAttemptChromiumInstall) {
+      if (shouldProposeUseChromium) {
         const didInstall =
           await this.chromiumInstaller.proposeAndAttemptInstall(
             startUrl.toString(),
@@ -506,13 +506,12 @@ class ChromiumInstaller {
     );
   }
 
-  shouldInstallOnCrawlFailure() {
+  shouldProposeUseChromiumOnCrawlFailure() {
     const { experimental } = this.config;
 
     return (
-      !this.isInstalled() &&
-      (experimental?.useChromiumForDocsCrawling === undefined ||
-        experimental.useChromiumForDocsCrawling)
+      experimental?.useChromiumForDocsCrawling === undefined ||
+      experimental.useChromiumForDocsCrawling
     );
   }
 
@@ -564,6 +563,6 @@ export default DocsCrawler;
 export {
   CheerioCrawler,
   ChromiumCrawler,
-  GitHubCrawler,
   ChromiumInstaller as ChromiumInstaller,
+  GitHubCrawler,
 };
