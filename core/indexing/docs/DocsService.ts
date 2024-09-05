@@ -31,6 +31,7 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
+import { addContextProvider } from "../../config/util";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -139,13 +140,34 @@ export default class DocsService {
     return !!title;
   }
 
+  async showAddDocsContextProviderToast() {
+    const actionMsg = "Add 'docs' context provider";
+    const res = await this.ide.showToast(
+      "info",
+      "Starting docs indexing",
+      actionMsg,
+    );
+
+    if (res === actionMsg) {
+      addContextProvider({
+        name: DocsContextProvider.description.title,
+        params: {},
+      });
+
+      this.ide.showToast("info", "Successfuly added docs context provider");
+    }
+
+    return res === actionMsg;
+  }
+
   async indexAllDocs(reIndex: boolean = false) {
     if (!this.hasDocsContextProvider()) {
-      this.ide.showToast(
-        "info",
-        "No 'docs' provider configured under 'contextProviders' in config.json",
-      );
-      return;
+      const didAddDocsContextProvider =
+        await this.showAddDocsContextProviderToast();
+
+      if (!didAddDocsContextProvider) {
+        return;
+      }
     }
 
     const docs = await this.list();
@@ -384,7 +406,7 @@ export default class DocsService {
 
   private async init(configHandler: ConfigHandler) {
     this.config = await configHandler.loadConfig();
-    this.docsCrawler = new DocsCrawler();
+    this.docsCrawler = new DocsCrawler(this.ide, this.config);
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
 
