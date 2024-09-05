@@ -5,7 +5,6 @@ import { EmbeddingsProvider } from "../index.js";
 export type GlobalContextType = {
   indexingPaused: boolean;
   selectedTabAutocompleteModel: string;
-  didPrevChromiumInstallFail: boolean;
   lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
   /**
    * This is needed to handle the case where a JetBrains user has created
