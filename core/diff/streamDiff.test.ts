@@ -1,8 +1,9 @@
+import fs from "node:fs";
 import { streamDiff } from "../diff/streamDiff.js";
 import { DiffLine, DiffLineType } from "../index.js";
 // @ts-ignore no typings available
 import { changed, diff as myersDiff } from "myers-diff";
-import { dedent } from "../util/index.js";
+import path from "node:path";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
@@ -54,9 +55,39 @@ function displayDiff(diff: DiffLine[]) {
     new: "+",
     old: "-",
   };
-  console.log(
-    diff.map(({ type, line }) => `${symbol[type]} ${line}`).join("\n"),
+
+  return diff.map(({ type, line }) => `${symbol[type]} ${line}`).join("\n");
+}
+
+async function expectDiff(file: string) {
+  const testFilePath = path.join(
+    __dirname,
+    "diff",
+    "test-examples",
+    file + ".diff",
   );
+  const testFileContents = fs.readFileSync(testFilePath, "utf-8");
+  const [oldText, newText, expectedDiff] = testFileContents
+    .split("\n---\n")
+    .map((s) => s.trim());
+  const oldLines = oldText.split("\n");
+  const newLines = newText.split("\n");
+  const { streamDiffs, myersDiffs } = await collectDiffs(oldLines, newLines);
+  const displayedDiff = displayDiff(streamDiffs);
+
+  if (expectedDiff.trim() === "") {
+    console.log(
+      "Expected diff was empty. Writing computed diff to the test file",
+    );
+    fs.writeFileSync(
+      testFilePath,
+      `${oldText}\n\n---\n\n${newText}\n\n---\n\n${displayedDiff}`,
+    );
+
+    throw new Error("Expected diff is empty");
+  }
+
+  expect(displayedDiff).toEqual(expectedDiff);
 }
 
 // We use a longer `)` string here to not get
@@ -194,67 +225,11 @@ describe("streamDiff(", () => {
     expect(getMyersDiffType(myersDiffs[0])).toBe("old");
   });
 
-  test.only("tabs vs. spaces differences are ignored", async () => {
-    const oldLines = dedent`
-\tfrom fastapi import FastAPI
-
-\tapp = FastAPI()
-
-\t@app.get("/")
-\tdef read_root():
-\t\treturn {"Hello": "World"}
-
-\t@app.get("/landing")
-\tdef read_landing_page():
-\t\treturn {"message": "Welcome to the landing page"}
-  `.split("\n");
-    const newLines = dedent`
-    from fastapi import FastAPI, HTTPException
-
-    app = FastAPI()
-
-    @app.get("/")
-    def read_root():
-        return {"Hello": "World"}
-
-    @app.get("/landing")
-    def read_landing_page():
-        raise HTTPException(status_code=404, detail="Page not found")
-  `.split("\n");
-
-    const { streamDiffs, myersDiffs } = await collectDiffs(oldLines, newLines);
-    displayDiff(streamDiffs);
+  test("tabs vs. spaces differences are ignored", async () => {
+    await expectDiff("fastapi-tabs-vs-spaces");
   });
 
   test("FastAPI example", async () => {
-    const oldLines = dedent`
-      from fastapi import FastAPI
-
-      app = FastAPI()
-
-      @app.get("/")
-      def read_root():
-          return {"Hello": "World"}
-
-      @app.get("/landing")
-      def read_landing_page():
-          return {"message": "Welcome to the landing page"}
-    `.split("\n");
-    const newLines = dedent`
-      from fastapi import FastAPI, HTTPException
-
-      app = FastAPI()
-
-      @app.get("/")
-      def read_root():
-          return {"Hello": "World"}
-
-      @app.get("/landing")
-      def read_landing_page():
-          raise HTTPException(status_code=404, detail="Page not found")
-    `.split("\n");
-
-    const { streamDiffs, myersDiffs } = await collectDiffs(oldLines, newLines);
-    displayDiff(streamDiffs);
+    await expectDiff("fastapi");
   });
 });
