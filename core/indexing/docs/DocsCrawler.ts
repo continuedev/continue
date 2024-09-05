@@ -58,7 +58,7 @@ class DocsCrawler {
         didCrawlSinglePage = true;
       }
 
-      // We assume that if they failed to crawl a single page,
+      // We assume that if we failed to crawl a single page,
       // it was due to an error that using Chromium can resolve
       const shouldAttemptChromiumInstall =
         !didCrawlSinglePage &&
@@ -348,6 +348,8 @@ class ChromiumCrawler {
 
   /**
    * We need to handle redirects manually, otherwise there are race conditions.
+   *
+   * https://github.com/puppeteer/puppeteer/issues/3323#issuecomment-2332333573
    */
   private async gotoPageAndHandleRedirects(page: Page, url: string) {
     const MAX_PAGE_WAIT_MS = 5000;
