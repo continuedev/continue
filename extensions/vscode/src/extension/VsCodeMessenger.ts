@@ -17,7 +17,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
-import { VsCodeIde } from "../ideProtocol";
+import { VsCodeIde } from "../VsCodeIde";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
@@ -282,18 +282,8 @@ export class VsCodeMessenger {
       const { filepath, startLine, endLine } = msg.data;
       return ide.showLines(filepath, startLine, endLine);
     });
-    // Other
-    this.onWebviewOrCore("errorPopup", (msg) => {
-      vscode.window
-        .showErrorMessage(msg.data.message, "Show Logs")
-        .then((selection) => {
-          if (selection === "Show Logs") {
-            vscode.commands.executeCommand("workbench.action.toggleDevTools");
-          }
-        });
-    });
-    this.onWebviewOrCore("infoPopup", (msg) => {
-      vscode.window.showInformationMessage(msg.data.message);
+    this.onWebviewOrCore("showToast", (msg) => {
+      this.ide.showToast(...msg.data);
     });
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
       ide.getGitHubAuthToken(),

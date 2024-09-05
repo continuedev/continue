@@ -176,7 +176,7 @@ export class Core {
         message: err.message,
         stack: err.stack,
       });
-      this.messenger.request("errorPopup", { message: err.message });
+      this.ide.showToast("error", err.message);
     });
 
     // New
@@ -272,9 +272,9 @@ export class Core {
       }
 
       if (hasFailed) {
-        this.ide.infoPopup(`Failed to index ${msg.data.startUrl}`);
+        this.ide.showToast("info", `Failed to index ${msg.data.startUrl}`);
       } else {
-        this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
+        this.ide.showToast("info", `Successfully indexed ${msg.data.startUrl}`);
         this.messenger.send("refreshSubmenuItems", undefined);
       }
     });
@@ -344,7 +344,10 @@ export class Core {
           id,
         }));
       } catch (e) {
-        this.ide.errorPopup(`Error getting context items from ${name}: ${e}`);
+        this.ide.showToast(
+          "error",
+          `Error getting context items from ${name}: ${e}`,
+        );
         return [];
       }
     });

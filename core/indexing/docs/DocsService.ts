@@ -31,6 +31,7 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
+import { addContextProvider } from "../../config/util";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -139,12 +140,34 @@ export default class DocsService {
     return !!title;
   }
 
+  async showAddDocsContextProviderToast() {
+    const actionMsg = "Add 'docs' context provider";
+    const res = await this.ide.showToast(
+      "info",
+      "Starting docs indexing",
+      actionMsg,
+    );
+
+    if (res === actionMsg) {
+      addContextProvider({
+        name: DocsContextProvider.description.title,
+        params: {},
+      });
+
+      this.ide.showToast("info", "Successfuly added docs context provider");
+    }
+
+    return res === actionMsg;
+  }
+
   async indexAllDocs(reIndex: boolean = false) {
     if (!this.hasDocsContextProvider()) {
-      this.ide.infoPopup(
-        "No 'docs' provider configured under 'contextProviders' in config.json",
-      );
-      return;
+      const didAddDocsContextProvider =
+        await this.showAddDocsContextProviderToast();
+
+      if (!didAddDocsContextProvider) {
+        return;
+      }
     }
 
     const docs = await this.list();
@@ -154,7 +177,7 @@ export default class DocsService {
       while (!(await generator.next()).done) {}
     }
 
-    this.ide.infoPopup("Docs indexing completed");
+    this.ide.showToast("info", "Docs indexing completed");
   }
 
   async list() {
@@ -383,7 +406,7 @@ export default class DocsService {
 
   private async init(configHandler: ConfigHandler) {
     this.config = await configHandler.loadConfig();
-    this.docsCrawler = new DocsCrawler();
+    this.docsCrawler = new DocsCrawler(this.ide, this.config);
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
 
@@ -711,7 +734,8 @@ export default class DocsService {
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
       // A bit noisy for teams users whom have no choice if their admin is the one who didn't setup an embeddingsProvider
-      // this.ide.errorPopup(
+      // this.ide.showToast(
+      //   "error",
       //   "The 'transformers.js' embeddings provider currently cannot be used to index " +
       //     "documentation in JetBrains. To enable documentation indexing, you can use " +
       //     "any of the other providers described in the docs: " +
