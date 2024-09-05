@@ -3,21 +3,21 @@
 
 const sidebars = {
   docsSidebar: [
-    "introduction",
+    "intro",
     {
       type: "category",
-      label: "Quickstart",
+      label: "Getting Started",
       collapsible: true,
       collapsed: true,
       items: [
         {
           type: "doc",
-          id: "quickstart/install",
+          id: "getting-started/install",
           label: "Install",
         },
         {
           type: "doc",
-          id: "quickstart/overview",
+          id: "getting-started/overview",
           label: "Overview",
         },
       ],
