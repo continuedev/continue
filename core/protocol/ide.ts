@@ -1,4 +1,4 @@
-import { ControlPlaneSessionInfo } from "../control-plane/client.js";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 import type {
   ContinueRcJson,
   DiffLine,
@@ -11,7 +11,8 @@ import type {
   Range,
   RangeInFile,
   Thread,
-} from "../index.js";
+  IDE,
+} from "../";
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
@@ -67,8 +68,10 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getBranch: [{ dir: string }, string];
   getRepoName: [{ dir: string }, string | undefined];
 
-  errorPopup: [{ message: string }, void];
-  infoPopup: [{ message: string }, void];
+  showToast: [
+    Parameters<IDE["showToast"]>,
+    Awaited<ReturnType<IDE["showToast"]>>,
+  ];
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
   getLastModified: [{ files: string[] }, { [path: string]: number }];

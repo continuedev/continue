@@ -141,7 +141,8 @@ export default class DocsService {
 
   async indexAllDocs(reIndex: boolean = false) {
     if (!this.hasDocsContextProvider()) {
-      this.ide.infoPopup(
+      this.ide.showToast(
+        "info",
         "No 'docs' provider configured under 'contextProviders' in config.json",
       );
       return;
@@ -154,7 +155,7 @@ export default class DocsService {
       while (!(await generator.next()).done) {}
     }
 
-    this.ide.infoPopup("Docs indexing completed");
+    this.ide.showToast("info", "Docs indexing completed");
   }
 
   async list() {
@@ -711,7 +712,8 @@ export default class DocsService {
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
       // A bit noisy for teams users whom have no choice if their admin is the one who didn't setup an embeddingsProvider
-      // this.ide.errorPopup(
+      // this.ide.showToast(
+      //   "error",
       //   "The 'transformers.js' embeddings provider currently cannot be used to index " +
       //     "documentation in JetBrains. To enable documentation indexing, you can use " +
       //     "any of the other providers described in the docs: " +

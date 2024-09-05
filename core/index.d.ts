@@ -317,6 +317,9 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
   model?: string;
 }
+
+export type ToastType = "info" | "error" | "warning";
+
 export interface LLMOptions {
   model: string;
 
@@ -497,9 +500,11 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
-  errorPopup(message: string): Promise<void>;
-  infoPopup(message: string): Promise<void>;
-
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<any>;
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
