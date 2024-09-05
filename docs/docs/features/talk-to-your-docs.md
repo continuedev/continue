@@ -37,7 +37,7 @@ We offer a selection of pre-indexed documentation sites for popular frameworks a
 
 ### Through the `@docs` Context Provider
 
-To add a single documentation site, we recommend going through the `@docs` context provider.
+To add a single documentation site, we recommend using the `@docs` context provider.
 
 1. Type `@docs` in the chat panel, hit enter
 2. Type "add" and select the "Add Docs" option
@@ -58,7 +58,6 @@ The configuration schema is as follows:
     "startUrl": "https://docs.continue.dev/intro",
     "rootUrl": "https://docs.continue.dev",
     "faviconUrl": "https://docs.continue.dev/favicon.ico",
-    "maxDepth": 3
   }
 ]
 ```
@@ -67,17 +66,20 @@ The configuration schema is as follows:
 - `startUrl`: The URL where the indexing process should begin.
 - `rootUrl`: The base URL of the documentation site, used to determine which pages to index.
 - `faviconUrl`: The URL of the site's favicon, used for visual identification in the UI.
-- `maxDepth`: The maximum number of levels deep the indexer should crawl from the start URL.
+
+## Crawling dynamically generated sites with `useChromiumForDocsCrawling`
+
+By default, we use a lighter weight tool to crawl documentation sites that cannot render sites that are dynamically generated using JavaScript.
+
+If you want to crawl a site that is dynamically generated, or you get an error while attempting to crawl a site, you can enable the experimental `useChromiumForDocsCrawling` feature in your `config.json`. This will download and install Chromium to `~/.continue/.utils`.
+
+```json title=config.json
+"experimental": {
+    "useChromiumForDocsCrawling": true
+}
+```
 
 ## FAQ
-
-### Why did my documentation site fail to index?
-
-Our current crawler is designed to work with static websites and may encounter issues with dynamic or JavaScript-heavy sites. If your documentation site failed to index, it's possible that it contains non-static elements that our crawler couldn't process.
-
-If you're experiencing issues with indexing a documentation site, please let us know. We're continuously improving our indexing capabilities and would appreciate your feedback to help us enhance the feature.
-
-<a href="https://discord.com/channels/1108621136150929458/1156679146932535376" className="button button--primary">Report Indexing Issues on Discord</a>
 
 ### How often is the indexed content updated?
 
