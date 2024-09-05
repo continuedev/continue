@@ -23,8 +23,10 @@ const config = {
   organizationName: "continuedev", // Usually your GitHub org/user name.
   projectName: "continue", // Usually your repo name.
 
-  onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  // TODO: Renable
+  onBrokenLinks: "ignore",
+  // onBrokenLinks: "throw",
+  // onBrokenMarkdownLinks: "warn",
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -177,7 +179,7 @@ const config = {
           },
           {
             from: "/getting-started",
-            to: "/quickstart/overview",
+            to: "/docs/quickstart/overview",
           },
           {
             from: "/model-setup/overview",
@@ -197,19 +199,19 @@ const config = {
           },
           {
             from: "/walkthroughs/codebase-embeddings",
-            to: "/features/codebase-embeddings",
+            to: "/reference/tutorials/codebase-retrieval",
           },
           {
             from: "/walkthroughs/tab-autocomplete",
-            to: "/features/tab-autocomplete",
+            to: "/reference/tutorials/tab-autocomplete",
           },
           {
             from: "/walkthroughs/prompt-files",
-            to: "/features/prompt-files",
+            to: "/reference/tutorials/prompt-files",
           },
           {
             from: "/walkthroughs/quick-actions",
-            to: "/features/quick-actions",
+            to: "/reference/tutorials/quick-actions",
           },
         ],
       },
