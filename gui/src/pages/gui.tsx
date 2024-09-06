@@ -57,6 +57,7 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import OnboardingCard from "../components/OnboardingCard";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -93,24 +94,10 @@ const StepsDiv = styled.div`
     position: relative;
   }
 
-  // Gray, vertical line on the left ("thread")
-  // &::before {
-  //   content: "";
-  //   position: absolute;
-  //   height: calc(100% - 12px);
-  //   border-left: 2px solid ${lightGray};
-  //   left: 28px;
-  //   z-index: 0;
-  //   bottom: 12px;
-  // }
-
   .thread-message {
     margin: 8px 4px 0 4px;
     padding-bottom: 8px;
   }
-  // .thread-message:not(:first-child) {
-  //   border-top: 1px solid ${lightGray}22;
-  // }
 `;
 
 const NewSessionButton = styled.div`
@@ -507,6 +494,10 @@ function GUI() {
                   </NewSessionButton>
                 </div>
               ) : null}
+
+              <div className="mt-10 mx-2">
+                <OnboardingCard />
+              </div>
 
               {!!showTutorialCard && (
                 <div className="flex justify-center w-full">
