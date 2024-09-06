@@ -73,7 +73,7 @@ const config = {
         logo: {
           alt: "Continue Logo",
           src: "img/logo.png",
-          href: "https://continue.dev",
+          href: "/docs",
         },
         items: [
           {
@@ -177,7 +177,7 @@ const config = {
           },
           {
             from: "/getting-started",
-            to: "/quickstart/overview",
+            to: "/docs/quickstart/overview",
           },
           {
             from: "/model-setup/overview",
@@ -197,19 +197,19 @@ const config = {
           },
           {
             from: "/walkthroughs/codebase-embeddings",
-            to: "/features/codebase-embeddings",
+            to: "/reference/tutorials/codebase-retrieval",
           },
           {
             from: "/walkthroughs/tab-autocomplete",
-            to: "/features/tab-autocomplete",
+            to: "/reference/tutorials/tab-autocomplete",
           },
           {
             from: "/walkthroughs/prompt-files",
-            to: "/features/prompt-files",
+            to: "/reference/tutorials/prompt-files",
           },
           {
             from: "/walkthroughs/quick-actions",
-            to: "/features/quick-actions",
+            to: "/reference/tutorials/quick-actions",
           },
         ],
       },
