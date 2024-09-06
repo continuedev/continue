@@ -31,10 +31,6 @@ async function collectDiffs(
   }
 
   const myersDiffs = myersDiff(oldLines.join("\n"), newLines.join("\n"));
-  // const myersDiffs: DiffLine[] = myersDiffsRaw.map((diff) => ({
-  //   type: getMyersDiffType(diff),
-  //   line: diff.rhs,
-  // }));
 
   return { streamDiffs, myersDiffs };
 }
