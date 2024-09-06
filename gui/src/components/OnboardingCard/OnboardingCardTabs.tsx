@@ -1,10 +1,5 @@
 import styled from "styled-components";
-import {
-  vscButtonBackground,
-  vscButtonForeground,
-  vscFocusBorder,
-  vscForeground,
-} from "..";
+import { vscButtonBackground, vscForeground } from "..";
 
 interface OnboardingCardTabsProps {
   activeTab: string;
@@ -19,6 +14,7 @@ export enum Tabs {
 
 const TabButton = styled.button<{ isActive: boolean }>`
   padding: 0.5rem 1rem;
+  margin-bottom: -1px;
   focus: outline-none;
   background: transparent;
   cursor: pointer;
@@ -36,12 +32,18 @@ const TabButton = styled.button<{ isActive: boolean }>`
   `}
 `;
 
+const TabList = styled.div`
+  border-style: solid;
+  border-width: 0 0 0.5px 0;
+  border-color: ${vscForeground};
+`;
+
 function OnboardingCardTabs({
   activeTab,
   onTabClick,
 }: OnboardingCardTabsProps) {
   return (
-    <div role="tablist" className="">
+    <TabList>
       {Object.values(Tabs).map((tab) => (
         <TabButton
           key={tab}
@@ -51,7 +53,7 @@ function OnboardingCardTabs({
           {tab}
         </TabButton>
       ))}
-    </div>
+    </TabList>
   );
 }
 

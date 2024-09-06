@@ -128,58 +128,56 @@ function OnboardingLocalTab() {
   }, []);
 
   return (
-    <div className="overflow-y-scroll">
-      <div className="flex flex-col gap-2">
-        <div>
-          <CheckMarkHeader isComplete={isOllamaConnected}>
-            Download Ollama
-          </CheckMarkHeader>
-          {renderOllamaConnectionStatus(ollamaConnectionStatus)}
-        </div>
-        <div>
-          <CheckMarkHeader
-            isComplete={isModelDownloaded(DefaultLocalModels.Chat)}
-          >
-            Chat
-          </CheckMarkHeader>
-          {!isModelDownloaded(DefaultLocalModels.Chat) && (
-            <div className="flex items-start gap-6">
-              <p className="leading-relaxed mt-0 flex-1">
-                <code>{DefaultLocalModels.Chat}</code> is the latest open-source
-                model trained by Meta
-              </p>
+    <div className="flex flex-col gap-2">
+      <div>
+        <CheckMarkHeader isComplete={isOllamaConnected}>
+          Download Ollama
+        </CheckMarkHeader>
+        {renderOllamaConnectionStatus(ollamaConnectionStatus)}
+      </div>
+      <div>
+        <CheckMarkHeader
+          isComplete={isModelDownloaded(DefaultLocalModels.Chat)}
+        >
+          Chat
+        </CheckMarkHeader>
+        {!isModelDownloaded(DefaultLocalModels.Chat) && (
+          <div className="flex items-start gap-6">
+            <p className="leading-relaxed mt-0 flex-1">
+              <code>{DefaultLocalModels.Chat}</code> is the latest open-source
+              model trained by Meta
+            </p>
 
-              <div className="flex-1">
-                <CopyToTerminalButton>
-                  {`ollama run ${DefaultLocalModels.Chat}`}
-                </CopyToTerminalButton>
-              </div>
+            <div className="flex-1">
+              <CopyToTerminalButton>
+                {`ollama run ${DefaultLocalModels.Chat}`}
+              </CopyToTerminalButton>
             </div>
-          )}
-        </div>
-        <div>
-          <CheckMarkHeader
-            isComplete={isModelDownloaded(DefaultLocalModels.Autocomplete)}
-          >
-            Autcomplete [Optional]
-          </CheckMarkHeader>
+          </div>
+        )}
+      </div>
+      <div>
+        <CheckMarkHeader
+          isComplete={isModelDownloaded(DefaultLocalModels.Autocomplete)}
+        >
+          Autcomplete [Optional]
+        </CheckMarkHeader>
 
-          {!isModelDownloaded(DefaultLocalModels.Autocomplete) && (
-            <div className="flex items-start gap-6">
-              <p className="leading-relaxed mt-0 flex-1">
-                <code>{DefaultLocalModels.Autocomplete}</code> is a
-                state-of-the-art 3B parameter autocomplete model trained by
-                Hugging Face
-              </p>
+        {!isModelDownloaded(DefaultLocalModels.Autocomplete) && (
+          <div className="flex items-start gap-6">
+            <p className="leading-relaxed mt-0 flex-1">
+              <code>{DefaultLocalModels.Autocomplete}</code> is a
+              state-of-the-art 3B parameter autocomplete model trained by
+              Hugging Face
+            </p>
 
-              <div className="flex-1">
-                <CopyToTerminalButton>
-                  {`ollama run ${DefaultLocalModels.Autocomplete}`}
-                </CopyToTerminalButton>
-              </div>
+            <div className="flex-1">
+              <CopyToTerminalButton>
+                {`ollama run ${DefaultLocalModels.Autocomplete}`}
+              </CopyToTerminalButton>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

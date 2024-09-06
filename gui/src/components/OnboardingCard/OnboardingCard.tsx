@@ -4,9 +4,9 @@ import OnboardingCardTabs, { Tabs } from "./OnboardingCardTabs";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import OnboardingLocalTab from "./OnboardingLocalTab";
 import OnboardingQuickstartTab from "./OnboardingQuickstartTab";
-import Alert from "../gui/Alert";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray } from "../";
+import OnboardingBestTab from "./OnboardingBestTab";
 
 const StyledCard = styled.div`
   margin: auto;
@@ -36,15 +36,7 @@ function OnboardingCard() {
       case Tabs.Quickstart:
         return <OnboardingQuickstartTab />;
       case Tabs.Best:
-        return (
-          <Alert>
-            Have an OpenAI key or other provider? {/* TODO: Configure link */}
-            <a className="text-inherit underline cursor-pointer hover:text-inherit">
-              Click here
-            </a>{" "}
-            to configure.
-          </Alert>
-        );
+        return <OnboardingBestTab />;
       case Tabs.Local:
         return <OnboardingLocalTab />;
       default:
