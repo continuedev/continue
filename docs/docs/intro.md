@@ -1,0 +1,15 @@
+---
+title: Introduction
+description: The open-source AI code assistant for developers
+keywords: [continue, AI, code assistant, autocomplete, chat, VS Code, JetBrains]
+---
+
+# Introduction
+
+![Continue Logo](/img/intro.png)
+
+**Continue is the leading open-source AI code assistant. You can connect any models and any context to build custom experiences inside [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
+- [Chat](/chat/how-to-use-it.md) to understand and iterate on code in the sidebar
+- [Autocomplete](/autocomplete/how-to-use-it.md) to recieve inline code suggestions as you type
+- [Edit](/edit/how-to-use-it.md) to modify code without leaving your current file
+- [Actions](/actions/how-to-use-it.md) to establish shortcuts for common use cases
