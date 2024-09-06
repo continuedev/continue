@@ -8,7 +8,7 @@ Run the llama.cpp server binary to start the API server. If running on a remote 
 
 After it's up and running, change `~/.continue/config.json` to look like this:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

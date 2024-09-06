@@ -20,7 +20,7 @@ You can use Continue in different ways. Here are some quick setups for common us
 
 The `free-trial` lets new users try out Continue with GPT-4o, Llama3, Claude 3.5, and other models using a ContinueDev proxy server that securely makes API calls to these services.
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {
@@ -54,7 +54,7 @@ This setup uses Claude 3.5 Sonnet for chatting, Codestral for autocomplete, and 
 3. Get an Voyage AI API key from [Voyage AI Dashboard](https://dash.voyageai.com/)
 4. Replace `[CODESTRAL_API_KEY]`, `[ANTHROPIC_API_KEY]`, and `[VOYAGE_API_KEY]` with the keys you got from the above links.
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {
@@ -97,7 +97,7 @@ This configuration leverages Ollama for all functionalities - chat, autocomplete
    - For autocomplete: `ollama pull starcoder2:3b`
    - For embeddings: `ollama pull nomic-embed-text`
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {
@@ -154,7 +154,7 @@ However, if neither of these are the case, you will need to wire up a new LLM ob
 
 Basic authentication can be done with any provider using the `apiKey` field:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {
@@ -171,7 +171,7 @@ This translates to the header `"Authorization": "Bearer xxx"`.
 
 If you need to send custom headers for authentication, you may use the `requestOptions.headers` property like in this example with Ollama:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {
@@ -190,7 +190,7 @@ If you need to send custom headers for authentication, you may use the `requestO
 
 Similarly if your model requires a Certificate for authentication, you may use the `requestOptions.clientCertificate` property like in the example below:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {
@@ -213,7 +213,7 @@ Similarly if your model requires a Certificate for authentication, you may use t
 
 Continue by default knows the context length for common models. For example, it will automatically assume 200k tokens for Claude 3. For Ollama, the context length is determined automatically by asking Ollama. If neither of these are sufficient, you can manually specify the context length by using hte `"contextLength"` property in your model in config.json.
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

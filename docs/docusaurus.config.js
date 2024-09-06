@@ -23,10 +23,8 @@ const config = {
   organizationName: "continuedev", // Usually your GitHub org/user name.
   projectName: "continue", // Usually your repo name.
 
-  // TODO: Renable
-  onBrokenLinks: "ignore",
-  // onBrokenLinks: "throw",
-  // onBrokenMarkdownLinks: "warn",
+  onBrokenLinks: "throw",
+  onBrokenMarkdownLinks: "warn",
 
   // Even if you don't use internalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
@@ -75,7 +73,7 @@ const config = {
         logo: {
           alt: "Continue Logo",
           src: "img/logo.png",
-          href: "https://continue.dev",
+          href: "/docs",
         },
         items: [
           {

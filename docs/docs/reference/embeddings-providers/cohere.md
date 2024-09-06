@@ -4,7 +4,7 @@ title: Cohere
 
 Configuration for the `embed-english-v3.0` model. This is the default.
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "embeddingsProvider": {
     "provider": "cohere",

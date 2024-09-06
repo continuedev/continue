@@ -4,7 +4,7 @@ title: Cohere
 
 See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rerank-2).
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "reranker": {
     "name": "cohere",

@@ -6,7 +6,7 @@ Gemini's _Text Embedding_ model is optimized for creating embeddings with 768 di
 
 As of May 2024, the only available embedding model from Gemini is [`text-embedding-004`](https://ai.google.dev/gemini-api/docs/models/gemini#text-embedding-and-embedding).
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "embeddingsProvider": {
     "provider": "gemini",

@@ -16,7 +16,7 @@ keywords: [codestral, mistral, model setup]
 
 4. To use Codestral as your model for both `autocomplete` and `chat`, replace `[API_KEY]` with your Mistral API key below and add it to your `config.json` file:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {
@@ -43,7 +43,7 @@ keywords: [codestral, mistral, model setup]
 
 Mistral AI recently changed the API endpoint to `codestral.mistral.ai` instead of `api.mistral.ai`, and our updated JetBrains extension is waiting on approval from the store. In the meantime, you will have to specify apiBase as `https://codestral.mistral.ai/v1` in the config.json like this:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

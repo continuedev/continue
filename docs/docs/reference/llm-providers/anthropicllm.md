@@ -2,7 +2,7 @@
 
 To setup Anthropic, obtain an API key from [here](https://www.anthropic.com/api) and add the following to your `config.json` file:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

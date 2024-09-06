@@ -1,9 +1,10 @@
 ---
-title: Talk To Your Docs
 description: Learn how to access and search your project's documentation directly within Continue
-keywords: [documentation, indexing, context provider, embeddings]
+keywords: [documentation, indexing, context provider, embeddings, docs]
 toc_max_heading_level: 5
 ---
+
+# @docs
 
 The [`@docs` context provider](http://localhost:3000/customization/context-providers#documentation) allows you to interact with your documentation directly within Continue. This feature enables you to index any static site or GitHub markdown pages, making it easier to access and utilize your documentation while coding.
 

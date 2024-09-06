@@ -2,7 +2,7 @@
 
 To setup Cohere, add the following to your `config.json` file:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

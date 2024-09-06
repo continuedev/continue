@@ -1,8 +1,9 @@
 ---
-title: Codebase Retrieval
 description: Talk to your codebase
 keywords: [talk, embeddings, reranker, codebase, experimental]
 ---
+
+# @codebase
 
 Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally with `all-MiniLM-L6-v2` and stored locally in `~/.continue/index`.
 
@@ -35,7 +36,7 @@ Here are use cases where it is not useful:
 
 There are a few options that let you configure the behavior of the codebase context provider. These can be set in `config.json`, and are the same for the codebase and folder context providers:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "contextProviders": [
     {

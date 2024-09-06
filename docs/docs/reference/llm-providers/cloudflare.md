@@ -2,7 +2,7 @@
 
 Cloudflare Workers AI can be used for both chat and tab autocompletion in Continue. To setup Cloudflare Workers AI, add the following to your `config.json` file:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

@@ -21,7 +21,7 @@ OpenAI compatible APIs
 
 If you are [using an OpenAI compatible server / API](../../setup/model-providers.md#local), you can change the `apiBase` like this:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

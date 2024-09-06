@@ -2,7 +2,7 @@
 
 To setup Bedrock using custom imported models, add the following to your `config.json` file:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "models": [
     {

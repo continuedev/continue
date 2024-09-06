@@ -1,6 +1,7 @@
 ---
 title: Introduction
 description: The open-source AI code assistant for developers
+slug: /docs
 keywords: [continue, AI, code assistant, autocomplete, chat, VS Code, JetBrains]
 ---
 

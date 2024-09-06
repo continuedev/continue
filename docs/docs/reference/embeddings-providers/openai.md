@@ -8,7 +8,7 @@ title: Open AI
 
 This is default. The `text-embedding-3-small` model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "embeddingsProvider": {
     "provider": "openai",
@@ -23,7 +23,7 @@ This is default. The `text-embedding-3-small` model offers an outstanding balanc
 
 For those requiring the highest level of embedding detail and precision, the `text-embedding-3-large` model is the better choice.
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "embeddingsProvider": {
     "provider": "openai",
@@ -38,7 +38,7 @@ For those requiring the highest level of embedding detail and precision, the `te
 
 For certain scenarios, you may still find the `text-embedding-ada-002` model relevant. Below is the configuration example:
 
-```json title="~/.continue/config.json"
+```json title="config.json"
 {
   "embeddingsProvider": {
     "provider": "openai",
