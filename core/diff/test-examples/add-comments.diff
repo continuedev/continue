@@ -33,21 +33,21 @@ def read_landing_page():
 ---
 
 + # Import the FastAPI class from the fastapi module
-  from fastapi import FastAPI
-  
+ from fastapi import FastAPI
+ 
 + # Create an instance of the FastAPI application
-  app = FastAPI()
-  
+ app = FastAPI()
+ 
 + # Define a route for the root endpoint ("/")
-  @app.get("/")
-  def read_root():
+ @app.get("/")
+ def read_root():
 +     # Return a simple JSON response
 +     return {"Hello": "World"} // This is an example comment
 + 
 + # Define a route for the landing page endpoint ("/landing")
 -     return {"Hello": "World"}
 - 
-  @app.get("/landing")
-  def read_landing_page():
+ @app.get("/landing")
+ def read_landing_page():
 +     # Return a JSON response with a welcome message
-      return {"message": "Welcome to the landing page"}
+     return {"message": "Welcome to the landing page"}

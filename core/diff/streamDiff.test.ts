@@ -51,7 +51,7 @@ function getMyersDiffType(diff: any): MyersDiffTypes | undefined {
 
 function displayDiff(diff: DiffLine[]) {
   const symbol = {
-    same: " ",
+    same: "",
     new: "+",
     old: "-",
   };
@@ -69,7 +69,7 @@ async function expectDiff(file: string) {
   const testFileContents = fs.readFileSync(testFilePath, "utf-8");
   const [oldText, newText, expectedDiff] = testFileContents
     .split("\n---\n")
-    .map((s) => s.trim());
+    .map((s) => s.replace(/^\n+/, "").trimEnd());
   const oldLines = oldText.split("\n");
   const newLines = newText.split("\n");
   const { streamDiffs, myersDiffs } = await collectDiffs(oldLines, newLines);
@@ -235,5 +235,9 @@ describe("streamDiff(", () => {
 
   test("FastAPI comments", async () => {
     await expectDiff("add-comments");
+  });
+
+  test.skip("Mock LLM example", async () => {
+    await expectDiff("mock-llm");
   });
 });
