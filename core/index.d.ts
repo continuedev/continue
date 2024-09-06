@@ -366,6 +366,7 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
 }

@@ -84,6 +84,10 @@ class WatsonX extends BaseLLM {
     }
   }
 
+  getWatsonxEndpoint(): string {
+    return this.watsonxFullUrl ?? `${this.watsonxUrl}/ml/v1/text/generation_stream?version=${this.watsonxApiVersion}`;
+  }
+
   static providerName: ModelProvider = "watsonx";
 
   protected _convertMessage(message: ChatMessage) {
@@ -186,8 +190,9 @@ class WatsonX extends BaseLLM {
     const stopToken =
       this.watsonxStopToken ??
       (options.model?.includes("granite") ? "<|im_end|>" : undefined);
+    const url = this.getWatsonxEndpoint();
     var response = await this.fetch(
-      `${this.watsonxUrl}/ml/v1/text/generation_stream?version=${this.watsonxApiVersion}`,
+      url,
       {
         method: "POST",
         headers: {
