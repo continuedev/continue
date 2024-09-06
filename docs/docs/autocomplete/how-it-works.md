@@ -4,9 +4,9 @@ description: Autocomplete \-how it works
 keywords: [how, autocomplete, context]
 ---
 
-# How it works
+<!-- TODO: Add link for "compound AI system -->
 
-Continue’s autocomplete is a [compound AI system]() that uses a combination of retrieval methods and response processing techniques. The system can be understood in roughly three parts.
+Continue’s autocomplete is a compound AI system that uses a combination of retrieval methods and response processing techniques. The system can be understood in roughly three parts.
 
 ## Timing
 

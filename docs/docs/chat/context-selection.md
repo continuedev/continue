@@ -4,19 +4,17 @@ description: How context can be selected for Chat
 keywords: [context]
 ---
 
-# Context selection
-
 ## Input
 
 Typing a question or instructions into the input box is the only required context. All of the other methods to select and include additional context listed below are optional.
 
 ## Highlighted code
 
-The highlighted code you’ve selected by pressing `cmd/ctrl+L` will be included in your prompt alongside the input you provide. This is the only section of code that will be provided to the model unless you highlight additional sections or use one of the other selection methods below.
+The highlighted code you’ve selected by pressing `cmd/ctrl + L` will be included in your prompt alongside the input you provide. This is the only section of code that will be provided to the model unless you highlight additional sections or use one of the other selection methods below.
 
 ## Active file
 
-You can include the currently open file as context by pressing `cmd/ctrl+opt+enter` when you send your request.
+You can include the currently open file as context by pressing `cmd/ctrl + opt + enter` when you send your request.
 
 ## Specific file
 

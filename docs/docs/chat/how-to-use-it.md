@@ -4,10 +4,6 @@ description: How to use Chat
 keywords: [how, use, chat]
 ---
 
-import Admonition from "@theme/Admonition";
-
-# How to use it
-
 Chat makes it easy to ask for help from an LLM without needing to leave the IDE. You send it a task, including any relevant information, and it replies with the text / code most likely to complete the task. If it does not give you want you want, then you can send follow up messages to clarify and adjust its approach until the task is completed.
 
 Chat is best used to understand and iterate on code or as a replacement for search engine queries.
@@ -18,7 +14,7 @@ You send it a question, and it replies with an answer. You tell it to solve a pr
 
 ## Highlight a code section to include as context
 
-You select a code section with your mouse, press `cmd/ctrl+L`, and then ask for it to be explained to you or request it to be refactored in some way.
+You select a code section with your mouse, press `cmd/ctrl + L`, and then ask for it to be explained to you or request it to be refactored in some way.
 
 ## Reference context with the @ symbol
 
@@ -30,7 +26,7 @@ When the LLM replies with code, you can hover over the top right of the code blo
 
 ## Start a fresh session for a new task
 
-Once you complete a task and want to start a new one, press `cmd/ctrl+L` to begin a new session, ensuring only relevant context for the next task is provided to the LLM.
+Once you complete a task and want to start a new one, press `cmd/ctrl + L` to begin a new session, ensuring only relevant context for the next task is provided to the LLM.
 
 ## Switch between different models
 
