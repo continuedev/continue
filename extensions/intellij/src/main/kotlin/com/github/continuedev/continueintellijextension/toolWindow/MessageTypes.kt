@@ -57,7 +57,8 @@ class MessageTypes {
             "getDefaultModelTitle",
             "indexProgress",
             "refreshSubmenuItems",
-            "didChangeAvailableProfiles"
+            "didChangeAvailableProfiles",
+            "addContextItem"
         )
     }
 }
