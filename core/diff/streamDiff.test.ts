@@ -75,7 +75,7 @@ async function expectDiff(file: string) {
   const { streamDiffs, myersDiffs } = await collectDiffs(oldLines, newLines);
   const displayedDiff = displayDiff(streamDiffs);
 
-  if (expectedDiff.trim() === "") {
+  if (!expectedDiff || expectedDiff.trim() === "") {
     console.log(
       "Expected diff was empty. Writing computed diff to the test file",
     );
@@ -231,5 +231,9 @@ describe("streamDiff(", () => {
 
   test("FastAPI example", async () => {
     await expectDiff("fastapi");
+  });
+
+  test("FastAPI comments", async () => {
+    await expectDiff("add-comments");
   });
 });
