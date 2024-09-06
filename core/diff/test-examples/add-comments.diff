@@ -1,0 +1,53 @@
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+@app.get("/landing")
+def read_landing_page():
+    return {"message": "Welcome to the landing page"}
+
+---
+
+# Import the FastAPI class from the fastapi module
+from fastapi import FastAPI
+
+# Create an instance of the FastAPI application
+app = FastAPI()
+
+# Define a route for the root endpoint ("/")
+@app.get("/")
+def read_root():
+    # Return a simple JSON response
+    return {"Hello": "World"} // This is an example comment
+
+# Define a route for the landing page endpoint ("/landing")
+@app.get("/landing")
+def read_landing_page():
+    # Return a JSON response with a welcome message
+    return {"message": "Welcome to the landing page"}
+
+---
+
++ # Import the FastAPI class from the fastapi module
+ from fastapi import FastAPI
+ 
++ # Create an instance of the FastAPI application
+ app = FastAPI()
+ 
++ # Define a route for the root endpoint ("/")
+ @app.get("/")
+ def read_root():
++     # Return a simple JSON response
++     return {"Hello": "World"} // This is an example comment
++ 
++ # Define a route for the landing page endpoint ("/landing")
+-     return {"Hello": "World"}
+- 
+ @app.get("/landing")
+ def read_landing_page():
++     # Return a JSON response with a welcome message
+     return {"message": "Welcome to the landing page"}
