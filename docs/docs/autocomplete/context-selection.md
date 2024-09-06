@@ -1,6 +1,6 @@
 ---
 title: Context selection
-description: \-context selection
+description: Autocomplete \-context selection
 keywords: [context]
 ---
 

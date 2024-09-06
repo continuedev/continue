@@ -1,6 +1,6 @@
 ---
 title: How to use it
-description: How to use it
+description: Actions \- how to use it
 keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
 ---
 

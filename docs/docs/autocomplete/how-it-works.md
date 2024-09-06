@@ -1,6 +1,6 @@
 ---
 title: How it works
-description: \-how it works
+description: Autocomplete \-how it works
 keywords: [how, autocomplete, context]
 ---
 

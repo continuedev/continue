@@ -1,10 +1,8 @@
 ---
 title: Advanced configuration
-description: \-advanced configuration
+description: Autocomplete \- advanced configuration
 keywords: [configuration, advanced]
 ---
-
-# Advanced configuration
 
 Experiment with these settings to find the perfect balance between suggestion quality and system performance for your specific needs and hardware capabilities:
 

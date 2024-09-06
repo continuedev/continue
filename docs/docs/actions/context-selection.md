@@ -1,6 +1,6 @@
 ---
 title: Context selection
-description: \-context selection
+description: Actions \-context selection
 keywords: [context, slash, debug, quick fix, right click]
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: How it works
-description: \-how it works
+description: Actions \-how it works
 keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: Model setup
-description: \-model setup
+description: Autocomplete \-model setup
 keywords: [model, autocomplete]
 ---
 

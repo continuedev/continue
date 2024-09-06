@@ -1,6 +1,6 @@
 ---
 title: How to use it
-description: How to use it
+description: Autocomplete \- how to use it
 keywords: [how]
 ---
 

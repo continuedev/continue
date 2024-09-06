@@ -1,6 +1,6 @@
 ---
 title: Model setup
-description: \-model setup
+description: Actions \-model setup
 keywords: [model]
 ---
 
