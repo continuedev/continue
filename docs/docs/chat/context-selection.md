@@ -1,6 +1,6 @@
 ---
 title: Context selection
-description: How context is and can be selected for Chat
+description: How context can be selected for Chat
 keywords: [context]
 ---
 
