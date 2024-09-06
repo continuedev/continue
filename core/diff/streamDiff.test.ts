@@ -8,6 +8,12 @@ import path from "node:path";
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
 
+const UNIFIED_DIFF_SYMBOLS = {
+  same: "",
+  new: "+",
+  old: "-",
+};
+
 async function* generateLines(lines: string[]): AsyncGenerator<string> {
   for (const line of lines) {
     yield line;
@@ -50,13 +56,9 @@ function getMyersDiffType(diff: any): MyersDiffTypes | undefined {
 }
 
 function displayDiff(diff: DiffLine[]) {
-  const symbol = {
-    same: "",
-    new: "+",
-    old: "-",
-  };
-
-  return diff.map(({ type, line }) => `${symbol[type]} ${line}`).join("\n");
+  return diff
+    .map(({ type, line }) => `${UNIFIED_DIFF_SYMBOLS[type]} ${line}`)
+    .join("\n");
 }
 
 async function expectDiff(file: string) {
@@ -237,7 +239,7 @@ describe("streamDiff(", () => {
     await expectDiff("add-comments");
   });
 
-  test.skip("Mock LLM example", async () => {
+  test("Mock LLM example", async () => {
     await expectDiff("mock-llm");
   });
 });
