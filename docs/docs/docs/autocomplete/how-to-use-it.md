@@ -1,80 +1,32 @@
 ---
 title: How to use it
-description: Actions \- how to use it
-keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
+description: Autocomplete \- how to use it
+keywords: [how]
 sidebar_position: 1
 ---
 
-Actions are shortcuts for common use cases. For example, you might want to review code, write tests, or add a docstring.
+![autocomplete](/img/autocomplete.gif)
 
-## Slash commands
+Tab autocomplete provides inline code suggestions as you type. To enable it, simply click the "Continue" button in the status bar at the bottom right of your IDE or ensure the "Enable Tab Autocomplete" option is checked in your IDE settings.
 
-The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
+## See when ghost text appears
 
-![slash-commands](/img/slash-commands.png)
+Autocomplete will suggest code based on your recent changes for every keystroke or cursor movement. You'll see suggestions appear as ghost text when adding new code or when modifying existing code. Suggestions may not always appear if no changes are predicted.
 
-A few of the most useful slash commands are available by default, like “/edit”, “/comment”, and “/share”, but Continue has a large built-in library of other options. To enable these, learn more [here](TODO).
+## Accept the suggestions
 
-## Prompt files
+Accept a full suggestion by pressing Tab, or reject it with Esc. Use Ctrl/CMD + → to accept part of a suggestion word-by-word, allowing for more granular control. To reject a suggestion, simply continue typing or press Escape.
 
-It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
+:::tip
+Only getting single-line suggestions?
 
-The full .prompt file reference can be found [here](TODO).
+To ensure multi-line completions, update your `tabAutocompleteOptions` with the following:
 
-:::tip[Prompt library]
-To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-examples). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
-:::
-
-Below is a quick example of setting up a prompt file to write unit tests using Jest.
-
-1. Create a folder called `.prompts/` at the top level of your workspace.
-2. Add a file called `test.prompt` to this folder. The name of this file will be the name of the slash command you will use to generate your prompt.
-3. Write the following contents to `test.prompt` and save.
-
-```
-{{{ input }}}
-
-Write unit tests for the above selected code, following each of these instructions:
-- Use `jest`
-- Properly set up and tear down
-- Include important edge cases
-- The tests should be complete and sophisticated
-- Give the tests just as chat output, don't edit any file
-- Don't explain how to set up `jest`
+```json title="config.json"
+ "tabAutocompleteOptions": {
+    "multilineCompletions": "always"
+  },
 ```
 
-Now to use this prompt, you can highlight code and use `cmd/ctrl + L` to select it in the Continue sidebar.
-
-Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
-
-## Other triggers for actions (VS Code)
-
-:::info
-Currently all of these are only available in VS Code
+If you're still seeing only single-line completions, try temporarily moving text below your cursor out of your active file or switching to a larger model.
 :::
-
-To make common use cases even more accessible, we provide a handful of other ways to invoke actions.
-
-### Quick actions
-
-Quick Actions are displayed as buttons above top-level classes and functions in your source code, letting you invoke actions with one click. They can also be customized with .prompt files to perform custom actions.
-
-![quick-actions](/img/quick-actions.png)
-
-By default, quick actions are disabled, but can be enabled with the “Continue: Enable Quick Actions” in VS Code settings.
-
-### Right click actions
-
-Right click actions let you highlight a desired region of code, right click, and then select an action from the dropdown menu.
-
-![context-menu](/img/context-menu.png)
-
-### Debug action
-
-The debug action is a special built-in keyboard shortcut in the VS Code extension. Use `cmd/ctrl + shift + R` to instantly copy the contents of the current terminal into the chat sidebar and get debugging advice.
-
-### Quick fixes
-
-Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut `cmd/ctrl + .` will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use `cmd/ctrl + .` again and Continue will attempt to help solve the problem.
-
-![ask-continue](/img/ask-continue.png)

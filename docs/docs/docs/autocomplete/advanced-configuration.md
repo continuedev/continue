@@ -7,11 +7,11 @@ sidebar_position: 5
 
 Experiment with these settings to find the perfect balance between suggestion quality and system performance for your specific needs and hardware capabilities:
 
-```config.json
+```json title="config.json"
  "tabAutocompleteOptions": {
    "useCopyBuffer": false,
    "maxPromptTokens": 400,
-   "prefixPercentage": 0.5
+   "prefixPercentage": 0.5,
    "multilineCompletions": "always"
  }
 ```

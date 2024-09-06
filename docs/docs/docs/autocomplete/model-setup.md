@@ -9,14 +9,14 @@ sidebar_position: 2
 
 For the best autocomplete experience, we recommend using Codestral through the [Mistral API](https://console.mistral.ai/). This model offers high-quality completions with an excellent understanding of code context:
 
-```title="config.json"
+```json title="config.json""
 {
- "tabAutocompleteModel": {
-   "title": "Codestral",
-   "provider": "mistral",
-   "model": "codestral-latest",
-   "apiKey": "YOUR_API_KEY"
- }
+  "tabAutocompleteModel": {
+    "title": "Codestral",
+    "provider": "mistral",
+    "model": "codestral-latest",
+    "apiKey": "YOUR_API_KEY"
+  }
 }
 ```
 
@@ -24,13 +24,13 @@ For the best autocomplete experience, we recommend using Codestral through the [
 
 For those preferring local execution or self-hosting, StarCoder2-3b offers a good balance of performance and quality for most users:
 
-```title="config.json"
+```json title="config.json""
 {
- "tabAutocompleteModel": {
-     "title": "StarCoder2-3b",
-     "model": "starcoder2:3b",
-     "provider": "ollama",
- }
+  "tabAutocompleteModel": {
+    "title": "StarCoder2-3b",
+    "model": "starcoder2:3b",
+    "provider": "ollama"
+  }
 }
 ```
 

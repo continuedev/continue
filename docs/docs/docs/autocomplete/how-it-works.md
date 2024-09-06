@@ -1,16 +1,18 @@
 ---
 title: How it works
-description: How Chat works
-keywords: [how, chat, works]
+description: Autocomplete \-how it works
+keywords: [how, autocomplete, context]
 sidebar_position: 4
 ---
 
-Using any selected code sections, all context that you have selected with @, and your input instructions, we prompt the model to provide a response in the sidebar. If you are asking a follow-up, then the all earlier session context is also included. No other additional context is provided to the model.
+<!-- TODO: Add link for "Compound AI system -->
 
-The model response is then streamed directly back to the sidebar. Each code section included in the response will be placed into its own code block, which gives you buttons to either “Apply to current file”, “Insert at cursor”, or “Copy” for each section.
+Continue’s autocomplete is a compound AI system that uses a combination of retrieval methods and response processing techniques. The system can be understood in roughly three parts.
 
-When you press cmd+L at the end of a session, all context is cleared and a new session is started, so that you can begin a new task. If you would like to view the exact prompt that is sent to the model during Chat, you can [view this in the prompt logs](../reference/).
+## Timing
 
-:::info
-TODO: You can learn about how @codebase and how @docs work here and here
-:::
+## Context
+
+## Filtering
+
+Continue's autocomplete analyzes your code context, including the current file, cursor position, and recent edits. It crafts a smart prompt using this information and relevant snippets from other files. The system then uses a language model to generate code suggestions, which can include multi-line completions or edits to existing code. These suggestions are refined for relevance and correctness, with successful completions cached for future use. Finally, the system displays the suggestions as ghost text for new additions or diff popups for modifications, allowing you to easily understand and incorporate the proposed changes.
