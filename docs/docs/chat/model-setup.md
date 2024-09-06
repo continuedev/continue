@@ -38,7 +38,7 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
 
 <Tabs>
 
-<TabItem value="together" label="Together">
+<TabItem value="Together">
 
     ```json title="config.json"
         "models": [
