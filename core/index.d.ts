@@ -442,6 +442,9 @@ export interface IdeSettings {
 }
 
 export interface IDE {
+  getPearAuth(): Promise<PearAuth>;
+  updatePearCredentials(auth: PearAuth): Promise<void>;
+  authenticatePear(): Promise<void>;
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
   getDiff(): Promise<string>;
@@ -1004,4 +1007,9 @@ export interface BrowserSerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+}
+
+export interface PearAuth {
+  accessToken?: string;
+  refreshToken?: string;
 }

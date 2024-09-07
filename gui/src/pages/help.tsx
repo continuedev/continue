@@ -1,3 +1,4 @@
+/* eslint-disable header/header */
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -11,11 +12,10 @@ import {
 } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useThemeType } from "../hooks/useVscTheme";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useNavigationListener } from "../hooks/useNavigationListener";
-import { SecondaryButton } from "../components";
+import { error } from "console";
 
 const ResourcesDiv = styled.div`
   margin: 4px;
@@ -66,13 +66,11 @@ const ButtonContainer = styled.div`
   @media (min-width: 726px) {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   @media (max-width: 400px) {
     width: 90%;
-    
   }
 `;
-
 
 const StyledButton = styled.div<{
   backgroundColor?: string;
@@ -89,7 +87,7 @@ const StyledButton = styled.div<{
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem  0.5rem;
+  padding: 0.25rem 0.5rem;
   text-align: center;
   font-size: clamp(0.85rem, 3.65vw, 1rem);
   font-weight: 500;
@@ -135,6 +133,27 @@ function HelpPage() {
   const navigate = useNavigate();
   const themeType = useThemeType();
   const ideMessenger = useContext(IdeMessengerContext);
+  const [session, setSession] = useState(false); // this state specifically serves to manage "Login to PearAI" text conditionally on auth status
+
+  // gets initial auth status
+  useEffect(() => {
+    ideMessenger.request("getPearAuth", undefined).then((res) => {
+      const newSession = res.accessToken ? true : false;
+      setSession(newSession);
+    });
+  }, []);
+
+  // get auth status when user opens tutorial
+  const handleOpenTutorial = () => {
+    ideMessenger.post("showTutorial", undefined);
+    ideMessenger.request("getPearAuth", undefined).then((res) => {
+      if (res?.accessToken) {
+        navigate("/");
+      } else {
+        navigate("/onboarding");
+      }
+    });
+  };
 
   return (
     <div>
@@ -154,64 +173,65 @@ function HelpPage() {
       </div>
 
       <div className="flex flex-col items-center justify-center w-full">
-      <ButtonContainer>
-        <StyledButton
-          className="inline-flex flex-shrink-0"
-          themeType={themeType}
-          onClick={() => {
-            ideMessenger.post("pearaiLogin", undefined);
-            navigate("/");
-          }}
-        >
-          Login to PearAI
-        </StyledButton>
-        <StyledLink
-          href="https://trypear.ai/"
-          target="_blank"
-          themeType={themeType}
-        >
-          PearAI Website
-        </StyledLink>
+        <ButtonContainer>
+          <StyledButton
+            className="inline-flex flex-shrink-0"
+            themeType={themeType}
+            onClick={() => {
+              ideMessenger.post("pearaiLogin", undefined);
+              navigate("/");
+            }}
+          >
+            {session ? "Relogin to PearAI" : "Login to PearAI"}
+          </StyledButton>
+          <StyledLink
+            href="https://trypear.ai/"
+            target="_blank"
+            themeType={themeType}
+          >
+            PearAI Website
+          </StyledLink>
 
-        <StyledButton
-          className="inline-flex flex-shrink-0"
-          themeType={themeType}
-          onClick={() => {
-            navigate("/stats");
-          }}
-        >
-          View Usage
-        </StyledButton>
-        <StyledButton
-          className="inline-flex flex-shrink-0"
-          themeType={themeType}
-          onClick={() => {
-            ideMessenger.post("showTutorial", undefined);
-            navigate("/onboarding");
-          }}
-        >
-          Open Tutorial
-        </StyledButton>
-        <StyledLink
-          className="flex items-center justify-center gap-2"
-          href="https://github.com/trypear/pearai-app/"
-          target="_blank"
-          themeType={themeType}
-        >
-          <span className="icon"><GithubSVG /></span>
-          Github
-        </StyledLink>
-        <StyledLink
-          className="flex items-center justify-center gap-2"
-          href="https://discord.gg/Uw9mVvFUk3"
-          target="_blank"
-          themeType={themeType}
-        >
-          <span className="icon"><DiscordSVG /></span>
-          Discord
-        </StyledLink>
-      </ButtonContainer>
-    </div>
+          <StyledButton
+            className="inline-flex flex-shrink-0"
+            themeType={themeType}
+            onClick={() => {
+              navigate("/stats");
+            }}
+          >
+            View Usage
+          </StyledButton>
+          <StyledButton
+            className="inline-flex flex-shrink-0"
+            themeType={themeType}
+            onClick={handleOpenTutorial}
+          >
+            Open Tutorial
+          </StyledButton>
+          <StyledLink
+            className="flex items-center justify-center gap-2"
+            href="https://github.com/trypear/pearai-app/"
+            target="_blank"
+            themeType={themeType}
+          >
+            <span className="icon">
+              <GithubSVG />
+            </span>
+            Github
+          </StyledLink>
+          <StyledLink
+            className="flex items-center justify-center gap-2"
+            href="https://discord.gg/Uw9mVvFUk3"
+            target="_blank"
+            themeType={themeType}
+          >
+            <span className="icon">
+              <DiscordSVG />
+            </span>
+            Discord
+          </StyledLink>
+        </ButtonContainer>
+      </div>
 
       <KeyboardShortcutsDialog />
     </div>

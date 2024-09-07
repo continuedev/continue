@@ -10,6 +10,7 @@ import type {
   Range,
   RangeInFile,
   Thread,
+  PearAuth,
 } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
 import { FromIdeProtocol } from "../protocol/index.js";
@@ -199,5 +200,17 @@ export class MessageIde implements IDE {
 
   async getBranch(dir: string): Promise<string> {
     return this.request("getBranch", { dir });
+  }
+
+  getPearAuth(): Promise<PearAuth> {
+    return this.request("getPearAuth", undefined);
+  }
+
+  updatePearCredentials(auth: PearAuth): Promise<void> {
+    return this.request("updatePearCredentials", auth);
+  }
+
+  authenticatePear(): Promise<void> {
+    return this.request("authenticatePear", undefined);
   }
 }

@@ -315,6 +315,9 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
       ide.getGitHubAuthToken(),
     );
+
+    this.onWebviewOrCore("getPearAuth", (msg) => ide.getPearAuth());
+
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
       return getControlPlaneSessionInfo(msg.data.silent);
     });

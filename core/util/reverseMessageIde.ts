@@ -37,6 +37,10 @@ export class ReverseMessageIde {
       return this.ide.getGitHubAuthToken();
     });
 
+    this.on("getPearAuth", (data) => {
+      return this.ide.getPearAuth();
+    });
+
     this.on("getLastModified", (data) => {
       return this.ide.getLastModified(data.files);
     });

@@ -144,12 +144,9 @@ function Onboarding() {
       <CustomModelButton
         className="m-5"
         disabled={false}
-        onClick={() =>
-          ideMessenger.post(
-            "openUrl",
-            "https://trypear.ai/signin?callback=pearai://pearai.pearai/auth", // Change to http://localhost:3000 and run pear-landing-page repo to test locally
-          )
-        }
+        onClick={() => {
+          ideMessenger.post("pearaiLogin", undefined);
+        }}
       >
         <h3 className="text-center my-2">Sign Up / Log In</h3>
         <img
@@ -164,16 +161,21 @@ function Onboarding() {
       <small
         style={{
           color: lightGray,
-          fontSize: '0.85em',
-          display: 'block'
+          fontSize: "0.85em",
+          display: "block",
         }}
         className="mx-3"
       >
-        Note: Having trouble logging in? Open PearAI from the dashboard on the {' '}
-        <a href="https://trypear.ai/dashboard" target="_blank" rel="noopener noreferrer">
+        Note: Having trouble logging in? Open PearAI from the dashboard on the{" "}
+        <a
+          href="https://trypear.ai/dashboard"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           website
-        </a>.
-        </small>
+        </a>
+        .
+      </small>
       {/* <div>
         <Div
           selected={false}
@@ -216,7 +218,6 @@ function Onboarding() {
           Skip
         </StyledButton>
       </div>
-
     </div>
   );
 }
