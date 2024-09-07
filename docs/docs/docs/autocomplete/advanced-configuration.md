@@ -5,7 +5,7 @@ keywords: [configuration, advanced]
 sidebar_position: 5
 ---
 
-Experiment with these settings to find the perfect balance between suggestion quality and system performance for your specific needs and hardware capabilities:
+Continue offers a handful of parameters in [`config.json`](../reference/config-json.md) that can be tuned to find the perfect balance between suggestion quality and system performance for your specific needs and hardware capabilities:
 
 ```json title="config.json"
  "tabAutocompleteOptions": {
@@ -21,4 +21,4 @@ Experiment with these settings to find the perfect balance between suggestion qu
 - `prefixPercentage`: Defines the proportion of the prompt dedicated to the code before the cursor.
 - `multilineCompletions`: Controls whether suggestions can span multiple lines ("always", "never", or "auto").
 
-For a comprehensive guide on all configuration options and their impacts, refer to our (detailed configuration documentation).
+For a comprehensive guide on all configuration options and their impacts, see the [full reference](../reference/config-json.md).

@@ -9,24 +9,6 @@ sidebar_position: 1
 
 Tab autocomplete provides inline code suggestions as you type. To enable it, simply click the "Continue" button in the status bar at the bottom right of your IDE or ensure the "Enable Tab Autocomplete" option is checked in your IDE settings.
 
-## See when ghost text appears
+## Accepting suggestions
 
-Autocomplete will suggest code based on your recent changes for every keystroke or cursor movement. You'll see suggestions appear as ghost text when adding new code or when modifying existing code. Suggestions may not always appear if no changes are predicted.
-
-## Accept the suggestions
-
-Accept a full suggestion by pressing Tab, or reject it with Esc. Use Ctrl/CMD + → to accept part of a suggestion word-by-word, allowing for more granular control. To reject a suggestion, simply continue typing or press Escape.
-
-:::tip
-Only getting single-line suggestions?
-
-To ensure multi-line completions, update your `tabAutocompleteOptions` with the following:
-
-```json title="config.json"
- "tabAutocompleteOptions": {
-    "multilineCompletions": "always"
-  },
-```
-
-If you're still seeing only single-line completions, try temporarily moving text below your cursor out of your active file or switching to a larger model.
-:::
+Accept a full suggestion by pressing `Tab`, or reject it with `Esc`. For more granular control, use `cmd/ctrl+→` to accept parts of the suggestion word-by-word.
