@@ -647,6 +647,10 @@ export type ModelName =
   | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
+  | "mistral-tiny"
+  | "mistral-small"
+  | "mistral-medium"
+  | "mistral-embed"
   // Llama 2
   | "llama2-7b"
   | "llama2-13b"
@@ -685,10 +689,6 @@ export type ModelName =
   | "gemini-1.5-pro"
   | "gemini-1.5-flash-latest"
   | "gemini-1.5-flash"
-  // Mistral
-  | "mistral-tiny"
-  | "mistral-small"
-  | "mistral-medium"
   // Tab autocomplete
   | "deepseek-1b"
   | "starcoder-1b"

@@ -1,5 +1,5 @@
 ---
-title: How it works
+title: How they work
 description: Actions \-how it works
 keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
 sidebar_position: 4

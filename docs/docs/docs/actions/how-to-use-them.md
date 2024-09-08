@@ -1,11 +1,14 @@
 ---
-title: How to use it
+title: Actions
 description: Actions \- how to use it
+sidebar_label: How to use them
 keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
 sidebar_position: 1
 ---
 
 ![action](/img/action.gif)
+
+## How to use them
 
 Actions are shortcuts for common use cases. For example, you might want to review code, write tests, or add a docstring.
 

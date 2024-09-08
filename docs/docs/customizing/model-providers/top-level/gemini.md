@@ -1,0 +1,50 @@
+---
+title: Gemini
+---
+
+## Chat model
+
+We recommend configuring **Gemini 1.5 Pro** as your chat model.
+
+```json title="config.json"
+{
+  "models": [
+    {
+      "title": "Gemini 1.5 Pro",
+      "provider": "gemini",
+      "model": "gemini-1.5-pro-latest",
+      "apiKey": "[API_KEY]"
+    }
+  ]
+}
+```
+
+## Autocomplete model
+
+Gemini currently does not offer any autocomplete models.
+
+[Click here](../../model-types/autocomplete.md) to see our full list of autocomplete model providers.
+
+## Embeddings model
+
+We recommend configuring **text-embedding-004** as your embeddings model.
+
+<!-- TODO: We should update the emebddings provider to infer `models/` -->
+
+```json title="config.json"
+{
+  "embeddingsProvider": [
+    {
+      "provider": "gemini",
+      "model": "models/text-embedding-004",
+      "apiKey": "[API_KEY]"
+    }
+  ]
+}
+```
+
+## Reranking model
+
+Gemini currently does not offer any reranking models.
+
+[Click here](../../model-types/reranking.md) to see our full list of reranking model providers.

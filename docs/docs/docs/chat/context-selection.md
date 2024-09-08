@@ -43,4 +43,6 @@ You can include all of the changes you've made to your current branch by typing 
 
 ## Other context
 
+<!-- TODO: Add link + explanation of custom -->
+
 Go to reference to see giant list of context providers

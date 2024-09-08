@@ -1,11 +1,15 @@
 ---
-title: How to use it
+title: Edit
 sidebar_position: 1
+sidebar_label: How to use it
 description: How to use Edit
 keywords: [edit, cmd l, use]
+slug: /docs/edit
 ---
 
 ![edit](/img/edit.gif)
+
+## How to use it
 
 Edit is a convenient way to modify code without leaving your current file. Highlight a block of code, describe your code changes, and a diff will be streamed inline to your file which you can accept or reject.
 
