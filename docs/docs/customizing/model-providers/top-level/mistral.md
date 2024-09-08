@@ -1,5 +1,6 @@
 ---
 title: Mistral
+slug: ../mistral
 ---
 
 ## Chat model

@@ -1,5 +1,6 @@
 ---
 title: OpenAI
+slug: ../openai
 ---
 
 ## Chat model

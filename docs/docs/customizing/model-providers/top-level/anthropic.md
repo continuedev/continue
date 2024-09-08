@@ -1,5 +1,6 @@
 ---
 title: Anthropic
+slug: ../anthropic
 ---
 
 ## Chat model

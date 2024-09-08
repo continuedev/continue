@@ -1,4 +1,7 @@
-# Ollama
+---
+title: Ollama
+slug: ../ollama
+---
 
 [Ollama](https://ollama.ai/) is an application for Mac, Windows, and Linux that makes it easy to locally run open-source models, including Llama3. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/ollama/ollama). Continue can then be configured to use the `"ollama"` provider:
 

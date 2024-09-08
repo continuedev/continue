@@ -1,5 +1,6 @@
 ---
 title: Amazon Bedrock
+slug: ../bedrock
 ---
 
 ## Chat model

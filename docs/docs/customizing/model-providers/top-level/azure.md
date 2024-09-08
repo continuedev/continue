@@ -1,5 +1,6 @@
 ---
 title: Azure OpenAI
+slug: ../azure
 ---
 
 ## Chat model

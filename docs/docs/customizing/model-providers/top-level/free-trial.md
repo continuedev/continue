@@ -1,4 +1,7 @@
-# Free Trial
+---
+title: Free trial
+slug: ../free-trial
+---
 
 The `"free-trial"` provider lets new users try out Continue with GPT-4, Llama3, Claude 3, and other models using a proxy server that securely makes API calls to these services. Continue will just work the first time you install the extension. To prevent abuse, we will ask you to sign in with GitHub, which you can [read more about below](#sign-in).
 
@@ -13,7 +16,7 @@ While the Continue extension is always free to use, we cannot support infinite f
 
 Ollama is a local service that makes it easy to run language models on your laptop.
 
-1. Download Ollama from https://ollama.ai
+1. Download Ollama from `<https://ollama.ai>`
 2. Open `~/.continue/config.json`. You can do this by clicking the gear icon in the bottom right corner of the Continue sidebar
 3. Add the following to your `config.json`:
 
@@ -33,7 +36,7 @@ Ollama is a local service that makes it easy to run language models on your lapt
 
 Groq provides lightning fast inference for open-source LLMs like Llama3, up to twice as fast as through other providers.
 
-1. Obtain an API key from https://console.groq.com
+1. Obtain an API key from `<https://console.groq.com>`
 2. Add the following to your `config.json`:
 
 ```json title="config.json"
@@ -51,7 +54,7 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
 
 ### ✨ OpenAI (highly capable)
 
-1. Copy your API key from https://platform.openai.com/account/api-keys
+1. Copy your API key from `<https://platform.openai.com/account/api-keys>`
 2. Add the following to your `config.json`:
 
 ```json title="config.json"

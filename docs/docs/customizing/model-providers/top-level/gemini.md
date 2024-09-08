@@ -1,5 +1,6 @@
 ---
 title: Gemini
+slug: ../gemini
 ---
 
 ## Chat model

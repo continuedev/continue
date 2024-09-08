@@ -1,5 +1,6 @@
 ---
 title: DeepSeek
+slug: ../deepseek
 ---
 
 ## Chat model
