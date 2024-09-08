@@ -2,32 +2,6 @@
 title: Azure OpenAI
 ---
 
-## General model configuration
-
-You can configure Azure OpenAI service through the UI, or you can configure it manually in `config.json`.
-
-```json title="config.json"
-"models": [{
-    "title": "Azure OpenAI",
-    "provider": "azure",
-    "model": "<YOUR_MODEL>",
-    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "openai",
-    "apiKey": "<MY_API_KEY>"
-}]
-```
-
-To find out the information from _Azure AI Studio_, select the model that you would like to connect. Under the _Endpoint_ section and capture the Target URI.
-For example, Target URI of `<https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview>`
-Maps to:
-
-- model = gpt-4o
-- engine = gpt-4o
-- apiVersion = 2023-13-15-preview
-- apiBase = just-an-example.openai.azure.com
-
 ## Chat model
 
 We recommend configuring **GPT-4o** as your chat model.
@@ -97,3 +71,18 @@ You need to apply for access to the Azure OpenAI service. Response times are typ
 
 **[Click here to apply for access to the Azure OpenAI service](https://azure.microsoft.com/en-us/products/ai-services/openai-service)**
 :::
+
+<!-- TODO: These docs are unclear, we should walk through ourselves and rewrite  -->
+
+## General model configuration
+
+Azure OpenAI requires a handful of additional parameters to be configured, such as a model engine and API version.
+
+To find this information in _Azure AI Studio_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
+
+For example, a Target URI of `<https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview>` would map to the following:
+
+- model = gpt-4o
+- engine = gpt-4o
+- apiVersion = 2023-13-15-preview
+- apiBase = just-an-example.openai.azure.com

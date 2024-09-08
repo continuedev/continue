@@ -4,7 +4,7 @@ title: DeepSeek
 
 ## Chat model
 
-We recommend configuring **deepseek-chat** as your chat model.
+We recommend configuring **DeepSeek Chat** as your chat model.
 
 ```json title="config.json"
 {
@@ -21,7 +21,7 @@ We recommend configuring **deepseek-chat** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **deepseek-coder** as your autocomplete model.
+We recommend configuring **DeepSeek Coder** as your autocomplete model.
 
 ```json title="config.json"
 {
