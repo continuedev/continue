@@ -581,13 +581,13 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     collectInputFor: [...completionParamsInputsConfigs],
   },
   sambanova: {
-    title: "SambaNova Cloud",
+    title: "SambaNova Fast API",
     provider: "sambanova",
     refPage: "sambanova",
     description:
-      "Use the SambaNova Cloud for Llama3.1 with world record performance",
+      "Use the SambaNova Fast API for Llama3.1 fast inference performance",
     icon: "sambanova.png",
-    longDescription: `The SambaNova Cloud is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
+    longDescription: `The SambaNova Fast API is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     params: {
       apiKey: "",
@@ -597,7 +597,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         inputType: "text",
         key: "apiKey",
         label: "API Key",
-        placeholder: "Enter your SambaNova Cloud API key",
+        placeholder: "Enter your SambaNova Fast API API key",
         required: true,
       },
       ...completionParamsInputsConfigs,
