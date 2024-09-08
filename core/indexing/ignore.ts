@@ -67,6 +67,7 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.csv",
   "*.uasset",
   "*.pdb",
+  "*.bin",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
 
@@ -84,6 +85,7 @@ export const DEFAULT_IGNORE_DIRS = [
   "node_modules/",
   "dist/",
   "build/",
+  "Build/",
   "target/",
   "out/",
   "bin/",
