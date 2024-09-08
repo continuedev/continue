@@ -80,6 +80,7 @@ You can run open-source LLMs with cloud services like:
 - [Replicate](../reference/Model%20Providers/replicatellm.md)
 - [Deepinfra](../reference/Model%20Providers/deepinfra.md)
 - [Groq](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
+- [SambaNova](../reference/Model%20Providers/sambanova.md)
 
 ### Commercial models
 
