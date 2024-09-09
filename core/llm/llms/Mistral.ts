@@ -18,7 +18,7 @@ class Mistral extends OpenAI {
       options.model.includes("codestral") &&
       !options.model.includes("mamba")
     ) {
-      this.apiBase = options.apiBase ?? "https://codestral.mistral.ai/v1/";
+      this.apiBase = options.apiBase ?? "https://api.mistral.ai/v1/";
     }
 
     if (!this.apiBase?.endsWith("/")) {
