@@ -5,11 +5,11 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
+  Button,
   vscForeground,
   StyledTooltip,
-  Button,
-} from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+} from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 
 export type CopyToTerminalButtonProps = {
   children: string;

@@ -1,4 +1,5 @@
 /** @type {import('tailwindcss').Config} */
+const defaultTheme = require("tailwindcss/defaultTheme");
 
 module.exports = {
   content: [
@@ -11,6 +12,10 @@ module.exports = {
       colors: {
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
         "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
+      },
+      screens: {
+        xs: "425px",
+        ...defaultTheme.screens,
       },
     },
   },

@@ -3,7 +3,11 @@ import { IndexingProgressUpdate } from "core";
 import { OnboardingStatus } from "../pages/onboarding/utils";
 
 type LocalStorageTypes = {
+  /**
+   * TODO: WHhat does this become?
+   */
   onboardingStatus?: OnboardingStatus;
+  showOnboardingCard?: boolean;
   mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
   ftc: number;
@@ -13,7 +17,6 @@ type LocalStorageTypes = {
   extensionVersion: string;
   indexingState: IndexingProgressUpdate;
   signedInToGh: boolean;
-  isOnboardingInProgress: boolean;
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;

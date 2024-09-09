@@ -1,10 +1,12 @@
 import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { CopyToTerminalButton, StyledDiv } from "./CopyToTerminalButton";
-import { useCompleteOnboarding } from "./utils";
-import { CheckMarkHeader } from "./CheckMarkHeader";
-import DownloadOllamaButton from "./DownloadOllamaButton";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { models } from "../../../pages/AddNewModel/configs/models";
+import { CheckMarkHeader } from "../components/CheckMarkHeader";
+import { CopyToTerminalButton } from "../components/CopyToTerminalButton";
+import DownloadOllamaButton from "../components/DownloadOllamaButton";
+import { Button } from "../..";
+import { OnboardingTab } from "./types";
 
 enum OllamaConnectionStatuses {
   WaitingToDownload = "WaitingToDownload",
@@ -12,15 +14,13 @@ enum OllamaConnectionStatuses {
   Verified = "Verified",
 }
 
-enum DefaultLocalModels {
-  Chat = "llama3",
-  Autocomplete = "starcoder2:3b",
-  Embeddings = "nomic-embed-text",
-}
-
 const REFETCH_MODELS_INTERVAL_MS = 1000;
+const autocompleteModel = "starcoder2:3b";
+const {
+  llama31Chat: { params: chatModel },
+} = models;
 
-function OnboardingLocalTab() {
+function OnboardingLocalTab({ onComplete }: OnboardingTab) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
@@ -33,8 +33,6 @@ function OnboardingLocalTab() {
     );
 
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
-
-  const { completeOnboarding } = useCompleteOnboarding();
 
   const isOllamaConnected =
     ollamaConnectionStatus === OllamaConnectionStatuses.Verified;
@@ -53,15 +51,20 @@ function OnboardingLocalTab() {
     switch (status) {
       case OllamaConnectionStatuses.WaitingToDownload:
         return (
-          <div className="flex items-start gap-6">
-            <p className="leading-relaxed mt-0 flex-1">
+          <div className="flex flex-col items-start gap-3 xs:gap-6 xs:flex-row">
+            <p className="leading-relaxed mt-0 w-full xs:w-auto flex-1">
               Download, install, and start Ollama
             </p>
-            <DownloadOllamaButton
-              onClick={() =>
-                setOllamaConnectionStatus(OllamaConnectionStatuses.Downloading)
-              }
-            />
+
+            <div className="w-full xs:w-auto flex-1">
+              <DownloadOllamaButton
+                onClick={() =>
+                  setOllamaConnectionStatus(
+                    OllamaConnectionStatuses.Downloading,
+                  )
+                }
+              />
+            </div>
           </div>
         );
 
@@ -81,7 +84,7 @@ function OnboardingLocalTab() {
    * we send an empty request to load it
    */
   useEffect(() => {
-    if (!hasLoadedChatModel && isModelDownloaded(DefaultLocalModels.Chat)) {
+    if (!hasLoadedChatModel && isModelDownloaded(chatModel.model)) {
       ideMessenger.post("llm/complete", {
         completionOptions: {},
         prompt: "",
@@ -128,7 +131,14 @@ function OnboardingLocalTab() {
   }, []);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-5">
+      <div>
+        <h1 className="text-xl">Download Ollama & install models</h1>
+        <p className="text-base">
+          Get started with the best open source models available
+        </p>
+      </div>
+
       <div>
         <CheckMarkHeader isComplete={isOllamaConnected}>
           Download Ollama
@@ -136,21 +146,18 @@ function OnboardingLocalTab() {
         {renderOllamaConnectionStatus(ollamaConnectionStatus)}
       </div>
       <div>
-        <CheckMarkHeader
-          isComplete={isModelDownloaded(DefaultLocalModels.Chat)}
-        >
-          Chat
+        <CheckMarkHeader isComplete={isModelDownloaded(chatModel.title)}>
+          Chat model: <code>{chatModel.title}</code>
         </CheckMarkHeader>
-        {!isModelDownloaded(DefaultLocalModels.Chat) && (
-          <div className="flex items-start gap-6">
-            <p className="leading-relaxed mt-0 flex-1">
-              <code>{DefaultLocalModels.Chat}</code> is the latest open-source
-              model trained by Meta
+        {!isModelDownloaded(chatModel.model) && (
+          <div className="flex flex-col items-start gap-3 xs:gap-6 xs:flex-row">
+            <p className="leading-relaxed mt-0 w-full xs:w-auto flex-1">
+              Latest open-source model trained by Meta
             </p>
 
-            <div className="flex-1">
+            <div className="w-full xs:w-auto flex-1">
               <CopyToTerminalButton>
-                {`ollama run ${DefaultLocalModels.Chat}`}
+                {`ollama run ${chatModel.model}`}
               </CopyToTerminalButton>
             </div>
           </div>
@@ -158,26 +165,36 @@ function OnboardingLocalTab() {
       </div>
       <div>
         <CheckMarkHeader
-          isComplete={isModelDownloaded(DefaultLocalModels.Autocomplete)}
+          isOptional
+          isComplete={isModelDownloaded(autocompleteModel)}
         >
-          Autcomplete [Optional]
+          Autcomplete model: <code>{autocompleteModel}</code>
         </CheckMarkHeader>
 
-        {!isModelDownloaded(DefaultLocalModels.Autocomplete) && (
-          <div className="flex items-start gap-6">
-            <p className="leading-relaxed mt-0 flex-1">
-              <code>{DefaultLocalModels.Autocomplete}</code> is a
-              state-of-the-art 3B parameter autocomplete model trained by
+        {!isModelDownloaded(autocompleteModel) && (
+          <div className="flex flex-col items-start gap-3 xs:gap-6 xs:flex-row">
+            <p className="leading-relaxed mt-0 w-full xs:w-auto flex-1">
+              State-of-the-art 3B parameter autocomplete model trained by
               Hugging Face
             </p>
 
-            <div className="flex-1">
+            <div className="w-full xs:w-auto flex-1">
               <CopyToTerminalButton>
-                {`ollama run ${DefaultLocalModels.Autocomplete}`}
+                {`ollama run ${autocompleteModel}`}
               </CopyToTerminalButton>
             </div>
           </div>
         )}
+      </div>
+
+      <div className="mt-4 w-full">
+        <Button
+          onClick={onComplete}
+          className="w-full"
+          disabled={!isModelDownloaded(chatModel.title)}
+        >
+          Complete
+        </Button>
       </div>
     </div>
   );

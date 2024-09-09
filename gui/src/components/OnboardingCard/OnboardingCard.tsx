@@ -1,12 +1,16 @@
-// gui/src/components/OnboardingCard/OnboardingCard.tsx
-import { useState } from "react";
-import OnboardingCardTabs, { Tabs } from "./OnboardingCardTabs";
+import { useContext, useState } from "react";
+import * as Tabs from "./tabs";
+import OnboardingCardTabs, {
+  TabTitle,
+  TabTitles,
+} from "./components/OnboardingCardTabs";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import OnboardingLocalTab from "./OnboardingLocalTab";
-import OnboardingQuickstartTab from "./OnboardingQuickstartTab";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray } from "../";
-import OnboardingBestTab from "./OnboardingBestTab";
+import { defaultBorderRadius, lightGray, vscBackground } from "../";
+import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { hasPassedFTL } from "../../util/freeTrial";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useCompleteOnboarding } from "./utils";
 
 const StyledCard = styled.div`
   margin: auto;
@@ -14,31 +18,61 @@ const StyledCard = styled.div`
   border-width: 1.5px;
   border-radius: ${defaultBorderRadius};
   border-color: ${lightGray};
-  padding: 1rem 1.5rem; // py-4 px-6
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.45); // More pronounced shadow
+  padding: 1rem 1.5rem;
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.45);
+`;
+
+const CloseButton = styled.button`
+  border: none;
+  background-color: ${vscBackground};
+  color: ${lightGray};
+  position: absolute;
+  top: 0.6rem;
+  right: 1rem;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;
 
 function OnboardingCard() {
-  const [activeTab, setActiveTab] = useState(Tabs.Quickstart);
-  const [isCardVisible, setIsCardVisible] = useState(true);
+  const ideMessenger = useContext(IdeMessengerContext);
+  const { completeOnboarding } = useCompleteOnboarding();
 
-  const handleTabClick = (tabName) => {
+  const [activeTab, setActiveTab] = useState<TabTitle>(
+    hasPassedFTL() ? "Best" : "Quickstart",
+  );
+
+  const [isCardVisible, setIsCardVisible] = useState(
+    getLocalStorage("showOnboardingCard") ?? true,
+  );
+
+  function handleTabClick(tabName) {
     setActiveTab(tabName);
-  };
+  }
 
-  const handleClose = () => {
-    localStorage.setItem("dismissCard", "true");
+  function handleClose() {
+    setLocalStorage("showOnboardingCard", false);
     setIsCardVisible(false);
-  };
+  }
+
+  function onComplete() {
+    ideMessenger.post("showTutorial", undefined);
+    setLocalStorage("showTutorialCard", true);
+    setLocalStorage("showOnboardingCard", false);
+    completeOnboarding();
+    setIsCardVisible(false);
+  }
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case Tabs.Quickstart:
-        return <OnboardingQuickstartTab />;
-      case Tabs.Best:
-        return <OnboardingBestTab />;
-      case Tabs.Local:
-        return <OnboardingLocalTab />;
+      case "Quickstart":
+        return <Tabs.Quickstart onComplete={onComplete} />;
+      case "Best":
+        return <Tabs.Best onComplete={onComplete} />;
+      case "Local":
+        return <Tabs.Local onComplete={onComplete} />;
       default:
         return null;
     }
@@ -49,14 +83,11 @@ function OnboardingCard() {
   }
 
   return (
-    <StyledCard>
+    <StyledCard className="relative">
       <OnboardingCardTabs activeTab={activeTab} onTabClick={handleTabClick} />
-      {/* <button
-          className="text-gray-600 border border-transparent hover:border-gray-600 hover:bg-gray-100 rounded p-1 flex items-center justify-center cursor-pointer"
-          onClick={handleClose}
-        >
-          <XMarkIcon className="h-3 w-3" />
-        </button> */}
+      <CloseButton onClick={handleClose}>
+        <XMarkIcon className="h-5 w-5" />
+      </CloseButton>
       <div className="content py-4">{renderTabContent()}</div>
     </StyledCard>
   );

@@ -51,7 +51,7 @@ function Alert({ children, type = "info" }: AlertProps) {
           <Icon className="w-6 h-6 text-blue-700" />
         </div>
         <div className="ml-3">
-          <p className={`text-sm text-slate-800`}>{children}</p>
+          <p className="text-sm text-slate-800 my-3">{children}</p>
         </div>
       </div>
     </div>

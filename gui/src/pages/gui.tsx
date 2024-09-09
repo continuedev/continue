@@ -162,7 +162,7 @@ function GUI() {
   const state = useSelector((state: RootState) => state.state);
 
   const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard") ?? true,
+    getLocalStorage("showTutorialCard"),
   );
 
   const onCloseTutorialCard = () => {

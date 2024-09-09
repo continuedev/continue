@@ -5,8 +5,8 @@ import QuickModelSetup from "../../components/modelSelection/quickSetup/QuickMod
 import Toggle from "../../components/modelSelection/Toggle";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getLocalStorage } from "../../util/localStorage";
-import DefaultModelConfigForm from "../../components/OnboardingCard/DefaultModelConfigForm";
 import { useCompleteOnboarding } from "./utils";
+import DefaultModelConfigForm from "../../components/OnboardingCard/components/DefaultModelConfigForm";
 
 function ApiKeysOnboarding() {
   const ideMessenger = useContext(IdeMessengerContext);

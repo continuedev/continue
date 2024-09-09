@@ -271,7 +271,7 @@ export const Input = styled.input`
 
   &:focus {
     background: ${vscInputBackground};
-    outline: 1px solid ${vscFocusBorder};
+    outline: 1px solid ${vscInputBorderFocus};
   }
 
   &:invalid {
@@ -368,7 +368,7 @@ export const HeaderButton = styled.button<{
   &:hover {
     background-color: ${({ inverted, hoverBackgroundColor }) =>
       typeof inverted === "undefined" || inverted
-        ? (hoverBackgroundColor ?? vscInputBackground)
+        ? hoverBackgroundColor ?? vscInputBackground
         : "transparent"};
   }
   display: flex;
