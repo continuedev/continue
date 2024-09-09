@@ -245,10 +245,10 @@ function TipTapEditor(props: TipTapEditorProps) {
         };
       });
     } else {
-      ideMessenger.post("errorPopup", {
-        message:
-          "Images need to be in jpg or png format and less than 10MB in size.",
-      });
+      ideMessenger.post("showToast", [
+        "error",
+        "Images need to be in jpg or png format and less than 10MB in size.",
+      ]);
     }
     return undefined;
   }

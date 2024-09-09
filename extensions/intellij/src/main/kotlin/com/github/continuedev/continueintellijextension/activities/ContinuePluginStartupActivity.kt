@@ -68,20 +68,20 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
 
-        project.messageBus.connect().subscribe(
-            ToolWindowManagerListener.TOPIC,
-            object : ToolWindowManagerListener {
-                override fun stateChanged(toolWindowManager: ToolWindowManager) {
-                    if (toolWindowManager.activeToolWindowId == TerminalToolWindowFactory.TOOL_WINDOW_ID
-                        || TerminalView.getInstance(project).isNotAvailable()
-                    ) {
-                        project.service<TerminalActivityTrackingService>().update(
-                            TerminalView.getInstance(project).widgets
-                        )
-                    }
-                }
-            }
-        )
+//        project.messageBus.connect().subscribe(
+//            ToolWindowManagerListener.TOPIC,
+//            object : ToolWindowManagerListener {
+//                override fun stateChanged(toolWindowManager: ToolWindowManager) {
+//                    if (toolWindowManager.activeToolWindowId == TerminalToolWindowFactory.TOOL_WINDOW_ID
+//                        || TerminalView.getInstance(project).isNotAvailable()
+//                    ) {
+//                        project.service<TerminalActivityTrackingService>().update(
+//                            TerminalView.getInstance(project).widgets
+//                        )
+//                    }
+//                }
+//            }
+//        )
 
        ApplicationManager.getApplication().executeOnPooledThread {
            initializePlugin(project)

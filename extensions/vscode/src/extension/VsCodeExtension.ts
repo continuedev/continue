@@ -18,7 +18,7 @@ import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvide
 import { registerDebugTracker } from "../debug/debug";
 import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
-import { VsCodeIde } from "../ideProtocol";
+import { VsCodeIde } from "../VsCodeIde";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
@@ -233,6 +233,7 @@ export class VsCodeExtension {
           "showConfigUpdateToast",
           true,
         );
+
         if (showToast) {
           vscode.window
             .showInformationMessage("Config updated", "Don't show again")

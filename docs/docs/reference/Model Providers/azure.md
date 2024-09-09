@@ -20,7 +20,7 @@ You can configure Azure OpenAI service through the UI, or you can configure it m
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "engine": "<YOUR_ENGINE>",
     "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "openai",
+    "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
 }]
 ```

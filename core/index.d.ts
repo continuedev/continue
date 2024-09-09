@@ -121,11 +121,12 @@ export interface ILLM extends LLMOptions {
 export type ContextProviderType = "normal" | "query" | "submenu";
 
 export interface ContextProviderDescription {
-  title: string;
+  title: ContextProviderName;
   displayTitle: string;
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
+  dependsOnIndexing?: boolean;
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
@@ -330,6 +331,9 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
   model?: string;
 }
+
+export type ToastType = "info" | "error" | "warning";
+
 export interface LLMOptions {
   model: string;
 
@@ -376,6 +380,7 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
 }
@@ -510,9 +515,11 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
-  errorPopup(message: string): Promise<void>;
-  infoPopup(message: string): Promise<void>;
-
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<any>;
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
@@ -582,7 +589,15 @@ type ContextProviderName =
   | "docs"
   | "gitlab-mr"
   | "os"
-  | "currentFile";
+  | "currentFile"
+  | "outline"
+  | "continue-proxy"
+  | "highlights"
+  | "file"
+  | "issue"
+  | "repo-map"
+  | "url"
+  | string;
 
 type TemplateType =
   | "llama2"
@@ -786,6 +801,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "bedrock"
   | "huggingface-tei"
   | "transformers.js"
   | "ollama"
@@ -806,6 +822,11 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxChunkSize?: number;
+  // AWS options
+  profile?: string;
+
+  // AWS and GCP Options
+  region?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -926,6 +947,13 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
+
+  /**
+   * If set to true, we will attempt to pull down and install an instance of Chromium
+   * that is compatible with the current version of Puppeteer.
+   * This is needed to crawl a large number of documentation sites that are dynamically rendered.
+   */
+  useChromiumForDocsCrawling?: boolean;
 }
 
 interface AnalyticsConfig {

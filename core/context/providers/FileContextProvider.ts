@@ -21,6 +21,7 @@ class FileContextProvider extends BaseContextProvider {
     displayTitle: "Files",
     description: "Type to search",
     type: "submenu",
+    dependsOnIndexing: true,
   };
 
   async getContextItems(

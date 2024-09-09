@@ -24,10 +24,6 @@ To enable the `@docs` context provider, you need to add it to the list of contex
 
 The `@docs` context provider works by crawling specified documentation sites, generating embeddings, and storing them locally for you. This process allows for quick and efficient access to your documentation content.
 
-:::info
-Note that we download and install a headless browser, Chromium, to crawl documentation sites. This is required to execute JavaScript on the page and ensure that we can crawl all the content.
-:::
-
 1. We crawl the specified documentation site
 2. Generate embeddings for the content
 3. Store the embeddings locally on your machine
@@ -70,6 +66,18 @@ The configuration schema is as follows:
 - `startUrl`: The URL where the indexing process should begin.
 - `rootUrl`: The base URL of the documentation site, used to determine which pages to index.
 - `faviconUrl`: The URL of the site's favicon, used for visual identification in the UI.
+
+## Crawling dynamically generated sites with `useChromiumForDocsCrawling`
+
+By default, we use a lighter weight tool to crawl documentation sites that cannot render sites that are dynamically generated using JavaScript.
+
+If you want to crawl a site that is dynamically generated, or you get an error while attempting to crawl a site, you can enable the experimental `useChromiumForDocsCrawling` feature in your `config.json`. This will download and install Chromium to `~/.continue/.utils`.
+
+```json title=config.json
+"experimental": {
+    "useChromiumForDocsCrawling": true
+}
+```
 
 ## FAQ
 

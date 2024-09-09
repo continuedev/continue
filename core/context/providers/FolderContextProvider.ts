@@ -5,7 +5,11 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../index.js";
-import { getBasename, groupByLastNPathParts, getUniqueFilePath } from "../../util/index.js";
+import {
+  getBasename,
+  groupByLastNPathParts,
+  getUniqueFilePath,
+} from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
 class FolderContextProvider extends BaseContextProvider {
@@ -14,6 +18,7 @@ class FolderContextProvider extends BaseContextProvider {
     displayTitle: "Folder",
     description: "Type to search",
     type: "submenu",
+    dependsOnIndexing: true,
   };
 
   async getContextItems(
@@ -35,7 +40,7 @@ class FolderContextProvider extends BaseContextProvider {
       return {
         id: folder,
         title: getBasename(folder),
-        description: getUniqueFilePath(folder, folderGroups)
+        description: getUniqueFilePath(folder, folderGroups),
       };
     });
   }
