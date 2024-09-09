@@ -69,19 +69,27 @@ const config = {
       // Replace with your project's social card
       image: "https://docs.continue.dev/img/continue-social-card.png",
       navbar: {
-        title: "Continue Docs",
+        title: "Continue",
         logo: {
           alt: "Continue Logo",
           src: "img/logo.png",
-          href: "/docs",
+          href: "https://continue.dev",
+          target: "_blank",
         },
         items: [
           {
             type: "docSidebar",
+            sidebarId: "docsSidebar",
+            position: "left",
+            label: "Docs",
+            href: "/docs",
+          },
+          {
+            type: "docSidebar",
             sidebarId: "customizingSidebar",
             position: "left",
-            label: "Customizing",
-            href: "/customizing",
+            label: "Customize",
+            href: "/customize",
           },
           {
             to: "https://github.com/continuedev/continue",

@@ -38,10 +38,10 @@ We recommend configuring **DeepSeek Coder** as your autocomplete model.
 
 DeepSeek currently does not offer any embeddings models.
 
-[Click here](../../model-types/embeddings.md) to see our full list of embeddings model providers.
+[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
 
 ## Reranking model
 
 DeepSeek currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see our full list of reranking model providers.
+[Click here](../../model-types/reranking.md) to see a list of reranking model providers.

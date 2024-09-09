@@ -24,7 +24,7 @@ We recommend configuring **Gemini 1.5 Pro** as your chat model.
 
 Gemini currently does not offer any autocomplete models.
 
-[Click here](../../model-types/autocomplete.md) to see our full list of autocomplete model providers.
+[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
 
 ## Embeddings model
 
@@ -48,4 +48,4 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 
 Gemini currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see our full list of reranking model providers.
+[Click here](../../model-types/reranking.md) to see a list of reranking model providers.

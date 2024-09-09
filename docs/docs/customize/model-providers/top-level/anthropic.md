@@ -24,19 +24,19 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
 Anthropic currently does not offer any autocomplete models.
 
-[Click here](../../model-types/autocomplete.md) to see our full list of autocomplete model providers.
+[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
 
 ## Embeddings model
 
 Anthropic currently does not offer any embeddings models.
 
-[Click here](../../model-types/embeddings.md) to see our full list of embeddings model providers.
+[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
 
 ## Reranking model
 
 Anthropic currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see our full list of reranking model providers.
+[Click here](../../model-types/reranking.md) to see a list of reranking model providers.
 
 ## Prompt caching
 

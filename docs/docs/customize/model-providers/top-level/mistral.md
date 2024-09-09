@@ -44,7 +44,8 @@ We recommend configuring **Mistral Embed** as your embeddings model.
     {
       "provider": "mistral",
       "model": "mistral-embed",
-      "apiKey": "[API_KEY]"
+      "apiKey": "[API_KEY]",
+      "apiBase": "https://api.mistral.ai/v1"
     }
   ]
 }
@@ -54,4 +55,4 @@ We recommend configuring **Mistral Embed** as your embeddings model.
 
 Mistral currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see our full list of reranking model providers.
+[Click here](../../model-types/reranking.md) to see a list of reranking model providers.

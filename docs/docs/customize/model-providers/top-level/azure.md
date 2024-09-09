@@ -61,7 +61,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 Azure OpenAI currently does not offer any reranking models.
 
-[Click here](../../model-types/reranking.md) to see our full list of reranking model providers.
+[Click here](../../model-types/reranking.md) to see a list of reranking models.
 
 ## Privacy
 
