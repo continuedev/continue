@@ -18,5 +18,8 @@
     "binary/": false,
     "**/core/vendor/**": true,
     "**/gui/dist": true
-  }
+  },
+  "eslint.workingDirectories": [
+    "./core"
+  ]
 }

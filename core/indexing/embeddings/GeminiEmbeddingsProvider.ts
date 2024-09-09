@@ -8,7 +8,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
  */
 class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "gemini";
-  static maxBatchSize = 2048;
+  static maxBatchSize = 100;
 
   static defaultOptions = {
     apiBase: "https://generativelanguage.googleapis.com/v1/",

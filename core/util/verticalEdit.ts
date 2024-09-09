@@ -81,6 +81,9 @@ export async function* streamDiffLines(
     oldLines = [];
   }
 
+  // Trim end of oldLines, otherwise we have trailing \r on every line for CRLF files
+  oldLines = oldLines.map((line) => line.trimEnd());
+
   const prompt = constructPrompt(
     prefix,
     highlighted,

@@ -513,6 +513,13 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         placeholder: "Enter the API Version",
         defaultValue: "2023-05-29"
       },
+      {
+        inputType: "text",
+        key: "watsonxFullUrl",
+        label: "Full watsonx URL",
+        placeholder: "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
+        required: false
+      },
       // {
       //   inputType: "text",
       //   key: "title",

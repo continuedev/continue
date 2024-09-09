@@ -146,7 +146,7 @@ function ProfileSwitcher(props: {}) {
         !lastControlServerBetaEnabledStatus && enableControlServerBeta;
 
       if (shouldShowPopup) {
-        ideMessenger.ide.infoPopup("Continue for Teams enabled");
+        ideMessenger.ide.showToast("info", "Continue for Teams enabled");
       }
 
       setControlServerBetaEnabled(enableControlServerBeta);

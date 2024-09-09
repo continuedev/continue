@@ -1,5 +1,5 @@
-import { ModelDescription } from "../index.js";
-import { editConfigJson } from "../util/paths.js";
+import { ContextProviderWithParams, ModelDescription } from "../";
+import { editConfigJson } from "../util/paths";
 
 function stringify(obj: any, indentation?: number): string {
   return JSON.stringify(
@@ -9,6 +9,18 @@ function stringify(obj: any, indentation?: number): string {
     },
     indentation,
   );
+}
+
+export function addContextProvider(provider: ContextProviderWithParams) {
+  editConfigJson((config) => {
+    if (!config.contextProviders) {
+      config.contextProviders = [provider];
+    } else {
+      config.contextProviders.push(provider);
+    }
+
+    return config;
+  });
 }
 
 export function addModel(model: ModelDescription) {

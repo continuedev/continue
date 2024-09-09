@@ -63,7 +63,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsCompletions(): boolean {
-    if (this.providerName === "openai") {
+    if (["openai", "azure"].includes(this.providerName)) {
       if (
         this.apiBase?.includes("api.groq.com") ||
         this.apiBase?.includes("api.mistral.ai") ||
@@ -118,6 +118,7 @@ export abstract class BaseLLM implements ILLM {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
 
@@ -180,6 +181,7 @@ export abstract class BaseLLM implements ILLM {
     this.watsonxProjectId = options.watsonxProjectId;
     this.watsonxStopToken = options.watsonxStopToken;
     this.watsonxApiVersion = options.watsonxApiVersion;
+    this.watsonxFullUrl = options.watsonxFullUrl;
 
     this.cacheSystemMessage = options.cacheSystemMessage;
 
