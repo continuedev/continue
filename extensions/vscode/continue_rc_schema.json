@@ -526,7 +526,8 @@
             "properties": {
               "provider": {
                 "enum": [
-                  "openai"
+                  "openai",
+                  "azure"
                 ]
               }
             },
@@ -729,13 +730,13 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "claude-2",
-                      "claude-instant-1",
                       "claude-3-5-sonnet-20240620",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
-                      "claude-2.1"
+                      "claude-2.1",
+                      "claude-2",
+                      "claude-instant-1"
                     ]
                   },
                   {
@@ -789,6 +790,7 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "anthropic.claude-3-5-sonnet-20240620-v1:0",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
                       "claude-2"
@@ -843,7 +845,6 @@
               },
               "model": {
                 "enum": [
-                  "chat-bison-001",
                   "gemini-pro",
                   "gemini-1.5-pro-latest",
                   "gemini-1.5-pro",
@@ -998,33 +999,33 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "mistral-7b",
-                      "llama2-7b",
-                      "llama2-13b",
-                      "codellama-7b",
-                      "codellama-13b",
-                      "codellama-34b",
-                      "codellama-70b",
-                      "llama3-8b",
-                      "llama3-70b",
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b",
-                      "phi-2",
-                      "phind-codellama-34b",
-                      "wizardcoder-7b",
-                      "wizardcoder-13b",
-                      "wizardcoder-34b",
-                      "zephyr-7b",
-                      "codeup-13b",
-                      "deepseek-7b",
-                      "deepseek-33b",
-                      "neural-chat-7b",
-                      "deepseek-1b",
-                      "stable-code-3b",
-                      "starcoder-1b",
-                      "starcoder-3b",
-                      "starcoder2-3b",
+                      "mistral:7b",
+                      "llama2:7b",
+                      "llama2:13b",
+                      "codellama:7b",
+                      "codellama:13b",
+                      "codellama:34b",
+                      "codellama:70b",
+                      "llama3:8b",
+                      "llama3:70b",
+                      "llama3.1:8b",
+                      "llama3.1:70b",
+                      "llama3.1:405b",
+                      "phi:2",
+                      "phind:codellama:34b",
+                      "wizardcoder:7b",
+                      "wizardcoder:13b",
+                      "wizardcoder:34b",
+                      "zephyr:7b",
+                      "codeup:13b",
+                      "deepseek:7b",
+                      "deepseek:33b",
+                      "neural:chat:7b",
+                      "deepseek:1b",
+                      "stable:code:3b",
+                      "starcoder:1b",
+                      "starcoder:3b",
+                      "starcoder2:3b",
                       "AUTODETECT"
                     ]
                   },
@@ -1336,7 +1337,6 @@
                       "claude-2.1",
                       "command-r",
                       "command-r-plus",
-                      "chat-bison-001",
                       "gemini-pro",
                       "gemini-1.5-pro-latest",
                       "gemini-1.5-pro",
