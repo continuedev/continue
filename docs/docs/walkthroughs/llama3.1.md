@@ -95,7 +95,7 @@ Replicate makes it easy to host and run open-source AI with an API.
 
 ## SambaNova
 
-SambaNova Fast API provides world record Llama3.1 70B/405B serving.
+SambaNova Cloud provides world record Llama3.1 70B/405B serving.
 
 1. Create an account [here](https://cloud.sambanova.ai/)
 2. Copy your API key
