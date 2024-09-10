@@ -585,7 +585,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     provider: "sambanova",
     refPage: "sambanova",
     description:
-      "Use the SambaNova Fast API for Llama3.1 fast inference performance",
+      "Use SambaNova Fast API for Llama3.1 fast inference performance",
     icon: "sambanova.png",
     longDescription: `The SambaNova Fast API is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],

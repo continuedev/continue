@@ -1,7 +1,9 @@
 import type {
   LLMOptions,
   ModelProvider,
+  CompletionOptions,
 } from "../../index.js";
+import { streamSse } from "../stream.js";
 
 import OpenAI from "./OpenAI.js";
 
