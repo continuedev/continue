@@ -29,9 +29,18 @@ Bedrock currently does not offer any autocomplete models.
 
 ## Embeddings model
 
-Bedrock currently does not offer any embeddings models.
+We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazon.com/bedrock/latest/devguide/models.html#amazon.titan-embed-text-v2-0) as your embeddings model.
 
-[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "title": "Embeddings Model",
+    "provider": "bedrock",
+    "model": "amazon.titan-embed-text-v2:0",
+    "region": "us-west-2"
+  }
+}
+```
 
 ## Reranking model
 
