@@ -781,7 +781,8 @@ export type EmbeddingsProviderName =
   | "gemini"
   | "continue-proxy"
   | "deepinfra"
-  | "voyage";
+  | "voyage"
+  | "mistral";
 
 export interface EmbedOptions {
   apiBase?: string;

@@ -2029,7 +2029,8 @@
                 "cohere",
                 "free-trial",
                 "gemini",
-                "voyage"
+                "voyage",
+                "mistral"
               ]
             },
             "model": {
@@ -2079,7 +2080,97 @@
                 "required": ["provider"]
               },
               "then": {
-                "required": ["apiKey"]
+                "required": ["apiKey"],
+                "properties": {
+                  "model": {
+                    "enum": ["models/text-embedding-004"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["ollama"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "properties": {
+                  "model": {
+                    "enum": ["nomic-embed-text"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["openai", "azure"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "properties": {
+                  "model": {
+                    "enum": ["text-embedding-3-large", "text-embedding-3-small"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["mistral"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "properties": {
+                  "model": {
+                    "enum": ["mistral-embed"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["voyage"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "properties": {
+                  "model": {
+                    "enum": ["voyage-code-2"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["cohere"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "properties": {
+                  "model": {
+                    "enum": ["embed-english-v3.0", "embed-english-light-v3.0"]
+                  }
+                }
               }
             }
           ]
