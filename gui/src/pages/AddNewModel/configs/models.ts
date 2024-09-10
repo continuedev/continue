@@ -67,6 +67,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "sambanova",
     ],
     isOpenSource: true,
   },
@@ -741,7 +742,7 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       model: "ibm/granite-20b-code-instruct",
       contextLength: 20_000,
-      title: "watsonx - Granite Code 20b"
+      title: "watsonx - Granite Code 20b",
     },
     providerOptions: ["watsonx"],
     icon: "watsonx.png",

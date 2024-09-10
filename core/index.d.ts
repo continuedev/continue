@@ -636,6 +636,7 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "openrouter"
+  | "sambanova"
   | "nvidia"
   | "vllm"
   | "mock";

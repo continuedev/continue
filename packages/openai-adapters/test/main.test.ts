@@ -204,6 +204,12 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
     apiKey: process.env.TOGETHER_API_KEY!,
     chatOnly: true,
   },
+  {
+    provider: "sambanova",
+    model: "Meta-Llama-3.1-8B-Instruct",
+    apiKey: process.env.SAMBANOVA_API_KEY!,
+    chatOnly: true,
+  },
 ];
 
 const FIM_TESTS: LlmApiConfig[] = [
