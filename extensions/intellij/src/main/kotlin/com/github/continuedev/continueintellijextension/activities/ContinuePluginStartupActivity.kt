@@ -134,6 +134,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 showTutorial(project)
             }
 
+            settings.addRemoteSyncJob()
+
             val ideProtocolClient = IdeProtocolClient(
                     continuePluginService,
                     defaultStrategy,
