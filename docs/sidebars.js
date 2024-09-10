@@ -87,7 +87,11 @@ const sidebars = {
       label: "🚶 Walkthroughs",
       collapsible: true,
       collapsed: true,
-      items: ["walkthroughs/set-up-codestral", "walkthroughs/llama3.1"],
+      items: [
+        "walkthroughs/set-up-codestral",
+        "walkthroughs/llama3.1",
+        "walkthroughs/custom-code-rag",
+      ],
     },
     {
       type: "category",
