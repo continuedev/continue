@@ -3,9 +3,7 @@ title: Autocomplete
 keywords: [autocomplete]
 ---
 
-Continue now provides support for tab autocomplete in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains IDEs](https://plugins.jetbrains.com/plugin/22707-continue/edit). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
-
-## Setting up with Codestral (recommended)
+### Setting up with Codestral (recommended)
 
 If you want to have the best autocomplete experience, we recommend using Codestral, which is available through the [Mistral API](https://console.mistral.ai/). To do this, obtain an API key and add it to your `config.json`:
 
@@ -20,9 +18,9 @@ If you want to have the best autocomplete experience, we recommend using Codestr
 }
 ```
 
-## Setting up with Ollama (default)
+### Setting up with Ollama (default)
 
-We recommend setting up tab-autocomplete with a local Ollama instance. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
+If you'd like to run your autocomplete model locally, we recommend using Ollama. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
 
 ```bash
 ollama run starcoder2:3b
@@ -30,31 +28,7 @@ ollama run starcoder2:3b
 
 Once it has been downloaded, you should begin to see completions in VS Code.
 
-## Setting up with LM Studio
-
-You can also set up tab-autocomplete with a local LM Studio instance by following these steps:
-
-1. Download the latest version of LM Studio from [here](https://lmstudio.ai/)
-2. Download a model (e.g. search for `second-state/StarCoder2-3B-GGUF` and choose one of the options there)
-3. Go to the server section (button is on the left), select your model from the dropdown at the top, and click "Start Server"
-4. Go to the "My Models" section (button is on the left), find your selected model, and copy the name the path (example: `second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf`); this will be used as the "model" attribute in Continue
-5. Go to Continue and modify the configurations for a [custom model](#setting-up-a-custom-model)
-6. Set the "provider" to `lmstudio` and the "model" to the path copied earlier
-
-Example:
-
-```json title=~/.continue/config.json
-{
-  "tabAutocompleteModel": {
-      "title": "Starcoder2 3b",
-      "model": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
-      "provider": "lmstudio",
-  },
-  ...
-}
-```
-
-## Setting up a custom model
+### Setting up a custom model
 
 All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
 
@@ -70,17 +44,7 @@ All of the configuration options available for chat models are available to use 
 }
 ```
 
-If you aren't yet familiar with the available options, you can learn more in our [overview](../setup/overview.md).
-
-### What model should I use?
-
-If you are running the model locally, we recommend `starcoder2:3b`.
-
-If you find it to be too slow, you should try `deepseek-coder:1.3b-base`.
-
-If you have a bit more compute, or are running a model in the cloud, you can upgrade to `deepseek-coder:6.7b-base`.
-
-Regardless of what you are willing to spend, we do not recommend using GPT or Claude for autocomplete. Learn why [below](#i-want-better-completions-should-i-use-gpt-4).
+If you aren't yet familiar with the available options, you can find the full reference [here](../config.mdx).
 
 ## Configuration Options
 
@@ -118,14 +82,14 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
     "apiBase": "https://<my endpoint>"
   },
   "tabAutocompleteOptions": {
-    "useCopyBuffer": false,
-    "maxPromptTokens": 400,
-    "prefixPercentage": 0.5
+    "debounceDelay": 500,
+    "maxPromptTokens": 1500,
+    "disableInFiles": ["*.md"]
   }
 }
 ```
 
-## Troubleshooting
+## FAQs
 
 ### I want better completions, should I use GPT-4?
 
@@ -147,19 +111,9 @@ Follow these steps to ensure that everything is set up correctly:
 
 Depending on your hardware, you may want to try a smaller, faster model. If 3b isn't working for you we recommend trying `deepseek-coder:1.3b-base`.
 
-### Completions don't know about my code
-
-We are working on this! Right now Continue uses the Language Server Protocol to add definitions to the prompt, as well as using similarity search over recently edited files. We will be improving the accuracy of this system greatly over the next few weeks.
-
-### Completions contain formatting errors
-
-If you're seeing a common pattern of mistake that might be helpful to report, please share in Discord. We will do our best to fix it as soon as possible.
-
 ### Completions are only ever single-line
 
 To ensure that you receive multi-line completions, you can set `"multilineCompletions": "always"` in `tabAutocompleteOptions`. By default, it is `"auto"`. If you still find that you are only seeing single-line completions, this may be because some models tend to produce shorter completions when starting in the middle of a file. You can try temporarily moving text below your cursor out of your active file, or switching to a larger model.
-
-## FAQs
 
 ### Can I configure a "trigger key" for autocomplete?
 
@@ -187,6 +141,6 @@ Alternatively, open VS Code settings, search for "Continue" and uncheck the box 
 
 Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocomplete".
 
-## Feedback
+#### Feedback
 
 If you're turning off autocomplete, we'd love to hear how we can improve! Please let us know in our [Discord](https://discord.gg/vapESyrFmJ) or file an issue on GitHub.

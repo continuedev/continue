@@ -89,7 +89,7 @@ const config = {
             sidebarId: "customizingSidebar",
             position: "left",
             label: "Customize",
-            href: "/customize",
+            href: "/customize/overview",
           },
           {
             to: "https://github.com/continuedev/continue",
