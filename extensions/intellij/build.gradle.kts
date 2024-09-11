@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
+    kotlin("plugin.serialization") version "1.8.0"
 }
 
 group = properties("pluginGroup").get()
@@ -38,6 +39,7 @@ dependencies {
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
     implementation("com.posthog.java:posthog:1.+")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 }
 
 
@@ -147,7 +149,7 @@ tasks {
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
         channels.set(listOf(environment("RELEASE_CHANNEL").getOrElse("eap")))
-        
+
         // We always hide the stable releases until a few days of EAP have proven them stable
 //        hidden = environment("RELEASE_CHANNEL").map { it == "stable" }.getOrElse(false)
     }
