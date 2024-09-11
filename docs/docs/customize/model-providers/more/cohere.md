@@ -1,6 +1,10 @@
 # Cohere
 
-To setup Cohere, add the following to your `config.json` file:
+Before using Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.
+
+## Chat model
+
+We recommend configuring **Command-R Plus** as your chat model.
 
 ```json title="config.json"
 {
@@ -15,6 +19,38 @@ To setup Cohere, add the following to your `config.json` file:
 }
 ```
 
-Visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.
+## Autocomplete model
 
-[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/Cohere.ts)
+Cohere currently does not offer any autocomplete models.
+
+[Click here](../../model-types/autocomplete.md) to see a list of autocomplete model providers.
+
+## Embeddings model
+
+We recommend configuring **embed-english-v3.0** as your embeddings model.
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "cohere",
+    "model": "embed-english-v3.0",
+    "apiKey": "<COHERE_API_KEY>"
+  }
+}
+```
+
+## Reranking model
+
+We recommend configuring **rerank-english-v3.0** as your reranking model.
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "cohere",
+    "params": {
+      "model": "rerank-english-v3.0",
+      "apiKey": "<COHERE_API_KEY>"
+    }
+  }
+}
+```
