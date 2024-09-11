@@ -3,6 +3,12 @@ title: DeepSeek
 slug: ../deepseek
 ---
 
+:::info
+
+You can get an API key from the [DeepSeek console](https://www.deepseek.com/).
+
+:::
+
 ## Chat model
 
 We recommend configuring **DeepSeek Chat** as your chat model.

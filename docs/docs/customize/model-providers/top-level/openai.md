@@ -3,6 +3,12 @@ title: OpenAI
 slug: ../openai
 ---
 
+:::info
+
+You can get an API key from the [OpenAI console](https://platform.openai.com/account/api-keys)
+
+:::
+
 ## Chat model
 
 We recommend configuring **GPT-4o** as your chat model.

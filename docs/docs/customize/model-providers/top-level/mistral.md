@@ -3,6 +3,12 @@ title: Mistral
 slug: ../mistral
 ---
 
+:::info
+
+You can get an API key from the [Mistral Dashboard](https://console.mistral.ai). Note that the API key for Codestral (codestral.mistral.ai) is different from for all other models (api.mistral.ai).
+
+:::
+
 ## Chat model
 
 We recommend configuring **Mistral Large** as your chat model.

@@ -3,6 +3,12 @@ title: Gemini
 slug: ../gemini
 ---
 
+:::info
+
+You can get an API key from the [Google AI Studio](https://aistudio.google.com/).
+
+:::
+
 ## Chat model
 
 We recommend configuring **Gemini 1.5 Pro** as your chat model.

@@ -3,6 +3,12 @@ title: Anthropic
 slug: ../anthropic
 ---
 
+:::info
+
+You can get an API key from the [Anthropic console](https://console.anthropic.com/account/keys).
+
+:::
+
 ## Chat model
 
 We recommend configuring **Claude 3.5 Sonnet** as your chat model.
