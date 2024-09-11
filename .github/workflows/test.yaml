@@ -13,7 +13,7 @@ jobs:
         run: echo "Hello, world!" > hello.txt
 
       - name: Create another
-        run: echo "Goodbye, world! > goodbye.txt"
+        run: echo "Goodbye, world!" > goodbye.txt
 
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
