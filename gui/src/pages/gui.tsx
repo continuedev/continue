@@ -223,11 +223,11 @@ function GUI() {
         if (u) {
           setLocalStorage("ftc", u + 1);
 
-          if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-            navigate("/onboarding");
-            posthog?.capture("ftc_reached");
-            return;
-          }
+          // if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
+          //   navigate("/onboarding");
+          //   posthog?.capture("ftc_reached");
+          //   return;
+          // }
         } else {
           setLocalStorage("ftc", 1);
         }

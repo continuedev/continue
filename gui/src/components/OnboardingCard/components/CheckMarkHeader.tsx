@@ -1,18 +1,12 @@
-import { ReactNode } from "react";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { lightGray } from "../..";
 
 interface CheckMarkHeaderProps {
   isComplete: boolean;
-  isOptional?: boolean;
-  children: ReactNode;
+  title: string;
 }
 
-export function CheckMarkHeader({
-  isComplete,
-  isOptional,
-  children,
-}: CheckMarkHeaderProps) {
+export function CheckMarkHeader({ isComplete, title }: CheckMarkHeaderProps) {
   return (
     <div className="flex gap-4 items-center">
       {isComplete ? (
@@ -24,15 +18,12 @@ export function CheckMarkHeader({
         ></CheckCircleIcon>
       ) : (
         <div
-          className="flex-none border border-solid rounded-full w-5 h-5 mt-1"
+          className="flex-none border border-solid rounded-full w-5 h-5"
           style={{ borderColor: lightGray }}
         ></div>
       )}
 
-      <div className={`flex flex-col ${isOptional ? "mb-3" : ""}`}>
-        <h3 className={`${isOptional ? "mb-1" : ""}`}>{children}</h3>
-        {isOptional && <i>Optional</i>}
-      </div>
+      <h2 className="text-base">{title}</h2>
     </div>
   );
 }

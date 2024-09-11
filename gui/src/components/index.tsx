@@ -121,17 +121,24 @@ export function parseColorForHex(colorVar: string): string {
   return hex;
 }
 
+/**
+ * Use logo in dev that includes text
+ *
+ */
+
 export const Button = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
-  color: ${vscForeground};
-  background-color: ${vscButtonBackground};
+  color: ${vscBackground};
+  background-color: ${vscForeground};
 
   &:disabled {
-    color: gray;
+    color: ${vscBackground};
+    opacity: 0.5;
+    pointer-events: none;
   }
 
   &:hover:enabled {
@@ -143,11 +150,12 @@ export const Button = styled.button`
 export const SecondaryButton = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
+  height: 2.5rem;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscInputBorder};
+  border: 1px solid ${vscForeground};
   color: ${vscForeground};
-  background-color: ${vscBackground};
+  background-color: inherit;
 
   &:disabled {
     color: gray;
@@ -155,8 +163,21 @@ export const SecondaryButton = styled.button`
 
   &:hover:enabled {
     cursor: pointer;
-    background-color: ${vscInputBackground};
+    background-color: ${vscBackground};
+    opacity: 0.9;
   }
+`;
+
+export const InputSubtext = styled.p`
+  font-size: 0.75rem;
+  color: ${lightGray};
+  margin-top: 0.25rem;
+`;
+
+export const ButtonSubtext = styled.p`
+  margin-top: 0;
+  text-align: center;
+  color: ${lightGray};
 `;
 
 export const CustomScrollbarDiv = styled.div`
@@ -261,8 +282,8 @@ export const HelperText = styled.p`
 export const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
-  margin: 8px 0;
   box-sizing: border-box;
+  margin: 4px 0px;
   border-radius: ${defaultBorderRadius};
   outline: 1px solid ${lightGray};
   border: none;
@@ -271,7 +292,7 @@ export const Input = styled.input`
 
   &:focus {
     background: ${vscInputBackground};
-    outline: 1px solid ${vscInputBorderFocus};
+    outline: 1px solid ${lightGray};
   }
 
   &:invalid {
@@ -376,4 +397,9 @@ export const HeaderButton = styled.button<{
   justify-content: center;
   gap: 4px;
   padding: 2px;
+`;
+
+export const Divider = styled.div`
+  height: 1px;
+  background-color: ${lightGray};
 `;

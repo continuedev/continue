@@ -1,15 +1,20 @@
 import { Listbox } from "@headlessui/react";
 import {
   ChevronDownIcon,
+  Cog6ToothIcon,
   CubeIcon,
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import {
+  defaultBorderRadius,
+  Divider,
+  lightGray,
+  vscInputBackground,
+} from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
@@ -24,6 +29,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import AddModelForm from "../../forms/AddModelForm";
 
 const MAX_HEIGHT_PX = 300;
 const StyledListboxButton = styled(Listbox.Button)`
@@ -45,7 +51,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
   margin-top: 4px;
   position: absolute;
   list-style: none;
-  padding: 4px;
+  padding: 0px;
   white-space: nowrap;
   cursor: default;
 
@@ -57,43 +63,73 @@ const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
   background-color: ${vscInputBackground};
 
   max-height: ${MAX_HEIGHT_PX}px;
-  overflow-y: auto;
+  overflow-y: scroll;
+
+  scrollbar-width: none;
 
   ${(props) => (props.showAbove ? "bottom: 100%;" : "top: 100%;")}
 `;
 
-const StyledListboxOption = styled(Listbox.Option)`
-  cursor: pointer;
+const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
   border-radius: ${defaultBorderRadius};
-  padding: 6px;
+  padding: 8px 12px;
 
-  &:hover {
-    background: ${(props) => `${lightGray}33`};
-  }
+  ${({ isDisabled }) =>
+    !isDisabled &&
+    `
+    cursor: pointer;
+
+    &:hover {
+      background: ${lightGray}33;
+    }
+  `}
+
+  ${({ isDisabled }) =>
+    isDisabled &&
+    `
+    opacity: 0.5;
+  `}
 `;
 
-const StyledTrashIcon = styled(TrashIcon)`
+const StyledTrashIcon = styled(TrashIcon)<{ hovered: boolean }>`
+  width: 1.2em;
+  height: 1.2em;
   cursor: pointer;
-  flex-shrink: 0;
-  margin-left: 8px;
+  padding: 4px;
+  border-radius: ${defaultBorderRadius};
+  opacity: ${(props) => (props.hovered ? 0.75 : 0)};
+  visibility: ${(props) => (props.hovered ? "visible" : "hidden")};
+
   &:hover {
-    color: red;
+    opacity: 1;
+    background-color: ${lightGray};
   }
 `;
 
-const Divider = styled.div`
-  height: 1px;
-  background-color: ${lightGray};
-  margin: 4px;
+const StyledCog6ToothIcon = styled(Cog6ToothIcon)<{ hovered: boolean }>`
+  width: 1.2em;
+  height: 1.2em;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: ${defaultBorderRadius};
+  opacity: ${(props) => (props.hovered ? 0.75 : 0)};
+  visibility: ${(props) => (props.hovered ? "visible" : "hidden")};
+
+  &:hover {
+    opacity: 1;
+    background-color: ${lightGray}33;
+  }
 `;
 
 function ModelOption({
   option,
   idx,
   showDelete,
+  showMissingApiKeyMsg,
 }: {
   option: Option;
   idx: number;
+  showMissingApiKeyMsg: boolean;
   showDelete?: boolean;
 }) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -121,30 +157,48 @@ function ModelOption({
     );
   }
 
+  function onClickGear(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    ideMessenger.post("openConfigJson", undefined);
+  }
+
+  function handleOptionClick(e) {
+    if (showMissingApiKeyMsg) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
   return (
     <StyledListboxOption
       key={idx}
       value={option.value}
-      onMouseEnter={() => {
-        setHovered(true);
-      }}
-      onMouseLeave={() => {
-        setHovered(false);
-      }}
+      isDisabled={showMissingApiKeyMsg}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={handleOptionClick}
     >
-      <div className="flex items-center justify-between w-full">
-        <div className="flex items-center pr-4">
-          <CubeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-          <span>{option.title}</span>
+      <div className="flex flex-col w-full gap-1">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center flex-grow">
+            <CubeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+            <span className="flex-grow">{option.title}</span>
+          </div>
+          <div className="flex items-center gap-1 ml-2">
+            <StyledCog6ToothIcon hovered={hovered} onClick={onClickGear} />
+            {showDelete && (
+              <StyledTrashIcon hovered={hovered} onClick={onClickDelete} />
+            )}
+          </div>
         </div>
 
-        <StyledTrashIcon
-          style={{ visibility: hovered && showDelete ? "visible" : "hidden" }}
-          className="ml-auto"
-          width="1.2em"
-          height="1.2em"
-          onClick={onClickDelete}
-        />
+        {showMissingApiKeyMsg && (
+          <span className="ml-6 text-xs italic text-[10px]">
+            API key required
+          </span>
+        )}
       </div>
     </StyledListboxOption>
   );
@@ -164,6 +218,7 @@ function modelSelectTitle(model: any): string {
 interface Option {
   value: string;
   title: string;
+  apiKey: string;
 }
 
 function ModelSelect() {
@@ -172,14 +227,24 @@ function ModelSelect() {
   const allModels = useSelector(
     (state: RootState) => state.state.config.models,
   );
-
-  const navigate = useNavigate();
-
+  const ideMessenger = useContext(IdeMessengerContext);
+  const [showAbove, setShowAbove] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
-
+  const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
   const selectedProfileId = useSelector(
     (store: RootState) => store.state.selectedProfileId,
   );
+
+  // Sort so that options without an API key are at the end
+  useEffect(() => {
+    const enabledOptions = options.filter((option) => option.apiKey !== "");
+    const disabledOptions = options.filter((option) => option.apiKey === "");
+
+    const sorted = [...enabledOptions, ...disabledOptions];
+
+    setSortedOptions(sorted);
+  }, [options]);
 
   useEffect(() => {
     setOptions(
@@ -187,10 +252,17 @@ function ModelSelect() {
         return {
           value: model.title,
           title: modelSelectTitle(model),
+          apiKey: model.apiKey,
         };
       }),
     );
   }, [allModels]);
+
+  useEffect(() => {
+    const handleResize = () => calculatePosition();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -211,27 +283,30 @@ function ModelSelect() {
     };
   }, [options, defaultModel]);
 
-  const ideMessenger = useContext(IdeMessengerContext);
+  function calculatePosition() {
+    const rect = buttonRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const dropdownHeight = MAX_HEIGHT_PX;
 
-  const [showAbove, setShowAbove] = useState(false);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+    setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+  }
 
-  const calculatePosition = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - rect.bottom;
-      const spaceAbove = rect.top;
-      const dropdownHeight = MAX_HEIGHT_PX;
+  function onClickAddModel(e) {
+    e.stopPropagation();
+    e.preventDefault();
 
-      setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
-    }
-  };
-
-  useEffect(() => {
-    const handleResize = () => calculatePosition();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <AddModelForm
+          onDone={() => {
+            dispatch(setShowDialog(false));
+          }}
+        />,
+      ),
+    );
+  }
 
   return (
     <Listbox
@@ -254,13 +329,14 @@ function ModelSelect() {
           </span>
         </StyledListboxButton>
         <StyledListboxOptions showAbove={showAbove}>
-          <div className={`max-h-[${MAX_HEIGHT_PX}px] overflow-y-auto`}>
-            {options.map((option, idx) => (
+          <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
+            {sortedOptions.map((option, idx) => (
               <ModelOption
                 option={option}
                 idx={idx}
                 key={idx}
                 showDelete={options.length > 1}
+                showMissingApiKeyMsg={option.apiKey === ""}
               />
             ))}
           </div>
@@ -268,37 +344,26 @@ function ModelSelect() {
           <div className="mt-auto">
             {selectedProfileId === "local" && (
               <>
-                {options.length > 0 && <Divider />}
+                {options.length > 0 && <Divider className="!my-0" />}
 
                 <StyledListboxOption
                   key={options.length}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    navigate("/addModel");
-                  }}
+                  onClick={onClickAddModel}
                   value={"addModel" as any}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center py-2">
                     <PlusIcon className="w-4 h-4 mr-2" />
-                    Add Model
+                    Add Chat model
                   </div>
                 </StyledListboxOption>
               </>
             )}
 
-            <Divider />
+            <Divider className="!my-0" />
 
-            <i
-              style={{
-                color: lightGray,
-                padding: "4px",
-                marginTop: "4px",
-                display: "block",
-              }}
-            >
-              {getMetaKeyLabel()}' to toggle
-            </i>
+            <span className="block px-3 py-3" style={{ color: lightGray }}>
+              <code>{getMetaKeyLabel()} + '</code> to toggle
+            </span>
           </div>
         </StyledListboxOptions>
       </div>

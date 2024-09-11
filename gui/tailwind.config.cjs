@@ -9,6 +9,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      animation: {
+        "spin-slow": "spin 3s linear infinite",
+      },
       colors: {
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
         "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",

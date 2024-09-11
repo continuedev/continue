@@ -6,7 +6,15 @@ import OnboardingCardTabs, {
 } from "./components/OnboardingCardTabs";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscBackground } from "../";
+import {
+  defaultBorderRadius,
+  lightGray,
+  parseColorForHex,
+  VSC_FOREGROUND_VAR,
+  vscBackground,
+  vscForeground,
+  vscInputBackground,
+} from "../";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { hasPassedFTL } from "../../util/freeTrial";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -14,17 +22,16 @@ import { useCompleteOnboarding } from "./utils";
 
 const StyledCard = styled.div`
   margin: auto;
-  border-style: solid;
-  border-width: 1.5px;
   border-radius: ${defaultBorderRadius};
-  border-color: ${lightGray};
   padding: 1rem 1.5rem;
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.45);
+  background-color: ${vscInputBackground};
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
+    0 8px 10px -6px rgb(0 0 0 / 0.1);
 `;
 
 const CloseButton = styled.button`
   border: none;
-  background-color: ${vscBackground};
+  background-color: inherit;
   color: ${lightGray};
   position: absolute;
   top: 0.6rem;

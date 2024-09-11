@@ -2,6 +2,7 @@ import { Listbox } from "@headlessui/react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
+  lightGray,
   vscBackground,
   vscButtonBackground,
   vscForeground,
@@ -25,7 +26,7 @@ export const StyledListboxButton = styled(Listbox.Button)`
   padding-bottom: 0.5rem;
 
   border-radius: 0.5em;
-  border: 1px solid ${vscButtonBackground};
+  border: 1px solid ${lightGray};
 
   margin: 0;
   height: 100%;

@@ -590,15 +590,13 @@ const commandsMap: (
       const quickPick = vscode.window.createQuickPick();
       const autocompleteModels =
         (await configHandler.loadConfig())?.tabAutocompleteModels ?? [];
-      const autocompleteModelTitles = autocompleteModels
-        .map((model) => model.title)
-        .filter((t) => t !== undefined) as string[];
+
       let selected = new GlobalContext().get("selectedTabAutocompleteModel");
       if (
         !selected ||
-        !autocompleteModelTitles.some((title) => title === selected)
+        !autocompleteModels.some((model) => model.title === selected)
       ) {
-        selected = autocompleteModelTitles[0];
+        selected = autocompleteModels[0].title;
       }
 
       // Toggle between Disabled, Paused, and Enabled
@@ -614,8 +612,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -637,9 +635,16 @@ const commandsMap: (
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
         },
-        ...autocompleteModelTitles.map((title) => ({
-          label: title === selected ? `$(check) ${title}` : title,
-          description: title === selected ? "Currently selected" : undefined,
+        ...autocompleteModels.map(({ title, apiKey }) => ({
+          label:
+            title === selected ? `$(check) ${title}` : title || "Unnamed Model",
+          description:
+            title === selected
+              ? `Currently selected${
+                  (apiKey === undefined || apiKey === "") &&
+                  " (API key required)"
+                }`
+              : undefined,
         })),
       ];
       quickPick.onDidAccept(() => {
@@ -658,7 +663,7 @@ const commandsMap: (
           selectedOption === "$(gear) Configure autocomplete options"
         ) {
           ide.openFile(getConfigJsonPath());
-        } else if (autocompleteModelTitles.includes(selectedOption)) {
+        } else if (autocompleteModels.includes(selectedOption)) {
           new GlobalContext().update(
             "selectedTabAutocompleteModel",
             selectedOption,

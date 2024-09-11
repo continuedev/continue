@@ -1,6 +1,6 @@
 import { usePostHog } from "posthog-js/react";
 import { useNavigate } from "react-router-dom";
-import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { getLocalStorage, setLocalStorage } from "../../../util/localStorage";
 
 // Note that there is no "NotStarted" status since the
 // local storage value is null until onboarding begins

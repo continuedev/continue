@@ -11,7 +11,6 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { isNewUserOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -27,6 +26,7 @@ import HeaderButtonWithText from "./HeaderButtonWithText";
 import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
+import { isNewUserOnboarding } from "./OnboardingCard/utils";
 
 const FOOTER_HEIGHT = "1.8em";
 
@@ -102,12 +102,6 @@ const ProfileDropdownPortalDiv = styled.div`
   font-size: ${getFontSize() - 2};
 `;
 
-const HIDE_FOOTER_ON_PAGES = [
-  "/onboarding",
-  "/localOnboarding",
-  "/apiKeyOnboarding",
-];
-
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -177,21 +171,21 @@ const Layout = () => {
     [location, navigate],
   );
 
-  useWebviewListener(
-    "addApiKey",
-    async () => {
-      navigate("/apiKeyOnboarding");
-    },
-    [navigate],
-  );
+  // useWebviewListener(
+  //   "addApiKey",
+  //   async () => {
+  //     navigate("/apiKeyOnboarding");
+  //   },
+  //   [navigate],
+  // );
 
-  useWebviewListener(
-    "openOnboarding",
-    async () => {
-      navigate("/onboarding");
-    },
-    [navigate],
-  );
+  // useWebviewListener(
+  //   "openOnboarding",
+  //   async () => {
+  //     navigate("/onboarding");
+  //   },
+  //   [navigate],
+  // );
 
   useWebviewListener(
     "incrementFtc",
@@ -217,14 +211,11 @@ const Layout = () => {
     [navigate],
   );
 
-  useEffect(() => {
-    if (
-      isNewUserOnboarding() &&
-      (location.pathname === "/" || location.pathname === "/index.html")
-    ) {
-      navigate("/onboarding");
-    }
-  }, [location]);
+  // useEffect(() => {
+  //   if (isNewUserOnboarding() && location.pathname === "/") {
+  //     navigate("/onboarding");
+  //   }
+  // }, [location]);
 
   return (
     <LayoutTopDiv>
@@ -252,33 +243,31 @@ const Layout = () => {
           <Outlet />
           <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
           <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
-          {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
-            <Footer>
-              <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
-                {defaultModel?.provider === "free-trial" && (
-                  <ProgressBar
-                    completed={parseInt(localStorage.getItem("ftc") || "0")}
-                    total={FREE_TRIAL_LIMIT_REQUESTS}
-                  />
-                )}
-              </div>
+          <Footer>
+            <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
+              {defaultModel?.provider === "free-trial" && (
+                <ProgressBar
+                  completed={parseInt(localStorage.getItem("ftc") || "0")}
+                  total={FREE_TRIAL_LIMIT_REQUESTS}
+                />
+              )}
+            </div>
 
-              <ProfileSwitcher />
-              <HeaderButtonWithText
-                tooltipPlacement="top-end"
-                text="More"
-                onClick={() => {
-                  if (location.pathname === "/help") {
-                    navigate("/");
-                  } else {
-                    navigate("/help");
-                  }
-                }}
-              >
-                <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </Footer>
-          )}
+            <ProfileSwitcher />
+            <HeaderButtonWithText
+              tooltipPlacement="top-end"
+              text="More"
+              onClick={() => {
+                if (location.pathname === "/help") {
+                  navigate("/");
+                } else {
+                  navigate("/help");
+                }
+              }}
+            >
+              <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          </Footer>
         </GridDiv>
 
         <BottomMessageDiv

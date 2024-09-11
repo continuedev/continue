@@ -44,7 +44,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         <XMarkIcon className="h-5 w-5" />
       </CloseButton>
 
-      <ul className="text-gray-300 space-y-4 pl-0">
+      <ul className="space-y-4 pl-0" style={{ color: lightGray }}>
         <li className="flex items-start">
           <PencilSquareIcon
             width="1.4em"

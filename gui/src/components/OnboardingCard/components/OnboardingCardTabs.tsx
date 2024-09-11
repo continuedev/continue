@@ -38,9 +38,8 @@ const TabButton = styled.button<{ isActive: boolean }>`
     `
     border-style: solid;
     border-width: 0 0 2.5px 0;
-    border-color: ${vscButtonBackground};
-    color: ${vscButtonBackground};
-    font-weight: medium;
+    border-color: ${vscForeground};
+    font-weight: bold;
   `}
 `;
 

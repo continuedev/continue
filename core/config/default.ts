@@ -3,7 +3,7 @@ import {
   ModelDescription,
   SerializedContinueConfig,
   SlashCommandDescription,
-} from "../index.js";
+} from "../";
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
@@ -91,7 +91,26 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [],
+  /**
+   * Add Sonnet + Codestral models into actual config
+   * No API key - [`Add your API key here`]
+   * - Chat model: add "No key" notification in model dropdown (beneath the model name, red alert, change trashcan to grey), free trial model comes first
+   * - Autocomplete: add check to short circuit if model is codestral and no api key, add no api key info in quickpick
+   */
+  models: [
+    {
+      model: "claude-3-5-sonnet-20240620",
+      provider: "anthropic",
+      apiKey: "",
+      title: "Claude 3.5 Sonnet",
+    },
+  ],
+  tabAutocompleteModel: {
+    title: "Codestral",
+    provider: "mistral",
+    model: "codestral-latest",
+    apiKey: "",
+  },
   customCommands: [
     {
       name: "test",
@@ -100,17 +119,25 @@ export const defaultConfig: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "ollama",
-    model: "starcoder2:3b",
-  },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: FREE_TRIAL_MODELS,
+  models: [
+    {
+      model: "claude-3-5-sonnet-20240620",
+      provider: "anthropic",
+      apiKey: "",
+      title: "Claude 3.5 Sonnet",
+    },
+  ],
+  tabAutocompleteModel: {
+    title: "Codestral",
+    provider: "mistral",
+    model: "codestral-latest",
+    apiKey: "",
+  },
   customCommands: [
     {
       name: "test",
@@ -119,11 +146,6 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "ollama",
-    model: "starcoder2:3b",
-  },
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
 };
