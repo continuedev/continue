@@ -663,7 +663,11 @@ const commandsMap: (
           selectedOption === "$(gear) Configure autocomplete options"
         ) {
           ide.openFile(getConfigJsonPath());
-        } else if (autocompleteModels.includes(selectedOption)) {
+        } else if (
+          autocompleteModels
+            .map((model) => model.title)
+            .includes(selectedOption)
+        ) {
           new GlobalContext().update(
             "selectedTabAutocompleteModel",
             selectedOption,

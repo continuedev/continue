@@ -5,32 +5,33 @@ import {
 } from "../../../redux/slices/uiStateSlice";
 import Alert from "../../gui/Alert";
 import AddModelForm from "../../../forms/AddModelForm";
-import { OnboardingTab } from "../tabs/types";
+import { useCompleteOnboarding } from "../utils";
 
-function AlternativeProviderAlert({ onComplete }: OnboardingTab) {
+function ProviderAlert() {
   const dispatch = useDispatch();
+  const { completeOnboarding } = useCompleteOnboarding();
 
-  function onOtherProviderClick() {
+  function onClick() {
     dispatch(setShowDialog(true));
-    dispatch(setDialogMessage(<AddModelForm onDone={onComplete} />));
+    dispatch(setDialogMessage(<AddModelForm onDone={completeOnboarding} />));
   }
 
   return (
     <Alert>
       <p className="font-semibold text-sm m-0">
-        Prefer to use an alternative provider like OpenAI?
+        Prefer to use an different provider like OpenAI?
       </p>
       <p className="m-0 mt-1">
         <a
           className="text-inherit underline cursor-pointer hover:text-inherit"
-          onClick={onOtherProviderClick}
+          onClick={onClick}
         >
           Click here
         </a>{" "}
-        to add a Chat model
+        to add a Chat model from OpenAI, Gemini, and more
       </p>
     </Alert>
   );
 }
 
-export default AlternativeProviderAlert;
+export default ProviderAlert;

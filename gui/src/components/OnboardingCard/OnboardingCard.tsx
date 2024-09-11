@@ -1,24 +1,11 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import * as Tabs from "./tabs";
-import OnboardingCardTabs, {
-  TabTitle,
-  TabTitles,
-} from "./components/OnboardingCardTabs";
+import OnboardingCardTabs, { TabTitle } from "./components/OnboardingCardTabs";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  parseColorForHex,
-  VSC_FOREGROUND_VAR,
-  vscBackground,
-  vscForeground,
-  vscInputBackground,
-} from "../";
-import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import { hasPassedFTL } from "../../util/freeTrial";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useCompleteOnboarding } from "./utils";
+import { defaultBorderRadius, lightGray, vscInputBackground } from "../";
+import { useDispatch } from "react-redux";
+import { setOnboardingCard } from "../../redux/slices/uiStateSlice";
 
 const StyledCard = styled.div`
   margin: auto;
@@ -43,16 +30,23 @@ const CloseButton = styled.button`
   cursor: pointer;
 `;
 
-function OnboardingCard() {
-  const ideMessenger = useContext(IdeMessengerContext);
-  const { completeOnboarding } = useCompleteOnboarding();
+export interface OnboardingCardState {
+  show?: boolean;
+  activeTab?: TabTitle;
+}
 
+export const defaultOnboardingCardState: OnboardingCardState = {
+  show: false,
+  activeTab: "Quickstart",
+};
+
+export type OnboardingCardProps = Pick<OnboardingCardState, "activeTab">;
+
+function OnboardingCard(props: OnboardingCardProps) {
+  const dispatch = useDispatch();
+  // TODO: Verify this works elsewhere with hasPassedFTL logic
   const [activeTab, setActiveTab] = useState<TabTitle>(
-    hasPassedFTL() ? "Best" : "Quickstart",
-  );
-
-  const [isCardVisible, setIsCardVisible] = useState(
-    getLocalStorage("showOnboardingCard") ?? true,
+    props.activeTab ?? "Quickstart",
   );
 
   function handleTabClick(tabName) {
@@ -60,34 +54,21 @@ function OnboardingCard() {
   }
 
   function handleClose() {
-    setLocalStorage("showOnboardingCard", false);
-    setIsCardVisible(false);
-  }
-
-  function onComplete() {
-    ideMessenger.post("showTutorial", undefined);
-    setLocalStorage("showTutorialCard", true);
-    setLocalStorage("showOnboardingCard", false);
-    completeOnboarding();
-    setIsCardVisible(false);
+    dispatch(setOnboardingCard({ show: false }));
   }
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "Quickstart":
-        return <Tabs.Quickstart onComplete={onComplete} />;
+        return <Tabs.Quickstart />;
       case "Best":
-        return <Tabs.Best onComplete={onComplete} />;
+        return <Tabs.Best />;
       case "Local":
-        return <Tabs.Local onComplete={onComplete} />;
+        return <Tabs.Local />;
       default:
         return null;
     }
   };
-
-  if (!isCardVisible) {
-    return null;
-  }
 
   return (
     <StyledCard className="relative">

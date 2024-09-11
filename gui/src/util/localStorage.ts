@@ -1,13 +1,10 @@
 import { JSONContent } from "@tiptap/react";
 import { IndexingProgressUpdate } from "core";
-import { OnboardingStatus } from "../pages/onboarding/utils";
+import { OnboardingStatus } from "../components/OnboardingCard/utils";
 
 type LocalStorageTypes = {
-  /**
-   * TODO: WHhat does this become?
-   */
   onboardingStatus?: OnboardingStatus;
-  showOnboardingCard?: boolean;
+  hasDismissedOnboardingCard: boolean;
   mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
   ftc: number;

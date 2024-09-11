@@ -1,12 +1,14 @@
 import BestExperienceConfigForm from "../components/BestExperienceConfigForm";
-import AlternativeProviderAlert from "../components/AlternativeProviderAlert";
-import { OnboardingTab } from "./types";
+import ProviderAlert from "../components/ProviderAlert";
+import { useCompleteOnboarding } from "../utils";
 
-function OnboardingBestTab({ onComplete }: OnboardingTab) {
+function OnboardingBestTab() {
+  const { completeOnboarding } = useCompleteOnboarding();
+
   return (
     <div className="flex flex-col gap-4">
-      <AlternativeProviderAlert onComplete={onComplete} />
-      <BestExperienceConfigForm onComplete={onComplete} />
+      <ProviderAlert />
+      <BestExperienceConfigForm onComplete={completeOnboarding} />
     </div>
   );
 }

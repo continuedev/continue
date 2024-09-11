@@ -55,9 +55,9 @@ import {
   isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../util";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import OnboardingCard from "../components/OnboardingCard";
+import { useOnboardingCard } from "../components/OnboardingCard/utils";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -142,8 +142,9 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 function GUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
+
+  const onboardingCard = useOnboardingCard();
 
   const sessionState = useSelector((state: RootState) => state.state);
 
@@ -495,9 +496,11 @@ function GUI() {
                 </div>
               ) : null}
 
-              <div className="mt-10 mx-2">
-                <OnboardingCard />
-              </div>
+              {onboardingCard.show && (
+                <div className="mt-10 mx-2">
+                  <OnboardingCard activeTab={onboardingCard.activeTab} />
+                </div>
+              )}
 
               {!!showTutorialCard && (
                 <div className="flex justify-center w-full">

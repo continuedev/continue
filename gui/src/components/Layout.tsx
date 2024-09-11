@@ -15,6 +15,7 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
+  setOnboardingCard,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
@@ -171,21 +172,21 @@ const Layout = () => {
     [location, navigate],
   );
 
-  // useWebviewListener(
-  //   "addApiKey",
-  //   async () => {
-  //     navigate("/apiKeyOnboarding");
-  //   },
-  //   [navigate],
-  // );
+  useWebviewListener(
+    "addApiKey",
+    async () => {
+      dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+    },
+    [],
+  );
 
-  // useWebviewListener(
-  //   "openOnboarding",
-  //   async () => {
-  //     navigate("/onboarding");
-  //   },
-  //   [navigate],
-  // );
+  useWebviewListener(
+    "openOnboarding",
+    async () => {
+      dispatch(setOnboardingCard({ show: true, activeTab: "Quickstart" }));
+    },
+    [],
+  );
 
   useWebviewListener(
     "incrementFtc",
@@ -206,16 +207,16 @@ const Layout = () => {
       ideMessenger.post("completeOnboarding", {
         mode: "localAfterFreeTrial",
       });
-      navigate("/localOnboarding");
+      dispatch(setOnboardingCard({ show: true, activeTab: "Local" }));
     },
     [navigate],
   );
 
-  // useEffect(() => {
-  //   if (isNewUserOnboarding() && location.pathname === "/") {
-  //     navigate("/onboarding");
-  //   }
-  // }, [location]);
+  useEffect(() => {
+    if (isNewUserOnboarding() && location.pathname === "/") {
+      dispatch(setOnboardingCard({ show: true, activeTab: "Quickstart" }));
+    }
+  }, [location]);
 
   return (
     <LayoutTopDiv>

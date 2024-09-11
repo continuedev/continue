@@ -4,7 +4,7 @@ import { hasPassedFTL } from "../../../util/freeTrial";
 
 interface OnboardingCardTabsProps {
   activeTab: string;
-  onTabClick: (tabName: string) => void;
+  onTabClick: (tabName: TabTitle) => void;
 }
 
 export type TabTitle = "Quickstart" | "Best" | "Local";
@@ -66,7 +66,7 @@ function OnboardingCardTabs({
           <TabButton
             key={tabType}
             isActive={activeTab === tabType}
-            onClick={() => onTabClick(tabType)}
+            onClick={() => onTabClick(tabType as TabTitle)}
           >
             <p className="hidden xs:block m-0 font-medium">{titles.default}</p>
             <p className="block xs:hidden m-0 font-medium">{titles.xs}</p>

@@ -403,3 +403,15 @@ export const Divider = styled.div`
   height: 1px;
   background-color: ${lightGray};
 `;
+
+export const StyledLinkButton = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 200ms;
+  border-radius: ${defaultBorderRadius};
+  padding: 2px 12px;
+  background-color: ${lightGray}33;
+  background-opacity: 0.1;
+`;

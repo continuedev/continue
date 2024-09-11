@@ -2,17 +2,18 @@ import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { Button } from "../..";
-import { OnboardingTab } from "./types";
 import SubmitButtonSubtext from "../components/SubmitButtonSubtext";
 import OllamaStatus from "../components/OllamaStatus";
 import ModelDownload from "../components/ModelDownload";
 import { useDownloadOllamaModels } from "../components/useDownloadOllamaModels";
+import { useCompleteOnboarding } from "../utils";
 
 const autocompleteModel = "starcoder2:3b";
 const chatModel = "llama3.1";
 
-function OnboardingLocalTab({ onComplete }: OnboardingTab) {
+function OnboardingLocalTab() {
   const ideMessenger = useContext(IdeMessengerContext);
+  const { completeOnboarding } = useCompleteOnboarding();
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
     string[]
@@ -73,7 +74,7 @@ function OnboardingLocalTab({ onComplete }: OnboardingTab) {
 
       <div className="mt-4 w-full">
         <Button
-          onClick={onComplete}
+          onClick={completeOnboarding}
           className="w-full"
           disabled={!hasDownloadedChatModel}
         >

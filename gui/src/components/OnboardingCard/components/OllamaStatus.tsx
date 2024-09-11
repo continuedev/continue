@@ -7,7 +7,7 @@ import { useState, useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { useDownloadOllamaModels } from "./useDownloadOllamaModels";
-import LinkButton from "../../LinkButton";
+import { StyledLinkButton } from "../..";
 
 export enum OllamaConnectionStatuses {
   WaitingToDownload = "WaitingToDownload",
@@ -43,9 +43,10 @@ function OllamaStatus({ onConnectionVerified }: OllamaStatusProps) {
   switch (status) {
     case OllamaConnectionStatuses.WaitingToDownload:
       return (
-        <div className="-mx-3">
-          <LinkButton onClick={onClickDownload} url={downloadUrl} />
-        </div>
+        <StyledLinkButton onClick={onClickDownload}>
+          <p className="underline text-sm">{downloadUrl}</p>
+          <ArrowTopRightOnSquareIcon width={24} height={24} />
+        </StyledLinkButton>
       );
     case OllamaConnectionStatuses.Downloading:
       return (
