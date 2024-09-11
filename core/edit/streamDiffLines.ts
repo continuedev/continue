@@ -15,7 +15,7 @@ import {
   LLMFullCompletionOptions,
 } from "../index.js";
 import { gptEditPrompt } from "../llm/templates/edit.js";
-import { Telemetry } from "./posthog.js";
+import { Telemetry } from "../util/posthog.js";
 
 function constructPrompt(
   prefix: string,

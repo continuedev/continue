@@ -1,0 +1,51 @@
+import { ChatMessage, ModelProvider } from "../..";
+import { dedent } from "../../util";
+
+export const UNCHANGED_CODE = "UNCHANGED CODE";
+
+type LazyApplyPrompt = (
+  oldCode: string,
+  filename: string,
+  newCode: string,
+) => ChatMessage[];
+
+function claude35SonnetLazyApplyPrompt(
+  ...args: Parameters<LazyApplyPrompt>
+): ReturnType<LazyApplyPrompt> {
+  const userContent = dedent`
+    ORIGINAL CODE:
+    \`\`\`${args[1]}
+    ${args[0]}
+    \`\`\`
+
+    NEW CODE:
+    \`\`\`
+    ${args[2]}
+    \`\`\`
+
+    Above is a code block containing the original version of a file (ORIGINAL CODE) and below it is a code snippet (NEW CODE) that was suggested as modification to the original file.
+
+    Your task is to apply the NEW CODE to the ORIGINAL CODE and show what the entire file would look like after it is applied. Your response should be a code block containing a new version of the entire file. Whenever any part of the code is the same as before, you may simply indicate this with a comment that says "${UNCHANGED_CODE}" instead of rewriting. You may do this for imports as well if needed. Do not explain your changes either before or after the code block.
+  `;
+
+  const assistantContent = dedent`
+    Sure! Here's the modified version of the file after applying the new code:
+    \`\`\`${args[1]}
+  `;
+
+  return [
+    { role: "user", content: userContent },
+    { role: "assistant", content: assistantContent },
+  ];
+}
+
+export function lazyApplyPromptForModel(
+  model: string,
+  provider: ModelProvider,
+): LazyApplyPrompt | undefined {
+  if (model.includes("sonnet")) {
+    return claude35SonnetLazyApplyPrompt;
+  }
+
+  return undefined;
+}

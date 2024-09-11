@@ -1,7 +1,9 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
-import { streamDiffLines } from "core/util/verticalEdit";
+
+import { DiffLine } from "core";
+import { streamDiffLines } from "core/edit/streamDiffLines";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffHandler } from "./handler";
 
@@ -29,7 +31,7 @@ export class VerticalPerLineDiffManager {
     filepath: string,
     startLine: number,
     endLine: number,
-    input: string,
+    input?: string,
   ) {
     if (this.filepathToHandler.has(filepath)) {
       this.filepathToHandler.get(filepath)?.clear(false);
@@ -169,6 +171,71 @@ export class VerticalPerLineDiffManager {
     } else {
       // Re-enable listener for user changes to file
       this.enableDocumentChangeListener();
+    }
+  }
+
+  async streamDiffLines(diffStream: AsyncGenerator<DiffLine>) {
+    vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
+
+    // Get the current editor filepath/range
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return;
+    }
+    const filepath = editor.document.uri.fsPath;
+    const startLine = 0;
+    const endLine = editor.document.lineCount - 1;
+
+    // Check for existing handlers in the same file the new one will be created in
+    const existingHandler = this.getHandlerForFile(filepath);
+    if (existingHandler) {
+      existingHandler.clear(false);
+    }
+
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200);
+    });
+
+    // Create new handler with determined start/end
+    const diffHandler = this.createVerticalPerLineDiffHandler(
+      filepath,
+      startLine,
+      endLine,
+    );
+
+    if (!diffHandler) {
+      console.warn("Issue occured while creating new vertical diff handler");
+      return;
+    }
+
+    if (editor.selection) {
+      // Unselect the range
+      editor.selection = new vscode.Selection(
+        editor.selection.active,
+        editor.selection.active,
+      );
+    }
+
+    vscode.commands.executeCommand(
+      "setContext",
+      "continue.streamingDiff",
+      true,
+    );
+
+    try {
+      await diffHandler.run(diffStream);
+
+      // enable a listener for user edits to file while diff is open
+      this.enableDocumentChangeListener();
+    } catch (e) {
+      this.disableDocumentChangeListener();
+      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+    } finally {
+      vscode.commands.executeCommand(
+        "setContext",
+        "continue.streamingDiff",
+        false,
+      );
     }
   }
 
