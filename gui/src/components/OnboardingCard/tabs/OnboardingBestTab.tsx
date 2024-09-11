@@ -1,6 +1,6 @@
 import BestExperienceConfigForm from "../components/BestExperienceConfigForm";
 import ProviderAlert from "../components/ProviderAlert";
-import { useCompleteOnboarding } from "../utils";
+import { useCompleteOnboarding } from "../hooks";
 
 function OnboardingBestTab() {
   const { completeOnboarding } = useCompleteOnboarding();

@@ -1,6 +1,6 @@
 import { JSONContent } from "@tiptap/react";
 import { IndexingProgressUpdate } from "core";
-import { OnboardingStatus } from "../components/OnboardingCard/utils";
+import { OnboardingStatus } from "../components/OnboardingCard";
 
 type LocalStorageTypes = {
   onboardingStatus?: OnboardingStatus;

@@ -4,7 +4,7 @@ import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 
 const CHECK_OLLAMA_CONNECTION_INTERVAL = 1000;
 
-export const useDownloadOllamaModels = (
+export const useCheckOllamaModels = (
   onDownloadedModels: (models: string[]) => void,
 ) => {
   const ideMessenger = useContext(IdeMessengerContext);

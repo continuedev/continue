@@ -1,7 +1,6 @@
-import { OnboardingTab } from "./types";
 import ContinueLogo from "../../ContinueLogo";
 import QuickStartSubmitButton from "../components/QuickStartSubmitButton";
-import { useCompleteOnboarding } from "../utils";
+import { useCompleteOnboarding } from "../hooks";
 
 function OnboardingQuickstartTab() {
   const { completeOnboarding } = useCompleteOnboarding();
@@ -9,7 +8,9 @@ function OnboardingQuickstartTab() {
   return (
     <div className="flex justify-center items-center">
       <div className="flex flex-col items-center justify-center w-3/4 text-center">
-        <ContinueLogo height={75} />
+        <div className="mr-5">
+          <ContinueLogo height={75} />
+        </div>
 
         <p className="text-sm">
           Quickly get up and running using our API keys. After this trial, we'll

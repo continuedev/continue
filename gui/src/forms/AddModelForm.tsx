@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { Input, Button, InputSubtext } from "../components";
-import QuickSetupListBox from "../components/modelSelection/quickSetup/QuickSetupListBox";
+import { Input, Button, InputSubtext, StyledLinkButton } from "../components";
+import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import {
   ProviderInfo,
@@ -10,9 +10,9 @@ import {
 } from "../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../redux/slices/stateSlice";
 import { hasPassedFTL, FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
-import SubmitButtonSubtext from "../components/OnboardingCard/components/SubmitButtonSubtext";
 import Alert from "../components/gui/Alert";
-import LinkButton from "../components/LinkButton";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
+import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -111,7 +111,7 @@ function AddModelForm({
           <div className="flex flex-col gap-6 my-8">
             <div>
               <label className="block text-sm font-medium">Provider</label>
-              <QuickSetupListBox
+              <ModelSelectionListbox
                 selectedProvider={selectedProvider}
                 setSelectedProvider={setSelectedProvider}
                 options={Object.entries(providers)
@@ -119,7 +119,7 @@ function AddModelForm({
                     ([key]) => !["freetrial", "openai-aiohttp"].includes(key),
                   )
                   .map(([, provider]) => provider)}
-              ></QuickSetupListBox>
+              ></ModelSelectionListbox>
               <InputSubtext className="mb-0">
                 Don't see your provider?{" "}
                 <a
@@ -139,16 +139,18 @@ function AddModelForm({
                   Install provider
                 </label>
 
-                <LinkButton
-                  onClick={onClickDownloadProvider}
-                  url={selectedProvider.downloadUrl}
-                />
+                <StyledLinkButton onClick={onClickDownloadProvider}>
+                  <p className="underline text-sm">
+                    {selectedProvider.downloadUrl}
+                  </p>
+                  <ArrowTopRightOnSquareIcon width={24} height={24} />
+                </StyledLinkButton>
               </div>
             )}
 
             <div>
               <label className="block text-sm font-medium">Model</label>
-              <QuickSetupListBox
+              <ModelSelectionListbox
                 selectedProvider={selectedModel}
                 setSelectedProvider={setSelectedModel}
                 options={
@@ -156,7 +158,7 @@ function AddModelForm({
                     ([, provider]) => provider.title === selectedProvider.title,
                   )?.[1].packages
                 }
-              ></QuickSetupListBox>
+              ></ModelSelectionListbox>
             </div>
 
             {selectedModel.params.model.startsWith("codestral") && (
@@ -200,7 +202,7 @@ function AddModelForm({
             <Button type="submit" className="w-full" disabled={isDisabled()}>
               Connect
             </Button>
-            <SubmitButtonSubtext />
+            <AddModelButtonSubtext />
           </div>
         </div>
       </form>

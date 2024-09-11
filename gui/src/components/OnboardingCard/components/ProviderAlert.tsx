@@ -5,7 +5,7 @@ import {
 } from "../../../redux/slices/uiStateSlice";
 import Alert from "../../gui/Alert";
 import AddModelForm from "../../../forms/AddModelForm";
-import { useCompleteOnboarding } from "../utils";
+import { useCompleteOnboarding } from "../hooks";
 
 function ProviderAlert() {
   const dispatch = useDispatch();
@@ -17,7 +17,7 @@ function ProviderAlert() {
   }
 
   return (
-    <Alert>
+    <Alert type="info">
       <p className="font-semibold text-sm m-0">
         Prefer to use an different provider like OpenAI?
       </p>

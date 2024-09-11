@@ -4,17 +4,17 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import ReactDOM from "react-dom";
 import { StyledLinkButton, StyledTooltip } from "../..";
 
-interface ModelDownloadProps {
+interface OllamaModelDownloadProps {
   title: string;
   modelName: string;
   hasDownloaded: boolean;
 }
 
-function ModelDownload({
+function OllamaModelDownload({
   title,
   modelName,
   hasDownloaded,
-}: ModelDownloadProps) {
+}: OllamaModelDownloadProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const command = `ollama pull ${modelName}`;
   const id = `info-hover-${encodeURIComponent(command)}`;
@@ -49,36 +49,8 @@ function ModelDownload({
             tooltipPortalDiv,
           )}
       </>
-      {/* <div className="flex justify-between items-center">
-        
-        <>
-          <LinkButton
-            data-tooltip-id={id}
-            onClick={onClick}
-            text={command}
-            Icon={
-              hasDownloaded ? (
-                <CheckCircleIcon
-                  width={24}
-                  height={24}
-                  className="text-emerald-600"
-                />
-              ) : (
-                <CommandLineIcon width={24} height={24} />
-              )
-            }
-          />
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id={id} place="top">
-                Copy into terminal
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      </div> */}
     </div>
   );
 }
 
-export default ModelDownload;
+export default OllamaModelDownload;

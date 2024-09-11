@@ -6,7 +6,7 @@ import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { useState, useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import { useDownloadOllamaModels } from "./useDownloadOllamaModels";
+import { useCheckOllamaModels } from "../hooks/useCheckOllamaModels";
 import { StyledLinkButton } from "../..";
 
 export enum OllamaConnectionStatuses {
@@ -30,7 +30,7 @@ function OllamaStatus({ onConnectionVerified }: OllamaStatusProps) {
     OllamaConnectionStatuses.WaitingToDownload,
   );
 
-  useDownloadOllamaModels((models) => {
+  useCheckOllamaModels((models) => {
     setStatus(OllamaConnectionStatuses.Verified);
     onConnectionVerified();
   });

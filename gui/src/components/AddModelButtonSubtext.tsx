@@ -1,8 +1,8 @@
 import { useContext } from "react";
-import { ButtonSubtext } from "../..";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { ButtonSubtext } from ".";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 
-function SubmitButtonSubtext() {
+function AddModelButtonSubtext() {
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
@@ -18,4 +18,4 @@ function SubmitButtonSubtext() {
   );
 }
 
-export default SubmitButtonSubtext;
+export default AddModelButtonSubtext;

@@ -4,16 +4,15 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
-import { OnboardingTab } from "../tabs/types";
 import { CubeIcon } from "@heroicons/react/24/outline";
 import { Button, Input, InputSubtext, lightGray } from "../..";
-import SubmitButtonSubtext from "./SubmitButtonSubtext";
+import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 
 const { anthropic: chatProvider, mistral: autocompleteProvider } = providers;
 const { claude35Sonnet: chatModel, codestral: autocompleteModel } = models;
 
 interface BestExperienceConfigFormProps {
-  onComplete: OnboardingTab["onComplete"];
+  onComplete: () => void;
 }
 
 function BestExperienceConfigForm({
@@ -128,7 +127,7 @@ function BestExperienceConfigForm({
           <Button className="w-full" type="submit" disabled={!chatApiKey}>
             Connect
           </Button>
-          <SubmitButtonSubtext />
+          <AddModelButtonSubtext />
         </div>
       </div>
     </form>

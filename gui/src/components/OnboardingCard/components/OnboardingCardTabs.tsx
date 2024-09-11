@@ -3,7 +3,7 @@ import { vscButtonBackground, vscForeground } from "../..";
 import { hasPassedFTL } from "../../../util/freeTrial";
 
 interface OnboardingCardTabsProps {
-  activeTab: string;
+  activeTab: TabTitle;
   onTabClick: (tabName: TabTitle) => void;
 }
 
@@ -53,8 +53,6 @@ function OnboardingCardTabs({
   activeTab,
   onTabClick,
 }: OnboardingCardTabsProps) {
-  // If the user has already passed the FTL,
-  // we don't want to show the Quickstart tab
   return (
     <TabList>
       {Object.entries(TabTitles).map(([tabType, titles]) => {

@@ -2,11 +2,10 @@ import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { Button } from "../..";
-import SubmitButtonSubtext from "../components/SubmitButtonSubtext";
 import OllamaStatus from "../components/OllamaStatus";
-import ModelDownload from "../components/ModelDownload";
-import { useDownloadOllamaModels } from "../components/useDownloadOllamaModels";
-import { useCompleteOnboarding } from "../utils";
+import { useCompleteOnboarding, useCheckOllamaModels } from "../hooks";
+import OllamaModelDownload from "../components/OllamaModelDownload";
+import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 
 const autocompleteModel = "starcoder2:3b";
 const chatModel = "llama3.1";
@@ -45,7 +44,7 @@ function OnboardingLocalTab() {
     }
   }, [downloadedOllamaModels, isOllamaConnected]);
 
-  useDownloadOllamaModels((models) => {
+  useCheckOllamaModels((models) => {
     setDownloadedOllamaModels(models);
   });
 
@@ -60,13 +59,13 @@ function OnboardingLocalTab() {
         <OllamaStatus onConnectionVerified={onConnectionVerified} />
       </div>
 
-      <ModelDownload
+      <OllamaModelDownload
         title="Download Chat model"
         modelName={chatModel}
         hasDownloaded={hasDownloadedChatModel}
       />
 
-      <ModelDownload
+      <OllamaModelDownload
         title="Download Autocomplete model"
         modelName={autocompleteModel}
         hasDownloaded={hasDownloadedAutocompleteModel}
@@ -80,7 +79,7 @@ function OnboardingLocalTab() {
         >
           Connect
         </Button>
-        <SubmitButtonSubtext />
+        <AddModelButtonSubtext />
       </div>
     </div>
   );

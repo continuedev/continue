@@ -1,9 +1,5 @@
-import { usePostHog } from "posthog-js/react";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import { useDispatch, useSelector } from "react-redux";
-import { setOnboardingCard } from "../../redux/slices/uiStateSlice";
-import { useContext } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { OnboardingCardState } from "./OnboardingCard";
 
@@ -13,6 +9,8 @@ export type OnboardingStatus = "Started" | "Completed";
 
 // If there is no value in local storage for "onboardingStatus",
 // it implies that the user has not begun or completed onboarding.
+
+// TODO: Is this still valid
 export function isNewUserOnboarding() {
   // We used to use "onboardingComplete", but switched to "onboardingStatus"
   const onboardingCompleteLegacyValue =
@@ -49,31 +47,4 @@ export function useOnboardingCard(): OnboardingCardState {
   }
 
   return { show, activeTab: onboardingCard.activeTab };
-}
-
-export function useCompleteOnboarding() {
-  const posthog = usePostHog();
-  const dispatch = useDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
-
-  function completeOnboarding() {
-    const onboardingStatus = getLocalStorage("onboardingStatus");
-
-    if (onboardingStatus === "Started") {
-      // Telemetry
-      posthog.capture("Onboarding Step", { status: "Completed" });
-
-      // Local state
-      setLocalStorage("onboardingStatus", "Completed");
-      setLocalStorage("showTutorialCard", true);
-      dispatch(setOnboardingCard({ show: false }));
-
-      // Move to next step in onboarding
-      ideMessenger.post("showTutorial", undefined);
-    }
-  }
-
-  return {
-    completeOnboarding,
-  };
 }

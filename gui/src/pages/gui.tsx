@@ -46,6 +46,7 @@ import {
 import {
   setDialogEntryOn,
   setDialogMessage,
+  setOnboardingCard,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
@@ -58,6 +59,7 @@ import {
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import OnboardingCard from "../components/OnboardingCard";
 import { useOnboardingCard } from "../components/OnboardingCard/utils";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -224,11 +226,11 @@ function GUI() {
         if (u) {
           setLocalStorage("ftc", u + 1);
 
-          // if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-          //   navigate("/onboarding");
-          //   posthog?.capture("ftc_reached");
-          //   return;
-          // }
+          if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
+            dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+            posthog?.capture("ftc_reached");
+            return;
+          }
         } else {
           setLocalStorage("ftc", 1);
         }

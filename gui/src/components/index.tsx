@@ -121,11 +121,6 @@ export function parseColorForHex(colorVar: string): string {
   return hex;
 }
 
-/**
- * Use logo in dev that includes text
- *
- */
-
 export const Button = styled.button`
   padding: 10px 12px;
   margin: 8px 0;

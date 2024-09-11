@@ -8,8 +8,8 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import { getFontSize } from "../../util";
-import QuickModelSetup from "../modelSelection/quickSetup/QuickModelSetup";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
+import AddModelForm from "../../forms/AddModelForm";
 
 const ProgressBarWrapper = styled.div`
   width: 100px;
@@ -66,7 +66,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
           dispatch(setShowDialog(true));
           dispatch(
             setDialogMessage(
-              <QuickModelSetup
+              <AddModelForm
                 onDone={() => {
                   dispatch(setShowDialog(false));
                   navigate("/");

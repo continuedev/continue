@@ -2,7 +2,7 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
-} from "../../components/OnboardingCard/OnboardingCard";
+} from "../../components/OnboardingCard";
 
 type UiState = {
   bottomMessage: JSX.Element | undefined;
