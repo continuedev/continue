@@ -798,6 +798,7 @@ export type EmbeddingsProviderName =
   | "gemini"
   | "continue-proxy"
   | "deepinfra"
+  | "nvidia"
   | "voyage";
 
 export interface EmbedOptions {

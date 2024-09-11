@@ -10,6 +10,7 @@ import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEIEmbeddingsProvider
 import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider.js";
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider.js";
+import NvidiaEmbeddingsProvider from "./NvidiaEmbeddingsProvider.js";
 import VoyageEmbeddingsProvider from "./VoyageEmbeddingsProvider.js";
 
 type EmbeddingsProviderConstructor = new (
@@ -30,5 +31,6 @@ export const allEmbeddingsProviders: Record<
   gemini: GeminiEmbeddingsProvider,
   "continue-proxy": ContinueProxyEmbeddingsProvider,
   deepinfra: DeepInfraEmbeddingsProvider,
+  nvidia: NvidiaEmbeddingsProvider,
   voyage: VoyageEmbeddingsProvider,
 };

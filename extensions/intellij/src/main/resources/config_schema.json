@@ -2095,6 +2095,7 @@
                 "free-trial",
                 "gemini",
                 "voyage",
+                "nvidia",
                 "bedrock"
               ]
             },
@@ -2136,20 +2137,7 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage"]
-                  }
-                },
-                "required": ["provider"]
-              },
-              "then": {
-                "required": ["apiKey"]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "provider": {
-                    "enum": ["gemini"]
+                    "enum": ["cohere", "voyage", "gemini", "nvidia"]
                   }
                 },
                 "required": ["provider"]
