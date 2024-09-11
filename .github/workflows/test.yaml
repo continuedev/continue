@@ -18,10 +18,8 @@ jobs:
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: my-artifact
-          path: |
-            name: text-files
-            path: "*.txt"
+          name: text-files
+          path: "*.txt"
 
   download:
     needs: upload
