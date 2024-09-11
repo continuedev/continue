@@ -7,6 +7,7 @@ on:
 
 jobs:
   upload:
+    runs-on: ubuntu-latest
     steps:
       - name: Create a build artifact
         run: echo "Hello, world!" > hello.txt
@@ -23,6 +24,7 @@ jobs:
             path: "*.txt"
 
   download:
+    runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@v4
