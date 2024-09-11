@@ -88,7 +88,7 @@ You can use commercial LLMs via APIs using:
 
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
 - [OpenAI API](../reference/Model%20Providers/openai.md)
-- [Azure OpenAI Service](../reference/Model%20Providers/openai.md)
+- [Azure OpenAI Service](../reference/Model%20Providers/azure.md)
 - [Amazon Bedrock](../reference/Model%20Providers/bedrock.md)
 - [Google Gemini API](../reference/Model%20Providers/geminiapi.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
