@@ -91,12 +91,6 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  /**
-   * Add Sonnet + Codestral models into actual config
-   * No API key - [`Add your API key here`]
-   * - Chat model: add "No key" notification in model dropdown (beneath the model name, red alert, change trashcan to grey), free trial model comes first
-   * - Autocomplete: add check to short circuit if model is codestral and no api key, add no api key info in quickpick
-   */
   models: [
     {
       model: "claude-3-5-sonnet-20240620",

@@ -664,9 +664,7 @@ const commandsMap: (
         ) {
           ide.openFile(getConfigJsonPath());
         } else if (
-          autocompleteModels
-            .map((model) => model.title)
-            .includes(selectedOption)
+          autocompleteModels.some((model) => model.title === selectedOption)
         ) {
           new GlobalContext().update(
             "selectedTabAutocompleteModel",
