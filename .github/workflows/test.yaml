@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - nate/test-yaml
+
+jobs:
+  upload:
+    steps:
+      - name: Create a build artifact
+        run: echo "Hello, world!" > hello.txt
+
+      - name: Create another
+        run: echo "Goodbye, world! > goodbye.txt"
+
+      - name: Upload both artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-artifact
+          path: |
+            name: text-files
+            path: "*.txt"
+
+  download:
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts-destination
+          pattern: "*.txt"
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls && echo "---" && ls artifacts-destination
