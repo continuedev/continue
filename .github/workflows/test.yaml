@@ -37,7 +37,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: "*-vsix"
+          pattern: "*-test"
           path: artifacts-destination
           merge-multiple: true
 
