@@ -14,7 +14,6 @@ export function useSubmitOnboarding(mode: OnboardingModes) {
   const { openTutorialCard } = useTutorialCard();
 
   function submitOnboarding() {
-    debugger;
     const onboardingStatus = getLocalStorage("onboardingStatus");
 
     // Always close the onboarding card and update config.json

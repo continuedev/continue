@@ -60,7 +60,7 @@ export function getFontSize(): number {
 }
 
 export function isJetBrains() {
-  return getLocalStorage("ide") === "jetbrains";
+  return getLocalStorage("ide") !== "jetbrains";
 }
 
 export function isWebEnvironment(): boolean {

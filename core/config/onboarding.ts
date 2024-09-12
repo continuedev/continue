@@ -14,12 +14,6 @@ export function setupBestConfig(
   return {
     ...config,
     models: config.models.filter((model) => model.provider !== "free-trial"),
-    embeddingsProvider: {
-      provider: "free-trial",
-    },
-    reranker: {
-      name: "free-trial",
-    },
   };
 }
 
@@ -30,9 +24,9 @@ export function setupLocalConfig(
     ...config,
     models: [
       {
-        title: "Llama 3",
+        title: "Llama 3.1 8B",
         provider: "ollama",
-        model: "llama3",
+        model: "llama3.1:8b",
       },
       {
         title: ONBOARDING_LOCAL_MODEL_TITLE,
@@ -50,7 +44,6 @@ export function setupLocalConfig(
       provider: "ollama",
       model: "nomic-embed-text",
     },
-    reranker: undefined,
   };
 }
 
@@ -84,9 +77,9 @@ export function setupLocalConfigAfterFreeTrial(
     ...config,
     models: [
       {
-        title: "Llama 3",
+        title: "Llama 3.1 8B",
         provider: "ollama",
-        model: "llama3",
+        model: "llama3.1:8b",
       },
       {
         title: ONBOARDING_LOCAL_MODEL_TITLE,
