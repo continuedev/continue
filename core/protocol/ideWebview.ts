@@ -61,4 +61,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setupLocalModel: [undefined, void];
   incrementFtc: [undefined, void];
   openOnboarding: [undefined, void];
+  applyCodeFromChat: [undefined, void];
 };

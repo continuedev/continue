@@ -24,7 +24,6 @@ function PreWithToolbar(props: { children: any; language: string | null }) {
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
 
   const [hovering, setHovering] = useState(false);
-
   const [copyValue, setCopyValue] = useState("");
 
   useEffect(() => {

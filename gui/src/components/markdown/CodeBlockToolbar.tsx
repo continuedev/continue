@@ -4,9 +4,11 @@ import {
   PlayIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { RootState } from "../../redux/store";
 import { isJetBrains } from "../../util";
 import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton } from "./CopyButton";
@@ -73,6 +75,21 @@ function isTerminalCodeBlock(language: string | undefined, text: string) {
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const [applying, setApplying] = useState(false);
+
+  const nextCodeBlockToApplyIndex = useSelector(
+    (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
+  );
+
+  // Handle apply keyboard shortcut
+  // useWebviewListener(
+  //   "applyCodeFromChat",
+  //   async () => {
+  //     await ideMessenger.request("applyToCurrentFile", {
+  //       text: "",
+  //     });
+  //   },
+  //   [nextCodeBlockToApplyIndex],
+  // );
 
   return (
     <TopDiv>

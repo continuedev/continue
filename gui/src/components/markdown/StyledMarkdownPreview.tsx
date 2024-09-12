@@ -12,12 +12,11 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
+import "./katex.css";
 import LinkableCode from "./LinkableCode";
+import "./markdown.css";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
-import { common } from "lowlight";
-import "./katex.css";
-import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -58,9 +57,19 @@ const StyledMarkdown = styled.div<{
   }
 
   background-color: ${vscBackground};
-  font-family: var(--vscode-font-family), system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-    "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    var(--vscode-font-family),
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   padding-left: 8px;
   padding-right: 8px;

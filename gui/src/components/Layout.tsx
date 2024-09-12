@@ -13,11 +13,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { isNewUserOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import {
-  setBottomMessage,
-  setBottomMessageCloseTimeout,
-  setShowDialog,
-} from "../redux/slices/uiStateSlice";
+import { setShowDialog } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
@@ -122,14 +118,6 @@ const Layout = () => {
   );
 
   const defaultModel = useSelector(defaultModelSelector);
-
-  const bottomMessage = useSelector(
-    (state: RootState) => state.uiState.bottomMessage,
-  );
-  const displayBottomMessageOnBottom = useSelector(
-    (state: RootState) => state.uiState.displayBottomMessageOnBottom,
-  );
-
   const timeline = useSelector((state: RootState) => state.state.history);
 
   useEffect(() => {
@@ -280,21 +268,6 @@ const Layout = () => {
             </Footer>
           )}
         </GridDiv>
-
-        <BottomMessageDiv
-          displayOnBottom={displayBottomMessageOnBottom}
-          onMouseEnter={() => {
-            dispatch(setBottomMessageCloseTimeout(undefined));
-          }}
-          onMouseLeave={(e) => {
-            if (!e.buttons) {
-              dispatch(setBottomMessage(undefined));
-            }
-          }}
-          hidden={!bottomMessage}
-        >
-          {bottomMessage}
-        </BottomMessageDiv>
       </div>
       <div
         style={{ fontSize: `${getFontSize() - 4}px` }}

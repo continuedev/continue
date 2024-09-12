@@ -460,6 +460,9 @@ const commandsMap: (
     "continue.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined);
     },
+    "continue.applyCodeFromChat": () => {
+      sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
+    },
     "continue.toggleFullScreen": () => {
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
