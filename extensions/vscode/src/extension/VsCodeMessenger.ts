@@ -17,12 +17,12 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
-import { VsCodeIde } from "../VsCodeIde";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
+import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 /**
@@ -172,7 +172,9 @@ export class VsCodeMessenger {
       const doc = await vscode.workspace.openTextDocument(
         vscode.Uri.file(tutorialPath),
       );
-      await vscode.window.showTextDocument(doc);
+      await vscode.window.showTextDocument(doc, {
+        preview: false,
+      });
     });
 
     this.onWebview("openUrl", (msg) => {

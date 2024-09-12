@@ -1,7 +1,10 @@
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { Input, Button, InputSubtext, StyledActionButton } from "../components";
+import { Button, Input, InputSubtext, StyledActionButton } from "../components";
+import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
+import Alert from "../components/gui/Alert";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import {
@@ -9,10 +12,7 @@ import {
   providers,
 } from "../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../redux/slices/stateSlice";
-import { hasPassedFTL, FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
-import Alert from "../components/gui/Alert";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
-import AddModelButtonSubtext from "../components/AddModelButtonSubtext";
+import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -65,8 +65,6 @@ function AddModelForm({
       title: selectedModel.title,
       ...(hasValidApiKey ? { apiKey } : {}),
     };
-
-    debugger;
 
     ideMessenger.post("config/addModel", { model });
     ideMessenger.post("openConfigJson", undefined);

@@ -332,8 +332,15 @@ ${prompt}`;
         return resp;
       } catch (e: any) {
         // Errors to ignore
-        if (!e.message.includes("/api/show")) {
-          console.warn(
+        if (e.message.includes("/api/tags")) {
+          console.debug(`Error fetching tags: ${e.message}`);
+          return;
+        } else if (e.message.includes("/api/show")) {
+          throw new Error(
+            `HTTP ${e.response.status} ${e.response.statusText} from ${e.response.url}\n\n${e.response.body}`,
+          );
+        } else {
+          console.debug(
             `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
           );
 

@@ -10,8 +10,13 @@ import {
   IdeSettings,
   ILLM,
 } from "../index.js";
+import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { finalToBrowserConfig } from "./load.js";
+import {
+  LOCAL_ONBOARDING_CHAT_MODEL,
+  ONBOARDING_LOCAL_MODEL_TITLE,
+} from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
@@ -282,6 +287,14 @@ export class ConfigHandler {
     const model =
       config.models.find((m) => m.title === title) || config.models[0];
     if (!model) {
+      if (title === ONBOARDING_LOCAL_MODEL_TITLE) {
+        // Special case, make calls to Ollama before we have it in the config
+        const ollama = new Ollama({
+          model: LOCAL_ONBOARDING_CHAT_MODEL,
+        });
+        return ollama;
+      }
+
       throw new Error("No model found");
     }
 
