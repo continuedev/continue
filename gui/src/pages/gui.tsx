@@ -17,7 +17,6 @@ import {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Button,
@@ -57,10 +56,11 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import OnboardingCard from "../components/OnboardingCard";
-import { useOnboardingCard } from "../components/OnboardingCard/utils";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { useTutorialCard } from "../hooks/useTutorialCard";
+import OnboardingCard, {
+  useOnboardingCard,
+} from "../components/OnboardingCard";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -219,7 +219,7 @@ function GUI() {
           setLocalStorage("ftc", u + 1);
 
           if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-            dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+            onboardingCard.open("Best");
             posthog?.capture("ftc_reached");
             return;
           }

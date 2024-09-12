@@ -3,7 +3,6 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import * as vscode from "vscode";
-
 import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
@@ -16,6 +15,8 @@ import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import {
   StatusBarStatus,
+  getAutocompleteStatusBarDescription,
+  getAutocompleteStatusBarTitle,
   getStatusBarStatus,
   getStatusBarStatusFromQuickPickItemLabel,
   quickPickStatusText,
@@ -635,16 +636,9 @@ const commandsMap: (
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
         },
-        ...autocompleteModels.map(({ title, apiKey }) => ({
-          label:
-            title === selected ? `$(check) ${title}` : title || "Unnamed Model",
-          description:
-            title === selected
-              ? `Currently selected${
-                  (apiKey === undefined || apiKey === "") &&
-                  " (API key required)"
-                }`
-              : undefined,
+        ...autocompleteModels.map((model) => ({
+          label: getAutocompleteStatusBarTitle(selected, model),
+          description: getAutocompleteStatusBarDescription(selected, model),
         })),
       ];
       quickPick.onDidAccept(() => {

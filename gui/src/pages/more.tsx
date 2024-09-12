@@ -10,6 +10,7 @@ import { useNavigationListener } from "../hooks/useNavigationListener";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useDispatch } from "react-redux";
 import { setOnboardingCard } from "../redux/slices/uiStateSlice";
+import useHistory from "../hooks/useHistory";
 
 interface MoreActionRowProps {
   title: string;
@@ -55,6 +56,7 @@ function MorePage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
+  const { saveSession } = useHistory(dispatch);
 
   const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
     desc: "Loading indexing config",
@@ -117,6 +119,8 @@ function MorePage() {
           buttonText="Open quickstart"
           onClick={() => {
             navigate("/");
+            // Used to clear the chat panel before showing onboarding card
+            saveSession();
             dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
             ideMessenger.post("showTutorial", undefined);
           }}

@@ -8,7 +8,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../../redux/slices/uiStateSlice";
-import JetBrainsFetchGitHubTokenDialog from "../../dialogs/JetBrainsFetchGitHubTokenDialog";
+import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
 import { useSubmitOnboarding } from "../hooks";
 
 function QuickstartSubmitButton() {
@@ -17,7 +17,7 @@ function QuickstartSubmitButton() {
 
   const { submitOnboarding } = useSubmitOnboarding("Quickstart");
 
-  function handleTokenAcquisition(token: string) {
+  function onComplete() {
     setLocalStorage("signedInToGh", true);
     submitOnboarding();
   }
@@ -26,7 +26,7 @@ function QuickstartSubmitButton() {
     dispatch(setShowDialog(true));
     dispatch(
       setDialogMessage(
-        <JetBrainsFetchGitHubTokenDialog onComplete={handleTokenAcquisition} />,
+        <JetBrainsFetchGitHubTokenDialog onComplete={onComplete} />,
       ),
     );
   }
@@ -34,7 +34,7 @@ function QuickstartSubmitButton() {
   async function fetchGitHubAuthToken() {
     const result = await ideMessenger.request("getGitHubAuthToken", undefined);
     if (result.status === "success") {
-      handleTokenAcquisition(result.content);
+      onComplete();
     }
   }
 

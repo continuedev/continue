@@ -6,6 +6,7 @@ import { Button, Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { useOnboardingCard } from "../OnboardingCard";
 
 const GridDiv = styled.div`
   display: grid;
@@ -18,8 +19,14 @@ function SetupLocalOrKeyDialog() {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = React.useState("");
   const dispatch = useDispatch();
+  const onboardingCard = useOnboardingCard();
 
   const ideMessenger = useContext(IdeMessengerContext);
+
+  function onClickLocal() {
+    dispatch(setShowDialog(false));
+    onboardingCard.open("Local");
+  }
 
   return (
     <div className="p-4">
@@ -60,17 +67,7 @@ function SetupLocalOrKeyDialog() {
       </Button>
       <div className="text-center">— OR —</div>
       <GridDiv>
-        <Button
-          onClick={() => {
-            dispatch(setShowDialog(false));
-            ideMessenger.request("completeOnboarding", {
-              mode: "localAfterFreeTrial",
-            });
-            navigate("/localOnboarding");
-          }}
-        >
-          Use local model
-        </Button>
+        <Button onClick={onClickLocal}>Use local model</Button>
         <Button
           onClick={() => {
             dispatch(setShowDialog(false));

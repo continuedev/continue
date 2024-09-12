@@ -28,6 +28,7 @@ import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 import { isNewUserOnboarding } from "./OnboardingCard/utils";
+import { useOnboardingCard } from "./OnboardingCard";
 
 const FOOTER_HEIGHT = "1.8em";
 
@@ -108,6 +109,7 @@ const Layout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+  const onboardingCard = useOnboardingCard();
 
   const dialogMessage = useSelector(
     (state: RootState) => state.uiState.dialogMessage,
@@ -188,8 +190,7 @@ const Layout = () => {
   useWebviewListener(
     "openOnboardingCard",
     async () => {
-      navigate("/");
-      dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+      onboardingCard.open("Best");
     },
     [],
   );
@@ -197,10 +198,9 @@ const Layout = () => {
   useWebviewListener(
     "setupLocalConfig",
     async () => {
-      navigate("/");
-      dispatch(setOnboardingCard({ show: true, activeTab: "Local" }));
+      onboardingCard.open("Local");
     },
-    [navigate],
+    [],
   );
 
   useEffect(() => {
@@ -208,7 +208,7 @@ const Layout = () => {
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      dispatch(setOnboardingCard({ show: true, activeTab: "Quickstart" }));
+      onboardingCard.open("Quickstart");
     }
   }, [location]);
 

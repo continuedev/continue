@@ -2,7 +2,6 @@ import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
 } from "@heroicons/react/24/outline";
-import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { useState, useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
