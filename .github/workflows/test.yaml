@@ -10,25 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create a build artifact
-        run: echo "Hello, world!" > hello-ubuntu.txt
+        run: mkdir text && echo "Hello, world!" > text/hello-ubuntu.txt
 
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-text
-          path: "*.txt"
+          path: "text/*.txt"
 
   upload2:
     runs-on: macos-latest
     steps:
       - name: Create a build artifact
-        run: echo "Hello, world!" > hello-mac.txt
+        run: mkdir text && echo "Hello, world!" > text/hello-mac.txt
 
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-text
-          path: "*.txt"
+          path: "text/*.txt"
 
   download:
     needs: [upload, upload2]
