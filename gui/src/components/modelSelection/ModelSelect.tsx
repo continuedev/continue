@@ -31,6 +31,19 @@ import {
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 import AddModelForm from "../../forms/AddModelForm";
 
+interface ModelOptionProps {
+  option: Option;
+  idx: number;
+  showMissingApiKeyMsg: boolean;
+  showDelete?: boolean;
+}
+
+interface Option {
+  value: string;
+  title: string;
+  apiKey: string;
+}
+
 const MAX_HEIGHT_PX = 300;
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
@@ -91,22 +104,7 @@ const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
   `}
 `;
 
-const StyledTrashIcon = styled(TrashIcon)<{ hovered: boolean }>`
-  width: 1.2em;
-  height: 1.2em;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: ${defaultBorderRadius};
-  opacity: ${(props) => (props.hovered ? 0.75 : 0)};
-  visibility: ${(props) => (props.hovered ? "visible" : "hidden")};
-
-  &:hover {
-    opacity: 1;
-    background-color: ${lightGray};
-  }
-`;
-
-const StyledCog6ToothIcon = styled(Cog6ToothIcon)<{ hovered: boolean }>`
+const IconBase = styled.div<{ hovered: boolean }>`
   width: 1.2em;
   height: 1.2em;
   cursor: pointer;
@@ -121,17 +119,26 @@ const StyledCog6ToothIcon = styled(Cog6ToothIcon)<{ hovered: boolean }>`
   }
 `;
 
+const StyledTrashIcon = styled(IconBase).attrs({ as: TrashIcon })``;
+const StyledCog6ToothIcon = styled(IconBase).attrs({ as: Cog6ToothIcon })``;
+
+function modelSelectTitle(model: any): string {
+  if (model?.title) return model?.title;
+  if (model?.model !== undefined && model?.model.trim() !== "") {
+    if (model?.class_name) {
+      return `${model?.class_name} - ${model?.model}`;
+    }
+    return model?.model;
+  }
+  return model?.class_name;
+}
+
 function ModelOption({
   option,
   idx,
   showDelete,
   showMissingApiKeyMsg,
-}: {
-  option: Option;
-  idx: number;
-  showMissingApiKeyMsg: boolean;
-  showDelete?: boolean;
-}) {
+}: ModelOptionProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const dispatch = useDispatch();
@@ -202,23 +209,6 @@ function ModelOption({
       </div>
     </StyledListboxOption>
   );
-}
-
-function modelSelectTitle(model: any): string {
-  if (model?.title) return model?.title;
-  if (model?.model !== undefined && model?.model.trim() !== "") {
-    if (model?.class_name) {
-      return `${model?.class_name} - ${model?.model}`;
-    }
-    return model?.model;
-  }
-  return model?.class_name;
-}
-
-interface Option {
-  value: string;
-  title: string;
-  apiKey: string;
 }
 
 function ModelSelect() {
@@ -296,6 +286,10 @@ function ModelSelect() {
     e.stopPropagation();
     e.preventDefault();
 
+    // Close the dropdown
+    if (buttonRef.current) {
+      buttonRef.current.click();
+    }
     dispatch(setShowDialog(true));
     dispatch(
       setDialogMessage(
