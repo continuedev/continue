@@ -1,5 +1,5 @@
-import { SerializedContinueConfig } from "../index.js";
-import { FREE_TRIAL_MODELS } from "./default.js";
+import { SerializedContinueConfig } from "../";
+import { FREE_TRIAL_MODELS } from "./default";
 
 export const TRIAL_FIM_MODEL = "codestral-latest";
 export const ONBOARDING_LOCAL_MODEL_TITLE = "Ollama";
