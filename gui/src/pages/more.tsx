@@ -88,7 +88,7 @@ function MorePage() {
 
       <h3 className="my-3 mx-auto text-center">Codebase Indexing</h3>
       <div
-        className="p-6 flex flex-col gap-6"
+        className="p-6 pb-0 flex flex-col gap-6"
         style={{
           borderTop: `0.5px solid ${lightGray}`,
         }}

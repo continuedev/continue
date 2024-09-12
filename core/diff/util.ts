@@ -31,7 +31,8 @@ function linesMatch(lineA: string, lineB: string, linesBetween = 0): boolean {
 
   return (
     // Should be more unlikely for lines to fuzzy match if they are further away
-    (d / Math.max(lineA.length, lineB.length) < 0.5 - linesBetween * 0.05 ||
+    (d / Math.max(lineA.length, lineB.length) <=
+      Math.max(0, 0.48 - linesBetween * 0.06) ||
       lineA.trim() === lineB.trim()) &&
     lineA.trim() !== ""
   );

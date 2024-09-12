@@ -72,7 +72,6 @@ const InputBoxDiv = styled.div<{ disabled?: boolean }>`
   width: calc(100% - 24px);
   background-color: ${vscInputBackground};
   color: ${vscForeground};
-  z-index: 1;
   border: 0.5px solid ${vscInputBorder};
   outline: none;
   font-size: ${getFontSize()}px;
@@ -99,7 +98,6 @@ const HoverDiv = styled.div`
   opacity: 0.5;
   background-color: ${vscBadgeBackground};
   color: ${vscForeground};
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,7 +110,6 @@ const HoverTextDiv = styled.div`
   top: 0;
   left: 0;
   color: ${vscForeground};
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;

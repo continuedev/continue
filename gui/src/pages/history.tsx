@@ -404,6 +404,11 @@ function History() {
                         This Month
                       </SectionHeader>
                     )}
+                  {date < lastMonth && prevDate > lastMonth && (
+                    <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
+                      Older
+                    </SectionHeader>
+                  )}
 
                   <Tr key={index}>
                     <TableRow

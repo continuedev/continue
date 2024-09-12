@@ -49,7 +49,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
 
           if (response.body) {
             const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-            return responseBody.embedding;
+            return [responseBody.embedding];
           }
         }),
       )
@@ -62,7 +62,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
   ): any {
     const payload = {
       "inputText": prompt,
-      "dimensions": 1024,
+      "dimensions": 512,
       "normalize": true
     };
 

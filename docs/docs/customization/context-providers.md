@@ -138,6 +138,26 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 }
 ```
 
+#### Using Github Enterprise Server
+
+When using with Github Enterprise Server, you can set the `domain` parameter to your server's hostname. By default this is set to `github.com`.
+
+```json
+{
+  "name": "issue",
+  "params": {
+    "repos": [
+      {
+        "owner": "continuedev",
+        "repo": "continue"
+      }
+    ],
+    "githubToken": "ghp_xxx",
+    "domain": "github.acme-inc.com"
+  }
+}
+```
+
 ### GitLab Merge Request
 
 Type `@gitlab-mr` to reference an open MR for this branch on GitLab.
