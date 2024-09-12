@@ -15,7 +15,7 @@ jobs:
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.target }}-text
+          name: ubuntu-text
           path: "*.txt"
 
   upload2:
@@ -27,7 +27,7 @@ jobs:
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.target }}-text
+          name: macos-text
           path: "*.txt"
 
   download:
