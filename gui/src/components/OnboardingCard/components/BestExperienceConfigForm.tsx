@@ -1,11 +1,11 @@
+import { CubeIcon } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
+import { Button, Input, InputSubtext, lightGray } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
-import { CubeIcon } from "@heroicons/react/24/outline";
-import { Button, Input, InputSubtext, lightGray } from "../..";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 
 const { anthropic: chatProvider, mistral: autocompleteProvider } = providers;
@@ -61,11 +61,11 @@ function BestExperienceConfigForm({
           <div className="text-lg font-bold mb-1 flex flex-row justify-between gap-4">
             <label className="text-lg font-bold">Chat model</label>
             <div
-              className="flex items-center text-xs font-semibold"
+              className="flex items-center text-xs font-semibold justify-end"
               style={{ color: lightGray }}
             >
               <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-              <span className="italic text-right">
+              <span className="italic text-right inline">
                 {chatModel.title}{" "}
                 <span className="max-xs:hidden">by Anthropic</span>
               </span>
@@ -98,7 +98,7 @@ function BestExperienceConfigForm({
               className="flex items-center text-xs font-semibold"
               style={{ color: lightGray }}
             >
-              <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+              <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0  inline" />
               <span className="italic text-right">
                 {autocompleteModel.title}{" "}
                 <span className="max-xs:hidden">by Mistral</span>

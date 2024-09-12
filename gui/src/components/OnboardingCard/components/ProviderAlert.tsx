@@ -1,10 +1,10 @@
 import { useDispatch } from "react-redux";
+import AddModelForm from "../../../forms/AddModelForm";
 import {
-  setShowDialog,
   setDialogMessage,
+  setShowDialog,
 } from "../../../redux/slices/uiStateSlice";
 import Alert from "../../gui/Alert";
-import AddModelForm from "../../../forms/AddModelForm";
 import { useSubmitOnboarding } from "../hooks";
 
 function ProviderAlert() {
@@ -17,7 +17,7 @@ function ProviderAlert() {
   }
 
   return (
-    <div className="max-xs:hidden">
+    <div>
       <Alert type="info">
         <p className="font-semibold text-sm m-0">
           Prefer to use an different provider like OpenAI?
