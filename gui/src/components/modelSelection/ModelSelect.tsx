@@ -322,7 +322,7 @@ function ModelSelect() {
             <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
           </span>
         </StyledListboxButton>
-        <StyledListboxOptions showAbove={showAbove}>
+        <StyledListboxOptions showAbove={showAbove} className="z-50">
           <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
             {sortedOptions.map((option, idx) => (
               <ModelOption
