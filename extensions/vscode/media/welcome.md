@@ -1,6 +1,6 @@
 # Move Continue to the right sidebar
 
-![Move Continue to right sidebar](./sidebar.gif)
+![Move Continue to right sidebar](./move-to-right-sidebar.gif)
 
 Continue is currently in the left sidebar, but we recommend moving it to the right.
 This way it won't cover your file explorer.
