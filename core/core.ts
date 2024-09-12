@@ -4,9 +4,9 @@ import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import {
   setupBestConfig,
-  setupQuickstartConfig,
-  setupLocalConfigAfterFreeTrial,
   setupLocalConfig,
+  setupLocalConfigAfterFreeTrial,
+  setupQuickstartConfig,
 } from "./config/onboarding";
 import { createNewPromptFile } from "./config/promptFile";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
@@ -468,7 +468,7 @@ export class Core {
           }
         }
       } catch (e) {
-        console.warn(`Error listing Ollama models: ${e}`);
+        console.debug(`Error listing Ollama models: ${e}`);
         return undefined;
       }
     });

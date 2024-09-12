@@ -1,4 +1,5 @@
 import { CubeIcon } from "@heroicons/react/24/outline";
+import { DEFAULT_CHAT_MODEL_CONFIG } from "core/config/default";
 import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button, Input, InputSubtext, lightGray } from "../..";
@@ -7,7 +8,6 @@ import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
-import { DEFAULT_CHAT_MODEL_CONFIG } from "core/config/default";
 
 const { anthropic: chatProvider, mistral: autocompleteProvider } = providers;
 const { claude35Sonnet: chatModel, codestral: autocompleteModel } = models;
@@ -112,7 +112,7 @@ function BestExperienceConfigForm({
 
           <div className="flex flex-col pb-4 w-full">
             <Input
-              placeholder="Enter your Mistral API Key"
+              placeholder="Enter your Codestral API Key"
               value={autocompleteApiKey}
               onChange={(e) => setAutocompleteApiKey(e.target.value)}
             />
@@ -124,7 +124,7 @@ function BestExperienceConfigForm({
               >
                 Click here
               </a>{" "}
-              to create a Mistral API key
+              to create a Codestral API key
             </InputSubtext>
           </div>
         </div>

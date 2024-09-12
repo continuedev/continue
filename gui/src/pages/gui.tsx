@@ -31,9 +31,13 @@ import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
 import { TutorialCard } from "../components/mainInput/TutorialCard";
+import OnboardingCard, {
+  useOnboardingCard,
+} from "../components/OnboardingCard";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
+import { useTutorialCard } from "../hooks/useTutorialCard";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -45,7 +49,6 @@ import {
 import {
   setDialogEntryOn,
   setDialogMessage,
-  setOnboardingCard,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
@@ -55,12 +58,8 @@ import {
   isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
-import { useTutorialCard } from "../hooks/useTutorialCard";
-import OnboardingCard, {
-  useOnboardingCard,
-} from "../components/OnboardingCard";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -496,7 +495,7 @@ function GUI() {
                 </div>
               )}
 
-              {!!showTutorialCard && (
+              {showTutorialCard !== false && !onboardingCard.open && (
                 <div className="flex justify-center w-full">
                   <TutorialCard onClose={closeTutorialCard} />
                 </div>

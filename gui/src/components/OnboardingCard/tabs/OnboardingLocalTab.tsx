@@ -1,11 +1,14 @@
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
+  LOCAL_ONBOARDING_CHAT_TITLE,
   LOCAL_ONBOARDING_FIM_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
 } from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { Button } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import { hasPassedFTL } from "../../../util/freeTrial";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
@@ -13,6 +16,7 @@ import OllamaStatus from "../components/OllamaStatus";
 import { useCheckOllamaModels, useSubmitOnboarding } from "../hooks";
 
 function OnboardingLocalTab() {
+  const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const { submitOnboarding } = useSubmitOnboarding(
     hasPassedFTL() ? "LocalAfterFreeTrial" : "Local",
@@ -77,7 +81,17 @@ function OnboardingLocalTab() {
 
       <div className="mt-4 w-full">
         <Button
-          onClick={submitOnboarding}
+          onClick={() => {
+            submitOnboarding();
+
+            // Set the selected model to the local chat model
+            dispatch(
+              setDefaultModel({
+                title: LOCAL_ONBOARDING_CHAT_TITLE,
+                force: true, // Because it doesn't exist in the webview's config object yet
+              }),
+            );
+          }}
           className="w-full"
           disabled={!hasDownloadedChatModel}
         >

@@ -284,8 +284,7 @@ export class ConfigHandler {
 
   async llmFromTitle(title?: string): Promise<ILLM> {
     const config = await this.loadConfig();
-    const model =
-      config.models.find((m) => m.title === title) || config.models[0];
+    const model = config.models.find((m) => m.title === title);
     if (!model) {
       if (title === ONBOARDING_LOCAL_MODEL_TITLE) {
         // Special case, make calls to Ollama before we have it in the config
@@ -293,6 +292,8 @@ export class ConfigHandler {
           model: LOCAL_ONBOARDING_CHAT_MODEL,
         });
         return ollama;
+      } else if (config.models.length > 0) {
+        return config.models[0];
       }
 
       throw new Error("No model found");
