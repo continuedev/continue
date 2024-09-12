@@ -2137,7 +2137,7 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "gemini", "nvidia"]
+                    "enum": ["cohere", "voyage", "nvidia", "gemini"]
                   }
                 },
                 "required": ["provider"]

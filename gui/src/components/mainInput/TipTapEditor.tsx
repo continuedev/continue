@@ -58,11 +58,8 @@ import {
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
 
-const InputBoxDiv = styled.div<{ disabled?: boolean }>`
+const InputBoxDiv = styled.div`
   resize: none;
-  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
-  pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "text")};
   padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
@@ -817,7 +814,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   return (
     <InputBoxDiv
-      disabled={!hasDefaultModel}
       onKeyDown={(e) => {
         if (e.key === "Alt") {
           setOptionKeyHeld(true);

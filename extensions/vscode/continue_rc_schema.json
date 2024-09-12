@@ -2329,7 +2329,9 @@
                 "cohere",
                 "free-trial",
                 "gemini",
-                "voyage"
+                "voyage",
+                "nvidia",
+                "bedrock"
               ]
             },
             "model": {
@@ -2375,8 +2377,8 @@
                     "enum": [
                       "cohere",
                       "voyage",
-                      "gemini",
-                      "nvidia"
+                      "nvidia",
+                      "gemini"
                     ]
                   }
                 },
