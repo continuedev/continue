@@ -223,7 +223,7 @@ jobs:
       - name: Publish to VS Code Marketplace
         run: |
           cd extensions/vscode
-          npx vsce publish --pre-release --packagePath ../../vsix-artifacts/alpine-x64/*.vsix ../../vsix-artifacts/darwin-arm64/*.vsix ../../vsix-artifacts/darwin-x64/*.vsix ../../vsix-artifacts/linux-arm64/*.vsix ../../vsix-artifacts/linux-armhf/*.vsix ../../vsix-artifacts/linux-x64/*.vsix ../../vsix-artifacts/win32-x64/*.vsix ../../vsix-artifacts/win32-arm64/*.vsix
+          npx vsce publish --pre-release --packagePath ../../vsix-artifacts/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
@@ -232,7 +232,7 @@ jobs:
         continue-on-error: true
         run: |
           cd extensions/vscode
-          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/alpine-x64/*.vsix ../../vsix-artifacts/darwin-arm64/*.vsix ../../vsix-artifacts/darwin-x64/*.vsix ../../vsix-artifacts/linux-arm64/*.vsix ../../vsix-artifacts/linux-armhf/*.vsix ../../vsix-artifacts/linux-x64/*.vsix ../../vsix-artifacts/win32-x64/*.vsix ../../vsix-artifacts/win32-arm64/*.vsix
+          npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
 
       # 4. Update the package.json version and push changes
       # - name: Update version in package.json
