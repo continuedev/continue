@@ -9,7 +9,6 @@ import {
   setShowDialog,
 } from "../../../redux/slices/uiStateSlice";
 import { isJetBrains } from "../../../util";
-import { setLocalStorage } from "../../../util/localStorage";
 import { useSubmitOnboarding } from "../hooks";
 import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
 
@@ -20,7 +19,6 @@ function QuickstartSubmitButton() {
   const { submitOnboarding } = useSubmitOnboarding("Quickstart");
 
   function onComplete() {
-    setLocalStorage("signedInToGh", true);
     submitOnboarding();
 
     // Set Sonnet as the default model
@@ -39,7 +37,9 @@ function QuickstartSubmitButton() {
   }
 
   async function fetchGitHubAuthToken() {
-    const result = await ideMessenger.request("getGitHubAuthToken", undefined);
+    const result = await ideMessenger.request("getGitHubAuthToken", {
+      force: true,
+    });
     if (result.status === "success") {
       onComplete();
     }

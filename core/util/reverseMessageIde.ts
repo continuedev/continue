@@ -33,8 +33,8 @@ export class ReverseMessageIde {
   }
 
   private initializeListeners() {
-    this.on("getGitHubAuthToken", () => {
-      return this.ide.getGitHubAuthToken();
+    this.on("getGitHubAuthToken", (data) => {
+      return this.ide.getGitHubAuthToken(data);
     });
 
     this.on("getLastModified", (data) => {

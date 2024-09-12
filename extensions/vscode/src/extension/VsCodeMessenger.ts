@@ -288,7 +288,7 @@ export class VsCodeMessenger {
       this.ide.showToast(...msg.data);
     });
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
-      ide.getGitHubAuthToken(),
+      ide.getGitHubAuthToken(msg.data),
     );
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
       return getControlPlaneSessionInfo(msg.data.silent);

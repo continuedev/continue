@@ -13,7 +13,6 @@ type LocalStorageTypes = {
   inputHistory: JSONContent[];
   extensionVersion: string;
   indexingState: IndexingProgressUpdate;
-  signedInToGh: boolean;
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;
