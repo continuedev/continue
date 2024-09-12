@@ -158,7 +158,7 @@ jobs:
       # 6. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.target }}
+          name: ${{ env.target }}-vsix
           path: "extensions/vscode/*.vsix"
 
   release:
@@ -177,21 +177,18 @@ jobs:
           git config --local user.name "GitHub Action"
 
       # Download the .vsix artifacts
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           files: |
-            alpine-x64/*.vsix
-            darwin-arm64/*.vsix
-            darwin-x64/*.vsix
-            linux-arm64/*.vsix
-            linux-armhf/*.vsix
-            linux-x64/*.vsix
-            win32-x64/*.vsix
-            win32-arm64/*.vsix
+            vsix-artifacts/*.vsix
           token: ${{ secrets.CI_GITHUB_TOKEN }}
           repository: continuedev/continue
           prerelease: true
