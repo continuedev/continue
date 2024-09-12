@@ -31,7 +31,7 @@ jobs:
           path: "*.txt"
 
   download:
-    needs: upload
+    needs: [upload, upload2]
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
