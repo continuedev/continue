@@ -109,7 +109,7 @@ class VsCodeIde implements IDE {
                 "continue.continueGUIView.focus",
               );
               (await this.vscodeWebviewProtocolPromise).request(
-                "openOnboarding",
+                "openOnboardingCard",
                 undefined,
               );
 

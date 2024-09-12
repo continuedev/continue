@@ -41,7 +41,10 @@ function Alert({ children, type = "info" }: AlertProps) {
   return (
     <div className="p-4 rounded-lg shadow-none border-l-4 bg-[color:var(--vscode-editor-foreground)] opacity-70">
       <div className="flex items-start">
-        <Icon className="w-6 h-6" style={{ color: vscBackground }} />
+        <Icon
+          className="w-6 min-w-5 h-6 min-h-5"
+          style={{ color: vscBackground }}
+        />
 
         <div className="ml-3" style={{ color: vscBackground }}>
           {children}

@@ -1,14 +1,14 @@
 import BestExperienceConfigForm from "../components/BestExperienceConfigForm";
 import ProviderAlert from "../components/ProviderAlert";
-import { useCompleteOnboarding } from "../hooks";
+import { useSubmitOnboarding } from "../hooks";
 
 function OnboardingBestTab() {
-  const { completeOnboarding } = useCompleteOnboarding();
+  const { submitOnboarding } = useSubmitOnboarding("Best");
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <ProviderAlert />
-      <BestExperienceConfigForm onComplete={completeOnboarding} />
+      <BestExperienceConfigForm onComplete={submitOnboarding} />
     </div>
   );
 }

@@ -163,13 +163,15 @@ export const SecondaryButton = styled.button`
   }
 `;
 
-export const InputSubtext = styled.p`
+export const InputSubtext = styled.span`
   font-size: 0.75rem;
+  line-height: 1rem;
   color: ${lightGray};
   margin-top: 0.25rem;
 `;
 
-export const ButtonSubtext = styled.p`
+export const ButtonSubtext = styled.span`
+  display: block;
   margin-top: 0;
   text-align: center;
   color: ${lightGray};
@@ -399,7 +401,7 @@ export const Divider = styled.div`
   background-color: ${lightGray};
 `;
 
-export const StyledLinkButton = styled.div`
+export const StyledActionButton = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -409,4 +411,18 @@ export const StyledLinkButton = styled.div`
   padding: 2px 12px;
   background-color: ${lightGray}33;
   background-opacity: 0.1;
+`;
+
+export const CloseButton = styled.button`
+  border: none;
+  background-color: inherit;
+  color: ${lightGray};
+  position: absolute;
+  top: 0.6rem;
+  right: 1rem;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;

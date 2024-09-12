@@ -4,7 +4,11 @@ import { FREE_TRIAL_MODELS } from "./default.js";
 export const TRIAL_FIM_MODEL = "codestral-latest";
 export const ONBOARDING_LOCAL_MODEL_TITLE = "Ollama";
 
-export function setupApiKeysMode(
+/**
+ * We set the "best" chat + autocopmlete models by default
+ * whenever a user doesn't have a config.json
+ */
+export function setupBestConfig(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {
@@ -19,7 +23,7 @@ export function setupApiKeysMode(
   };
 }
 
-export function setupLocalMode(
+export function setupLocalConfig(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {
@@ -50,7 +54,7 @@ export function setupLocalMode(
   };
 }
 
-export function setupFreeTrialMode(
+export function setupQuickstartConfig(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {
@@ -73,7 +77,7 @@ export function setupFreeTrialMode(
   };
 }
 
-export function setupLocalAfterFreeTrial(
+export function setupLocalConfigAfterFreeTrial(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {

@@ -351,7 +351,7 @@ function ModelSelect() {
                   onClick={onClickAddModel}
                   value={"addModel" as any}
                 >
-                  <div className="flex items-center py-2">
+                  <div className="flex items-center py-0.5">
                     <PlusIcon className="w-4 h-4 mr-2" />
                     Add Chat model
                   </div>

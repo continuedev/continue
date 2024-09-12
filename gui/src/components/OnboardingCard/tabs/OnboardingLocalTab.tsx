@@ -3,16 +3,19 @@ import { useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { Button } from "../..";
 import OllamaStatus from "../components/OllamaStatus";
-import { useCompleteOnboarding, useCheckOllamaModels } from "../hooks";
+import { useSubmitOnboarding, useCheckOllamaModels } from "../hooks";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
+import { hasPassedFTL } from "../../../util/freeTrial";
 
 const autocompleteModel = "starcoder2:3b";
-const chatModel = "llama3.1";
+const chatModel = "llama3.1:8b";
 
 function OnboardingLocalTab() {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { completeOnboarding } = useCompleteOnboarding();
+  const { submitOnboarding } = useSubmitOnboarding(
+    hasPassedFTL() ? "LocalAfterFreeTrial" : "Local",
+  );
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
   const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
     string[]
@@ -73,7 +76,7 @@ function OnboardingLocalTab() {
 
       <div className="mt-4 w-full">
         <Button
-          onClick={completeOnboarding}
+          onClick={submitOnboarding}
           className="w-full"
           disabled={!hasDownloadedChatModel}
         >

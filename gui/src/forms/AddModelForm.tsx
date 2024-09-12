@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { Input, Button, InputSubtext, StyledLinkButton } from "../components";
+import { Input, Button, InputSubtext, StyledActionButton } from "../components";
 import ModelSelectionListbox from "../components/modelSelection/ModelSelectionListbox";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import {
@@ -139,12 +139,12 @@ function AddModelForm({
                   Install provider
                 </label>
 
-                <StyledLinkButton onClick={onClickDownloadProvider}>
+                <StyledActionButton onClick={onClickDownloadProvider}>
                   <p className="underline text-sm">
                     {selectedProvider.downloadUrl}
                   </p>
                   <ArrowTopRightOnSquareIcon width={24} height={24} />
-                </StyledLinkButton>
+                </StyledActionButton>
               </div>
             )}
 

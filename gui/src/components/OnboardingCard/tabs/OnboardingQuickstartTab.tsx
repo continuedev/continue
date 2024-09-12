@@ -1,10 +1,7 @@
 import ContinueLogo from "../../ContinueLogo";
 import QuickStartSubmitButton from "../components/QuickStartSubmitButton";
-import { useCompleteOnboarding } from "../hooks";
 
 function OnboardingQuickstartTab() {
-  const { completeOnboarding } = useCompleteOnboarding();
-
   return (
     <div className="flex justify-center items-center">
       <div className="flex flex-col items-center justify-center w-3/4 text-center">
@@ -21,7 +18,7 @@ function OnboardingQuickstartTab() {
           To prevent abuse, we'll ask you to sign in to GitHub.
         </p>
 
-        <QuickStartSubmitButton onComplete={completeOnboarding} />
+        <QuickStartSubmitButton />
       </div>
     </div>
   );

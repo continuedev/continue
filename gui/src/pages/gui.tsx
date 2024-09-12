@@ -60,6 +60,7 @@ import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import OnboardingCard from "../components/OnboardingCard";
 import { useOnboardingCard } from "../components/OnboardingCard/utils";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
+import { useTutorialCard } from "../hooks/useTutorialCard";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -147,6 +148,7 @@ function GUI() {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const onboardingCard = useOnboardingCard();
+  const { showTutorialCard, closeTutorialCard } = useTutorialCard();
 
   const sessionState = useSelector((state: RootState) => state.state);
 
@@ -163,16 +165,6 @@ function GUI() {
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
 
   const state = useSelector((state: RootState) => state.state);
-
-  const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard"),
-  );
-
-  const onCloseTutorialCard = () => {
-    posthog.capture("closedTutorialCard");
-    setLocalStorage("showTutorialCard", false);
-    setShowTutorialCard(false);
-  };
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -506,7 +498,7 @@ function GUI() {
 
               {!!showTutorialCard && (
                 <div className="flex justify-center w-full">
-                  <TutorialCard onClose={onCloseTutorialCard} />
+                  <TutorialCard onClose={closeTutorialCard} />
                 </div>
               )}
             </>

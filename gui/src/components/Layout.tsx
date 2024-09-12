@@ -173,22 +173,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "addApiKey",
-    async () => {
-      dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "openOnboarding",
-    async () => {
-      dispatch(setOnboardingCard({ show: true, activeTab: "Quickstart" }));
-    },
-    [],
-  );
-
-  useWebviewListener(
     "incrementFtc",
     async () => {
       const u = getLocalStorage("ftc");
@@ -202,11 +186,18 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "setupLocalModel",
+    "openOnboardingCard",
     async () => {
-      ideMessenger.post("completeOnboarding", {
-        mode: "localAfterFreeTrial",
-      });
+      navigate("/");
+      dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "setupLocalConfig",
+    async () => {
+      navigate("/");
       dispatch(setOnboardingCard({ show: true, activeTab: "Local" }));
     },
     [navigate],

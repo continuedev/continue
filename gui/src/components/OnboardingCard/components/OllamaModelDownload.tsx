@@ -1,8 +1,9 @@
-import { CheckCircleIcon, CommandLineIcon } from "@heroicons/react/24/outline";
+import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import ReactDOM from "react-dom";
-import { StyledLinkButton, StyledTooltip } from "../..";
+import { StyledActionButton, StyledTooltip } from "../..";
+import OllamaCompletedStep from "./OllamaCompletedStep";
 
 interface OllamaModelDownloadProps {
   title: string;
@@ -28,27 +29,23 @@ function OllamaModelDownload({
   return (
     <div className="flex flex-col">
       <p className="text-lg font-bold leading-tight mb-2">{title}</p>
-      <>
-        <StyledLinkButton data-tooltip-id={id} onClick={onClick}>
-          <p className="font-mono">{command}</p>
-          {hasDownloaded ? (
-            <CheckCircleIcon
-              width={24}
-              height={24}
-              className="text-emerald-600"
-            />
-          ) : (
+      {hasDownloaded ? (
+        <OllamaCompletedStep text={command} />
+      ) : (
+        <>
+          <StyledActionButton data-tooltip-id={id} onClick={onClick}>
+            <p className="font-mono">{command}</p>
             <CommandLineIcon width={24} height={24} />
-          )}
-        </StyledLinkButton>
-        {tooltipPortalDiv &&
-          ReactDOM.createPortal(
-            <StyledTooltip id={id} place="top">
-              Copy into terminal
-            </StyledTooltip>,
-            tooltipPortalDiv,
-          )}
-      </>
+          </StyledActionButton>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id={id} place="top">
+                Copy into terminal
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      )}
     </div>
   );
 }

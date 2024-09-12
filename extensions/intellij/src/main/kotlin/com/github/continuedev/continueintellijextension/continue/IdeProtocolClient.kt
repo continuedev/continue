@@ -634,7 +634,7 @@ class IdeProtocolClient (
 
                         if (ghAuthToken == null) {
                             // Open a dialog so user can enter their GitHub token
-                            continuePluginService.sendToWebview("openOnboarding", null, uuid())
+                            continuePluginService.sendToWebview("openOnboardingCard", null, uuid())
                             respond(null)
                         } else {
                             respond(ghAuthToken)

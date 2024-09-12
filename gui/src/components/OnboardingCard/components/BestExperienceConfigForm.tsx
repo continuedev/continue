@@ -56,19 +56,21 @@ function BestExperienceConfigForm({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex flex-col">
+      <div className="flex flex-col gap-3">
         <div>
-          <p className="text-lg font-bold leading-tight mb-2 flex flex-row justify-between gap-4 mb-2">
-            Chat model
-            <span
+          <div className="text-lg font-bold mb-1 flex flex-row justify-between gap-4">
+            <label className="text-lg font-bold">Chat model</label>
+            <div
               className="flex items-center text-xs font-semibold"
               style={{ color: lightGray }}
             >
-              <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0 " />
-              <span className="italic">{chatModel.title}&nbsp;</span>
-              <span>by Anthropic</span>
-            </span>
-          </p>
+              <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+              <span className="italic text-right">
+                {chatModel.title}{" "}
+                <span className="max-xs:hidden">by Anthropic</span>
+              </span>
+            </div>
+          </div>
 
           <div className="flex flex-col pb-4 w-full">
             <Input
@@ -90,19 +92,19 @@ function BestExperienceConfigForm({
         </div>
 
         <div>
-          <p className="text-lg font-bold leading-tight mb-2 flex flex-row justify-between gap-4 mb-2">
-            Autocomplete model
-            <span
-              className="flex items-center font-semibold"
+          <div className="text-lg font-bold mb-1 flex flex-row justify-between gap-4">
+            <label className="text-lg font-bold">Autocomplete model</label>
+            <div
+              className="flex items-center text-xs font-semibold"
               style={{ color: lightGray }}
             >
               <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-              <span className="text-xs">
-                <span className="italic">{autocompleteModel.title}&nbsp;</span>
-                <span>by Mistral</span>
+              <span className="italic text-right">
+                {autocompleteModel.title}{" "}
+                <span className="max-xs:hidden">by Mistral</span>
               </span>
-            </span>
-          </p>
+            </div>
+          </div>
 
           <div className="flex flex-col pb-4 w-full">
             <Input
