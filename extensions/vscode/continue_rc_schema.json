@@ -195,6 +195,7 @@
             "msty",
             "watsonx",
             "openrouter",
+            "sambanova",
             "nvidia",
             "vllm"
           ],
@@ -410,7 +411,8 @@
                   "huggingface-inference-api",
                   "replicate",
                   "together",
-                  "cloudflare"
+                  "cloudflare",
+                  "sambanova"
                 ]
               }
             },
@@ -1424,6 +1426,9 @@
               "watsonxStopToken": {
                 "type": "string"
               },
+              "watsonxFullUrl": {
+                "type": "string"
+              },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
@@ -1438,6 +1443,39 @@
               "watsonxUrl",
               "watsonxProjectId"
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "sambanova"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option."
+              }
+            }
           }
         }
       ]
@@ -2292,6 +2330,7 @@
                 "free-trial",
                 "gemini",
                 "voyage",
+                "nvidia",
                 "bedrock"
               ]
             },
@@ -2337,25 +2376,8 @@
                   "provider": {
                     "enum": [
                       "cohere",
-                      "voyage"
-                    ]
-                  }
-                },
-                "required": [
-                  "provider"
-                ]
-              },
-              "then": {
-                "required": [
-                  "apiKey"
-                ]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "provider": {
-                    "enum": [
+                      "voyage",
+                      "nvidia",
                       "gemini"
                     ]
                   }

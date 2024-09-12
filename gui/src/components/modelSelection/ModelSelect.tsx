@@ -45,6 +45,7 @@ interface Option {
 }
 
 const MAX_HEIGHT_PX = 300;
+
 const StyledListboxButton = styled(Listbox.Button)`
   font-family: inherit;
   display: flex;
@@ -187,7 +188,7 @@ function ModelOption({
       onMouseLeave={() => setHovered(false)}
       onClick={handleOptionClick}
     >
-      <div className="flex flex-col w-full gap-1">
+      <div className="flex flex-col w-full gap-0.5">
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center flex-grow">
             <CubeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -202,8 +203,8 @@ function ModelOption({
         </div>
 
         {showMissingApiKeyMsg && (
-          <span className="ml-6 text-xs italic text-[10px]">
-            API key required
+          <span className="ml-6 text-xs italic text-[8px]">
+            Missing API key
           </span>
         )}
       </div>
@@ -322,7 +323,7 @@ function ModelSelect() {
             <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
           </span>
         </StyledListboxButton>
-        <StyledListboxOptions showAbove={showAbove}>
+        <StyledListboxOptions showAbove={showAbove} className="z-50">
           <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
             {sortedOptions.map((option, idx) => (
               <ModelOption

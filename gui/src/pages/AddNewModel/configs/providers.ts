@@ -513,6 +513,13 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         placeholder: "Enter the API Version",
         defaultValue: "2023-05-29",
       },
+      {
+        inputType: "text",
+        key: "watsonxFullUrl",
+        label: "Full watsonx URL",
+        placeholder: "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
+        required: false
+      },
       // {
       //   inputType: "text",
       //   key: "title",
@@ -572,5 +579,35 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     collectInputFor: [...completionParamsInputsConfigs],
+  },
+  sambanova: {
+    title: "SambaNova Cloud",
+    provider: "sambanova",
+    refPage: "sambanova",
+    description:
+      "Use SambaNova Cloud for Llama3.1 fast inference performance",
+    icon: "sambanova.png",
+    longDescription: `The SambaNova Cloud is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your SambaNova Cloud API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.llama31Chat,
+    ].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
 };

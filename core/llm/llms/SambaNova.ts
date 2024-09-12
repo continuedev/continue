@@ -1,0 +1,22 @@
+import type { LLMOptions, ModelProvider } from "../../index.js";
+
+import OpenAI from "./OpenAI.js";
+
+class SambaNova extends OpenAI {
+  static providerName: ModelProvider = "sambanova";
+  static defaultOptions: Partial<LLMOptions> = {
+    apiBase: "https://api.sambanova.ai/v1/",
+  };
+
+  private static MODEL_IDS: { [name: string]: string } = {
+    "llama3.1-8b": "Meta-Llama-3.1-8B-Instruct",
+    "llama3.1-70b": "Meta-Llama-3.1-70B-Instruct",
+    "llama3.1-405b": "Meta-Llama-3.1-405B-Instruct",
+  };
+
+  protected _convertModelName(model: string) {
+    return SambaNova.MODEL_IDS[model] || this.model;
+  }
+}
+
+export default SambaNova;

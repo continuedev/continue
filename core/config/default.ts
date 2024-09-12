@@ -5,6 +5,20 @@ import {
   SlashCommandDescription,
 } from "../";
 
+export const DEFAULT_CHAT_MODEL_CONFIG: ModelDescription = {
+  model: "claude-3-5-sonnet-20240620",
+  provider: "anthropic",
+  apiKey: "",
+  title: "Claude 3.5 Sonnet",
+};
+
+export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
+  title: "Codestral",
+  provider: "mistral",
+  model: "codestral-latest",
+  apiKey: "",
+};
+
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
     title: "GPT-4o (Free Trial)",
@@ -91,20 +105,8 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [
-    {
-      model: "claude-3-5-sonnet-20240620",
-      provider: "anthropic",
-      apiKey: "",
-      title: "Claude 3.5 Sonnet",
-    },
-  ],
-  tabAutocompleteModel: {
-    title: "Codestral",
-    provider: "mistral",
-    model: "codestral-latest",
-    apiKey: "",
-  },
+  models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {
       name: "test",
@@ -118,20 +120,8 @@ export const defaultConfig: SerializedContinueConfig = {
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: [
-    {
-      model: "claude-3-5-sonnet-20240620",
-      provider: "anthropic",
-      apiKey: "",
-      title: "Claude 3.5 Sonnet",
-    },
-  ],
-  tabAutocompleteModel: {
-    title: "Codestral",
-    provider: "mistral",
-    model: "codestral-latest",
-    apiKey: "",
-  },
+  models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {
       name: "test",

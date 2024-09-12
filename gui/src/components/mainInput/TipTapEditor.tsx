@@ -58,11 +58,8 @@ import {
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
 
-const InputBoxDiv = styled.div<{ disabled?: boolean }>`
+const InputBoxDiv = styled.div`
   resize: none;
-  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
-  pointer-events: ${(props) => (props.disabled ? "none" : "auto")};
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "text")};
   padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
@@ -72,7 +69,6 @@ const InputBoxDiv = styled.div<{ disabled?: boolean }>`
   width: calc(100% - 24px);
   background-color: ${vscInputBackground};
   color: ${vscForeground};
-  z-index: 1;
   border: 0.5px solid ${vscInputBorder};
   outline: none;
   font-size: ${getFontSize()}px;
@@ -99,7 +95,6 @@ const HoverDiv = styled.div`
   opacity: 0.5;
   background-color: ${vscBadgeBackground};
   color: ${vscForeground};
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,7 +107,6 @@ const HoverTextDiv = styled.div`
   top: 0;
   left: 0;
   color: ${vscForeground};
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -820,7 +814,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   return (
     <InputBoxDiv
-      disabled={!hasDefaultModel}
       onKeyDown={(e) => {
         if (e.key === "Alt") {
           setOptionKeyHeld(true);

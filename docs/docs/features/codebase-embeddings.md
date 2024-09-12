@@ -68,6 +68,21 @@ Whether to use re-ranking, which will allow initial selection of `nRetrieve` res
 
 We also support other methods of generating embeddings, which can be configured with the `"embeddingsProvider"` property in `config.json`. We currently have built-in support for the following providers:
 
+### NVIDIA
+NVIDIA provides text embedding models as NIMs (NVIDIA Inference Models) that generate semantically meaningful vector representations of text.
+Sample configuration for the `nvidia/nv-embedqa-mistral-7b-v2` model. This is the default model for the nvidia provider.
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "nvidia",
+    "model": "nvidia/nv-embedqa-mistral-7b-v2",
+    "apiKey": "YOUR_API_KEY"
+  }
+}
+```
+Some of the other key NVIDIA embedding NIMs are: `nvidia/nv-embedqa-e5-v5` and `baai/bge-m3`. See Nvidia's [catalog](https://build.nvidia.com/search?term=embeddings) for more available models.
+
 ### Transformers.js (currently VS Code only)
 
 [Transformers.js](https://huggingface.co/docs/transformers.js/index) is a JavaScript port of the popular [Transformers](https://huggingface.co/transformers/) library. It allows embeddings to be calculated locally in the browser (or in this case inside of the sidebar of your IDE). The model used is `all-MiniLM-L6-v2`, which is shipped alongside the Continue extension and generates embeddings of size 384.

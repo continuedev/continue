@@ -1,18 +1,18 @@
 import { Octokit } from "@octokit/rest";
+import * as cheerio from "cheerio";
 import * as fs from "fs";
+import fetch from "node-fetch";
 import { URL } from "node:url";
-import { Page } from "puppeteer";
+import { Handler, HTTPResponse, Page } from "puppeteer";
 import {
+  editConfigJson,
   getChromiumPath,
   getContinueUtilsPath,
-  editConfigJson,
 } from "../../util/paths";
 // @ts-ignore
 // @prettier-ignore
 import PCR from "puppeteer-chromium-resolver";
-import * as cheerio from "cheerio";
-import fetch from "node-fetch";
-import { GlobalContext } from "../../util/GlobalContext";
+import { ContinueConfig, IDE } from "../..";
 
 export type PageData = {
   url: string;
@@ -23,10 +23,20 @@ export type PageData = {
 class DocsCrawler {
   private readonly MAX_REQUESTS_PER_CRAWL = 1000;
   private readonly GITHUB_HOST = "github.com";
-  private useChromiumPromise: Promise<boolean> | undefined = undefined;
+  private readonly chromiumInstaller: ChromiumInstaller;
 
-  constructor() {
-    this.useChromiumPromise = ChromiumCrawler.verifyOrInstallChromium();
+  constructor(
+    private readonly ide: IDE,
+    private readonly config: ContinueConfig,
+  ) {
+    this.chromiumInstaller = new ChromiumInstaller(this.ide, this.config);
+  }
+
+  private shouldUseChromium() {
+    return (
+      this.config.experimental?.useChromiumForDocsCrawling &&
+      this.chromiumInstaller.isInstalled()
+    );
   }
 
   async *crawl(
@@ -35,11 +45,39 @@ class DocsCrawler {
   ): AsyncGenerator<PageData> {
     if (startUrl.host === this.GITHUB_HOST) {
       yield* new GitHubCrawler(startUrl).crawl();
+    } else if (this.shouldUseChromium()) {
+      yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
     } else {
-      if (await this.useChromiumPromise) {
-        yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
-      } else {
-        yield* new CheerioCrawler(startUrl, maxRequestsPerCrawl).crawl();
+      let didCrawlSinglePage = false;
+
+      for await (const pageData of new CheerioCrawler(
+        startUrl,
+        maxRequestsPerCrawl,
+      ).crawl()) {
+        yield pageData;
+        didCrawlSinglePage = true;
+      }
+
+      // We assume that if we failed to crawl a single page,
+      // it was due to an error that using Chromium can resolve
+      const shouldProposeUseChromium =
+        !didCrawlSinglePage &&
+        this.chromiumInstaller.shouldProposeUseChromiumOnCrawlFailure();
+
+      if (shouldProposeUseChromium) {
+        const didInstall =
+          await this.chromiumInstaller.proposeAndAttemptInstall(
+            startUrl.toString(),
+          );
+
+        if (didInstall) {
+          await this.ide.showToast(
+            "info",
+            `Successfully installed Chromium! Retrying crawl of: ${startUrl.toString()}`,
+          );
+
+          yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
+        }
       }
     }
   }
@@ -152,12 +190,15 @@ class CheerioCrawler {
         (this.constructor as any).name
       }] Starting crawl from: ${url} - Max Depth: ${maxDepth}`,
     );
+
     const { baseUrl, basePath } = this.splitUrl(url);
+
     let paths: { path: string; depth: number }[] = [
       { path: basePath, depth: 0 },
     ];
 
     let index = 0;
+
     while (index < paths.length) {
       const batch = paths.slice(index, index + 50);
 
@@ -189,15 +230,12 @@ class CheerioCrawler {
           }
         }
       } catch (e) {
-        if (e instanceof TypeError) {
-          console.warn("Error while crawling page: ", e);
-        } else {
-          console.error("Error while crawling page: ", e);
-        }
+        console.debug("Error while crawling page: ", e);
       }
 
       index += batch.length;
     }
+
     console.log("Crawl completed");
   }
 
@@ -235,7 +273,9 @@ class CheerioCrawler {
 
     $("a").each((_: any, element: any) => {
       const href = $(element).attr("href");
-      if (!href) return;
+      if (!href) {
+        return;
+      }
 
       const parsedUrl = new URL(href, url);
       if (parsedUrl.hostname === baseUrl.hostname) {
@@ -264,20 +304,29 @@ class CheerioCrawler {
 
 class ChromiumCrawler {
   private readonly LINK_GROUP_SIZE = 2;
-  private static PCR_CONFIG = { downloadPath: getContinueUtilsPath() };
+  private curCrawlCount = 0;
 
   constructor(
     private readonly startUrl: URL,
     private readonly maxRequestsPerCrawl: number,
   ) {}
 
+  static setUseChromiumForDocsCrawling(useChromiumForDocsCrawling: boolean) {
+    editConfigJson((config) => ({
+      ...config,
+      experimental: {
+        ...config.experimental,
+        useChromiumForDocsCrawling,
+      },
+    }));
+  }
+
   async *crawl(): AsyncGenerator<PageData> {
     console.debug(
-      `[${(this.constructor as any).name}] Crawling site repo: ${
-        this.startUrl
-      }`,
+      `[${(this.constructor as any).name}] Crawling site: ${this.startUrl}`,
     );
-    const stats = await PCR(ChromiumCrawler.PCR_CONFIG);
+
+    const stats = await PCR(ChromiumInstaller.PCR_CONFIG);
     const browser = await stats.puppeteer.launch({
       args: [
         "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36",
@@ -290,56 +339,82 @@ class ChromiumCrawler {
       yield* this.crawlSitePages(page, this.startUrl);
     } catch (e) {
       console.debug("Error getting links: ", e);
+      console.debug(
+        "Setting 'useChromiumForDocsCrawling' to 'false' in config.json",
+      );
+
+      ChromiumCrawler.setUseChromiumForDocsCrawling(false);
     } finally {
       await browser.close();
     }
+  }
+
+  /**
+   * We need to handle redirects manually, otherwise there are race conditions.
+   *
+   * https://github.com/puppeteer/puppeteer/issues/3323#issuecomment-2332333573
+   */
+  private async gotoPageAndHandleRedirects(page: Page, url: string) {
+    const MAX_PAGE_WAIT_MS = 5000;
+
+    await page.goto(url, {
+      timeout: 0,
+      waitUntil: "networkidle2",
+    });
+
+    let responseEventOccurred = false;
+    const responseHandler: Handler<HTTPResponse> = (event) =>
+      (responseEventOccurred = true);
+
+    const responseWatcher = new Promise<void>(function (resolve, reject) {
+      setTimeout(() => {
+        if (!responseEventOccurred) {
+          resolve();
+        } else {
+          setTimeout(() => resolve(), MAX_PAGE_WAIT_MS);
+        }
+      }, 500);
+    });
+
+    page.on("response", responseHandler);
+
+    await Promise.race([responseWatcher, page.waitForNavigation()]);
   }
 
   private async *crawlSitePages(
     page: Page,
     curUrl: URL,
     visitedLinks: Set<string> = new Set(),
-    curRequestCount: number = 0,
   ): AsyncGenerator<PageData> {
-    if (curRequestCount >= this.maxRequestsPerCrawl) {
-      console.warn(
-        `[${
-          (this.constructor as any).name
-        }] Max requests per crawl reached. Stopping crawler.`,
-      );
+    const urlStr = curUrl.toString();
+
+    if (visitedLinks.has(urlStr)) {
       return;
     }
 
-    if (visitedLinks.has(curUrl.toString())) {
-      return;
-    }
-
-    console.debug(
-      `[${(this.constructor as any).name}] Crawling page: ${curUrl.toString()}`,
-    );
-
-    await page.goto(curUrl.toString());
+    await this.gotoPageAndHandleRedirects(page, urlStr);
 
     const htmlContent = await page.content();
     const linkGroups = await this.getLinkGroupsFromPage(page, curUrl);
-    const requestCount = curRequestCount + 1;
+    this.curCrawlCount++;
 
-    visitedLinks.add(curUrl.toString());
+    visitedLinks.add(urlStr);
 
     yield {
       path: curUrl.pathname,
-      url: curUrl.toString(),
+      url: urlStr,
       content: htmlContent,
     };
 
     for (const linkGroup of linkGroups) {
+      let enqueuedLinkCount = this.curCrawlCount;
+
       for (const link of linkGroup) {
-        yield* this.crawlSitePages(
-          page,
-          new URL(link),
-          visitedLinks,
-          requestCount,
-        );
+        enqueuedLinkCount++;
+        console.log({ enqueuedLinkCount, url: this.startUrl });
+        if (enqueuedLinkCount <= this.maxRequestsPerCrawl) {
+          yield* this.crawlSitePages(page, new URL(link), visitedLinks);
+        }
       }
     }
   }
@@ -395,34 +470,89 @@ class ChromiumCrawler {
 
     return groups;
   }
+}
 
-  static async verifyOrInstallChromium() {
-    const globalContext = new GlobalContext();
+class ChromiumInstaller {
+  static PCR_CONFIG = { downloadPath: getContinueUtilsPath() };
 
-    // If we previously failed to install Chromium, don't try again
-    if (globalContext.get("didPrevChromiumInstallFail")) {
-      return false;
+  constructor(
+    private readonly ide: IDE,
+    private readonly config: ContinueConfig,
+  ) {
+    if (this.shouldInstallOnStartup()) {
+      console.log("Installing Chromium");
+      void this.install();
     }
+  }
 
-    if (fs.existsSync(getChromiumPath())) {
-      return true;
+  isInstalled() {
+    return fs.existsSync(getChromiumPath());
+  }
+
+  shouldInstallOnStartup() {
+    return (
+      !this.isInstalled() &&
+      this.config.experimental?.useChromiumForDocsCrawling
+    );
+  }
+
+  shouldProposeUseChromiumOnCrawlFailure() {
+    const { experimental } = this.config;
+
+    return (
+      experimental?.useChromiumForDocsCrawling === undefined ||
+      experimental.useChromiumForDocsCrawling
+    );
+  }
+
+  async proposeAndAttemptInstall(site: string) {
+    const userAcceptedInstall = await this.proposeInstall(site);
+
+    if (userAcceptedInstall) {
+      const didInstall = await this.install();
+      return didInstall;
     }
+  }
 
+  async install() {
     try {
-      await PCR(ChromiumCrawler.PCR_CONFIG);
+      await PCR(ChromiumInstaller.PCR_CONFIG);
+
+      ChromiumCrawler.setUseChromiumForDocsCrawling(true);
+
       return true;
     } catch (error) {
       console.debug("Error installing Chromium : ", error);
       console.debug(
-        `Setting 'didPrevChromiumInstallFail' to 'true' in ${globalContext.constructor.name}`,
+        "Setting 'useChromiumForDocsCrawling' to 'false' in config.json",
       );
 
-      globalContext.update("didPrevChromiumInstallFail", true);
+      ChromiumCrawler.setUseChromiumForDocsCrawling(false);
+
+      await this.ide.showToast("error", "Failed to install Chromium");
 
       return false;
     }
   }
+
+  private async proposeInstall(site: string) {
+    const msg =
+      `Unable to crawl documentation site: ${site}\n` +
+      "We recommend installing Chromium. " +
+      "Download progress can be viewed in the developer console.";
+
+    const actionMsg = "Install Chromium";
+
+    const res = await this.ide.showToast("warning", msg, actionMsg);
+
+    return res === actionMsg;
+  }
 }
 
 export default DocsCrawler;
-export { CheerioCrawler, ChromiumCrawler, GitHubCrawler };
+export {
+  CheerioCrawler,
+  ChromiumCrawler,
+  ChromiumInstaller as ChromiumInstaller,
+  GitHubCrawler,
+};

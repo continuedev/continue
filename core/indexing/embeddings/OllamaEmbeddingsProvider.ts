@@ -28,6 +28,7 @@ async function embedOne(
       }),
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${options.apiKey}`,
       },
     });
 

@@ -7,6 +7,7 @@ import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
+import { DEFAULT_CHAT_MODEL_CONFIG } from "core/config/default";
 
 const { anthropic: chatProvider, mistral: autocompleteProvider } = providers;
 const { claude35Sonnet: chatModel, codestral: autocompleteModel } = models;
@@ -42,6 +43,9 @@ function BestExperienceConfigForm({
       apiKey: autocompleteApiKey,
     };
 
+    ideMessenger.post("config/deleteModel", {
+      title: DEFAULT_CHAT_MODEL_CONFIG.title,
+    });
     ideMessenger.post("config/addModel", { model: chatModelConfig });
     dispatch(setDefaultModel({ title: chatModelConfig.title, force: true }));
 

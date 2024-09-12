@@ -121,7 +121,7 @@ export interface ILLM extends LLMOptions {
 export type ContextProviderType = "normal" | "query" | "submenu";
 
 export interface ContextProviderDescription {
-  title: string;
+  title: ContextProviderName;
   displayTitle: string;
   description: string;
   renderInlineAs?: string;
@@ -366,6 +366,7 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
 }
@@ -574,7 +575,15 @@ type ContextProviderName =
   | "docs"
   | "gitlab-mr"
   | "os"
-  | "currentFile";
+  | "currentFile"
+  | "outline"
+  | "continue-proxy"
+  | "highlights"
+  | "file"
+  | "issue"
+  | "repo-map"
+  | "url"
+  | string;
 
 type TemplateType =
   | "llama2"
@@ -627,6 +636,7 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "openrouter"
+  | "sambanova"
   | "nvidia"
   | "vllm"
   | "mock";
@@ -788,6 +798,7 @@ export type EmbeddingsProviderName =
   | "gemini"
   | "continue-proxy"
   | "deepinfra"
+  | "nvidia"
   | "voyage";
 
 export interface EmbedOptions {
@@ -924,6 +935,13 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
+
+  /**
+   * If set to true, we will attempt to pull down and install an instance of Chromium
+   * that is compatible with the current version of Puppeteer.
+   * This is needed to crawl a large number of documentation sites that are dynamically rendered.
+   */
+  useChromiumForDocsCrawling?: boolean;
 }
 
 interface AnalyticsConfig {

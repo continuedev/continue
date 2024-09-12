@@ -55,12 +55,24 @@ class SageMaker extends BaseLLM {
         let position;
         while ((position = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, position);
-          const data = JSON.parse(line.replace(/^data:/, ""));
-          if ("choices" in data) {
-            yield data.choices[0].delta.content;
-          }
-          else if ("token" in data) {
-            yield data.token.text;
+          try {
+            const data = JSON.parse(line.replace(/^data:/, ''));
+            let text = undefined;
+            if ("choices" in data) {
+              if ("delta" in data.choices[0]){
+                text = data.choices[0].delta.content;
+              }
+              else{
+                text = data.choices[0].text;
+              }
+            }
+            else if ("token" in data) {
+              text = data.token.text;
+            }
+            if (text !== undefined) {
+              yield text;
+            }
+          } catch (e) {
           }
           buffer = buffer.slice(position + 1);
         }
@@ -94,12 +106,24 @@ class SageMaker extends BaseLLM {
         let position;
         while ((position = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, position);
-          const data = JSON.parse(line.replace(/^data:/, ""));
-          if ("choices" in data) {
-            yield { role: "assistant", content: data.choices[0].delta.content };
-          }
-          else if ("token" in data) {
-            yield { role: "assistant", content: data.token.text };
+          try {
+            const data = JSON.parse(line.replace(/^data:/, ''));
+            let text = undefined;
+            if ("choices" in data) {
+              if ("delta" in data.choices[0]){
+                text = data.choices[0].delta.content;
+              }
+              else{
+                text = data.choices[0].text;
+              }
+            }
+            else if ("token" in data) {
+              text = data.token.text;
+            }
+            if (text !== undefined) {
+              yield { role: "assistant", content: text };
+            }
+          } catch (e) {
           }
           buffer = buffer.slice(position + 1);
         }
@@ -189,6 +213,7 @@ class CompletionAPIToolkit implements SageMakerModelToolkit {
   ): InvokeEndpointWithResponseStreamCommand {
     const payload = {
       inputs: prompt,
+      prompt: prompt,
       parameters: this.sagemaker.completionOptions,
       stream: true,
     };
