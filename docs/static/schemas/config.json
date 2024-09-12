@@ -2094,8 +2094,8 @@
                 "cohere",
                 "free-trial",
                 "gemini",
-                "nvidia",
                 "voyage",
+                "nvidia",
                 "bedrock"
               ]
             },

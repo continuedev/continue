@@ -455,7 +455,7 @@ export const models: { [key: string]: ModelPackage } = {
   codestral: {
     title: "Codestral",
     description:
-      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion. Trained on more than 80 programming languages, Codestral demonstrates proficiency in both widely-used and less-common languages.",
+      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion.",
     params: {
       title: "Codestral",
       model: "codestral-latest",

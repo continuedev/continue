@@ -110,7 +110,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
     private fun syncRemoteConfig() {
         val state = instance.continueState
 
-        if (state.remoteConfigServerUrl != null) {
+        if (state.remoteConfigServerUrl != null && state.remoteConfigServerUrl!!.isNotEmpty()) {
             // download remote config as json file
 
             val client = OkHttpClient()

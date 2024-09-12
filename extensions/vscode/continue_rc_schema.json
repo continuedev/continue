@@ -2377,8 +2377,8 @@
                     "enum": [
                       "cohere",
                       "voyage",
-                      "gemini",
-                      "nvidia"
+                      "nvidia",
+                      "gemini"
                     ]
                   }
                 },

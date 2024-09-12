@@ -165,7 +165,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
   },
   mistral: {
-    title: "Mistral API",
+    title: "Mistral",
     provider: "mistral",
     description:
       "The Mistral API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
@@ -202,7 +202,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     description:
       "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
     longDescription:
-      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
+      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/download) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: [
@@ -219,7 +219,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
-    downloadUrl: "https://ollama.ai/",
+    downloadUrl: "https://ollama.ai/download",
   },
   cohere: {
     title: "Cohere",
@@ -490,28 +490,28 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         key: "watsonxUrl",
         label: "watsonx URL",
         placeholder: "e.g. http://us-south.dataplatform.cloud.ibm.com",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
         key: "watsonxProjectId",
         label: "watsonx Project ID",
         placeholder: "Enter your project ID",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
         key: "watsonxCreds",
         label: "watsonx API key",
         placeholder: "Enter your API key (SaaS) or ZenApiKey (Software)",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
         key: "watsonxApiVersion",
         label: "watsonx API version",
         placeholder: "Enter the API Version",
-        defaultValue: "2023-05-29"
+        defaultValue: "2023-05-29",
       },
       {
         inputType: "text",

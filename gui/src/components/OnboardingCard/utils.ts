@@ -1,5 +1,3 @@
-import { usePostHog } from "posthog-js/react";
-import { useNavigate } from "react-router-dom";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 
 // Note that there is no "NotStarted" status since the
@@ -21,28 +19,4 @@ export function isNewUserOnboarding() {
   const onboardingStatus = getLocalStorage("onboardingStatus");
 
   return onboardingStatus === undefined;
-}
-
-/**
- * Telemetry, status tracking, and routing logic for new user onboarding.
- */
-export function useCompleteOnboarding() {
-  const posthog = usePostHog();
-  const navigate = useNavigate();
-
-  function completeOnboarding() {
-    const onboardingStatus = getLocalStorage("onboardingStatus");
-
-    if (onboardingStatus === "Started") {
-      setLocalStorage("onboardingStatus", "Completed");
-      setLocalStorage("showTutorialCard", true);
-      posthog.capture("Onboarding Step", { status: "Completed" });
-    }
-
-    navigate("/");
-  }
-
-  return {
-    completeOnboarding,
-  };
 }
