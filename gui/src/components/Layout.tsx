@@ -28,7 +28,7 @@ import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 import { isNewUserOnboarding } from "./OnboardingCard/utils";
-import useHistory from "../hooks/useHistory";
+import { useOnboardingCard } from "./OnboardingCard";
 
 const FOOTER_HEIGHT = "1.8em";
 
@@ -109,7 +109,7 @@ const Layout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { saveSession } = useHistory(dispatch);
+  const onboardingCard = useOnboardingCard();
 
   const dialogMessage = useSelector(
     (state: RootState) => state.uiState.dialogMessage,
@@ -190,12 +190,7 @@ const Layout = () => {
   useWebviewListener(
     "openOnboardingCard",
     async () => {
-      navigate("/");
-
-      // Used to clear the chat panel before showing onboarding card
-      saveSession();
-
-      dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+      onboardingCard.open("Best");
     },
     [],
   );
@@ -203,14 +198,9 @@ const Layout = () => {
   useWebviewListener(
     "setupLocalConfig",
     async () => {
-      navigate("/");
-
-      // Used to clear the chat panel before showing onboarding card
-      saveSession();
-
-      dispatch(setOnboardingCard({ show: true, activeTab: "Local" }));
+      onboardingCard.open("Local");
     },
-    [navigate],
+    [],
   );
 
   useEffect(() => {
@@ -218,10 +208,7 @@ const Layout = () => {
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      // Used to clear the chat panel before showing onboarding card
-      saveSession();
-
-      dispatch(setOnboardingCard({ show: true, activeTab: "Quickstart" }));
+      onboardingCard.open("Quickstart");
     }
   }, [location]);
 

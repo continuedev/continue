@@ -1,17 +1,10 @@
-import { useState } from "react";
 import * as Tabs from "./tabs";
 import OnboardingCardTabs, { TabTitle } from "./components/OnboardingCardTabs";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import styled from "styled-components";
-import {
-  CloseButton,
-  defaultBorderRadius,
-  lightGray,
-  vscInputBackground,
-} from "../";
-import { useDispatch } from "react-redux";
-import { setOnboardingCard } from "../../redux/slices/uiStateSlice";
+import { CloseButton, defaultBorderRadius, vscInputBackground } from "../";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { useOnboardingCard } from "./hooks/useOnboardingCard";
 
 const StyledCard = styled.div`
   margin: auto;
@@ -35,22 +28,10 @@ export const defaultOnboardingCardState: OnboardingCardState = {
 export type OnboardingCardProps = Pick<OnboardingCardState, "activeTab">;
 
 function OnboardingCard(props: OnboardingCardProps) {
-  const dispatch = useDispatch();
-  const [activeTab, setActiveTab] = useState<TabTitle>(
-    props.activeTab ?? "Best",
-  );
-
-  function handleTabClick(tabName) {
-    setActiveTab(tabName);
-  }
-
-  function handleClose() {
-    setLocalStorage("hasDismissedOnboardingCard", true);
-    dispatch(setOnboardingCard({ show: false }));
-  }
+  const onboardingCard = useOnboardingCard();
 
   function renderTabContent() {
-    switch (activeTab) {
+    switch (onboardingCard.activeTab) {
       case "Quickstart":
         return <Tabs.Quickstart />;
       case "Best":
@@ -68,8 +49,11 @@ function OnboardingCard(props: OnboardingCardProps) {
 
   return (
     <StyledCard className="relative">
-      <OnboardingCardTabs activeTab={activeTab} onTabClick={handleTabClick} />
-      <CloseButton onClick={handleClose}>
+      <OnboardingCardTabs
+        activeTab={onboardingCard.activeTab}
+        onTabClick={onboardingCard.setActiveTab}
+      />
+      <CloseButton onClick={onboardingCard.close}>
         <XMarkIcon className="h-5 w-5" />
       </CloseButton>
       <div className="content py-4">{renderTabContent()}</div>

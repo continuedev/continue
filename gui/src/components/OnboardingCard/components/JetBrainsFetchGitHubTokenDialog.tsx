@@ -1,28 +1,37 @@
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
-import { StyledActionButton, Input, Button, ButtonSubtext } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { QuickstartSubmitButtonProps } from "../OnboardingCard/components/QuickStartSubmitButton";
+import { StyledActionButton, Input, Button, ButtonSubtext } from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { setShowDialog } from "../../../redux/slices/uiStateSlice";
+import { useDispatch } from "react-redux";
+
+interface JetBrainsFetchGitHubTokenDialogProps {
+  onComplete: () => void;
+}
+
+const GITHUB_AUTH_URL =
+  "https://github.com/settings/tokens/new?scopes=user:email&description=Continue%20Free%20Trial%20Token%20";
 
 function JetBrainsFetchGitHubTokenDialog({
   onComplete,
-}: QuickstartSubmitButtonProps) {
+}: JetBrainsFetchGitHubTokenDialogProps) {
+  const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const [jbGhAuthToken, setJbGhAuthToken] = useState("");
   const [hasClickedGitHubButton, setHasClickedGitHubButton] = useState(false);
 
-  const submitJetBrainsToken = async () => {
-    await ideMessenger.request("setGitHubAuthToken", { token: jbGhAuthToken });
-    onComplete(jbGhAuthToken);
-  };
+  async function submitJetBrainsToken() {
+    await ideMessenger.request("setGitHubAuthToken", {
+      token: jbGhAuthToken,
+    });
+    dispatch(setShowDialog(false));
+    onComplete();
+  }
 
-  const openGitHubTokenPage = () => {
-    ideMessenger.post(
-      "openUrl",
-      "https://github.com/settings/tokens/new?scopes=user:email&description=Continue%20Free%20Trial%20Token%20",
-    );
+  function openGitHubTokenPage() {
+    ideMessenger.post("openUrl", GITHUB_AUTH_URL);
     setHasClickedGitHubButton(true);
-  };
+  }
 
   return (
     <div className="p-8 flex flex-col gap-3">
