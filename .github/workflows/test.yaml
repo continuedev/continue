@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create a build artifact
-        run: echo "Hello, world!" > hello.txt
+        run: echo "Hello, world!" > hello-ubuntu.txt
 
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
@@ -22,7 +22,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Create a build artifact
-        run: echo "Hello, world!" > hello.txt
+        run: echo "Hello, world!" > hello-mac.txt
 
       - name: Upload both artifacts
         uses: actions/upload-artifact@v4
