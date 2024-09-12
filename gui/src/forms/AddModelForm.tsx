@@ -42,7 +42,10 @@ function AddModelForm({
     : selectedProvider.apiKeyUrl;
 
   function isDisabled() {
-    if (selectedProvider.downloadUrl) {
+    if (
+      selectedProvider.downloadUrl ||
+      selectedProvider.provider === "free-trial"
+    ) {
       return false;
     }
 
