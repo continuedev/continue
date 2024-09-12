@@ -112,9 +112,9 @@ function MorePage() {
         />
 
         <MoreActionRow
-          title="Tutorial"
-          description="Reopen the tutorial and onboarding card"
-          buttonText="Open tutorial"
+          title="Quickstart"
+          description="Reopen the quickstart and tutorial file"
+          buttonText="Open quickstart"
           onClick={() => {
             navigate("/");
             dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
