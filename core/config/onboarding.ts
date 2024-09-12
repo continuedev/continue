@@ -3,6 +3,8 @@ import { FREE_TRIAL_MODELS } from "./default.js";
 
 export const TRIAL_FIM_MODEL = "codestral-latest";
 export const ONBOARDING_LOCAL_MODEL_TITLE = "Ollama";
+export const LOCAL_ONBOARDING_FIM_MODEL = "starcoder2:3b";
+export const LOCAL_ONBOARDING_CHAT_MODEL = "llama3.1:8b";
 
 /**
  * We set the "best" chat + autocopmlete models by default
@@ -26,7 +28,7 @@ export function setupLocalConfig(
       {
         title: "Llama 3.1 8B",
         provider: "ollama",
-        model: "llama3.1:8b",
+        model: LOCAL_ONBOARDING_CHAT_MODEL,
       },
       {
         title: ONBOARDING_LOCAL_MODEL_TITLE,
@@ -38,7 +40,7 @@ export function setupLocalConfig(
     tabAutocompleteModel: {
       title: "Starcoder 3b",
       provider: "ollama",
-      model: "starcoder2:3b",
+      model: LOCAL_ONBOARDING_FIM_MODEL,
     },
     embeddingsProvider: {
       provider: "ollama",
@@ -79,7 +81,7 @@ export function setupLocalConfigAfterFreeTrial(
       {
         title: "Llama 3.1 8B",
         provider: "ollama",
-        model: "llama3.1:8b",
+        model: LOCAL_ONBOARDING_CHAT_MODEL,
       },
       {
         title: ONBOARDING_LOCAL_MODEL_TITLE,

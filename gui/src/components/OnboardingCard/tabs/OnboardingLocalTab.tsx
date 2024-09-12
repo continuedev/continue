@@ -1,15 +1,16 @@
-import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
+import {
+  LOCAL_ONBOARDING_CHAT_MODEL,
+  LOCAL_ONBOARDING_FIM_MODEL,
+  ONBOARDING_LOCAL_MODEL_TITLE,
+} from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { Button } from "../..";
-import OllamaStatus from "../components/OllamaStatus";
-import { useSubmitOnboarding, useCheckOllamaModels } from "../hooks";
-import OllamaModelDownload from "../components/OllamaModelDownload";
-import AddModelButtonSubtext from "../../AddModelButtonSubtext";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { hasPassedFTL } from "../../../util/freeTrial";
-
-const autocompleteModel = "starcoder2:3b";
-const chatModel = "llama3.1:8b";
+import AddModelButtonSubtext from "../../AddModelButtonSubtext";
+import OllamaModelDownload from "../components/OllamaModelDownload";
+import OllamaStatus from "../components/OllamaStatus";
+import { useCheckOllamaModels, useSubmitOnboarding } from "../hooks";
 
 function OnboardingLocalTab() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -24,11 +25,11 @@ function OnboardingLocalTab() {
   const [isOllamaConnected, setIsOllamaConnected] = useState(false);
 
   const hasDownloadedChatModel = downloadedOllamaModels.some((ollamaModel) =>
-    ollamaModel.startsWith(chatModel),
+    ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
   );
 
   const hasDownloadedAutocompleteModel = downloadedOllamaModels.some(
-    (ollamaModel) => ollamaModel.startsWith(chatModel),
+    (ollamaModel) => ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
   );
 
   /**
@@ -64,13 +65,13 @@ function OnboardingLocalTab() {
 
       <OllamaModelDownload
         title="Download Chat model"
-        modelName={chatModel}
+        modelName={LOCAL_ONBOARDING_CHAT_MODEL}
         hasDownloaded={hasDownloadedChatModel}
       />
 
       <OllamaModelDownload
         title="Download Autocomplete model"
-        modelName={autocompleteModel}
+        modelName={LOCAL_ONBOARDING_FIM_MODEL}
         hasDownloaded={hasDownloadedAutocompleteModel}
       />
 
