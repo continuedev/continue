@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { defaultBorderRadius, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
-import HeaderButtonWithText from "../HeaderButtonWithText";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton } from "./CopyButton";
 
 const TopDiv = styled.div`
@@ -78,13 +78,13 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     <TopDiv>
       <SecondDiv bottom={props.bottom || false}>
         {isJetBrains() || (
-          <HeaderButtonWithText
+          <ButtonWithTooltip
             text={
               isTerminalCodeBlock(props.language, props.text)
                 ? "Run in terminal"
                 : applying
-                ? "Applying..."
-                : "Apply to current file"
+                  ? "Applying..."
+                  : "Apply to current file"
             }
             disabled={applying}
             style={{ backgroundColor: vscEditorBackground }}
@@ -111,9 +111,9 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             ) : (
               <PlayIcon className="w-4 h-4" />
             )}
-          </HeaderButtonWithText>
+          </ButtonWithTooltip>
         )}
-        <HeaderButtonWithText
+        <ButtonWithTooltip
           text="Insert at cursor"
           style={{ backgroundColor: vscEditorBackground }}
           onClick={() => {
@@ -121,7 +121,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           }}
         >
           <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
-        </HeaderButtonWithText>
+        </ButtonWithTooltip>
         <CopyButton text={props.text} />
       </SecondDiv>
     </TopDiv>

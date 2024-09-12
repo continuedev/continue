@@ -11,8 +11,8 @@ import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import FileIcon from "../FileIcon";
-import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const PreviewMarkdownDiv = styled.div<{
@@ -49,7 +49,7 @@ interface CodeSnippetPreviewProps {
   editing?: boolean;
 }
 
-const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
+const StyledHeaderButtonWithText = styled(ButtonWithTooltip)<{
   color?: string;
 }>`
   ${(props) => props.color && `background-color: ${props.color};`}
@@ -133,7 +133,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               <PaintBrushIcon width="1.1em" height="1.1em" />
             </StyledHeaderButtonWithText>
           )}
-          <HeaderButtonWithText
+          <ButtonWithTooltip
             text="Delete"
             onClick={(e) => {
               e.stopPropagation();
@@ -141,7 +141,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             }}
           >
             <XMarkIcon width="1.1em" height="1.1em" />
-          </HeaderButtonWithText>
+          </ButtonWithTooltip>
         </div>
       </PreviewMarkdownHeader>
       <div
@@ -162,7 +162,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       </div>
 
       {(codeBlockRef.current?.scrollHeight ?? 0) > MAX_PREVIEW_HEIGHT && (
-        <HeaderButtonWithText
+        <ButtonWithTooltip
           className="bottom-1 right-1 absolute"
           text={collapsed ? "Expand" : "Collapse"}
         >
@@ -179,7 +179,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               onClick={() => setCollapsed(true)}
             />
           )}
-        </HeaderButtonWithText>
+        </ButtonWithTooltip>
       )}
     </PreviewMarkdownDiv>
   );

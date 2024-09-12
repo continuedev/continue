@@ -27,7 +27,7 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import HeaderButtonWithText from "../HeaderButtonWithText";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
 const GridDiv = styled.div`
@@ -149,7 +149,7 @@ function ListBoxOption({
       <div className="flex items-center justify-between gap-3 h-5 relative">
         <span>{option.title}</span>
         {hovered && showDelete && (
-          <HeaderButtonWithText
+          <ButtonWithTooltip
             text={undefined}
             onClick={(e) => {
               dispatch(setShowDialog(true));
@@ -173,7 +173,7 @@ function ListBoxOption({
             className="absolute right-0 p-1"
           >
             <TrashIcon width="1.2em" height="1.2em" />
-          </HeaderButtonWithText>
+          </ButtonWithTooltip>
         )}
       </div>
     </StyledListboxOption>

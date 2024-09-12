@@ -2,6 +2,7 @@ import {
   ArrowRightIcon,
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
+  BoltIcon,
   BookOpenIcon,
   CodeBracketIcon,
   CommandLineIcon,
@@ -16,7 +17,6 @@ import {
   PlusIcon,
   SparklesIcon,
   TrashIcon,
-  BoltIcon,
 } from "@heroicons/react/24/outline";
 import { Editor } from "@tiptap/react";
 import {
@@ -40,8 +40,8 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import FileIcon from "../FileIcon";
-import HeaderButtonWithText from "../HeaderButtonWithText";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem } from "./types";
@@ -113,7 +113,9 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
 
 const ItemsDiv = styled.div`
   border-radius: ${defaultBorderRadius};
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;
@@ -410,7 +412,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     {item.subActions?.map((subAction) => {
                       const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
                       return (
-                        <HeaderButtonWithText
+                        <ButtonWithTooltip
                           onClick={(e) => {
                             subAction.action(item);
                             e.stopPropagation();
@@ -420,7 +422,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                           text={undefined}
                         >
                           <Icon width="1.2em" height="1.2em" />
-                        </HeaderButtonWithText>
+                        </ButtonWithTooltip>
                       );
                     })}
                   </span>

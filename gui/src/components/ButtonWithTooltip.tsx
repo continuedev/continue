@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import { HeaderButton, StyledTooltip } from ".";
 import { type PlacesType } from "react-tooltip";
+import { HeaderButton, StyledTooltip } from ".";
 
 import { v4 as uuidv4 } from "uuid";
 
@@ -21,7 +21,7 @@ interface HeaderButtonWithTextProps {
   tooltipPlacement?: PlacesType;
 }
 
-const HeaderButtonWithText = React.forwardRef<
+const ButtonWithTooltip = React.forwardRef<
   HTMLButtonElement,
   HeaderButtonWithTextProps
 >((props: HeaderButtonWithTextProps, ref) => {
@@ -71,4 +71,4 @@ const HeaderButtonWithText = React.forwardRef<
   );
 });
 
-export default HeaderButtonWithText;
+export default ButtonWithTooltip;

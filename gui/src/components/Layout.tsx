@@ -22,8 +22,8 @@ import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import ButtonWithTooltip from "./ButtonWithTooltip";
 import TextDialog from "./dialogs";
-import HeaderButtonWithText from "./HeaderButtonWithText";
 import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
@@ -264,7 +264,7 @@ const Layout = () => {
               </div>
 
               <ProfileSwitcher />
-              <HeaderButtonWithText
+              <ButtonWithTooltip
                 tooltipPlacement="top-end"
                 text="More"
                 onClick={() => {
@@ -276,7 +276,7 @@ const Layout = () => {
                 }}
               >
                 <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
+              </ButtonWithTooltip>
             </Footer>
           )}
         </GridDiv>

@@ -41,6 +41,7 @@ function PreWithToolbar(props: { children: any; language: string | null }) {
 
   return (
     <div
+      tabIndex={-1}
       style={{ padding: "0px" }}
       className="relative"
       onMouseEnter={() => setHovering(true)}
