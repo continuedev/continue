@@ -21,6 +21,11 @@ export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
+    title: "Claude 3 Sonnet (Free Trial)",
+    provider: "free-trial",
+    model: "claude-3-sonnet-20240229",
+  },
+  {
     title: "GPT-4o (Free Trial)",
     provider: "free-trial",
     model: "gpt-4o",
@@ -38,11 +43,6 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
     title: "Codestral (Free Trial)",
     provider: "free-trial",
     model: "codestral",
-  },
-  {
-    title: "Claude 3 Sonnet (Free Trial)",
-    provider: "free-trial",
-    model: "claude-3-sonnet-20240229",
   },
 ];
 

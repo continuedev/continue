@@ -1,15 +1,17 @@
+import { FREE_TRIAL_MODELS } from "core/config/default";
 import { useContext } from "react";
+import { useDispatch } from "react-redux";
 import { Button, ButtonSubtext } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { isJetBrains } from "../../../util";
-import { setLocalStorage } from "../../../util/localStorage";
-import { useDispatch } from "react-redux";
+import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../../redux/slices/uiStateSlice";
-import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
+import { isJetBrains } from "../../../util";
+import { setLocalStorage } from "../../../util/localStorage";
 import { useSubmitOnboarding } from "../hooks";
+import JetBrainsFetchGitHubTokenDialog from "./JetBrainsFetchGitHubTokenDialog";
 
 function QuickstartSubmitButton() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -20,6 +22,11 @@ function QuickstartSubmitButton() {
   function onComplete() {
     setLocalStorage("signedInToGh", true);
     submitOnboarding();
+
+    // Set Sonnet as the default model
+    dispatch(
+      setDefaultModel({ title: FREE_TRIAL_MODELS[0].title, force: true }),
+    );
   }
 
   function openJetBrainsDialog() {
