@@ -17,7 +17,8 @@ jobs:
         with:
           name: ${{ env.target }}-text
           path: "*.txt"
-    
+
+  upload2:
     runs-on: macos-latest
     steps:
       - name: Create a build artifact
