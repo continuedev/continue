@@ -1,5 +1,6 @@
 import Parser from "web-tree-sitter";
 import { DiffLine } from "../..";
+import { myersDiff } from "../../diff/myers";
 import { getParserForFile } from "../../util/treeSitter";
 
 // TODO: If we don't have high confidence, return undefined to fall back to slower methods
@@ -70,6 +71,15 @@ function diffNodes(
   // Base case
   if (nodesAreExact(oldNode, newNode)) {
     return diffLinesForNode(newNode, "same");
+  }
+
+  // Other base case: no lazy blocks => use line-by-line diff
+  const firstLazyBlockIndex = newNode.children.find((child) =>
+    isLazyBlock(child),
+  );
+  if (!firstLazyBlockIndex) {
+    const diffLines = myersDiff(oldNode.text, newNode.text);
+    return diffLines;
   }
 
   const diffLines: DiffLine[] = [];
