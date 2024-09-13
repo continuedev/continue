@@ -134,6 +134,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       {
         // languages: {},
       } as Options,
+      () => {
+        let codeBlockIndex = 0;
+        return (tree) => {
+          visit(tree, { tagName: "pre" }, (node: any) => {
+            // Add an index (0, 1, 2, etc...) to each code block.
+            node.properties = { codeBlockIndex };
+            codeBlockIndex++;
+          });
+        };
+      },
+      {},
     ],
     rehypeReactOptions: {
       components: {
@@ -149,6 +160,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           return props.showCodeBorder ? (
             <PreWithToolbar
+              codeBlockIndex={preProps.codeBlockIndex}
               language={getLanuageFromClassName(childrenClassName)}
             >
               <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>

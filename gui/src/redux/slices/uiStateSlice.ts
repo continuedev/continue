@@ -12,7 +12,7 @@ export const uiStateSlice = createSlice({
     showDialog: false,
     dialogMessage: "",
     dialogEntryOn: false,
-    nextCodeBlockToApplyIndex: -1,
+    nextCodeBlockToApplyIndex: 0,
   } as UiState,
   reducers: {
     setDialogMessage: (

@@ -4,11 +4,12 @@ import {
   PlayIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { RootState } from "../../redux/store";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { incrementNextCodeBlockToApplyIndex } from "../../redux/slices/uiStateSlice";
 import { isJetBrains } from "../../util";
 import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton } from "./CopyButton";
@@ -39,6 +40,7 @@ interface CodeBlockToolBarProps {
   text: string;
   bottom: boolean;
   language: string | undefined;
+  isNextCodeBlock: boolean;
 }
 
 const terminalLanguages = ["bash", "sh"];
@@ -75,25 +77,29 @@ function isTerminalCodeBlock(language: string | undefined, text: string) {
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const [applying, setApplying] = useState(false);
-
-  const nextCodeBlockToApplyIndex = useSelector(
-    (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
-  );
+  const dispatch = useDispatch();
 
   // Handle apply keyboard shortcut
-  // useWebviewListener(
-  //   "applyCodeFromChat",
-  //   async () => {
-  //     await ideMessenger.request("applyToCurrentFile", {
-  //       text: "",
-  //     });
-  //   },
-  //   [nextCodeBlockToApplyIndex],
-  // );
+  useWebviewListener(
+    "applyCodeFromChat",
+    async () => {
+      await ideMessenger.request("applyToCurrentFile", {
+        text: props.text,
+      });
+      dispatch(incrementNextCodeBlockToApplyIndex({}));
+    },
+    [props.isNextCodeBlock, props.text],
+    !props.isNextCodeBlock,
+  );
 
   return (
     <TopDiv>
-      <SecondDiv bottom={props.bottom || false}>
+      <SecondDiv
+        bottom={props.bottom || false}
+        style={{
+          border: props.isNextCodeBlock ? "1px solid orange" : undefined,
+        }}
+      >
         {isJetBrains() || (
           <ButtonWithTooltip
             text={

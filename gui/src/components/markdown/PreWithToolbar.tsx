@@ -1,6 +1,8 @@
 import { debounce } from "lodash";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import useUIConfig from "../../hooks/useUIConfig";
+import { RootState } from "../../redux/store";
 import CodeBlockToolBar from "./CodeBlockToolbar";
 
 function childToText(child: any) {
@@ -19,12 +21,20 @@ function childrenToText(children: any) {
   return children.map((child: any) => childToText(child)).join("");
 }
 
-function PreWithToolbar(props: { children: any; language: string | null }) {
+function PreWithToolbar(props: {
+  children: any;
+  language: string | null;
+  codeBlockIndex: number;
+}) {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
 
   const [hovering, setHovering] = useState(false);
   const [copyValue, setCopyValue] = useState("");
+
+  const nextCodeBlockIndex = useSelector(
+    (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
+  );
 
   useEffect(() => {
     const debouncedEffect = debounce(() => {
@@ -48,6 +58,7 @@ function PreWithToolbar(props: { children: any; language: string | null }) {
     >
       {!toolbarBottom && hovering && (
         <CodeBlockToolBar
+          isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
           text={copyValue}
           bottom={toolbarBottom}
           language={props.language}
@@ -56,6 +67,7 @@ function PreWithToolbar(props: { children: any; language: string | null }) {
       {props.children}
       {toolbarBottom && hovering && (
         <CodeBlockToolBar
+          isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
           text={copyValue}
           bottom={toolbarBottom}
           language={props.language}

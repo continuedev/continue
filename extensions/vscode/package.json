@@ -350,8 +350,7 @@
       {
         "command": "continue.applyCodeFromChat",
         "mac": "alt+l",
-        "key": "alt+l",
-        "when": "continue.continueGUIView.visible"
+        "key": "alt+l"
       }
     ],
     "submenus": [
