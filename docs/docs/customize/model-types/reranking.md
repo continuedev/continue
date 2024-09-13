@@ -2,6 +2,7 @@
 title: Reranking model
 description: Reranking model
 keywords: [rerank]
+sidebar_position: 4
 ---
 
 A "reranking model" is trained to take two pieces of text (often a user question and a document) and return a relevancy score between 0 and 1, estimating how useful the document will be in answering the question. Rerankers are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.

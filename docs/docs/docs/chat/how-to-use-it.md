@@ -20,11 +20,11 @@ You send it a question, and it replies with an answer. You tell it to solve a pr
 
 ## Highlight a code section to include as context
 
-You select a code section with your mouse, press `cmd/ctrl + L`, and then ask for it to be explained to you or request it to be refactored in some way.
+You select a code section with your mouse, press `cmd/ctrl + L` (VS Code) or `cmd/ctrl + J` (JetBrains) to send it to the LLM, and then ask for it to be explained to you or request it to be refactored in some way.
 
 ## Reference context with the @ symbol
 
-If there is information from the codebase, documentation, IDE, or other tools that you want to include as context, you can type @ to select and include it as context.
+If there is information from the codebase, documentation, IDE, or other tools that you want to include as context, you can type @ to select and include it as context. You can learn more about how to use this in [Chat context selection](context-selection.md).
 
 ## Apply generated code to your file
 
@@ -32,7 +32,7 @@ When the LLM replies with code, you can hover over the top right of the code blo
 
 ## Start a fresh session for a new task
 
-Once you complete a task and want to start a new one, press `cmd/ctrl + L` to begin a new session, ensuring only relevant context for the next task is provided to the LLM.
+Once you complete a task and want to start a new one, press `cmd/ctrl + L` (VS Code) or `cmd/ctrl + J` (JetBrains) to begin a new session, ensuring only relevant context for the next task is provided to the LLM.
 
 ## Switch between different models
 

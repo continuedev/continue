@@ -5,9 +5,9 @@ keywords: [model, autocomplete]
 sidebar_position: 2
 ---
 
-## Best autocomplete experience (Codestral)
+## Best overall experience
 
-For the best autocomplete experience, we recommend using Codestral through the [Mistral API](https://console.mistral.ai/). This model offers high-quality completions with an excellent understanding of code context:
+For the best Autocomplete experience, we recommend using Codestral through the [Mistral API](https://console.mistral.ai/). This model offers high-quality completions with an excellent understanding of code context:
 
 ```json title="config.json""
 {
@@ -24,9 +24,9 @@ For the best autocomplete experience, we recommend using Codestral through the [
 The API keys for Codestral and the general Mistral APIs are different. If you are using Codestral, you probably want a Codestral API key, but if you are sharing the key as a team or otherwise want to use `api.mistral.ai`, then make sure to set `"apiBase": "https://api.mistral.ai/v1"` in your `tabAutocompleteModel`.
 :::
 
-## Self Hosted / Local
+## Local, offline / self-hosted experience
 
-For those preferring local execution or self-hosting, StarCoder2-3b offers a good balance of performance and quality for most users:
+For those preferring local execution or self-hosting,`StarCoder2-3b` offers a good balance of performance and quality for most users:
 
 ```json title="config.json""
 {
@@ -38,10 +38,10 @@ For those preferring local execution or self-hosting, StarCoder2-3b offers a goo
 }
 ```
 
-### Alternatives
+## Alternative experiences
 
-- Completions too slow? Try `deepseek-coder:1.3b-base` for quicker completions on less powerful hardware.
-- Have more compute? Use `deepseek-coder:6.7b-base` for potentially higher-quality suggestions.
+- Completions too slow? Try `deepseek-coder:1.3b-base` for quicker completions on less powerful hardware
+- Have more compute? Use `deepseek-coder:6.7b-base` for potentially higher-quality suggestions
 
 :::note
 
@@ -49,6 +49,6 @@ For LM Studio users, navigate to the "My Models" section, find your desired mode
 
 :::
 
-## More
+## Other experiences
 
-There are many more models and providers you can use with Autocomplete. Check them out [here](../reference/Model%20Providers/).
+There are many more models and providers you can use with Autocomplete. Check them out [here](../../customize/model-types/autocomplete.md).

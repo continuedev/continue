@@ -26,55 +26,35 @@
 
 <p></p>
 
-## Easily understand code sections
+## Chat
 
-![understand](docs/static/img/understand.gif)
+[Chat](https://continue.dev/docs/chat/how-to-use-it) makes it easy to ask for help from an LLM without needing to leave the IDE
 
-VS Code: `cmd+L` (MacOS) / `ctrl+L` (Windows)
+![chat](docs/static/img/chat.gif)
 
-JetBrains: `cmd+J` (MacOS) / `ctrl+J` (Windows)
+## Autocomplete
 
-## Tab to autocomplete code suggestions
+[Autocomplete](https://continue.dev/docs/autocomplete/how-to-use-it) provides inline code suggestions as you type
 
 ![autocomplete](docs/static/img/autocomplete.gif)
 
-VS Code: `tab` (MacOS) / `tab` (Windows)
+## Edit
 
-JetBrains: `tab` (MacOS) / `tab` (Windows)
+[Edit](https://continue.dev/docs/edit/how-to-use-it) is a convenient way to modify code without leaving your current file
 
-## Refactor functions where you are coding
+![edit](docs/static/img/edit.gif)
 
-![inline](docs/static/img/inline.gif)
+## Actions
 
-VS Code: `cmd+I` (MacOS) / `ctrl+I` (Windows)
+[Actions](https://continue.dev/docs/actions/how-to-use-it) are shortcuts for common use cases.
 
-JetBrains: `cmd+I` (MacOS) / `ctrl+I` (Windows)
-
-## Ask questions about your codebase
-
-![codebase](docs/static/img/codebase.gif)
-
-VS Code: `cmd+enter` (MacOS) / `ctrl+enter` (Windows)
-
-JetBrains: `cmd+enter` (MacOS) / `ctrl+enter` (Windows)
-
-## Quickly use documentation as context
-
-![docs](docs/static/img/docs.gif)
-
-VS Code: `@docs` (MacOS) / `@docs` (Windows)
-
-JetBrains: `@docs` (MacOS) / `@docs` (Windows)
+![actions](docs/static/img/actions.gif)
 
 </div>
 
 ## Getting Started
 
-### Download for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)
-
-You can try out Continue with our free trial models before configuring your setup.
-
-Learn more about the models and providers [here](https://continue.dev/docs/setup/overview).
+Learn about how to install and use Continue in the docs [here](https://continue.dev/docs/getting-started)
 
 ## Contributing
 

@@ -1,12 +1,16 @@
 ---
 title: How it works
-description: Actions \-how it works
-keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
+description: How Chat works
+keywords: [how, chat, works]
 sidebar_position: 4
 ---
 
-While many actions are based on templated prompts and can be customized with .prompt files, there are a number that execute more complex code under the hood.
+# How it works
 
-Actions that generate inline diffs, like “/edit”, “/comment”, or right click actions, use the same prompt and response processing logic as [Edit](../edit/how-it-works.md).
+Using any selected code sections, all context that you have selected with @, and your input instructions, we prompt the model to provide a response in the sidebar. If you are asking a follow-up, then all earlier session context is also included. No other additional context is provided to the model.
 
-To learn how other slash commands work, see the full reference [here](../reference/slash-commands).
+The model response is then streamed directly back to the sidebar. Each code section included in the response will be placed into its own code block, which gives you buttons to either “Apply to current file”, “Insert at cursor”, or “Copy” for each section. When you press `cmd/ctrl + L` (VS Code) or `cmd/ctrl + J` (JetBrains) at the end of a session, all context is cleared and a new session is started, so that you can begin a new task. 
+
+If you would like to view the exact prompt that is sent to the model during Chat, you can [view this in the prompt logs](../troubleshooting.md#llm-prompt-logs).
+
+You can learn more about how @codebase works [here](../../customize/deep-dives/codebase.md) and @docs [here](../../customize/deep-dives/docs.md).

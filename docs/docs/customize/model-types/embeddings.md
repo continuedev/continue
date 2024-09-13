@@ -2,6 +2,7 @@
 title: Embeddings model
 description: Embeddings model
 keywords: [embedding]
+sidebar_position: 3
 ---
 
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.

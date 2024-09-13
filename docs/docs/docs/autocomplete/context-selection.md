@@ -1,6 +1,6 @@
 ---
 title: Context selection
-description: Autocomplete \-context selection
+description: Autocomplete context selection
 keywords: [context, autocomplete, lsp, recent]
 sidebar_position: 3
 ---

@@ -1,18 +1,18 @@
 ---
 title: Actions
-description: Actions \- how to use it
-sidebar_label: How to use them
+description: How to use Actions
+sidebar_label: How to use it
 keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
 sidebar_position: 1
 ---
 
-![action](/img/action.gif)
+![actions](/img/actions.gif)
 
-## How to use them
+## How to use Actions
 
 Actions are shortcuts for common use cases. For example, you might want to review code, write tests, or add a docstring.
 
-## Slash commands
+### Slash commands
 
 The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
 
@@ -20,7 +20,7 @@ The most common way to invoke an action is with a slash command. These are short
 
 A few of the most useful slash commands are available by default, like “/edit”, “/comment”, and “/share”, but Continue has a large built-in library of other options. To enable these, learn more [here](TODO).
 
-## Prompt files
+### Prompt files
 
 It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
 
@@ -52,7 +52,7 @@ Now to use this prompt, you can highlight code and use `cmd/ctrl+L` to select it
 
 Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
 
-## Other triggers for actions (VS Code)
+### Other triggers for Actions (VS Code)
 
 :::info
 Currently all of these are only available in VS Code
@@ -60,7 +60,7 @@ Currently all of these are only available in VS Code
 
 To make common use cases even more accessible, we provide a handful of other ways to invoke actions.
 
-### Quick actions
+#### Quick actions
 
 Quick Actions are displayed as buttons above top-level classes and functions in your source code, letting you invoke actions with one click. They can also be customized with .prompt files to perform custom actions.
 
@@ -68,17 +68,17 @@ Quick Actions are displayed as buttons above top-level classes and functions in 
 
 By default, quick actions are disabled, but can be enabled with the “Continue: Enable Quick Actions” in VS Code settings.
 
-### Right click actions
+#### Right click actions
 
 Right click actions let you highlight a desired region of code, right click, and then select an action from the dropdown menu.
 
 ![context-menu](/img/context-menu.png)
 
-### Debug action
+#### Debug action
 
 The debug action is a special built-in keyboard shortcut in the VS Code extension. Use `cmd/ctrl+shift+R` to instantly copy the contents of the current terminal into the chat sidebar and get debugging advice.
 
-### Quick fixes
+#### Quick fixes
 
 Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut `cmd/ctrl+.` will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use `cmd/ctrl+.` again and Continue will attempt to help solve the problem.
 

@@ -10,8 +10,16 @@ sidebar_position: 1
 
 ## How to use it
 
-Tab autocomplete provides inline code suggestions as you type. To enable it, simply click the "Continue" button in the status bar at the bottom right of your IDE or ensure the "Enable Tab Autocomplete" option is checked in your IDE settings.
+Autocomplete provides inline code suggestions as you type. To enable it, simply click the "Continue" button in the status bar at the bottom right of your IDE or ensure the "Enable Tab Autocomplete" option is checked in your IDE settings.
 
-## Accepting suggestions
+### Accepting a full suggestion
 
-Accept a full suggestion by pressing `Tab`, or reject it with `Esc`. For more granular control, use `cmd/ctrl+→` to accept parts of the suggestion word-by-word.
+Accept a full suggestion by pressing `Tab`
+
+### Rejecting a full suggestion
+
+Reject a full suggestion with `Esc`
+
+### Partially accepting a suggestion
+
+For more granular control, use `cmd/ctrl+→` to accept parts of the suggestion word-by-word.

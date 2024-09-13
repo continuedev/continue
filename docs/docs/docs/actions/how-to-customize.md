@@ -1,7 +1,7 @@
 ---
-title: Advanced configuration
-description: Advanced configuration
-keywords: [configuration, advanced]
+title: How to customize
+description: How to customize Actions
+keywords: [customize, actions]
 sidebar_position: 5
 ---
 
@@ -52,3 +52,5 @@ For full `config.ts` reference, see [here](../reference/config-ts.md).
 ## Other custom actions
 
 Currently the other action triggers are not open for configuration, but we plan to allow this via .prompt files in the future.
+
+<!-- For any actions defined in a .prompt file, you can [configure a specific model](TODO). -->

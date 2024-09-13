@@ -17,7 +17,7 @@ keywords:
 
 ![Continue Logo](/img/intro.png)
 
-**Continue is the leading open-source AI code assistant. You can connect any models and any context to build custom experiences inside [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**.
+**Continue is the leading open-source AI code assistant inside of [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 - [Chat](/chat/how-to-use-it.md) to understand and iterate on code in the sidebar
 - [Autocomplete](/autocomplete/how-to-use-it.md) to recieve inline code suggestions as you type

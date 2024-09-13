@@ -1,8 +1,8 @@
 ---
-title: Advanced configuration
+title: How to customize
 sidebar_position: 5
-description: Advanced configuration for Edit
-keywords: [edit, cmd l, works]
+description: How to customize Edit
+keywords: [edit, cmd i, works]
 ---
 
 You can configure a particular model to be used for Edit using the `inlineEdit` property.

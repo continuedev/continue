@@ -4,9 +4,9 @@ description: Introduction to customizing Continue
 keywords: [customize, configure, config]
 ---
 
-Continue can be deeply customized by editing a local file located at `~/.continue/config.json` (or `%USERPROFILE%\.continue\config.json` on Windows). `config.json` is created the first time you use Continue.
+Continue can be deeply customized. This is primarily accomplished by editing a local file located at `~/.continue/config.json` (MacOS / Linux) or `%USERPROFILE%\.continue\config.json` (Windows). `config.json` is created the first time you use Continue.
 
-## Basics
+## Getting started
 
 To open `config.json`, click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can use IntelliSense to see the available options as you type, or you can check the [full reference](./config.mdx).
 
@@ -18,6 +18,6 @@ If you'd like to scope certain settings to a particular workspace, you can add a
 
 ## Programmatic configuration
 
-`config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically configure Continue, you can use `config.ts`, which is located at `~/.continue/config.ts` (or `%USERPROFILE%\.continue\config.ts` on Windows).
+`config.json` can handle the vast majority of necessary configuration, so we recommend using it whenever possible. However, if you need to programmatically configure Continue, you can use `config.ts`, which is located at `~/.continue/config.ts` (MacOS / Linux) or `%USERPROFILE%\.continue\config.ts` (Windows).
 
 For examples of how to use `config.ts`, see [writing custom slash commands](./tutorials/build-your-own-slash-command.md#custom-slash-commands) or [writing custom context providers](./tutorials/build-your-own-context-provider.md).

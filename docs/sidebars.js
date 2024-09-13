@@ -62,7 +62,7 @@ const sidebars = {
       label: "Actions",
       link: {
         type: "doc",
-        id: "docs/actions/how-to-use-them",
+        id: "docs/actions/how-to-use-it",
       },
       items: [
         {
