@@ -10,7 +10,11 @@ import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import {
+  getContinueGlobalPath,
+  getConfigJsonPath,
+  getDevDataFilePath,
+} from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import {
@@ -386,7 +390,7 @@ const commandsMap: (
       captureCommandTelemetry("viewLogs");
 
       // Open ~/.continue/continue.log
-      const logFile = path.join(os.homedir(), ".continue", "continue.log");
+      const logFile = path.join(getContinueGlobalPath(), "continue.log");
       // Make sure the file/directory exist
       if (!fs.existsSync(logFile)) {
         fs.mkdirSync(path.dirname(logFile), { recursive: true });

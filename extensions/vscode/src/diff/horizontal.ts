@@ -1,4 +1,4 @@
-import { devDataPath } from "core/util/paths";
+import { devDataPath, getContinueGlobalPath } from "core/util/paths";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -27,7 +27,7 @@ async function writeFile(uri: vscode.Uri, contents: string) {
 
 // THIS IS LOCAL
 export const DIFF_DIRECTORY = path
-  .join(os.homedir(), ".continue", ".diffs")
+  .join(getContinueGlobalPath(), ".diffs")
   .replace(/^C:/, "c:");
 
 export class DiffManager {

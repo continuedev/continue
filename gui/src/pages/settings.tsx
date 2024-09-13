@@ -155,12 +155,7 @@ function Settings() {
           <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
           <ConfigJsonButton
             onClick={() => {
-              ideMessenger.post("showFile", {
-                filepath:
-                  getPlatform() == "windows"
-                    ? "~\\.continue\\config.json"
-                    : "~/.continue/config.json",
-              });
+              ideMessenger.post("openConfigJson", undefined);
             }}
           >
             Open config.json

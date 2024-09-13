@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
+import com.github.continuedev.continueintellijextension.utils.getContinueGlobalDir
 import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
 import com.intellij.diff.DiffRequestPanel
@@ -27,8 +28,7 @@ import javax.swing.JComponent
 
 
 fun getDiffDirectory(): File {
-    val homeDirectory = System.getProperty("user.home")
-    val diffDirPath = Paths.get(homeDirectory).resolve(".continue").resolve(".diffs").toString()
+    val diffDirPath = getContinueGlobalDir().resolve(".diffs").toString()
     val diffDir = File(diffDirPath)
     if (!diffDir.exists()) {
         diffDir.mkdirs()
