@@ -33,13 +33,13 @@ const GradientBorder = styled.div<{
       ? props.borderColor
       : `repeating-linear-gradient(
       101.79deg,
-      #1BBE84 0%,
-      #331BBE 16%,
-      #BE1B55 33%,
-      #A6BE1B 55%,
-      #BE1B55 67%,
-      #331BBE 85%,
-      #1BBE84 99%
+      #4DA587 0%,
+      #EBF5DF 16%,
+      #4DA587 33%,
+      #EBF5DF 55%,
+      #4DA587 67%,
+      #4DA587 85%,
+      #4DA587 99%
     )`};
   animation: ${(props) => (props.loading ? gradient : "")} 6s linear infinite;
   background-size: 200% 200%;
