@@ -45,13 +45,6 @@ a:focus {
   outline: none;
 }
 
-*:focus {
-  outline: 1px solid red;
-  border: 1px solid black;
-  background-color: gainsboro;
-  visibility: visible !important;
-}
-
 @keyframes fadeIn {
   from {
     opacity: 0;

@@ -494,3 +494,19 @@ export async function* stopAtRepeatingLines(
     previousLine = line;
   }
 }
+
+/**
+ * Pass-through, except logs the total output at the end
+ * @param lines a `LineStream`
+ */
+export async function* logLines(
+  lines: LineStream,
+  prefix: string = "STREAMED LINES",
+): LineStream {
+  let linesToLog = [];
+  for await (const line of lines) {
+    yield line;
+    linesToLog.push(line);
+  }
+  console.log(`${prefix}:\n${linesToLog.join("\n")}\n\n`);
+}

@@ -10,12 +10,14 @@ type LazyApplyPrompt = (
 ) => ChatMessage[];
 
 const RULES = [
-  `Your response should be a code block containing a new version of the entire file.`,
-  `Whenever any part of the code is the same as before, you may simply indicate this with a comment that says "${UNCHANGED_CODE}" instead of rewriting. You must keep at least one line above and below from the original code, so that we can identify what the previous code was.`,
-  `You should write "${UNCHANGED_CODE}" at least for each function that is unchanged, rather than grouping them into a single comment.`,
-  `You should lean toward using a smaller number of these comments rather than rewriting it for every function if all of them are unchanged.`,
-  `You may do this for imports as well if needed.`,
-  `Do not explain your changes either before or after the code block.`,
+  `Your response should be a code block containing a rewritten version of the file.`,
+  `Whenever any part of the code is the same as before, you may simply indicate this with a comment that says "${UNCHANGED_CODE}" instead of rewriting.`,
+  `You must keep at least one line above and below from the original code, so that we can identify what the previous code was.`,
+  `Do not place miscellaneous "${UNCHANGED_CODE}" comments at the top or bottom of the file when there is nothing to replace them.`,
+  // `You should write "${UNCHANGED_CODE}" at least for each function that is unchanged, rather than grouping them into a single comment.`,
+  // `You should lean toward using a smaller number of these comments rather than rewriting it for every function if all of them are unchanged.`,
+  // `You may do this for imports as well if needed.`,
+  // `Do not explain your changes either before or after the code block.`,
 ];
 
 function claude35SonnetLazyApplyPrompt(

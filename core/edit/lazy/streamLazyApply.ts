@@ -7,6 +7,7 @@ import { streamDiff } from "../../diff/streamDiff.js";
 import { LineStream, streamLines } from "../../diff/util.js";
 import { DiffLine, ILLM } from "../../index.js";
 import { lazyApplyPromptForModel, UNCHANGED_CODE } from "./prompts.js";
+import { BUFFER_LINES_BELOW, getReplacementWithLlm } from "./replace.js";
 
 export async function* streamLazyApply(
   oldCode: string,
@@ -23,21 +24,31 @@ export async function* streamLazyApply(
   const lazyCompletion = llm.streamChat(promptMessages);
 
   // Do find and replace over the lazy edit response
-  async function replacementFunction(
+  async function* replacementFunction(
     oldCode: string,
     linesBefore: string[],
     linesAfter: string[],
-  ): Promise<string> {
-    let r = getReplacementByMatching(oldCode, linesBefore, linesAfter);
-    if (r) {
-      return r;
+  ): AsyncGenerator<string> {
+    for await (const line of getReplacementWithLlm(
+      oldCode,
+      linesBefore,
+      linesAfter,
+      llm,
+    )) {
+      yield line;
     }
-    r = await getReplacementWithLlm(oldCode, linesBefore, linesAfter, llm);
-    if (r) {
-      return r;
-    }
-    return "// NO REPLACEMENT FOUND";
+
+    // let r = getReplacementByMatching(oldCode, linesBefore, linesAfter);
+    // if (r) {
+    //   return r;
+    // }
+    // r = await getReplacementWithLlm(oldCode, linesBefore, linesAfter, llm);
+    // if (r) {
+    //   return r;
+    // }
+    // return "// NO REPLACEMENT FOUND";
   }
+
   let lazyCompletionLines = streamLines(lazyCompletion, true);
   // Process line output
   // lazyCompletionLines = filterEnglishLinesAtStart(lazyCompletionLines);
@@ -60,7 +71,6 @@ export async function* streamLazyApply(
   }
 }
 
-const BUFFER_LINES_BELOW = 2;
 async function* streamFillUnchangedCode(
   lines: LineStream,
   oldCode: string,
@@ -68,7 +78,7 @@ async function* streamFillUnchangedCode(
     oldCode: string,
     linesBefore: string[],
     linesAfter: string[],
-  ) => Promise<string>,
+  ) => AsyncGenerator<string>,
 ): LineStream {
   const newLines = [];
   let buffer = [];
@@ -80,17 +90,13 @@ async function* streamFillUnchangedCode(
 
       if (buffer.length >= BUFFER_LINES_BELOW) {
         // Find the replacement and continue streaming once we have it
-        const replacement = await replacementFunction(
-          oldCode,
-          newLines,
-          buffer,
-        );
-        for (const replacementLine of replacement.split("\n")) {
+        const replacementLines = replacementFunction(oldCode, newLines, buffer);
+        let replacement = "";
+        for await (const replacementLine of replacementLines) {
           yield replacementLine;
           newLines.push(replacementLine);
+          replacement += replacementLine + "\n";
         }
-
-        console.log("FOUND REPLACEMENT:\n", replacement);
 
         // Yield the buffered lines
         for (const bufferedLine of buffer) {
@@ -100,6 +106,7 @@ async function* streamFillUnchangedCode(
 
         waitingForBuffer = false;
         buffer = [];
+        continue;
       } else {
         continue;
       }
@@ -118,8 +125,8 @@ async function* streamFillUnchangedCode(
   if (waitingForBuffer) {
     // If we're still waiting for a buffer, we've reached the end of the stream
     // and we should just look for the replacement with what we have
-    const replacement = await replacementFunction(oldCode, newLines, buffer);
-    for (const replacementLine of replacement.split("\n")) {
+    const replacementLines = replacementFunction(oldCode, newLines, buffer);
+    for await (const replacementLine of replacementLines) {
       yield replacementLine;
       newLines.push(replacementLine);
     }
@@ -129,56 +136,4 @@ async function* streamFillUnchangedCode(
       newLines.push(bufferedLine);
     }
   }
-}
-
-const MATCH_LINES_ABOVE = 1;
-function getReplacementByMatching(
-  oldCode: string,
-  linesBefore: string[],
-  linesAfter: string[],
-): string | undefined {
-  const oldLines = oldCode.split("\n");
-  const linesToMatchAbove = MATCH_LINES_ABOVE;
-  const linesToMatchBelow = Math.min(BUFFER_LINES_BELOW, linesAfter.length);
-
-  // Get surrounding lines around the gap
-  const beforeContext = linesBefore.slice(-linesToMatchAbove).join("\n");
-  const afterContext = linesAfter.slice(0, linesToMatchBelow).join("\n");
-
-  // Find the start index in the old code
-  const startIndex = oldLines.findIndex((line, index) => {
-    const chunk = oldLines.slice(index, index + linesToMatchAbove).join("\n");
-    return chunk === beforeContext;
-  });
-
-  if (startIndex === -1) {
-    return undefined; // Couldn't find matching start
-  }
-
-  // Find the end index in the old code
-  const endIndex = oldLines.findIndex((line, index) => {
-    if (index <= startIndex + linesToMatchBelow) return false;
-    const chunk = oldLines.slice(index, index + linesToMatchBelow).join("\n");
-    return chunk === afterContext;
-  });
-
-  if (endIndex === -1) {
-    return undefined; // Couldn't find matching end
-  }
-
-  // Extract the replacement code
-  const replacement = oldLines
-    .slice(startIndex + linesToMatchAbove, endIndex)
-    .join("\n");
-
-  return replacement;
-}
-
-async function getReplacementWithLlm(
-  oldCode: string,
-  linesBefore: string[],
-  linesAfter: string[],
-  llm: ILLM,
-): Promise<string> {
-  return "// TODO";
 }
