@@ -18,6 +18,7 @@ const RULES = [
   // `You should lean toward using a smaller number of these comments rather than rewriting it for every function if all of them are unchanged.`,
   // `You may do this for imports as well if needed.`,
   // `Do not explain your changes either before or after the code block.`,
+  `The code should always be syntactically valid, even with the comments.`,
 ];
 
 function claude35SonnetLazyApplyPrompt(
