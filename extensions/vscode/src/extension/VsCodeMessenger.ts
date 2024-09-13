@@ -1,3 +1,4 @@
+import { ILLM } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { streamLazyApply } from "core/edit/lazy/streamLazyApply";
 import {
@@ -147,12 +148,23 @@ export class VsCodeMessenger {
         return;
       }
 
+      let fastLlm: ILLM | undefined;
+      if (config.experimental?.modelRoles?.repoMapFileSelection) {
+        fastLlm = config.models.find(
+          (model) =>
+            model.title ===
+            config.experimental?.modelRoles?.repoMapFileSelection,
+        );
+      }
+      fastLlm ??= llm;
+
       // Generate the diff and pass through diff manager
       const diffLines = streamLazyApply(
         editor.document.getText(),
         getBasename(editor.document.fileName),
         msg.data.text,
         llm,
+        fastLlm,
       );
       const verticalDiffManager = await this.verticalDiffManagerPromise;
       verticalDiffManager.streamDiffLines(diffLines);

@@ -120,7 +120,11 @@ describe("deterministicApplyLazyEdit(", () => {
     expect(myersDiffs).toEqual([]);
   });
 
-  test.only("tabs vs. spaces differences are ignored", async () => {
+  test.only("fastapi", async () => {
+    await expectDiff("fastapi.py");
+  });
+
+  test.only("calculator exp", async () => {
     await expectDiff("fastapi.py");
   });
 });

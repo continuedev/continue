@@ -14,6 +14,7 @@ export async function* streamLazyApply(
   filename: string,
   newCode: string,
   llm: ILLM,
+  fastLlm: ILLM,
 ): AsyncGenerator<DiffLine> {
   const promptFactory = lazyApplyPromptForModel(llm.model, llm.providerName);
   if (!promptFactory) {
@@ -33,19 +34,21 @@ export async function* streamLazyApply(
       oldCode,
       linesBefore,
       linesAfter,
-      llm,
+      fastLlm,
     )) {
       yield line;
     }
 
     // let r = getReplacementByMatching(oldCode, linesBefore, linesAfter);
     // if (r) {
-    //   return r;
+    //   for (let line of r.split("\n")) {
+    //     yield line;
+    //   }
     // }
-    // r = await getReplacementWithLlm(oldCode, linesBefore, linesAfter, llm);
-    // if (r) {
-    //   return r;
-    // }
+    // // r = await getReplacementWithLlm(oldCode, linesBefore, linesAfter, llm);
+    // // if (r) {
+    // //   return r;
+    // // }
     // return "// NO REPLACEMENT FOUND";
   }
 
