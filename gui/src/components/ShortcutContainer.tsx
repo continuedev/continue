@@ -87,6 +87,7 @@ const ShortcutContainer = () => {
   const ideMessenger = useContext(IdeMessengerContext);
   const shortcutContainerRef = useRef<HTMLDivElement>(null);
   const [modifier] = useState(isMac ? "Cmd" : "Ctrl");
+  const [showArrows, setShowArrows] = useState(false);
 
   useEffect(() => {
     const shortcutContainer = shortcutContainerRef.current;
@@ -97,9 +98,15 @@ const ShortcutContainer = () => {
           shortcutContainer.scrollLeft += event.deltaY;
         }
       };
+      const checkOverflow = () => {
+        setShowArrows(shortcutContainer.scrollWidth > shortcutContainer.clientWidth);
+      };
       shortcutContainer.addEventListener("wheel", handleWheel);
+      window.addEventListener('resize', checkOverflow);
+
       return () => {
         shortcutContainer.removeEventListener("wheel", handleWheel);
+        window.removeEventListener('resize', checkOverflow);
       };
     }
   }, []);
@@ -151,10 +158,9 @@ const ShortcutContainer = () => {
 
   return (
     <div className="relative h-[1.55rem] overflow-hidden flex justify-center w-full">
-      <LeftArrowButton onClick={scrollLeft}>
+      {showArrows && <LeftArrowButton onClick={scrollLeft}>
         <ChevronLeftIcon />
-      </LeftArrowButton>
-
+      </LeftArrowButton>}
       <div
         ref={shortcutContainerRef}
         className="flex overflow-x-auto whitespace-nowrap no-scrollbar h-full mx-3 max-w-screen-lg"
@@ -170,9 +176,9 @@ const ShortcutContainer = () => {
         ))}
       </div>
 
-      <RightArrowButton onClick={scrollRight}>
+      {showArrows && <RightArrowButton onClick={scrollRight}>
         <ChevronRightIcon />
-      </RightArrowButton>
+      </RightArrowButton>}
     </div>
   );
 };
