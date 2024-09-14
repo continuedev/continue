@@ -36,6 +36,49 @@ To authenticate to your watsonx.ai Software instance with Continue, you can use 
    - Set **watsonx Project ID** to your watsonx project ID.
    - Set **watsonx API Key** to your watsonx Username and Password using `username:password` as format.
 
-<!-- ## Usage
+## Configuration
 
-![usage-gif](../Model%20Providers/assets/watsonx1.gif) -->
+Add the following configuration to your `config.json` file to use the watsonx provider. Fill in the `watsonxCreds` with the authentication details you obtained in the setup step.
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "model": "model ID",
+      "title": "watsonx - Model Name",
+      "watsonxUrl": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+      "watsonxProjectId": "PROJECT_ID",
+      "watsonxCreds": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+      "watsonxApiVersion": "2023-05-29",
+      "provider": "watsonx"
+    }
+  ]
+}
+```
+
+`watsonxAPIVersion` is optional and defaults to the latest version.
+
+### Configuration Options
+
+Add the full watsonx URL to `watsonxFullUrl` if you are using a custom endpoint. When `watsonxFullUrl` is set, `watsonxUrl` and `watsonxApiVersion` are ignored.
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "model": "model ID",
+      "title": "watsonx - Model Name",
+      "watsonxUrl": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+      "watsonxProjectId": "PROJECT_ID",
+      "watsonxCreds": "API_KEY",
+      "watsonxApiVersion": "2023-05-29",
+      "provider": "watsonx",
+      "watsonxFullUrl": "https://us-south.ml.cloud.ibm.com/m1/v1/text/generation"
+    }
+  ]
+}
+```
+
+## Usage
+
+![usage-gif](../assets/watsonx2.gif)

@@ -90,3 +90,24 @@ Replicate makes it easy to host and run open-source AI with an API.
   ]
 }
 ```
+
+## SambaNova
+
+SambaNova Cloud provides world record Llama3.1 70B/405B serving.
+
+1. Create an account [here](https://cloud.sambanova.ai/)
+2. Copy your API key
+3. Update your Continue config file like this:
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "SambaNova Llama 3.1 405B",
+      "provider": "sambanova",
+      "model": "llama3.1-405b",
+      "apiKey": "YOUR_API_KEY"
+    }
+  ]
+}
+```

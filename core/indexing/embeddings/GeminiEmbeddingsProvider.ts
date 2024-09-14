@@ -8,7 +8,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
  */
 class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "gemini";
-  static maxBatchSize = 2048;
+  static maxBatchSize = 100;
 
   static defaultOptions = {
     apiBase: "https://generativelanguage.googleapis.com/v1/",
@@ -55,10 +55,10 @@ class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    const batches = GeminiEmbeddingsProvider.getBatchedChunks(chunks);
+    const batchedChunks = this.getBatchedChunks(chunks);
 
     const results = await Promise.all(
-      batches.map((batch) => this.getSingleBatchEmbedding(batch)),
+      batchedChunks.map((batch) => this.getSingleBatchEmbedding(batch)),
     );
     return results.flat();
   }

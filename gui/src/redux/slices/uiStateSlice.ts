@@ -1,4 +1,9 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  defaultOnboardingCardState,
+  OnboardingCardState,
+} from "../../components/OnboardingCard";
+
 type UiState = {
   bottomMessage: JSX.Element | undefined;
   bottomMessageCloseTimeout: NodeJS.Timeout | undefined;
@@ -6,6 +11,7 @@ type UiState = {
   showDialog: boolean;
   dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
+  onboardingCard: OnboardingCardState;
 };
 
 export const uiStateSlice = createSlice({
@@ -17,8 +23,15 @@ export const uiStateSlice = createSlice({
     dialogMessage: "",
     dialogEntryOn: false,
     displayBottomMessageOnBottom: true,
+    onboardingCard: defaultOnboardingCardState,
   } as UiState,
   reducers: {
+    setOnboardingCard: (
+      state,
+      action: PayloadAction<Partial<OnboardingCardState>>,
+    ) => {
+      state.onboardingCard = { ...state.onboardingCard, ...action.payload };
+    },
     setBottomMessage: (
       state,
       action: PayloadAction<UiState["bottomMessage"]>,
@@ -59,6 +72,7 @@ export const uiStateSlice = createSlice({
 });
 
 export const {
+  setOnboardingCard,
   setBottomMessage,
   setBottomMessageCloseTimeout,
   setDialogMessage,
@@ -66,4 +80,5 @@ export const {
   setShowDialog,
   setDisplayBottomMessageOnBottom,
 } = uiStateSlice.actions;
+
 export default uiStateSlice.reducer;

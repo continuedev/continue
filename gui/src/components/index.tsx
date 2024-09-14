@@ -127,11 +127,13 @@ export const Button = styled.button`
   border-radius: ${defaultBorderRadius};
 
   border: none;
-  color: ${vscForeground};
-  background-color: ${vscButtonBackground};
+  color: ${vscBackground};
+  background-color: ${vscForeground};
 
   &:disabled {
-    color: gray;
+    color: ${vscBackground};
+    opacity: 0.5;
+    pointer-events: none;
   }
 
   &:hover:enabled {
@@ -143,11 +145,12 @@ export const Button = styled.button`
 export const SecondaryButton = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
+  height: 2.5rem;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscInputBorder};
+  border: 1px solid ${vscForeground};
   color: ${vscForeground};
-  background-color: ${vscBackground};
+  background-color: inherit;
 
   &:disabled {
     color: gray;
@@ -155,8 +158,23 @@ export const SecondaryButton = styled.button`
 
   &:hover:enabled {
     cursor: pointer;
-    background-color: ${vscInputBackground};
+    background-color: ${vscBackground};
+    opacity: 0.9;
   }
+`;
+
+export const InputSubtext = styled.span`
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: ${lightGray};
+  margin-top: 0.25rem;
+`;
+
+export const ButtonSubtext = styled.span`
+  display: block;
+  margin-top: 0;
+  text-align: center;
+  color: ${lightGray};
 `;
 
 export const CustomScrollbarDiv = styled.div`
@@ -261,8 +279,8 @@ export const HelperText = styled.p`
 export const Input = styled.input`
   width: 100%;
   padding: 8px 12px;
-  margin: 8px 0;
   box-sizing: border-box;
+  margin: 4px 0px;
   border-radius: ${defaultBorderRadius};
   outline: 1px solid ${lightGray};
   border: none;
@@ -271,7 +289,7 @@ export const Input = styled.input`
 
   &:focus {
     background: ${vscInputBackground};
-    outline: 1px solid ${vscFocusBorder};
+    outline: 1px solid ${lightGray};
   }
 
   &:invalid {
@@ -368,7 +386,7 @@ export const HeaderButton = styled.button<{
   &:hover {
     background-color: ${({ inverted, hoverBackgroundColor }) =>
       typeof inverted === "undefined" || inverted
-        ? (hoverBackgroundColor ?? vscInputBackground)
+        ? hoverBackgroundColor ?? vscInputBackground
         : "transparent"};
   }
   display: flex;
@@ -376,4 +394,35 @@ export const HeaderButton = styled.button<{
   justify-content: center;
   gap: 4px;
   padding: 2px;
+`;
+
+export const Divider = styled.div`
+  height: 1px;
+  background-color: ${lightGray};
+`;
+
+export const StyledActionButton = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 200ms;
+  border-radius: ${defaultBorderRadius};
+  padding: 2px 12px;
+  background-color: ${lightGray}33;
+  background-opacity: 0.1;
+`;
+
+export const CloseButton = styled.button`
+  border: none;
+  background-color: inherit;
+  color: ${lightGray};
+  position: absolute;
+  top: 0.6rem;
+  right: 1rem;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 `;

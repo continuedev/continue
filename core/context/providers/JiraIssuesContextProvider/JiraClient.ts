@@ -1,6 +1,7 @@
-import { RequestOptions } from "../../../index.js";
+import { RequestOptions } from "../../../";
 // @ts-ignore
 import adf2md from "adf-to-md";
+
 interface JiraClientOptions {
   domain: string;
   username: string;
@@ -112,7 +113,7 @@ export class JiraClient {
     if (typeof issue.fields.description === "string") {
       result.description = issue.fields.description;
     } else if (issue.fields.description) {
-      result.description = adf2md(issue.fields.description).result;
+      result.description = adf2md.validate(issue.fields.description).result;
     } else {
       result.description = "";
     }
@@ -122,7 +123,7 @@ export class JiraClient {
         const body =
           typeof comment.body === "string"
             ? comment.body
-            : adf2md(comment.body).result;
+            : adf2md.validate(comment.body).result;
 
         return {
           body,

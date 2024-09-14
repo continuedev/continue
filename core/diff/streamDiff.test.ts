@@ -1,10 +1,18 @@
+import fs from "node:fs";
 import { streamDiff } from "../diff/streamDiff.js";
 import { DiffLine, DiffLineType } from "../index.js";
 // @ts-ignore no typings available
 import { changed, diff as myersDiff } from "myers-diff";
+import path from "node:path";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
+
+const UNIFIED_DIFF_SYMBOLS = {
+  same: "",
+  new: "+",
+  old: "-",
+};
 
 async function* generateLines(lines: string[]): AsyncGenerator<string> {
   for (const line of lines) {
@@ -41,6 +49,43 @@ function getMyersDiffType(diff: any): MyersDiffTypes | undefined {
   }
 
   return undefined;
+}
+
+function displayDiff(diff: DiffLine[]) {
+  return diff
+    .map(({ type, line }) => `${UNIFIED_DIFF_SYMBOLS[type]} ${line}`)
+    .join("\n");
+}
+
+async function expectDiff(file: string) {
+  const testFilePath = path.join(
+    __dirname,
+    "diff",
+    "test-examples",
+    file + ".diff",
+  );
+  const testFileContents = fs.readFileSync(testFilePath, "utf-8");
+  const [oldText, newText, expectedDiff] = testFileContents
+    .split("\n---\n")
+    .map((s) => s.replace(/^\n+/, "").trimEnd());
+  const oldLines = oldText.split("\n");
+  const newLines = newText.split("\n");
+  const { streamDiffs, myersDiffs } = await collectDiffs(oldLines, newLines);
+  const displayedDiff = displayDiff(streamDiffs);
+
+  if (!expectedDiff || expectedDiff.trim() === "") {
+    console.log(
+      "Expected diff was empty. Writing computed diff to the test file",
+    );
+    fs.writeFileSync(
+      testFilePath,
+      `${oldText}\n\n---\n\n${newText}\n\n---\n\n${displayedDiff}`,
+    );
+
+    throw new Error("Expected diff is empty");
+  }
+
+  expect(displayedDiff).toEqual(expectedDiff);
 }
 
 // We use a longer `)` string here to not get
@@ -176,5 +221,21 @@ describe("streamDiff(", () => {
     // Multi-line deletion
     expect(myersDiffs[0].lhs.del).toEqual(2);
     expect(getMyersDiffType(myersDiffs[0])).toBe("old");
+  });
+
+  test("tabs vs. spaces differences are ignored", async () => {
+    await expectDiff("fastapi-tabs-vs-spaces");
+  });
+
+  test("FastAPI example", async () => {
+    await expectDiff("fastapi");
+  });
+
+  test("FastAPI comments", async () => {
+    await expectDiff("add-comments");
+  });
+
+  test("Mock LLM example", async () => {
+    await expectDiff("mock-llm");
   });
 });

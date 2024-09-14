@@ -45,6 +45,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "sagemaker",
   "continue-proxy",
   "mistral",
+  "sambanova",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -108,6 +109,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "free-trial",
   "replicate",
   "together",
+  "sambanova",
 ];
 
 function llmCanGenerateInParallel(
