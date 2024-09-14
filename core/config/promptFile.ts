@@ -32,9 +32,9 @@ export async function getPromptFiles(
 }
 
 const DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
-# It is used to define and reuse prompts within Continue
-# Continue will automatically create a slash command for each prompt in the .prompts folder
-# To learn more, see the full .prompt file reference: https://docs.continue.dev/features/prompt-files
+# It is used to define and reuse prompts within PearAI
+# PearAI will automatically create a slash command for each prompt in the .prompts folder
+# To learn more, see the full .prompt file reference: https://trypear.ai/features/prompt-files
 temperature: 0.0
 ---
 {{{ diff }}}
