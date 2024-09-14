@@ -12,7 +12,7 @@ import {
     static description: ContextProviderDescription = {
       title: "greptile",
       displayTitle: "Greptile",
-      description: "Query Greptile for relevant code snippets",
+      description: "Insert query to Greptile",
       type: "query",
     };
   
