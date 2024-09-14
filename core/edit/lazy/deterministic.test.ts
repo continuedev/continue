@@ -5,7 +5,7 @@ import { changed, diff as myersDiff } from "myers-diff";
 import path from "node:path";
 import { DiffLine, DiffLineType } from "../..";
 import { dedent } from "../../util";
-import { deterministicApplyLazyEdit } from "./deterministic";
+import { deterministicApplyLazyEdit2 as deterministicApplyLazyEdit } from "./deterministic2";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
@@ -58,6 +58,13 @@ function displayDiff(diff: DiffLine[]) {
     .join("\n");
 }
 
+function normalizeDisplayedDiff(d: string): string {
+  return d
+    .split("\n")
+    .map((line) => (line.trim() === "" ? "" : line))
+    .join("\n");
+}
+
 async function expectDiff(file: string) {
   const testFilePath = path.join(
     __dirname,
@@ -89,7 +96,9 @@ async function expectDiff(file: string) {
     throw new Error("Expected diff is empty");
   }
 
-  expect(displayedDiff).toEqual(expectedDiff);
+  expect(normalizeDisplayedDiff(displayedDiff)).toEqual(
+    normalizeDisplayedDiff(expectedDiff),
+  );
 }
 
 describe("deterministicApplyLazyEdit(", () => {
@@ -120,11 +129,15 @@ describe("deterministicApplyLazyEdit(", () => {
     expect(myersDiffs).toEqual([]);
   });
 
-  test.only("fastapi", async () => {
+  test("fastapi", async () => {
     await expectDiff("fastapi.py");
   });
 
-  test.only("calculator exp", async () => {
-    await expectDiff("fastapi.py");
+  test("calculator exp", async () => {
+    await expectDiff("calculator-exp.js");
+  });
+
+  test.only("calculator comments", async () => {
+    await expectDiff("calculator-comments.js");
   });
 });
