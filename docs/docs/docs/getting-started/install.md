@@ -1,7 +1,6 @@
 ---
 title: Install
 description: The open-source AI code assistant for developers
-slug: /getting-started
 keywords: [install, installation, getting started, vs code, jetbrains]
 ---
 

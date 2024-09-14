@@ -178,32 +178,40 @@ const config = {
             from: "/customization",
           },
           {
-            to: "/docs/getting-started/overview",
-            from: "/model-setup/overview",
+            to: "/docs/getting-started/install",
+            from: ["/install/vscode", "/install/jetbrains"],
           },
           {
             to: "/docs/getting-started/overview",
-            from: "/model-setup/select-model",
-          },
-          {
-            to: "/docs/getting-started/overview",
-            from: "/model-setup/configuration",
+            from: [
+              "/model-setup/overview",
+              "/model-setup/select-model",
+              "/model-setup/configuration",
+              "/quickstart",
+              "/how-to-use-continue",
+            ],
           },
           {
             to: "/customize/model-providers",
-            from: "/setup/select-provider",
+            from: ["/setup/select-provider", "/setup/model-providers"],
           },
           {
             to: "/customize/deep-dives/codebase",
-            from: "/walkthroughs/codebase-embeddings",
+            from: [
+              "/walkthroughs/codebase-embeddings",
+              "/features/codebase-embeddings",
+            ],
           },
           {
             to: "/customize/deep-dives/autocomplete",
-            from: "/walkthroughs/tab-autocomplete",
+            from: [
+              "/walkthroughs/tab-autocomplete",
+              "/features/tab-autocomplete",
+            ],
           },
           {
             to: "/customize/deep-dives/prompt-files",
-            from: "/walkthroughs/prompt-files",
+            from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
           {
             to: "/docs/actions/how-to-use-it#quick-actions",
@@ -215,7 +223,7 @@ const config = {
           },
           {
             to: "/customize/config",
-            from: "/customization/code-config",
+            from: ["/customization/code-config", "/reference/config"],
           },
           {
             to: "/customize/context-providers",
@@ -226,64 +234,44 @@ const config = {
             from: "/development-data",
           },
           {
-            to: "/customize/deep-dives/autocomplete",
-            from: "/features/tab-autocomplete",
-          },
-          {
-            to: "/customize/deep-dives/codebase",
-            from: "/features/codebase-embeddings",
-          },
-          {
             to: "/customize/deep-dives/docs",
             from: "/features/talk-to-your-docs",
           },
           {
-            to: "/customize/deep-dives/prompt-files",
-            from: "/features/prompt-files",
-          },
-          {
-            to: "/customize/model-providers",
-            from: "/setup/model-providers",
-          },
-          {
             to: "/customize/model-providers/anthropic",
-            from: "/reference/Model%20Providers/anthropicllm",
+            from: "/reference/Model Providers/anthropicllm",
           },
           {
             to: "/customize/model-providers/azure",
-            from: "/reference/Model%20Providers/azure",
+            from: "/reference/Model Providers/azure",
           },
           {
             to: "/customize/model-providers/bedrock",
-            from: "/reference/Model%20Providers/bedrock",
+            from: "/reference/Model Providers/bedrock",
           },
           {
             to: "/customize/model-providers/deepseek",
-            from: "/reference/Model%20Providers/deepseek",
+            from: "/reference/Model Providers/deepseek",
           },
           {
             to: "/customize/model-providers/free-trial",
-            from: "/reference/Model%20Providers/freetrial",
+            from: "/reference/Model Providers/freetrial",
           },
           {
             to: "/customize/model-providers/gemini",
-            from: "/reference/Model%20Providers/geminiapi",
+            from: "/reference/Model Providers/geminiapi",
           },
           {
             to: "/customize/model-providers/mistral",
-            from: "/reference/Model%20Providers/mistral",
+            from: "/reference/Model Providers/mistral",
           },
           {
             to: "/customize/model-providers/ollama",
-            from: "/reference/Model%20Providers/ollama",
+            from: "/reference/Model Providers/ollama",
           },
           {
             to: "/customize/model-providers/openai",
-            from: "/reference/Model%20Providers/openai",
-          },
-          {
-            to: "/customize/overview",
-            from: "/customization/overview",
+            from: "/reference/Model Providers/openai",
           },
           {
             to: "/customize/slash-commands",
@@ -310,16 +298,84 @@ const config = {
             from: "/intro",
           },
           {
-            to: "/docs/getting-started/overview",
-            from: "/quickstart",
-          },
-          {
             to: "/docs/telemetry",
             from: "/telemetry",
           },
           {
             to: "/docs/troubleshooting",
             from: "/troubleshooting",
+          },
+          {
+            to: "/customize/model-providers/more/cloudflare",
+            from: "/reference/Model Providers/cloudflare",
+          },
+          {
+            to: "/customize/model-providers/more/cohere",
+            from: "/reference/Model Providers/cohere",
+          },
+          {
+            to: "/customize/model-providers/more/deepinfra",
+            from: "/reference/Model Providers/deepinfra",
+          },
+          {
+            to: "/customize/model-providers/more/flowise",
+            from: "/reference/Model Providers/flowise",
+          },
+          {
+            to: "/customize/model-providers/more/huggingfaceinferenceapi",
+            from: "/reference/Model Providers/huggingfaceinferenceapi",
+          },
+          {
+            to: "/customize/model-providers/more/ipex_llm",
+            from: "/reference/Model Providers/ipex_llm",
+          },
+          {
+            to: "/customize/model-providers/more/kindo",
+            from: "/reference/Model Providers/kindo",
+          },
+          {
+            to: "/customize/model-providers/more/llamacpp",
+            from: "/reference/Model Providers/llamacpp",
+          },
+          {
+            to: "/customize/model-providers/more/llamafile",
+            from: "/reference/Model Providers/llamafile",
+          },
+          {
+            to: "/customize/model-providers/more/lmstudio",
+            from: "/reference/Model Providers/lmstudio",
+          },
+          {
+            to: "/customize/model-providers/more/msty",
+            from: "/reference/Model Providers/msty",
+          },
+          {
+            to: "/customize/model-providers/more/openrouter",
+            from: "/reference/Model Providers/openrouter",
+          },
+          {
+            to: "/customize/model-providers/more/replicatellm",
+            from: "/reference/Model Providers/replicatellm",
+          },
+          {
+            to: "/customize/model-providers/more/sagemaker",
+            from: "/reference/Model Providers/sagemaker",
+          },
+          {
+            to: "/customize/model-providers/more/textgenwebui",
+            from: "/reference/Model Providers/textgenwebui",
+          },
+          {
+            to: "/customize/model-providers/more/together",
+            from: "/reference/Model Providers/togetherllm",
+          },
+          {
+            to: "/customize/model-providers/more/vllm",
+            from: "/reference/Model Providers/vllm",
+          },
+          {
+            to: "/customize/model-providers/more/watsonx",
+            from: "/reference/Model Providers/watsonx",
           },
         ],
       },
