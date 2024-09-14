@@ -312,7 +312,7 @@ export class QuickEdit {
     const modelTitle = await this.getCurModelTitle();
 
     if (!modelTitle) {
-      this.ide.infoPopup("Please configure a model to use Quick Edit");
+      this.ide.showToast("info", "Please configure a model to use Quick Edit");
       return undefined;
     }
 

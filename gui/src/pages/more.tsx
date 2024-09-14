@@ -8,11 +8,55 @@ import IndexingProgressBar from "../components/loaders/IndexingProgressBar";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useDispatch } from "react-redux";
+import { setOnboardingCard } from "../redux/slices/uiStateSlice";
+import useHistory from "../hooks/useHistory";
+
+interface MoreActionRowProps {
+  title: string;
+  description: string;
+  buttonText: string;
+  onClick?: () => void;
+  href?: string;
+}
+
+function MoreActionRow({
+  title,
+  description,
+  buttonText,
+  onClick,
+  href,
+}: MoreActionRowProps) {
+  const ButtonOrLink = href ? "a" : "div";
+  const buttonProps = href
+    ? { href, target: "_blank", className: "no-underline w-1/2" }
+    : { className: "w-1/2" };
+
+  return (
+    <div className="flex items-center gap-2 w-full">
+      <div className="w-1/2 pr-4">
+        <h3 className="my-0">{title}</h3>
+        <p>{description}</p>
+      </div>
+      <ButtonOrLink {...buttonProps}>
+        <SecondaryButton
+          className="grid grid-flow-col items-center gap-2 w-full"
+          onClick={onClick}
+        >
+          {buttonText}
+        </SecondaryButton>
+      </ButtonOrLink>
+    </div>
+  );
+}
 
 function MorePage() {
   useNavigationListener();
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
+  const { saveSession } = useHistory(dispatch);
 
   const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
     desc: "Loading indexing config",
@@ -44,7 +88,7 @@ function MorePage() {
 
       <h3 className="my-3 mx-auto text-center">Codebase Indexing</h3>
       <div
-        className="p-6 flex flex-col gap-6"
+        className="p-6 pb-0 flex flex-col gap-6"
         style={{
           borderTop: `0.5px solid ${lightGray}`,
         }}
@@ -62,92 +106,46 @@ function MorePage() {
         Help Center
       </h3>
       <div className="p-6 flex flex-col gap-6">
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <div className="col-span-2">
-            <h3 className="my-0">Documentation</h3>
-            <p>
-              Visit the documentation site to learn how to configure and use
-              Continue.
-            </p>
-          </div>
-          <a
-            className="col-span-1 "
-            href="https://docs.continue.dev/"
-            target="_blank"
-          >
-            <SecondaryButton className="w-full">View docs</SecondaryButton>
-          </a>
-        </div>
+        <MoreActionRow
+          title="Documentation"
+          description="Visit the documentation site to learn how to configure and use Continue"
+          buttonText="View docs"
+          href="https://docs.continue.dev/"
+        />
 
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <div className="col-span-2">
-            <h3 className="my-0">Tutorial</h3>
-            <p>
-              Open the tutorial to get a quick walkthrough of the most commonly
-              used features in Continue.
-            </p>
-          </div>
-          <SecondaryButton
-            className="col-span-1 w-full"
-            onClick={() => {
-              ideMessenger.post("showTutorial", undefined);
-            }}
-          >
-            Open tutorial
-          </SecondaryButton>
-        </div>
+        <MoreActionRow
+          title="Quickstart"
+          description="Reopen the quickstart and tutorial file"
+          buttonText="Open quickstart"
+          onClick={() => {
+            navigate("/");
+            // Used to clear the chat panel before showing onboarding card
+            saveSession();
+            dispatch(setOnboardingCard({ show: true, activeTab: "Best" }));
+            ideMessenger.post("showTutorial", undefined);
+          }}
+        />
 
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <div className="col-span-2">
-            <h3 className="my-0">Token usage stats</h3>
-            <p>
-              See how many tokens you're using each day and how they're
-              distributed across your models.
-            </p>
-          </div>
-          <SecondaryButton
-            className="col-span-1"
-            onClick={() => {
-              navigate("/stats");
-            }}
-          >
-            View token usage
-          </SecondaryButton>
-        </div>
+        <MoreActionRow
+          title="Token usage stats"
+          description="See how many tokens you're using each day and how they're distributed across your models"
+          buttonText="View token usage"
+          onClick={() => navigate("/stats")}
+        />
 
-        <div className="grid grid-cols-3 gap-4 items-center w-full">
-          <div className="col-span-2">
-            <h3 className="my-0">Have an issue?</h3>
-            <p>Let us know on GitHub and we'll do our best to resolve it.</p>
-          </div>
-          <a
-            href="https://github.com/continuedev/continue/issues/new/choose"
-            target="_blank"
-            className="no-underline"
-          >
-            <SecondaryButton className="grid grid-flow-col items-center gap-2 w-full">
-              Create a GitHub issue
-            </SecondaryButton>
-          </a>
-        </div>
+        <MoreActionRow
+          title="Have an issue?"
+          description="Let us know on GitHub and we'll do our best to resolve it"
+          buttonText="Create a GitHub issue"
+          href="https://github.com/continuedev/continue/issues/new/choose"
+        />
 
-        <div className="grid grid-cols-3 gap-4 items-center w-full">
-          <div className="col-span-2">
-            <h3 className="my-0">Join the community!</h3>
-            <p>
-              Join us on Discord to stay up-to-date on the latest developments
-            </p>
-          </div>
-          <a
-            href="https://discord.gg/vapESyrFmJ"
-            target="_blank"
-            className="no-underline"
-          >
-            <SecondaryButton className="grid grid-flow-col items-center gap-2 w-full">
-              Continue Discord
-            </SecondaryButton>
-          </a>
-        </div>
+        <MoreActionRow
+          title="Join the community!"
+          description="Join us on Discord to stay up-to-date on the latest developments"
+          buttonText="Continue Discord"
+          href="https://discord.gg/vapESyrFmJ"
+        />
       </div>
 
       <h3

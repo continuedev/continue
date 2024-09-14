@@ -14,6 +14,9 @@ import com.google.gson.reflect.TypeToken
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
+import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.util.ExecUtil
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.Disposable
@@ -52,6 +55,7 @@ import java.awt.datatransfer.StringSelection
 import java.io.*
 import java.net.NetworkInterface
 import java.nio.charset.Charset
+import java.nio.file.Paths
 import java.util.*
 
 
@@ -197,6 +201,7 @@ class IdeProtocolClient (
     private val project: Project
 ): DumbAware {
     val diffManager = DiffManager(project)
+    private val ripgrep: String
 
     init {
         initIdeProtocol()
@@ -205,6 +210,20 @@ class IdeProtocolClient (
         VirtualFileManager.getInstance().addAsyncFileListener(AsyncFileSaveListener(this), object : Disposable {
             override fun dispose() {}
         })
+
+        val myPluginId = "com.github.continuedev.continueintellijextension"
+        val pluginDescriptor = PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
+
+        val pluginPath = pluginDescriptor.pluginPath
+        val osName = System.getProperty("os.name").toLowerCase()
+        val os = when {
+            osName.contains("mac") || osName.contains("darwin") -> "darwin"
+            osName.contains("win") -> "win32"
+            osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
+            else -> "linux"
+        }
+
+        ripgrep = Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + (if (os == "win32") ".exe" else "")).toString()
     }
 
     private fun send(messageType: String, data: Any?, messageId: String? = null) {
@@ -592,7 +611,8 @@ class IdeProtocolClient (
                     }
 
                     "getSearchResults" -> {
-                        respond("")
+                        val query = (data as Map<String, Any>)["query"] as String
+                        respond(search(query))
                     }
 
                     // Other
@@ -634,7 +654,7 @@ class IdeProtocolClient (
 
                         if (ghAuthToken == null) {
                             // Open a dialog so user can enter their GitHub token
-                            continuePluginService.sendToWebview("openOnboarding", null, uuid())
+                            continuePluginService.sendToWebview("openOnboardingCard", null, uuid())
                             respond(null)
                         } else {
                             respond(ghAuthToken)
@@ -1017,6 +1037,12 @@ class IdeProtocolClient (
         }
 
         return contents
+    }
+
+    private fun search(query: String): String {
+        val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--", query, ".")
+        command.setWorkDirectory(project.basePath)
+        return ExecUtil.execAndGetOutput(command).stdout ?: ""
     }
 }
 

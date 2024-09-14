@@ -48,7 +48,10 @@ class HistoryManager {
       (session) => session.sessionId !== sessionId,
     );
 
-    fs.writeFileSync(sessionsListFile, JSON.stringify(sessionsList));
+    fs.writeFileSync(
+      sessionsListFile,
+      JSON.stringify(sessionsList, undefined, 2),
+    );
   }
 
   load(sessionId: string): PersistedSessionInfo {
@@ -77,7 +80,7 @@ class HistoryManager {
     // Save the main session json file
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),
-      JSON.stringify(session),
+      JSON.stringify(session, undefined, 2),
     );
 
     // Read and update the sessions list
@@ -117,7 +120,10 @@ class HistoryManager {
         sessionsList.push(sessionInfo);
       }
 
-      fs.writeFileSync(sessionsListFilePath, JSON.stringify(sessionsList));
+      fs.writeFileSync(
+        sessionsListFilePath,
+        JSON.stringify(sessionsList, undefined, 2),
+      );
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new Error(

@@ -12,6 +12,7 @@ class RepoMapContextProvider extends BaseContextProvider {
     displayTitle: "Repository Map",
     description: "List of files and signatures",
     type: "normal",
+    dependsOnIndexing: true,
   };
 
   async getContextItems(

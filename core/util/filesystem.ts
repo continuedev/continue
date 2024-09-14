@@ -12,12 +12,21 @@ import {
   Range,
   RangeInFile,
   Thread,
+  ToastType,
 } from "../index.d.js";
 
+import { GetGhTokenArgs } from "../protocol/ide.js";
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
   constructor(private readonly workspaceDir: string) {}
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<void> {
+    return Promise.resolve();
+  }
   pathSep(): Promise<string> {
     return Promise.resolve(path.sep);
   }
@@ -42,7 +51,7 @@ class FileSystemIde implements IDE {
       enableDebugLogs: false,
     };
   }
-  async getGitHubAuthToken(): Promise<string | undefined> {
+  async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
     return undefined;
   }
   async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
@@ -68,28 +77,25 @@ class FileSystemIde implements IDE {
         dirent.isDirectory()
           ? (2 as FileType.Directory)
           : dirent.isSymbolicLink()
-          ? (64 as FileType.SymbolicLink)
-          : (1 as FileType.File),
+            ? (64 as FileType.SymbolicLink)
+            : (1 as FileType.File),
       ]);
     return Promise.resolve(all);
   }
-  infoPopup(message: string): Promise<void> {
-    return Promise.resolve();
-  }
-  errorPopup(message: string): Promise<void> {
-    return Promise.resolve();
-  }
+
   getRepoName(dir: string): Promise<string | undefined> {
     return Promise.resolve(undefined);
   }
 
   async getTags(artifactId: string): Promise<IndexTag[]> {
-    const directory =(await this.getWorkspaceDirs())[0];
-    return [{
-      artifactId,
-      branch: await this.getBranch(directory),
-      directory
-    }];
+    const directory = (await this.getWorkspaceDirs())[0];
+    return [
+      {
+        artifactId,
+        branch: await this.getBranch(directory),
+        directory,
+      },
+    ];
   }
 
   getIdeInfo(): Promise<IdeInfo> {
