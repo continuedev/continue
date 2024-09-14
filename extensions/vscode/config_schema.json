@@ -244,10 +244,10 @@
           "type": "string"
         },
         "region": {
-              "title": "Region",
-              "description": "The region where the model is hosted",
-              "type": "string"
-            },
+          "title": "Region",
+          "description": "The region where the model is hosted",
+          "type": "string"
+        },
         "profile": {
           "title": "Profile",
           "description": "The AWS security profile to use",
@@ -414,9 +414,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "bedrockimport"
-                ]
+                "enum": ["bedrockimport"]
               }
             },
             "required": ["provider"]
@@ -1317,11 +1315,7 @@
               "model": {
                 "anyOf": [
                   {
-                    "enum": [
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b"
-                    ]
+                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
                   },
                   {
                     "type": "string"
