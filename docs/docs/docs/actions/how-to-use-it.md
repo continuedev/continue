@@ -8,7 +8,7 @@ sidebar_position: 1
 
 ![actions](/img/actions.gif)
 
-## How to use Actions
+## How to use it
 
 Actions are shortcuts for common use cases. For example, you might want to review code, write tests, or add a docstring.
 

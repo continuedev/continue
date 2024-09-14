@@ -173,46 +173,153 @@ const config = {
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [
-          // Redirects from old docs
           {
-            from: "/customization",
             to: "/customize/overview",
+            from: "/customization",
           },
           {
-            from: "/getting-started",
-            to: "/docs",
-          },
-          {
+            to: "/docs/getting-started/overview",
             from: "/model-setup/overview",
-            to: "/docs/getting-started/overview",
           },
           {
+            to: "/docs/getting-started/overview",
             from: "/model-setup/select-model",
-            to: "/docs/getting-started/overview",
           },
           {
+            to: "/docs/getting-started/overview",
             from: "/model-setup/configuration",
-            to: "/docs/getting-started/overview",
           },
           {
-            from: "/setup/select-provider",
             to: "/customize/model-providers",
+            from: "/setup/select-provider",
           },
           {
-            from: "/walkthroughs/codebase-embeddings",
             to: "/customize/deep-dives/codebase",
+            from: "/walkthroughs/codebase-embeddings",
           },
           {
-            from: "/walkthroughs/tab-autocomplete",
             to: "/customize/deep-dives/autocomplete",
+            from: "/walkthroughs/tab-autocomplete",
           },
           {
-            from: "/walkthroughs/prompt-files",
             to: "/customize/deep-dives/prompt-files",
+            from: "/walkthroughs/prompt-files",
           },
           {
-            from: "/walkthroughs/quick-actions",
             to: "/docs/actions/how-to-use-it#quick-actions",
+            from: "/walkthroughs/quick-actions",
+          },
+          {
+            to: "/customize/changelog",
+            from: "/changelog",
+          },
+          {
+            to: "/customize/config",
+            from: "/customization/code-config",
+          },
+          {
+            to: "/customize/context-providers",
+            from: "/customization/context-providers",
+          },
+          {
+            to: "/customize/development-data",
+            from: "/development-data",
+          },
+          {
+            to: "/customize/deep-dives/autocomplete",
+            from: "/features/tab-autocomplete",
+          },
+          {
+            to: "/customize/deep-dives/codebase",
+            from: "/features/codebase-embeddings",
+          },
+          {
+            to: "/customize/deep-dives/docs",
+            from: "/features/talk-to-your-docs",
+          },
+          {
+            to: "/customize/deep-dives/prompt-files",
+            from: "/features/prompt-files",
+          },
+          {
+            to: "/customize/model-providers",
+            from: "/setup/model-providers",
+          },
+          {
+            to: "/customize/model-providers/anthropic",
+            from: "/reference/Model%20Providers/anthropicllm",
+          },
+          {
+            to: "/customize/model-providers/azure",
+            from: "/reference/Model%20Providers/azure",
+          },
+          {
+            to: "/customize/model-providers/bedrock",
+            from: "/reference/Model%20Providers/bedrock",
+          },
+          {
+            to: "/customize/model-providers/deepseek",
+            from: "/reference/Model%20Providers/deepseek",
+          },
+          {
+            to: "/customize/model-providers/free-trial",
+            from: "/reference/Model%20Providers/freetrial",
+          },
+          {
+            to: "/customize/model-providers/gemini",
+            from: "/reference/Model%20Providers/geminiapi",
+          },
+          {
+            to: "/customize/model-providers/mistral",
+            from: "/reference/Model%20Providers/mistral",
+          },
+          {
+            to: "/customize/model-providers/ollama",
+            from: "/reference/Model%20Providers/ollama",
+          },
+          {
+            to: "/customize/model-providers/openai",
+            from: "/reference/Model%20Providers/openai",
+          },
+          {
+            to: "/customize/overview",
+            from: "/customization/overview",
+          },
+          {
+            to: "/customize/slash-commands",
+            from: "/customization/slash-commands",
+          },
+          {
+            to: "/customize/tutorials/custom-code-rag",
+            from: "/walkthroughs/custom-code-rag",
+          },
+          {
+            to: "/customize/tutorials/llama3.1",
+            from: "/walkthroughs/llama3.1",
+          },
+          {
+            to: "/customize/tutorials/running-continue-without-internet",
+            from: "/walkthroughs/running-continue-without-internet",
+          },
+          {
+            to: "/customize/tutorials/set-up-codestral",
+            from: "/walkthroughs/set-up-codestral",
+          },
+          {
+            to: "/docs",
+            from: "/intro",
+          },
+          {
+            to: "/docs/getting-started/overview",
+            from: "/quickstart",
+          },
+          {
+            to: "/docs/telemetry",
+            from: "/telemetry",
+          },
+          {
+            to: "/docs/troubleshooting",
+            from: "/troubleshooting",
           },
         ],
       },

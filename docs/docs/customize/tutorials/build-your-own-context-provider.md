@@ -185,7 +185,7 @@ If you'd like to write a context provider in a language other than TypeScript, y
 }
 ```
 
-Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
+<!-- Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI. -->
 
 ## Extension API for VSCode
 
