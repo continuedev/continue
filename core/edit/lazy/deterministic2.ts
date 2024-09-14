@@ -1,7 +1,36 @@
-import { diffLines } from "diff";
+import { diffLines, type Change } from "diff";
 import { DiffLine } from "../..";
 import { convertMyersChangeToDiffLines } from "../../diff/myers";
 import { isLazyLine } from "./deterministic";
+
+function bubbleUpLazyBlocks(originalChanges: Change[]): Change[] {
+  const changes = [...originalChanges];
+  for (let i = 1; i < changes.length; i++) {
+    const change = changes[i];
+    if (
+      // Single line
+      change.count === 1 &&
+      // lazy line
+      isLazyLine(change.value) &&
+      // with a removal above
+      changes[i - 1].removed
+    ) {
+      // Bubble up and merge together the removals into a single remove change
+      while (
+        i + 1 < changes.length &&
+        (changes[i + 1].value.trim() === "" || changes[i + 1].removed)
+      ) {
+        // Merge the removed/new line with the removal above
+        const changeValue = changes[i + 1].value;
+        changes[i - 1].value += changeValue;
+
+        // and then delete
+        changes.splice(i + 1, 1);
+      }
+    }
+  }
+  return changes;
+}
 
 export async function deterministicApplyLazyEdit2(
   oldFile: string,
@@ -25,12 +54,13 @@ export async function deterministicApplyLazyEdit2(
   // }
   // newLazyFile = processedLazyFileLines.join("\n");
 
-  const theirFormat = diffLines(oldFile, newLazyFile, {
+  let theirFormat = diffLines(oldFile, newLazyFile, {
     newlineIsToken: false,
   });
   const lines: DiffLine[] = [];
-
   const removedLinesBuffer: DiffLine[] = [];
+
+  theirFormat = bubbleUpLazyBlocks(theirFormat);
 
   for (const change of theirFormat) {
     if (!change.added && !change.removed) {
