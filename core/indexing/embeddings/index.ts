@@ -7,6 +7,7 @@ import DeepInfraEmbeddingsProvider from "./DeepInfraEmbeddingsProvider.js";
 import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider.js";
 import GeminiEmbeddingsProvider from "./GeminiEmbeddingsProvider.js";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEIEmbeddingsProvider.js";
+import MistralEmbeddingsProvider from "./MistralEmbeddingsProvider.js";
 import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider.js";
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider.js";
@@ -33,4 +34,5 @@ export const allEmbeddingsProviders: Record<
   deepinfra: DeepInfraEmbeddingsProvider,
   nvidia: NvidiaEmbeddingsProvider,
   voyage: VoyageEmbeddingsProvider,
+  mistral: MistralEmbeddingsProvider,
 };
