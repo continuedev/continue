@@ -812,6 +812,7 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxChunkSize?: number;
+  maxBatchSize?: number;
   // AWS options
   profile?: string;
 

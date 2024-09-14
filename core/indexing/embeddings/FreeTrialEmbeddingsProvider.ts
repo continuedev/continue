@@ -24,16 +24,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    const batchedChunks = [];
-    for (
-      let i = 0;
-      i < chunks.length;
-      i += FreeTrialEmbeddingsProvider.maxBatchSize
-    ) {
-      batchedChunks.push(
-        chunks.slice(i, i + FreeTrialEmbeddingsProvider.maxBatchSize),
-      );
-    }
+    const batchedChunks = this.getBatchedChunks(chunks);
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {
