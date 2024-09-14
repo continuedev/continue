@@ -33,6 +33,16 @@ class PearAIServer extends BaseLLM {
     this.pearAIRefreshToken = undefined;
   }
 
+  // Public setter for pearAIAccessToken
+  public setPearAIAccessToken(value: string | undefined): void {
+    this.pearAIAccessToken = value;
+  }
+
+  // Public setter for pearAIRefreshToken
+  public setPearAIRefreshToken(value: string | undefined): void {
+    this.pearAIRefreshToken = value;
+  }
+
   private async _getHeaders() {
     await this._checkAndUpdateCredentials();
     return {

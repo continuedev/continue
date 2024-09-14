@@ -93,6 +93,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     string,
   ];
+  "llm/resetPearAICredentials": [undefined | string, void];
   "llm/listModels": [{ title: string }, string[] | undefined];
   "llm/streamComplete": [
     {

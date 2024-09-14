@@ -723,6 +723,7 @@ const commandsMap: (
     "pearai.logout": async () => {
       await extensionContext.secrets.delete("pearai-token");
       await extensionContext.secrets.delete("pearai-refresh");
+      core.invoke("llm/resetPearAICredentials", undefined);
       vscode.window.showInformationMessage("PearAI: Successfully logged out!");
     },
     "pearai.updateUserAuth": async (data: {
@@ -739,7 +740,7 @@ const commandsMap: (
 
       extensionContext.secrets.store("pearai-token", data.accessToken);
       extensionContext.secrets.store("pearai-refresh", data.refreshToken);
-
+      core.invoke("llm/resetPearAICredentials", undefined);
       sidebar.webviewProtocol?.request("addPearAIModel", undefined);
       vscode.window.showInformationMessage("PearAI: Successfully logged in!");
     },
