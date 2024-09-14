@@ -1,7 +1,7 @@
 import { ILLM } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { generateLines } from "core/diff/util";
-import { deterministicApplyLazyEdit } from "core/edit/lazy/deterministic";
+import { deterministicApplyLazyEdit2 } from "core/edit/lazy/deterministic2";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -167,7 +167,7 @@ export class VsCodeMessenger {
       //   llm,
       //   fastLlm,
       // );
-      const diffLines = await deterministicApplyLazyEdit(
+      const diffLines = await deterministicApplyLazyEdit2(
         editor.document.getText(),
         msg.data.text,
         getBasename(editor.document.fileName),
