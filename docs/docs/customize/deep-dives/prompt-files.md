@@ -35,7 +35,7 @@ Write unit tests for the above selected code, following each of these instructio
 - Don't explain how to set up `jest`
 ```
 
-Now to use this prompt, you can highlight code and use `cmd/ctrl+L` to select it in the Continue sidebar.
+Now to use this prompt, you can highlight code and use `cmd/ctrl + L` to select it in the Continue sidebar.
 
 Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
 
@@ -79,7 +79,7 @@ The following built-in variables are currently available:
 
 ### Context providers
 
-Any [context provider](../customization/context-providers.md) that you have added to your config can be referenced using the name of the context provider. Context providers that receive an input are also supported.
+Any [context provider](../context-providers.md) that you have added to your config can be referenced using the name of the context provider. Context providers that receive an input are also supported.
 
 - `{{{ terminal }}}` - The contents of the terminal
 - `{{{ url "https://github.com/continuedev/continue" }}}` - The contents of a URL

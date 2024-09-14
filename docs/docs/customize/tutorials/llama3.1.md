@@ -6,7 +6,7 @@ keywords: [llama, meta, togetherai, ollama, replicate]
 
 Continue makes it easy to code with the latest open-source models, including the entire Llama 3.1 family of models.
 
-If you haven't already installed Continue, you can do that [here for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [here for JetBrains](https://plugins.jetbrains.com/plugin/22707-continue). For more general information on customizing Continue, read [our customization docs](../customization/overview.md).
+If you haven't already installed Continue, you can do that [here for VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) or [here for JetBrains](https://plugins.jetbrains.com/plugin/22707-continue). For more general information on customizing Continue, read [our customization docs](../overview.md).
 
 Below we share some of the easiest ways to get up and running, depending on your use-case.
 

@@ -35,6 +35,6 @@ If you would like to reach the Ollama service from another machine, make sure yo
 
 :::tip
 
-- For more configuration options regarding completion or authentication, you could refer to [here](./ollama.md#completion-options) for Ollama provider.
-- If you would like to preload the model before your first conversation with that model in Continue, you could refer to [here](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/continue_quickstart.html#pull-and-prepare-the-model) for more information.
-  :::
+If you would like to preload the model before your first conversation with that model in Continue, you could refer to [here](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/continue_quickstart.html#pull-and-prepare-the-model) for more information.
+
+:::

@@ -176,43 +176,43 @@ const config = {
           // Redirects from old docs
           {
             from: "/customization",
-            to: "/customization/overview",
+            to: "/customize/overview",
           },
           {
             from: "/getting-started",
-            to: "/docs/quickstart/overview",
+            to: "/docs",
           },
           {
             from: "/model-setup/overview",
-            to: "/setup/overview",
+            to: "/docs/getting-started/overview",
           },
           {
             from: "/model-setup/select-model",
-            to: "/setup/select-model",
+            to: "/docs/getting-started/overview",
           },
           {
             from: "/model-setup/configuration",
-            to: "/setup/configuration",
+            to: "/docs/getting-started/overview",
           },
           {
             from: "/setup/select-provider",
-            to: "/setup/model-providers",
+            to: "/customize/model-providers",
           },
           {
             from: "/walkthroughs/codebase-embeddings",
-            to: "/reference/tutorials/codebase-retrieval",
+            to: "/customize/deep-dives/codebase",
           },
           {
             from: "/walkthroughs/tab-autocomplete",
-            to: "/reference/tutorials/tab-autocomplete",
+            to: "/customize/deep-dives/autocomplete",
           },
           {
             from: "/walkthroughs/prompt-files",
-            to: "/reference/tutorials/prompt-files",
+            to: "/customize/deep-dives/prompt-files",
           },
           {
             from: "/walkthroughs/quick-actions",
-            to: "/reference/tutorials/quick-actions",
+            to: "/docs/actions/how-to-use-it#quick-actions",
           },
         ],
       },

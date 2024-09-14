@@ -86,6 +86,7 @@ const sidebars = {
       label: "Model providers",
       collapsed: false,
       link: {
+        slug: "/customize/model-providers",
         type: "generated-index",
       },
       items: [
@@ -97,6 +98,7 @@ const sidebars = {
           type: "category",
           label: "More",
           link: {
+            slug: "/customize/model-providers/more",
             type: "generated-index",
           },
           items: [
@@ -112,6 +114,7 @@ const sidebars = {
       type: "category",
       label: "Model types",
       link: {
+        slug: "/customize/model-types",
         type: "generated-index",
       },
       items: [
