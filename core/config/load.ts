@@ -306,7 +306,7 @@ async function intermediateToFinalConfig(
       (model) => model.providerName === "free-trial",
     );
     if (freeTrialModels.length > 0) {
-      const ghAuthToken = await ide.getGitHubAuthToken();
+      const ghAuthToken = await ide.getGitHubAuthToken({});
       for (const model of freeTrialModels) {
         (model as FreeTrial).setupGhAuthToken(ghAuthToken);
       }
@@ -341,7 +341,7 @@ async function intermediateToFinalConfig(
                 // This shouldn't happen
                 throw new Error("Free trial cannot be used with control plane");
               }
-              const ghAuthToken = await ide.getGitHubAuthToken();
+              const ghAuthToken = await ide.getGitHubAuthToken({});
               (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
             }
             return llm;
@@ -356,7 +356,14 @@ async function intermediateToFinalConfig(
   // These context providers are always included, regardless of what, if anything,
   // the user has configured in config.json
 
-  const codebaseContextParams = ((config.contextProviders || []).filter(isContextProviderWithParams).find(cp => cp.name === "codebase") as ContextProviderWithParams | undefined)?.params || {};
+  const codebaseContextParams =
+    (
+      (config.contextProviders || [])
+        .filter(isContextProviderWithParams)
+        .find((cp) => cp.name === "codebase") as
+        | ContextProviderWithParams
+        | undefined
+    )?.params || {};
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),

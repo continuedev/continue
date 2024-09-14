@@ -16,6 +16,7 @@ class CodeContextProvider extends BaseContextProvider {
     displayTitle: "Code",
     description: "Type to search",
     type: "submenu",
+    dependsOnIndexing: true,
   };
 
   async getContextItems(

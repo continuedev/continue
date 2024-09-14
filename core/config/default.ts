@@ -3,9 +3,28 @@ import {
   ModelDescription,
   SerializedContinueConfig,
   SlashCommandDescription,
-} from "../index.js";
+} from "../";
+
+export const DEFAULT_CHAT_MODEL_CONFIG: ModelDescription = {
+  model: "claude-3-5-sonnet-20240620",
+  provider: "anthropic",
+  apiKey: "",
+  title: "Claude 3.5 Sonnet",
+};
+
+export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
+  title: "Codestral",
+  provider: "mistral",
+  model: "codestral-latest",
+  apiKey: "",
+};
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
+  {
+    title: "Claude 3 Sonnet (Free Trial)",
+    provider: "free-trial",
+    model: "claude-3-sonnet-20240229",
+  },
   {
     title: "GPT-4o (Free Trial)",
     provider: "free-trial",
@@ -24,11 +43,6 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
     title: "Codestral (Free Trial)",
     provider: "free-trial",
     model: "codestral",
-  },
-  {
-    title: "Claude 3 Sonnet (Free Trial)",
-    provider: "free-trial",
-    model: "claude-3-sonnet-20240229",
   },
 ];
 
@@ -91,7 +105,8 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [],
+  models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {
       name: "test",
@@ -100,17 +115,13 @@ export const defaultConfig: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "ollama",
-    model: "starcoder2:3b",
-  },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: FREE_TRIAL_MODELS,
+  models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {
       name: "test",
@@ -119,11 +130,6 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "ollama",
-    model: "starcoder2:3b",
-  },
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
 };

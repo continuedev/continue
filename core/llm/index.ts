@@ -63,7 +63,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsCompletions(): boolean {
-    if (this.providerName === "openai") {
+    if (["openai", "azure"].includes(this.providerName)) {
       if (
         this.apiBase?.includes("api.groq.com") ||
         this.apiBase?.includes("api.mistral.ai") ||
@@ -76,7 +76,7 @@ export abstract class BaseLLM implements ILLM {
         return false;
       }
     }
-    if (["groq", "mistral"].includes(this.providerName)) {
+    if (["groq", "mistral", "deepseek"].includes(this.providerName)) {
       return false;
     }
     return true;
@@ -118,6 +118,7 @@ export abstract class BaseLLM implements ILLM {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
 
@@ -180,6 +181,7 @@ export abstract class BaseLLM implements ILLM {
     this.watsonxProjectId = options.watsonxProjectId;
     this.watsonxStopToken = options.watsonxStopToken;
     this.watsonxApiVersion = options.watsonxApiVersion;
+    this.watsonxFullUrl = options.watsonxFullUrl;
 
     this.cacheSystemMessage = options.cacheSystemMessage;
 
@@ -323,6 +325,20 @@ ${prompt}`;
           ) {
             text =
               "You may need to add pre-paid credits before using the OpenAI API.";
+          } else if (
+            resp.status === 401 &&
+            (resp.url.includes("api.mistral.ai") ||
+              resp.url.includes("codestral.mistral.ai"))
+          ) {
+            if (resp.url.includes("codestral.mistral.ai")) {
+              throw new Error(
+                `You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting "apiBase" to "https://api.mistral.ai/v1" in config.json.`,
+              );
+            } else {
+              throw new Error(
+                `You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting "apiBase" to "https://codestral.mistral.ai/v1" in config.json.`,
+              );
+            }
           }
           throw new Error(
             `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
@@ -332,8 +348,14 @@ ${prompt}`;
         return resp;
       } catch (e: any) {
         // Errors to ignore
-        if (!e.message.includes("/api/show")) {
-          console.warn(
+        if (e.message.includes("/api/tags")) {
+          throw new Error(`Error fetching tags: ${e.message}`);
+        } else if (e.message.includes("/api/show")) {
+          throw new Error(
+            `HTTP ${e.response.status} ${e.response.statusText} from ${e.response.url}\n\n${e.response.body}`,
+          );
+        } else {
+          console.debug(
             `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
           );
 

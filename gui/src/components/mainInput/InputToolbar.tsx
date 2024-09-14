@@ -33,7 +33,6 @@ const StyledDiv = styled.div<{ isHidden: boolean }>`
   gap: 1px;
   background-color: ${vscInputBackground};
   align-items: center;
-  z-index: 50;
   font-size: ${getFontSize() - 2}px;
   cursor: ${(props) => (props.isHidden ? "default" : "text")};
   opacity: ${(props) => (props.isHidden ? 0 : 1)};

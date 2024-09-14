@@ -137,12 +137,12 @@ export class VsCodeWebviewProtocol
                 if (selection === "Add API Key") {
                   this.request("addApiKey", undefined);
                 } else if (selection === "Use Local Model") {
-                  this.request("setupLocalModel", undefined);
+                  this.request("setupLocalConfig", undefined);
                 }
               });
           } else if (message.includes("Please sign in with GitHub")) {
             showFreeTrialLoginMessage(message, this.reloadConfig, () =>
-              this.request("openOnboarding", undefined),
+              this.request("openOnboardingCard", undefined),
             );
           } else {
             Telemetry.capture(

@@ -1,14 +1,15 @@
+import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import ReactDOM from "react-dom";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
+import AddModelForm from "../../forms/AddModelForm";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import { getFontSize } from "../../util";
-import QuickModelSetup from "../modelSelection/quickSetup/QuickModelSetup";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 
 const ProgressBarWrapper = styled.div`
@@ -58,6 +59,27 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
+  if (completed > total) {
+    return (
+      <>
+        <div
+          className="flex items-center gap-1 cursor-default"
+          data-tooltip-id="usage_progress_bar"
+        >
+          <ExclamationCircleIcon width="18px" height="18px" color="red" />
+          Trial limit reached
+        </div>
+        {tooltipPortalDiv &&
+          ReactDOM.createPortal(
+            <StyledTooltip id="usage_progress_bar" place="top">
+              Configure a model above in order to continue
+            </StyledTooltip>,
+            tooltipPortalDiv,
+          )}
+      </>
+    );
+  }
+
   return (
     <>
       <GridDiv
@@ -66,7 +88,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
           dispatch(setShowDialog(true));
           dispatch(
             setDialogMessage(
-              <QuickModelSetup
+              <AddModelForm
                 onDone={() => {
                   dispatch(setShowDialog(false));
                   navigate("/");

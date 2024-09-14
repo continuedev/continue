@@ -125,9 +125,13 @@ function windowsToPosix(windowsPath: string): string {
 function isWindowsLocalButNotRemote(): boolean {
   return (
     vscode.env.remoteName !== undefined &&
-    ["wsl", "ssh-remote", "dev-container", "attached-container", "tunnel"].includes(
-      vscode.env.remoteName,
-    ) &&
+    [
+      "wsl",
+      "ssh-remote",
+      "dev-container",
+      "attached-container",
+      "tunnel",
+    ].includes(vscode.env.remoteName) &&
     process.platform === "win32"
   );
 }

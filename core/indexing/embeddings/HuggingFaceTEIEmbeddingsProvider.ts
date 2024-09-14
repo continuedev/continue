@@ -9,7 +9,10 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "huggingface-tei";
-  maxBatchSize = 32;
+  private _maxBatchSize?: number;
+  get maxBatchSize(): number | undefined {
+    return this._maxBatchSize ?? super.maxBatchSize;
+  }
 
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "http://localhost:8080",
@@ -24,18 +27,16 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
     }
     this.doInfoRequest().then((response) => {
       this.options.model = response.model_id;
-      this.maxBatchSize = response.max_client_batch_size;
+      this._maxBatchSize = response.max_client_batch_size;
     });
   }
 
   async embed(chunks: string[]) {
-    const promises = [];
-    for (let i = 0; i < chunks.length; i += this.maxBatchSize) {
-      promises.push(
-        this.doEmbedRequest(chunks.slice(i, i + this.maxBatchSize)),
-      );
-    }
-    const results = await Promise.all(promises);
+    const batchedChunks = this.getBatchedChunks(chunks);
+
+    const results = await Promise.all(
+      batchedChunks.map((batch) => this.doEmbedRequest(batch)),
+    );
     return results.flat();
   }
 
