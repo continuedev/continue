@@ -121,3 +121,10 @@ export async function* streamLines(
     }
   }
 }
+
+export async function* generateLines<T>(lines: T[]): AsyncGenerator<T> {
+  for (const line of lines) {
+    yield line;
+    // await new Promise((resolve, reject) => setTimeout(() => resolve(null), 50));
+  }
+}

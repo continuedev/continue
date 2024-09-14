@@ -1,7 +1,9 @@
+import { distance } from "fastest-levenshtein";
 import Parser from "web-tree-sitter";
 import { DiffLine } from "../..";
 import { myersDiff } from "../../diff/myers";
 import { getParserForFile } from "../../util/treeSitter";
+import { findInAst } from "./findInAst";
 
 // TODO: If we don't have high confidence, return undefined to fall back to slower methods
 export async function deterministicApplyLazyEdit(
@@ -41,7 +43,18 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
     return false;
   }
 
-  return true; // TODO
+  if (
+    a.children[0]?.text === b.children[0]?.text &&
+    a.children[1]?.text === b.children[1]?.text
+  ) {
+    return true;
+  }
+
+  const lineOneA = a.text.split("\n")[0];
+  const lineOneB = b.text.split("\n")[0];
+
+  const levDist = distance(lineOneA, lineOneB);
+  return levDist / Math.min(lineOneA.length, lineOneB.length) <= 0.25;
 }
 
 function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
@@ -74,18 +87,40 @@ function diffNodes(
   }
 
   // Other base case: no lazy blocks => use line-by-line diff
-  const firstLazyBlockIndex = newNode.children.find((child) =>
-    isLazyBlock(child),
-  );
-  if (!firstLazyBlockIndex) {
-    const diffLines = myersDiff(oldNode.text, newNode.text);
-    return diffLines;
+  const firstLazyNodeInSubtree = findInAst(newNode, isLazyBlock);
+  if (!firstLazyNodeInSubtree) {
+    const myersDiffLines = myersDiff(oldNode.text, newNode.text);
+    return myersDiffLines;
   }
 
   const diffLines: DiffLine[] = [];
   const leftChildren = oldNode.children;
   const rightChildren = newNode.children;
   let isLazy = false;
+
+  // Deal with any leading whitespace in this node
+  const leadingNewlines =
+    leftChildren[0].startPosition.row - oldNode.endPosition.row;
+  for (let i = 1; i < leadingNewlines - 1; ++i) {
+    diffLines.push({ type: "same", line: "" });
+  }
+
+  function consumeLeftChild(L: Parser.SyntaxNode) {
+    leftChildren.shift();
+    const nextNode = leftChildren[0];
+
+    if (!nextNode) {
+      return;
+    }
+
+    const blankLinesBetween = nextNode.startPosition.row - L.endPosition.row;
+    for (let i = 0; i < blankLinesBetween - 1; i++) {
+      diffLines.push({
+        type: "same",
+        line: "",
+      });
+    }
+  }
 
   while (leftChildren.length > 0 && rightChildren.length > 0) {
     const L = leftChildren[0];
@@ -108,22 +143,25 @@ function diffNodes(
 
         // then consume lazy, L, and R
         isLazy = false;
-        leftChildren.shift();
+        consumeLeftChild(L);
         rightChildren.shift();
       } else {
+        // Push "same" lines
+        diffLines.push(...diffLinesForNode(L, "same"));
+
         // L != R, consume L
-        leftChildren.shift();
+        consumeLeftChild(L);
       }
     } else {
       // When not lazy, we look for the first match of L
       const index = rightChildren.findIndex((node) => nodesAreSimilar(L, node));
 
       if (index === -1) {
-        leftChildren.shift();
         diffLines.push(
           // TODO: What are we returning? Iterate over the lines?
           ...diffLinesForNode(L, "old"),
         );
+        consumeLeftChild(L);
       } else {
         // Match found, insert all right nodes before the match
         for (let i = 0; i < index; i++) {
@@ -136,7 +174,7 @@ function diffNodes(
         diffLines.push(...subDiffs);
 
         // then consume L and R
-        leftChildren.shift();
+        consumeLeftChild(L);
         rightChildren.shift();
       }
     }

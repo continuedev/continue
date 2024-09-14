@@ -4,6 +4,7 @@ import { DiffLine, DiffLineType } from "../index.js";
 // @ts-ignore no typings available
 import { changed, diff as myersDiff } from "myers-diff";
 import path from "node:path";
+import { generateLines } from "./util.js";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
@@ -13,12 +14,6 @@ const UNIFIED_DIFF_SYMBOLS = {
   new: "+",
   old: "-",
 };
-
-async function* generateLines(lines: string[]): AsyncGenerator<string> {
-  for (const line of lines) {
-    yield line;
-  }
-}
 
 async function collectDiffs(
   oldLines: string[],
