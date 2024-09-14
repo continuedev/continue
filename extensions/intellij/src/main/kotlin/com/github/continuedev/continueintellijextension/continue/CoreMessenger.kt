@@ -5,6 +5,7 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.github.continuedev.continueintellijextension.services.TelemetryService
 import com.github.continuedev.continueintellijextension.toolWindow.MessageTypes
 import com.google.gson.Gson
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import java.io.*
@@ -168,14 +169,13 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 println("An error occurred: ${e.message}")
             }
         } else {
-            // Set proper permissions
-            setPermissions(continueCorePath)
-            setPermissions(esbuildPath)
 
-            // Start the subprocess
-            val processBuilder = ProcessBuilder(continueCorePath)
-                    .directory(File(continueCorePath).parentFile)
-            process = processBuilder.start()
+            // Register for full service, multiple windows using the same process instance
+            val service = ServiceManager.getService(GlobalContinueService::class.java)
+            if (service.getGlobalContinueProcess() == null){
+                service.initProcess(esbuildPath, continueCorePath)
+            }
+            process = service.getGlobalContinueProcess()?.getContinueProcess()
 
             val outputStream = process!!.outputStream
             val inputStream = process!!.inputStream
