@@ -24,8 +24,6 @@ We recommend configuring **GPT-4o** as your chat model.
 
 We recommend configuring **Codestral** as your autocomplete model.
 
-<!-- TODO: I don't think this is valid -->
-
 ```json title="config.json"
 "tabAutocompleteModel": [{
     "title": "Codestral",
@@ -42,8 +40,6 @@ We recommend configuring **Codestral** as your autocomplete model.
 ## Embeddings model
 
 We recommend configuring **text-embedding-3-large** as your embeddings model.
-
-<!-- TODO: I don't think this is valid -->
 
 ```json title="config.json"
 "embeddingsProvider": [{
@@ -72,8 +68,6 @@ You need to apply for access to the Azure OpenAI service. Response times are typ
 
 **[Click here to apply for access to the Azure OpenAI service](https://azure.microsoft.com/en-us/products/ai-services/openai-service)**
 :::
-
-<!-- TODO: These docs are unclear, we should walk through ourselves and rewrite  -->
 
 ## General model configuration
 

@@ -22,4 +22,4 @@ Reject a full suggestion with `Esc`
 
 ### Partially accepting a suggestion
 
-For more granular control, use `cmd/ctrl+→` to accept parts of the suggestion word-by-word.
+For more granular control, use `cmd/ctrl + →` to accept parts of the suggestion word-by-word.

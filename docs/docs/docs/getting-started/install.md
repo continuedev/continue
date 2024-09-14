@@ -2,19 +2,12 @@
 title: Install
 description: The open-source AI code assistant for developers
 slug: /getting-started
-keywords:
-  [
-    install,
-    installation,
-    getting started,
-    vs code,
-    jetbrains
-  ]
+keywords: [install, installation, getting started, vs code, jetbrains]
 ---
 
 ## VS Code
 
-1. Click `Install` on the **[Continue extension page in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)**
+1. Click `Install` on the [Continue extension page in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
 2. This will open the Continue extension page in VS Code, where you will need to click `Install` again
 
@@ -22,7 +15,9 @@ keywords:
 
 ![move-to-right-sidebar](/img/move-to-right-sidebar.gif)
 
-5. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs)
+:::info[Troubleshooting]
+If you have any problems, see the [troubleshooting guide](../troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs)
+:::
 
 ## JetBrains
 
@@ -34,4 +29,6 @@ keywords:
 
 ![jetbrains-getting-started.png](/img/jetbrains-getting-started.png)
 
-4. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ)
+:::info[Troubleshooting]
+If you have any problems, see the [troubleshooting guide](../troubleshooting.md) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ)
+:::

@@ -301,7 +301,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
   together: {
     title: "TogetherAI",
     provider: "together",
-    refPage: "togetherllm",
+    refPage: "together",
     description:
       "Use the TogetherAI API for extremely fast streaming of open-source models",
     icon: "together.png",

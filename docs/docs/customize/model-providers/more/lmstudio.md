@@ -14,7 +14,7 @@
 }
 ```
 
-### Setting up a remote instance
+## Setting up a remote instance
 
 To configure a remote instance of LM Studio, add the `"apiBase"` property to your model in config.json:
 

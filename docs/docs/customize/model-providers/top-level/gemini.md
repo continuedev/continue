@@ -36,8 +36,6 @@ Gemini currently does not offer any autocomplete models.
 
 We recommend configuring **text-embedding-004** as your embeddings model.
 
-<!-- TODO: We should update the emebddings provider to infer `models/` -->
-
 ```json title="config.json"
 {
   "embeddingsProvider": [

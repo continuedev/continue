@@ -54,10 +54,10 @@ We are constantly making fixes and improvements to Continue, but the latest chan
 
 On JetBrains, the "pre-release" happens through their Early Access Program (EAP) channel. To download the latest EAP version, enable the EAP channel:
 
-1. Open JetBrains settings (cmd/ctrl+,) and go to "Plugins"
+1. Open JetBrains settings (`cmd/ctrl + ,`) and go to "Plugins"
 2. Click the gear icon at the top
 3. Select "Manage Plugin Repositories..."
-4. Add "[https://plugins.jetbrains.com/plugins/eap/list>](https://plugins.jetbrains.com/plugins/eap/list)" to the list
+4. Add "[https://plugins.jetbrains.com/plugins/eap/list](https://plugins.jetbrains.com/plugins/eap/list)" to the list
 5. You'll now always be able to download the latest EAP version from the marketplace
 
 ## Download an Older Version
