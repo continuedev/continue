@@ -1529,7 +1529,8 @@
                 "url",
                 "database",
                 "os",
-                "repo-map"
+                "repo-map",
+                "greptile"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1553,7 +1554,8 @@
                 "Reference the contents of a page at a URL",
                 "Reference table schemas",
                 "Operating system and CPU Information",
-                "Map of files in the repository with important code highlights"
+                "Map of files in the repository with important code highlights",
+                "Query your greptile index of the current repo"
               ],
               "type": "string"
             },

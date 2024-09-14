@@ -22,6 +22,7 @@ import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";
+import GreptileContextProvider from "./GreptileContextProvider";
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
@@ -53,6 +54,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   URLContextProvider,
   ContinueProxyContextProvider,
   RepoMapContextProvider,
+  GreptileContextProvider,
 ];
 
 export function contextProviderClassFromName(

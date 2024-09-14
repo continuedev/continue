@@ -547,7 +547,8 @@ declare global {
     | "docs"
     | "gitlab-mr"
     | "os"
-    | "currentFile";
+    | "currentFile"
+    | "greptile;
 
   type TemplateType =
     | "llama2"
