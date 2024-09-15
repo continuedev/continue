@@ -20,7 +20,7 @@
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
-        "CONTROL_PLANE_ENV": "local"
+        // "CONTROL_PLANE_ENV": "local"
       }
     },
     {
