@@ -15,7 +15,7 @@ We recommend configuring **GPT-4o** as your chat model.
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "engine": "<YOUR_ENGINE>",
     "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "openai",
+    "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
 }]
 ```
@@ -32,7 +32,7 @@ We recommend configuring **Codestral** as your autocomplete model.
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "engine": "<YOUR_ENGINE>",
     "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "openai",
+    "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
 }]
 ```
@@ -48,7 +48,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "engine": "<YOUR_ENGINE>",
     "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "openai",
+    "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
 }]
 ```
@@ -75,9 +75,17 @@ Azure OpenAI requires a handful of additional parameters to be configured, such 
 
 To find this information in _Azure AI Studio_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
 
-For example, a Target URI of `<https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-13-15-preview>` would map to the following:
+For example, a Target URI of `<https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-03-15-preview>` would map to the following:
 
-- model = gpt-4o
-- engine = gpt-4o
-- apiVersion = 2023-13-15-preview
-- apiBase = just-an-example.openai.azure.com
+```json
+{
+  "title": "GPT-4o Azure",
+  "model": "gpt-4o",
+  "provider": "azure",
+  "apiBase": "https://just-an-example.openai.azure.com",
+  "apiType": "azure",
+  "engine": "gpt-4o",
+  "apiVersion": "2023-03-15-preview",
+  "apiKey": "<MY_API_KEY>"
+}
+```
