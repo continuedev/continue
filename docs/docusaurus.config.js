@@ -297,10 +297,10 @@ const config = {
             to: "/customize/tutorials/set-up-codestral",
             from: "/walkthroughs/set-up-codestral",
           },
-          // {
-          //   to: "/docs",
-          //   from: "/intro",
-          // },
+          {
+            to: "/docs",
+            from: "/intro",
+          },
           {
             to: "/docs/telemetry",
             from: "/telemetry",
