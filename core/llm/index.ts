@@ -150,7 +150,16 @@ export abstract class BaseLLM implements ILLM {
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
-      maxTokens: options.completionOptions?.maxTokens ?? DEFAULT_MAX_TOKENS,
+      maxTokens:
+        options.completionOptions?.maxTokens ??
+        (llmInfo?.maxCompletionTokens
+          ? Math.min(
+              llmInfo.maxCompletionTokens,
+              // Even if the model has a large maxTokens, we don't want to use that every time,
+              // because it takes away from the context length
+              this.contextLength / 4,
+            )
+          : DEFAULT_MAX_TOKENS),
     };
     if (CompletionOptionsForModels[options.model as ModelName]) {
       this.completionOptions = mergeJson(
