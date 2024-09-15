@@ -182,6 +182,10 @@ const config = {
             from: ["/install/vscode", "/install/jetbrains"],
           },
           {
+            to: "/customize/model-types",
+            from: "/setup/overview",
+          },
+          {
             to: "/docs/getting-started/overview",
             from: [
               "/model-setup/overview",

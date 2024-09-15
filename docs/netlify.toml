@@ -1,9 +1,4 @@
 [[redirects]]
-  from = "/"
+  from = "/docs"
   to = "/docs"
-  force = true
-
-[[redirects]]
-  from = "/intro"
-  to = "/docs"
-  force = true
+  status = 200
