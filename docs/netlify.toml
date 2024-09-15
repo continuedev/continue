@@ -2,3 +2,8 @@
   from = "/docs"
   to = "/docs"
   status = 200
+
+[[redirects]]
+  from = "/intro"
+  to = "/docs"
+  status = 200
