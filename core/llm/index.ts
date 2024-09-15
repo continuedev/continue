@@ -135,6 +135,7 @@ export abstract class BaseLLM implements ILLM {
     };
 
     this.model = options.model;
+    // Use @continuedev/llm-info package to autodetect certain parameters
     const llmInfo = findLlmInfo(this.model);
 
     const templateType =
