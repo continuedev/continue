@@ -9,7 +9,7 @@ An "embeddings model" is trained to convert a piece of text into a vector, which
 
 In Continue, embeddings are generated during indexing and then used by [@codebase](../deep-dives/codebase.md) to perform similarity search over your codebase.
 
-## Recommended reranking models
+## Recommended embedding models
 
 If you have the ability to use any model, we recommend `voyage-code-2`, which is listed below along with the rest of the options for embeddings models.
 
