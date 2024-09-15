@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Changed
-body: Use Chromium only as a fallback after asking user
-time: 2024-09-05T13:08:13.018136-07:00
