@@ -67,6 +67,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "sambanova",
     ],
     isOpenSource: true,
   },
@@ -454,7 +455,7 @@ export const models: { [key: string]: ModelPackage } = {
   codestral: {
     title: "Codestral",
     description:
-      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion. Trained on more than 80 programming languages, Codestral demonstrates proficiency in both widely-used and less-common languages.",
+      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion.",
     params: {
       title: "Codestral",
       model: "codestral-latest",
@@ -741,7 +742,7 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       model: "ibm/granite-20b-code-instruct",
       contextLength: 20_000,
-      title: "watsonx - Granite Code 20b"
+      title: "watsonx - Granite Code 20b",
     },
     providerOptions: ["watsonx"],
     icon: "watsonx.png",

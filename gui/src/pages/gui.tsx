@@ -17,7 +17,6 @@ import {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Button,
@@ -32,9 +31,13 @@ import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
 import { TutorialCard } from "../components/mainInput/TutorialCard";
+import OnboardingCard, {
+  useOnboardingCard,
+} from "../components/OnboardingCard";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
+import { useTutorialCard } from "../hooks/useTutorialCard";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -93,24 +96,10 @@ const StepsDiv = styled.div`
     position: relative;
   }
 
-  // Gray, vertical line on the left ("thread")
-  // &::before {
-  //   content: "";
-  //   position: absolute;
-  //   height: calc(100% - 12px);
-  //   border-left: 2px solid ${lightGray};
-  //   left: 28px;
-  //   z-index: 0;
-  //   bottom: 12px;
-  // }
-
   .thread-message {
     margin: 8px 4px 0 4px;
     padding-bottom: 8px;
   }
-  // .thread-message:not(:first-child) {
-  //   border-top: 1px solid ${lightGray}22;
-  // }
 `;
 
 const NewSessionButton = styled.div`
@@ -155,8 +144,10 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 function GUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
+
+  const onboardingCard = useOnboardingCard();
+  const { showTutorialCard, closeTutorialCard } = useTutorialCard();
 
   const sessionState = useSelector((state: RootState) => state.state);
 
@@ -173,16 +164,6 @@ function GUI() {
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
 
   const state = useSelector((state: RootState) => state.state);
-
-  const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard") ?? true,
-  );
-
-  const onCloseTutorialCard = () => {
-    posthog.capture("closedTutorialCard");
-    setLocalStorage("showTutorialCard", false);
-    setShowTutorialCard(false);
-  };
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -237,8 +218,12 @@ function GUI() {
           setLocalStorage("ftc", u + 1);
 
           if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-            navigate("/onboarding");
+            onboardingCard.open("Best");
             posthog?.capture("ftc_reached");
+            ideMessenger.ide.showToast(
+              "info",
+              "You've reached the free trial limit. Please configure a model to continue.",
+            );
             return;
           }
         } else {
@@ -508,9 +493,15 @@ function GUI() {
                 </div>
               ) : null}
 
-              {!!showTutorialCard && (
+              {onboardingCard.show && (
+                <div className="mt-10 mx-2">
+                  <OnboardingCard activeTab={onboardingCard.activeTab} />
+                </div>
+              )}
+
+              {showTutorialCard !== false && !onboardingCard.open && (
                 <div className="flex justify-center w-full">
-                  <TutorialCard onClose={onCloseTutorialCard} />
+                  <TutorialCard onClose={closeTutorialCard} />
                 </div>
               )}
             </>

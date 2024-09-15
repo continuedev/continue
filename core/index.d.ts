@@ -1,3 +1,5 @@
+import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -121,7 +123,7 @@ export interface ILLM extends LLMOptions {
 export type ContextProviderType = "normal" | "query" | "submenu";
 
 export interface ContextProviderDescription {
-  title: string;
+  title: ContextProviderName;
   displayTitle: string;
   description: string;
   renderInlineAs?: string;
@@ -317,6 +319,9 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
   model?: string;
 }
+
+export type ToastType = "info" | "error" | "warning";
+
 export interface LLMOptions {
   model: string;
 
@@ -363,6 +368,7 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
 }
@@ -497,13 +503,15 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
-  errorPopup(message: string): Promise<void>;
-  infoPopup(message: string): Promise<void>;
-
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<any>;
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
-  getGitHubAuthToken(): Promise<string | undefined>;
+  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
@@ -569,7 +577,15 @@ type ContextProviderName =
   | "docs"
   | "gitlab-mr"
   | "os"
-  | "currentFile";
+  | "currentFile"
+  | "outline"
+  | "continue-proxy"
+  | "highlights"
+  | "file"
+  | "issue"
+  | "repo-map"
+  | "url"
+  | string;
 
 type TemplateType =
   | "llama2"
@@ -622,6 +638,7 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "openrouter"
+  | "sambanova"
   | "nvidia"
   | "vllm"
   | "mock";
@@ -648,6 +665,10 @@ export type ModelName =
   | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
+  | "mistral-tiny"
+  | "mistral-small"
+  | "mistral-medium"
+  | "mistral-embed"
   // Llama 2
   | "llama2-7b"
   | "llama2-13b"
@@ -686,10 +707,6 @@ export type ModelName =
   | "gemini-1.5-pro"
   | "gemini-1.5-flash-latest"
   | "gemini-1.5-flash"
-  // Mistral
-  | "mistral-tiny"
-  | "mistral-small"
-  | "mistral-medium"
   // Tab autocomplete
   | "deepseek-1b"
   | "starcoder-1b"
@@ -783,7 +800,9 @@ export type EmbeddingsProviderName =
   | "gemini"
   | "continue-proxy"
   | "deepinfra"
-  | "voyage";
+  | "nvidia"
+  | "voyage"
+  | "mistral";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -794,6 +813,7 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxChunkSize?: number;
+  maxBatchSize?: number;
   // AWS options
   profile?: string;
 
@@ -919,6 +939,13 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
+
+  /**
+   * If set to true, we will attempt to pull down and install an instance of Chromium
+   * that is compatible with the current version of Puppeteer.
+   * This is needed to crawl a large number of documentation sites that are dynamically rendered.
+   */
+  useChromiumForDocsCrawling?: boolean;
 }
 
 interface AnalyticsConfig {

@@ -17,12 +17,12 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
-import { VsCodeIde } from "../ideProtocol";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
+import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 /**
@@ -172,7 +172,9 @@ export class VsCodeMessenger {
       const doc = await vscode.workspace.openTextDocument(
         vscode.Uri.file(tutorialPath),
       );
-      await vscode.window.showTextDocument(doc);
+      await vscode.window.showTextDocument(doc, {
+        preview: false,
+      });
     });
 
     this.onWebview("openUrl", (msg) => {
@@ -282,21 +284,11 @@ export class VsCodeMessenger {
       const { filepath, startLine, endLine } = msg.data;
       return ide.showLines(filepath, startLine, endLine);
     });
-    // Other
-    this.onWebviewOrCore("errorPopup", (msg) => {
-      vscode.window
-        .showErrorMessage(msg.data.message, "Show Logs")
-        .then((selection) => {
-          if (selection === "Show Logs") {
-            vscode.commands.executeCommand("workbench.action.toggleDevTools");
-          }
-        });
-    });
-    this.onWebviewOrCore("infoPopup", (msg) => {
-      vscode.window.showInformationMessage(msg.data.message);
+    this.onWebviewOrCore("showToast", (msg) => {
+      this.ide.showToast(...msg.data);
     });
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
-      ide.getGitHubAuthToken(),
+      ide.getGitHubAuthToken(msg.data),
     );
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
       return getControlPlaneSessionInfo(msg.data.silent);

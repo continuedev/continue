@@ -137,7 +137,12 @@ export class VsCodeIdeUtils {
 
   openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(
+      filepath,
+      range,
+      vscode.ViewColumn.One,
+      false,
+    );
   }
 
   async fileExists(filepath: string): Promise<boolean> {

@@ -3,4 +3,6 @@ id: index
 slug: /
 ---
 
-This index page should automatically redirect to [/docs/intro](./intro.md)
+# Index
+
+This index page should automatically redirect to [/docs](./docs/introduction.md)

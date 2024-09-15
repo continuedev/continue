@@ -45,6 +45,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "sagemaker",
   "continue-proxy",
   "mistral",
+  "sambanova",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -57,6 +58,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "bedrock",
   "sagemaker",
   "continue-proxy",
+  "openrouter",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -78,9 +80,11 @@ function modelSupportsImages(
   provider: ModelProvider,
   model: string,
   title: string | undefined,
-  capabilities: ModelCapability | undefined
+  capabilities: ModelCapability | undefined,
 ): boolean {
-  if (capabilities?.uploadImage !== undefined) {return capabilities.uploadImage;}
+  if (capabilities?.uploadImage !== undefined) {
+    return capabilities.uploadImage;
+  }
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }
@@ -108,6 +112,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "free-trial",
   "replicate",
   "together",
+  "sambanova",
 ];
 
 function llmCanGenerateInParallel(

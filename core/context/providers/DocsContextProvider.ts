@@ -90,7 +90,8 @@ class DocsContextProvider extends BaseContextProvider {
       await docsService.isJetBrainsAndPreIndexedDocsProvider();
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
-      extras.ide.errorPopup(
+      extras.ide.showToast(
+        "error",
         `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
           "the embeddings provider, but it cannot be used with JetBrains. " +
           "Please select a different embeddings provider to use the '@docs' " +
@@ -108,8 +109,9 @@ class DocsContextProvider extends BaseContextProvider {
       });
     }
 
-    const embeddingsProvider =
-      await docsService.getEmbeddingsProvider(!!preIndexedDoc);
+    const embeddingsProvider = await docsService.getEmbeddingsProvider(
+      !!preIndexedDoc,
+    );
 
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 

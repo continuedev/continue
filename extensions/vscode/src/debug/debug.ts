@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { VsCodeIde } from "../ideProtocol";
+import type { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export const threadStopped: Map<number, boolean> = new Map();
