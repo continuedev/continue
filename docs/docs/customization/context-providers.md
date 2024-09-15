@@ -322,8 +322,7 @@ Type `@os` to reference the architecture and platform of your current operating 
 ```
 
 ### Greptile
-Type @greptile to perform file retrieval using your greptile indices. 
-Enter your query to greptile in the popup text box. The currently active vscode project is automatically used as the repository of interest (this must be pre-indexed with greptile).
+Type @greptile to query your Greptile indexes. 
  ```json
  {"name": "greptile"}
  ```
