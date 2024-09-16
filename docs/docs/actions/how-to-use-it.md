@@ -18,13 +18,13 @@ The most common way to invoke an action is with a slash command. These are short
 
 ![slash-commands](/img/slash-commands.png)
 
-A few of the most useful slash commands are available by default, like “/edit”, “/comment”, and “/share”, but Continue has a large built-in library of other options. To enable these, learn more [here](../../customize/slash-commands.md).
+A few of the most useful slash commands are available by default, like “/edit”, “/comment”, and “/share”, but Continue has a large built-in library of other options. To enable these, learn more [here](../customize/slash-commands.md).
 
 ### Prompt files
 
 It is also possible to write your own slash command by defining a “.prompt file.” Prompt files can be as simple as a text file, but also include templating so that you can refer to files, URLs, highlighted code, and more.
 
-The full .prompt file reference can be found [here](../../customize/deep-dives/prompt-files.md).
+The full .prompt file reference can be found [here](../customize/deep-dives/prompt-files.md).
 
 :::tip[Prompt library]
 To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-examples). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!

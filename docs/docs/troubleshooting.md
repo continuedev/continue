@@ -48,7 +48,7 @@ Open `~/.continue/logs/core.log`. The most recent logs are found at the bottom o
 
 We are constantly making fixes and improvements to Continue, but the latest changes remain in a "pre-release" version for roughly a week so that we can test their stability. If you are experiencing issues, you can try the pre-release by going to the Continue extension page in VS Code and selecting "Switch to Pre-Release" as shown below.
 
-![Pre-Release](../../static/img/prerelease.png)
+![Pre-Release](../static/img/prerelease.png)
 
 ### JetBrains
 

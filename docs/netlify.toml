@@ -1,5 +1,0 @@
-[[redirects]]
-  from = "/"
-  to = "/docs"
-  status = 200
-  force = true
