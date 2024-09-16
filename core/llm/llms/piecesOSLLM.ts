@@ -20,6 +20,14 @@ class PiecesOSLLM extends BaseLLM {
     });
     this.model = options.model || "pieces_os";
   }
+
+  private _convertArgs(options: CompletionOptions, prompt: string): QGPTQuestionInput {
+    const relevanceInput: QGPTRelevanceInput = {
+      query: prompt,
+      options: {
+        database: true,
+      },
+    };
   
 }
 
