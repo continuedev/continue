@@ -204,7 +204,7 @@
             "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
             "### Bedrock Imported Models\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
             "### Sagemaker\nSagemaker is AWS' machine learning platform.",
-            "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/together)",
+            "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/togetherllm)",
             "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/ollama)",
             "### Huggingface TGI\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfacetgi)",
             "### Huggingface Inference API\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfaceinferenceapi)",
@@ -244,10 +244,10 @@
           "type": "string"
         },
         "region": {
-              "title": "Region",
-              "description": "The region where the model is hosted",
-              "type": "string"
-            },
+          "title": "Region",
+          "description": "The region where the model is hosted",
+          "type": "string"
+        },
         "profile": {
           "title": "Profile",
           "description": "The AWS security profile to use",
@@ -414,9 +414,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "bedrockimport"
-                ]
+                "enum": ["bedrockimport"]
               }
             },
             "required": ["provider"]
@@ -526,7 +524,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai", "azure"]
+                "enum": ["openai"]
               }
             },
             "required": ["provider"]
@@ -710,13 +708,13 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "claude-2",
+                      "claude-instant-1",
                       "claude-3-5-sonnet-20240620",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
-                      "claude-2.1",
-                      "claude-2",
-                      "claude-instant-1"
+                      "claude-2.1"
                     ]
                   },
                   {
@@ -759,7 +757,6 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "anthropic.claude-3-5-sonnet-20240620-v1:0",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
                       "claude-2"
@@ -806,6 +803,7 @@
               },
               "model": {
                 "enum": [
+                  "chat-bison-001",
                   "gemini-pro",
                   "gemini-1.5-pro-latest",
                   "gemini-1.5-pro",
@@ -946,33 +944,33 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "mistral:7b",
-                      "llama2:7b",
-                      "llama2:13b",
-                      "codellama:7b",
-                      "codellama:13b",
-                      "codellama:34b",
-                      "codellama:70b",
-                      "llama3:8b",
-                      "llama3:70b",
-                      "llama3.1:8b",
-                      "llama3.1:70b",
-                      "llama3.1:405b",
-                      "phi:2",
-                      "phind:codellama:34b",
-                      "wizardcoder:7b",
-                      "wizardcoder:13b",
-                      "wizardcoder:34b",
-                      "zephyr:7b",
-                      "codeup:13b",
-                      "deepseek:7b",
-                      "deepseek:33b",
-                      "neural:chat:7b",
-                      "deepseek:1b",
-                      "stable:code:3b",
-                      "starcoder:1b",
-                      "starcoder:3b",
-                      "starcoder2:3b",
+                      "mistral-7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
+                      "phi-2",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "starcoder2-3b",
                       "AUTODETECT"
                     ]
                   },
@@ -1237,6 +1235,7 @@
                       "claude-2.1",
                       "command-r",
                       "command-r-plus",
+                      "chat-bison-001",
                       "gemini-pro",
                       "gemini-1.5-pro-latest",
                       "gemini-1.5-pro",
@@ -1316,11 +1315,7 @@
               "model": {
                 "anyOf": [
                   {
-                    "enum": [
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b"
-                    ]
+                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
                   },
                   {
                     "type": "string"
@@ -2481,16 +2476,13 @@
               "type": "object",
               "properties": {
                 "inlineEdit": {
-                  "description": "The 'title' property of the model you wish to use for inline edits",
-                  "type": "string"
+                  "$ref": "#/definitions/ModelTitle"
                 },
                 "applyCodeBlock": {
-                  "description": "The 'title' property of the model you wish to use for applying code blocks",
-                  "type": "string"
+                  "$ref": "#/definitions/ModelTitle"
                 },
                 "repoMapFileSelection": {
-                  "description": "The 'title' property of the model you wish to use for repo map file selections",
-                  "type": "string"
+                  "$ref": "#/definitions/ModelTitle"
                 }
               }
             },
@@ -2552,6 +2544,12 @@
             }
           }
         }
+      }
+    },
+    "ModelTitle": {
+      "type": "string",
+      "enum": {
+        "$data": "/models/title"
       }
     }
   }
