@@ -78,6 +78,11 @@ class PiecesOSLLM extends BaseLLM {
       return 'Error asking question';
     }
   }
+
+  setModel(modelName: string): void {
+    this.model = modelName;
+    console.log(`Model set to ${modelName}.`);
+  }
   
   }
 
