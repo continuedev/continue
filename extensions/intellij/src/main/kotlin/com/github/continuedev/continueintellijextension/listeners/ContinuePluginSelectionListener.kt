@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.services.ContinueExtensi
 import com.github.continuedev.continueintellijextension.utils.Debouncer
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
@@ -26,7 +27,18 @@ class ContinuePluginSelectionListener(
         debouncer.debounce { handleSelection(e) }
     }
 
-    private var toolTipComponent: ToolTipComponent? = null
+    private var toolTipComponents: ArrayList<ToolTipComponent> = ArrayList()
+
+    private fun removeExistingTooltips(editor: Editor) {
+        ApplicationManager.getApplication().invokeLater {
+            toolTipComponents.forEach {
+                editor.contentComponent.remove(it)
+            }
+            editor.contentComponent.revalidate()
+            editor.contentComponent.repaint()
+            toolTipComponents.clear()
+        }
+    }
 
     private fun handleSelection(e: SelectionEvent) {
         ApplicationManager.getApplication().runReadAction {
@@ -36,12 +48,7 @@ class ContinuePluginSelectionListener(
 
             // If selected text is empty, remove the tooltip
             if (selectedText.isNullOrEmpty()) {
-                ApplicationManager.getApplication().invokeLater {
-                    toolTipComponent?.let { editor.contentComponent.remove(it) }
-                    toolTipComponent = null
-                    editor.contentComponent.revalidate()
-                    editor.contentComponent.repaint()
-                }
+                removeExistingTooltips(editor)
                 return@runReadAction
             }
 
@@ -66,8 +73,7 @@ class ContinuePluginSelectionListener(
             val filepath = virtualFile?.path ?: "Unknown path"
 
             ApplicationManager.getApplication().invokeLater {
-                toolTipComponent?.let { editor.contentComponent.remove(it) }
-
+                removeExistingTooltips(editor)
                 editor.contentComponent.layout = null
 
                 val line = startLine - 2
@@ -84,10 +90,9 @@ class ContinuePluginSelectionListener(
                     val maxToolTipWidth = 600
                     x = max(0, min(x, maxEditorWidth - maxToolTipWidth))
 
-                    toolTipComponent = ToolTipComponent(editor, x, y)
+                    val toolTipComponent = ToolTipComponent(editor, x, y)
+                    toolTipComponents.add(toolTipComponent)
                     editor.contentComponent.add(toolTipComponent)
-                } else {
-                    toolTipComponent = null
                 }
 
                 editor.contentComponent.revalidate()
