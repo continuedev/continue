@@ -5,6 +5,14 @@ import { QGPTApi, QGPTQuestionInput, QGPTStreamInput, QGPTRelevanceInput } from 
 import { PiecesClient } from 'pieces-copilot-sdk';
 
 class PiecesOSLLM extends BaseLLM {
+  static providerName: ModelProvider = "pieces_os";
+  static defaultOptions: Partial<LLMOptions> = {
+    apiBase: "http://localhost:1000", 
+    model: "pieces_os",
+  };
+
+  client: QGPTApi;
+
   
 }
 
