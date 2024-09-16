@@ -64,7 +64,21 @@ class PiecesOSLLM extends BaseLLM {
     async _call(
     prompt: string,
     options: CompletionOptions,
-  )
+  ): Promise<string> {
+    try {
+      const questionInput = this._convertArgs(options, prompt);
+      const response = await this.client.questionRaw({ qGPTQuestionInput: questionInput });
+      const result = await response.value();
+
+      return result.answers && result.answers.iterable.length > 0
+        ? result.answers.iterable[0].text
+        : "";
+    } catch (error) {
+      console.error('Error asking question:', error);
+      return 'Error asking question';
+    }
+  }
+  
   }
 
 export default PiecesOSLLM;
