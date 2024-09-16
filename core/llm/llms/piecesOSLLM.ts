@@ -7,7 +7,7 @@ import { PiecesClient } from 'pieces-copilot-sdk';
 class PiecesOSLLM extends BaseLLM {
   static providerName: ModelProvider = "pieces_os";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:1000", 
+    apiBase: "http://localhost:1000", // Replace with actual Pieces OS API base URL
     model: "pieces_os",
   };
 
@@ -30,7 +30,7 @@ class PiecesOSLLM extends BaseLLM {
     };
 
     return {
-      relevant: { iterable: [] }, 
+      relevant: { iterable: [] }, // This should be populated with relevant snippets from relevance endpoint
       query: prompt,
       application: this.model,
     };
@@ -39,8 +39,7 @@ class PiecesOSLLM extends BaseLLM {
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions,
-  )
-}: AsyncGenerator<string> {
+  ): AsyncGenerator<string> {
     try {
       const streamInput: QGPTStreamInput = {
         question: this._convertArgs(options, prompt),
@@ -60,8 +59,9 @@ class PiecesOSLLM extends BaseLLM {
       console.error('Error streaming question:', error);
       yield 'Error streaming question';
     }
+  }
 
-    async _call(
+  async _call(
     prompt: string,
     options: CompletionOptions,
   ): Promise<string> {
@@ -91,7 +91,6 @@ class PiecesOSLLM extends BaseLLM {
   get _identifyingParams(): Record<string, any> {
     return { model: this.model };
   }
-  
-  }
+}
 
 export default PiecesOSLLM;
