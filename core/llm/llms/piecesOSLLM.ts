@@ -40,6 +40,26 @@ class PiecesOSLLM extends BaseLLM {
     prompt: string,
     options: CompletionOptions,
   )
-}
+}: AsyncGenerator<string> {
+    try {
+      const streamInput: QGPTStreamInput = {
+        question: this._convertArgs(options, prompt),
+      };
+
+      const response = await this.client.qgptStreamRaw({ qGPTStreamInput: streamInput });
+      const stream = await response.value();
+
+      for await (const chunk of stream) {
+        if (chunk.question && chunk.question.answers) {
+          for (const answer of chunk.question.answers.iterable) {
+            yield answer.text;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error streaming question:', error);
+      yield 'Error streaming question';
+    }
+  }
 
 export default PiecesOSLLM;
