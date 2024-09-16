@@ -13,6 +13,13 @@ class PiecesOSLLM extends BaseLLM {
 
   client: QGPTApi;
 
+  constructor(options: LLMOptions) {
+    super(options);
+    this.client = new QGPTApi({
+      basePath: this.apiBase,
+    });
+    this.model = options.model || "pieces_os";
+  }
   
 }
 
