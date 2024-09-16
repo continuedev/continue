@@ -82,7 +82,7 @@ const config = {
             sidebarId: "docsSidebar",
             position: "left",
             label: "Docs",
-            href: "/docs",
+            href: "/",
           },
           {
             type: "docSidebar",
@@ -178,15 +178,19 @@ const config = {
             from: "/customization",
           },
           {
-            to: "/docs/getting-started/install",
+            to: "/getting-started/install",
             from: ["/install/vscode", "/install/jetbrains"],
           },
+          // {
+          //   to: "/getting-started/install",
+          //   from: "/getting-started",
+          // },
           {
             to: "/customize/model-types",
             from: "/setup/overview",
           },
           {
-            to: "/docs/getting-started/overview",
+            to: "/getting-started/overview",
             from: [
               "/model-setup/overview",
               "/model-setup/select-model",
@@ -218,7 +222,7 @@ const config = {
             from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
           {
-            to: "/docs/actions/how-to-use-it#quick-actions",
+            to: "/actions/how-to-use-it#quick-actions",
             from: "/walkthroughs/quick-actions",
           },
           {
@@ -298,16 +302,8 @@ const config = {
             from: "/walkthroughs/set-up-codestral",
           },
           {
-            to: "/docs",
+            to: "/",
             from: "/intro",
-          },
-          {
-            to: "/docs/telemetry",
-            from: "/telemetry",
-          },
-          {
-            to: "/docs/troubleshooting",
-            from: "/troubleshooting",
           },
           {
             to: "/customize/model-providers/more/cloudflare",
@@ -380,6 +376,27 @@ const config = {
           {
             to: "/customize/model-providers/more/watsonx",
             from: "/reference/Model Providers/watsonx",
+          },
+          // Sidebar items that should route directly to a subpage
+          {
+            to: "/chat/how-to-use-it",
+            from: "/chat",
+          },
+          {
+            to: "/edit/how-to-use-it",
+            from: "/edit",
+          },
+          {
+            to: "/actions/how-to-use-it",
+            from: "/actions",
+          },
+          {
+            to: "/autocomplete/how-to-use-it",
+            from: "/autocomplete",
+          },
+          {
+            to: "/getting-started/install",
+            from: "/getting-started",
           },
         ],
       },
