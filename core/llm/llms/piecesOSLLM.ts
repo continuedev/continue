@@ -83,6 +83,10 @@ class PiecesOSLLM extends BaseLLM {
     this.model = modelName;
     console.log(`Model set to ${modelName}.`);
   }
+
+  get _llmType(): string {
+    return "pieces_os";
+  }
   
   }
 
