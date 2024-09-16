@@ -32,3 +32,10 @@ To use Pieces OS with Continue, update your `~/.continue/config.json` file as fo
 ## Usage
 
 Once configured, you can use Pieces OS like any other model provider in Continue. The integration will use the Pieces OS API for completions and other supported operations.
+
+## Limitations
+
+- Pieces OS must be running locally on your machine for this integration to work.
+- The available features and capabilities depend on your Pieces OS installation and configuration.
+
+[View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/piecesOSLLM.ts)
