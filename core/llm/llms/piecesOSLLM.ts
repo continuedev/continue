@@ -60,6 +60,11 @@ class PiecesOSLLM extends BaseLLM {
       console.error('Error streaming question:', error);
       yield 'Error streaming question';
     }
+
+    async _call(
+    prompt: string,
+    options: CompletionOptions,
+  )
   }
 
 export default PiecesOSLLM;
