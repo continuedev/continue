@@ -7,7 +7,7 @@ import { PiecesClient } from 'pieces-copilot-sdk';
 class PiecesOSLLM extends BaseLLM {
   static providerName: ModelProvider = "pieces_os";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:1000", // Replace with actual Pieces OS API base URL
+    apiBase: "http://localhost:1000", 
     model: "pieces_os",
   };
 
@@ -30,7 +30,7 @@ class PiecesOSLLM extends BaseLLM {
     };
 
     return {
-      relevant: { iterable: [] }, // This should be populated with relevant snippets from relevance endpoint
+      relevant: { iterable: [] }, 
       query: prompt,
       application: this.model,
     };
