@@ -82,7 +82,7 @@ const config = {
             sidebarId: "docsSidebar",
             position: "left",
             label: "Docs",
-            href: "/docs",
+            href: "/",
           },
           {
             type: "docSidebar",
@@ -180,6 +180,10 @@ const config = {
           {
             to: "/docs/getting-started/install",
             from: ["/install/vscode", "/install/jetbrains"],
+          },
+          {
+            to: "/customize/model-types",
+            from: "/setup/overview",
           },
           {
             to: "/docs/getting-started/overview",
@@ -294,7 +298,7 @@ const config = {
             from: "/walkthroughs/set-up-codestral",
           },
           {
-            to: "/docs",
+            to: "/",
             from: "/intro",
           },
           {
