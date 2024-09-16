@@ -35,7 +35,11 @@ class PiecesOSLLM extends BaseLLM {
       application: this.model,
     };
   }
-  
+
+  protected async *_streamComplete(
+    prompt: string,
+    options: CompletionOptions,
+  )
 }
 
 export default PiecesOSLLM;
