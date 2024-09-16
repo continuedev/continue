@@ -82,7 +82,7 @@ const config = {
             sidebarId: "docsSidebar",
             position: "left",
             label: "Docs",
-            href: "/docs",
+            href: "/",
           },
           {
             type: "docSidebar",
