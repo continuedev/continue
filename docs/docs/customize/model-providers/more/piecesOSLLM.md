@@ -28,3 +28,7 @@ To use Pieces OS with Continue, update your `~/.continue/config.json` file as fo
 - `provider`: Must be set to `"pieces_os"`.
 - `model`: The model identifier for Pieces OS. Default is `"pieces_os"`.
 - `apiBase`: The base URL for the Pieces OS API. Default is `"http://localhost:1000"`.
+
+## Usage
+
+Once configured, you can use Pieces OS like any other model provider in Continue. The integration will use the Pieces OS API for completions and other supported operations.
