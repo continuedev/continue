@@ -1,8 +1,6 @@
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import lancedb, { Connection } from "vectordb";
-import { ConfigHandler } from "../../config/ConfigHandler";
-import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import {
   Chunk,
   ContinueConfig,
@@ -11,6 +9,9 @@ import {
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from "../..";
+import { ConfigHandler } from "../../config/ConfigHandler";
+import { addContextProvider } from "../../config/util";
+import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { GlobalContext } from "../../util/GlobalContext";
 import { IMessenger } from "../../util/messenger";
@@ -31,7 +32,6 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
-import { addContextProvider } from "../../config/util";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -249,6 +249,10 @@ export default class DocsService {
         maxKnownPages *= 2;
       }
     }
+
+    Telemetry.capture("docs_pages_crawled", {
+      count: processedPages,
+    });
 
     const chunks: Chunk[] = [];
     const embeddings: number[][] = [];
@@ -533,9 +537,8 @@ export default class DocsService {
   private async getLanceTableNameFromEmbeddingsProvider(
     isPreIndexedDoc: boolean,
   ) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(
-      isPreIndexedDoc,
-    );
+    const embeddingsProvider =
+      await this.getEmbeddingsProvider(isPreIndexedDoc);
     const embeddingsProviderId = this.removeInvalidLanceTableNameChars(
       embeddingsProvider.id,
     );
