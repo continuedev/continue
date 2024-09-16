@@ -20,23 +20,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check_release_name:
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
-    steps:
-      - id: check
-        working-directory: .
-        run: |
-          if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_run=false" >> $GITHUB_OUTPUT
-          fi
+  # check_release_name:
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     should_run: ${{ steps.check.outputs.should_run }}
+  #   steps:
+  #     - id: check
+  #       working-directory: .
+  #       run: |
+  #         if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
+  #           echo "should_run=true" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "should_run=false" >> $GITHUB_OUTPUT
+  #         fi
 
   # Prepare and publish the plugin to JetBrains Marketplace repository
   build:
-    needs: check_release_name
+    # needs: check_release_name
     if: needs.check_release_name.outputs.should_run == 'true'
     name: Build Plugin
     runs-on: macos-latest
