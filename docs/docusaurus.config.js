@@ -298,7 +298,7 @@ const config = {
             from: "/walkthroughs/set-up-codestral",
           },
           {
-            to: "/docs",
+            to: "/",
             from: "/intro",
           },
           {
