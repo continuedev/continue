@@ -36,12 +36,12 @@ import OpenAI from "./OpenAI";
 import OpenRouter from "./OpenRouter";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
-import SambaNova from "./SambaNova";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
+import PiecesOSLLM from "./piecesOSLLM";
 
 const LLMs = [
   Anthropic,
@@ -76,8 +76,8 @@ const LLMs = [
   OpenRouter,
   Nvidia,
   Vllm,
-  SambaNova,
   Mock,
+  PiecesOSLLM,
 ];
 
 export async function llmFromDescription(
