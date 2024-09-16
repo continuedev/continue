@@ -29,7 +29,7 @@ class ContinuePluginSelectionListener(
 
     private var toolTipComponents: ArrayList<ToolTipComponent> = ArrayList()
 
-    private fun removeExistingTooltips(editor: Editor) {
+    private fun removeExistingTooltips(editor: Editor, onComplete : () -> Unit = {}) {
         ApplicationManager.getApplication().invokeLater {
             toolTipComponents.forEach {
                 editor.contentComponent.remove(it)
@@ -37,6 +37,7 @@ class ContinuePluginSelectionListener(
             editor.contentComponent.revalidate()
             editor.contentComponent.repaint()
             toolTipComponents.clear()
+            onComplete()
         }
     }
 
@@ -72,31 +73,33 @@ class ContinuePluginSelectionListener(
                 FileDocumentManager.getInstance().getFile(document)
             val filepath = virtualFile?.path ?: "Unknown path"
 
-            ApplicationManager.getApplication().invokeLater {
-                removeExistingTooltips(editor)
-                editor.contentComponent.layout = null
 
-                val line = startLine - 2
-                if (line > 0 && startLine < endLine) {
-                    // Get the text on line number "line"
+            removeExistingTooltips(editor) {
+                ApplicationManager.getApplication().invokeLater {
+                    editor.contentComponent.layout = null
+
+                    val line = startLine - 2
+                    if (line > 0 && startLine < endLine) {
+                        // Get the text on line number "line"
 //                    val text = document.getText(document.getLineStartOffset(line), document.getLineEndOffset(line))
 
-                    val pos = LogicalPosition(line, selectedText.split("\n")[0].length + 1)
-                    val y: Int = editor.logicalPositionToXY(pos).y + editor.lineHeight
-                    var x: Int = editor.logicalPositionToXY(pos).x
+                        val pos = LogicalPosition(line, selectedText.split("\n")[0].length + 1)
+                        val y: Int = editor.logicalPositionToXY(pos).y + editor.lineHeight
+                        var x: Int = editor.logicalPositionToXY(pos).x
 
-                    // Check if x is out of bounds
-                    val maxEditorWidth = editor.contentComponent.width
-                    val maxToolTipWidth = 600
-                    x = max(0, min(x, maxEditorWidth - maxToolTipWidth))
+                        // Check if x is out of bounds
+                        val maxEditorWidth = editor.contentComponent.width
+                        val maxToolTipWidth = 600
+                        x = max(0, min(x, maxEditorWidth - maxToolTipWidth))
 
-                    val toolTipComponent = ToolTipComponent(editor, x, y)
-                    toolTipComponents.add(toolTipComponent)
-                    editor.contentComponent.add(toolTipComponent)
+                        val toolTipComponent = ToolTipComponent(editor, x, y)
+                        toolTipComponents.add(toolTipComponent)
+                        editor.contentComponent.add(toolTipComponent)
+                    }
+
+                    editor.contentComponent.revalidate()
+                    editor.contentComponent.repaint()
                 }
-
-                editor.contentComponent.revalidate()
-                editor.contentComponent.repaint()
             }
         }
     }
