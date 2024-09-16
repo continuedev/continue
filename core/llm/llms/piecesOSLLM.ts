@@ -28,6 +28,13 @@ class PiecesOSLLM extends BaseLLM {
         database: true,
       },
     };
+
+    return {
+      relevant: { iterable: [] }, 
+      query: prompt,
+      application: this.model,
+    };
+  }
   
 }
 
