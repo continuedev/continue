@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.listeners
 
 import ToolTipComponent
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.utils.Debouncer
 import com.intellij.openapi.application.ApplicationManager
@@ -57,6 +58,11 @@ class ContinuePluginSelectionListener(
             // Note that we still check for empty selected text before this
             val extensionSettingsService = service<ContinueExtensionSettings>()
             if (extensionSettingsService.continueState.displayEditorTooltip == false) {
+                return@runReadAction
+            }
+
+            // Don't display in the terminal
+            if (EditorUtils().isTerminal(editor)) {
                 return@runReadAction
             }
 

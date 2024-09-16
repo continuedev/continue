@@ -98,6 +98,11 @@ fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTex
 fun openInlineEdit(project: Project?, editor: Editor) {
     if (project == null) return
 
+    // Don't open in terminal
+     if (EditorUtils().isTerminal(editor)) {
+            return
+     }
+
     val manager = EditorComponentInlaysManager.from(editor)
 
     // Get list of model titles
