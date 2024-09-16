@@ -1,7 +1,7 @@
 ---
 title: Introduction
 description: The open-source AI code assistant for developers
-slug: /docs
+slug: /
 keywords:
   [
     continue,
