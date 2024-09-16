@@ -87,6 +87,10 @@ class PiecesOSLLM extends BaseLLM {
   get _llmType(): string {
     return "pieces_os";
   }
+
+  get _identifyingParams(): Record<string, any> {
+    return { model: this.model };
+  }
   
   }
 
