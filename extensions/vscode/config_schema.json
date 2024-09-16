@@ -192,17 +192,17 @@
             "msty",
             "watsonx",
             "openrouter",
-            "sambanova",
             "nvidia",
-            "vllm"
+            "vllm",
+            "pieces_os"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
             "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/anthropicllm)",
             "### Cohere\nTo use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/cohere)",
-            "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
-            "### Bedrock Imported Models\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
+            "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
+            "### Bedrock Imported Models\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
             "### Sagemaker\nSagemaker is AWS' machine learning platform.",
             "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/togetherllm)",
             "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/ollama)",
@@ -224,7 +224,8 @@
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
-            "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server."
+            "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
+            "### Pieces OS\nUse the Pieces OS API for completions. Requires a local Pieces OS installation."
           ],
           "type": "string"
         },
@@ -241,21 +242,6 @@
         "apiBase": {
           "title": "Api Base",
           "description": "The base URL of the LLM API.",
-          "type": "string"
-        },
-        "region": {
-          "title": "Region",
-          "description": "The region where the model is hosted",
-          "type": "string"
-        },
-        "profile": {
-          "title": "Profile",
-          "description": "The AWS security profile to use",
-          "type": "string"
-        },
-        "modelArn": {
-          "title": "Profile",
-          "description": "The AWS arn for the imported model",
           "type": "string"
         },
         "contextLength": {
@@ -399,8 +385,7 @@
                   "huggingface-inference-api",
                   "replicate",
                   "together",
-                  "cloudflare",
-                  "sambanova"
+                  "cloudflare"
                 ]
               }
             },
@@ -408,19 +393,6 @@
           },
           "then": {
             "required": ["apiKey"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["bedrockimport"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "required": ["modelArn"]
           }
         },
         {
@@ -1263,6 +1235,25 @@
           "if": {
             "properties": {
               "provider": {
+                "enum": ["pieces_os"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "type": "string",
+                "description": "The model to use for Pieces OS completions.",
+                "default": "pieces_os"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
                 "enum": ["watsonx"]
               }
             },
@@ -1285,9 +1276,6 @@
               "watsonxStopToken": {
                 "type": "string"
               },
-              "watsonxFullUrl": {
-                "type": "string"
-              },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
@@ -1299,31 +1287,6 @@
               }
             },
             "required": ["watsonxUrl", "watsonxProjectId"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["sambanova"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ],
-                "markdownDescription": "Select a pre-defined option."
-              }
-            }
           }
         }
       ]
@@ -2088,9 +2051,7 @@
                 "cohere",
                 "free-trial",
                 "gemini",
-                "voyage",
-                "nvidia",
-                "bedrock"
+                "voyage"
               ]
             },
             "model": {
@@ -2113,16 +2074,6 @@
               "type": "integer",
               "minimum": 128,
               "exclusiveMaximum": 2147483647
-            },
-            "region": {
-              "title": "Region",
-              "description": "The region where the model is hosted",
-              "type": "string"
-            },
-            "profile": {
-              "title": "Profile",
-              "description": "The AWS security profile to use",
-              "type": "string"
             }
           },
           "required": ["provider"],
@@ -2131,7 +2082,20 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "nvidia", "gemini"]
+                    "enum": ["cohere", "voyage"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "required": ["apiKey"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["gemini"]
                   }
                 },
                 "required": ["provider"]
@@ -2476,13 +2440,16 @@
               "type": "object",
               "properties": {
                 "inlineEdit": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for inline edits",
+                  "type": "string"
                 },
                 "applyCodeBlock": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for applying code blocks",
+                  "type": "string"
                 },
                 "repoMapFileSelection": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for repo map file selections",
+                  "type": "string"
                 }
               }
             },
@@ -2544,12 +2511,6 @@
             }
           }
         }
-      }
-    },
-    "ModelTitle": {
-      "type": "string",
-      "enum": {
-        "$data": "/models/title"
       }
     }
   }
