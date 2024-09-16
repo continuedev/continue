@@ -7,7 +7,6 @@ import com.github.continuedev.continueintellijextension.constants.getConfigJsonP
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.services.TerminalActivityTrackingService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
@@ -1033,22 +1032,23 @@ class IdeProtocolClient (
     }
 
     private fun terminalContents(): String {
-        val contents = project.service<TerminalActivityTrackingService>().latest()?.run {
-            TerminalUtils.getTextInTerminal(terminalPanel)
-        } ?: ""
-
-        var lines = contents.split("\n").dropLastWhile { it.isEmpty() }
-        val lastLine = lines.lastOrNull()?.trim()
-        if (lastLine != null) {
-            lines = lines.dropLast(1)
-            var i = lines.size - 1
-            while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
-                i--
-            }
-            return lines.subList(maxOf(i, 0), lines.size).joinToString("\n")
-        }
-
-        return contents
+        return ""
+//        val contents = project.service<TerminalActivityTrackingService>().latest()?.run {
+//            TerminalUtils.getTextInTerminal(terminalPanel)
+//        } ?: ""
+//
+//        var lines = contents.split("\n").dropLastWhile { it.isEmpty() }
+//        val lastLine = lines.lastOrNull()?.trim()
+//        if (lastLine != null) {
+//            lines = lines.dropLast(1)
+//            var i = lines.size - 1
+//            while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
+//                i--
+//            }
+//            return lines.subList(maxOf(i, 0), lines.size).joinToString("\n")
+//        }
+//
+//        return contents
     }
 
     private fun search(query: String): String {

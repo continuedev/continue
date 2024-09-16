@@ -1,8 +1,6 @@
 package com.github.continuedev.continueintellijextension.utils
 
 import org.jetbrains.plugins.terminal.TerminalView
-import java.awt.Toolkit
-import java.awt.event.KeyEvent
 
 enum class Os {
     MAC, WINDOWS, LINUX
