@@ -1,13 +1,16 @@
 import { Analytics } from "@continuedev/config-types";
 import fetch from "node-fetch";
-import { CONTROL_PLANE_URL, ControlPlaneClient } from "../client.js";
-import { IAnalyticsProvider } from "./IAnalyticsProvider.js";
+import { ControlPlaneClient } from "../client.js";
+import {
+  ControlPlaneProxyInfo,
+  IAnalyticsProvider,
+} from "./IAnalyticsProvider.js";
 
 export default class ContinueProxyAnalyticsProvider
   implements IAnalyticsProvider
 {
   uniqueId?: string;
-  workspaceId?: string;
+  controlPlaneProxyInfo?: ControlPlaneProxyInfo;
 
   controlPlaneClient?: ControlPlaneClient;
 
@@ -16,8 +19,8 @@ export default class ContinueProxyAnalyticsProvider
     properties: { [key: string]: any },
   ): Promise<void> {
     const url = new URL(
-      `proxy/analytics/${this.workspaceId}/capture`,
-      CONTROL_PLANE_URL,
+      `proxy/analytics/${this.controlPlaneProxyInfo?.workspaceId}/capture`,
+      this.controlPlaneProxyInfo?.controlPlaneProxyUrl,
     ).toString();
     fetch(url, {
       method: "POST",
@@ -35,10 +38,10 @@ export default class ContinueProxyAnalyticsProvider
   async setup(
     config: Analytics,
     uniqueId: string,
-    workspaceId?: string,
+    controlPlaneProxyInfo?: ControlPlaneProxyInfo,
   ): Promise<void> {
     this.uniqueId = uniqueId;
-    this.workspaceId = workspaceId;
+    this.controlPlaneProxyInfo = controlPlaneProxyInfo;
   }
 
   async shutdown(): Promise<void> {}

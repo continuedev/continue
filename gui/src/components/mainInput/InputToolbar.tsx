@@ -202,7 +202,7 @@ function InputToolbar(props: InputToolbarProps) {
               }}
               className={"hover:underline cursor-pointer float-right"}
             >
-              {getMetaKeyLabel()} ⏎ Use codebase
+              {getMetaKeyLabel()} ⏎ Use @codebase
             </StyledSpan>
           )}
           <EnterButton

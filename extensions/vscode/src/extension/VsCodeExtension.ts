@@ -15,10 +15,8 @@ import {
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
-import { registerDebugTracker } from "../debug/debug";
 import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
-import { VsCodeIde } from "../VsCodeIde";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
@@ -28,6 +26,7 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
@@ -210,7 +209,8 @@ export class VsCodeExtension {
       this.core,
     );
 
-    registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
+    // Disabled due to performance issues
+    // registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
 
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught

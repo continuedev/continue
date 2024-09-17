@@ -1,8 +1,8 @@
-import { ControlPlaneSessionInfo } from "../control-plane/client";
 import type {
   ContinueRcJson,
   DiffLine,
   FileType,
+  IDE,
   IdeInfo,
   IdeSettings,
   IndexTag,
@@ -11,8 +11,12 @@ import type {
   Range,
   RangeInFile,
   Thread,
-  IDE,
 } from "../";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
+
+export interface GetGhTokenArgs {
+  force?: boolean;
+}
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
@@ -78,7 +82,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
-  getGitHubAuthToken: [undefined, string | undefined];
+  getGitHubAuthToken: [GetGhTokenArgs, string | undefined];
   getControlPlaneSessionInfo: [
     { silent: boolean },
     ControlPlaneSessionInfo | undefined,

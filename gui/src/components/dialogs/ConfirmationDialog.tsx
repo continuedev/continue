@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { Button, SecondaryButton } from "..";
+import { Button, lightGray, SecondaryButton } from "..";
 import {
   setDialogMessage,
   setShowDialog,
@@ -41,6 +41,7 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
       <GridDiv>
         {!!props.hideCancelButton || (
           <SecondaryButton
+            style={{ color: lightGray }}
             onClick={() => {
               props.onCancel?.();
               dispatch(setShowDialog(false));

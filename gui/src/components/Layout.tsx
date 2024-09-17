@@ -11,18 +11,23 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { isNewUserOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { setShowDialog } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import ButtonWithTooltip from "./ButtonWithTooltip";
 import TextDialog from "./dialogs";
 import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
+import { isNewUserOnboarding } from "./OnboardingCard/utils";
+import { useOnboardingCard } from "./OnboardingCard";
+import {
+  setBottomMessage,
+  setBottomMessageCloseTimeout,
+  setShowDialog,
+} from "../redux/slices/uiStateSlice";
+import HeaderButtonWithText from "./HeaderButtonWithText";
 
 const FOOTER_HEIGHT = "1.8em";
 
@@ -98,17 +103,12 @@ const ProfileDropdownPortalDiv = styled.div`
   font-size: ${getFontSize() - 2};
 `;
 
-const HIDE_FOOTER_ON_PAGES = [
-  "/onboarding",
-  "/localOnboarding",
-  "/apiKeyOnboarding",
-];
-
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
+  const onboardingCard = useOnboardingCard();
 
   const dialogMessage = useSelector(
     (state: RootState) => state.uiState.dialogMessage,
@@ -118,6 +118,14 @@ const Layout = () => {
   );
 
   const defaultModel = useSelector(defaultModelSelector);
+
+  const bottomMessage = useSelector(
+    (state: RootState) => state.uiState.bottomMessage,
+  );
+  const displayBottomMessageOnBottom = useSelector(
+    (state: RootState) => state.uiState.displayBottomMessageOnBottom,
+  );
+
   const timeline = useSelector((state: RootState) => state.state.history);
 
   useEffect(() => {
@@ -166,22 +174,6 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "addApiKey",
-    async () => {
-      navigate("/apiKeyOnboarding");
-    },
-    [navigate],
-  );
-
-  useWebviewListener(
-    "openOnboarding",
-    async () => {
-      navigate("/onboarding");
-    },
-    [navigate],
-  );
-
-  useWebviewListener(
     "incrementFtc",
     async () => {
       const u = getLocalStorage("ftc");
@@ -195,14 +187,19 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "setupLocalModel",
+    "openOnboardingCard",
     async () => {
-      ideMessenger.post("completeOnboarding", {
-        mode: "localAfterFreeTrial",
-      });
-      navigate("/localOnboarding");
+      onboardingCard.open("Best");
     },
-    [navigate],
+    [],
+  );
+
+  useWebviewListener(
+    "setupLocalConfig",
+    async () => {
+      onboardingCard.open("Local");
+    },
+    [],
   );
 
   useEffect(() => {
@@ -210,7 +207,7 @@ const Layout = () => {
       isNewUserOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
-      navigate("/onboarding");
+      onboardingCard.open("Quickstart");
     }
   }, [location]);
 
@@ -240,34 +237,47 @@ const Layout = () => {
           <Outlet />
           <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
           <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
-          {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
-            <Footer>
-              <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
-                {defaultModel?.provider === "free-trial" && (
-                  <ProgressBar
-                    completed={parseInt(localStorage.getItem("ftc") || "0")}
-                    total={FREE_TRIAL_LIMIT_REQUESTS}
-                  />
-                )}
-              </div>
+          <Footer>
+            <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
+              {defaultModel?.provider === "free-trial" && (
+                <ProgressBar
+                  completed={parseInt(localStorage.getItem("ftc") || "0")}
+                  total={FREE_TRIAL_LIMIT_REQUESTS}
+                />
+              )}
+            </div>
 
-              <ProfileSwitcher />
-              <ButtonWithTooltip
-                tooltipPlacement="top-end"
-                text="More"
-                onClick={() => {
-                  if (location.pathname === "/help") {
-                    navigate("/");
-                  } else {
-                    navigate("/help");
-                  }
-                }}
-              >
-                <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
-              </ButtonWithTooltip>
-            </Footer>
-          )}
+            <ProfileSwitcher />
+            <HeaderButtonWithText
+              tooltipPlacement="top-end"
+              text="More"
+              onClick={() => {
+                if (location.pathname === "/help") {
+                  navigate("/");
+                } else {
+                  navigate("/help");
+                }
+              }}
+            >
+              <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          </Footer>
         </GridDiv>
+
+        <BottomMessageDiv
+          displayOnBottom={displayBottomMessageOnBottom}
+          onMouseEnter={() => {
+            dispatch(setBottomMessageCloseTimeout(undefined));
+          }}
+          onMouseLeave={(e) => {
+            if (!e.buttons) {
+              dispatch(setBottomMessage(undefined));
+            }
+          }}
+          hidden={!bottomMessage}
+        >
+          {bottomMessage}
+        </BottomMessageDiv>
       </div>
       <div
         style={{ fontSize: `${getFontSize() - 4}px` }}

@@ -311,7 +311,14 @@ export class CompletionProvider {
 
       // Get completion
       const llm = await this.getLlm();
+
       if (!llm) {
+        return undefined;
+      }
+
+      // Ignore empty API keys for Mistral since we currently write
+      // a template provider without one during onboarding
+      if (llm.providerName === "mistral" && llm.apiKey === "") {
         return undefined;
       }
 

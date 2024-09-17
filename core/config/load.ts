@@ -306,7 +306,7 @@ async function intermediateToFinalConfig(
       (model) => model.providerName === "free-trial",
     );
     if (freeTrialModels.length > 0) {
-      const ghAuthToken = await ide.getGitHubAuthToken();
+      const ghAuthToken = await ide.getGitHubAuthToken({});
       for (const model of freeTrialModels) {
         (model as FreeTrial).setupGhAuthToken(ghAuthToken);
       }
@@ -341,7 +341,7 @@ async function intermediateToFinalConfig(
                 // This shouldn't happen
                 throw new Error("Free trial cannot be used with control plane");
               }
-              const ghAuthToken = await ide.getGitHubAuthToken();
+              const ghAuthToken = await ide.getGitHubAuthToken({});
               (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
             }
             return llm;

@@ -1,5 +1,5 @@
-import { getLocalStorage } from "./localStorage";
 import _ from "lodash";
+import { getLocalStorage } from "./localStorage";
 
 type Platform = "mac" | "linux" | "windows" | "unknown";
 

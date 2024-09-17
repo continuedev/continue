@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
 import { type PlacesType } from "react-tooltip";
-import { HeaderButton, StyledTooltip } from ".";
-
+import { HeaderButton } from ".";
 import { v4 as uuidv4 } from "uuid";
+import { ToolTip } from "./gui/Tooltip";
 
 interface HeaderButtonWithTextProps {
   text: string | undefined;
@@ -59,12 +59,9 @@ const ButtonWithTooltip = React.forwardRef<
       {props.text &&
         tooltipPortalDiv &&
         ReactDOM.createPortal(
-          <StyledTooltip
-            id={tooltipId}
-            place={props.tooltipPlacement ?? "bottom"}
-          >
+          <ToolTip id={tooltipId} place={props.tooltipPlacement ?? "bottom"}>
             {props.text}
-          </StyledTooltip>,
+          </ToolTip>,
           tooltipPortalDiv,
         )}
     </>

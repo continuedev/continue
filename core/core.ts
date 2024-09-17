@@ -3,10 +3,10 @@ import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import {
-  setupApiKeysMode,
-  setupFreeTrialMode,
-  setupLocalAfterFreeTrial,
-  setupLocalMode,
+  setupBestConfig,
+  setupLocalConfig,
+  setupLocalConfigAfterFreeTrial,
+  setupQuickstartConfig,
 } from "./config/onboarding";
 import { createNewPromptFile } from "./config/promptFile";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
@@ -468,7 +468,7 @@ export class Core {
           }
         }
       } catch (e) {
-        console.warn(`Error listing Ollama models: ${e}`);
+        console.debug(`Error listing Ollama models: ${e}`);
         return undefined;
       }
     });
@@ -606,31 +606,27 @@ export class Core {
     on("completeOnboarding", (msg) => {
       const mode = msg.data.mode;
 
-      Telemetry.capture("onboardingSelection", {
-        mode,
-      });
-
-      if (mode === "custom") {
+      if (mode === "Custom") {
         return;
       }
 
       let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
 
       switch (mode) {
-        case "local":
-          editConfigJsonCallback = setupLocalMode;
+        case "Local":
+          editConfigJsonCallback = setupLocalConfig;
           break;
 
-        case "freeTrial":
-          editConfigJsonCallback = setupFreeTrialMode;
+        case "Quickstart":
+          editConfigJsonCallback = setupQuickstartConfig;
           break;
 
-        case "localAfterFreeTrial":
-          editConfigJsonCallback = setupLocalAfterFreeTrial;
+        case "LocalAfterFreeTrial":
+          editConfigJsonCallback = setupLocalConfigAfterFreeTrial;
           break;
 
-        case "apiKeys":
-          editConfigJsonCallback = setupApiKeysMode;
+        case "Best":
+          editConfigJsonCallback = setupBestConfig;
           break;
 
         default:

@@ -480,8 +480,9 @@ class IdeProtocolClient (
                     }
                     "getBranch" -> {
                         // Get the current branch name
+                        val dir = (data as Map<String, Any>)["dir"] as String
                         val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-                        builder.directory(File(workspacePath ?: "."))
+                        builder.directory(File(dir))
                         val process = builder.start()
 
                         val reader = BufferedReader(InputStreamReader(process.inputStream))
@@ -492,15 +493,21 @@ class IdeProtocolClient (
                     }
                     "getRepoName" -> {
                         // Get the current repository name
+                        val dir = (data as Map<String, Any>)["dir"] as String
                         val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
-                        builder.directory(File(workspacePath ?: "."))
-                        val process = builder.start()
+                        builder.directory(File(dir))
+                        var output = "NONE"
+                        try {
+                            val process = builder.start()
 
-                        val reader = BufferedReader(InputStreamReader(process.inputStream))
-                        val output = reader.readLine()
-                        process.waitFor()
+                            val reader = BufferedReader(InputStreamReader(process.inputStream))
+                            output = reader.readLine()
+                            process.waitFor()
+                        } catch (error: Exception) {
+                            println("Git not found: " + error)
+                        }
 
-                        respond(output ?: "NONE")
+                        respond(output)
                     }
 
                     // NEW //
@@ -654,7 +661,7 @@ class IdeProtocolClient (
 
                         if (ghAuthToken == null) {
                             // Open a dialog so user can enter their GitHub token
-                            continuePluginService.sendToWebview("openOnboarding", null, uuid())
+                            continuePluginService.sendToWebview("openOnboardingCard", null, uuid())
                             respond(null)
                         } else {
                             respond(ghAuthToken)
@@ -870,10 +877,15 @@ class IdeProtocolClient (
     }
 
     private fun workspaceDirectories(): Array<String> {
+        val dirs = this.continuePluginService.workspacePaths
+        if (dirs?.isNotEmpty() == true) {
+            return dirs
+        }
+
         if (this.workspacePath != null) {
             return arrayOf(this.workspacePath)
         }
-        return arrayOf<String>();
+        return arrayOf()
     }
 
     private fun listDirectoryContents(directory: String?): List<String> {

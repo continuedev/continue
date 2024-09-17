@@ -13,10 +13,10 @@ import type {
   Problem,
   RangeInFile,
   Thread,
-  ToastType,
 } from "core";
 import { Range } from "core";
 import { walkDir } from "core/indexing/walkDir";
+import { GetGhTokenArgs } from "core/protocol/ide";
 import {
   editConfigJson,
   getConfigJsonPath,
@@ -76,7 +76,7 @@ class VsCodeIde implements IDE {
   private authToken: string | undefined;
   private askedForAuth = false;
 
-  async getGitHubAuthToken(): Promise<string | undefined> {
+  async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
     // Saved auth token
     if (this.authToken) {
       return this.authToken;
@@ -92,6 +92,14 @@ class VsCodeIde implements IDE {
     }
 
     try {
+      if (args.force) {
+        this.askedForAuth = true;
+        this.authToken = await vscode.authentication
+          .getSession("github", [], { createIfNone: true })
+          .then((session) => session.accessToken);
+        return this.authToken;
+      }
+
       // If we haven't asked yet, give explanation of what is happening and why
       // But don't wait to return this immediately
       // We will use a callback to refresh the config
@@ -109,7 +117,7 @@ class VsCodeIde implements IDE {
                 "continue.continueGUIView.focus",
               );
               (await this.vscodeWebviewProtocolPromise).request(
-                "openOnboarding",
+                "openOnboardingCard",
                 undefined,
               );
 

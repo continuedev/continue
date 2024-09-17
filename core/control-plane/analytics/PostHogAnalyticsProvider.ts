@@ -1,5 +1,8 @@
 import { Analytics } from "@continuedev/config-types";
-import { IAnalyticsProvider } from "./IAnalyticsProvider.js";
+import {
+  ControlPlaneProxyInfo,
+  IAnalyticsProvider,
+} from "./IAnalyticsProvider.js";
 
 export default class PostHogAnalyticsProvider implements IAnalyticsProvider {
   client?: any;
@@ -19,7 +22,7 @@ export default class PostHogAnalyticsProvider implements IAnalyticsProvider {
   async setup(
     config: Analytics,
     uniqueId: string,
-    workspaceId?: string,
+    controlPlaneProxyInfo?: ControlPlaneProxyInfo,
   ): Promise<void> {
     if (!config || !config.clientKey || !config.url) {
       this.client = undefined;
