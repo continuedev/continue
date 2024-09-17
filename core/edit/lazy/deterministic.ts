@@ -36,32 +36,32 @@ export async function deterministicApplyLazyEdit(
   const oldFileLines = oldFile.split("\n");
   const newFileChars = newLazyFile.split("");
   for (const { lazyBlockNode, replacementNodes } of acc) {
-    if (replacementNodes.length === 0) {
-      // TODO: Whitespace
-      continue;
-    }
-
     // Get the full string from the replacement nodes
-    const startPosition = replacementNodes[0].startPosition;
-    const endPosition =
-      replacementNodes[replacementNodes.length - 1].endPosition;
-    const replacementLines = oldFileLines.slice(
-      startPosition.row,
-      endPosition.row + 1,
-    );
-    replacementLines[0] = replacementLines[0].slice(startPosition.column);
-    replacementLines[replacementLines.length - 1] = replacementLines[
-      replacementLines.length - 1
-    ].slice(0, endPosition.column);
+    let replacementText = "";
+    if (replacementNodes.length > 0) {
+      const startPosition = replacementNodes[0].startPosition;
+      const endPosition =
+        replacementNodes[replacementNodes.length - 1].endPosition;
+      const replacementLines = oldFileLines.slice(
+        startPosition.row,
+        endPosition.row + 1,
+      );
+      replacementLines[0] = replacementLines[0].slice(startPosition.column);
+      replacementLines[replacementLines.length - 1] = replacementLines[
+        replacementLines.length - 1
+      ].slice(0, endPosition.column);
+      replacementText = replacementLines.join("\n");
+    }
 
     newFileChars.splice(
       lazyBlockNode.startIndex,
       lazyBlockNode.text.length,
-      replacementLines.join("\n"),
+      replacementText,
     );
   }
 
-  return myersDiff(oldFile, newFileChars.join(""));
+  const diff = myersDiff(oldFile, newFileChars.join(""));
+  return diff;
 }
 
 const COMMENT_TYPES = ["comment"];
@@ -209,5 +209,15 @@ function diffNodes(
       lazyBlockNode: currentLazyBlockNode!,
       replacementNodes: currentLazyBlockReplacementNodes,
     });
+  }
+
+  // Cut out any extraneous lazy blocks
+  for (const R of rightChildren) {
+    if (isLazyBlock(R)) {
+      acc.push({
+        lazyBlockNode: R,
+        replacementNodes: [],
+      });
+    }
   }
 }
