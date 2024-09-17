@@ -1,9 +1,16 @@
 import { debounce } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import styled from "styled-components";
+import { defaultBorderRadius, lightGray } from "..";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import CodeBlockToolBar from "./CodeBlockToolbar";
+
+const TopDiv = styled.div`
+  border: 0.5px solid ${lightGray}80;
+  border-radius: ${defaultBorderRadius};
+`;
 
 function childToText(child: any) {
   if (typeof child === "string") {
@@ -49,31 +56,19 @@ function PreWithToolbar(props: {
   }, [props.children]);
 
   return (
-    <div
+    <TopDiv
       tabIndex={-1}
-      style={{ padding: "0px" }}
-      className="relative"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {!toolbarBottom && hovering && (
-        <CodeBlockToolBar
-          isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
-          text={copyValue}
-          bottom={toolbarBottom}
-          language={props.language}
-        ></CodeBlockToolBar>
-      )}
+      <CodeBlockToolBar
+        isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
+        text={copyValue}
+        bottom={toolbarBottom}
+        language={props.language}
+      ></CodeBlockToolBar>
       {props.children}
-      {toolbarBottom && hovering && (
-        <CodeBlockToolBar
-          isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
-          text={copyValue}
-          bottom={toolbarBottom}
-          language={props.language}
-        ></CodeBlockToolBar>
-      )}
-    </div>
+    </TopDiv>
   );
 }
 

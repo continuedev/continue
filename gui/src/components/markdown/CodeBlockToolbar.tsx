@@ -1,39 +1,44 @@
 import {
-  ArrowLeftEndOnRectangleIcon,
   CheckIcon,
+  ClipboardIcon,
   PlayIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, vscEditorBackground } from "..";
+import { lightGray, vscEditorBackground, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { incrementNextCodeBlockToApplyIndex } from "../../redux/slices/uiStateSlice";
-import { isJetBrains } from "../../util";
-import ButtonWithTooltip from "../ButtonWithTooltip";
-import { CopyButton } from "./CopyButton";
+import { getFontSize, isJetBrains } from "../../util";
+import FileIcon from "../FileIcon";
 
-const TopDiv = styled.div`
-  position: sticky;
-  top: 0;
-  left: 100%;
-  height: 0;
-  width: 0;
-  overflow: visible;
-  z-index: 100;
+const ToolbarDiv = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: ${vscEditorBackground};
+  font-size: ${getFontSize() - 2}px;
+  padding: 3px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-bottom: 0.5px solid ${lightGray}80;
+  margin: 0;
 `;
 
-const SecondDiv = styled.div<{ bottom: boolean }>`
-  position: absolute;
-  ${(props) => (props.bottom ? "bottom: 3px;" : "top: -11px;")}
-  right: 10px;
+const ToolbarButton = styled.button`
   display: flex;
-  padding: 1px 2px;
-  gap: 4px;
-  border: 0.5px solid #8888;
-  border-radius: ${defaultBorderRadius};
-  background-color: ${vscEditorBackground};
+  align-items: center;
+  border: none;
+  outline: none;
+  background: transparent;
+
+  color: ${vscForeground};
+  font-size: ${getFontSize() - 2}px;
+
+  &:hover {
+    cursor: pointer;
+  }
 `;
 
 interface CodeBlockToolBarProps {
@@ -76,6 +81,7 @@ function isTerminalCodeBlock(language: string | undefined, text: string) {
 
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const [copied, setCopied] = useState<boolean>(false);
   const [applying, setApplying] = useState(false);
   const dispatch = useDispatch();
 
@@ -93,22 +99,23 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   );
 
   return (
-    <TopDiv>
-      <SecondDiv
-        bottom={props.bottom || false}
-        style={{
-          border: props.isNextCodeBlock ? "1px solid orange" : undefined,
+    <ToolbarDiv>
+      <div
+        className="flex items-center cursor-pointer"
+        onClick={() => {
+          // Open the file
         }}
       >
+        <FileIcon
+          filename={"test.py"}
+          height={"16px"}
+          width={"16px"}
+        ></FileIcon>
+        {props.language}
+      </div>
+      <div className="flex items-center">
         {isJetBrains() || (
-          <ButtonWithTooltip
-            text={
-              isTerminalCodeBlock(props.language, props.text)
-                ? "Run in terminal"
-                : applying
-                  ? "Applying..."
-                  : "Apply to current file"
-            }
+          <ToolbarButton
             disabled={applying}
             style={{ backgroundColor: vscEditorBackground }}
             onClick={() => {
@@ -129,14 +136,24 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               setTimeout(() => setApplying(false), 2000);
             }}
           >
-            {applying ? (
-              <CheckIcon className="w-4 h-4 text-green-500" />
-            ) : (
-              <PlayIcon className="w-4 h-4" />
-            )}
-          </ButtonWithTooltip>
+            <div
+              className="flex items-center gap-1"
+              style={{ color: lightGray }}
+            >
+              {applying ? (
+                <CheckIcon className="w-3 h-3 text-green-500" />
+              ) : (
+                <PlayIcon className="w-3 h-3" />
+              )}
+              {isTerminalCodeBlock(props.language, props.text)
+                ? "Run in terminal"
+                : applying
+                  ? "Applying..."
+                  : "Apply"}
+            </div>
+          </ToolbarButton>
         )}
-        <ButtonWithTooltip
+        {/* <ButtonWithTooltip
           text="Insert at cursor"
           style={{ backgroundColor: vscEditorBackground }}
           onClick={() => {
@@ -144,10 +161,30 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           }}
         >
           <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
-        </ButtonWithTooltip>
-        <CopyButton text={props.text} />
-      </SecondDiv>
-    </TopDiv>
+        </ButtonWithTooltip> */}
+
+        <ToolbarButton
+          onClick={(e) => {
+            const text =
+              typeof props.text === "string" ? props.text : props.text;
+            if (isJetBrains()) {
+              ideMessenger.request("copyText", { text });
+            } else {
+              navigator.clipboard.writeText(text);
+            }
+
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+        >
+          {copied ? (
+            <CheckIcon className="w-3 h-3 text-green-500" />
+          ) : (
+            <ClipboardIcon className="w-3 h-3" color={lightGray} />
+          )}
+        </ToolbarButton>
+      </div>
+    </ToolbarDiv>
   );
 }
 

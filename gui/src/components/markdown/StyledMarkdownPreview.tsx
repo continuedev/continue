@@ -30,14 +30,8 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    ${(props) => {
-      if (props.showBorder) {
-        return `
-          border: 0.5px solid #8888;
-        `;
-      }
-    }}
-    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
+    padding: ${(props) => (props.showBorder ? "4px 12px" : "0px 2px")};
+    margin: 0px;
   }
 
   code {
