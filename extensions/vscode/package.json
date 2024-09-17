@@ -1,10 +1,10 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/continuedev/continue"
+    "url": "https://github.com/trypear/pearai-submodule"
   },
   "extensionKind": [
     "ui",
