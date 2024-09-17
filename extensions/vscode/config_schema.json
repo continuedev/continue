@@ -2476,13 +2476,16 @@
               "type": "object",
               "properties": {
                 "inlineEdit": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for inline edits",
+                  "type": "string"
                 },
                 "applyCodeBlock": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for applying code blocks",
+                  "type": "string"
                 },
                 "repoMapFileSelection": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for repo map file selections",
+                  "type": "string"
                 }
               }
             },
@@ -2544,12 +2547,6 @@
             }
           }
         }
-      }
-    },
-    "ModelTitle": {
-      "type": "string",
-      "enum": {
-        "$data": "/models/title"
       }
     }
   }
