@@ -16,8 +16,7 @@ To use Pieces OS with Continue, update your `~/.continue/config.json` file as fo
     {
       "title": "Pieces OS",
       "provider": "pieces-os",
-      "model": "pieces-os",
-      "apiBase": "http://localhost:1000"
+      "model": "pieces-os"
     }
 
 ```
