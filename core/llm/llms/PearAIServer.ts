@@ -52,18 +52,7 @@ class PearAIServer extends BaseLLM {
   }
 
   private async _countTokens(prompt: string, model: string, isPrompt: boolean) {
-    if (!Telemetry.client) {
-      throw new Error(
-        'In order to use the server, telemetry must be enabled so that we can monitor abuse. To enable telemetry, set "allowAnonymousTelemetry": true in config.json and make sure the box is checked in IDE settings. If you use your own model (local or API key), telemetry will never be required.',
-      );
-    }
-    const event = isPrompt
-      ? "free_trial_prompt_tokens"
-      : "free_trial_completion_tokens";
-    Telemetry.capture(event, {
-      tokens: this.countTokens(prompt),
-      model,
-    });
+    // no-op
   }
 
   private _convertArgs(options: CompletionOptions): any {
