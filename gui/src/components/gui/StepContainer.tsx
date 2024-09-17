@@ -177,10 +177,6 @@ function StepContainer(props: StepContainerProps) {
               {feedback === false || (
                 <ButtonWithTooltip text="Helpful" tabIndex={-1}>
                   <HandThumbUpIcon
-                    className={
-                      "cursor-pointer hover:text-green-500" +
-                      (feedback === true ? " text-green-500" : "")
-                    }
                     width="1.2em"
                     height="1.2em"
                     color={lightGray}
@@ -193,10 +189,6 @@ function StepContainer(props: StepContainerProps) {
               {feedback === true || (
                 <ButtonWithTooltip text="Unhelpful" tabIndex={-1}>
                   <HandThumbDownIcon
-                    className={
-                      "cursor-pointer hover:text-red-500" +
-                      (feedback === false ? " text-red-500" : "")
-                    }
                     width="1.2em"
                     height="1.2em"
                     color={lightGray}

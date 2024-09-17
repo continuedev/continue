@@ -107,9 +107,43 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         }}
       >
         <FileIcon filename="test.py" height="16px" width="16px" />
-        {props.language}
+        <span className="hover:brightness-125">{props.language}</span>
       </div>
       <div className="flex items-center">
+        <ToolbarButton
+          onClick={(e) => {
+            const text =
+              typeof props.text === "string" ? props.text : props.text;
+            if (isJetBrains()) {
+              ideMessenger.request("copyText", { text });
+            } else {
+              navigator.clipboard.writeText(text);
+            }
+
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+        >
+          <div
+            className={`flex items-center gap-1 text-[${lightGray}] hover:brightness-125 transition-colors duration-200`}
+          >
+            {copied ? (
+              <>
+                <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <ClipboardIcon
+                  className="w-3 h-3 hover:brightness-125"
+                  color={lightGray}
+                />
+                <span>Copy</span>
+              </>
+            )}
+          </div>
+        </ToolbarButton>
+
         {isJetBrains() || (
           <ToolbarButton
             disabled={applying}
@@ -159,40 +193,6 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         >
           <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
         </ButtonWithTooltip> */}
-
-        <ToolbarButton
-          onClick={(e) => {
-            const text =
-              typeof props.text === "string" ? props.text : props.text;
-            if (isJetBrains()) {
-              ideMessenger.request("copyText", { text });
-            } else {
-              navigator.clipboard.writeText(text);
-            }
-
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}
-        >
-          <div
-            className={`flex items-center gap-1 text-[${lightGray}] hover:brightness-125 transition-colors duration-200`}
-          >
-            {copied ? (
-              <>
-                <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
-                <span>Copied</span>
-              </>
-            ) : (
-              <>
-                <ClipboardIcon
-                  className="w-3 h-3 hover:brightness-125"
-                  color={lightGray}
-                />
-                <span>Copy</span>
-              </>
-            )}
-          </div>
-        </ToolbarButton>
       </div>
     </ToolbarDiv>
   );
