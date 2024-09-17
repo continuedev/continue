@@ -5,6 +5,11 @@ import { myersDiff } from "../../diff/myers";
 import { getParserForFile } from "../../util/treeSitter";
 import { findInAst } from "./findInAst";
 
+type LazyBlockReplacements = Array<{
+  lazyBlockNode: Parser.SyntaxNode;
+  replacementNodes: Parser.SyntaxNode[];
+}>;
+
 // TODO: If we don't have high confidence, return undefined to fall back to slower methods
 export async function deterministicApplyLazyEdit(
   oldFile: string,
@@ -19,9 +24,44 @@ export async function deterministicApplyLazyEdit(
   const oldTree = parser.parse(oldFile);
   const newTree = parser.parse(newLazyFile);
 
-  const diffLines = diffNodes(oldTree.rootNode, newTree.rootNode);
+  const acc: LazyBlockReplacements = [];
+  diffNodes(oldTree.rootNode, newTree.rootNode, acc);
 
-  return diffLines;
+  // Sort acc by reverse line number
+  acc
+    .sort((a, b) => a.lazyBlockNode.startIndex - b.lazyBlockNode.startIndex)
+    .reverse();
+
+  // Reconstruct entire file by replacing lazy blocks with the replacement nodes
+  const oldFileLines = oldFile.split("\n");
+  const newFileChars = newLazyFile.split("");
+  for (const { lazyBlockNode, replacementNodes } of acc) {
+    if (replacementNodes.length === 0) {
+      // TODO: Whitespace
+      continue;
+    }
+
+    // Get the full string from the replacement nodes
+    const startPosition = replacementNodes[0].startPosition;
+    const endPosition =
+      replacementNodes[replacementNodes.length - 1].endPosition;
+    const replacementLines = oldFileLines.slice(
+      startPosition.row,
+      endPosition.row + 1,
+    );
+    replacementLines[0] = replacementLines[0].slice(startPosition.column);
+    replacementLines[replacementLines.length - 1] = replacementLines[
+      replacementLines.length - 1
+    ].slice(0, endPosition.column);
+
+    newFileChars.splice(
+      lazyBlockNode.startIndex,
+      lazyBlockNode.text.length,
+      replacementLines.join("\n"),
+    );
+  }
+
+  return myersDiff(oldFile, newFileChars.join(""));
 }
 
 const COMMENT_TYPES = ["comment"];
@@ -82,47 +122,23 @@ function diffLinesForNode(
 function diffNodes(
   oldNode: Parser.SyntaxNode,
   newNode: Parser.SyntaxNode,
-): DiffLine[] {
+  acc: LazyBlockReplacements,
+): void {
   // Base case
   if (nodesAreExact(oldNode, newNode)) {
-    return diffLinesForNode(newNode, "same");
+    return;
   }
 
   // Other base case: no lazy blocks => use line-by-line diff
-  const firstLazyNodeInSubtree = findInAst(newNode, isLazyBlock);
-  if (!firstLazyNodeInSubtree) {
-    const myersDiffLines = myersDiff(oldNode.text, newNode.text);
-    return myersDiffLines;
+  if (!findInAst(newNode, isLazyBlock)) {
+    return;
   }
 
-  const diffLines: DiffLine[] = [];
-  const leftChildren = oldNode.children;
-  const rightChildren = newNode.children;
+  const leftChildren = oldNode.namedChildren;
+  const rightChildren = newNode.namedChildren;
   let isLazy = false;
-
-  // Deal with any leading whitespace in this node
-  const leadingNewlines =
-    leftChildren[0].startPosition.row - oldNode.endPosition.row;
-  for (let i = 1; i < leadingNewlines - 1; ++i) {
-    diffLines.push({ type: "same", line: "" });
-  }
-
-  function consumeLeftChild(L: Parser.SyntaxNode) {
-    leftChildren.shift();
-    const nextNode = leftChildren[0];
-
-    if (!nextNode) {
-      return;
-    }
-
-    const blankLinesBetween = nextNode.startPosition.row - L.endPosition.row;
-    for (let i = 0; i < blankLinesBetween - 1; i++) {
-      diffLines.push({
-        type: "same",
-        line: "",
-      });
-    }
-  }
+  let currentLazyBlockNode: Parser.SyntaxNode | undefined = undefined;
+  const currentLazyBlockReplacementNodes = [];
 
   while (leftChildren.length > 0 && rightChildren.length > 0) {
     const L = leftChildren[0];
@@ -130,7 +146,10 @@ function diffNodes(
 
     // Consume lazy block
     if (isLazyBlock(R)) {
+      // Enter "lazy mode"
       isLazy = true;
+      currentLazyBlockNode = R;
+      R.startIndex;
       rightChildren.shift();
       continue;
     }
@@ -140,47 +159,55 @@ function diffNodes(
         // L ~= R
 
         // recurse
-        const subDiffs = diffNodes(L, R);
-        diffLines.push(...subDiffs);
+        diffNodes(L, R, acc);
 
         // then consume lazy, L, and R
-        isLazy = false;
-        consumeLeftChild(L);
+        leftChildren.shift();
         rightChildren.shift();
+
+        // Record the replacement lines
+        acc.push({
+          lazyBlockNode: currentLazyBlockNode!,
+          replacementNodes: currentLazyBlockReplacementNodes,
+        });
+
+        // Exit "lazy mode"
+        isLazy = false;
+        currentLazyBlockReplacementNodes.length = 0;
+        currentLazyBlockNode = undefined;
       } else {
         // Push "same" lines
-        diffLines.push(...diffLinesForNode(L, "same"));
+        currentLazyBlockReplacementNodes.push(L);
 
         // L != R, consume L
-        consumeLeftChild(L);
+        leftChildren.shift();
       }
     } else {
       // When not lazy, we look for the first match of L
       const index = rightChildren.findIndex((node) => nodesAreSimilar(L, node));
 
       if (index === -1) {
-        diffLines.push(
-          // TODO: What are we returning? Iterate over the lines?
-          ...diffLinesForNode(L, "old"),
-        );
-        consumeLeftChild(L);
+        leftChildren.shift();
       } else {
         // Match found, insert all right nodes before the match
         for (let i = 0; i < index; i++) {
-          diffLines.push(...diffLinesForNode(rightChildren[0], "new"));
           rightChildren.shift();
         }
 
         // then recurse at the match
-        const subDiffs = diffNodes(L, rightChildren[0]);
-        diffLines.push(...subDiffs);
+        diffNodes(L, rightChildren[0], acc);
 
         // then consume L and R
-        consumeLeftChild(L);
+        leftChildren.shift();
         rightChildren.shift();
       }
     }
   }
 
-  return diffLines;
+  if (isLazy) {
+    acc.push({
+      lazyBlockNode: currentLazyBlockNode!,
+      replacementNodes: currentLazyBlockReplacementNodes,
+    });
+  }
 }

@@ -5,7 +5,7 @@ import { changed, diff as myersDiff } from "myers-diff";
 import path from "node:path";
 import { DiffLine, DiffLineType } from "../..";
 import { dedent } from "../../util";
-import { deterministicApplyLazyEdit2 as deterministicApplyLazyEdit } from "./deterministic2";
+import { deterministicApplyLazyEdit } from "./deterministic";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
@@ -133,11 +133,11 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("fastapi.py");
   });
 
-  test("calculator exp", async () => {
+  test.only("calculator exp", async () => {
     await expectDiff("calculator-exp.js");
   });
 
-  test.only("calculator comments", async () => {
+  test("calculator comments", async () => {
     await expectDiff("calculator-comments.js");
   });
 });
