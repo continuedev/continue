@@ -32,7 +32,7 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 
 All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
@@ -73,7 +73,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 
 ### Full example
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",

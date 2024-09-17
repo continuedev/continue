@@ -12,46 +12,76 @@ As an example, say you are working on solving a new GitHub Issue. You type '@iss
 
 ## Built-in Context Providers
 
-To use any of the built-in context providers, open `~/.continue/config.json` and add it to the `contextProviders` list.
+To use any of the built-in context providers, open `config.json` and add it to the `contextProviders` list.
 
 ### Files
 
 Type '@file' to reference any file in your current workspace.
 
-```json
-{ "name": "file" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "file"
+    }
+  ]
+}
 ```
 
 ### Code
 
 Type '@code' to reference specific functions or classes from throughout your project.
 
-```json
-{ "name": "code" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "code"
+    }
+  ]
+}
 ```
 
 ### Git Diff
 
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
-```json
-{ "name": "diff" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "diff"
+    }
+  ]
+}
 ```
 
 ### Terminal
 
 Type '@terminal' to reference the contents of your IDE's terminal.
 
-```json
-{ "name": "terminal" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "terminal"
+    }
+  ]
+}
 ```
 
 ### Documentation
 
 Type `@docs` to index and retrieve snippets from any documentation site.
 
-```json
-{ "name": "docs" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "docs"
+    }
+  ]
+}
 ```
 
 To learn more, visit `[@docs](../customize/deep-dives/docs.md)`.
@@ -60,58 +90,103 @@ To learn more, visit `[@docs](../customize/deep-dives/docs.md)`.
 
 Type '@open' to reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
 
-```json
-{ "name": "open", "params": { "onlyPinned": true } }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "open",
+      "params": {
+        "onlyPinned": true
+      }
+    }
+  ]
+}
 ```
 
 ### Codebase Retrieval
 
 Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](../customize/deep-dives/codebase.md).
 
-```json
-{ "name": "codebase" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "codebase"
+    }
+  ]
+}
 ```
 
 ### Folders
 
 Type '@folder' to use the same retrieval mechanism as '@codebase', but only on a single folder.
 
-```json
-{ "name": "folder" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "folder"
+    }
+  ]
+}
 ```
 
 ### Exact Search
 
 Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search. This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
 
-```json
-{ "name": "search" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "search"
+    }
+  ]
+}
 ```
 
 ### URL
 
 Type '@url' and input a URL, then Continue will convert it to a markdown document to pass to the model.
 
-```json
-{ "name": "url" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "url"
+    }
+  ]
+}
 ```
 
 ### File Tree
 
 Type '@tree' to reference the structure of your current workspace. The LLM will be able to see the nested directory structure of your project.
 
-```json
-{ "name": "tree" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "tree"
+    }
+  ]
+}
 ```
 
 ### Google
 
 Type '@google' to reference the results of a Google search. For example, type "@google python tutorial" if you want to search and discuss ways of learning Python.
 
-```json
+```json title="config.json"
 {
-  "name": "google",
-  "params": { "serperApiKey": "<your serper.dev api key>" }
+  "contextProviders": [
+    {
+      "name": "google",
+      "params": {
+        "serperApiKey": "<your serper.dev api key>"
+      }
+    }
+  ]
 }
 ```
 
@@ -121,18 +196,22 @@ Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
 Type '@issue' to reference the conversation in a GitHub issue. Make sure to include your own [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) to avoid being rate-limited:
 
-```json
+```json title="config.json"
 {
-  "name": "issue",
-  "params": {
-    "repos": [
-      {
-        "owner": "continuedev",
-        "repo": "continue"
+  "contextProviders": [
+    {
+      "name": "issue",
+      "params": {
+        "repos": [
+          {
+            "owner": "continuedev",
+            "repo": "continue"
+          }
+        ],
+        "githubToken": "ghp_xxx"
       }
-    ],
-    "githubToken": "ghp_xxx"
-  }
+    }
+  ]
 }
 ```
 
@@ -144,12 +223,16 @@ Type `@gitlab-mr` to reference an open MR for this branch on GitLab.
 
 You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope. then add the following to your configuration:
 
-```json
+```json title="config.json"
 {
-  "name": "gitlab-mr",
-  "params": {
-    "token": "..."
-  }
+  "contextProviders": [
+    {
+      "name": "gitlab-mr",
+      "params": {
+        "token": "..."
+      }
+    }
+  ]
 }
 ```
 
@@ -157,13 +240,17 @@ You will need to create a [personal access token](https://docs.gitlab.com/ee/use
 
 You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
 
-```json
+```json title="config.json"
 {
-  "name": "gitlab-mr",
-  "params": {
-    "token": "...",
-    "domain": "gitlab.example.com"
-  }
+  "contextProviders": [
+    {
+      "name": "gitlab-mr",
+      "params": {
+        "token": "...",
+        "domain": "gitlab.example.com"
+      }
+    }
+  ]
 }
 ```
 
@@ -175,13 +262,17 @@ If you select some code to be edited, you can have the context provider filter o
 
 Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens), or use your `email` and `token`, with token set to your password for basic authentication. If you use your own Atlassian API Token, don't configure your email.
 
-```json
+```json title="config.json"
 {
-  "name": "jira",
-  "params": {
-    "domain": "company.atlassian.net",
-    "token ": "ATATT..."
-  }
+  "contextProviders": [
+    {
+      "name": "jira",
+      "params": {
+        "domain": "company.atlassian.net",
+        "token ": "ATATT..."
+      }
+    }
+  ]
 }
 ```
 
@@ -191,10 +282,18 @@ This context provider supports both Jira API version 2 and 3. It will use versio
 that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
 to set the API Version to 2 using the `apiVersion` property.
 
-```json
-  "params": {
-    "apiVersion": "2",
-    ...
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "jira",
+      "params": {
+        "apiVersion": "2"
+      }
+    }
+  ]
+}
+...
   }
 ```
 
@@ -217,7 +316,7 @@ You can override this query by setting the `issueQuery` parameter.
 
 Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
 
-```json
+```json title="config.json"
 { "name": "outline" }
 ```
 
@@ -225,7 +324,7 @@ Type '@outline' to reference the outline of all currently open files. The outlin
 
 Type '@highlights' to reference the 'highlights' from all currently open files. The highlights are computed using Paul Gauthier's so-called ['repomap'](https://aider.chat/docs/repomap.html) technique in [Aider Chat](https://github.com/paul-gauthier/aider). Supported file extensions are the same as for '@Outline' (behind the scenes, we use the corresponding tree-sitter grammars for language parsing).
 
-```json
+```json title="config.json"
 { "name": "highlights" }
 ``` -->
 
@@ -239,18 +338,22 @@ By default, the `schema` filter is set to `public`, and the `sampleRows` is set 
 
 [Here is a short demo.](https://github.com/continuedev/continue/pull/859)
 
-```json
+```json title="config.json"
 {
-  "name": "postgres",
-  "params": {
-    "host": "localhost",
-    "port": 5436,
-    "user": "myuser",
-    "password": "catsarecool",
-    "database": "animals",
-    "schema": "public",
-    "sampleRows": 3
-  }
+  "contextProviders": [
+    {
+      "name": "postgres",
+      "params": {
+        "host": "localhost",
+        "port": 5436,
+        "user": "myuser",
+        "password": "catsarecool",
+        "database": "animals",
+        "schema": "public",
+        "sampleRows": 3
+      }
+    }
+  ]
 }
 ```
 
@@ -258,31 +361,35 @@ By default, the `schema` filter is set to `public`, and the `sampleRows` is set 
 
 Type `@database` to reference table schemas you can use the drop-down or start typeing table names based off of your configuration. Configuration supports multiple databases, allowing you to specify various connection details for PostgreSQL, MySQL, SQLite. Each connection should include a unique name, the connection_type (e.g., postgres, sqlite), and the necessary connection parameters specific to each database type.
 
-```json
+```json title="config.json"
 {
-  "name": "database",
-  "params": {
-    "connections": [
-      {
-        "name": "examplePostgres",
-        "connection_type": "postgres",
-        "connection": {
-          "user": "username",
-          "host": "localhost",
-          "database": "exampleDB",
-          "password": "yourPassword",
-          "port": 5432
-        }
-      },
-      {
-        "name": "exampleSqlite",
-        "connection_type": "sqlite",
-        "connection": {
-          "filename": "/path/to/your/sqlite/database.db"
-        }
+  "contextProviders": [
+    {
+      "name": "database",
+      "params": {
+        "connections": [
+          {
+            "name": "examplePostgres",
+            "connection_type": "postgres",
+            "connection": {
+              "user": "username",
+              "host": "localhost",
+              "database": "exampleDB",
+              "password": "yourPassword",
+              "port": 5432
+            }
+          },
+          {
+            "name": "exampleSqlite",
+            "connection_type": "sqlite",
+            "connection": {
+              "filename": "/path/to/your/sqlite/database.db"
+            }
+          }
+        ]
       }
-    ]
-  }
+    }
+  ]
 }
 ```
 
@@ -290,12 +397,16 @@ Type `@database` to reference table schemas you can use the drop-down or start t
 
 Type `@locals` to reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread. A dropdown will appear, allowing you to select a specific thread to see the local variables in that thread.
 
-```json
+```json title="config.json"
 {
-  "name": "locals",
-  "params": {
-    "stackDepth": 3
-  }
+  "contextProviders": [
+    {
+      "name": "locals",
+      "params": {
+        "stackDepth": 3
+      }
+    }
+  ]
 }
 ```
 
@@ -305,9 +416,13 @@ Provides an overview of all files and the call signatures of top-level classes, 
 
 This context provider is inpsired by [Aider's repository map](https://aider.chat/2023/10/22/repomap.html).
 
-```json
+```json title="config.json"
 {
-  "name": "repo-map"
+  "contextProviders": [
+    {
+      "name": "repo-map"
+    }
+  ]
 }
 ```
 
@@ -315,8 +430,14 @@ This context provider is inpsired by [Aider's repository map](https://aider.chat
 
 Type `@os` to reference the architecture and platform of your current operating system.
 
-```json
-{ "name": "os" }
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "os"
+    }
+  ]
+}
 ```
 
 ### Requesting Context Providers
