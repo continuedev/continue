@@ -1,6 +1,6 @@
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import ReactDOM from "react-dom";
-import { StyledTooltip } from ".";
+import { ToolTip } from "./gui/Tooltip";
 
 const InfoHover = ({ msg }: { msg: string }) => {
   const id = `info-hover-${encodeURIComponent(msg)}`;
@@ -15,10 +15,10 @@ const InfoHover = ({ msg }: { msg: string }) => {
       />
       {tooltipPortalDiv &&
         ReactDOM.createPortal(
-          <StyledTooltip id={id} place="bottom">
+          <ToolTip id={id} place="bottom">
             {msg}
-          </StyledTooltip>,
-          tooltipPortalDiv
+          </ToolTip>,
+          tooltipPortalDiv,
         )}
     </>
   );

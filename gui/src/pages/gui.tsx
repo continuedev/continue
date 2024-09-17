@@ -31,7 +31,8 @@ import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
 import { TutorialCard } from "../components/mainInput/TutorialCard";
-import OnboardingCard, {
+import {
+  OnboardingCard,
   useOnboardingCard,
 } from "../components/OnboardingCard";
 import { IdeMessengerContext } from "../context/IdeMessenger";

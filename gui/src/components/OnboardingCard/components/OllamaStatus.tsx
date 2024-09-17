@@ -8,12 +8,7 @@ import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { useCheckOllamaModels } from "../hooks/useCheckOllamaModels";
 import { StyledActionButton } from "../..";
 import OllamaCompletedStep from "./OllamaCompletedStep";
-
-export enum OllamaConnectionStatuses {
-  WaitingToDownload = "WaitingToDownload",
-  Downloading = "Downloading",
-  Verified = "Verified",
-}
+import { OllamaConnectionStatuses } from "../utils";
 
 interface OllamaStatusProps {
   onConnectionVerified: () => void;
@@ -23,7 +18,7 @@ const {
   ollama: { downloadUrl },
 } = providers;
 
-function OllamaStatus({ onConnectionVerified }: OllamaStatusProps) {
+export function OllamaStatus({ onConnectionVerified }: OllamaStatusProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [status, setStatus] = useState<OllamaConnectionStatuses>(
@@ -63,5 +58,3 @@ function OllamaStatus({ onConnectionVerified }: OllamaStatusProps) {
       );
   }
 }
-
-export default OllamaStatus;

@@ -1,12 +1,8 @@
 import ReactDOM from "react-dom";
 import styled from "styled-components";
-import {
-  StyledTooltip,
-  defaultBorderRadius,
-  lightGray,
-  vscForeground,
-} from "..";
+import { defaultBorderRadius, lightGray, vscForeground } from "..";
 import { getPlatform, isJetBrains } from "../../util";
+import { ToolTip } from "../gui/Tooltip";
 
 const GridDiv = styled.div`
   display: grid;
@@ -51,9 +47,9 @@ function KeyDiv({ text }: { text: string }) {
       </StyledKeyDiv>
       {tooltipPortalDiv &&
         ReactDOM.createPortal(
-          <StyledTooltip id={`header_button_${text}`} place="bottom">
+          <ToolTip id={`header_button_${text}`} place="bottom">
             {keyToName[text]}
-          </StyledTooltip>,
+          </ToolTip>,
           tooltipPortalDiv,
         )}
     </>
