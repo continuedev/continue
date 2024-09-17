@@ -5,10 +5,10 @@ import { QGPTApi, QGPTQuestionInput, QGPTStreamInput, QGPTRelevanceInput } from 
 import { PiecesClient } from 'pieces-copilot-sdk';
 
 class PiecesOSLLM extends BaseLLM {
-  static providerName: ModelProvider = "pieces_os";
+  static providerName: ModelProvider = "pieces-os";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:1000", 
-    model: "pieces_os",
+    model: "pieces-os",
   };
 
   client: QGPTApi;
@@ -18,7 +18,7 @@ class PiecesOSLLM extends BaseLLM {
     this.client = new QGPTApi({
       basePath: this.apiBase,
     });
-    this.model = options.model || "pieces_os";
+    this.model = options.model || "pieces-os";
   }
 
   private _convertArgs(options: CompletionOptions, prompt: string): QGPTQuestionInput {
@@ -85,7 +85,7 @@ class PiecesOSLLM extends BaseLLM {
   }
 
   get _llmType(): string {
-    return "pieces_os";
+    return "pieces-os";
   }
 
   get _identifyingParams(): Record<string, any> {
