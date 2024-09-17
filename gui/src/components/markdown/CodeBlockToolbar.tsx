@@ -101,16 +101,12 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   return (
     <ToolbarDiv>
       <div
-        className="flex items-center cursor-pointer"
+        className="flex items-center cursor-pointer py-0.5 px-0.5"
         onClick={() => {
           // Open the file
         }}
       >
-        <FileIcon
-          filename={"test.py"}
-          height={"16px"}
-          width={"16px"}
-        ></FileIcon>
+        <FileIcon filename="test.py" height="16px" width="16px" />
         {props.language}
       </div>
       <div className="flex items-center">
@@ -137,19 +133,20 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             }}
           >
             <div
-              className="flex items-center gap-1"
-              style={{ color: lightGray }}
+              className={`flex items-center gap-1 text-[${lightGray}] hover:brightness-125 transition-colors duration-200`}
             >
               {applying ? (
                 <CheckIcon className="w-3 h-3 text-green-500" />
               ) : (
                 <PlayIcon className="w-3 h-3" />
               )}
-              {isTerminalCodeBlock(props.language, props.text)
-                ? "Run in terminal"
-                : applying
+              <span>
+                {isTerminalCodeBlock(props.language, props.text)
+                  ? "Run in terminal"
+                  : applying
                   ? "Applying..."
                   : "Apply"}
+              </span>
             </div>
           </ToolbarButton>
         )}
@@ -177,11 +174,24 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             setTimeout(() => setCopied(false), 2000);
           }}
         >
-          {copied ? (
-            <CheckIcon className="w-3 h-3 text-green-500" />
-          ) : (
-            <ClipboardIcon className="w-3 h-3" color={lightGray} />
-          )}
+          <div
+            className={`flex items-center gap-1 text-[${lightGray}] hover:brightness-125 transition-colors duration-200`}
+          >
+            {copied ? (
+              <>
+                <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <ClipboardIcon
+                  className="w-3 h-3 hover:brightness-125"
+                  color={lightGray}
+                />
+                <span>Copy</span>
+              </>
+            )}
+          </div>
         </ToolbarButton>
       </div>
     </ToolbarDiv>

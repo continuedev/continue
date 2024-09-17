@@ -27,7 +27,7 @@ import {
   setBottomMessageCloseTimeout,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import HeaderButtonWithText from "./HeaderButtonWithText";
+import ButtonWithTooltip from "./ButtonWithTooltip";
 
 const FOOTER_HEIGHT = "1.8em";
 
@@ -248,7 +248,7 @@ const Layout = () => {
             </div>
 
             <ProfileSwitcher />
-            <HeaderButtonWithText
+            <ButtonWithTooltip
               tooltipPlacement="top-end"
               text="More"
               onClick={() => {
@@ -260,7 +260,7 @@ const Layout = () => {
               }}
             >
               <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
+            </ButtonWithTooltip>
           </Footer>
         </GridDiv>
 
