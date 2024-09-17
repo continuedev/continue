@@ -2782,13 +2782,16 @@
               "type": "object",
               "properties": {
                 "inlineEdit": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for inline edits",
+                  "type": "string"
                 },
                 "applyCodeBlock": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for applying code blocks",
+                  "type": "string"
                 },
                 "repoMapFileSelection": {
-                  "$ref": "#/definitions/ModelTitle"
+                  "description": "The 'title' property of the model you wish to use for repo map file selections",
+                  "type": "string"
                 }
               }
             },
@@ -2863,12 +2866,6 @@
           "title": "Merge behavior",
           "markdownDescription": "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json."
         }
-      }
-    },
-    "ModelTitle": {
-      "type": "string",
-      "enum": {
-        "$data": "/models/title"
       }
     }
   }
