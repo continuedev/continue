@@ -12,7 +12,7 @@ import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import { hasPassedFTL } from "../../../util/freeTrial";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
-import OllamaStatus from "../components/OllamaStatus";
+import { OllamaStatus } from "../components/OllamaStatus";
 import { useCheckOllamaModels, useSubmitOnboarding } from "../hooks";
 
 function OnboardingLocalTab() {

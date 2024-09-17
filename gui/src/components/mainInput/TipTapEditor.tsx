@@ -47,7 +47,7 @@ import {
   isMetaEquivalentKeyPressed,
   isWebEnvironment,
 } from "../../util";
-import CodeBlockExtension from "./CodeBlockExtension";
+import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
 import { Mention } from "./MentionExtension";

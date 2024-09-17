@@ -1,4 +1,3 @@
-import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
 import { getFontSize, isJetBrains } from "../util";
 
@@ -196,27 +195,6 @@ export const CustomScrollbarDiv = styled.div`
     }
   }
 `;
-
-const TooltipStyles = {
-  fontSize: `${getFontSize() - 2}px`,
-  backgroundColor: vscInputBackground,
-  boxShadow: `0px 0px 2px 1px ${vscBadgeBackground}`,
-  color: vscForeground,
-  padding: "2px 6px",
-  zIndex: 1000,
-  maxWidth: "80vw",
-  textAlign: "center",
-  overflow: "hidden",
-};
-
-export function StyledTooltip(props: any) {
-  const combinedStyles = {
-    ...TooltipStyles,
-    ...props.style, // Merge any additional styles passed via props
-  };
-
-  return <Tooltip {...props} style={combinedStyles} />;
-}
 
 export const TextArea = styled.textarea`
   padding: 8px;

@@ -1,4 +1,5 @@
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { OnboardingCardState } from "./OnboardingCard";
 
 // Note that there is no "NotStarted" status since the
 // local storage value is null until onboarding begins
@@ -19,4 +20,15 @@ export function isNewUserOnboarding() {
   const onboardingStatus = getLocalStorage("onboardingStatus");
 
   return onboardingStatus === undefined;
+}
+
+export const defaultOnboardingCardState: OnboardingCardState = {
+  show: false,
+  activeTab: "Quickstart",
+};
+
+export enum OllamaConnectionStatuses {
+  WaitingToDownload = "WaitingToDownload",
+  Downloading = "Downloading",
+  Verified = "Verified",
 }
