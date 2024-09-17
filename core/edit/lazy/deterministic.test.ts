@@ -133,8 +133,12 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("fastapi.py");
   });
 
-  test.only("calculator exp", async () => {
+  test("calculator exp", async () => {
     await expectDiff("calculator-exp.js");
+  });
+
+  test.only("calculator exp2", async () => {
+    await expectDiff("calculator-exp2.js");
   });
 
   test("calculator comments", async () => {
