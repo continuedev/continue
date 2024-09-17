@@ -83,47 +83,47 @@ class Calculator {
 
 ---
 
- class Calculator {
-   constructor() {
-     this.result = 0;
-   }
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
  
 +   // Adds the given number to the result
-   add(number) {
-     this.result += number;
-     return this;
-   }
+  add(number) {
+    this.result += number;
+    return this;
+  }
  
 +   // Subtracts the given number from the result
-   subtract(number) {
-     this.result -= number;
-     return this;
-   }
+  subtract(number) {
+    this.result -= number;
+    return this;
+  }
 
 +   // Multiplies the result by the given number
-   multiply(number) {
-     this.result *= number;
-     return this;
-   }
+  multiply(number) {
+    this.result *= number;
+    return this;
+  }
 
 +   // Divides the result by the given number
 +   // Throws an error if attempting to divide by zero
-   divide(number) {
-     if (number === 0) {
-       throw new Error("Cannot divide by zero");
-     }
-     this.result /= number;
-     return this;
-   }
+  divide(number) {
+    if (number === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    this.result /= number;
+    return this;
+  }
 
 +   // Returns the current result
-   getResult() {
-     return this.result;
-   }
+  getResult() {
+    return this.result;
+  }
 
 +   // Resets the result to zero
-   reset() {
-     this.result = 0;
-     return this;
-   }
- }
+  reset() {
+    this.result = 0;
+    return this;
+  }
+}

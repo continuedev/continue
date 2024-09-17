@@ -86,7 +86,7 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
   }
 
   if (
-    a.children[0]?.text === b.children[0]?.text &&
+    a.namedChildren[0]?.text === b.namedChildren[0]?.text &&
     a.children[1]?.text === b.children[1]?.text
   ) {
     return true;
@@ -96,7 +96,7 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
   const lineOneB = b.text.split("\n")[0];
 
   const levDist = distance(lineOneA, lineOneB);
-  return levDist / Math.min(lineOneA.length, lineOneB.length) <= 0.25;
+  return levDist / Math.min(lineOneA.length, lineOneB.length) <= 0.2;
 }
 
 function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
@@ -149,7 +149,6 @@ function diffNodes(
       // Enter "lazy mode"
       isLazy = true;
       currentLazyBlockNode = R;
-      R.startIndex;
       rightChildren.shift();
       continue;
     }

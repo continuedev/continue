@@ -86,8 +86,8 @@ class Calculator {
     return this;
   }
 + 
-+   exp(a) {
-+     this.result = Math.pow(this.result, a);
++   exp(number) {
++     this.result = Math.pow(this.result, number);
 +     return this;
 +   }
 }

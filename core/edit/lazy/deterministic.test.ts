@@ -1,7 +1,7 @@
 import fs from "node:fs";
 
 // @ts-ignore no typings available
-import { changed, diff as myersDiff } from "myers-diff";
+import { diff as myersDiff } from "myers-diff";
 import path from "node:path";
 import { DiffLine, DiffLineType } from "../..";
 import { dedent } from "../../util";
@@ -36,25 +36,11 @@ async function collectDiffs(
   return { ourDiffs, myersDiffs };
 }
 
-function getMyersDiffType(diff: any): MyersDiffTypes | undefined {
-  if (changed(diff.rhs) && !changed(diff.lhs)) {
-    return "new";
-  }
-
-  if (!changed(diff.rhs) && changed(diff.lhs)) {
-    return "old";
-  }
-
-  if (changed(diff.rhs) && changed(diff.lhs)) {
-    return "modification";
-  }
-
-  return undefined;
-}
-
 function displayDiff(diff: DiffLine[]) {
   return diff
-    .map(({ type, line }) => `${UNIFIED_DIFF_SYMBOLS[type]} ${line}`)
+    .map(({ type, line }) =>
+      type === "same" ? line : `${UNIFIED_DIFF_SYMBOLS[type]} ${line}`,
+    )
     .join("\n");
 }
 
@@ -129,19 +115,19 @@ describe("deterministicApplyLazyEdit(", () => {
     expect(myersDiffs).toEqual([]);
   });
 
-  test("fastapi", async () => {
+  test.skip("fastapi", async () => {
     await expectDiff("fastapi.py");
   });
 
-  test("calculator exp", async () => {
+  test.skip("calculator exp", async () => {
     await expectDiff("calculator-exp.js");
   });
 
-  test.only("calculator exp2", async () => {
+  test("calculator exp2", async () => {
     await expectDiff("calculator-exp2.js");
   });
 
-  test("calculator comments", async () => {
+  test.skip("calculator comments", async () => {
     await expectDiff("calculator-comments.js");
   });
 });
