@@ -89,7 +89,7 @@ class Bedrock extends BaseLLM {
   }
 
   private _convertMessages(messages: ChatMessage[]): any[] {
-    return messages.map((message) => ({
+    return messages.filter((message)=>message.role!=="system").map((message) => ({
       role: message.role,
       content: this._convertMessageContent(message.content),
     }));
