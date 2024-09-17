@@ -1,6 +1,7 @@
 import GenerateTerminalCommand from "./cmd.js";
 import CommentSlashCommand from "./comment.js";
 import CommitMessageCommand from "./commit.js";
+import ComponentMessageCommand from "./component.js";
 import DraftIssueCommand from "./draftIssue.js";
 import EditSlashCommand from "./edit.js";
 import HttpSlashCommand from "./http.js";
@@ -18,4 +19,5 @@ export default [
   HttpSlashCommand,
   CommitMessageCommand,
   ReviewMessageCommand,
+	ComponentMessageCommand,
 ];
