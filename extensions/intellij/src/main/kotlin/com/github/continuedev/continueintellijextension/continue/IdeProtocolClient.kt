@@ -10,18 +10,13 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
-import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
@@ -32,7 +27,6 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
-import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
@@ -42,7 +36,6 @@ import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.terminal.TerminalUtils
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.concurrency.annotations.RequiresEdt
@@ -543,35 +536,38 @@ class IdeProtocolClient (
                         val document: Document = editor!!.document
                         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@launch
 
-                        val analyzer = DaemonCodeAnalyzer.getInstance(project) as DaemonCodeAnalyzerImpl
-                        val highlightInfos = ReadAction.compute<MutableList<HighlightInfo>, Throwable> {
-                            analyzer.getFileLevelHighlights(project, psiFile)
-                        }
-
                         val problems = ArrayList<Map<String, Any?>>()
-                        for (highlightInfo in highlightInfos) {
-                            if (highlightInfo.severity === HighlightSeverity.ERROR ||
-                                    highlightInfo.severity === HighlightSeverity.WARNING) {
-                                val startOffset = highlightInfo.getStartOffset()
-                                val endOffset = highlightInfo.getEndOffset()
-                                val description = highlightInfo.description
-                                problems.add(mapOf(
-                                        "filepath" to psiFile.virtualFile?.path,
-                                        "range" to mapOf(
-                                                "start" to mapOf(
-                                                        "line" to document.getLineNumber(startOffset),
-                                                        "character" to startOffset - document.getLineStartOffset(document.getLineNumber(startOffset))
-                                                ),
-                                                "end" to mapOf(
-                                                        "line" to document.getLineNumber(endOffset),
-                                                        "character" to endOffset - document.getLineStartOffset(document.getLineNumber(endOffset))
-                                                )
-                                        ),
-                                        "message" to description
-                                ))
-                            }
-                        }
                         respond(problems)
+
+                        // DaemonCodeAnalyzerImpl has been made internal, which means we cannot access this
+//                        val analyzer = DaemonCodeAnalyzer.getInstance(project) as DaemonCodeAnalyzerImpl
+//                        val highlightInfos = ReadAction.compute<MutableList<HighlightInfo>, Throwable> {
+//                            analyzer.getFileLevelHighlights(project, psiFile)
+//                        }
+//
+//                        for (highlightInfo in highlightInfos) {
+//                            if (highlightInfo.severity === HighlightSeverity.ERROR ||
+//                                    highlightInfo.severity === HighlightSeverity.WARNING) {
+//                                val startOffset = highlightInfo.getStartOffset()
+//                                val endOffset = highlightInfo.getEndOffset()
+//                                val description = highlightInfo.description
+//                                problems.add(mapOf(
+//                                        "filepath" to psiFile.virtualFile?.path,
+//                                        "range" to mapOf(
+//                                                "start" to mapOf(
+//                                                        "line" to document.getLineNumber(startOffset),
+//                                                        "character" to startOffset - document.getLineStartOffset(document.getLineNumber(startOffset))
+//                                                ),
+//                                                "end" to mapOf(
+//                                                        "line" to document.getLineNumber(endOffset),
+//                                                        "character" to endOffset - document.getLineStartOffset(document.getLineNumber(endOffset))
+//                                                )
+//                                        ),
+//                                        "message" to description
+//                                ))
+//                            }
+//                        }
+//                        respond(problems)
                     }
                     "getConfigJsUrl" -> {
                         // Calculate a data URL for the config.js file
@@ -975,10 +971,12 @@ class IdeProtocolClient (
 
     @RequiresEdt
     private fun pinnedFiles(): List<String> {
-        val fileEditorManager = FileEditorManager.getInstance(project) as? FileEditorManagerImpl ?: return listOf()
-        val openFiles = fileEditorManager.openFiles.map { it.path }.toList()
-        val pinnedFiles = fileEditorManager.windows.flatMap { window -> window.files.filter { window.isFilePinned(it) } }.map { it.path }.toSet()
-        return openFiles.intersect(pinnedFiles).toList()
+        // Caused incompatibility issue with JetBrains new release
+        return visibleFiles()
+//        val fileEditorManager = FileEditorManager.getInstance(project) as? FileEditorManagerImpl ?: return listOf() // FileEditorManagerImpl should be the type, but this was marked as internal
+//        val openFiles = fileEditorManager.openFiles.map { it.path }.toList()
+//        val pinnedFiles = fileEditorManager.windows.flatMap { window -> window.files.filter { window.isFilePinned(it) } }.map { it.path }.toSet()
+//        return openFiles.intersect(pinnedFiles).toList()
     }
 
     private fun currentFile(): String? {
