@@ -167,7 +167,7 @@ function diffNodes(
         // Record the replacement lines
         acc.push({
           lazyBlockNode: currentLazyBlockNode!,
-          replacementNodes: currentLazyBlockReplacementNodes,
+          replacementNodes: [...currentLazyBlockReplacementNodes],
         });
 
         // Exit "lazy mode"
@@ -206,7 +206,7 @@ function diffNodes(
   if (isLazy) {
     acc.push({
       lazyBlockNode: currentLazyBlockNode!,
-      replacementNodes: currentLazyBlockReplacementNodes,
+      replacementNodes: [...currentLazyBlockReplacementNodes],
     });
   }
 

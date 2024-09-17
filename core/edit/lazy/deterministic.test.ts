@@ -115,11 +115,12 @@ describe("deterministicApplyLazyEdit(", () => {
     expect(myersDiffs).toEqual([]);
   });
 
-  test.skip("fastapi", async () => {
+  test("fastapi", async () => {
     await expectDiff("fastapi.py");
   });
 
-  test.skip("calculator exp", async () => {
+  // Whitespace
+  test("calculator exp", async () => {
     await expectDiff("calculator-exp.js");
   });
 
@@ -127,7 +128,7 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("calculator-exp2.js");
   });
 
-  test.skip("calculator comments", async () => {
+  test.only("calculator comments", async () => {
     await expectDiff("calculator-comments.js");
   });
 });
