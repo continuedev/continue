@@ -51,4 +51,4 @@ For LM Studio users, navigate to the "My Models" section, find your desired mode
 
 ## Other experiences
 
-There are many more models and providers you can use with Autocomplete. Check them out [here](../../customize/model-types/autocomplete.md).
+There are many more models and providers you can use with Autocomplete. Check them out [here](../customize/model-types/autocomplete.md).
