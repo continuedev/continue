@@ -38,16 +38,16 @@ function copyVSCodeSettingsToPearAIDir() {
         fs.mkdirSync(pearAIDevExtensionsDir, { recursive: true });
     }
 
-    const itemsToCopy = ['settings.json', 'keybindings.json', 'snippets', 'sync'];
+    const itemsToCopy = ['settings.json', 'keybindings.json', 'snippets', 'sync', 'globalStorage/state.vscdb', 'globalStorage/state.vscdb.backup'];
     itemsToCopy.forEach(item => {
         const source = path.join(vscodeSettingsDir, item);
         const destination = path.join(pearAIDevSettingsDir, item);
         if (fs.existsSync(source)) {
-        if (fs.lstatSync(source).isDirectory()) {
-            copyDirectoryRecursiveSync(source, destination);
-        } else {
-            fs.copyFileSync(source, destination);
-        }
+            if (fs.lstatSync(source).isDirectory()) {
+                copyDirectoryRecursiveSync(source, destination);
+            } else {
+                fs.copyFileSync(source, destination);
+            }
         }
     });
 
@@ -61,7 +61,7 @@ function copyVSCodeSettingsToPearAIDir() {
     }
 
     copyDirectoryRecursiveSync(vscodeExtensionsDir, pearAIDevExtensionsDir, exclusions);
-    }
+}
 
 function getVSCodeSettingsDir() {
     const platform = process.platform;
