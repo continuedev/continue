@@ -174,8 +174,8 @@ jobs:
       #     options: --options runtime --entitlements entitlements.xml
 
       # Build plugin
-      # - name: Build plugin
-      #   run: ./gradlew buildPlugin
+      - name: Build plugin
+        run: ./gradlew buildPlugin
 
       # # Publish the plugin to JetBrains Marketplace
       # - name: Publish EAP Plugin
