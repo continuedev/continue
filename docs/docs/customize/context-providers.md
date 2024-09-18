@@ -6,7 +6,7 @@ keywords: [context, "@", provider, LLM]
 
 Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider.
 
-As an example, say you are working on solving a new GitHub Issue. You type '@issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
+As an example, say you are working on solving a new GitHub Issue. You type '@Isse' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
 
 ![Context Items](/img/context-provider-example.png)
 
@@ -14,7 +14,7 @@ As an example, say you are working on solving a new GitHub Issue. You type '@iss
 
 To use any of the built-in context providers, open `config.json` and add it to the `contextProviders` list.
 
-### `@file`
+### `@File`
 
 Reference any file in your current workspace.
 
@@ -28,7 +28,7 @@ Reference any file in your current workspace.
 }
 ```
 
-### `@code`
+### `@Code`
 
 Reference specific functions or classes from throughout your project.
 
@@ -42,7 +42,7 @@ Reference specific functions or classes from throughout your project.
 }
 ```
 
-### `@diff`
+### `@Git Diff`
 
 Reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
 
@@ -56,7 +56,7 @@ Reference all of the changes you've made to your current branch. This is useful 
 }
 ```
 
-### `@terminal`
+### `@Terminal`
 
 Reference the contents of your IDE's terminal.
 
@@ -70,7 +70,7 @@ Reference the contents of your IDE's terminal.
 }
 ```
 
-### `@docs`
+### `@Docs`
 
 Reference the contents from any documentation site.
 
@@ -84,11 +84,11 @@ Reference the contents from any documentation site.
 }
 ```
 
-Note that this will only enable the `@docs` context provider.
+Note that this will only enable the `@Docs` context provider.
 
 To use it, you need to add a documentation site to your `config.json`. See the [docs](../customize/deep-dives/docs.md) page for more information.
 
-### `'@open`
+### `@Open`
 
 Reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
 
@@ -105,7 +105,7 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
 }
 ```
 
-### `@codebase`
+### `@Codebase`
 
 Reference the most relevant snippets from your codebase.
 
@@ -121,9 +121,9 @@ Reference the most relevant snippets from your codebase.
 
 Read more about indexing and retrieval [here](../customize/deep-dives/codebase.md).
 
-### `@folder`
+### `@Folder`
 
-Uses the same retrieval mechanism as `@codebase`, but only on a single folder.
+Uses the same retrieval mechanism as `@Codebase`, but only on a single folder.
 
 ```json title="config.json"
 {
@@ -135,7 +135,7 @@ Uses the same retrieval mechanism as `@codebase`, but only on a single folder.
 }
 ```
 
-### `@search`
+### `@Search`
 
 Reference the results of codebase search, just like the results you would get from VS Code search.
 
@@ -151,7 +151,7 @@ Reference the results of codebase search, just like the results you would get fr
 
 This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
 
-### `@url`
+### `@Url`
 
 Reference the markdown converted contents of a given URL.
 
@@ -165,7 +165,7 @@ Reference the markdown converted contents of a given URL.
 }
 ```
 
-### `@tree`
+### `@Tree`
 
 Reference the structure of your current workspace.
 
@@ -179,7 +179,7 @@ Reference the structure of your current workspace.
 }
 ```
 
-### `@google`
+### `@Google`
 
 Reference the results of a Google search.
 
@@ -196,11 +196,11 @@ Reference the results of a Google search.
 }
 ```
 
-For example, type "@google python tutorial" if you want to search and discuss ways of learning Python.
+For example, type "@Google python tutorial" if you want to search and discuss ways of learning Python.
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
-### `@issue`
+### `@Isse`
 
 Reference the conversation in a GitHub issue.
 
@@ -225,7 +225,7 @@ Reference the conversation in a GitHub issue.
 
 Make sure to include your own [GitHub personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-fine-grained-personal-access-token) to avoid being rate-limited.
 
-### `@gitlab-mr`
+### `@Gitlab Merge Request`
 
 Reference an open MR for this branch on GitLab.
 
@@ -266,7 +266,7 @@ You can specify the domain to communicate with by setting the `domain` parameter
 
 If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
 
-### `@jira`
+### `@Jira`
 
 Reference the conversation in a Jira issue.
 
@@ -315,7 +315,7 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 
 You can override this query by setting the `issueQuery` parameter.
 
-### `@postgres`
+### `@Postgres`
 
 Reference the schema of a table, and some sample rows
 
@@ -344,7 +344,7 @@ By default, the `schema` filter is set to `public`, and the `sampleRows` is set 
 
 [Here is a short demo.](https://github.com/continuedev/continue/pull/859)
 
-### `@database`
+### `@Database`
 
 Reference table schemas from Sqlite, Postgres, and MySQL databases.
 
@@ -382,7 +382,7 @@ Reference table schemas from Sqlite, Postgres, and MySQL databases.
 
 Each connection should include a unique name, the connection_type (e.g., postgres, sqlite), and the necessary connection parameters specific to each database type.
 
-### `@locals`
+### `@Locals`
 
 Reference the contents of the local variables in the debugger.
 
@@ -401,7 +401,7 @@ Reference the contents of the local variables in the debugger.
 
 Uses the top _n_ levels (defaulting to 3) of the call stack for that thread.
 
-### `@repo-map`
+### `@Repository Map`
 
 Reference the outline of your codebase.
 
@@ -419,7 +419,7 @@ Provides an overview of all files and the call signatures of top-level classes, 
 
 This context provider is inpsired by [Aider's repository map](https://aider.chat/2023/10/22/repomap.html).
 
-### `@os`
+### `@Operating System`
 
 Reference the architecture and platform of your current operating system.
 

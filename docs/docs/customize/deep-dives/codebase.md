@@ -3,11 +3,11 @@ description: Talk to your codebase
 keywords: [talk, embeddings, reranker, codebase, experimental]
 ---
 
-# @codebase
+# @Codebase
 
 Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally with `all-MiniLM-L6-v2` and stored locally in `~/.continue/index`.
 
-Currently, the codebase retrieval feature is available as the "codebase" and "folder" context providers. You can use them by typing `@codebase` or `@folder` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase (or folder) to determine relevant files.
+Currently, the codebase retrieval feature is available as the "codebase" and "folder" context providers. You can use them by typing `@Codebase` or `@Folder` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase (or folder) to determine relevant files.
 
 Here are some common use cases where it can be useful:
 
@@ -19,10 +19,10 @@ Here are some common use cases where it can be useful:
   - "Generate a new React component with a date picker, using the same patterns as existing components"
   - "Write a draft of a CLI application for this project using Python's argparse"
   - "Implement the `foo` method in the `bar` class, following the patterns seen in other subclasses of `baz`.
-- Use `@folder` to ask questions about a specific folder, increasing the likelihood of relevant results
+- Use `@Folder` to ask questions about a specific folder, increasing the likelihood of relevant results
   - "What is the main purpose of this folder?"
   - "How do we use VS Code's CodeLens API?"
-  - Or any of the above examples, but with `@folder` instead of `@codebase`
+  - Or any of the above examples, but with `@Folder` instead of `@Codebase`
 
 Here are use cases where it is not useful:
 

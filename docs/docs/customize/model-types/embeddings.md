@@ -7,7 +7,7 @@ sidebar_position: 3
 
 An "embeddings model" is trained to convert a piece of text into a vector, which can later be rapidly compared to other vectors to determine similarity between the pieces of text. Embeddings models are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, embeddings are generated during indexing and then used by [@codebase](../deep-dives/codebase.md) to perform similarity search over your codebase.
+In Continue, embeddings are generated during indexing and then used by [@Codebase](../deep-dives/codebase.md) to perform similarity search over your codebase.
 
 ## Recommended embedding models
 

@@ -4,13 +4,13 @@ keywords: [documentation, indexing, context provider, embeddings, docs]
 toc_max_heading_level: 5
 ---
 
-# @docs
+# @Docs
 
-The [`@docs` context provider](http://localhost:3000/customization/context-providers#documentation) allows you to interact with your documentation directly within Continue. This feature enables you to index any static site or GitHub markdown pages, making it easier to access and utilize your documentation while coding.
+The [`@Docs` context provider](http://localhost:3000/customization/context-providers#documentation) allows you to interact with your documentation directly within Continue. This feature enables you to index any static site or GitHub markdown pages, making it easier to access and utilize your documentation while coding.
 
-## Enabling the `@docs` context provider
+## Enabling the `@Docs` context provider
 
-To enable the `@docs` context provider, you need to add it to the list of context providers in your `config.json` file.
+To enable the `@Docs` context provider, you need to add it to the list of context providers in your `config.json` file.
 
 ```json
 {
@@ -23,12 +23,12 @@ To enable the `@docs` context provider, you need to add it to the list of contex
 
 ## How It Works
 
-The `@docs` context provider works by crawling specified documentation sites, generating embeddings, and storing them locally for you. This process allows for quick and efficient access to your documentation content.
+The `@Docs` context provider works by crawling specified documentation sites, generating embeddings, and storing them locally for you. This process allows for quick and efficient access to your documentation content.
 
 1. We crawl the specified documentation site
 2. Generate embeddings for the content
 3. Store the embeddings locally on your machine
-4. Provide access to the indexed content through the `@docs` context provider
+4. Provide access to the indexed content through the `@Docs` context provider
 
 ## Pre-indexed Documentation Sites
 
@@ -36,11 +36,11 @@ We offer a selection of pre-indexed documentation sites for popular frameworks a
 
 ## Indexing Your Own Documentation
 
-### Through the `@docs` Context Provider
+### Through the `@Docs` Context Provider
 
-To add a single documentation site, we recommend using the `@docs` context provider.
+To add a single documentation site, we recommend using the `@Docs` context provider.
 
-1. Type `@docs` in the chat panel, hit enter
+1. Type `@Docs` in the chat panel, hit enter
 2. Type "add" and select the "Add Docs" option
 3. Enter the required information into the dialog
 
