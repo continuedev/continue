@@ -11,4 +11,4 @@ The model response is then streamed directly back to the sidebar. Each code sect
 
 If you would like to view the exact prompt that is sent to the model during Chat, you can [view this in the prompt logs](troubleshooting.md#llm-prompt-logs).
 
-You can learn more about how `@codebase` works [here](../customize/deep-dives/codebase.md) and `@docs` [here](../customize/deep-dives/docs.md).
+You can learn more about how `@Codebase` works [here](../customize/deep-dives/codebase.md) and `@Docs` [here](../customize/deep-dives/docs.md).

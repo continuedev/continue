@@ -12,9 +12,9 @@ Slash commands are shortcuts that can be activated by typing '/' and selecting f
 
 To use any of the built-in slash commands, open `config.json` and add it to the `slashCommands` list.
 
-### `/edit`
+### `/Edit`
 
-Select code with `ctrl/cmd + L` (VS Code) or `ctrl/cmd + J` (JetBrains), and then type "/edit", followed by instructions for the edit. Continue will stream the changes into a side-by-side diff editor.
+Select code with `ctrl/cmd + L` (VS Code) or `ctrl/cmd + J` (JetBrains), and then type `/Edit`, followed by instructions for the edit. Continue will stream the changes into a side-by-side diff editor.
 
 ```json title="config.json"
 {
@@ -27,9 +27,9 @@ Select code with `ctrl/cmd + L` (VS Code) or `ctrl/cmd + J` (JetBrains), and the
 }
 ```
 
-### `/comment`
+### `/Comment`
 
-Comment works just like /edit, except it will automatically prompt the LLM to comment the code.
+Comment works just like `/Edit`, except it will automatically prompt the LLM to comment the code.
 
 ```json title="config.json"
 {
@@ -42,9 +42,9 @@ Comment works just like /edit, except it will automatically prompt the LLM to co
 }
 ```
 
-### `/share`
+### `/Share`
 
-Type "/share" to generate a shareable markdown transcript of your current chat history.
+Generate a shareable markdown transcript of your current chat history.
 
 ```json title="config.json"
 {
@@ -60,7 +60,7 @@ Type "/share" to generate a shareable markdown transcript of your current chat h
 
 Use the `outputDir` parameter to specify where you want to the markdown file to be saved.
 
-### `/cmd`
+### `/Cmd`
 
 Generate a shell command from natural language and (only in VS Code) automatically paste it into the terminal.
 
@@ -75,7 +75,7 @@ Generate a shell command from natural language and (only in VS Code) automatical
 }
 ```
 
-### `/commit`
+### `/Commit`
 
 Shows the LLM your current git diff and asks it to generate a commit message.
 
@@ -90,7 +90,7 @@ Shows the LLM your current git diff and asks it to generate a commit message.
 }
 ```
 
-### `/http`
+### `/Http`
 
 Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup. The endpoint should return a sequence of string updates, which will be streamed to the Continue sidebar. See our basic [FastAPI example](https://github.com/continuedev/continue/blob/74002369a5e435735b83278fb965e004ae38a97d/core/context/providers/context_provider_server.py#L34-L45) for reference.
 
@@ -106,7 +106,7 @@ Write a custom slash command at your own HTTP endpoint. Set 'url' in the params 
 }
 ```
 
-### `/issue`
+### `/Issue`
 
 Describe the issue you'd like to generate, and Continue will turn into a well-formatted title and body, then give you a link to the draft so you can submit. Make sure to set the URL of the repository you want to generate issues for.
 
@@ -122,7 +122,7 @@ Describe the issue you'd like to generate, and Continue will turn into a well-fo
 }
 ```
 
-### `/so`
+### `/So`
 
 The StackOverflow slash command will automatically pull results from StackOverflow to answer your question, quoting links along with its answer.
 
@@ -137,7 +137,7 @@ The StackOverflow slash command will automatically pull results from StackOverfl
 }
 ```
 
-### `/onboard`
+### `/Onboard`
 
 The Onboard slash command helps to familiarize yourself with a new project by analyzing the project structure, READMEs, and dependency files. It identifies key folders, explains their purpose, and highlights popular packages used. Additionally, it offers insights into the project's architecture.
 

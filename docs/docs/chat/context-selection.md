@@ -19,27 +19,27 @@ You can include the currently open file as context by pressing `cmd/ctrl + opt +
 
 ## Specific file
 
-You can include a specific file in your current workspace as context by typing [`@files`](../customize/context-providers.md#files) and selecting the file.
+You can include a specific file in your current workspace as context by typing [`@Files`](../customize/context-providers.md#files) and selecting the file.
 
 ## Specific folder
 
-You can include a folder in your current workspace as context by typing [`@directory`](../customize/context-providers.md#folders) and selecting the directory. It [works like `@codebase`](../customize/deep-dives/codebase.md) but only includes the files in the selected directory.
+You can include a folder in your current workspace as context by typing [`@Folder`](../customize/context-providers.md#folders) and selecting the directory. It [works like `@Codebase`](../customize/deep-dives/codebase.md) but only includes the files in the selected folder.
 
 ## Entire codebase
 
-You can include your entire codebase as context by typing [`@codebase`](../customize/context-providers.md#codebase-retrieval). You can learn about how @codebase works [here](../customize/deep-dives/codebase.md).
+You can include your entire codebase as context by typing [`@Codebase`](../customize/context-providers.md#codebase-retrieval). You can learn about how @Codebase works [here](../customize/deep-dives/codebase.md).
 
 ## Documentation site
 
-You can include a documentation site as context by typing [`@docs`](../customize/context-providers.md#documentation) and selecting the documentation site. You can learn about how @docs works [here](../customize/deep-dives/docs.md).
+You can include a documentation site as context by typing [`@Docs`](../customize/context-providers.md#documentation) and selecting the documentation site. You can learn about how @Docs works [here](../customize/deep-dives/docs.md).
 
 ## Terminal contents
 
-You can include the contents of the terminal in your IDE as context by typing [`@terminal`](../customize/context-providers.md#terminal).
+You can include the contents of the terminal in your IDE as context by typing [`@Terminal`](../customize/context-providers.md#terminal).
 
 ## Git diff
 
-You can include all of the changes you've made to your current branch by typing [`@diff`](../customize/context-providers.md#git-diff).
+You can include all of the changes you've made to your current branch by typing [`@Git Diff`](../customize/context-providers.md#git-diff).
 
 ## Other context
 
