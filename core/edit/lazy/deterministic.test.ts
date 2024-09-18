@@ -119,7 +119,7 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("fastapi.py");
   });
 
-  // Whitespace
+  // TODO: Whitespace
   test("calculator exp", async () => {
     await expectDiff("calculator-exp.js");
   });
@@ -128,7 +128,11 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("calculator-exp2.js");
   });
 
-  test.only("calculator comments", async () => {
+  test("calculator comments", async () => {
     await expectDiff("calculator-comments.js");
+  });
+
+  test("calculator docstrings", async () => {
+    await expectDiff("calculator-docstrings.js");
   });
 });

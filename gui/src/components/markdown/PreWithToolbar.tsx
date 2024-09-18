@@ -10,6 +10,7 @@ import CodeBlockToolBar from "./CodeBlockToolbar";
 const TopDiv = styled.div`
   border: 0.5px solid ${lightGray}80;
   border-radius: ${defaultBorderRadius};
+  margin-bottom: 8px;
 `;
 
 function childToText(child: any) {
