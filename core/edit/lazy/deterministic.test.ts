@@ -131,7 +131,6 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("calculator-docstrings.js");
   });
 
-  // TODO
   test("calculator stateless", async () => {
     await expectDiff("calculator-stateless.js");
   });
@@ -142,5 +141,9 @@ describe("deterministicApplyLazyEdit(", () => {
 
   test("gui add toggle", async () => {
     await expectDiff("gui.js");
+  });
+
+  test.only("rust calculator", async () => {
+    await expectDiff("rust-calc-exp.rs");
   });
 });

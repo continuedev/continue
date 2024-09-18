@@ -112,14 +112,13 @@ export async function deterministicApplyLazyEdit(
   return diff;
 }
 
-const COMMENT_TYPES = ["comment"];
 const LAZY_COMMENT_REGEX = /\.{3}\s*(.+?)\s*\.{3}/;
 export function isLazyLine(text: string): boolean {
   return LAZY_COMMENT_REGEX.test(text);
 }
 
 function isLazyBlock(node: Parser.SyntaxNode): boolean {
-  return COMMENT_TYPES.includes(node.type) && isLazyLine(node.text);
+  return node.type.includes("comment") && isLazyLine(node.text);
 }
 
 /**
