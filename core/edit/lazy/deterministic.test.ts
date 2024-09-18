@@ -140,7 +140,7 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("top-level-same.js");
   });
 
-  test.skip("gui add toggle", async () => {
+  test("gui add toggle", async () => {
     await expectDiff("gui.js");
   });
 });

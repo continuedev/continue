@@ -177,7 +177,10 @@ export class VerticalPerLineDiffManager {
     }
   }
 
-  async streamDiffLines(diffStream: AsyncGenerator<DiffLine>) {
+  async streamDiffLines(
+    diffStream: AsyncGenerator<DiffLine>,
+    instant: boolean,
+  ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     // Get the current editor filepath/range
@@ -204,7 +207,9 @@ export class VerticalPerLineDiffManager {
       filepath,
       startLine,
       endLine,
-      {},
+      {
+        instant,
+      },
     );
 
     if (!diffHandler) {

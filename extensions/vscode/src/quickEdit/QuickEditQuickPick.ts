@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { ContinueConfig, IDE } from "core";
+import { IDE } from "core";
 import { walkDir } from "core/indexing/walkDir";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -215,7 +215,7 @@ export class QuickEdit {
     );
 
     this.editorWhenOpened = editor;
-    this.previousInput = existingHandler?.input;
+    this.previousInput = existingHandler?.options.input;
   }
 
   /**

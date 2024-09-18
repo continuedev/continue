@@ -1,7 +1,6 @@
 import { ILLM } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
-import { generateLines } from "core/diff/util";
-import { deterministicApplyLazyEdit2 } from "core/edit/lazy/deterministic2";
+import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -160,21 +159,15 @@ export class VsCodeMessenger {
       fastLlm ??= llm;
 
       // Generate the diff and pass through diff manager
-      // const diffLines = streamLazyApply(
-      //   editor.document.getText(),
-      //   getBasename(editor.document.fileName),
-      //   msg.data.text,
-      //   llm,
-      //   fastLlm,
-      // );
-      const diffLines = await deterministicApplyLazyEdit2(
+      const [instant, diffLines] = await applyCodeBlock(
         editor.document.getText(),
         msg.data.text,
         getBasename(editor.document.fileName),
+        llm,
+        fastLlm,
       );
-      const diffGenerator = generateLines(diffLines!);
       const verticalDiffManager = await this.verticalDiffManagerPromise;
-      verticalDiffManager.streamDiffLines(diffGenerator);
+      verticalDiffManager.streamDiffLines(diffLines, instant);
     });
 
     this.onWebview("showTutorial", async (msg) => {

@@ -349,8 +349,8 @@
       },
       {
         "command": "continue.applyCodeFromChat",
-        "mac": "alt+l",
-        "key": "alt+l"
+        "mac": "alt+a",
+        "key": "alt+a"
       }
     ],
     "submenus": [
