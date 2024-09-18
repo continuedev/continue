@@ -131,4 +131,9 @@ describe("deterministicApplyLazyEdit(", () => {
   test("calculator docstrings", async () => {
     await expectDiff("calculator-docstrings.js");
   });
+
+  // TODO
+  test("calculator stateless", async () => {
+    await expectDiff("calculator-stateless.js");
+  });
 });
