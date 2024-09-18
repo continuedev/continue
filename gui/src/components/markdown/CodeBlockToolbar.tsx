@@ -17,7 +17,7 @@ const ToolbarDiv = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: ${vscEditorBackground};
+  background: inherit;
   font-size: ${getFontSize() - 2}px;
   padding: 3px;
   padding-left: 4px;
@@ -46,6 +46,7 @@ interface CodeBlockToolBarProps {
   bottom: boolean;
   language: string | undefined;
   isNextCodeBlock: boolean;
+  filename?: string;
 }
 
 const terminalLanguages = ["bash", "sh"];
@@ -98,34 +99,66 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     !props.isNextCodeBlock,
   );
 
+  function onClickHeader() {
+    // TODO: Need to turn into relative or fq path
+    ideMessenger.post("showFile", {
+      filepath: props.filename,
+    });
+  }
+
+  function onClickCopy(e) {
+    const text = typeof props.text === "string" ? props.text : props.text;
+    if (isJetBrains()) {
+      ideMessenger.request("copyText", { text });
+    } else {
+      navigator.clipboard.writeText(text);
+    }
+
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  function onClickActionButton() {
+    if (isTerminalCodeBlock(props.language, props.text)) {
+      let text = props.text;
+      if (text.startsWith("$ ")) {
+        text = text.slice(2);
+      }
+      ideMessenger.ide.runCommand(text);
+      return;
+    }
+
+    if (applying) return;
+    ideMessenger.post("applyToCurrentFile", {
+      text: props.text,
+    });
+    setApplying(true);
+    setTimeout(() => setApplying(false), 2000);
+  }
+
   return (
     <ToolbarDiv>
       <div
         className="flex items-center cursor-pointer py-0.5 px-0.5"
-        onClick={() => {
-          // Open the file
-        }}
+        onClick={onClickHeader}
       >
-        <FileIcon filename="test.py" height="16px" width="16px" />
-        <span className="hover:brightness-125">{props.language}</span>
+        {props.filename && (
+          <>
+            <FileIcon
+              filename={props.filename || props.language}
+              height="18px"
+              width="18px"
+            />
+            <span className="hover:brightness-125 ml-1">{props.filename}</span>{" "}
+          </>
+        )}
       </div>
-      <div className="flex items-center">
-        <ToolbarButton
-          onClick={(e) => {
-            const text =
-              typeof props.text === "string" ? props.text : props.text;
-            if (isJetBrains()) {
-              ideMessenger.request("copyText", { text });
-            } else {
-              navigator.clipboard.writeText(text);
-            }
 
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}
-        >
+      <div className="flex items-center">
+        <ToolbarButton onClick={onClickCopy}>
           <div
-            className={`flex items-center gap-1 text-[${lightGray}] hover:brightness-125 transition-colors duration-200`}
+            className={`flex items-center gap-1 ] hover:brightness-125 transition-colors duration-200`}
+            style={{ color: lightGray }}
           >
             {copied ? (
               <>
@@ -134,10 +167,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               </>
             ) : (
               <>
-                <ClipboardIcon
-                  className="w-3 h-3 hover:brightness-125"
-                  color={lightGray}
-                />
+                <ClipboardIcon className="w-3 h-3 hover:brightness-125" />
                 <span>Copy</span>
               </>
             )}
@@ -148,26 +178,11 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           <ToolbarButton
             disabled={applying}
             style={{ backgroundColor: vscEditorBackground }}
-            onClick={() => {
-              if (isTerminalCodeBlock(props.language, props.text)) {
-                let text = props.text;
-                if (text.startsWith("$ ")) {
-                  text = text.slice(2);
-                }
-                ideMessenger.ide.runCommand(text);
-                return;
-              }
-
-              if (applying) return;
-              ideMessenger.post("applyToCurrentFile", {
-                text: props.text,
-              });
-              setApplying(true);
-              setTimeout(() => setApplying(false), 2000);
-            }}
+            onClick={onClickActionButton}
           >
             <div
-              className={`flex items-center gap-1 text-[${lightGray}] hover:brightness-125 transition-colors duration-200`}
+              className={`flex items-center gap-1 hover:brightness-125 transition-colors duration-200`}
+              style={{ color: lightGray }}
             >
               {applying ? (
                 <CheckIcon className="w-3 h-3 text-green-500" />
@@ -184,15 +199,6 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             </div>
           </ToolbarButton>
         )}
-        {/* <ButtonWithTooltip
-          text="Insert at cursor"
-          style={{ backgroundColor: vscEditorBackground }}
-          onClick={() => {
-            ideMessenger.post("insertAtCursor", { text: props.text });
-          }}
-        >
-          <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
-        </ButtonWithTooltip> */}
       </div>
     </ToolbarDiv>
   );
