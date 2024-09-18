@@ -33,6 +33,7 @@ function PreWithToolbar(props: {
   children: any;
   language: string | null;
   codeBlockIndex: number;
+  filename?: string | undefined;
 }) {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
@@ -67,7 +68,8 @@ function PreWithToolbar(props: {
         text={copyValue}
         bottom={toolbarBottom}
         language={props.language}
-      ></CodeBlockToolBar>
+        filename={props.filename}
+      />
       {props.children}
     </TopDiv>
   );

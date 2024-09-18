@@ -112,11 +112,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         }}
       >
         <div className="flex items-center">
-          <FileIcon
-            height="20px"
-            width="20px"
-            filename={props.item.name}
-          ></FileIcon>
+          <FileIcon height="20px" width="20px" filename={props.item.name} />
           {props.item.name}
         </div>
         <div className="flex items-center">

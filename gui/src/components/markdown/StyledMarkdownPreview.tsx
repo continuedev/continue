@@ -51,19 +51,9 @@ const StyledMarkdown = styled.div<{
   }
 
   background-color: ${vscBackground};
-  font-family:
-    var(--vscode-font-family),
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    "Open Sans",
-    "Helvetica Neue",
-    sans-serif;
+  font-family: var(--vscode-font-family), system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+    "Open Sans", "Helvetica Neue", sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   padding-left: 8px;
   padding-right: 8px;
@@ -113,6 +103,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             } else if (node.lang.includes(".")) {
               node.lang = node.lang.split(".").slice(-1)[0];
             }
+
+            if (node.meta) {
+              node.data = node.data || {};
+              node.data.hProperties = node.data.hProperties || {};
+              node.data.hProperties.filename = node.meta;
+            }
           });
         };
       },
@@ -150,12 +146,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const childrenClassName = preProps?.children?.[0]?.props?.className;
+          const { className, filename } = preProps?.children?.[0]?.props;
 
           return props.showCodeBorder ? (
             <PreWithToolbar
               codeBlockIndex={preProps.codeBlockIndex}
-              language={getLanuageFromClassName(childrenClassName)}
+              language={getLanuageFromClassName(className)}
+              filename={filename}
             >
               <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
             </PreWithToolbar>
