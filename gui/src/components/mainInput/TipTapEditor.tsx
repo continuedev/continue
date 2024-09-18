@@ -47,7 +47,7 @@ import {
   isMetaEquivalentKeyPressed,
   isWebEnvironment,
 } from "../../util";
-import CodeBlockExtension from "./CodeBlockExtension";
+import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
 import { Mention } from "./MentionExtension";
@@ -60,7 +60,6 @@ import { ComboBoxItem } from "./types";
 
 const InputBoxDiv = styled.div`
   resize: none;
-
   padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
@@ -70,7 +69,6 @@ const InputBoxDiv = styled.div`
   width: calc(100% - 24px);
   background-color: ${vscInputBackground};
   color: ${vscForeground};
-  z-index: 1;
   border: 0.5px solid ${vscInputBorder};
   outline: none;
   font-size: ${getFontSize()}px;
@@ -97,7 +95,6 @@ const HoverDiv = styled.div`
   opacity: 0.5;
   background-color: ${vscBadgeBackground};
   color: ${vscForeground};
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,7 +107,6 @@ const HoverTextDiv = styled.div`
   top: 0;
   left: 0;
   color: ${vscForeground};
-  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,6 +154,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const posthog = usePostHog();
   const [isEditorFocused, setIsEditorFocused] = useState(false);
+  const [hasDefaultModel, setHasDefaultModel] = useState(true);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -212,6 +209,20 @@ function TipTapEditor(props: TipTapEditorProps) {
   const active = useSelector((state: RootState) => state.state.active);
   const activeRef = useUpdatingRef(active);
 
+  // Only set `hasDefaultModel` after a timeout to prevent jank
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setHasDefaultModel(
+        !!defaultModel &&
+          defaultModel.apiKey !== undefined &&
+          defaultModel.apiKey !== "",
+      );
+    }, 3500);
+
+    // Cleanup function to clear the timeout if the component unmounts
+    return () => clearTimeout(timer);
+  }, [defaultModel]);
+
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
@@ -259,6 +270,16 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { prevRef, nextRef, addRef } = useInputHistory();
 
+  function getPlaceholder() {
+    if (!hasDefaultModel) {
+      return "Configure a Chat model to get started";
+    }
+
+    return historyLengthRef.current === 0
+      ? "Ask anything, '/' for slash commands, '@' to add context"
+      : "Ask a follow-up";
+  }
+
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -299,10 +320,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Placeholder.configure({
-        placeholder: () =>
-          historyLengthRef.current === 0
-            ? "Ask anything, '/' for slash commands, '@' to add context"
-            : "Ask a follow-up",
+        placeholder: getPlaceholder,
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {

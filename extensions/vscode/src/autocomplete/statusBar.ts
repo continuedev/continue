@@ -4,6 +4,7 @@ import {
   CONTINUE_WORKSPACE_KEY,
   getContinueWorkspaceConfig,
 } from "../util/workspaceConfig";
+import { ILLM } from "core";
 
 export enum StatusBarStatus {
   Disabled,
@@ -133,4 +134,38 @@ export function monitorBatteryChanges(battery: Battery): vscode.Disposable {
       );
     }
   });
+}
+
+export function getAutocompleteStatusBarDescription(
+  selected: string | undefined,
+  { title, apiKey, providerName }: ILLM,
+): string | undefined {
+  if (title !== selected) {
+    return undefined;
+  }
+
+  let description = "Currently selected";
+
+  // Only set for Mistral since our default config includes Codestral without
+  // an API key
+  if ((apiKey === undefined || apiKey === "") && providerName === "mistral") {
+    description += " (Missing API key)";
+  }
+
+  return description;
+}
+
+export function getAutocompleteStatusBarTitle(
+  selected: string | undefined,
+  { title }: ILLM,
+): string {
+  if (!title) {
+    return "Unnamed Model";
+  }
+
+  if (title === selected) {
+    return `$(check) ${title}`;
+  }
+
+  return title;
 }

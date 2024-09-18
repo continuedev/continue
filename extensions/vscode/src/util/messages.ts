@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 export function showFreeTrialLoginMessage(
   message: string,
   reloadConfig: () => void,
-  openOnboarding: () => void,
+  openOnboardingCard: () => void,
 ) {
   vscode.window
     .showInformationMessage(message, "Sign In", "Use API key / local model")
@@ -17,7 +17,7 @@ export function showFreeTrialLoginMessage(
             reloadConfig();
           });
       } else if (selection === "Use API key / local model") {
-        openOnboarding();
+        openOnboardingCard();
       }
     });
 }

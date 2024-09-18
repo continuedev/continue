@@ -92,6 +92,8 @@ export class SqliteDb {
       driver: sqlite3.Database,
     });
 
+    await SqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
+
     await SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;

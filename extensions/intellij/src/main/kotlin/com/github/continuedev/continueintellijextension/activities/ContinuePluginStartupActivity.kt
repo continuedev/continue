@@ -33,6 +33,8 @@ import javax.swing.*
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.wm.ToolWindowManager
 import com.intellij.openapi.wm.ex.ToolWindowManagerListener
 import org.jetbrains.plugins.terminal.TerminalToolWindowFactory
@@ -134,6 +136,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 showTutorial(project)
             }
 
+            settings.addRemoteSyncJob()
+
             val ideProtocolClient = IdeProtocolClient(
                     continuePluginService,
                     defaultStrategy,
@@ -186,11 +190,16 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                         )
 
                 // Reload the WebView
-                continuePluginService?.let {
-                    val workspacePaths =
-                            if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
+                continuePluginService?.let { pluginService ->
+                    val allModulePaths = ModuleManager.getInstance(project).modules
+                        .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.path } }
+                        .map { Paths.get(it).normalize() }
 
-                    continuePluginService.workspacePaths = workspacePaths as Array<String>
+                    val topLevelModulePaths = allModulePaths
+                        .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
+                        .map { it.toString() }
+
+                    pluginService.workspacePaths = topLevelModulePaths.toTypedArray()
                 }
 
                 EditorFactory.getInstance().eventMulticaster.addSelectionListener(

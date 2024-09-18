@@ -1,3 +1,5 @@
+import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -366,6 +368,7 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
 }
@@ -508,7 +511,7 @@ export interface IDE {
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
-  getGitHubAuthToken(): Promise<string | undefined>;
+  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
@@ -635,6 +638,7 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "openrouter"
+  | "sambanova"
   | "nvidia"
   | "vllm"
   | "mock";
@@ -661,6 +665,10 @@ export type ModelName =
   | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
+  | "mistral-tiny"
+  | "mistral-small"
+  | "mistral-medium"
+  | "mistral-embed"
   // Llama 2
   | "llama2-7b"
   | "llama2-13b"
@@ -699,10 +707,6 @@ export type ModelName =
   | "gemini-1.5-pro"
   | "gemini-1.5-flash-latest"
   | "gemini-1.5-flash"
-  // Mistral
-  | "mistral-tiny"
-  | "mistral-small"
-  | "mistral-medium"
   // Tab autocomplete
   | "deepseek-1b"
   | "starcoder-1b"
@@ -796,7 +800,9 @@ export type EmbeddingsProviderName =
   | "gemini"
   | "continue-proxy"
   | "deepinfra"
-  | "voyage";
+  | "nvidia"
+  | "voyage"
+  | "mistral";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -807,6 +813,7 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxChunkSize?: number;
+  maxBatchSize?: number;
   // AWS options
   profile?: string;
 

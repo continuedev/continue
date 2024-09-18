@@ -71,7 +71,7 @@ class DocsCrawler {
           );
 
         if (didInstall) {
-          this.ide.showToast(
+          await this.ide.showToast(
             "info",
             `Successfully installed Chromium! Retrying crawl of: ${startUrl.toString()}`,
           );
@@ -273,7 +273,9 @@ class CheerioCrawler {
 
     $("a").each((_: any, element: any) => {
       const href = $(element).attr("href");
-      if (!href) return;
+      if (!href) {
+        return;
+      }
 
       const parsedUrl = new URL(href, url);
       if (parsedUrl.hostname === baseUrl.hostname) {
@@ -302,6 +304,7 @@ class CheerioCrawler {
 
 class ChromiumCrawler {
   private readonly LINK_GROUP_SIZE = 2;
+  private curCrawlCount = 0;
 
   constructor(
     private readonly startUrl: URL,
@@ -337,7 +340,7 @@ class ChromiumCrawler {
     } catch (e) {
       console.debug("Error getting links: ", e);
       console.debug(
-        `Setting 'useChromiumForDocsCrawling' to 'false' in config.json`,
+        "Setting 'useChromiumForDocsCrawling' to 'false' in config.json",
       );
 
       ChromiumCrawler.setUseChromiumForDocsCrawling(false);
@@ -382,32 +385,18 @@ class ChromiumCrawler {
     page: Page,
     curUrl: URL,
     visitedLinks: Set<string> = new Set(),
-    curRequestCount: number = 0,
   ): AsyncGenerator<PageData> {
     const urlStr = curUrl.toString();
-
-    if (curRequestCount >= this.maxRequestsPerCrawl) {
-      console.warn(
-        `[${
-          (this.constructor as any).name
-        }] Max requests per crawl reached. Stopping crawler.`,
-      );
-      return;
-    }
 
     if (visitedLinks.has(urlStr)) {
       return;
     }
 
-    console.debug(
-      `[${(this.constructor as any).name}] Crawling page: ${urlStr}`,
-    );
-
     await this.gotoPageAndHandleRedirects(page, urlStr);
 
     const htmlContent = await page.content();
     const linkGroups = await this.getLinkGroupsFromPage(page, curUrl);
-    const requestCount = curRequestCount + 1;
+    this.curCrawlCount++;
 
     visitedLinks.add(urlStr);
 
@@ -418,13 +407,14 @@ class ChromiumCrawler {
     };
 
     for (const linkGroup of linkGroups) {
+      let enqueuedLinkCount = this.curCrawlCount;
+
       for (const link of linkGroup) {
-        yield* this.crawlSitePages(
-          page,
-          new URL(link),
-          visitedLinks,
-          requestCount,
-        );
+        enqueuedLinkCount++;
+        console.log({ enqueuedLinkCount, url: this.startUrl });
+        if (enqueuedLinkCount <= this.maxRequestsPerCrawl) {
+          yield* this.crawlSitePages(page, new URL(link), visitedLinks);
+        }
       }
     }
   }
@@ -491,7 +481,7 @@ class ChromiumInstaller {
   ) {
     if (this.shouldInstallOnStartup()) {
       console.log("Installing Chromium");
-      this.install();
+      void this.install();
     }
   }
 
@@ -524,7 +514,7 @@ class ChromiumInstaller {
     }
   }
 
-  private async install() {
+  async install() {
     try {
       await PCR(ChromiumInstaller.PCR_CONFIG);
 
@@ -534,12 +524,12 @@ class ChromiumInstaller {
     } catch (error) {
       console.debug("Error installing Chromium : ", error);
       console.debug(
-        `Setting 'useChromiumForDocsCrawling' to 'false' in config.json`,
+        "Setting 'useChromiumForDocsCrawling' to 'false' in config.json",
       );
 
       ChromiumCrawler.setUseChromiumForDocsCrawling(false);
 
-      this.ide.showToast("error", "Failed to install Chromium");
+      await this.ide.showToast("error", "Failed to install Chromium");
 
       return false;
     }

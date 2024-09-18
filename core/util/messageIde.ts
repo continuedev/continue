@@ -10,9 +10,11 @@ import type {
   Range,
   RangeInFile,
   Thread,
-  ToastType,
 } from "../index.js";
-import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
+import {
+  GetGhTokenArgs,
+  ToIdeFromWebviewOrCoreProtocol,
+} from "../protocol/ide.js";
 import { FromIdeProtocol } from "../protocol/index.js";
 
 export class MessageIde implements IDE {
@@ -43,8 +45,8 @@ export class MessageIde implements IDE {
   getIdeSettings(): Promise<IdeSettings> {
     return this.request("getIdeSettings", undefined);
   }
-  getGitHubAuthToken(): Promise<string | undefined> {
-    return this.request("getGitHubAuthToken", undefined);
+  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
+    return this.request("getGitHubAuthToken", args);
   }
   getLastModified(files: string[]): Promise<{ [path: string]: number }> {
     return this.request("getLastModified", { files });
@@ -58,7 +60,7 @@ export class MessageIde implements IDE {
 
   showToast: IDE["showToast"] = (...params) => {
     return this.request("showToast", params);
-  }
+  };
 
   getRepoName(dir: string): Promise<string | undefined> {
     return this.request("getRepoName", { dir });

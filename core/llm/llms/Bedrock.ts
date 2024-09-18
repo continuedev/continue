@@ -18,7 +18,7 @@ class Bedrock extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    contextLength: 200_000
+    contextLength: 200_000,
   };
   profile?: string | undefined;
 
@@ -49,7 +49,7 @@ class Bedrock extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const credentials = await this._getCredentials();
-    
+
     const client = new BedrockRuntimeClient({
       region: this.region,
       endpoint: this.apiBase,
@@ -60,22 +60,25 @@ class Bedrock extends BaseLLM {
       },
     });
 
-    let config_headers = this.requestOptions && this.requestOptions.headers ? this.requestOptions.headers : {};
+    let config_headers =
+      this.requestOptions && this.requestOptions.headers
+        ? this.requestOptions.headers
+        : {};
     // AWS SigV4 requires strict canonicalization of headers.
     // DO NOT USE "_" in your header name. It will return an error like below.
     // "The request signature we calculated does not match the signature you provided."
 
     client.middlewareStack.add(
-      (next) => async (args) => {
-          args.request.headers = {
-            ...args.request.headers,
-            ...config_headers
-          };
+      (next) => async (args: any) => {
+        args.request.headers = {
+          ...args.request.headers,
+          ...config_headers,
+        };
         return next(args);
       },
       {
-        step: 'build'
-      }
+        step: "build",
+      },
     );
 
     const input = this._generateConverseInput(messages, options);

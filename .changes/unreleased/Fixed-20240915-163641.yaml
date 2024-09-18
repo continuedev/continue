@@ -1,0 +1,4 @@
+project: extensions/intellij
+kind: Fixed
+body: Fixed bug where only first module would be recognized
+time: 2024-09-15T16:36:41.899428-07:00

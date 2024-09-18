@@ -1,4 +1,4 @@
-import type { FileEdit, RangeInFile, Thread, ToastType } from "core";
+import type { FileEdit, RangeInFile, Thread } from "core";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
@@ -137,7 +137,12 @@ export class VsCodeIdeUtils {
 
   openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(
+      filepath,
+      range,
+      vscode.ViewColumn.One,
+      false,
+    );
   }
 
   async fileExists(filepath: string): Promise<boolean> {

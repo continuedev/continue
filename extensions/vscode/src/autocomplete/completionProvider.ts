@@ -38,7 +38,7 @@ export class ContinueCompletionProvider
       showFreeTrialLoginMessage(
         e.message,
         this.configHandler.reloadConfig.bind(this.configHandler),
-        () => this.webviewProtocol.request("openOnboarding", undefined),
+        () => this.webviewProtocol.request("openOnboardingCard", undefined),
       );
       return;
     }
@@ -50,7 +50,7 @@ export class ContinueCompletionProvider
           ),
         );
       } else if (val === "Download Ollama") {
-        vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai"));
+        vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai/download"));
       }
     });
   }

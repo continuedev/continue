@@ -212,7 +212,7 @@ const IndexingProgressBar = ({
             margin: 0,
           }}
         >
-          {Math.trunc(indexingState.progress)}%
+          {Math.trunc(Math.min(100, 100 * indexingState.progress))}%
         </p>
       </div>
 
@@ -259,20 +259,22 @@ const IndexingProgressBar = ({
         >
           Retry
         </StyledButton>
-      ) : indexingState.status === "indexing" ? (
-        <StyledButton
-          onClick={() => {
-            if (indexingState.progress < 1 && indexingState.progress >= 0) {
-              setPaused((prev) => !prev);
-            } else {
-              ideMessenger.post("index/forceReIndex", undefined);
-            }
-          }}
-        >
-          Pause
-        </StyledButton>
-      ) : indexingState.status === "loading" ? null : indexingState.status ===
-        "paused" ? (
+      ) : indexingState.status === "indexing" ||
+        indexingState.status === "loading" ? (
+        <div>
+          <StyledButton
+            onClick={() => {
+              if (indexingState.progress < 1 && indexingState.progress >= 0) {
+                setPaused((prev) => !prev);
+              } else {
+                ideMessenger.post("index/forceReIndex", undefined);
+              }
+            }}
+          >
+            Pause
+          </StyledButton>
+        </div>
+      ) : indexingState.status === "paused" ? (
         <StyledButton
           onClick={() => {
             if (indexingState.progress < 1 && indexingState.progress >= 0) {
@@ -286,11 +288,16 @@ const IndexingProgressBar = ({
         </StyledButton>
       ) : null}
 
-      {indexingState.status === "failed" && (
-        <p style={{ color: "red", fontSize: getFontSize() - 2 }}>
-          {getIndexingErrMsg(indexingState.desc)}
-        </p>
-      )}
+      <div style={{ height: "40px", overflow: "hidden" }}>
+        {indexingState.status === "failed" && (
+          <p style={{ color: "red", fontSize: getFontSize() - 2 }}>
+            {getIndexingErrMsg(indexingState.desc)}
+          </p>
+        )}
+        {indexingState.status === "indexing" && (
+          <p style={{ color: lightGray }}>{indexingState.desc}</p>
+        )}
+      </div>
     </div>
   );
 };

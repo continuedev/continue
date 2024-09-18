@@ -15,6 +15,7 @@ import {
   ToastType,
 } from "../index.d.js";
 
+import { GetGhTokenArgs } from "../protocol/ide.js";
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
@@ -50,7 +51,7 @@ class FileSystemIde implements IDE {
       enableDebugLogs: false,
     };
   }
-  async getGitHubAuthToken(): Promise<string | undefined> {
+  async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
     return undefined;
   }
   async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
@@ -76,8 +77,8 @@ class FileSystemIde implements IDE {
         dirent.isDirectory()
           ? (2 as FileType.Directory)
           : dirent.isSymbolicLink()
-          ? (64 as FileType.SymbolicLink)
-          : (1 as FileType.File),
+            ? (64 as FileType.SymbolicLink)
+            : (1 as FileType.File),
       ]);
     return Promise.resolve(all);
   }
