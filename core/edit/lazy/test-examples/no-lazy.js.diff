@@ -1,0 +1,34 @@
+class Hello {
+    hello() {
+        return "Hello World";
+    }
+}
+
+class Goodbye {
+    goodbye() {
+        return "Goodbye World";
+    }
+}
+
+---
+
+class Goodbye {
+    goodbye() {
+        return "Au revoir le monde";
+    }
+}
+
+---
+
+class Hello {
+    hello() {
+        return "Hello World";
+    }
+}
+
+class Goodbye {
+    goodbye() {
+-         return "Goodbye World";
++         return "Au revoir le monde";
+    }
+}

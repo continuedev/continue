@@ -143,7 +143,11 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("gui.js");
   });
 
-  test.only("rust calculator", async () => {
+  test("rust calculator", async () => {
     await expectDiff("rust-calc-exp.rs");
+  });
+
+  test("no lazy blocks", async () => {
+    await expectDiff("no-lazy.js");
   });
 });
