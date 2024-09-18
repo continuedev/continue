@@ -1,7 +1,12 @@
 import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker.js";
-import { ControlPlaneClient } from "../../control-plane/client.js";
+import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
+import {
+  ControlPlaneClient,
+  DEFAULT_CONTROL_PLANE_PROXY_URL,
+} from "../../control-plane/client.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import {
+  ContinueConfig,
   ContinueRcJson,
   IDE,
   IdeSettings,
@@ -33,7 +38,7 @@ export default async function doLoadConfig(
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
-  const newConfig = await loadFullConfigNode(
+  let newConfig = await loadFullConfigNode(
     ide,
     workspaceConfigs,
     ideSettings,
@@ -56,34 +61,59 @@ export default async function doLoadConfig(
   // TODO: pass config to pre-load non-system TTS models
   await TTS.setup();
 
+  // Set up control plane proxy if configured
+  let controlPlaneProxyUrl: string =
+    (newConfig as any).controlPlane?.proxyUrl ??
+    DEFAULT_CONTROL_PLANE_PROXY_URL;
+  if (!controlPlaneProxyUrl.endsWith("/")) {
+    controlPlaneProxyUrl += "/";
+  }
+  const controlPlaneProxyInfo = {
+    workspaceId,
+    controlPlaneProxyUrl,
+    workOsAccessToken,
+  };
+
   if (newConfig.analytics) {
     await TeamAnalytics.setup(
       newConfig.analytics as any, // TODO: Need to get rid of index.d.ts once and for all
       uniqueId,
       ideInfo.extensionVersion,
       controlPlaneClient,
-      workspaceId,
+      controlPlaneProxyInfo,
     );
   }
 
-  [...newConfig.models, ...(newConfig.tabAutocompleteModels ?? [])].forEach(
+  newConfig = await injectControlPlaneProxyInfo(
+    newConfig,
+    controlPlaneProxyInfo,
+  );
+
+  return newConfig;
+}
+
+// Pass ControlPlaneProxyInfo to objects that need it
+async function injectControlPlaneProxyInfo(
+  config: ContinueConfig,
+  info: ControlPlaneProxyInfo,
+): Promise<ContinueConfig> {
+  [...config.models, ...(config.tabAutocompleteModels ?? [])].forEach(
     async (model) => {
       if (model.providerName === "continue-proxy") {
-        (model as ContinueProxy).workOsAccessToken = workOsAccessToken;
+        (model as ContinueProxy).controlPlaneProxyInfo = info;
       }
     },
   );
 
-  if (newConfig.embeddingsProvider?.providerName === "continue-proxy") {
+  if (config.embeddingsProvider?.providerName === "continue-proxy") {
     (
-      newConfig.embeddingsProvider as ContinueProxyEmbeddingsProvider
-    ).workOsAccessToken = workOsAccessToken;
+      config.embeddingsProvider as ContinueProxyEmbeddingsProvider
+    ).controlPlaneProxyInfo = info;
   }
 
-  if (newConfig.reranker?.name === "continue-proxy") {
-    (newConfig.reranker as ContinueProxyReranker).workOsAccessToken =
-      workOsAccessToken;
+  if (config.reranker?.name === "continue-proxy") {
+    (config.reranker as ContinueProxyReranker).controlPlaneProxyInfo = info;
   }
 
-  return newConfig;
+  return config;
 }

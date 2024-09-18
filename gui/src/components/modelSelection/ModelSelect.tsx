@@ -194,7 +194,7 @@ function ModelOption({
             <CubeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
             <span className="flex-grow">{option.title}</span>
           </div>
-          <div className="flex items-center ml-2">
+          <div className="flex items-center ml-5">
             <StyledCog6ToothIcon hovered={hovered} onClick={onClickGear} />
             {showDelete && (
               <StyledTrashIcon hovered={hovered} onClick={onClickDelete} />

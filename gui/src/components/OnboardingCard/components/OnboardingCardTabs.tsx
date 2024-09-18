@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { vscButtonBackground, vscForeground } from "../..";
+import { vscForeground } from "../..";
 import { hasPassedFTL } from "../../../util/freeTrial";
 
 interface OnboardingCardTabsProps {
@@ -49,7 +49,7 @@ const TabList = styled.div`
   border-color: ${vscForeground};
 `;
 
-function OnboardingCardTabs({
+export function OnboardingCardTabs({
   activeTab,
   onTabClick,
 }: OnboardingCardTabsProps) {
@@ -74,5 +74,3 @@ function OnboardingCardTabs({
     </TabList>
   );
 }
-
-export default OnboardingCardTabs;

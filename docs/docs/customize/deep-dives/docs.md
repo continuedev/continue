@@ -74,7 +74,7 @@ By default, we use a lighter weight tool to crawl documentation sites that canno
 
 If you want to crawl a site that is dynamically generated, or you get an error while attempting to crawl a site, you can enable the experimental `useChromiumForDocsCrawling` feature in your `config.json`. This will download and install Chromium to `~/.continue/.utils`.
 
-```json title=config.json
+```json title="config.json"
 "experimental": {
     "useChromiumForDocsCrawling": true
 }

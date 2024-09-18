@@ -1,5 +1,5 @@
 import * as Tabs from "./tabs";
-import OnboardingCardTabs, { TabTitle } from "./components/OnboardingCardTabs";
+import { TabTitle, OnboardingCardTabs } from "./components/OnboardingCardTabs";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import styled from "styled-components";
 import { CloseButton, defaultBorderRadius, vscInputBackground } from "../";
@@ -20,14 +20,9 @@ export interface OnboardingCardState {
   activeTab?: TabTitle;
 }
 
-export const defaultOnboardingCardState: OnboardingCardState = {
-  show: false,
-  activeTab: "Quickstart",
-};
-
 export type OnboardingCardProps = Pick<OnboardingCardState, "activeTab">;
 
-function OnboardingCard(props: OnboardingCardProps) {
+export function OnboardingCard(props: OnboardingCardProps) {
   const onboardingCard = useOnboardingCard();
 
   function renderTabContent() {
@@ -60,5 +55,3 @@ function OnboardingCard(props: OnboardingCardProps) {
     </StyledCard>
   );
 }
-
-export default OnboardingCard;

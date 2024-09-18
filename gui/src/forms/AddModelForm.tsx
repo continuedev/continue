@@ -177,7 +177,9 @@ function AddModelForm({
             {selectedProvider.apiKeyUrl && (
               <div>
                 <>
-                  <label className="block text-sm font-medium">API key</label>
+                  <label className="block text-sm font-medium mb-1">
+                    API key
+                  </label>
                   <Input
                     id="apiKey"
                     className="w-full"

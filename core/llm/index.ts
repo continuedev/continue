@@ -135,6 +135,7 @@ export abstract class BaseLLM implements ILLM {
     };
 
     this.model = options.model;
+    // Use @continuedev/llm-info package to autodetect certain parameters
     const llmInfo = findLlmInfo(this.model);
 
     const templateType =
@@ -149,7 +150,16 @@ export abstract class BaseLLM implements ILLM {
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
-      maxTokens: options.completionOptions?.maxTokens ?? DEFAULT_MAX_TOKENS,
+      maxTokens:
+        options.completionOptions?.maxTokens ??
+        (llmInfo?.maxCompletionTokens
+          ? Math.min(
+              llmInfo.maxCompletionTokens,
+              // Even if the model has a large maxTokens, we don't want to use that every time,
+              // because it takes away from the context length
+              this.contextLength / 4,
+            )
+          : DEFAULT_MAX_TOKENS),
     };
     if (CompletionOptionsForModels[options.model as ModelName]) {
       this.completionOptions = mergeJson(
@@ -332,11 +342,11 @@ ${prompt}`;
           ) {
             if (resp.url.includes("codestral.mistral.ai")) {
               throw new Error(
-                `You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting "apiBase" to "https://api.mistral.ai/v1" in config.json.`,
+                'You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting "apiBase" to "https://api.mistral.ai/v1" in config.json.',
               );
             } else {
               throw new Error(
-                `You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting "apiBase" to "https://codestral.mistral.ai/v1" in config.json.`,
+                'You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting "apiBase" to "https://codestral.mistral.ai/v1" in config.json.',
               );
             }
           }
