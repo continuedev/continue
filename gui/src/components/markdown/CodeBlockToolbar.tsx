@@ -10,7 +10,7 @@ import { lightGray, vscEditorBackground, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { incrementNextCodeBlockToApplyIndex } from "../../redux/slices/uiStateSlice";
-import { getFontSize, isJetBrains } from "../../util";
+import { getAltKeyLabel, getFontSize, isJetBrains } from "../../util";
 import FileIcon from "../FileIcon";
 
 const ToolbarDiv = styled.div`
@@ -193,8 +193,10 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                 {isTerminalCodeBlock(props.language, props.text)
                   ? "Run in terminal"
                   : applying
-                  ? "Applying..."
-                  : "Apply"}
+                    ? "Applying..."
+                    : props.isNextCodeBlock
+                      ? `Apply (${getAltKeyLabel()}A)`
+                      : "Apply"}
               </span>
             </div>
           </ToolbarButton>

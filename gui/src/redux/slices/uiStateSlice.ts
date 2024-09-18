@@ -1,4 +1,4 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
@@ -71,7 +71,7 @@ export const uiStateSlice = createSlice({
       state.displayBottomMessageOnBottom = action.payload;
     },
     resetNextCodeBlockToApplyIndex: (state) => {
-      state.nextCodeBlockToApplyIndex = -1;
+      state.nextCodeBlockToApplyIndex = 0;
     },
     incrementNextCodeBlockToApplyIndex: (state, action) => {
       state.nextCodeBlockToApplyIndex++;

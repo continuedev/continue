@@ -10,32 +10,20 @@ type LazyBlockReplacements = Array<{
   replacementNodes: Parser.SyntaxNode[];
 }>;
 
-// TODO: If we don't have high confidence, return undefined to fall back to slower methods
-export async function deterministicApplyLazyEdit(
+function reconstructNewFile(
   oldFile: string,
-  newLazyFile: string,
-  filename: string,
-): Promise<DiffLine[] | undefined> {
-  const parser = await getParserForFile(filename);
-  if (!parser) {
-    return undefined;
-  }
-
-  const oldTree = parser.parse(oldFile);
-  const newTree = parser.parse(newLazyFile);
-
-  const acc: LazyBlockReplacements = [];
-  diffNodes(oldTree.rootNode, newTree.rootNode, acc);
-
+  newFile: string,
+  lazyBlockReplacements: LazyBlockReplacements,
+): string {
   // Sort acc by reverse line number
-  acc
+  lazyBlockReplacements
     .sort((a, b) => a.lazyBlockNode.startIndex - b.lazyBlockNode.startIndex)
     .reverse();
 
   // Reconstruct entire file by replacing lazy blocks with the replacement nodes
   const oldFileLines = oldFile.split("\n");
-  const newFileChars = newLazyFile.split("");
-  for (const { lazyBlockNode, replacementNodes } of acc) {
+  const newFileChars = newFile.split("");
+  for (const { lazyBlockNode, replacementNodes } of lazyBlockReplacements) {
     // Get the full string from the replacement nodes
     let replacementText = "";
     if (replacementNodes.length > 0) {
@@ -94,7 +82,33 @@ export async function deterministicApplyLazyEdit(
     }
   }
 
-  const diff = myersDiff(oldFile, newFileChars.join(""));
+  return newFileChars.join("");
+}
+
+// TODO: If we don't have high confidence, return undefined to fall back to slower methods
+export async function deterministicApplyLazyEdit(
+  oldFile: string,
+  newLazyFile: string,
+  filename: string,
+): Promise<DiffLine[] | undefined> {
+  const parser = await getParserForFile(filename);
+  if (!parser) {
+    return undefined;
+  }
+
+  const oldTree = parser.parse(oldFile);
+  const newTree = parser.parse(newLazyFile);
+
+  // If there is no lazy block anywhere, we add our own to the outsides
+  // so that large chunks of the file don't get removed
+  if (!findInAst(newTree.rootNode, isLazyBlock)) {
+  }
+
+  const acc: LazyBlockReplacements = [];
+  findLazyBlockReplacements(oldTree.rootNode, newTree.rootNode, acc);
+
+  const newFullFile = reconstructNewFile(oldFile, newLazyFile, acc);
+  const diff = myersDiff(oldFile, newFullFile);
   return diff;
 }
 
@@ -151,7 +165,7 @@ function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
  * @param oldNode
  * @returns
  */
-function diffNodes(
+function findLazyBlockReplacements(
   oldNode: Parser.SyntaxNode,
   newNode: Parser.SyntaxNode,
   acc: LazyBlockReplacements,
@@ -204,7 +218,7 @@ function diffNodes(
       }
 
       // then recurse at the match
-      diffNodes(L, rightChildren[0], acc);
+      findLazyBlockReplacements(L, rightChildren[0], acc);
 
       // then consume L and R
       leftChildren.shift();
