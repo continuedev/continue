@@ -590,9 +590,14 @@ async function buildConfigTs() {
   }
   return fs.readFileSync(getConfigJsPath(), "utf8");
 }
+function addDefaults(config: SerializedContinueConfig): void {
+  addDefaultModels(config);
+  addDefaultCustomCommands(config);
+  addDefaultContextProviders(config);
+  addDefaultSlashCommands(config);
+}
 
-function enforceDefaultModels(config: SerializedContinueConfig): void {
-  // check if all default models are present, add if not
+function addDefaultModels(config: SerializedContinueConfig): void {
   const defaultModels = defaultConfig.models.filter(
     (model) => model.isDefault === true,
   );
@@ -619,6 +624,35 @@ function addDefaultCustomCommands(config: SerializedContinueConfig): void {
   });
 }
 
+function addDefaultContextProviders(config: SerializedContinueConfig): void {
+  const defaultContextProviders = defaultContextProvidersVsCode; // or defaultContextProvidersJetBrains based on IDE type
+  defaultContextProviders.forEach((defaultProvider) => {
+    const providerExists = config.contextProviders?.some(
+      (configProvider) => configProvider.name === defaultProvider.name,
+    );
+
+    if (!providerExists) {
+      config.contextProviders = config.contextProviders || [];
+      config.contextProviders.push({ ...defaultProvider });
+    }
+  });
+}
+
+function addDefaultSlashCommands(config: SerializedContinueConfig): void {
+  const defaultSlashCommands = defaultSlashCommandsVscode; // or defaultSlashCommandsJetBrains based on IDE type
+  defaultSlashCommands.forEach((defaultCommand) => {
+    const commandExists = config.slashCommands?.some(
+      (configCommand) => configCommand.name === defaultCommand.name,
+    );
+
+    if (!commandExists) {
+      config.slashCommands = config.slashCommands || [];
+      config.slashCommands.push({ ...defaultCommand });
+    }
+  });
+}
+
+
 async function loadFullConfigNode(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
@@ -638,8 +672,7 @@ async function loadFullConfigNode(
   );
 
   // check and enforce default models
-  enforceDefaultModels(serialized);
-  addDefaultCustomCommands(serialized);
+  addDefaults(serialized);
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
