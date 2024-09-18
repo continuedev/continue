@@ -34,6 +34,7 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
 ];
 
 export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
+  { name: "directory", params: {} },
   { name: "code", params: {} },
   { name: "docs", params: {} },
   { name: "diff", params: {} },

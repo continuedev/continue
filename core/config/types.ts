@@ -460,7 +460,7 @@ declare global {
     | "open"
     | "google"
     | "search"
-    | "tree"
+    | "directory"
     | "http"
     | "codebase"
     | "problems"

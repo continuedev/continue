@@ -5,6 +5,7 @@ import {
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 import { retrieveContextItemsFromEmbeddings } from "../retrieval/retrieval.js";
+import FileTreeContextProvider from "./FileTreeContextProvider";
 
 class CodebaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -19,7 +20,12 @@ class CodebaseContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    return retrieveContextItemsFromEmbeddings(extras, this.options, undefined);
+   
+    const embeddingsItems = await retrieveContextItemsFromEmbeddings(extras, this.options, undefined); 
+    const fileTreeProvider = new FileTreeContextProvider(this.options);
+    const directoryStructureItems = await fileTreeProvider.getContextItems(query, extras);
+
+    return [...embeddingsItems, ...directoryStructureItems];
   }
   async load(): Promise<void> {}
 }

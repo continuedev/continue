@@ -110,7 +110,8 @@ export class VsCodeMessenger {
     });
     this.onWebview("bigChat", (msg) => {
       vscode.commands.executeCommand("pearai.resizeAuxiliaryBarWidth");
-    });this.onWebview("pearaiLogin", (msg) => {
+    });
+    this.onWebview("pearaiLogin", (msg) => {
       vscode.commands.executeCommand("pearai.login");
     });
     this.onWebview("lastChat", (msg) => {
@@ -131,6 +132,24 @@ export class VsCodeMessenger {
     });
     this.onWebview("readFile", async (msg) => {
       return await ide.readFile(msg.data.filepath);
+    });
+    this.onWebview("createFile", async (msg) => {
+      const workspaceDirs = await ide.getWorkspaceDirs();
+      if (workspaceDirs.length === 0) {
+        throw new Error(
+          "No workspace directories found. Make sure you've opened a folder in your IDE.",
+        );
+      }
+      const filePath = path.join(
+        workspaceDirs[0],
+        msg.data.path.replace(/^\//, ""),
+      );
+
+      if (!fs.existsSync(filePath)) {
+        await ide.writeFile(filePath, "");
+      }
+
+      return ide.openFile(filePath);
     });
     this.onWebview("showDiff", async (msg) => {
       return await ide.showDiff(

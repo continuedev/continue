@@ -105,6 +105,7 @@ type State = {
   defaultModelTitle: string;
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
+  directoryItems: string;
 };
 
 const initialState: State = {
@@ -137,6 +138,7 @@ const initialState: State = {
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
+  directoryItems: "",
 };
 
 export const stateSlice = createSlice({
@@ -352,6 +354,7 @@ export const stateSlice = createSlice({
         state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
+        state.directoryItems = "";
       }
     },
     deleteContextWithIds: (
@@ -436,6 +439,9 @@ export const stateSlice = createSlice({
 
       return { ...state, contextItems };
     },
+    setDirectoryItems: (state, action: PayloadAction<string>) => {
+      state.directoryItems = action.payload;
+    },
     setEditingAtIds: (
       state,
       {
@@ -506,6 +512,7 @@ export const {
   deleteContextWithIds,
   resubmitAtIndex,
   addHighlightedCode,
+  setDirectoryItems,
   setEditingAtIds,
   setDefaultModel,
   setConfig,

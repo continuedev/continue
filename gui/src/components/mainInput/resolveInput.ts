@@ -8,6 +8,8 @@ import {
 } from "core";
 import { stripImages } from "core/llm/images";
 import { IIdeMessenger } from "../../context/IdeMessenger";
+import { setDirectoryItems } from "../../redux/slices/stateSlice";
+import { RootState, store } from "../../redux/store";
 
 interface MentionAttrs {
   label: string;
@@ -111,6 +113,24 @@ async function resolveEditorContent(
     contextItems.push(...resolvedItems);
     for (const resolvedItem of resolvedItems) {
       contextItemsText += resolvedItem.content + "\n\n";
+    }
+  }
+
+  const previousDirectoryItems = (store.getState() as any).state.directoryItems;
+
+  // use directory structure
+  const directoryItems = await ideMessenger.request("context/getContextItems", {
+    name: "directory",
+    query: "",
+    fullInput: stripImages(parts),
+    selectedCode,
+  });
+
+  if (previousDirectoryItems !== directoryItems[0].content) {
+    store.dispatch(setDirectoryItems(directoryItems[0].content));
+    contextItems.push(...directoryItems);
+    for (const codebaseItem of directoryItems) {
+      contextItemsText += codebaseItem.content + "\n\n";
     }
   }
 

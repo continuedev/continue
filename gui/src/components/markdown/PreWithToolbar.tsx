@@ -2,21 +2,28 @@ import { debounce } from "lodash";
 import { useEffect, useState } from "react";
 import useUIConfig from "../../hooks/useUIConfig";
 import CodeBlockToolBar from "./CodeBlockToolbar";
+import FileCreateChip from "./FileCreateChip";
 
-function childToText(child: any) {
+function childToText(child: any): string {
   if (typeof child === "string") {
     return child;
-  } else if (child?.props) {
-    return childToText(child.props?.children);
-  } else if (Array.isArray(child)) {
-    return childrenToText(child);
-  } else {
-    return "";
   }
+
+  if (Array.isArray(child)) {
+    return child.map(childToText).join("");
+  }
+
+  if (child?.props?.children) {
+    return childToText(child.props.children);
+  }
+
+  return "";
 }
 
-function childrenToText(children: any) {
-  return children.map((child: any) => childToText(child)).join("");
+function childrenToText(children: any): string {
+  return Array.isArray(children)
+    ? children.map(childToText).join("")
+    : childToText(children);
 }
 
 function PreWithToolbar(props: {
@@ -28,12 +35,14 @@ function PreWithToolbar(props: {
 
   const [hovering, setHovering] = useState(false);
 
-  const [copyValue, setCopyValue] = useState("");
+  const [rawCodeBlock, setRawCodeBlock] = useState("");
+  const [isCreateFile, setIsCreateFile] = useState(false);
+  const [checkedForCreateFile, setCheckedForCreateFile] = useState(false);
 
   useEffect(() => {
     const debouncedEffect = debounce(() => {
-      setCopyValue(childrenToText(props.children.props.children));
-    }, 100);
+      setRawCodeBlock(childrenToText(props.children.props.children));
+    }, 50);
 
     debouncedEffect();
 
@@ -42,7 +51,27 @@ function PreWithToolbar(props: {
     };
   }, [props.children]);
 
-  return (
+  useEffect(() => {
+    if (isCreateFile || checkedForCreateFile) return;
+
+    const lines = childrenToText(props.children.props.children)
+      .trim()
+      .split("\n");
+    // file creation code block will only have 1 line
+    if (lines.length > 2) {
+      setCheckedForCreateFile(true);
+    }
+
+    if (lines[0].startsWith("pearCreateFile:")) {
+      setIsCreateFile(true);
+    } else {
+      setIsCreateFile(false);
+    }
+  }, [props.children]);
+
+  return isCreateFile ? (
+    <FileCreateChip rawCodeBlock={rawCodeBlock}></FileCreateChip>
+  ) : (
     <div
       style={{ padding: "0px" }}
       className="relative"
@@ -51,7 +80,7 @@ function PreWithToolbar(props: {
     >
       {!toolbarBottom && hovering && (
         <CodeBlockToolBar
-          text={copyValue}
+          text={rawCodeBlock}
           bottom={toolbarBottom}
           language={props.language}
         ></CodeBlockToolBar>
@@ -59,7 +88,7 @@ function PreWithToolbar(props: {
       {props.children}
       {toolbarBottom && hovering && (
         <CodeBlockToolBar
-          text={copyValue}
+          text={rawCodeBlock}
           bottom={toolbarBottom}
           language={props.language}
         ></CodeBlockToolBar>
