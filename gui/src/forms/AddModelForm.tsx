@@ -124,7 +124,7 @@ function AddModelForm({
               <InputSubtext className="mb-0">
                 Don't see your provider?{" "}
                 <a
-                  href={null}
+                  href="https://docs.continue.dev/customize/model-providers"
                   target="_blank"
                   className="text-inherit underline cursor-pointer hover:text-inherit"
                 >

@@ -11,4 +11,4 @@ The model response is then streamed directly back to the highlighted range in yo
 
 If you accept the diff, we remove the previously highlighted lines, and if you reject the diff, we remove the proposed changes.
 
-If you would like to view the exact prompt that is sent to the model during an edit, you can [view this in the prompt logs](../troubleshooting.md#check-the-logs).
+If you would like to view the exact prompt that is sent to the model during an edit, you can [view this in the prompt logs](troubleshooting.md#check-the-logs).
