@@ -47,11 +47,11 @@ class Calculator {
 class Subtract extends Calculator {
   sub(num1, num2) {
     this.result = num1 - num2;
-+
-+    if (this.result < 0) {
-+      throw new Error("Result cannot be negative");
-+    }
-+
++ 
++     if (this.result < 0) {
++       throw new Error("Result cannot be negative");
++     }
++ 
     return this.result;
   }
 }

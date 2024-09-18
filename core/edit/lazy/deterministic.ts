@@ -137,16 +137,6 @@ function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
   return a.text === b.text;
 }
 
-function diffLinesForNode(
-  node: Parser.SyntaxNode,
-  type: DiffLine["type"],
-): DiffLine[] {
-  return node.text.split("\n").map((line) => ({
-    line,
-    type,
-  }));
-}
-
 /**
  * Should be like Myers diff, but lazy blocks consume all nodes until the next match
  * @param newNode
@@ -229,7 +219,7 @@ function diffNodes(
   if (isLazy) {
     acc.push({
       lazyBlockNode: currentLazyBlockNode!,
-      replacementNodes: [...currentLazyBlockReplacementNodes],
+      replacementNodes: [...currentLazyBlockReplacementNodes, ...leftChildren],
     });
   }
 
