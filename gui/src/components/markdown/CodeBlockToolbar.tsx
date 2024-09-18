@@ -253,16 +253,12 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         className="flex items-center cursor-pointer py-0.5 px-0.5"
         onClick={onClickHeader}
       >
-        {props.filename && (
-          <>
-            <FileIcon
-              filename={props.filename || props.language}
-              height="18px"
-              width="18px"
-            />
-            <span className="hover:brightness-125 ml-1">{props.filename}</span>{" "}
-          </>
-        )}
+        <FileIcon
+          filename={props.filename || props.language}
+          height="18px"
+          width="18px"
+        />
+        <span className="hover:brightness-125 ml-1">{props.filename}</span>{" "}
       </div>
 
       <div className="flex items-center">
