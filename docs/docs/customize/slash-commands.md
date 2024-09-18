@@ -14,7 +14,7 @@ To use any of the built-in slash commands, open `config.json` and add it to the 
 
 ### `/Edit`
 
-Select code with `ctrl/cmd + L` (VS Code) or `ctrl/cmd + J` (JetBrains), and then type "/edit", followed by instructions for the edit. Continue will stream the changes into a side-by-side diff editor.
+Select code with `ctrl/cmd + L` (VS Code) or `ctrl/cmd + J` (JetBrains), and then type `/Edit`, followed by instructions for the edit. Continue will stream the changes into a side-by-side diff editor.
 
 ```json title="config.json"
 {
@@ -29,7 +29,7 @@ Select code with `ctrl/cmd + L` (VS Code) or `ctrl/cmd + J` (JetBrains), and the
 
 ### `/Comment`
 
-Comment works just like /edit, except it will automatically prompt the LLM to comment the code.
+Comment works just like `/Edit`, except it will automatically prompt the LLM to comment the code.
 
 ```json title="config.json"
 {
@@ -44,7 +44,7 @@ Comment works just like /edit, except it will automatically prompt the LLM to co
 
 ### `/Share`
 
-Type "/share" to generate a shareable markdown transcript of your current chat history.
+Generate a shareable markdown transcript of your current chat history.
 
 ```json title="config.json"
 {
