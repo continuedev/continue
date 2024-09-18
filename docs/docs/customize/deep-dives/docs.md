@@ -14,10 +14,11 @@ To enable the `@Docs` context provider, you need to add it to the list of contex
 
 ```json
 {
-    "contextProviders": [
-        { "name": "docs" }
-        ...
-    ]
+  "contextProviders": [
+    {
+      "name": "docs"
+    }
+  ]
 }
 ```
 
