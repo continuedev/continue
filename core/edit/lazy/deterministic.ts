@@ -119,6 +119,14 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
     return false;
   }
 
+  // Check if they have the same name
+  if (
+    a.childForFieldName("name") !== null &&
+    a.childForFieldName("name")?.text === b.childForFieldName("name")?.text
+  ) {
+    return true;
+  }
+
   if (
     a.namedChildren[0]?.text === b.namedChildren[0]?.text &&
     a.children[1]?.text === b.children[1]?.text

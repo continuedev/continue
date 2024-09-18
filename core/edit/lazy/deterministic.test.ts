@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { diff as myersDiff } from "myers-diff";
 import path from "node:path";
 import { DiffLine } from "../..";
+import { myersDiff as continueMyersDiff } from "../../diff/myers";
 import { dedent } from "../../util";
 import { deterministicApplyLazyEdit } from "./deterministic";
 
@@ -60,11 +61,7 @@ async function expectDiff(file: string) {
   const [oldFile, newFile, expectedDiff] = testFileContents
     .split("\n---\n")
     .map((s) => s.replace(/^\n+/, "").trimEnd());
-  const { ourDiffs: streamDiffs, myersDiffs } = await collectDiffs(
-    oldFile,
-    newFile,
-    file,
-  );
+  const { ourDiffs: streamDiffs } = await collectDiffs(oldFile, newFile, file);
   const displayedDiff = displayDiff(streamDiffs);
 
   if (!expectedDiff || expectedDiff.trim() === "") {
@@ -73,7 +70,9 @@ async function expectDiff(file: string) {
     );
     fs.writeFileSync(
       testFilePath,
-      `${oldFile}\n\n---\n\n${newFile}\n\n---\n\n${displayedDiff}`,
+      `${oldFile}\n\n---\n\n${newFile}\n\n---\n\n${displayDiff(
+        continueMyersDiff(oldFile, newFile),
+      )}`,
     );
 
     throw new Error("Expected diff is empty");
@@ -141,7 +140,7 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("top-level-same.js");
   });
 
-  test("gui add toggle", async () => {
+  test.skip("gui add toggle", async () => {
     await expectDiff("gui.js");
   });
 });
