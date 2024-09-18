@@ -3,7 +3,7 @@ import {
   ModelDescription,
   SerializedContinueConfig,
   SlashCommandDescription,
-  CustomCommand
+  CustomCommand,
 } from "../index.js";
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
@@ -146,8 +146,30 @@ export const defaultConfig: SerializedContinueConfig = {
 export const defaultCustomCommands: CustomCommand[] = [
   {
     name: "leetcode",
-    description: "Learn when practicing leetcode! Usage: `/leetcode [LINK_TO_PROBLEM] @[LEETCODE_FILE_NAME]`",
-    prompt: "{{{ input }}}\n\nThe input should be of the format: [LINK_TO_LEETCODE_PROBLEM] @[LEETCODE_ATTEMPT_FILE]. If this is not the case, please respond reminding the user the usage is: `/leetcode [LINK_TO_PROBLEM] @[LEETCODE_FILE_NAME]`. If there are no issues, proceed: \n\nPlease analyze my attempt and provide feedback on a conceptual level, that is digestible. Remember than I want to Learn, as I am preparing for interviews. \n\nExplain what I did wrong or could improve, along with specific parts to my code I have to change. Don't tell me exactly what i need to change, show me problematic parts in a hinting manner. Then, tell me that I can ask you for more specific guidance the actual code changes to make."
+    description:
+      "Receive interviewer-style guidance. Usage: `/leetcode [LINK_TO_PROBLEM] @[LEETCODE_FILE_NAME]`",
+    prompt:
+      "{{{ input }}}\n\nThe input should be of the format: [LINK_TO_LEETCODE_PROBLEM] @[LEETCODE_ATTEMPT_FILE]. If this is not the case, please respond reminding the user the usage is: `/leetcode [LINK_TO_PROBLEM] @[LEETCODE_FILE_NAME]`. If there are no issues, proceed: \n\nPlease analyze my attempt and provide feedback on a conceptual level, that is digestible. Remember than I want to Learn, as I am preparing for interviews. \n\nExplain what I did wrong or could improve, along with specific parts to my code I have to change. Don't tell me exactly what i need to change, show me problematic parts in a hinting manner. Then, tell me that I can ask you for more specific guidance the actual code changes to make.",
+  },
+  {
+    name: "sensei",
+    description:
+      "Promotes learning by guiding rather than providing direct answers (good for students/beginners).",
+    prompt: `You are a senior software engineer acting as a mentor for a junior developer or student. 
+
+    This is the user's prompt:
+
+{{{ input }}}
+
+Please review the prompt provided by the user. Instead of giving direct solutions, guide the user by:
+
+1. Identifying any apparent issues or areas of improvement in their code, if any.
+2. Asking probing questions that encourage the user to think critically about their approach.
+3. Providing hints or suggestions that can help the user arrive at the solution independently.
+4. Encouraging best practices and good coding habits.
+5. Suggesting to use latest technologies if the user isn't already.
+
+Ensure your feedback is clear, constructive, and aimed at enhancing the user's understanding and skills. Avoid giving away the complete answer; instead, empower the user to solve the problem through guidance.`,
   },
 ];
 
