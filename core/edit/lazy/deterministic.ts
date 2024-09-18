@@ -51,13 +51,47 @@ export async function deterministicApplyLazyEdit(
         replacementLines.length - 1
       ].slice(0, endPosition.column);
       replacementText = replacementLines.join("\n");
-    }
 
-    newFileChars.splice(
-      lazyBlockNode.startIndex,
-      lazyBlockNode.text.length,
-      replacementText,
-    );
+      // Replace the lazy block
+      newFileChars.splice(
+        lazyBlockNode.startIndex,
+        lazyBlockNode.text.length,
+        replacementText,
+      );
+    } else {
+      // If there are no replacements, then we want to strip the surrounding whitespace
+      // The example in calculator-exp.js.diff is a test where this is necessary
+      const lazyBlockStart = lazyBlockNode.startIndex;
+      const lazyBlockEnd = lazyBlockNode.endIndex - 1;
+
+      // Remove leading whitespace up to two new lines
+      let startIndex = lazyBlockStart;
+      let newLinesFound = 0;
+      while (
+        startIndex > 0 &&
+        newFileChars[startIndex - 1].trim() === "" &&
+        newLinesFound < 2
+      ) {
+        startIndex--;
+        if (newFileChars[startIndex - 1] === "\n") {
+          newLinesFound++;
+        }
+      }
+
+      // Remove trailing whitespace up to two new lines
+      const charAfter = newFileChars[lazyBlockEnd + 1];
+      const secondCharAfter = newFileChars[lazyBlockEnd + 2];
+      let endIndex = lazyBlockEnd;
+      if (charAfter === "\n") {
+        endIndex++;
+        if (secondCharAfter === "\n") {
+          endIndex++;
+        }
+      }
+
+      // Remove the lazy block
+      newFileChars.splice(startIndex, endIndex - startIndex + 1);
+    }
   }
 
   const diff = myersDiff(oldFile, newFileChars.join(""));

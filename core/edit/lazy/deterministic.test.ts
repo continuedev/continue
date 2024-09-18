@@ -3,12 +3,9 @@ import fs from "node:fs";
 // @ts-ignore no typings available
 import { diff as myersDiff } from "myers-diff";
 import path from "node:path";
-import { DiffLine, DiffLineType } from "../..";
+import { DiffLine } from "../..";
 import { dedent } from "../../util";
 import { deterministicApplyLazyEdit } from "./deterministic";
-
-// "modification" is an extra type used to represent an "old" + "new" diff line
-type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
 
 const UNIFIED_DIFF_SYMBOLS = {
   same: "",
@@ -119,7 +116,6 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("fastapi.py");
   });
 
-  // TODO: Whitespace
   test("calculator exp", async () => {
     await expectDiff("calculator-exp.js");
   });
