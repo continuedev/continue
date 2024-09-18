@@ -102,6 +102,7 @@ const commonTerminalCommands = [
   "ruby",
   "bundle",
 ];
+
 function isTerminalCodeBlock(language: string | undefined, text: string) {
   return (
     terminalLanguages.includes(language) ||
@@ -151,45 +152,6 @@ function useCopyAction(text: string) {
 
   return { copied, handleCopy };
 }
-
-const ApplyButton = ({ isTerminal, applying, onClick }) => (
-  <ToolbarButton disabled={applying} onClick={onClick}>
-    <div
-      className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
-      style={{ color: lightGray }}
-    >
-      {applying ? (
-        <CheckIcon className="w-3 h-3 text-green-500" />
-      ) : (
-        <PlayIcon className="w-3 h-3" />
-      )}
-      <span>
-        {isTerminal ? "Run in terminal" : applying ? "Applying..." : "Apply"}
-      </span>
-    </div>
-  </ToolbarButton>
-);
-
-const CopyButton = ({ copied, onClick }) => (
-  <ToolbarButton onClick={onClick}>
-    <div
-      className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
-      style={{ color: lightGray }}
-    >
-      {copied ? (
-        <>
-          <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
-          <span>Copied</span>
-        </>
-      ) : (
-        <>
-          <ClipboardIcon className="w-3 h-3 hover:brightness-125" />
-          <span>Copy</span>
-        </>
-      )}
-    </div>
-  </ToolbarButton>
-);
 
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -253,22 +215,44 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         className="flex items-center cursor-pointer py-0.5 px-0.5"
         onClick={onClickHeader}
       >
-        <FileIcon
-          filename={props.filename || props.language}
-          height="18px"
-          width="18px"
-        />
+        <FileIcon filename={props.filename} height="18px" width="18px" />
         <span className="hover:brightness-125 ml-1">{props.filename}</span>{" "}
       </div>
 
       <div className="flex items-center">
-        <CopyButton copied={copied} onClick={handleCopy} />
+        <ToolbarButton onClick={handleCopy}>
+          <div
+            className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
+            style={{ color: lightGray }}
+          >
+            {copied ? (
+              <>
+                <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
+                <span>Copied</span>
+              </>
+            ) : (
+              <>
+                <ClipboardIcon className="w-3 h-3 hover:brightness-125" />
+                <span>Copy</span>
+              </>
+            )}
+          </div>
+        </ToolbarButton>
+
         {!isJetBrains() && (
-          <ApplyButton
-            isTerminal={isTerminal}
-            applying={applying}
-            onClick={handleApply}
-          />
+          <ToolbarButton disabled={applying} onClick={handleApply}>
+            <div
+              className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
+              style={{ color: lightGray }}
+            >
+              {applying ? (
+                <CheckIcon className="w-3 h-3 text-green-500" />
+              ) : (
+                <PlayIcon className="w-3 h-3" />
+              )}
+              <span>{applying ? "Applying..." : "Apply"}</span>
+            </div>
+          </ToolbarButton>
         )}
       </div>
     </ToolbarDiv>
