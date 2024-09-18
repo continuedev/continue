@@ -135,4 +135,12 @@ describe("deterministicApplyLazyEdit(", () => {
   test("calculator docstrings", async () => {
     await expectDiff("calculator-docstrings.js");
   });
+
+  test("top level same blocks", async () => {
+    await expectDiff("top-level-same.js");
+  });
+
+  test("gui add toggle", async () => {
+    await expectDiff("gui.js");
+  });
 });
