@@ -10,7 +10,7 @@ sidebar_position: 1
 
 ## How to use it
 
-Chat makes it easy to ask for help from an LLM without needing to leave the IDE. You send it a task, including any relevant information, and it replies with the text / code most likely to complete the task. If it does not give you want you want, then you can send follow up messages to clarify and adjust its approach until the task is completed.
+Chat makes it easy to ask for help from an LLM without needing to leave the IDE. You send it a task, including any relevant information, and it replies with the text / code most likely to complete the task. If it does not give you what you want, then you can send follow up messages to clarify and adjust its approach until the task is completed.
 
 Chat is best used to understand and iterate on code or as a replacement for search engine queries.
 
