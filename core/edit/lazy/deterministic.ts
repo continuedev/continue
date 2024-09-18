@@ -153,52 +153,41 @@ function diffNodes(
       continue;
     }
 
-    if (isLazy) {
-      if (nodesAreSimilar(L, R)) {
-        // L ~= R
+    // Look for the first match of L
+    const index = rightChildren.findIndex((node) => nodesAreSimilar(L, node));
 
-        // recurse
-        diffNodes(L, R, acc);
+    if (index === -1) {
+      // No match
+      if (isLazy) {
+        // Add to replacements if in lazy mode
+        currentLazyBlockReplacementNodes.push(L);
+      }
 
-        // then consume lazy, L, and R
-        leftChildren.shift();
+      // Consume
+      leftChildren.shift();
+    } else {
+      // Match found, insert all right nodes before the match
+      for (let i = 0; i < index; i++) {
         rightChildren.shift();
+      }
 
+      // then recurse at the match
+      diffNodes(L, rightChildren[0], acc);
+
+      // then consume L and R
+      leftChildren.shift();
+      rightChildren.shift();
+
+      // Exit "lazy mode"
+      if (isLazy) {
         // Record the replacement lines
         acc.push({
           lazyBlockNode: currentLazyBlockNode!,
           replacementNodes: [...currentLazyBlockReplacementNodes],
         });
-
-        // Exit "lazy mode"
         isLazy = false;
         currentLazyBlockReplacementNodes.length = 0;
         currentLazyBlockNode = undefined;
-      } else {
-        // Push "same" lines
-        currentLazyBlockReplacementNodes.push(L);
-
-        // L != R, consume L
-        leftChildren.shift();
-      }
-    } else {
-      // When not lazy, we look for the first match of L
-      const index = rightChildren.findIndex((node) => nodesAreSimilar(L, node));
-
-      if (index === -1) {
-        leftChildren.shift();
-      } else {
-        // Match found, insert all right nodes before the match
-        for (let i = 0; i < index; i++) {
-          rightChildren.shift();
-        }
-
-        // then recurse at the match
-        diffNodes(L, rightChildren[0], acc);
-
-        // then consume L and R
-        leftChildren.shift();
-        rightChildren.shift();
       }
     }
   }
