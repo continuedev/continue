@@ -173,6 +173,8 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             // Register for full service, multiple windows using the same process instance
             val service = ServiceManager.getService(GlobalContinueService::class.java)
             if (service.getGlobalContinueProcess() == null){
+                setPermissions(continueCorePath)
+                setPermissions(esbuildPath)
                 service.initProcess(esbuildPath, continueCorePath)
             }
             process = service.getGlobalContinueProcess()?.getContinueProcess()
