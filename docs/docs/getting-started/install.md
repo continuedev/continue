@@ -15,7 +15,7 @@ keywords: [install, installation, getting started, vs code, jetbrains]
 ![move-to-right-sidebar](/img/move-to-right-sidebar.gif)
 
 :::info[Troubleshooting]
-If you have any problems, see the [troubleshooting guide](../troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs)
+If you have any problems, see the [troubleshooting guide](troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs)
 :::
 
 ## JetBrains
@@ -29,5 +29,5 @@ If you have any problems, see the [troubleshooting guide](../troubleshooting.md)
 ![jetbrains-getting-started.png](/img/jetbrains-getting-started.png)
 
 :::info[Troubleshooting]
-If you have any problems, see the [troubleshooting guide](../troubleshooting.md) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ)
+If you have any problems, see the [troubleshooting guide](troubleshooting.md) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ)
 :::

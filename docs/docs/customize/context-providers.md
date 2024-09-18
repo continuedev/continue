@@ -84,7 +84,7 @@ Type `@docs` to index and retrieve snippets from any documentation site.
 }
 ```
 
-To learn more, visit `[@docs](../customize/deep-dives/docs.md)`.
+To learn more, visit `[@docs](customize/deep-dives/docs.md)`.
 
 ### Open Files
 
@@ -105,7 +105,7 @@ Type '@open' to reference the contents of all of your open files. Set `onlyPinne
 
 ### Codebase Retrieval
 
-Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](../customize/deep-dives/codebase.md).
+Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](customize/deep-dives/codebase.md).
 
 ```json title="config.json"
 {

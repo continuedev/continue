@@ -5,7 +5,7 @@ keywords: [chat]
 sidebar_position: 2
 ---
 
-A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters. In Continue, these models are used for [Chat](../../docs/chat/how-to-use-it.md), [Edit](../../docs/edit/how-to-use-it.md), and [Actions](../../docs/actions/how-to-use-it.md).
+A "chat model" is an LLM that is trained to respond in a conversational format. Because they should be able to answer general questions and generate complex code, the best chat models are typically large, often 405B+ parameters. In Continue, these models are used for [Chat](../../chat/how-to-use-it.md), [Edit](../../edit/how-to-use-it.md), and [Actions](../../actions/how-to-use-it.md).
 
 ## Recommended Chat models
 
