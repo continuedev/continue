@@ -203,7 +203,7 @@ class WatsonX extends BaseLLM {
     if (!!options.temperature) {
       parameters.decoding_method = "sample";
       parameters.temperature = options.temperature;
-      parameters.top_p = options.topP || 1;
+      parameters.top_p = options.topP || 1.0;
       parameters.top_k = options.topK;
     }
 
