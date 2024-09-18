@@ -124,7 +124,7 @@ function StepContainer(props: StepContainerProps) {
         {(props.isLast || isHovered || typeof feedback !== "undefined") &&
           !active && (
             <div
-              className="flex items-center gap-1 absolute -bottom-2 right-1"
+              className="flex items-center gap-1 absolute -bottom-3 right-2"
               style={{
                 color: lightGray,
                 fontSize: getFontSize() - 3,
@@ -198,7 +198,7 @@ function StepContainer(props: StepContainerProps) {
                   />
                 </ButtonWithTooltip>
               )}
-              <ButtonWithTooltip text="Delete Message" tabIndex={-1}>
+              <ButtonWithTooltip text="Delete" tabIndex={-1}>
                 <TrashIcon
                   color={lightGray}
                   width="1.2em"

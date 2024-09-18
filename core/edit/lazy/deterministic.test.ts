@@ -136,4 +136,12 @@ describe("deterministicApplyLazyEdit(", () => {
   test("calculator stateless", async () => {
     await expectDiff("calculator-stateless.js");
   });
+
+  test("top level same blocks", async () => {
+    await expectDiff("top-level-same.js");
+  });
+
+  test("gui add toggle", async () => {
+    await expectDiff("gui.js");
+  });
 });

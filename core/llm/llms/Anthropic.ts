@@ -26,15 +26,19 @@ class Anthropic extends BaseLLM {
 2. Never separate the code into multiple code blocks.
 3. Only include the code that is being added.
 4. Replace existing code with a "lazy" block like this: "// ... existing code ..."
-5. If the user submits a code block that contains a filename in the language specifier, always include the filename in any code block you generate based on that file. The filename should be on the same line as the language specifier in your code block.
+5. You must always provide 1-2 lines of context above and below a "lazy" block
+6. If the user submits a code block that contains a filename in the language specifier, always include the filename in any code block you generate based on that file. The filename should be on the same line as the language specifier in your code block.
 
 Example 1:
 Input:
 \`\`\`test.js
+import addition from "addition"
+
 class Calculator {
   constructor() {
     this.result = 0;
   }
+    
   add(number) {
     this.result += number;
     return this;
@@ -45,6 +49,9 @@ User request: Add a subtract method
 
 Output:
 \`\`\`javascript test.js
+// ... existing code ...
+import subtraction from "subtraction"
+
 class Calculator {
   // ... existing code ...
   
