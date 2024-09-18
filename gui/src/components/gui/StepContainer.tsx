@@ -124,7 +124,7 @@ function StepContainer(props: StepContainerProps) {
         {(props.isLast || isHovered || typeof feedback !== "undefined") &&
           !active && (
             <div
-              className="flex items-center gap-1 absolute -bottom-3 right-2"
+              className="flex items-center gap-1 absolute -bottom-2 right-2"
               style={{
                 color: lightGray,
                 fontSize: getFontSize() - 3,

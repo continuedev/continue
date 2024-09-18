@@ -8,7 +8,8 @@ import { RootState } from "../../redux/store";
 import CodeBlockToolBar from "./CodeBlockToolbar";
 
 const TopDiv = styled.div`
-  border: 0.5px solid ${lightGray}80;
+  outline: 0.5px solid rgba(153, 153, 152);
+  outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px;
 `;
@@ -63,13 +64,25 @@ function PreWithToolbar(props: {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      <CodeBlockToolBar
-        isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
-        text={copyValue}
-        bottom={toolbarBottom}
-        language={props.language}
-        filename={props.filename}
-      />
+      {!!props.filename ? (
+        <CodeBlockToolBar
+          isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
+          text={copyValue}
+          bottom={toolbarBottom}
+          language={props.language}
+          filename={props.filename}
+        />
+      ) : (
+        hovering && (
+          <CodeBlockToolBar
+            isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
+            text={copyValue}
+            bottom={toolbarBottom}
+            language={props.language}
+          />
+        )
+      )}
+
       {props.children}
     </TopDiv>
   );
