@@ -5,7 +5,10 @@ import { getMarkdownLanguageTagForFile } from "core/util";
 import { DiffLine } from "core";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffHandler } from "./handler";
+import {
+  VerticalPerLineDiffHandler,
+  VerticalPerLineDiffHandlerOptions,
+} from "./handler";
 
 export interface VerticalDiffCodeLens {
   start: number;
@@ -31,7 +34,7 @@ export class VerticalPerLineDiffManager {
     filepath: string,
     startLine: number,
     endLine: number,
-    input?: string,
+    options: VerticalPerLineDiffHandlerOptions,
   ) {
     if (this.filepathToHandler.has(filepath)) {
       this.filepathToHandler.get(filepath)?.clear(false);
@@ -46,7 +49,7 @@ export class VerticalPerLineDiffManager {
         this.filepathToCodeLens,
         this.clearForFilepath.bind(this),
         this.refreshCodeLens,
-        input,
+        options,
       );
       this.filepathToHandler.set(filepath, handler);
       return handler;
@@ -201,6 +204,7 @@ export class VerticalPerLineDiffManager {
       filepath,
       startLine,
       endLine,
+      {},
     );
 
     if (!diffHandler) {
@@ -334,7 +338,7 @@ export class VerticalPerLineDiffManager {
       filepath,
       startLine,
       endLine,
-      input,
+      { input },
     );
 
     if (!diffHandler) {
