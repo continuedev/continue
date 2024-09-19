@@ -20,63 +20,6 @@ class Anthropic extends BaseLLM {
     apiBase: "https://api.anthropic.com/v1/",
   };
 
-  static lazySystemMessage: string = `When generating new code:
-
-1. Always produce a single code block.
-2. Never separate the code into multiple code blocks.
-3. Only include the code that is being added.
-4. Replace existing code with a "lazy" block like this: "// ... existing code ..."
-5. You must always provide 1-2 lines of context above and below a "lazy" block
-6. If the user submits a code block that contains a filename in the language specifier, always include the filename in any code block you generate based on that file. The filename should be on the same line as the language specifier in your code block.
-
-Example 1:
-Input:
-\`\`\`test.js
-import addition from "addition"
-
-class Calculator {
-  constructor() {
-    this.result = 0;
-  }
-    
-  add(number) {
-    this.result += number;
-    return this;
-  }
-}
-\`\`\`
-User request: Add a subtract method
-
-Output:
-\`\`\`javascript test.js
-// ... existing code ...
-import subtraction from "subtraction"
-
-class Calculator {
-  // ... existing code ...
-  
-  subtract(number) {
-    this.result -= number;
-    return this;
-  }
-}
-\`\`\`
-
-Example 2:
-Input:
-\`\`\`javascript test.js (6-9)
-function helloWorld() {}
-\`\`\`
-
-Output:
-\`\`\`javascript test.js
-function helloWorld() {
-  // New code here
-}
-\`\`\`
-
-Always follow these guidelines when generating code responses.`;
-
   private _convertArgs(options: CompletionOptions) {
     const finalOptions = {
       top_k: options.topK,
@@ -135,17 +78,9 @@ Always follow these guidelines when generating code responses.`;
     const shouldCacheSystemMessage =
       !!this.systemMessage && !!this.cacheSystemMessage;
 
-    // This likely should be set in the base class where we wrap
-    // _streamChat in a try/catch
-    let curSystemMsg = this.systemMessage;
-
-    // We only are doing lazy prompting with Sonnet right now
-    if (
-      this.hasCodeBlockWithFilename(messages[0].content) &&
-      options.model?.includes("sonnet")
-    ) {
-      this.systemMessage = `${this.systemMessage} ${Anthropic.lazySystemMessage}`;
-    }
+    const systemMessage: string = stripImages(
+      messages.filter((m) => m.role === "system")[0].content,
+    );
 
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
@@ -169,7 +104,7 @@ Always follow these guidelines when generating code responses.`;
                 cache_control: { type: "ephemeral" },
               },
             ]
-          : this.systemMessage,
+          : systemMessage,
       }),
     });
 
@@ -184,8 +119,6 @@ Always follow these guidelines when generating code responses.`;
         yield { role: "assistant", content: value.delta.text };
       }
     }
-
-    this.systemMessage = curSystemMsg;
   }
 }
 

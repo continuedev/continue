@@ -253,7 +253,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       });
       posthog.capture("userInput", {});
 
-      const messages = constructMessages(newHistory);
+      const messages = constructMessages(newHistory, defaultModel.model);
 
       // Determine if the input is a slash command
       let commandAndInput = getSlashCommandForInput(content);

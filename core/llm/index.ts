@@ -561,17 +561,6 @@ ${prompt}`;
     return { role: "assistant" as ChatMessageRole, content: completion };
   }
 
-  hasCodeBlockWithFilename(content: ChatMessage["content"]): boolean {
-    const contentStr = typeof content === "string" ? content : content[0].text;
-
-    if (!contentStr) {
-      return false;
-    }
-
-    const codeBlockRegex = /```[\w\W]*?\.[\w\W]*/;
-    return codeBlockRegex.test(contentStr);
-  }
-
   async *streamChat(
     _messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
