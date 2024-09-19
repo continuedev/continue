@@ -79,7 +79,7 @@ class Anthropic extends BaseLLM {
       !!this.systemMessage && !!this.cacheSystemMessage;
 
     const systemMessage: string = stripImages(
-      messages.filter((m) => m.role === "system")[0].content,
+      messages.filter((m) => m.role === "system")[0]?.content,
     );
 
     const response = await this.fetch(new URL("messages", this.apiBase), {
