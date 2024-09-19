@@ -303,6 +303,12 @@
         "category": "PearAI",
         "title": "Big Chat - CTRL + [",
         "group": "PearAI"
+      },
+      {
+        "command": "pearai.patchWSL",
+        "category": "Shell",
+        "title": "Patch WSL",
+        "group": "Shell"
       }
     ],
     "keybindings": [
