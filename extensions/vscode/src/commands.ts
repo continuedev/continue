@@ -270,7 +270,7 @@ const commandsMap: (
 
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
-      vscode.commands.executeCommand("pearai.focusContinueInput")
+      vscode.commands.executeCommand("pearai.focusContinueInput");
     },
     // Passthrough for telemetry purposes
     "pearai.defaultQuickAction": async (args: QuickEditShowParams) => {
@@ -763,6 +763,78 @@ const commandsMap: (
     },
     "pearai.macResizeAuxiliaryBarWidth": () => {
       vscode.commands.executeCommand("pearai.resizeAuxiliaryBarWidth");
+    },
+    "pearai.patchWSL": async () => {
+      if (process.platform !== 'win32') {
+        vscode.window.showWarningMessage("WSL is for Windows only.");
+        return;
+      }
+      
+      const wslExtension = vscode.extensions.getExtension('ms-vscode-remote.remote-wsl');
+
+      if (!wslExtension) {
+        vscode.window.showInformationMessage("Please install WSL extension first, then try again.");
+        return;
+      }
+
+      const wslExtensionPath = wslExtension.extensionPath;
+      const pearExtensionPath = extensionContext.extensionPath;
+      const wslDownloadScript = path.join( wslExtensionPath, "scripts", "wslDownload.sh" );
+      const patchScript = path.join(pearExtensionPath, "wsl-scripts/wslPatch.sh");
+
+      if (!fs.existsSync(patchScript)) {
+        vscode.window.showWarningMessage("Patch script not found.");
+        return;
+      }
+
+      let PEAR_COMMIT_ID = "";
+      let VSC_COMMIT_ID = "";
+      const productJsonPath = path.join(vscode.env.appRoot, "product.json");
+      try {
+        const productJson = JSON.parse(
+          fs.readFileSync(productJsonPath, "utf8"),
+        );
+        PEAR_COMMIT_ID = productJson.commit;
+        VSC_COMMIT_ID = productJson.VSCodeCommit;
+        // testing commit ids - its for VSC version 1.89 most probably. 
+        // VSC_COMMIT_ID = "4849ca9bdf9666755eb463db297b69e5385090e3";
+        // PEAR_COMMIT_ID="58996b5e761a7fe74bdfb4ac468e4b91d4d27294";
+        vscode.window.showInformationMessage(`VSC commit: ${VSC_COMMIT_ID}`);
+      } catch (error) {
+        vscode.window.showErrorMessage("Error reading product.json");
+        console.error("Error reading product.json:", error);
+      }
+
+      if (!PEAR_COMMIT_ID) {
+        vscode.window.showWarningMessage(
+          "Unable to retrieve PEAR commit ID.",
+        );
+        return;
+      }
+
+      if (!VSC_COMMIT_ID) {
+        vscode.window.showWarningMessage(
+          "Unable to retrieve VSCODE commit ID.",
+        );
+        return;
+      }
+
+      vscode.window.showInformationMessage(`Downloading WSL`);
+
+      let terminal: vscode.Terminal;
+
+      try {
+        terminal = vscode.window.createTerminal({
+          name: "WSL Patch",
+          shellPath: "wsl.exe"
+        });
+      } catch (error) {
+        vscode.window.showErrorMessage("WSL is not installed. Please install WSL and try again.");
+        return;
+      }
+
+      terminal.sendText(`$(wslpath '${patchScript}') $(wslpath '${wslDownloadScript}') '${PEAR_COMMIT_ID}' '${VSC_COMMIT_ID}'`);
+      terminal.show();
     },
   };
 };
