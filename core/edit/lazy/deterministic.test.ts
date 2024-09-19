@@ -150,4 +150,8 @@ describe("deterministicApplyLazyEdit(", () => {
   test("no lazy blocks", async () => {
     await expectDiff("no-lazy.js");
   });
+
+  test("no lazy blocks in single top level class", async () => {
+    await expectDiff("no-lazy-single-class.js");
+  });
 });

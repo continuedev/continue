@@ -126,6 +126,14 @@ export class VsCodeMessenger {
       );
     });
 
+    webviewProtocol.on("acceptDiff", async ({ data: { filepath } }) => {
+      await vscode.commands.executeCommand("continue.acceptDiff", filepath);
+    });
+
+    webviewProtocol.on("rejectDiff", async ({ data: { filepath } }) => {
+      await vscode.commands.executeCommand("continue.rejectDiff", filepath);
+    });
+
     this.onWebview("applyToCurrentFile", async (msg) => {
       // Get active text editor
       const editor = vscode.window.activeTextEditor;

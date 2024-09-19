@@ -27,6 +27,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
   setGitHubAuthToken: [{ token: string }, void];
+  acceptDiff: [{ filepath: string }, void];
+  rejectDiff: [{ filepath: string }, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

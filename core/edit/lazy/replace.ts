@@ -34,7 +34,9 @@ export function getReplacementByMatching(
 
   // Find the end index in the old code
   const endIndex = oldLines.findIndex((line, index) => {
-    if (index <= startIndex + linesToMatchBelow) return false;
+    if (index <= startIndex + linesToMatchBelow) {
+      return false;
+    }
     const chunk = oldLines.slice(index, index + linesToMatchBelow).join("\n");
     return chunk === afterContext;
   });

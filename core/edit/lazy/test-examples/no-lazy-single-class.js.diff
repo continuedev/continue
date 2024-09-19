@@ -1,0 +1,30 @@
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  reset() {
+    this.result = 0;
+    return this;
+  }
+}
+---
+
+  reset() {
+    this.result = 1;
+    return this;
+  }
+
+---
+
+class Calculator {
+  constructor() {
+    this.result = 0;
+  }
+
+  reset() {
+-    this.result = 0;
++    this.result = 1;
+    return this;
+  }
+}

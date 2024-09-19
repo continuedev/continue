@@ -107,7 +107,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             if (node.meta) {
               node.data = node.data || {};
               node.data.hProperties = node.data.hProperties || {};
-              node.data.hProperties.filename = node.meta;
+              node.data.hProperties.filepath = node.meta;
             }
           });
         };
@@ -146,13 +146,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const { className, filename } = preProps?.children?.[0]?.props;
+          const { className, filepath } = preProps?.children?.[0]?.props;
 
           return props.showCodeBorder ? (
             <PreWithToolbar
               codeBlockIndex={preProps.codeBlockIndex}
               language={getLanuageFromClassName(className)}
-              filename={filename}
+              filepath={filepath}
             >
               <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
             </PreWithToolbar>

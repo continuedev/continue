@@ -38,18 +38,6 @@ export async function* streamLazyApply(
     )) {
       yield line;
     }
-
-    // let r = getReplacementByMatching(oldCode, linesBefore, linesAfter);
-    // if (r) {
-    //   for (let line of r.split("\n")) {
-    //     yield line;
-    //   }
-    // }
-    // // r = await getReplacementWithLlm(oldCode, linesBefore, linesAfter, llm);
-    // // if (r) {
-    // //   return r;
-    // // }
-    // return "// NO REPLACEMENT FOUND";
   }
 
   let lazyCompletionLines = streamLines(lazyCompletion, true);

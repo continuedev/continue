@@ -34,7 +34,7 @@ function PreWithToolbar(props: {
   children: any;
   language: string | null;
   codeBlockIndex: number;
-  filename?: string | undefined;
+  filepath?: string | undefined;
 }) {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
@@ -64,13 +64,13 @@ function PreWithToolbar(props: {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {!!props.filename ? (
+      {!!props.filepath ? (
         <CodeBlockToolBar
           isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
           text={copyValue}
           bottom={toolbarBottom}
           language={props.language}
-          filename={props.filename}
+          filepath={props.filepath}
         />
       ) : (
         hovering && (
