@@ -30,6 +30,7 @@ import { Battery } from "./util/battery";
 import { uriFromFilePath } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { getFullyQualifiedPath } from "./util/util";
+import { getModelByRole } from "core/config/util";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -208,12 +209,13 @@ const commandsMap: (
   ) {
     const config = await configHandler.loadConfig();
 
+    const defaultModelTitle = await sidebar.webviewProtocol.request(
+      "getDefaultModelTitle",
+      undefined,
+    );
+
     const modelTitle =
-      config.experimental?.modelRoles?.inlineEdit ??
-      (await sidebar.webviewProtocol.request(
-        "getDefaultModelTitle",
-        undefined,
-      ));
+      getModelByRole(config, "inlineEdit")?.title ?? defaultModelTitle;
 
     sidebar.webviewProtocol.request("incrementFtc", undefined);
 
