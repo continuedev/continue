@@ -1,4 +1,4 @@
-import { ContextProviderName } from "../../";
+import { ContextItem, ContextProviderName } from "../../";
 import { BaseContextProvider } from "../";
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
@@ -60,3 +60,9 @@ export function contextProviderClassFromName(
 ): typeof BaseContextProvider | undefined {
   return Providers.find((cls) => cls.description.title === name);
 }
+
+export const INSTRUCTIONS_BASE_ITEM: ContextItem = {
+  name: "Instructions",
+  description: "Instructions",
+  content: "",
+};

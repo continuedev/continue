@@ -13,6 +13,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
+import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers";
 
 const ContextItemDiv = styled.div`
   cursor: pointer;
@@ -47,12 +48,20 @@ interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
 }
 
+function filterInstructionContextItem(
+  contextItems: ContextItemsPeekProps["contextItems"],
+) {
+  return contextItems?.filter(
+    (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
+  );
+}
+
 const ContextItemsPeek = (props: ContextItemsPeekProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [open, setOpen] = React.useState(false);
 
-  const ctxItems = props.contextItems;
+  const ctxItems = filterInstructionContextItem(props.contextItems);
 
   if (!ctxItems || ctxItems.length === 0) {
     return null;
@@ -118,6 +127,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
         )}
         <ContextItems>{contextItemsText}</ContextItems>
       </div>
+
       {open && (
         <div
           style={{
