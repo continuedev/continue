@@ -15,5 +15,6 @@ jobs:
       - name: "Auto-assign issue"
         uses: pozil/auto-assign-issue@v2
         with:
+          repo-token: ${{ secrets.CI_GITHUB_TOKEN }}
           assignees: sestinj,Patrick-Erichsen
           numOfAssignee: 1
