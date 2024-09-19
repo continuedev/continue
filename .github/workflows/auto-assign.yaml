@@ -1,0 +1,19 @@
+name: Issue assignment
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  auto-assign:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: "Auto-assign issue"
+        uses: pozil/auto-assign-issue@v2
+        with:
+          assignees: sestinj,Patrick-Erichsen
+          numOfAssignee: 1
