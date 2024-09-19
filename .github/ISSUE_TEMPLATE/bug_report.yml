@@ -23,16 +23,15 @@ body:
       description: |
         Feel free to omit any info that is not relevant to your issue.
 
-        - **OS**: e.g. macOS 14.2.1
-        - **Continue**: e.g. v0.9.4
-        - **IDE**: e.g. VSCode 1.85.1
-        - Include also your LLM Model if it is relevant to your issue
-          - **Model**: e.g. Ollama v0.1.19
-        - The contents of your config.json file (e.g. `~/.continue/config.json` on macOS)
+        - **OS**: macOS
+        - **Continue version**: v0.9.4
+        - **IDE version**:  VSCode 1.85.1
+        - Model: Claude Sonnet 3.5
+        - config.json: `{ "models": ... }`
       value: |
         - OS:
-        - Continue:
-        - IDE:
+        - Continue version:
+        - IDE version:
         - Model:
         - config.json:
           ```json
