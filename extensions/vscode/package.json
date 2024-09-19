@@ -128,6 +128,12 @@
     },
     "commands": [
       {
+        "command": "continue.applyCodeFromChat",
+        "category": "Continue",
+        "title": "Apply code from chat",
+        "group": "Continue"
+      },
+      {
         "command": "continue.acceptDiff",
         "category": "Continue",
         "title": "Accept Diff",
@@ -340,6 +346,11 @@
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "continue.applyCodeFromChat",
+        "mac": "alt+a",
+        "key": "alt+a"
       }
     ],
     "submenus": [

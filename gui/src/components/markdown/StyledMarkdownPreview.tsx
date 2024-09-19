@@ -12,12 +12,11 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
+import "./katex.css";
 import LinkableCode from "./LinkableCode";
+import "./markdown.css";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
-import { common } from "lowlight";
-import "./katex.css";
-import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -31,14 +30,8 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    ${(props) => {
-      if (props.showBorder) {
-        return `
-          border: 0.5px solid #8888;
-        `;
-      }
-    }}
-    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
+    padding: ${(props) => (props.showBorder ? "8px 12px" : "0px 2px")};
+    margin: 0px;
   }
 
   code {
@@ -110,6 +103,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             } else if (node.lang.includes(".")) {
               node.lang = node.lang.split(".").slice(-1)[0];
             }
+
+            if (node.meta) {
+              node.data = node.data || {};
+              node.data.hProperties = node.data.hProperties || {};
+              node.data.hProperties.filepath = node.meta;
+            }
           });
         };
       },
@@ -125,6 +124,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       {
         // languages: {},
       } as Options,
+      () => {
+        let codeBlockIndex = 0;
+        return (tree) => {
+          visit(tree, { tagName: "pre" }, (node: any) => {
+            // Add an index (0, 1, 2, etc...) to each code block.
+            node.properties = { codeBlockIndex };
+            codeBlockIndex++;
+          });
+        };
+      },
+      {},
     ],
     rehypeReactOptions: {
       components: {
@@ -136,11 +146,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const childrenClassName = preProps?.children?.[0]?.props?.className;
+          const { className, filepath } = preProps?.children?.[0]?.props;
 
           return props.showCodeBorder ? (
             <PreWithToolbar
-              language={getLanuageFromClassName(childrenClassName)}
+              codeBlockIndex={preProps.codeBlockIndex}
+              language={getLanuageFromClassName(className)}
+              filepath={filepath}
             >
               <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
             </PreWithToolbar>

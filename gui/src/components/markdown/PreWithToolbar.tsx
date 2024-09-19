@@ -1,7 +1,18 @@
 import { debounce } from "lodash";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import styled from "styled-components";
+import { defaultBorderRadius, lightGray } from "..";
 import useUIConfig from "../../hooks/useUIConfig";
+import { RootState } from "../../redux/store";
 import CodeBlockToolBar from "./CodeBlockToolbar";
+
+const TopDiv = styled.div`
+  outline: 0.5px solid rgba(153, 153, 152);
+  outline-offset: -0.5px;
+  border-radius: ${defaultBorderRadius};
+  margin-bottom: 8px;
+`;
 
 function childToText(child: any) {
   if (typeof child === "string") {
@@ -19,13 +30,21 @@ function childrenToText(children: any) {
   return children.map((child: any) => childToText(child)).join("");
 }
 
-function PreWithToolbar(props: { children: any; language: string | null }) {
+function PreWithToolbar(props: {
+  children: any;
+  language: string | null;
+  codeBlockIndex: number;
+  filepath?: string | undefined;
+}) {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
 
   const [hovering, setHovering] = useState(false);
-
   const [copyValue, setCopyValue] = useState("");
+
+  const nextCodeBlockIndex = useSelector(
+    (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
+  );
 
   useEffect(() => {
     const debouncedEffect = debounce(() => {
@@ -40,28 +59,32 @@ function PreWithToolbar(props: { children: any; language: string | null }) {
   }, [props.children]);
 
   return (
-    <div
-      style={{ padding: "0px" }}
-      className="relative"
+    <TopDiv
+      tabIndex={-1}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {!toolbarBottom && hovering && (
+      {!!props.filepath ? (
         <CodeBlockToolBar
+          isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
           text={copyValue}
           bottom={toolbarBottom}
           language={props.language}
-        ></CodeBlockToolBar>
+          filepath={props.filepath}
+        />
+      ) : (
+        hovering && (
+          <CodeBlockToolBar
+            isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
+            text={copyValue}
+            bottom={toolbarBottom}
+            language={props.language}
+          />
+        )
       )}
+
       {props.children}
-      {toolbarBottom && hovering && (
-        <CodeBlockToolBar
-          text={copyValue}
-          bottom={toolbarBottom}
-          language={props.language}
-        ></CodeBlockToolBar>
-      )}
-    </div>
+    </TopDiv>
   );
 }
 

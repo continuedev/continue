@@ -9,7 +9,7 @@ import {
 } from "..";
 import { PackageDimension } from "../../pages/AddNewModel/configs/models";
 import { providers } from "../../pages/AddNewModel/configs/providers";
-import HeaderButtonWithText from "../HeaderButtonWithText";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import InfoHover from "../InfoHover";
 import { ModelProviderTag } from "./ModelProviderTag";
 import { ModelProviderTags } from "./utils";
@@ -164,9 +164,9 @@ function ModelCard(props: ModelCardProps) {
             href={props.refUrl}
             target="_blank"
           >
-            <HeaderButtonWithText text="Read the docs">
+            <ButtonWithTooltip text="Read the docs">
               <BookOpenIcon width="1.6em" height="1.6em" />
-            </HeaderButtonWithText>
+            </ButtonWithTooltip>
           </a>
         )}
       </div>
@@ -219,7 +219,7 @@ function ModelCard(props: ModelCardProps) {
                     return null;
                   }
                   return (
-                    <HeaderButtonWithText
+                    <ButtonWithTooltip
                       text={info.title}
                       className="p-2 text-center mx-1 items-center"
                       style={{
@@ -240,7 +240,7 @@ function ModelCard(props: ModelCardProps) {
                           height="24px"
                         />
                       )}
-                    </HeaderButtonWithText>
+                    </ButtonWithTooltip>
                   );
                 })}
               </div>

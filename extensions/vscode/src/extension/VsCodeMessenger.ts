@@ -1,4 +1,6 @@
+import { ILLM } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -11,6 +13,7 @@ import {
   CORE_TO_WEBVIEW_PASS_THROUGH,
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
+import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
 import * as fs from "node:fs";
@@ -123,36 +126,61 @@ export class VsCodeMessenger {
       );
     });
 
-    this.onWebview("applyToCurrentFile", async (msg) => {
-      // Select the entire current file
-      const editor = vscode.window.activeTextEditor;
+    webviewProtocol.on("acceptDiff", async ({ data: { filepath } }) => {
+      await vscode.commands.executeCommand("continue.acceptDiff", filepath);
+    });
 
+    webviewProtocol.on("rejectDiff", async ({ data: { filepath } }) => {
+      await vscode.commands.executeCommand("continue.rejectDiff", filepath);
+    });
+
+    this.onWebview("applyToCurrentFile", async (msg) => {
+      // Get active text editor
+      const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
       }
 
-      if (editor.selection.isEmpty) {
-        const document = editor.document;
-        const start = new vscode.Position(0, 0);
-        const end = new vscode.Position(
-          document.lineCount - 1,
-          document.lineAt(document.lineCount - 1).text.length,
-        );
-        editor.selection = new vscode.Selection(start, end);
-      }
-
-      const verticalDiffManager = await this.verticalDiffManagerPromise;
-      const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
-
+      // Get LLM from config
       const configHandler = await configHandlerPromise;
       const config = await configHandler.loadConfig();
-
       const modelTitle =
         config.experimental?.modelRoles?.applyCodeBlock ??
         (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
+      const llm = config.models.find((model) => model.title === modelTitle);
+      if (!llm) {
+        vscode.window.showErrorMessage(
+          `Model ${modelTitle} not found in config.`,
+        );
+        return;
+      }
 
-      verticalDiffManager.streamEdit(prompt, modelTitle);
+      let fastLlm: ILLM | undefined;
+      if (config.experimental?.modelRoles?.repoMapFileSelection) {
+        fastLlm = config.models.find(
+          (model) =>
+            model.title ===
+            config.experimental?.modelRoles?.repoMapFileSelection,
+        );
+      }
+      fastLlm ??= llm;
+
+      // Generate the diff and pass through diff manager
+      const [instant, diffLines] = await applyCodeBlock(
+        editor.document.getText(),
+        msg.data.text,
+        getBasename(editor.document.fileName),
+        llm,
+        fastLlm,
+      );
+      const verticalDiffManager = await this.verticalDiffManagerPromise;
+      if (instant) {
+        verticalDiffManager.streamDiffLines(diffLines, instant);
+      } else {
+        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
+        verticalDiffManager.streamEdit(prompt, modelTitle);
+      }
     });
 
     this.onWebview("showTutorial", async (msg) => {

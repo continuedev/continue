@@ -281,7 +281,8 @@ ${prompt}`;
   ) {
     let promptTokens = this.countTokens(prompt);
     let generatedTokens = this.countTokens(completion);
-    Telemetry.capture(
+
+    void Telemetry.capture(
       "tokens_generated",
       {
         model: model,
@@ -291,12 +292,14 @@ ${prompt}`;
       },
       true,
     );
-    DevDataSqliteDb.logTokensGenerated(
+
+    void DevDataSqliteDb.logTokensGenerated(
       model,
       this.providerName,
       promptTokens,
       generatedTokens,
     );
+
     logDevData("tokens_generated", {
       model: model,
       provider: this.providerName,
@@ -342,11 +345,11 @@ ${prompt}`;
           ) {
             if (resp.url.includes("codestral.mistral.ai")) {
               throw new Error(
-                'You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting "apiBase" to "https://api.mistral.ai/v1" in config.json.',
+                "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
               );
             } else {
               throw new Error(
-                'You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting "apiBase" to "https://codestral.mistral.ai/v1" in config.json.',
+                "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
               );
             }
           }
@@ -542,6 +545,7 @@ ${prompt}`;
     const completion = await this._complete(prompt, completionOptions);
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
+
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
@@ -604,6 +608,7 @@ ${prompt}`;
     }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
+
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }

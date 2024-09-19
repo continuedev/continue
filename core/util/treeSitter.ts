@@ -45,6 +45,7 @@ export const supportedLanguages: { [key: string]: string } = {
   mjs: "javascript",
   cjs: "javascript",
   py: "python",
+  ipynb: "python",
   pyw: "python",
   pyi: "python",
   el: "elisp",

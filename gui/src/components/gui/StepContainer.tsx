@@ -20,7 +20,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
-import HeaderButtonWithText from "../HeaderButtonWithText";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
@@ -124,7 +124,7 @@ function StepContainer(props: StepContainerProps) {
         {(props.isLast || isHovered || typeof feedback !== "undefined") &&
           !active && (
             <div
-              className="flex items-center gap-1 absolute -bottom-2 right-1"
+              className="flex items-center gap-1 absolute -bottom-2 right-2"
               style={{
                 color: lightGray,
                 fontSize: getFontSize() - 3,
@@ -145,7 +145,8 @@ function StepContainer(props: StepContainerProps) {
               )}
 
               {truncatedEarly && (
-                <HeaderButtonWithText
+                <ButtonWithTooltip
+                  tabIndex={-1}
                   text="Continue generation"
                   onClick={(e) => {
                     props.onContinueGeneration();
@@ -156,28 +157,26 @@ function StepContainer(props: StepContainerProps) {
                     width="1.2em"
                     height="1.2em"
                   />
-                </HeaderButtonWithText>
+                </ButtonWithTooltip>
               )}
 
               <CopyButton
+                tabIndex={-1}
                 text={stripImages(props.item.message.content)}
                 color={lightGray}
               />
-              <HeaderButtonWithText
+              <ButtonWithTooltip
+                tabIndex={-1}
                 text="Regenerate"
                 onClick={(e) => {
                   props.onRetry();
                 }}
               >
                 <ArrowPathIcon color={lightGray} width="1.2em" height="1.2em" />
-              </HeaderButtonWithText>
+              </ButtonWithTooltip>
               {feedback === false || (
-                <HeaderButtonWithText text="Helpful">
+                <ButtonWithTooltip text="Helpful" tabIndex={-1}>
                   <HandThumbUpIcon
-                    className={
-                      "cursor-pointer hover:text-green-500" +
-                      (feedback === true ? " text-green-500" : "")
-                    }
                     width="1.2em"
                     height="1.2em"
                     color={lightGray}
@@ -185,15 +184,11 @@ function StepContainer(props: StepContainerProps) {
                       sendFeedback(true);
                     }}
                   />
-                </HeaderButtonWithText>
+                </ButtonWithTooltip>
               )}
               {feedback === true || (
-                <HeaderButtonWithText text="Unhelpful">
+                <ButtonWithTooltip text="Unhelpful" tabIndex={-1}>
                   <HandThumbDownIcon
-                    className={
-                      "cursor-pointer hover:text-red-500" +
-                      (feedback === false ? " text-red-500" : "")
-                    }
                     width="1.2em"
                     height="1.2em"
                     color={lightGray}
@@ -201,9 +196,9 @@ function StepContainer(props: StepContainerProps) {
                       sendFeedback(false);
                     }}
                   />
-                </HeaderButtonWithText>
+                </ButtonWithTooltip>
               )}
-              <HeaderButtonWithText text="Delete Message">
+              <ButtonWithTooltip text="Delete" tabIndex={-1}>
                 <TrashIcon
                   color={lightGray}
                   width="1.2em"
@@ -212,7 +207,7 @@ function StepContainer(props: StepContainerProps) {
                     props.onDelete();
                   }}
                 />
-              </HeaderButtonWithText>
+              </ButtonWithTooltip>
             </div>
           )}
       </div>

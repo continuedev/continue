@@ -9,6 +9,11 @@ import {
 } from "./decorations";
 import type { VerticalDiffCodeLens } from "./manager";
 
+export interface VerticalPerLineDiffHandlerOptions {
+  input?: string;
+  instant?: boolean;
+}
+
 export class VerticalPerLineDiffHandler implements vscode.Disposable {
   private editor: vscode.TextEditor;
   private startLine: number;
@@ -24,7 +29,7 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
 
   private newLinesAdded = 0;
 
-  public input?: string;
+  public options: VerticalPerLineDiffHandlerOptions;
 
   constructor(
     startLine: number,
@@ -39,13 +44,13 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
       accept: boolean,
     ) => void,
     private readonly refreshCodeLens: () => void,
-    input?: string,
+    options: VerticalPerLineDiffHandlerOptions,
   ) {
     this.currentLineIndex = startLine;
     this.startLine = startLine;
     this.endLine = endLine;
     this.editor = editor;
-    this.input = input;
+    this.options = options;
 
     this.redDecorationManager = new DecorationTypeRangeManager(
       redDecorationType,
@@ -184,6 +189,11 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
   }
 
   private updateIndexLineDecorations() {
+    if (this.options.instant) {
+      // We don't show progress on instant apply
+      return;
+    }
+
     // Highlight the line at the currentLineIndex
     // And lightly highlight all lines between that and endLine
     if (this.currentLineIndex - this.newLinesAdded >= this.endLine) {

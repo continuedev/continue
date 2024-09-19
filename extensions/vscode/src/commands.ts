@@ -29,6 +29,7 @@ import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import { uriFromFilePath } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { getFullyQualifiedPath } from "./util/util";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -229,20 +230,30 @@ const commandsMap: (
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("acceptDiff");
 
-      if (newFilepath instanceof vscode.Uri) {
-        newFilepath = newFilepath.fsPath;
+      let fullPath = newFilepath;
+
+      if (fullPath instanceof vscode.Uri) {
+        fullPath = fullPath.fsPath;
+      } else {
+        fullPath = getFullyQualifiedPath(fullPath);
       }
-      verticalDiffManager.clearForFilepath(newFilepath, true);
-      await diffManager.acceptDiff(newFilepath);
+
+      verticalDiffManager.clearForFilepath(fullPath, true);
+      await diffManager.acceptDiff(fullPath);
     },
     "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("rejectDiff");
 
-      if (newFilepath instanceof vscode.Uri) {
-        newFilepath = newFilepath.fsPath;
+      let fullPath = newFilepath;
+
+      if (fullPath instanceof vscode.Uri) {
+        fullPath = fullPath.fsPath;
+      } else {
+        fullPath = getFullyQualifiedPath(fullPath);
       }
-      verticalDiffManager.clearForFilepath(newFilepath, false);
-      await diffManager.rejectDiff(newFilepath);
+
+      verticalDiffManager.clearForFilepath(fullPath, false);
+      await diffManager.rejectDiff(fullPath);
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
@@ -460,6 +471,9 @@ const commandsMap: (
     },
     "continue.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined);
+    },
+    "continue.applyCodeFromChat": () => {
+      sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
     "continue.toggleFullScreen": () => {
       // Check if full screen is already open by checking open tabs
