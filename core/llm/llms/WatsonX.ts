@@ -192,7 +192,7 @@ class WatsonX extends BaseLLM {
     const url = this.getWatsonxEndpoint();
     const headers = this._getHeaders();
 
-    const parameters = {
+    const parameters: any = {
       decoding_method: "greedy",
       max_new_tokens: options.maxTokens ?? 1024,
       min_new_tokens: 1,
@@ -207,7 +207,7 @@ class WatsonX extends BaseLLM {
       parameters.top_k = options.topK;
     }
 
-    const payload = {
+    const payload: any = {
       input: messages[messages.length - 1].content,
       parameters: parameters,
     };
