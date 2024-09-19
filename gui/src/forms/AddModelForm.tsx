@@ -56,7 +56,6 @@ function AddModelForm({
         const value = formMethods.watch(input.key);
         return value;
       });
-    console.log("Required fields values:", required);
 
     return !required.every((value) => value !== undefined && value.length > 0);
   }
