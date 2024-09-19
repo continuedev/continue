@@ -7,25 +7,28 @@ import { myersDiff } from "../../diff/myers";
 import { getParserForFile } from "../../util/treeSitter";
 import { findInAst } from "./findInAst";
 
-type LazyBlockReplacements = Array<{
-  lazyBlockNode: Parser.SyntaxNode;
+type AstReplacements = Array<{
+  nodeToReplace: Parser.SyntaxNode;
   replacementNodes: Parser.SyntaxNode[];
 }>;
 
 function reconstructNewFile(
   oldFile: string,
   newFile: string,
-  lazyBlockReplacements: LazyBlockReplacements,
+  lazyBlockReplacements: AstReplacements,
 ): string {
   // Sort acc by reverse line number
   lazyBlockReplacements
-    .sort((a, b) => a.lazyBlockNode.startIndex - b.lazyBlockNode.startIndex)
+    .sort((a, b) => a.nodeToReplace.startIndex - b.nodeToReplace.startIndex)
     .reverse();
 
   // Reconstruct entire file by replacing lazy blocks with the replacement nodes
   const oldFileLines = oldFile.split("\n");
   const newFileChars = newFile.split("");
-  for (const { lazyBlockNode, replacementNodes } of lazyBlockReplacements) {
+  for (const {
+    nodeToReplace: lazyBlockNode,
+    replacementNodes,
+  } of lazyBlockReplacements) {
     // Get the full string from the replacement nodes
     let replacementText = "";
     if (replacementNodes.length > 0) {
@@ -87,6 +90,15 @@ function reconstructNewFile(
   return newFileChars.join("");
 }
 
+const REMOVAL_PERCENTAGE_THRESHOLD = 0.3;
+function shouldRejectDiff(diff: DiffLine[]): boolean {
+  const numRemovals = diff.filter((line) => line.type === "old").length;
+  if (numRemovals / diff.length > REMOVAL_PERCENTAGE_THRESHOLD) {
+    return true;
+  }
+  return false;
+}
+
 // TODO: If we don't have high confidence, return undefined to fall back to slower methods
 export async function deterministicApplyLazyEdit(
   oldFile: string,
@@ -104,19 +116,36 @@ export async function deterministicApplyLazyEdit(
   // If there is no lazy block anywhere, we add our own to the outsides
   // so that large chunks of the file don't get removed
   if (!findInAst(newTree.rootNode, isLazyBlock)) {
-    const ext = path.extname(filename).slice(1);
-    const language = LANGUAGES[ext];
-    if (language) {
-      newLazyFile = `${language.singleLineComment} ... existing code ...\n\n${newLazyFile}\n\n${language.singleLineComment} ... existing code...`;
-      newTree = parser.parse(newLazyFile);
+    // First, we need to check whether there are matching (similar) nodes at the root level
+    const firstSimilarNode = findInAst(oldTree.rootNode, (node) =>
+      nodesAreSimilar(node, newTree.rootNode.children[0]),
+    );
+    if (firstSimilarNode?.parent?.equals(oldTree.rootNode)) {
+      // If so, we tack lazy blocks to start and end, and run the usual algorithm
+      const ext = path.extname(filename).slice(1);
+      const language = LANGUAGES[ext];
+      if (language) {
+        newLazyFile = `${language.singleLineComment} ... existing code ...\n\n${newLazyFile}\n\n${language.singleLineComment} ... existing code...`;
+        newTree = parser.parse(newLazyFile);
+      }
+    } else {
+      // If not, we need to recursively search for the nodes that are being rewritten,
+      // and we apply a slightly different algorithm
+      return undefined; // TODO
     }
   }
 
-  const acc: LazyBlockReplacements = [];
+  const acc: AstReplacements = [];
   findLazyBlockReplacements(oldTree.rootNode, newTree.rootNode, acc);
 
   const newFullFile = reconstructNewFile(oldFile, newLazyFile, acc);
   const diff = myersDiff(oldFile, newFullFile);
+
+  // If the diff is too messy and seems likely borked, we fall back to LLM strategy
+  if (shouldRejectDiff(diff)) {
+    return undefined;
+  }
+
   return diff;
 }
 
@@ -175,7 +204,7 @@ function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
 function findLazyBlockReplacements(
   oldNode: Parser.SyntaxNode,
   newNode: Parser.SyntaxNode,
-  acc: LazyBlockReplacements,
+  acc: AstReplacements,
 ): void {
   // Base case
   if (nodesAreExact(oldNode, newNode)) {
@@ -235,7 +264,7 @@ function findLazyBlockReplacements(
       if (isLazy) {
         // Record the replacement lines
         acc.push({
-          lazyBlockNode: currentLazyBlockNode!,
+          nodeToReplace: currentLazyBlockNode!,
           replacementNodes: [...currentLazyBlockReplacementNodes],
         });
         isLazy = false;
@@ -247,7 +276,7 @@ function findLazyBlockReplacements(
 
   if (isLazy) {
     acc.push({
-      lazyBlockNode: currentLazyBlockNode!,
+      nodeToReplace: currentLazyBlockNode!,
       replacementNodes: [...currentLazyBlockReplacementNodes, ...leftChildren],
     });
   }
@@ -256,7 +285,7 @@ function findLazyBlockReplacements(
   for (const R of rightChildren) {
     if (isLazyBlock(R)) {
       acc.push({
-        lazyBlockNode: R,
+        nodeToReplace: R,
         replacementNodes: [],
       });
     }

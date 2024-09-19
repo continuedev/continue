@@ -175,7 +175,12 @@ export class VsCodeMessenger {
         fastLlm,
       );
       const verticalDiffManager = await this.verticalDiffManagerPromise;
-      verticalDiffManager.streamDiffLines(diffLines, instant);
+      if (instant) {
+        verticalDiffManager.streamDiffLines(diffLines, instant);
+      } else {
+        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
+        verticalDiffManager.streamEdit(prompt, modelTitle);
+      }
     });
 
     this.onWebview("showTutorial", async (msg) => {

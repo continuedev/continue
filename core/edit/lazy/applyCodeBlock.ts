@@ -23,9 +23,13 @@ export async function applyCodeBlock(
       newFile,
       filename,
     );
-    const diffGenerator = generateLines(diffLines!);
-    return [true, diffGenerator];
-  } else {
-    return [false, streamLazyApply(oldFile, filename, newFile, llm, fastLlm)];
+
+    // Fall back to LLM method if we couldn't apply deterministically
+    if (diffLines !== undefined) {
+      const diffGenerator = generateLines(diffLines!);
+      return [true, diffGenerator];
+    }
   }
+
+  return [false, streamLazyApply(oldFile, filename, newFile, llm, fastLlm)];
 }
