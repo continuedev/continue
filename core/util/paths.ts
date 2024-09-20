@@ -9,8 +9,37 @@ import { IdeType, SerializedContinueConfig } from "../index.js";
 
 dotenv.config();
 
-const CONTINUE_GLOBAL_DIR =
-  process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
+function getContinueGlobalDir(): string {
+  // Use user-configured directory if set.
+  const envGlobalDir = process.env.CONTINUE_GLOBAL_DIR;
+  if (envGlobalDir) {
+    return envGlobalDir;
+  }
+
+  const defaultDotDir = path.join(os.homedir(), ".continue");
+
+  // Backwards compatibility: use ~/.continue if it already exists
+  if (fs.existsSync(defaultDotDir)) {
+    return defaultDotDir;
+  }
+
+  // on Linux, prefer XDG directories by default
+  // https://specifications.freedesktop.org/basedir-spec/latest/index.html
+  const xdgDataDir = process.env.XDG_DATA_HOME;
+  if (xdgDataDir) {
+    return path.join(xdgDataDir, "continue");
+  }
+
+  // on Windows, prefer ~\AppData\Local
+  const localAppDataDir = process.env.LOCALAPPDATA;
+  if (localAppDataDir ) {
+    return path.join(localAppDataDir , "Continue");
+  }
+  // Use ~/.continue everywhere else.
+  return defaultDotDir;
+}
+
+const CONTINUE_GLOBAL_DIR = getContinueGlobalDir();
 
 export function getChromiumPath(): string {
   return path.join(getContinueUtilsPath(), ".chromium-browser-snapshots");
@@ -25,7 +54,6 @@ export function getContinueUtilsPath(): string {
 }
 
 export function getContinueGlobalPath(): string {
-  // This is ~/.continue on mac/linux
   const continuePath = CONTINUE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);

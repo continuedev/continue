@@ -179,7 +179,8 @@ class AsyncFileSaveListener : AsyncFileListener {
     }
     override fun prepareChange(events: MutableList<out VFileEvent>): AsyncFileListener.ChangeApplier? {
         for (event in events) {
-            if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(".continue\\config.json") || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json")) {
+            val fileName = event.file?.name ?: continue
+            if (fileName == "config.json" || fileName == "config.ts" || fileName == ".continuerc.json") {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
                         val config = readConfigJson()
