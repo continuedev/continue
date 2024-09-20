@@ -512,6 +512,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         label: "watsonx API version",
         placeholder: "Enter the API Version",
         defaultValue: "2023-05-29",
+        required: true
       },
       {
         inputType: "text",
@@ -521,20 +522,6 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
           "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
         required: false,
       },
-      // {
-      //   inputType: "text",
-      //   key: "title",
-      //   label: "Model name",
-      //   placeholder: "Granite 13B Chat v2",
-      //   isWatsonxAttribute: true,
-      // },
-      // {
-      //   inputType: "text",
-      //   key: "model",
-      //   label: "Model Id",
-      //   placeholder: "ibm/granite-13b-chat-v2",
-      //   isWatsonxAttribute: true,
-      // },
       {
         inputType: "text",
         key: "watsonxStopToken",

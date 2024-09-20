@@ -13,6 +13,7 @@ import {
 } from "../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../redux/slices/stateSlice";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
+import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -49,8 +50,14 @@ function AddModelForm({
       return false;
     }
 
-    const apiKey = formMethods.watch("apiKey");
-    return typeof apiKey === "undefined" || apiKey.length === 0;
+    const required = selectedProvider.collectInputFor
+      .filter((input) => input.required)
+      .map((input) => {
+        const value = formMethods.watch(input.key);
+        return value;
+      });
+
+    return !required.every((value) => value !== undefined && value.length > 0);
   }
 
   useEffect(() => {
@@ -60,10 +67,15 @@ function AddModelForm({
   function onSubmit() {
     const apiKey = formMethods.watch("apiKey");
     const hasValidApiKey = apiKey !== undefined && apiKey !== "";
+    const reqInputFields = {};
+    for (let input of selectedProvider.collectInputFor) {
+      reqInputFields[input.key] = formMethods.watch(input.key);
+    }
 
     const model = {
       ...selectedProvider.params,
       ...selectedModel.params,
+      ...reqInputFields,
       provider: selectedProvider.provider,
       title: selectedModel.title,
       ...(hasValidApiKey ? { apiKey } : {}),
@@ -199,6 +211,33 @@ function AddModelForm({
                 </>
               </div>
             )}
+            
+            {selectedProvider.collectInputFor &&
+              selectedProvider.collectInputFor
+                .filter(
+                  (field) =>
+                    !Object.values(completionParamsInputs).some(
+                      (input) => input.key === field.key,
+                    ) &&
+                    field.required &&
+                    field.key !== "apiKey",
+                )
+                .map((field) => (
+                  <div>
+                    <>
+                      <label className="block text-sm font-medium mb-1">
+                        {field.label}
+                      </label>
+                      <Input
+                        id={field.key}
+                        className="w-full"
+                        defaultValue={field.defaultValue}
+                        placeholder={`${field.placeholder}`}
+                        {...formMethods.register(field.key)}
+                      />
+                    </>
+                  </div>
+                ))}
           </div>
 
           <div className="mt-4 w-full">
