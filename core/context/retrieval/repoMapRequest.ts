@@ -19,7 +19,7 @@ export async function requestFilesFromRepoMap(
 
   try {
     const repoMap = await generateRepoMap(llm, ide, {
-      signatures: false,
+      includeSignatures: false,
       dirs: filterDirectory ? [filterDirectory] : undefined,
     });
 

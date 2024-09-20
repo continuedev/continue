@@ -13,6 +13,10 @@ const repoMapPreamble =
   "classes, methods, or functions in the file.\n\n";
 
 const REPO_MAX_CONTEXT_LENGTH_RATIO = 0.5;
+export interface RepoMapOptions {
+  includeSignatures?: boolean;
+  dirs?: string[];
+}
 
 function indentMultilineString(str: string) {
   return str
@@ -21,9 +25,8 @@ function indentMultilineString(str: string) {
     .join("\n");
 }
 
-export interface RepoMapOptions {
-  signatures?: boolean;
-  dirs?: string[];
+function isSnippetSameAsFile(snippet: string, fileContent: string): boolean {
+  return snippet.trim() === fileContent.trim();
 }
 
 async function getPaths(dirs: string[], ide: IDE): Promise<Set<string>> {
@@ -53,22 +56,23 @@ function generateContentForPath(
   absolutePath: string,
   signatures: string[],
   dirs: string[],
-  options: RepoMapOptions,
+  { includeSignatures }: RepoMapOptions,
 ): string {
   const workspaceDir = dirs.find((dir) => absolutePath.startsWith(dir)) || "";
   const relativePath = path.relative(workspaceDir, absolutePath);
+
   let content = "";
 
-  if (options.signatures !== false) {
+  if (includeSignatures) {
     content += `${relativePath}:\n`;
+
     for (const signature of signatures.slice(0, -1)) {
       content += `${indentMultilineString(signature)}\n\t...\n`;
     }
-    if (signatures.length > 0) {
-      content += `${indentMultilineString(
-        signatures[signatures.length - 1],
-      )}\n\n`;
-    }
+
+    content += `${indentMultilineString(
+      signatures[signatures.length - 1],
+    )}\n\n`;
   } else {
     content += `${relativePath}\n`;
   }
@@ -97,9 +101,14 @@ async function processPathsAndSignatures(
 
     let content = "";
     for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
+      const fileContent = await fs.promises.readFile(absolutePath, "utf8");
+      const filteredSignatures = signatures.filter(
+        (signature) => !isSnippetSameAsFile(signature, fileContent),
+      );
+
       content += generateContentForPath(
         absolutePath,
-        signatures,
+        filteredSignatures,
         dirs,
         options,
       );
