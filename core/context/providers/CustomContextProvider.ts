@@ -20,6 +20,7 @@ class CustomContextProviderClass implements IContextProvider {
       description: this.custom.description ?? "",
       type: this.custom.type ?? "normal",
       renderInlineAs: this.custom.renderInlineAs,
+      icon: this.custom.icon ?? "file",
     };
   }
 

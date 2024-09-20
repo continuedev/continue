@@ -99,12 +99,35 @@ declare global {
 
   export type ContextProviderType = "normal" | "query" | "submenu";
 
+  export type IconName =
+    | "file"
+    | "code"
+    | "terminal"
+    | "diff"
+    | "search"
+    | "url"
+    | "open"
+    | "codebase"
+    | "problems"
+    | "folder"
+    | "docs"
+    | "issue"
+    | "trash"
+    | "/edit"
+    | "/clear"
+    | "/comment"
+    | "/share"
+    | "/cmd";
+
+
   export interface ContextProviderDescription {
     title: string;
     displayTitle: string;
     description: string;
     renderInlineAs?: string;
     type: ContextProviderType;
+    icon?: IconName;
+    dependsOnIndexing?: boolean;
   }
 
   export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
@@ -132,6 +155,7 @@ declare global {
     description?: string;
     renderInlineAs?: string;
     type?: ContextProviderType;
+    icon?: IconName;
     getContextItems(
       query: string,
       extras: ContextProviderExtras,
