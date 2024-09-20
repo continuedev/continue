@@ -1,8 +1,4 @@
-import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CircleStackIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { contextItemToRangeInFileWithContents } from "core/commands/util";
 import React, { useContext } from "react";
@@ -18,7 +14,7 @@ import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
-import { MapIcon } from "@heroicons/react/24/outline";
+import { getIconFromDropdownItem } from "./MentionList";
 
 const ContextItemDiv = styled.div`
   cursor: pointer;
@@ -52,11 +48,6 @@ export const ContextItems = styled.span`
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
 }
-
-const CONTEXT_PROVIDERS_TO_ICONS: Record<string, any> = {
-  "repo-map": MapIcon,
-  database: CircleStackIcon,
-};
 
 function filterInstructionContextItem(
   contextItems: ContextItemsPeekProps["contextItems"],
@@ -118,8 +109,10 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
       );
     }
 
-    const ProviderIcon =
-      CONTEXT_PROVIDERS_TO_ICONS[contextItem.id.providerTitle];
+    const ProviderIcon = getIconFromDropdownItem(
+      contextItem.id.providerTitle,
+      "contextProvider",
+    );
 
     if (ProviderIcon) {
       return (

@@ -44,7 +44,7 @@ import ButtonWithTooltip from "../ButtonWithTooltip";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
-import { ComboBoxItem } from "./types";
+import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -68,6 +68,14 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/cmd": CommandLineIcon,
 };
 
+export function getIconFromDropdownItem(id: string, type: ComboBoxItemType) {
+  debugger;
+  return (
+    ICONS_FOR_DROPDOWN[id] ??
+    (type === "contextProvider" ? AtSymbolIcon : BoltIcon)
+  );
+}
+
 function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
   if (props.item.type === "action") {
     return (
@@ -85,9 +93,7 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     }
   })();
 
-  const IconComponent =
-    ICONS_FOR_DROPDOWN[provider] ??
-    (props.item.type === "contextProvider" ? AtSymbolIcon : BoltIcon);
+  const IconComponent = getIconFromDropdownItem(provider, props.item.type);
 
   const fallbackIcon = (
     <IconComponent
