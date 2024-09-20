@@ -12,7 +12,6 @@ const repoMapPreamble =
   "this map contains the name of the file, and the signature for any " +
   "classes, methods, or functions in the file.\n\n";
 
-// The max percent of the context window we will take
 const REPO_MAX_CONTEXT_LENGTH_RATIO = 0.5;
 
 function indentMultilineString(str: string) {
@@ -27,25 +26,63 @@ export interface RepoMapOptions {
   dirs?: string[];
 }
 
-async function generateRepoMap(llm: ILLM, ide: IDE, options?: RepoMapOptions) {
-  const repoMapPath = getRepoMapFilePath();
-  const dirs = options?.dirs ?? (await ide.getWorkspaceDirs());
-  const maxRepoMapTokens = llm.contextLength * REPO_MAX_CONTEXT_LENGTH_RATIO;
+async function getPaths(dirs: string[], ide: IDE): Promise<Set<string>> {
+  const paths = new Set<string>();
 
-  const pathsWithoutSnippets = new Set<string>();
   for (const dir of dirs) {
     for await (const filepath of walkDirAsync(dir, ide)) {
-      pathsWithoutSnippets.add(filepath.replace(dir, "").slice(1));
+      paths.add(filepath.replace(dir, "").slice(1));
     }
   }
 
+  return paths;
+}
+
+async function initializeWriteStream(
+  repoMapPath: string,
+): Promise<fs.WriteStream> {
   if (fs.existsSync(repoMapPath)) {
     console.debug(`Overwriting existing repo map at ${repoMapPath}`);
   }
-
   const writeStream = fs.createWriteStream(repoMapPath);
   await new Promise((resolve) => writeStream.write(repoMapPreamble, resolve));
+  return writeStream;
+}
 
+function generateContentForPath(
+  absolutePath: string,
+  signatures: string[],
+  dirs: string[],
+  options: RepoMapOptions,
+): string {
+  const workspaceDir = dirs.find((dir) => absolutePath.startsWith(dir)) || "";
+  const relativePath = path.relative(workspaceDir, absolutePath);
+  let content = "";
+
+  if (options.signatures !== false) {
+    content += `${relativePath}:\n`;
+    for (const signature of signatures.slice(0, -1)) {
+      content += `${indentMultilineString(signature)}\n\t...\n`;
+    }
+    if (signatures.length > 0) {
+      content += `${indentMultilineString(
+        signatures[signatures.length - 1],
+      )}\n\n`;
+    }
+  } else {
+    content += `${relativePath}\n`;
+  }
+
+  return content;
+}
+
+async function processPathsAndSignatures(
+  llm: ILLM,
+  dirs: string[],
+  options: RepoMapOptions,
+  writeStream: fs.WriteStream,
+  maxRepoMapTokens: number,
+): Promise<number> {
   let curTokens = llm.countTokens(repoMapPreamble);
   let offset = 0;
   const batchSize = 100;
@@ -59,59 +96,63 @@ async function generateRepoMap(llm: ILLM, ide: IDE, options?: RepoMapOptions) {
       );
 
     let content = "";
-
     for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
-      const workspaceDir =
-        dirs.find((dir) => absolutePath.startsWith(dir)) || "";
-
-      const relativePath = path.relative(workspaceDir, absolutePath);
-
-      pathsWithoutSnippets.delete(relativePath);
-
-      if (options?.signatures !== false) {
-        content += `${relativePath}:\n`;
-        for (const signature of signatures.slice(0, -1)) {
-          content += `${indentMultilineString(signature)}\n\t...\n`;
-        }
-        if (signatures.length > 0) {
-          // Don't add the trailing ellipsis for the last entry
-          content += `${indentMultilineString(
-            signatures[signatures.length - 1],
-          )}\n\n`;
-        }
-      } else {
-        // No signatures mode
-        content += `${relativePath}\n`;
-      }
+      content += generateContentForPath(
+        absolutePath,
+        signatures,
+        dirs,
+        options,
+      );
     }
 
     const contentTokens = llm.countTokens(content);
 
     if (curTokens + contentTokens >= maxRepoMapTokens) {
-      // Fit what we can, then stop
       const prunedContent = pruneLinesFromTop(
         content,
         maxRepoMapTokens - curTokens,
         llm.model,
       );
       await new Promise((resolve) => writeStream.write(prunedContent, resolve));
-      break;
+      return curTokens + llm.countTokens(prunedContent);
     } else {
       await new Promise((resolve) => writeStream.write(content, resolve));
+      curTokens += contentTokens;
     }
-
-    curTokens += contentTokens;
 
     if (!hasMore) {
       break;
     }
-
     offset += batchSize;
   }
 
-  const content = Array.from(pathsWithoutSnippets).join("\n");
-  if (content.length > 0) {
-    await new Promise((resolve) => writeStream.write(content, resolve));
+  return curTokens;
+}
+
+async function generateRepoMap(
+  llm: ILLM,
+  ide: IDE,
+  options: RepoMapOptions = {},
+) {
+  const repoMapPath = getRepoMapFilePath();
+  const dirs = options.dirs ?? (await ide.getWorkspaceDirs());
+  const maxRepoMapTokens = llm.contextLength * REPO_MAX_CONTEXT_LENGTH_RATIO;
+
+  const paths = await getPaths(dirs, ide);
+  const writeStream = await initializeWriteStream(repoMapPath);
+
+  const curTokens = await processPathsAndSignatures(
+    llm,
+    dirs,
+    options,
+    writeStream,
+    maxRepoMapTokens,
+  );
+
+  const remainingPaths = Array.from(paths).join("\n");
+
+  if (remainingPaths.length > 0) {
+    await new Promise((resolve) => writeStream.write(remainingPaths, resolve));
   }
 
   writeStream.end();
@@ -119,13 +160,11 @@ async function generateRepoMap(llm: ILLM, ide: IDE, options?: RepoMapOptions) {
 
   if (curTokens >= maxRepoMapTokens) {
     console.debug(
-      "Full repo map was unable to be genereated due to context window limitations",
+      "Full repo map was unable to be generated due to context window limitations",
     );
   }
 
-  const repoMap = fs.readFileSync(repoMapPath, "utf8");
-
-  return repoMap;
+  return fs.readFileSync(repoMapPath, "utf8");
 }
 
 export default generateRepoMap;
