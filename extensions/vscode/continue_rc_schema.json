@@ -1149,6 +1149,7 @@
                   "llama2-70b",
                   "mistral-8x7b",
                   "gemma",
+                  "gemma2",
                   "llama3-8b",
                   "llama3-70b",
                   "llama3.1-8b",
