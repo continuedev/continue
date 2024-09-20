@@ -1,4 +1,8 @@
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CircleStackIcon,
+} from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { contextItemToRangeInFileWithContents } from "core/commands/util";
 import React, { useContext } from "react";
@@ -14,6 +18,7 @@ import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
+import { MapIcon } from "@heroicons/react/24/outline";
 
 const ContextItemDiv = styled.div`
   cursor: pointer;
@@ -47,6 +52,11 @@ export const ContextItems = styled.span`
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
 }
+
+const CONTEXT_PROVIDERS_TO_ICONS: Record<string, any> = {
+  "repo-map": MapIcon,
+  database: CircleStackIcon,
+};
 
 function filterInstructionContextItem(
   contextItems: ContextItemsPeekProps["contextItems"],
@@ -93,6 +103,45 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
     }
   }
 
+  const getContextItemIcon = (contextItem: ContextItemWithId) => {
+    const dimmensions = "1.4em";
+
+    if (contextItem.icon) {
+      return (
+        <SafeImg
+          className="flex-shrink-0 pr-2"
+          src={contextItem.icon}
+          height={dimmensions}
+          width={dimmensions}
+          fallback={null}
+        />
+      );
+    }
+
+    const ProviderIcon =
+      CONTEXT_PROVIDERS_TO_ICONS[contextItem.id.providerTitle];
+
+    if (ProviderIcon) {
+      return (
+        <ProviderIcon
+          className="flex-shrink-0 pr-2"
+          height={dimmensions}
+          width={dimmensions}
+        />
+      );
+    }
+
+    return (
+      <FileIcon
+        filename={
+          contextItem.description.split(" ").shift()?.split("#").shift() || ""
+        }
+        height={dimmensions}
+        width={dimmensions}
+      />
+    );
+  };
+
   return (
     <div
       style={{
@@ -135,70 +184,24 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
           }}
         >
           {ctxItems?.map((contextItem, idx) => {
-            if (contextItem.description.startsWith("http")) {
-              return (
-                <a
-                  key={idx}
-                  href={contextItem.description}
-                  target="_blank"
-                  style={{ color: vscForeground, textDecoration: "none" }}
-                >
-                  <ContextItemDiv
-                    onClick={() => {
-                      openContextItem(contextItem);
-                    }}
-                  >
-                    {!!contextItem.icon ? (
-                      <SafeImg
-                        className="flex-shrink-0 pr-2"
-                        src={contextItem.icon}
-                        height="18em"
-                        width="18em"
-                        fallback={null}
-                      />
-                    ) : (
-                      <FileIcon
-                        filename={
-                          contextItem.description
-                            .split(" ")
-                            .shift()
-                            ?.split("#")
-                            .shift() || ""
-                        }
-                        height="1.6em"
-                        width="1.6em"
-                      ></FileIcon>
-                    )}
-                    {contextItem.name}
-                  </ContextItemDiv>
-                </a>
-              );
-            }
-
-            return (
-              <ContextItemDiv
-                key={idx}
-                onClick={() => {
-                  openContextItem(contextItem);
-                }}
-              >
-                {!!contextItem.icon ? (
-                  <SafeImg
-                    className="flex-shrink-0 pr-2"
-                    src={contextItem.icon}
-                    height="18em"
-                    width="18em"
-                    fallback={null}
-                  />
-                ) : (
-                  <FileIcon
-                    filename={contextItem.description.split(" ").shift()!}
-                    height="1.6em"
-                    width="1.6em"
-                  ></FileIcon>
-                )}
+            const contextItemContent = (
+              <ContextItemDiv onClick={() => openContextItem(contextItem)}>
+                {getContextItemIcon(contextItem)}
                 {contextItem.name}
               </ContextItemDiv>
+            );
+
+            return contextItem.description.startsWith("http") ? (
+              <a
+                key={idx}
+                href={contextItem.description}
+                target="_blank"
+                style={{ color: vscForeground, textDecoration: "none" }}
+              >
+                {contextItemContent}
+              </a>
+            ) : (
+              <React.Fragment key={idx}>{contextItemContent}</React.Fragment>
             );
           })}
         </div>
