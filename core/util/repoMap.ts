@@ -13,6 +13,9 @@ const repoMapPreamble =
   "classes, methods, or functions in the file.\n\n";
 
 const REPO_MAX_CONTEXT_LENGTH_RATIO = 0.5;
+
+const BATCH_SIZE = 100;
+
 export interface RepoMapOptions {
   includeSignatures?: boolean;
   dirs?: string[];
@@ -53,17 +56,13 @@ async function initializeWriteStream(
 }
 
 function generateContentForPath(
-  absolutePath: string,
+  relativePath: string,
   signatures: string[],
-  dirs: string[],
   { includeSignatures }: RepoMapOptions,
 ): string {
-  const workspaceDir = dirs.find((dir) => absolutePath.startsWith(dir)) || "";
-  const relativePath = path.relative(workspaceDir, absolutePath);
-
   let content = "";
 
-  if (includeSignatures) {
+  if (includeSignatures !== false) {
     content += `${relativePath}:\n`;
 
     for (const signature of signatures.slice(0, -1)) {
@@ -84,94 +83,165 @@ async function processPathsAndSignatures(
   llm: ILLM,
   dirs: string[],
   options: RepoMapOptions,
-  writeStream: fs.WriteStream,
   maxRepoMapTokens: number,
-): Promise<number> {
+  ide: IDE,
+): Promise<{ content: string; remainingPaths: Set<string> }> {
+  const paths = await getPaths(dirs, ide);
+  let pathsWithoutSignatures = new Set<string>(paths);
+
+  let content = "";
   let curTokens = llm.countTokens(repoMapPreamble);
   let offset = 0;
-  const batchSize = 100;
 
   while (true) {
     const { groupedByPath, hasMore } =
       await CodeSnippetsCodebaseIndex.getPathsAndSignatures(
         dirs,
         offset,
-        batchSize,
+        BATCH_SIZE,
       );
 
-    let content = "";
-    for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
-      const fileContent = await fs.promises.readFile(absolutePath, "utf8");
-      const filteredSignatures = signatures.filter(
-        (signature) => !isSnippetSameAsFile(signature, fileContent),
-      );
+    const { batchContent, updatedPathsWithoutSignatures } = await processBatch(
+      groupedByPath,
+      dirs,
+      options,
+      pathsWithoutSignatures,
+    );
 
-      content += generateContentForPath(
-        absolutePath,
-        filteredSignatures,
-        dirs,
-        options,
-      );
-    }
+    pathsWithoutSignatures = updatedPathsWithoutSignatures;
 
-    const contentTokens = llm.countTokens(content);
+    const batchTokens = llm.countTokens(batchContent);
 
-    if (curTokens + contentTokens >= maxRepoMapTokens) {
-      const prunedContent = pruneLinesFromTop(
-        content,
+    if (curTokens + batchTokens >= maxRepoMapTokens) {
+      content += pruneLinesFromTop(
+        batchContent,
         maxRepoMapTokens - curTokens,
         llm.model,
       );
-      await new Promise((resolve) => writeStream.write(prunedContent, resolve));
-      return curTokens + llm.countTokens(prunedContent);
-    } else {
-      await new Promise((resolve) => writeStream.write(content, resolve));
-      curTokens += contentTokens;
+      break;
     }
+
+    content += batchContent;
+    curTokens += batchTokens;
 
     if (!hasMore) {
       break;
     }
-    offset += batchSize;
+    offset += BATCH_SIZE;
   }
 
-  return curTokens;
+  return { content, remainingPaths: pathsWithoutSignatures };
 }
 
-async function generateRepoMap(
-  llm: ILLM,
-  ide: IDE,
-  options: RepoMapOptions = {},
-) {
-  const repoMapPath = getRepoMapFilePath();
-  const dirs = options.dirs ?? (await ide.getWorkspaceDirs());
-  const maxRepoMapTokens = llm.contextLength * REPO_MAX_CONTEXT_LENGTH_RATIO;
+async function processBatch(
+  groupedByPath: Record<string, string[]>,
+  dirs: string[],
+  options: RepoMapOptions,
+  pathsWithoutSignatures: Set<string>,
+): Promise<{
+  batchContent: string;
+  updatedPathsWithoutSignatures: Set<string>;
+}> {
+  let batchContent = "";
+  const updatedPathsWithoutSignatures = new Set(pathsWithoutSignatures);
 
-  const paths = await getPaths(dirs, ide);
-  const writeStream = await initializeWriteStream(repoMapPath);
+  for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
+    const { content } = await processFile(
+      absolutePath,
+      signatures,
+      dirs,
+      options,
+      updatedPathsWithoutSignatures,
+    );
+    batchContent += content;
+  }
+  return { batchContent, updatedPathsWithoutSignatures };
+}
 
-  const curTokens = await processPathsAndSignatures(
-    llm,
-    dirs,
-    options,
-    writeStream,
-    maxRepoMapTokens,
+async function processFile(
+  absolutePath: string,
+  signatures: string[],
+  dirs: string[],
+  options: RepoMapOptions,
+  pathsWithoutSignatures: Set<string>,
+): Promise<{ relativePath: string; content: string }> {
+  const workspaceDir = dirs.find((dir) => absolutePath.startsWith(dir)) || "";
+  const relativePath = path.relative(workspaceDir, absolutePath);
+
+  const fileContent = await fs.promises.readFile(absolutePath, "utf8");
+  const filteredSignatures = signatures.filter(
+    (signature) => !isSnippetSameAsFile(signature, fileContent),
   );
 
-  const remainingPaths = Array.from(paths).join("\n");
-
-  if (remainingPaths.length > 0) {
-    await new Promise((resolve) => writeStream.write(remainingPaths, resolve));
+  if (filteredSignatures.length > 0) {
+    pathsWithoutSignatures.delete(relativePath);
   }
 
-  writeStream.end();
-  console.debug(`Generated repo map for ${dirs.join(", ")} at ${repoMapPath}`);
+  const content = generateContentForPath(
+    relativePath,
+    filteredSignatures,
+    options,
+  );
+  return { relativePath, content };
+}
 
-  if (curTokens >= maxRepoMapTokens) {
+async function writeContentToStream(
+  writeStream: fs.WriteStream,
+  content: string,
+): Promise<void> {
+  await new Promise((resolve) => writeStream.write(content, resolve));
+}
+
+async function writeRemainingPaths(
+  writeStream: fs.WriteStream,
+  remainingPaths: Set<string>,
+): Promise<void> {
+  if (remainingPaths.size > 0) {
+    await new Promise((resolve) =>
+      writeStream.write(Array.from(remainingPaths).join("\n"), resolve),
+    );
+  }
+}
+
+function logRepoMapGeneration(
+  dirs: string[],
+  repoMapPath: string,
+  contentTokens: number,
+  maxRepoMapTokens: number,
+): void {
+  console.debug(`Generated repo map for ${dirs.join(", ")} at ${repoMapPath}`);
+  if (contentTokens >= maxRepoMapTokens) {
     console.debug(
       "Full repo map was unable to be generated due to context window limitations",
     );
   }
+}
+
+async function generateRepoMap(llm: ILLM, ide: IDE, options: RepoMapOptions) {
+  const repoMapPath = getRepoMapFilePath();
+  const dirs = options.dirs ?? (await ide.getWorkspaceDirs());
+  const maxRepoMapTokens = llm.contextLength * REPO_MAX_CONTEXT_LENGTH_RATIO;
+  const writeStream = await initializeWriteStream(repoMapPath);
+
+  const { content, remainingPaths } = await processPathsAndSignatures(
+    llm,
+    dirs,
+    options,
+    maxRepoMapTokens,
+    ide,
+  );
+
+  await writeContentToStream(writeStream, content);
+  await writeRemainingPaths(writeStream, remainingPaths);
+
+  writeStream.end();
+
+  logRepoMapGeneration(
+    dirs,
+    repoMapPath,
+    llm.countTokens(content),
+    maxRepoMapTokens,
+  );
 
   return fs.readFileSync(repoMapPath, "utf8");
 }
