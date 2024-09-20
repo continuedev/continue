@@ -11,7 +11,7 @@ import {
   getBasename,
   getUniqueFilePath,
 } from "../../util";
-import generateRepoMap from "../../util/repoMap";
+import generateRepoMap from "../../util/generateRepoMap";
 
 const ENTIRE_PROJECT_ITEM: ContextSubmenuItem = {
   id: "entire-workspace",

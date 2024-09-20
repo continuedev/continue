@@ -1,7 +1,7 @@
 import { Chunk, ContinueConfig, IDE, ILLM } from "../..";
 import { getModelByRole } from "../../config/util";
 import { stripImages } from "../../llm/images";
-import generateRepoMap from "../../util/repoMap";
+import generateRepoMap from "../../util/generateRepoMap";
 
 export async function requestFilesFromRepoMap(
   defaultLlm: ILLM,
@@ -13,9 +13,10 @@ export async function requestFilesFromRepoMap(
   const llm = getModelByRole(config, "repoMapFileSelection") ?? defaultLlm;
 
   // Only supported for Claude models right now
-  if (!llm.model.toLowerCase().includes("claude")) {
-    return [];
-  }
+  // TODO: Uncomment
+  // if (!llm.model.toLowerCase().includes("claude")) {
+  //   return [];
+  // }
 
   try {
     const repoMap = await generateRepoMap(llm, ide, {
