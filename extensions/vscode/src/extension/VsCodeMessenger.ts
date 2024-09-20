@@ -27,6 +27,7 @@ import {
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { getModelByRole } from "core/config/util";
 
 /**
  * A shared messenger class between Core and Webview
@@ -145,26 +146,26 @@ export class VsCodeMessenger {
       // Get LLM from config
       const configHandler = await configHandlerPromise;
       const config = await configHandler.loadConfig();
-      const modelTitle =
-        config.experimental?.modelRoles?.applyCodeBlock ??
-        (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
-      const llm = config.models.find((model) => model.title === modelTitle);
+
+      let llm = getModelByRole(config, "applyCodeBlock");
+
       if (!llm) {
-        vscode.window.showErrorMessage(
-          `Model ${modelTitle} not found in config.`,
+        const defaultModelTitle = await this.webviewProtocol.request(
+          "getDefaultModelTitle",
+          undefined,
         );
-        return;
+
+        llm = config.models.find((model) => model.title === defaultModelTitle);
+
+        if (!llm) {
+          vscode.window.showErrorMessage(
+            `Model ${defaultModelTitle} not found in config.`,
+          );
+          return;
+        }
       }
 
-      let fastLlm: ILLM | undefined;
-      if (config.experimental?.modelRoles?.repoMapFileSelection) {
-        fastLlm = config.models.find(
-          (model) =>
-            model.title ===
-            config.experimental?.modelRoles?.repoMapFileSelection,
-        );
-      }
-      fastLlm ??= llm;
+      const fastLlm = getModelByRole(config, "repoMapFileSelection") ?? llm;
 
       // Generate the diff and pass through diff manager
       const [instant, diffLines] = await applyCodeBlock(
@@ -179,7 +180,7 @@ export class VsCodeMessenger {
         verticalDiffManager.streamDiffLines(diffLines, instant);
       } else {
         const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
-        verticalDiffManager.streamEdit(prompt, modelTitle);
+        verticalDiffManager.streamEdit(prompt, llm.title);
       }
     });
 

@@ -23,8 +23,10 @@ class OSContextProvider extends BaseContextProvider {
     return [
       {
         description: "Your operating system and CPU",
-        content: `I am running ${platform === "win32" ? "Windows" : platform} on ${cpu}.`,
-        name: "os",
+        content: `I am running ${
+          platform === "win32" ? "Windows" : platform
+        } on ${cpu}.`,
+        name: "Operating System",
       },
     ];
   }

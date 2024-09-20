@@ -1,4 +1,10 @@
-import { ContextProviderWithParams, ModelDescription } from "../";
+import {
+  ContextProviderWithParams,
+  ContinueConfig,
+  ILLM,
+  ModelDescription,
+  ModelRoles,
+} from "../";
 import { editConfigJson } from "../util/paths";
 
 function stringify(obj: any, indentation?: number): string {
@@ -60,4 +66,21 @@ export function deleteModel(title: string) {
     config.models = config.models.filter((m: any) => m.title !== title);
     return config;
   });
+}
+
+export function getModelByRole<T extends keyof ModelRoles>(
+  config: ContinueConfig,
+  role: T,
+): ILLM | undefined {
+  const roleTitle = config.experimental?.modelRoles?.[role];
+
+  if (!roleTitle) {
+    return undefined;
+  }
+
+  const matchingModel = config.models.find(
+    (model) => model.title === roleTitle,
+  );
+
+  return matchingModel;
 }

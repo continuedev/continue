@@ -415,7 +415,9 @@ Reference the outline of your codebase.
 }
 ```
 
-Provides an overview of all files and the call signatures of top-level classes, functions, and methods. This helps the model better understand how a particular piece of code relates to the rest of the codebase.
+Provides a list of files and the call signatures of top-level classes, functions, and methods in those files. This helps the model better understand how a particular piece of code relates to the rest of the codebase.
+
+In the submenu that appears, you can select either `Entire codebase`, or specify a subfolder to generate the repostiory map from.
 
 This context provider is inpsired by [Aider's repository map](https://aider.chat/2023/10/22/repomap.html).
 

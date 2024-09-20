@@ -13,6 +13,8 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
+import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
+import { getIconFromDropdownItem } from "./MentionList";
 
 const ContextItemDiv = styled.div`
   cursor: pointer;
@@ -47,12 +49,20 @@ interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
 }
 
+function filterInstructionContextItem(
+  contextItems: ContextItemsPeekProps["contextItems"],
+) {
+  return contextItems?.filter(
+    (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
+  );
+}
+
 const ContextItemsPeek = (props: ContextItemsPeekProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [open, setOpen] = React.useState(false);
 
-  const ctxItems = props.contextItems;
+  const ctxItems = filterInstructionContextItem(props.contextItems);
 
   if (!ctxItems || ctxItems.length === 0) {
     return null;
@@ -83,6 +93,50 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
       ideMessenger.ide.showVirtualFile(contextItem.name, contextItem.content);
     }
   }
+
+  const getContextItemIcon = (contextItem: ContextItemWithId) => {
+    const dimmensions = "1.4em";
+
+    if (contextItem.icon) {
+      return (
+        <SafeImg
+          className="flex-shrink-0 pr-2"
+          src={contextItem.icon}
+          height={dimmensions}
+          width={dimmensions}
+          fallback={null}
+        />
+      );
+    }
+
+    // Heuristic to check if it's a file
+    const shouldShowFileIcon = contextItem.content.includes("```");
+
+    if (shouldShowFileIcon) {
+      return (
+        <FileIcon
+          filename={
+            contextItem.description.split(" ").shift()?.split("#").shift() || ""
+          }
+          height={dimmensions}
+          width={dimmensions}
+        />
+      );
+    }
+
+    const ProviderIcon = getIconFromDropdownItem(
+      contextItem.id.providerTitle,
+      "contextProvider",
+    );
+
+    return (
+      <ProviderIcon
+        className="flex-shrink-0 pr-2"
+        height={dimmensions}
+        width={dimmensions}
+      />
+    );
+  };
 
   return (
     <div
@@ -118,6 +172,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
         )}
         <ContextItems>{contextItemsText}</ContextItems>
       </div>
+
       {open && (
         <div
           style={{
@@ -125,70 +180,24 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
           }}
         >
           {ctxItems?.map((contextItem, idx) => {
-            if (contextItem.description.startsWith("http")) {
-              return (
-                <a
-                  key={idx}
-                  href={contextItem.description}
-                  target="_blank"
-                  style={{ color: vscForeground, textDecoration: "none" }}
-                >
-                  <ContextItemDiv
-                    onClick={() => {
-                      openContextItem(contextItem);
-                    }}
-                  >
-                    {!!contextItem.icon ? (
-                      <SafeImg
-                        className="flex-shrink-0 pr-2"
-                        src={contextItem.icon}
-                        height="18em"
-                        width="18em"
-                        fallback={null}
-                      />
-                    ) : (
-                      <FileIcon
-                        filename={
-                          contextItem.description
-                            .split(" ")
-                            .shift()
-                            ?.split("#")
-                            .shift() || ""
-                        }
-                        height="1.6em"
-                        width="1.6em"
-                      ></FileIcon>
-                    )}
-                    {contextItem.name}
-                  </ContextItemDiv>
-                </a>
-              );
-            }
-
-            return (
-              <ContextItemDiv
-                key={idx}
-                onClick={() => {
-                  openContextItem(contextItem);
-                }}
-              >
-                {!!contextItem.icon ? (
-                  <SafeImg
-                    className="flex-shrink-0 pr-2"
-                    src={contextItem.icon}
-                    height="18em"
-                    width="18em"
-                    fallback={null}
-                  />
-                ) : (
-                  <FileIcon
-                    filename={contextItem.description.split(" ").shift()!}
-                    height="1.6em"
-                    width="1.6em"
-                  ></FileIcon>
-                )}
+            const contextItemContent = (
+              <ContextItemDiv onClick={() => openContextItem(contextItem)}>
+                {getContextItemIcon(contextItem)}
                 {contextItem.name}
               </ContextItemDiv>
+            );
+
+            return contextItem.description.startsWith("http") ? (
+              <a
+                key={idx}
+                href={contextItem.description}
+                target="_blank"
+                style={{ color: vscForeground, textDecoration: "none" }}
+              >
+                {contextItemContent}
+              </a>
+            ) : (
+              <React.Fragment key={idx}>{contextItemContent}</React.Fragment>
             );
           })}
         </div>
