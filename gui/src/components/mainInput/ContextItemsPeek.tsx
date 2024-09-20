@@ -13,7 +13,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
-import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers";
+import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 
 const ContextItemDiv = styled.div`
   cursor: pointer;

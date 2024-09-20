@@ -30,7 +30,7 @@ import RepoMapContextProvider from "./RepoMapContextProvider";
  *
  * See this issue for details: https://github.com/continuedev/continue/issues/1365
  */
-const Providers: (typeof BaseContextProvider)[] = [
+export const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,
@@ -60,9 +60,3 @@ export function contextProviderClassFromName(
 ): typeof BaseContextProvider | undefined {
   return Providers.find((cls) => cls.description.title === name);
 }
-
-export const INSTRUCTIONS_BASE_ITEM: ContextItem = {
-  name: "Instructions",
-  description: "Instructions",
-  content: "",
-};

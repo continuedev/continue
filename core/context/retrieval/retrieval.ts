@@ -2,7 +2,7 @@ import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
 import { getRelativePath } from "../../util/";
-import { INSTRUCTIONS_BASE_ITEM } from "../providers/";
+import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline";
 import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline";
 import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline";

@@ -115,7 +115,7 @@ async function generateRepoMap(llm: ILLM, ide: IDE, options?: RepoMapOptions) {
   }
 
   writeStream.end();
-  console.debug(`Generated repo map at ${repoMapPath}`);
+  console.debug(`Generated repo map for ${dirs.join(", ")} at ${repoMapPath}`);
 
   if (curTokens >= maxRepoMapTokens) {
     console.debug(

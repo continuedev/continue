@@ -1,4 +1,4 @@
-import { INSTRUCTIONS_BASE_ITEM } from ".";
+import { INSTRUCTIONS_BASE_ITEM } from "./utils";
 import { BaseContextProvider } from "../";
 import {
   Chunk,
