@@ -93,18 +93,35 @@ class RepoMapGenerator {
   ): Promise<void> {
     for (const [absolutePath, signatures] of Object.entries(groupedByPath)) {
       const content = await this.processFile(absolutePath, signatures);
-      await this.writeToStream(content);
+
+      if (content) {
+        await this.writeToStream(content);
+      }
     }
   }
 
   private async processFile(
     absolutePath: string,
     signatures: string[],
-  ): Promise<string> {
+  ): Promise<string | undefined> {
     const workspaceDir =
       this.repoMapDirs.find((dir) => absolutePath.startsWith(dir)) || "";
     const relativePath = path.relative(workspaceDir, absolutePath);
-    const fileContent = await fs.promises.readFile(absolutePath, "utf8");
+
+    let fileContent: string;
+
+    try {
+      fileContent = await fs.promises.readFile(absolutePath, "utf8");
+    } catch (err) {
+      console.error(
+        "Failed to read file:\n" +
+          `  Path: ${absolutePath}\n` +
+          `  Error: ${err instanceof Error ? err.message : String(err)}`,
+      );
+
+      return;
+    }
+
     const filteredSignatures = signatures.filter(
       (signature) => signature.trim() !== fileContent.trim(),
     );

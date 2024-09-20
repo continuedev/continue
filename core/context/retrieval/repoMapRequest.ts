@@ -13,10 +13,9 @@ export async function requestFilesFromRepoMap(
   const llm = getModelByRole(config, "repoMapFileSelection") ?? defaultLlm;
 
   // Only supported for Claude models right now
-  // TODO: Uncomment
-  // if (!llm.model.toLowerCase().includes("claude")) {
-  //   return [];
-  // }
+  if (!llm.model.toLowerCase().includes("claude")) {
+    return [];
+  }
 
   try {
     const repoMap = await generateRepoMap(llm, ide, {
