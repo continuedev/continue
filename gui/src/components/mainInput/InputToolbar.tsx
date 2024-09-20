@@ -38,6 +38,8 @@ const StyledDiv = styled.div<{ isHidden: boolean }>`
   opacity: ${(props) => (props.isHidden ? 0 : 1)};
   pointer-events: ${(props) => (props.isHidden ? "none" : "auto")};
 
+  user-select: none;
+
   & > * {
     flex: 0 0 auto;
   }
