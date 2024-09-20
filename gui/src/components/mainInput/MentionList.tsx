@@ -69,7 +69,6 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
 };
 
 export function getIconFromDropdownItem(id: string, type: ComboBoxItemType) {
-  debugger;
   return (
     ICONS_FOR_DROPDOWN[id] ??
     (type === "contextProvider" ? AtSymbolIcon : BoltIcon)
@@ -83,15 +82,10 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     );
   }
 
-  const provider = (() => {
-    switch (props.item.type) {
-      case "contextProvider":
-      case "slashCommand":
-        return props.item.id;
-      default:
-        return props.item.type;
-    }
-  })();
+  const provider =
+    props.item.type === "contextProvider" || props.item.type === "slashCommand"
+      ? props.item.id
+      : props.item.type;
 
   const IconComponent = getIconFromDropdownItem(provider, props.item.type);
 

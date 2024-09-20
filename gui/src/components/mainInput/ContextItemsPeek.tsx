@@ -109,26 +109,29 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
       );
     }
 
-    const ProviderIcon = getIconFromDropdownItem(
-      contextItem.id.providerTitle,
-      "contextProvider",
-    );
+    // Heuristic to check if it's a file
+    const shouldShowFileIcon = contextItem.content.includes("```");
 
-    if (ProviderIcon) {
+    if (shouldShowFileIcon) {
       return (
-        <ProviderIcon
-          className="flex-shrink-0 pr-2"
+        <FileIcon
+          filename={
+            contextItem.description.split(" ").shift()?.split("#").shift() || ""
+          }
           height={dimmensions}
           width={dimmensions}
         />
       );
     }
 
+    const ProviderIcon = getIconFromDropdownItem(
+      contextItem.id.providerTitle,
+      "contextProvider",
+    );
+
     return (
-      <FileIcon
-        filename={
-          contextItem.description.split(" ").shift()?.split("#").shift() || ""
-        }
+      <ProviderIcon
+        className="flex-shrink-0 pr-2"
         height={dimmensions}
         width={dimmensions}
       />

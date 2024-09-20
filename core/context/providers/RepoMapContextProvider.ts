@@ -14,9 +14,9 @@ import {
 import generateRepoMap from "../../util/generateRepoMap";
 
 const ENTIRE_PROJECT_ITEM: ContextSubmenuItem = {
-  id: "entire-workspace",
-  title: "Entire workspace",
-  description: "Search the entire workspace",
+  id: "entire-codebase",
+  title: "Entire codebase",
+  description: "Search the entire codebase",
 };
 
 class RepoMapContextProvider extends BaseContextProvider {

@@ -3,6 +3,32 @@ import { getModelByRole } from "../../config/util";
 import { stripImages } from "../../llm/images";
 import generateRepoMap from "../../util/generateRepoMap";
 
+const SUPPORTED_MODEL_TITLE_FAMILIES = [
+  "claude-3",
+  "llama3.1",
+  "gemini-1.5",
+  "gpt-4",
+];
+
+function isSupportedModel(
+  config: ContinueConfig,
+  modelTitle?: string,
+): boolean {
+  if (config.experimental?.modelRoles?.applyCodeBlock) {
+    return true;
+  }
+
+  if (!modelTitle) {
+    return false;
+  }
+
+  const lowercaseModelTitle = modelTitle.toLowerCase();
+
+  return SUPPORTED_MODEL_TITLE_FAMILIES.some((title) =>
+    lowercaseModelTitle.includes(title),
+  );
+}
+
 export async function requestFilesFromRepoMap(
   defaultLlm: ILLM,
   config: ContinueConfig,
@@ -13,7 +39,7 @@ export async function requestFilesFromRepoMap(
   const llm = getModelByRole(config, "repoMapFileSelection") ?? defaultLlm;
 
   // Only supported for Claude models right now
-  if (!llm.model.toLowerCase().includes("claude")) {
+  if (!isSupportedModel(config, llm.title)) {
     return [];
   }
 
