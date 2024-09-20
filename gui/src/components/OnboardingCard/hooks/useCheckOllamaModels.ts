@@ -1,6 +1,7 @@
 import { useContext, useEffect } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
+import { withExponentialBackoff } from "core/util/withExponentialBackoff";
 
 const CHECK_OLLAMA_CONNECTION_INTERVAL = 1000;
 
@@ -11,9 +12,11 @@ export const useCheckOllamaModels = (
 
   useEffect(() => {
     const fetchDownloadedModels = async () => {
-      const result = (await ideMessenger.request("llm/listModels", {
-        title: ONBOARDING_LOCAL_MODEL_TITLE,
-      })) as any;
+      const result = await withExponentialBackoff(() =>
+        ideMessenger.request("llm/listModels", {
+          title: ONBOARDING_LOCAL_MODEL_TITLE,
+        })
+      );
 
       if (result.status === "success") {
         const models = result.content;
