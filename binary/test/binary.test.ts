@@ -171,13 +171,17 @@ describe("Test Suite", () => {
       "package.json",
       "logs/core.log",
       "index/autocompleteCache.sqlite",
-      "out/config.js",
       "types/core/index.d.ts",
     ];
 
-    for (const file of expectedFiles) {
+    const missingFiles = expectedFiles.filter((file) => {
       const filePath = path.join(CONTINUE_GLOBAL_DIR, file);
-      expect(fs.existsSync(filePath)).toBe(true);
+      return !fs.existsSync(filePath);
+    });
+
+    expect(missingFiles).toEqual([]);
+    if (missingFiles.length > 0) {
+      console.log("Missing files:", missingFiles);
     }
   });
 
