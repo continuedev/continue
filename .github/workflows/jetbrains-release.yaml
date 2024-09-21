@@ -334,7 +334,7 @@ jobs:
 
       - name: Upload logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
           path: binary/.continue/logs/core.log
