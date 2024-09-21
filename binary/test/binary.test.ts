@@ -83,7 +83,7 @@ describe("Test Suite", () => {
         fs.chmodSync(binaryPath, 0o755);
         console.log("Execute permissions set for the binary");
 
-        if (false && platform === "darwin") {
+        if (platform === "darwin") {
           const indexNodePath = path.join(binaryDir, "index.node");
           const filesToUnquarantine = [binaryPath, indexNodePath];
 
@@ -118,6 +118,7 @@ describe("Test Suite", () => {
         subprocess = spawn(binaryPath, {
           env: { ...process.env, CONTINUE_GLOBAL_DIR },
         });
+        console.log("Successfully spawned subprocess");
       } catch (error) {
         console.error("Error spawning subprocess:", error);
         throw error;
