@@ -83,7 +83,7 @@ describe("Test Suite", () => {
         fs.chmodSync(binaryPath, 0o755);
         console.log("Execute permissions set for the binary");
 
-        if (platform === "darwin") {
+        if (false && platform === "darwin") {
           const indexNodePath = path.join(binaryDir, "index.node");
           const filesToUnquarantine = [binaryPath, indexNodePath];
 
