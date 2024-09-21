@@ -254,23 +254,23 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            platform: win32
-            arch: x64
-            npm_config_arch: x64
-          - os: ubuntu-latest
-            platform: linux
-            arch: x64
-            npm_config_arch: x64
+          # - os: windows-latest
+          #   platform: win32
+          #   arch: x64
+          #   npm_config_arch: x64
+          # - os: ubuntu-latest
+          #   platform: linux
+          #   arch: x64
+          #   npm_config_arch: x64
           # arm64 not actually supported by GitHub
           # - os: ubuntu-latest
           #   platform: linux
           #   arch: arm64
           #   npm_config_arch: arm64
-          - os: macos-12
-            platform: darwin
-            arch: x64
-            npm_config_arch: x64
+          # - os: macos-12
+          #   platform: darwin
+          #   arch: x64
+          #   npm_config_arch: x64
           - os: macos-latest
             platform: darwin
             arch: arm64
