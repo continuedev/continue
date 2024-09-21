@@ -54,17 +54,14 @@ function OnboardingLocalTab() {
 
   useCheckOllamaModels((models) => {
     setDownloadedOllamaModels(models);
-  });
-
-  function onConnectionVerified() {
     setIsOllamaConnected(true);
-  }
+  });
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col">
         <p className="text-lg font-bold leading-tight mb-2">Install Ollama</p>
-        <OllamaStatus onConnectionVerified={onConnectionVerified} />
+        <OllamaStatus isOllamaConnected={isOllamaConnected} />
       </div>
 
       <OllamaModelDownload

@@ -5,30 +5,26 @@ import {
 import { useState, useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import { useCheckOllamaModels } from "../hooks/useCheckOllamaModels";
 import { StyledActionButton } from "../..";
 import OllamaCompletedStep from "./OllamaCompletedStep";
 import { OllamaConnectionStatuses } from "../utils";
 
 interface OllamaStatusProps {
-  onConnectionVerified: () => void;
+  isOllamaConnected: boolean;
 }
 
 const {
   ollama: { downloadUrl },
 } = providers;
 
-export function OllamaStatus({ onConnectionVerified }: OllamaStatusProps) {
+export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [status, setStatus] = useState<OllamaConnectionStatuses>(
-    OllamaConnectionStatuses.WaitingToDownload,
+    isOllamaConnected
+      ? OllamaConnectionStatuses.Connected
+      : OllamaConnectionStatuses.WaitingToDownload,
   );
-
-  useCheckOllamaModels((models) => {
-    setStatus(OllamaConnectionStatuses.Verified);
-    onConnectionVerified();
-  });
 
   function onClickDownload() {
     ideMessenger.post("openUrl", downloadUrl);
@@ -52,7 +48,7 @@ export function OllamaStatus({ onConnectionVerified }: OllamaStatusProps) {
           <ArrowPathIcon className="h-4 w-4 animate-spin-slow mr-1" />
         </div>
       );
-    case OllamaConnectionStatuses.Verified:
+    case OllamaConnectionStatuses.Connected:
       return (
         <OllamaCompletedStep text="Ollama is running at http://localhost:11434" />
       );
