@@ -42,6 +42,7 @@ import com.intellij.util.concurrency.annotations.RequiresEdt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.*
@@ -883,52 +884,6 @@ class IdeProtocolClient (
         return arrayOf()
     }
 
-    private fun listDirectoryContents(directory: String?): List<String> {
-        val dirs: Array<String>;
-        if (directory != null) {
-            dirs = arrayOf(directory)
-        } else {
-            dirs = workspaceDirectories()
-        }
-
-        val contents = ArrayList<String>()
-        for (dir in dirs) {
-            if (DEFAULT_IGNORE_DIRS.any { dir.contains(it) }) {
-                continue
-            }
-
-            val workspacePath = File(dir)
-            val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
-
-            if (workspaceDir != null) {
-                val filter = object : VirtualFileFilter {
-                    override fun accept(file: VirtualFile): Boolean {
-                        if (file.isDirectory) {
-                            return !shouldIgnoreDirectory(file.name)
-                        } else {
-                            val filePath = file.path
-                            return !shouldIgnoreDirectory(filePath) && !DEFAULT_IGNORE_FILETYPES.any { filePath.endsWith(it) }
-                        }
-                    }
-                }
-                VfsUtil.iterateChildrenRecursively(workspaceDir, filter) { virtualFile: VirtualFile ->
-                    if (!virtualFile.isDirectory) {
-                        contents.add(virtualFile.path)
-
-                        // Set a hard limit on the number of files to list
-                        if (contents.size > 10000) {
-                            // Completely exit the iteration
-                            return@iterateChildrenRecursively false
-                        }
-                    }
-                    true
-                }
-            }
-        }
-
-        return contents
-    }
-
     private fun saveFile(filepath: String) {
         ApplicationManager.getApplication().invokeLater {
             val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return@invokeLater
@@ -986,7 +941,8 @@ class IdeProtocolClient (
         return virtualFile?.path
     }
 
-    fun showMessage(msg: String) {
+suspend fun showMessage(msg: String) {
+    withContext(Dispatchers.Main) {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
 
         JBPopupFactory.getInstance()
@@ -999,6 +955,7 @@ class IdeProtocolClient (
                 Balloon.Position.atRight
             )
     }
+}
 
     fun highlightCode(rangeInFile: RangeInFile, color: String?) {
         val file =

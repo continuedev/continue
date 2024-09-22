@@ -30,7 +30,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.roots.ModuleRootManager
 
-fun showTutorial(project: Project) {
+suspend fun showTutorial(project: Project) {
     ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
         if (`is` == null) {
             throw IOException("Resource not found: continue_tutorial.py")
@@ -40,6 +40,9 @@ fun showTutorial(project: Project) {
             content = content.replace("⌘", "⌃")
         }
         val filepath = Paths.get(getContinueGlobalPath(), "continue_tutorial.py").toString()
+        withContext(Dispatchers.IO) {
+            File(filepath).writeText(content)
+        }
         File(filepath).writeText(content)
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
 

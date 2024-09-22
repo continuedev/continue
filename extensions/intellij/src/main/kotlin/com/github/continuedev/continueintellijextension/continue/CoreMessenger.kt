@@ -7,6 +7,10 @@ import com.github.continuedev.continueintellijextension.toolWindow.MessageTypes
 import com.google.gson.Gson
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.*
 import java.net.Socket
 import java.nio.charset.StandardCharsets
@@ -196,7 +200,9 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 }
 
                 println("Core process exited with output: $err")
-                ideProtocolClient.showMessage("Core process exited with output: $err")
+                CoroutineScope(Dispatchers.Main).launch {
+                    ideProtocolClient.showMessage("Core process exited with output: $err")
+                }
 
                 // Log the cause of the failure
                 val telemetryService = service<TelemetryService>()
