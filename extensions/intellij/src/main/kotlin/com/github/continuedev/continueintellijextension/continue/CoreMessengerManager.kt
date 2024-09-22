@@ -55,7 +55,7 @@ class CoreMessengerManager(private val project: Project, private val ideProtocol
     }
 
     private fun setupCoreMessenger(esbuildPath: String, continueCorePath: String): Unit {
-        coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient)
+        coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient, coroutineScope)
 
         coreMessenger?.request("config/getSerializedProfileInfo", null, null) { resp ->
             val data = resp as? Map<String, Any>
