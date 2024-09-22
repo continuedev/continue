@@ -703,6 +703,9 @@ ${prompt}`;
         this.providerName,
         autodetectTemplateType(this.model),
       );
+      if (!templateMessages) {
+        return rendered;
+      }
       return templateMessages(rendered);
     }
     return rendered;
