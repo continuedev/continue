@@ -41,6 +41,24 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
   },
 };
 
+// https://github.com/QwenLM/Qwen2.5-Coder?tab=readme-ov-file#3-file-level-code-completion-fill-in-the-middle
+const qwenCoderFimTemplate: AutocompleteTemplate = {
+  template:
+    "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  completionOptions: {
+    stop: [
+      "<|fim_prefix|>",
+      "<|fim_middle|>",
+      "<|fim_suffix|>",
+      "<|fim_pad|>",
+      "<|repo_name|>",
+      "<|file_sep|>",
+      "<|im_start|>",
+      "<|im_end|>",
+    ],
+  },
+};
+
 const codestralFimTemplate: AutocompleteTemplate = {
   template: "[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
   completionOptions: {
@@ -317,6 +335,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
   // if (lowerCaseModel.includes("starcoder2")) {
   //   return starcoder2FimTemplate;
   // }
+
+  if (lowerCaseModel.includes("qwen") && lowerCaseModel.includes("coder")) {
+    return qwenCoderFimTemplate;
+  }
 
   if (
     lowerCaseModel.includes("starcoder") ||
