@@ -169,9 +169,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
                             ),"#00ff0022")
                 }
                 "showTutorial" -> {
-                    coroutineScope.launch {
-                        showTutorial(project)
-                    }
+                    showTutorial(project)
                 }
                 "showVirtualFile" -> {
                     val data = data.asJsonObject
