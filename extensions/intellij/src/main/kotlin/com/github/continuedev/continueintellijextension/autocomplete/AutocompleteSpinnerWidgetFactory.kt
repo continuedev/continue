@@ -30,6 +30,7 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
             IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading5(RiderLight).svg", javaClass),
             IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading6(RiderLight).svg", javaClass),
             IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading7(RiderLight).svg", javaClass),
+            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading8(RiderLight).svg", javaClass),
     )
 
     init {

@@ -41,7 +41,6 @@ fun showTutorial(project: Project) {
         }
         val filepath = Paths.get(getContinueGlobalPath(), "continue_tutorial.py").toString()
         File(filepath).writeText(content)
-        File(filepath).writeText(content)
         val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
 
 
