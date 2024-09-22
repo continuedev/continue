@@ -1,4 +1,5 @@
 import { ContextSubmenuItem } from "core";
+import { WebviewMessengerResult } from "core/protocol/util";
 import {
   deduplicateArray,
   getBasename,
@@ -10,9 +11,8 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { useWebviewListener } from "./useWebviewListener";
-import { WebviewMessengerResult } from "core/protocol/util";
 import { getLocalStorage } from "../util/localStorage";
+import { useWebviewListener } from "./useWebviewListener";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -188,18 +188,6 @@ function useSubmenuContextProviders() {
         console.debug("Current fallbackResults:", fallbackResults);
         console.debug("Current minisearches:", Object.keys(minisearches));
 
-        if (!initialLoadComplete) {
-          console.debug("Initial load not complete, returning loading state");
-          return [
-            {
-              id: "loading",
-              title: "Loading...",
-              description: "Please wait while items are being loaded",
-              providerTitle: providerTitle || "unknown",
-            },
-          ];
-        }
-
         try {
           const results = getSubmenuSearchResults(providerTitle, query);
           if (results.length === 0) {
@@ -211,6 +199,21 @@ function useSubmenuContextProviders() {
                   providerTitle,
                 };
               });
+
+            if (fallbackItems.length === 0 && !initialLoadComplete) {
+              console.debug(
+                "Initial load not complete, returning loading state",
+              );
+              return [
+                {
+                  id: "loading",
+                  title: "Loading...",
+                  description: "Please wait while items are being loaded",
+                  providerTitle: providerTitle || "unknown",
+                },
+              ];
+            }
+
             console.debug("Using fallback results:", fallbackItems.length);
             console.debug("Fallback items:", fallbackItems);
             return fallbackItems;

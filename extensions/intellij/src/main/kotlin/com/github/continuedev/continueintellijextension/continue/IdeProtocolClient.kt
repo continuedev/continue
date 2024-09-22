@@ -39,10 +39,7 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.concurrency.annotations.RequiresEdt
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.*
@@ -347,6 +344,16 @@ class IdeProtocolClient (
                         respond(workspaceDirectories())
                     }
 
+                    "getTags" -> {
+                        val artifactId = data as? String
+                        if (artifactId == null) {
+                            respond(emptyList<Any>())
+                            return@launch
+                        }
+                        val tags = getTags(artifactId)
+                        respond(tags)
+                    }
+
                     "getWorkspaceConfigs" -> {
                         val workspaceDirs = workspaceDirectories()
 
@@ -474,15 +481,8 @@ class IdeProtocolClient (
                     "getBranch" -> {
                         // Get the current branch name
                         val dir = (data as Map<String, Any>)["dir"] as String
-                        val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-                        builder.directory(File(dir))
-                        val process = builder.start()
-
-                        val reader = BufferedReader(InputStreamReader(process.inputStream))
-                        val output = reader.readLine()
-                        process.waitFor()
-
-                        respond(output ?: "NONE")
+                        val branch = getBranch(dir)
+                        respond(branch)
                     }
                     "getRepoName" -> {
                         // Get the current repository name
@@ -740,6 +740,41 @@ class IdeProtocolClient (
 
     fun uniqueId(): String {
         return getMachineUniqueID()
+    }
+
+    suspend fun getBranch(dir: String): String = withContext(Dispatchers.IO) {
+        try {
+            val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
+            builder.directory(File(dir))
+            val process = builder.start()
+
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val output = reader.readLine()
+
+            process.waitFor()
+
+            output ?: "NONE"
+        } catch (e: Exception) {
+            "NONE"
+        }
+    }
+
+    data class IndexTag(val directory: String, val branch: String, val artifactId: String)
+
+    suspend fun getTags(artifactId: String): List<IndexTag> {
+        val workspaceDirs = workspaceDirectories()
+
+        // Collect branches concurrently using Kotlin coroutines
+        val branches = withContext(Dispatchers.IO) {
+            workspaceDirs.map { dir ->
+                async { getBranch(dir) }
+            }.map { it.await() }
+        }
+
+        // Create the list of IndexTag objects
+        return workspaceDirs.mapIndexed { index, directory ->
+            IndexTag(directory, branches[index], artifactId)
+        }
     }
 
     fun readFile(filepath: String): String {
