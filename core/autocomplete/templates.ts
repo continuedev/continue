@@ -54,7 +54,7 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
       "<|repo_name|>",
       "<|file_sep|>",
       "<|im_start|>",
-      "<|im_end|",
+      "<|im_end|>",
     ],
   },
 };
