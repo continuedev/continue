@@ -41,6 +41,7 @@ class ContinueSettingsComponent: DumbAware {
 
         panel.add(JLabel("Remote Config Server URL:"), constraints)
         constraints.gridy++
+        constraints.gridy++
         panel.add(remoteConfigServerUrl, constraints)
         constraints.gridy++
         panel.add(JLabel("Remote Config Sync Period (in minutes):"), constraints)

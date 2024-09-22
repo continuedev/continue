@@ -35,6 +35,7 @@ class MessageTypes {
             "getProblems",
             "subprocess",
             "getBranch",
+            "getTags",
             "getIdeInfo",
             "getIdeSettings",
             "errorPopup",

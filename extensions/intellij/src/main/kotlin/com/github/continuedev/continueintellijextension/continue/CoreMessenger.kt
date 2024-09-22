@@ -7,6 +7,7 @@ import com.github.continuedev.continueintellijextension.toolWindow.MessageTypes
 import com.google.gson.Gson
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.*
 import java.io.*
 import java.net.Socket
 import java.nio.charset.StandardCharsets
@@ -14,7 +15,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
+class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient, private val coroutineScope: CoroutineScope) {
     private var writer: Writer? = null
     private var reader: BufferedReader? = null
     private var process: Process? = null
@@ -169,8 +170,10 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             }
         } else {
             // Set proper permissions
-            setPermissions(continueCorePath)
-            setPermissions(esbuildPath)
+            coroutineScope.launch(Dispatchers.IO) {
+                setPermissions(continueCorePath)
+                setPermissions(esbuildPath)
+            }
 
             // Start the subprocess
             val processBuilder = ProcessBuilder(continueCorePath)
@@ -196,7 +199,9 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 }
 
                 println("Core process exited with output: $err")
-                ideProtocolClient.showMessage("Core process exited with output: $err")
+                CoroutineScope(Dispatchers.Main).launch {
+                    ideProtocolClient.showMessage("Core process exited with output: $err")
+                }
 
                 // Log the cause of the failure
                 val telemetryService = service<TelemetryService>()
@@ -210,7 +215,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 process?.destroy()
             }
 
-            Thread {
+            coroutineScope.launch(Dispatchers.IO) {
                 try {
                     while (true) {
                         val line = reader?.readLine()
@@ -222,7 +227,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                                 println(e)
                             }
                         } else {
-                            Thread.sleep(100)
+                            delay(100)
                         }
                     }
                 } catch (e: IOException) {
@@ -238,7 +243,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                         e.printStackTrace()
                     }
                 }
-            }.start()
+            }
         }
     }
 }
