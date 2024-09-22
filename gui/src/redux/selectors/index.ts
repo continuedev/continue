@@ -8,7 +8,7 @@ export const selectSlashCommands = createSelector(
     return (
       slashCommands?.map((cmd) => {
         return {
-          title: `/${cmd.name.charAt(0).toUpperCase() + cmd.name.slice(1)}`,
+          title: `/${cmd.name}`,
           description: cmd.description,
           type: "slashCommand" as ComboBoxItemType,
         };
