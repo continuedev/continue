@@ -5,9 +5,6 @@
 name: JetBrains Release
 
 on:
-  push:
-    branches:
-      - nate/jetbrains-updates
   release:
     types: [prereleased]
 
@@ -20,24 +17,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # check_release_name:
-  #   runs-on: ubuntu-latest
-  #   outputs:
-  #     should_run: ${{ steps.check.outputs.should_run }}
-  #   steps:
-  #     - id: check
-  #       working-directory: .
-  #       run: |
-  #         if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
-  #           echo "should_run=true" >> $GITHUB_OUTPUT
-  #         else
-  #           echo "should_run=false" >> $GITHUB_OUTPUT
-  #         fi
+  check_release_name:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        working-directory: .
+        run: |
+          if [[ "${{ github.event.release.tag_name }}" == v0.0.*-jetbrains ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
 
   # Prepare and publish the plugin to JetBrains Marketplace repository
   build:
-    # needs: check_release_name
-    # if: needs.check_release_name.outputs.should_run == 'true'
+    needs: check_release_name
+    if: needs.check_release_name.outputs.should_run == 'true'
     name: Build Plugin
     runs-on: macos-latest
     permissions:
@@ -177,24 +174,24 @@ jobs:
       - name: Build plugin
         run: ./gradlew buildPlugin
 
-      # # Publish the plugin to JetBrains Marketplace
-      # - name: Publish EAP Plugin
-      #   env:
-      #     PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
-      #     CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
-      #     PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
-      #     PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
-      #     RELEASE_CHANNEL: eap
-      #   run: ./gradlew publishPlugin
+      # Publish the plugin to JetBrains Marketplace
+      - name: Publish EAP Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: eap
+        run: ./gradlew publishPlugin
 
-      # - name: Publish Stable Plugin
-      #   env:
-      #     PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
-      #     CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
-      #     PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
-      #     PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
-      #     RELEASE_CHANNEL: default
-      #   run: ./gradlew publishPlugin
+      - name: Publish Stable Plugin
+        env:
+          PUBLISH_TOKEN: ${{ secrets.JETBRAINS_PUBLISH_TOKEN }}
+          CERTIFICATE_CHAIN: ${{ secrets.JETBRAINS_CERTIFICATE_CHAIN }}
+          PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
+          PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
+          RELEASE_CHANNEL: default
+        run: ./gradlew publishPlugin
 
       # Prepare plugin archive content for creating artifact
       - name: Prepare Plugin Artifact
@@ -254,23 +251,23 @@ jobs:
     strategy:
       matrix:
         include:
-          # - os: windows-latest
-          #   platform: win32
-          #   arch: x64
-          #   npm_config_arch: x64
-          # - os: ubuntu-latest
-          #   platform: linux
-          #   arch: x64
-          #   npm_config_arch: x64
+          - os: windows-latest
+            platform: win32
+            arch: x64
+            npm_config_arch: x64
+          - os: ubuntu-latest
+            platform: linux
+            arch: x64
+            npm_config_arch: x64
           # arm64 not actually supported by GitHub
           # - os: ubuntu-latest
           #   platform: linux
           #   arch: arm64
           #   npm_config_arch: arm64
-          # - os: macos-12
-          #   platform: darwin
-          #   arch: x64
-          #   npm_config_arch: x64
+          - os: macos-12
+            platform: darwin
+            arch: x64
+            npm_config_arch: x64
           - os: macos-latest
             platform: darwin
             arch: arm64
