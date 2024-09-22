@@ -175,31 +175,29 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
             })
 
-            GlobalScope.async(Dispatchers.IO) {
-                val listener =
-                        ContinuePluginSelectionListener(
-                                ideProtocolClient,
-                                coroutineScope
-                        )
+            val listener =
+                    ContinuePluginSelectionListener(
+                            ideProtocolClient,
+                            coroutineScope
+                    )
 
-                // Reload the WebView
-                continuePluginService?.let { pluginService ->
-                    val allModulePaths = ModuleManager.getInstance(project).modules
-                        .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.path } }
-                        .map { Paths.get(it).normalize() }
+            // Reload the WebView
+            continuePluginService?.let { pluginService ->
+                val allModulePaths = ModuleManager.getInstance(project).modules
+                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.path } }
+                    .map { Paths.get(it).normalize() }
 
-                    val topLevelModulePaths = allModulePaths
-                        .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
-                        .map { it.toString() }
+                val topLevelModulePaths = allModulePaths
+                    .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
+                    .map { it.toString() }
 
-                    pluginService.workspacePaths = topLevelModulePaths.toTypedArray()
-                }
-
-                EditorFactory.getInstance().eventMulticaster.addSelectionListener(
-                        listener,
-                        this@ContinuePluginStartupActivity
-                )
+                pluginService.workspacePaths = topLevelModulePaths.toTypedArray()
             }
+
+            EditorFactory.getInstance().eventMulticaster.addSelectionListener(
+                    listener,
+                    this@ContinuePluginStartupActivity
+            )
 
             val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient)
             continuePluginService.coreMessengerManager = coreMessengerManager
