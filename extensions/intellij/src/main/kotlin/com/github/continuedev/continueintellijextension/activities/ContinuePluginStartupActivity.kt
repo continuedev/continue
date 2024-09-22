@@ -199,7 +199,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                     this@ContinuePluginStartupActivity
             )
 
-            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient)
+            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)
             continuePluginService.coreMessengerManager = coreMessengerManager
         }
     }

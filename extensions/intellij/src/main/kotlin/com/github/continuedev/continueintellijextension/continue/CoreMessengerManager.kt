@@ -7,18 +7,16 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.project.Project
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
+import kotlinx.coroutines.*
 import java.nio.file.Paths
 
-class CoreMessengerManager(private val project: Project, private val ideProtocolClient: IdeProtocolClient) {
+class CoreMessengerManager(private val project: Project, private val ideProtocolClient: IdeProtocolClient, private val coroutineScope: CoroutineScope) {
 
     var coreMessenger: CoreMessenger? = null
     var lastBackoffInterval = 0.5
 
     init {
-        GlobalScope.async(Dispatchers.IO) {
+        coroutineScope.launch {
             val continuePluginService = ServiceManager.getService(
                 project,
                 ContinuePluginService::class.java
