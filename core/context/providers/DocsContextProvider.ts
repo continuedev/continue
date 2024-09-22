@@ -1,3 +1,4 @@
+import { INSTRUCTIONS_BASE_ITEM } from "./utils";
 import { BaseContextProvider } from "../";
 import {
   Chunk,
@@ -149,8 +150,7 @@ class DocsContextProvider extends BaseContextProvider {
         }))
         .reverse(),
       {
-        name: "Instructions",
-        description: "Instructions",
+        ...INSTRUCTIONS_BASE_ITEM,
         content:
           "Use the above documentation to answer the following question. You should not reference " +
           "anything outside of what is shown, unless it is a commonly known concept. Reference URLs " +

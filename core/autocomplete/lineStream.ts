@@ -1,6 +1,6 @@
 import { distance } from "fastest-levenshtein";
-import { LineStream } from "../diff/util";
 import { DiffLine } from "../";
+import { LineStream } from "../diff/util";
 
 export type LineFilter = (args: {
   lines: LineStream;
@@ -238,9 +238,10 @@ export async function* stopAtSimilarLine(
 export async function* stopAtLines(
   stream: LineStream,
   fullStop: () => void,
+  linesToStopAt: string[] = LINES_TO_STOP_AT,
 ): LineStream {
   for await (const line of stream) {
-    if (LINES_TO_STOP_AT.some((stopAt) => line.trim().includes(stopAt))) {
+    if (linesToStopAt.some((stopAt) => line.trim().includes(stopAt))) {
       fullStop();
       break;
     }
@@ -382,6 +383,17 @@ export async function* filterEnglishLinesAtEnd(lines: LineStream) {
   }
 }
 
+export async function* filterLeadingNewline(lines: LineStream): LineStream {
+  let firstLine = true;
+  for await (const line of lines) {
+    if (firstLine && line.trim() === "") {
+      firstLine = false;
+      continue;
+    }
+    yield line;
+  }
+}
+
 /**
  * Removes leading indentation from the first line of a CodeLlama output.
  * @param {LineStream} lines - The input stream of lines.
@@ -481,4 +493,20 @@ export async function* stopAtRepeatingLines(
     }
     previousLine = line;
   }
+}
+
+/**
+ * Pass-through, except logs the total output at the end
+ * @param lines a `LineStream`
+ */
+export async function* logLines(
+  lines: LineStream,
+  prefix: string = "STREAMED LINES",
+): LineStream {
+  let linesToLog = [];
+  for await (const line of lines) {
+    yield line;
+    linesToLog.push(line);
+  }
+  console.log(`${prefix}:\n${linesToLog.join("\n")}\n\n`);
 }

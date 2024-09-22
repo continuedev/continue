@@ -30,6 +30,7 @@ import {
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
@@ -178,6 +179,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         dispatch(initNewActiveMessage({ editorState }));
       }
 
+      // Reset current code block index
+      dispatch(resetNextCodeBlockToApplyIndex());
+
       // Resolve context providers and construct new history
       const [selectedContextItems, selectedCode, content] =
         await resolveEditorContent(
@@ -193,9 +197,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
         const currentFilePath = await ideMessenger.ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
-          let currentFileContents = await ideMessenger.ide.readFile(
-            currentFilePath,
-          );
+          let currentFileContents =
+            await ideMessenger.ide.readFile(currentFilePath);
           if (usingFreeTrial) {
             currentFileContents = currentFileContents
               .split("\n")
@@ -250,7 +253,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       });
       posthog.capture("userInput", {});
 
-      const messages = constructMessages(newHistory);
+      const messages = constructMessages(newHistory, defaultModel.model);
 
       // Determine if the input is a slash command
       let commandAndInput = getSlashCommandForInput(content);

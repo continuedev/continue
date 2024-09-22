@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
-import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -512,28 +512,16 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         label: "watsonx API version",
         placeholder: "Enter the API Version",
         defaultValue: "2023-05-29",
+        required: true
       },
       {
         inputType: "text",
         key: "watsonxFullUrl",
         label: "Full watsonx URL",
-        placeholder: "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
-        required: false
+        placeholder:
+          "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
+        required: false,
       },
-      // {
-      //   inputType: "text",
-      //   key: "title",
-      //   label: "Model name",
-      //   placeholder: "Granite 13B Chat v2",
-      //   isWatsonxAttribute: true,
-      // },
-      // {
-      //   inputType: "text",
-      //   key: "model",
-      //   label: "Model Id",
-      //   placeholder: "ibm/granite-13b-chat-v2",
-      //   isWatsonxAttribute: true,
-      // },
       {
         inputType: "text",
         key: "watsonxStopToken",
@@ -584,8 +572,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     title: "SambaNova Cloud",
     provider: "sambanova",
     refPage: "sambanova",
-    description:
-      "Use SambaNova Cloud for Llama3.1 fast inference performance",
+    description: "Use SambaNova Cloud for Llama3.1 fast inference performance",
     icon: "sambanova.png",
     longDescription: `The SambaNova Cloud is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
@@ -602,9 +589,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
       ...completionParamsInputsConfigs,
     ],
-    packages: [
-      models.llama31Chat,
-    ].map((p) => {
+    packages: [models.llama31Chat].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),

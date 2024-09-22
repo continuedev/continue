@@ -13,7 +13,7 @@ import {
 } from "../../components";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
 import ModelCard from "../../components/modelSelection/ModelCard";
-import ModelProviderTag from "../../components/modelSelection/ModelProviderTag";
+import { ModelProviderTag } from "../../components/modelSelection/ModelProviderTag";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { setDefaultModel } from "../../redux/slices/stateSlice";

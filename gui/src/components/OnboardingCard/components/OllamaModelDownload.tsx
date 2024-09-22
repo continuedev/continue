@@ -2,8 +2,9 @@ import { CommandLineIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import ReactDOM from "react-dom";
-import { StyledActionButton, StyledTooltip } from "../..";
+import { StyledActionButton } from "../..";
 import OllamaCompletedStep from "./OllamaCompletedStep";
+import { ToolTip } from "../../gui/Tooltip";
 
 interface OllamaModelDownloadProps {
   title: string;
@@ -39,9 +40,9 @@ function OllamaModelDownload({
           </StyledActionButton>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
-              <StyledTooltip id={id} place="top">
+              <ToolTip id={id} place="top">
                 Copy into terminal
-              </StyledTooltip>,
+              </ToolTip>,
               tooltipPortalDiv,
             )}
         </>

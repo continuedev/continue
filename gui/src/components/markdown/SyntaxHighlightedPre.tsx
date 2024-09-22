@@ -1,12 +1,15 @@
 import { useContext } from "react";
 import styled from "styled-components";
-import { vscForeground } from "..";
+import { defaultBorderRadius, vscForeground } from "..";
 import { VscThemeContext } from "../../context/VscTheme";
 
 const StyledPre = styled.pre<{ theme: any }>`
   & .hljs {
     color: ${vscForeground};
   }
+
+  margin-top: 0;
+  border-radius: 0 0 ${defaultBorderRadius} ${defaultBorderRadius} !important;
 
   ${(props) =>
     Object.keys(props.theme)

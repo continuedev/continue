@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { ContinueConfig, IDE } from "core";
+import { IDE } from "core";
 import { walkDir } from "core/indexing/walkDir";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
@@ -13,6 +13,7 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 import { ConfigHandler } from "core/config/ConfigHandler";
 // @ts-ignore
 import MiniSearch from "minisearch";
+import { getModelByRole } from "core/config/util";
 
 /**
  * Used to track what action to take after a user interacts
@@ -215,37 +216,28 @@ export class QuickEdit {
     );
 
     this.editorWhenOpened = editor;
-    this.previousInput = existingHandler?.input;
+    this.previousInput = existingHandler?.options.input;
   }
 
   /**
    * Gets the model title the user has chosen, or their default model
    */
   private async getCurModelTitle() {
-    const config = await this.configHandler.loadConfig();
-
     if (this._curModelTitle) {
       return this._curModelTitle;
     }
 
-    const inlineEditModel = config.experimental?.modelRoles?.inlineEdit;
+    const config = await this.configHandler.loadConfig();
 
-    if (inlineEditModel) {
-      return inlineEditModel;
-    }
-
-    let defaultModelTitle: string | undefined =
-      await this.webviewProtocol.request(
+    return (
+      getModelByRole(config, "inlineEdit")?.title ??
+      (await this.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
         false,
-      );
-
-    if (!defaultModelTitle) {
-      defaultModelTitle = config.models[0].title;
-    }
-
-    return defaultModelTitle || inlineEditModel;
+      )) ??
+      config.models[0]?.title
+    );
   }
 
   /**

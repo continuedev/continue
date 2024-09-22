@@ -3,15 +3,28 @@ import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
+  ContextSubmenuItem,
+  LoadSubmenuItemsArgs,
 } from "../../";
-import generateRepoMap from "../../util/repoMap";
+import {
+  groupByLastNPathParts,
+  getBasename,
+  getUniqueFilePath,
+} from "../../util";
+import generateRepoMap from "../../util/generateRepoMap";
+
+const ENTIRE_PROJECT_ITEM: ContextSubmenuItem = {
+  id: "entire-codebase",
+  title: "Entire codebase",
+  description: "Search the entire codebase",
+};
 
 class RepoMapContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "repo-map",
     displayTitle: "Repository Map",
-    description: "List of files and signatures",
-    type: "normal",
+    description: "Select a folder",
+    type: "submenu",
     dependsOnIndexing: true,
   };
 
@@ -23,8 +36,26 @@ class RepoMapContextProvider extends BaseContextProvider {
       {
         name: "Repository Map",
         description: "Overview of the repository structure",
-        content: await generateRepoMap(extras.llm, extras.ide),
+        content: await generateRepoMap(extras.llm, extras.ide, {
+          dirs: query === ENTIRE_PROJECT_ITEM.id ? undefined : [query],
+        }),
       },
+    ];
+  }
+
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs,
+  ): Promise<ContextSubmenuItem[]> {
+    const folders = await args.ide.listFolders();
+    const folderGroups = groupByLastNPathParts(folders, 2);
+
+    return [
+      ENTIRE_PROJECT_ITEM,
+      ...folders.map((folder) => ({
+        id: folder,
+        title: getBasename(folder),
+        description: getUniqueFilePath(folder, folderGroups),
+      })),
     ];
   }
 }

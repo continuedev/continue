@@ -137,19 +137,24 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     if (!this._sessions.length) {
       return;
     }
+
+    const finalSessions = [];
     for (const session of this._sessions) {
       try {
         const newSession = await this._refreshSession(session.refreshToken);
         session.accessToken = newSession.accessToken;
         session.refreshToken = newSession.refreshToken;
         session.expiresIn = newSession.expiresIn;
+        finalSessions.push(session);
       } catch (e: any) {
         if (e.message === "Network failure") {
           setTimeout(() => this._refreshSessions(), 60 * 1000);
           return;
         }
+        console.debug(`Error refreshing session token: ${e.message}`);
       }
     }
+    this._sessions = finalSessions;
     await this.storeSessions(this._sessions);
     this._sessionChangeEmitter.fire({
       added: [],
@@ -157,7 +162,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       changed: this._sessions,
     });
 
-    if (this._sessions[0].expiresIn) {
+    if (this._sessions[0]?.expiresIn) {
       setTimeout(
         () => this._refreshSessions(),
         (this._sessions[0].expiresIn * 2) / 3,

@@ -24,7 +24,7 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
-import HeaderButtonWithText from "./HeaderButtonWithText";
+import ButtonWithTooltip from "./ButtonWithTooltip";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -235,7 +235,7 @@ function ProfileSwitcher(props: {}) {
       )}
 
       {/* Settings button (either opens config.json or /settings page in control plane) */}
-      <HeaderButtonWithText
+      <ButtonWithTooltip
         tooltipPlacement="top-end"
         onClick={() => {
           if (selectedProfileId === "local") {
@@ -250,11 +250,11 @@ function ProfileSwitcher(props: {}) {
         text="Configure Continue"
       >
         <Cog6ToothIcon width="1.4em" height="1.4em" />
-      </HeaderButtonWithText>
+      </ButtonWithTooltip>
 
       {/* Only show login if beta explicitly enabled */}
       {controlServerBetaEnabled && (
-        <HeaderButtonWithText
+        <ButtonWithTooltip
           tooltipPlacement="top-end"
           text={
             session?.account
@@ -270,7 +270,7 @@ function ProfileSwitcher(props: {}) {
           }}
         >
           <UserCircleIcon width="1.4em" height="1.4em" />
-        </HeaderButtonWithText>
+        </ButtonWithTooltip>
       )}
     </>
   );

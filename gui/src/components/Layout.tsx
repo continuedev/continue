@@ -12,23 +12,22 @@ import {
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import {
-  setBottomMessage,
-  setBottomMessageCloseTimeout,
-  setOnboardingCard,
-  setShowDialog,
-} from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import TextDialog from "./dialogs";
-import HeaderButtonWithText from "./HeaderButtonWithText";
 import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 import { isNewUserOnboarding } from "./OnboardingCard/utils";
 import { useOnboardingCard } from "./OnboardingCard";
+import {
+  setBottomMessage,
+  setBottomMessageCloseTimeout,
+  setShowDialog,
+} from "../redux/slices/uiStateSlice";
+import ButtonWithTooltip from "./ButtonWithTooltip";
 
 const FOOTER_HEIGHT = "1.8em";
 
@@ -249,7 +248,7 @@ const Layout = () => {
             </div>
 
             <ProfileSwitcher />
-            <HeaderButtonWithText
+            <ButtonWithTooltip
               tooltipPlacement="top-end"
               text="More"
               onClick={() => {
@@ -261,7 +260,7 @@ const Layout = () => {
               }}
             >
               <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
+            </ButtonWithTooltip>
           </Footer>
         </GridDiv>
 

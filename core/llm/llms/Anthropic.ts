@@ -78,6 +78,10 @@ class Anthropic extends BaseLLM {
     const shouldCacheSystemMessage =
       !!this.systemMessage && !!this.cacheSystemMessage;
 
+    const systemMessage: string = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content,
+    );
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
@@ -100,7 +104,7 @@ class Anthropic extends BaseLLM {
                 cache_control: { type: "ephemeral" },
               },
             ]
-          : this.systemMessage,
+          : systemMessage,
       }),
     });
 
