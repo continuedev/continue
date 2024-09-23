@@ -262,16 +262,29 @@ export abstract class BaseLLM implements ILLM {
     prompt: string,
     completionOptions: CompletionOptions,
   ): string {
-    const dict = { contextLength: this.contextLength, ...completionOptions };
-    const settings = Object.entries(dict)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join("\n");
-    return `Settings:
-${settings}
+    const completionOptionsLog = JSON.stringify(
+      {
+        contextLength: this.contextLength,
+        ...completionOptions,
+      },
+      null,
+      2,
+    );
 
-############################################
+    let requestOptionsLog = "";
+    if (this.requestOptions) {
+      requestOptionsLog = JSON.stringify(this.requestOptions, null, 2);
+    }
 
-${prompt}`;
+    return (
+      "##### Completion options #####\n" +
+      completionOptionsLog +
+      (requestOptionsLog
+        ? "\n\n##### Request options #####\n" + requestOptionsLog
+        : "") +
+      "\n\n##### Prompt #####\n" +
+      prompt
+    );
   }
 
   private _logTokensGenerated(
@@ -703,9 +716,6 @@ ${prompt}`;
         this.providerName,
         autodetectTemplateType(this.model),
       );
-      if (!templateMessages) {
-        return rendered;
-      }
       return templateMessages(rendered);
     }
     return rendered;
