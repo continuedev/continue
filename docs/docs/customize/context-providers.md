@@ -380,7 +380,13 @@ Reference table schemas from Sqlite, Postgres, and MySQL databases.
 }
 ```
 
-Each connection should include a unique name, the connection_type (e.g., postgres, sqlite), and the necessary connection parameters specific to each database type.
+Each connection should include a unique name, the `connection_type`, and the necessary connection parameters specific to each database type.
+
+Available connection types:
+
+- `postgres`
+- `mysql`
+- `sqlite`
 
 ### `@Locals`
 
