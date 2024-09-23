@@ -122,6 +122,10 @@ If you are having persistent errors with indexing, our recommendation is to rebu
 
 This can be accomplished using the following command: `Continue: Rebuild codebase index`.
 
+### Android Studio - "Nothing to show" in Chat
+
+This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then selecting the latest version, and then restarting Android Studio. [See this thread](https://github.com/continuedev/continue/issues/2280#issuecomment-2365231567) for details.
+
 ## Still having trouble?
 
 You can also join our Discord community [here](https://discord.gg/vapESyrFmJ) for additional support and discussions. Alternatively, you can create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), providing details of your problem, and we'll be able to help you out more quickly.
