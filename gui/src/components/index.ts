@@ -389,6 +389,10 @@ export const StyledActionButton = styled.div`
   padding: 2px 12px;
   background-color: ${lightGray}33;
   background-opacity: 0.1;
+
+  &:hover {
+    background-color: ${lightGray}55;
+  }
 `;
 
 export const CloseButton = styled.button`

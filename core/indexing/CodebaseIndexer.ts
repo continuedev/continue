@@ -249,10 +249,11 @@ export class CodebaseIndexer {
       }
     }
     yield {
-      progress: 100,
+      progress: 1,
       desc: "Indexing Complete",
       status: "done",
     };
+    this.logProgress(beginTime, 0, 1);
   }
 
   private handleErrorAndGetProgressUpdate(

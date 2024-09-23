@@ -13,7 +13,9 @@ import { hasPassedFTL } from "../../../util/freeTrial";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
-import { useCheckOllamaModels, useSubmitOnboarding } from "../hooks";
+import { useSubmitOnboarding } from "../hooks";
+
+const OLLAMA_CHECK_INTERVAL_MS = 3000;
 
 function OnboardingLocalTab() {
   const dispatch = useDispatch();
@@ -52,19 +54,40 @@ function OnboardingLocalTab() {
     }
   }, [downloadedOllamaModels, isOllamaConnected]);
 
-  useCheckOllamaModels((models) => {
-    setDownloadedOllamaModels(models);
-  });
+  useEffect(() => {
+    const fetchDownloadedModels = async () => {
+      try {
+        const result = (await ideMessenger.request("llm/listModels", {
+          title: ONBOARDING_LOCAL_MODEL_TITLE,
+        })) as any;
 
-  function onConnectionVerified() {
-    setIsOllamaConnected(true);
-  }
+        if (result.status === "success" && Array.isArray(result.content)) {
+          setDownloadedOllamaModels(result.content);
+          setIsOllamaConnected(true);
+        } else {
+          throw new Error("Failed to fetch models");
+        }
+      } catch (error) {
+        console.error("Error fetching models:", error);
+        setIsOllamaConnected(false);
+      }
+    };
+
+    const intervalId = setInterval(
+      fetchDownloadedModels,
+      OLLAMA_CHECK_INTERVAL_MS,
+    );
+
+    fetchDownloadedModels();
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col">
         <p className="text-lg font-bold leading-tight mb-2">Install Ollama</p>
-        <OllamaStatus onConnectionVerified={onConnectionVerified} />
+        <OllamaStatus isOllamaConnected={isOllamaConnected} />
       </div>
 
       <OllamaModelDownload

@@ -78,7 +78,8 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
     try {
       return await
       fromIni({
-        profile: this.profile
+        profile: this.profile,
+        ignoreCache: true
       })();
     } catch (e) {
       console.warn(

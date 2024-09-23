@@ -30,5 +30,5 @@ export const defaultOnboardingCardState: OnboardingCardState = {
 export enum OllamaConnectionStatuses {
   WaitingToDownload = "WaitingToDownload",
   Downloading = "Downloading",
-  Verified = "Verified",
+  Connected = "Connected",
 }

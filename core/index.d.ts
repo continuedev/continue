@@ -691,6 +691,8 @@ export type ModelName =
   | "deepseek-7b"
   | "deepseek-33b"
   | "neural-chat-7b"
+  | "gemma-7b-it"
+  | "gemma2-9b-it"
   // Anthropic
   | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"

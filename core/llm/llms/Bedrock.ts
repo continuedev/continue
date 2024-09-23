@@ -153,6 +153,7 @@ class Bedrock extends BaseLLM {
     try {
       return await fromIni({
         profile: this.profile,
+        ignoreCache: true
       })();
     } catch (e) {
       console.warn(

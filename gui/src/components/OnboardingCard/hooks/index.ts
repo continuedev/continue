@@ -1,2 +1,2 @@
-export * from "./useCheckOllamaModels";
 export * from "./useSubmitOnboarding";
+export * from "./useOnboardingCard";
