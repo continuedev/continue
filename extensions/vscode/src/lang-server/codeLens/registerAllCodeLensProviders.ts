@@ -1,7 +1,7 @@
 import { ContinueConfig } from "core";
 import * as vscode from "vscode";
-import { VerticalDiffCodeLens } from "../../diff/verticalPerLine/manager";
 import { DiffManager } from "../../diff/horizontal";
+import { VerticalDiffCodeLens } from "../../diff/verticalPerLine/manager";
 import * as providers from "./providers";
 import {
   getQuickActionsConfig,
@@ -121,11 +121,6 @@ export function registerAllCodeLensProviders(
     new providers.ConfigPyCodeLensProvider(),
   );
 
-  tutorialCodeLensDisposable = registerCodeLensProvider(
-    "*",
-    new providers.TutorialCodeLensProvider(),
-  );
-
   registerQuickActionsProvider(config, context);
 
   subscribeToVSCodeQuickActionsSettings(() =>
@@ -136,7 +131,6 @@ export function registerAllCodeLensProviders(
   context.subscriptions.push(suggestionsCodeLensDisposable);
   context.subscriptions.push(diffsCodeLensDisposable);
   context.subscriptions.push(configPyCodeLensDisposable);
-  context.subscriptions.push(tutorialCodeLensDisposable);
 
   return { verticalDiffCodeLens };
 }
