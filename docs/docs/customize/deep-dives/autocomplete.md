@@ -119,7 +119,7 @@ To ensure that you receive multi-line completions, you can set `"multilineComple
 
 Yes, in VS Code, if you don't want to be shown suggestions automatically you can:
 
-1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disabe automatic suggestions
+1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disable automatic suggestions
 2. Open "Keyboard Shortcuts" (cmd/ctrl+k, cmd/ctrl+s) and search for `editor.action.inlineSuggest.trigger`
 3. Click the "+" icon to add a new keybinding
 4. Press the key combination you want to use to trigger suggestions (e.g. `ctrl+space`)
