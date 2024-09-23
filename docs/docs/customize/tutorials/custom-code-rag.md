@@ -37,7 +37,6 @@ With LanceDB, we can do steps 2 and 3 simultaneously, as demonstrated [in their 
 ```python
 from lancedb.pydantic import LanceModel, Vector
 from lancedb.embeddings import get_registry
-from typing import List
 
 db = lancedb.connect("/tmp/db")
 func = get_registry().get("openai").create(
@@ -49,7 +48,8 @@ func = get_registry().get("openai").create(
 class CodeChunks(LanceModel):
     filename: str
     text: str = func.SourceField()
-    vector: List[float] = func.VectorField()
+    # 1536 is the embedding dimension of the `voyage-code-2` model.
+    vector: Vector(1536) = func.VectorField()
 
 table = db.create_table("code_chunks", schema=CodeChunks, mode="overwrite")
 table.add([
