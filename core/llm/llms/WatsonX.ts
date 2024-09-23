@@ -20,8 +20,8 @@ class WatsonX extends BaseLLM {
     super(options);
   }
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
-    
     if (
+      this.watsonxFullUrl?.includes("cloud.ibm.com") ||
       this.watsonxUrl?.includes("cloud.ibm.com")
     ) {
       // watsonx SaaS
@@ -43,14 +43,12 @@ class WatsonX extends BaseLLM {
       };
     } else {
       // watsonx Software
-      if (
-        !this.watsonxCreds?.includes(":")
-      ) {
-    // Using ZenApiKey auth
-    return {
-      token: this.watsonxCreds ?? "",
-      expiration: -1,
-    };
+      if (!this.watsonxCreds?.includes(":")) {
+        // Using ZenApiKey auth
+        return {
+          token: this.watsonxCreds ?? "",
+          expiration: -1,
+        };
       } else {
         // Using username/password auth
         const userPass = this.watsonxCreds?.split(":");
@@ -85,7 +83,10 @@ class WatsonX extends BaseLLM {
   }
 
   getWatsonxEndpoint(): string {
-    return this.watsonxFullUrl ?? `${this.watsonxUrl}/ml/v1/text/generation_stream?version=${this.watsonxApiVersion}`;
+    return (
+      this.watsonxFullUrl ??
+      `${this.watsonxUrl}/ml/v1/text/generation_stream?version=${this.watsonxApiVersion}`
+    );
   }
 
   static providerName: ModelProvider = "watsonx";
@@ -132,9 +133,8 @@ class WatsonX extends BaseLLM {
   protected _getHeaders() {
     return {
       "Content-Type": "application/json",
-      Authorization: `${
-        watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-      } ${watsonxConfig.accessToken.token}`,
+      Authorization: `${watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+        } ${watsonxConfig.accessToken.token}`,
     };
   }
 
@@ -178,8 +178,7 @@ class WatsonX extends BaseLLM {
       watsonxConfig.accessToken = await this.getBearerToken();
     } else {
       console.log(
-        `Reusing token (expires in ${
-          (watsonxConfig.accessToken.expiration - now) / 60
+        `Reusing token (expires in ${(watsonxConfig.accessToken.expiration - now) / 60
         } mins)`,
       );
     }
@@ -191,31 +190,37 @@ class WatsonX extends BaseLLM {
       this.watsonxStopToken ??
       (options.model?.includes("granite") ? "<|im_end|>" : undefined);
     const url = this.getWatsonxEndpoint();
-    var response = await this.fetch(
-      url,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `${
-            watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-          } ${watsonxConfig.accessToken.token}`,
-        },
-        body: JSON.stringify({
-          input: messages[messages.length - 1].content,
-          parameters: {
-            decoding_method: "greedy",
-            max_new_tokens: options.maxTokens ?? 1024,
-            min_new_tokens: 1,
-            stop_sequences: stopToken ? [stopToken] : [],
-            include_stop_sequence: false,
-            repetition_penalty: 1,
-          },
-          model_id: options.model,
-          project_id: this.watsonxProjectId
-        }),
-      },
-    );
+    const headers = this._getHeaders();
+
+    const parameters: any = {
+      decoding_method: "greedy",
+      max_new_tokens: options.maxTokens ?? 1024,
+      min_new_tokens: 1,
+      stop_sequences: stopToken ? [stopToken] : [],
+      include_stop_sequence: false,
+      repetition_penalty: 1,
+    };
+    if (!!options.temperature) {
+      parameters.decoding_method = "sample";
+      parameters.temperature = options.temperature;
+      parameters.top_p = options.topP || 1.0;
+      parameters.top_k = options.topK;
+    }
+
+    const payload: any = {
+      input: messages[messages.length - 1].content,
+      parameters: parameters,
+    };
+    if (!this.watsonxFullUrl) {
+      payload.model_id = options.model;
+      payload.project_id = this.watsonxProjectId;
+    }
+
+    var response = await this.fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(payload),
+    });
 
     if (!response.ok || response.body === null) {
       throw new Error(
@@ -223,7 +228,6 @@ class WatsonX extends BaseLLM {
       );
     } else {
       for await (const value of streamResponse(response)) {
-
         const lines = value.split("\n");
         let generatedChunk = "";
         let generatedTextIndex = undefined;
