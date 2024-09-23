@@ -334,7 +334,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     return codestralMultifileFimTemplate;
   }
 
-  if (lowerCaseModel.includes("codegemma")) {
+  if (
+    lowerCaseModel.includes("codegemma") ||
+    lowerCaseModel.includes("qwen2.5-coder")
+  ) {
     return codegemmaFimTemplate;
   }
 
