@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { EXTENSION_NAME } from "../util/constants";
 import { getMetaKeyName } from "../util/util";
 
 const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
@@ -12,7 +13,7 @@ const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
 
 function showInlineTip() {
   return vscode.workspace
-    .getConfiguration("continue")
+    .getConfiguration(EXTENSION_NAME)
     .get<boolean>("showInlineTip");
 }
 

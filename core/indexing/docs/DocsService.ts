@@ -467,7 +467,7 @@ export default class DocsService {
     }
 
     for (const doc of deletedDocs) {
-      console.log(`Deleting doc: ${doc.startUrl}`);
+      // console.debug(`Deleting doc: ${doc.startUrl}`);
       await this.delete(doc.startUrl);
     }
 

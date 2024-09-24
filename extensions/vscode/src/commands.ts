@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import * as vscode from "vscode";
 import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { getModelByRole } from "core/config/util";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import readLastLines from "read-last-lines";
+import * as vscode from "vscode";
 import {
   StatusBarStatus,
   getAutocompleteStatusBarDescription,
@@ -27,10 +28,10 @@ import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
+import { EXTENSION_NAME } from "./util/constants";
+import { getFullyQualifiedPath } from "./util/util";
 import { uriFromFilePath } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { getFullyQualifiedPath } from "./util/util";
-import { getModelByRole } from "core/config/util";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -422,7 +423,7 @@ const commandsMap: (
     },
     "continue.hideInlineTip": () => {
       vscode.workspace
-        .getConfiguration("continue")
+        .getConfiguration(EXTENSION_NAME)
         .update("showInlineTip", false, vscode.ConfigurationTarget.Global);
     },
 
@@ -567,7 +568,7 @@ const commandsMap: (
     "continue.toggleTabAutocompleteEnabled": () => {
       captureCommandTelemetry("toggleTabAutocompleteEnabled");
 
-      const config = vscode.workspace.getConfiguration("continue");
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const enabled = config.get("enableTabAutocomplete");
       const pauseOnBattery = config.get<boolean>(
         "pauseTabAutocompleteOnBattery",
@@ -603,7 +604,7 @@ const commandsMap: (
     "continue.openTabAutocompleteConfigMenu": async () => {
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
-      const config = vscode.workspace.getConfiguration("continue");
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
       const autocompleteModels =
         (await configHandler.loadConfig())?.tabAutocompleteModels ?? [];
@@ -629,8 +630,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-            ? StatusBarStatus.Paused
-            : StatusBarStatus.Disabled;
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =

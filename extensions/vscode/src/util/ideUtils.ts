@@ -18,6 +18,7 @@ import {
 } from "./vscode";
 
 import _ from "lodash";
+import { EXTENSION_NAME } from "./constants";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
@@ -175,7 +176,7 @@ export class VsCodeIdeUtils {
 
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
-    let secret = vscode.workspace.getConfiguration("continue").get(key);
+    let secret = vscode.workspace.getConfiguration(EXTENSION_NAME).get(key);
     if (typeof secret !== "undefined" && secret !== null) {
       return secret;
     }
@@ -188,7 +189,7 @@ export class VsCodeIdeUtils {
 
     // Add secret to VS Code settings
     vscode.workspace
-      .getConfiguration("continue")
+      .getConfiguration(EXTENSION_NAME)
       .update(key, secret, vscode.ConfigurationTarget.Global);
 
     return secret;
