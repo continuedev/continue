@@ -8,14 +8,14 @@ module.exports = {
     "./src/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    // Note that these breakpoints are primarily optimized for the input toolbar
     screens: {
       xxs: "170px", // Smallest width for Primary Sidebar in VS Code
-      xs: "250px", // Default sidebar width in VS Code
-      sm: "320px",
-      md: "480px",
-      lg: "640px", // Tailwind's default 'sm'
-      xl: "768px", // Tailwind's default 'md'
-      "2xl": "1024px", // Tailwind's default 'lg'
+      xs: "250px", // Avg default sidebar width in VS Code
+      sm: "330px",
+      md: "460px",
+      lg: "590px",
+      xl: "720px",
     },
     extend: {
       animation: {
