@@ -72,9 +72,9 @@ You can run the documentation server locally using either of the following metho
 
 2. Run the following command to install the necessary dependencies for the documentation server:
 
-  ```bash
-  npm install
-  ```
+   ```bash
+   npm install
+   ```
 
 3. Run the following command to start the documentation server:
 
