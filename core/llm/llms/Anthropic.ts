@@ -98,23 +98,7 @@ class Anthropic extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage =
-      !!this.cacheSystemMessage;
-
-    const body = JSON.stringify({
-      ...this._convertArgs(options),
-      messages: this._convertMessages(messages),
-      system: shouldCacheSystemMessage
-        ? [
-            {
-              type: "text",
-              text: this.systemMessage,
-              cache_control: { type: "ephemeral" },
-            },
-          ]
-        : this.systemMessage,
-    });
-
+    const shouldCacheSystemMessage = !!this.systemMessage && !!this.cacheSystemMessage;
     const systemMessage: string = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content,
     );
