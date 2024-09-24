@@ -4,6 +4,7 @@ description: How to use Chat
 sidebar_label: How to use it
 keywords: [how, use, chat]
 sidebar_position: 1
+pagination_next: chat/model-setup
 ---
 
 ![chat](/img/chat.gif)

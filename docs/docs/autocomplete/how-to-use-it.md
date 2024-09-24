@@ -4,6 +4,7 @@ description: Autocomplete \- how to use it
 sidebar_label: How to use it
 keywords: [how]
 sidebar_position: 1
+pagination_next: autocomplete/model-setup
 ---
 
 ![autocomplete](/img/autocomplete.gif)
