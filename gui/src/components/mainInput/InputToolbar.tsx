@@ -207,17 +207,19 @@ function InputToolbar(props: InputToolbarProps) {
               {getMetaKeyLabel()} ⏎ Use @codebase
             </StyledSpan>
           )}
-          <EnterButton
-            offFocus={props.usingCodebase}
-            onClick={(e) => {
-              props.onEnter({
-                useCodebase: isMetaEquivalentKeyPressed(e),
-                noContext: useActiveFile ? e.altKey : !e.altKey,
-              });
-            }}
-          >
-            ⏎ Enter
-          </EnterButton>
+          <div className="hidden xs:flex">
+            <EnterButton
+              offFocus={props.usingCodebase}
+              onClick={(e) => {
+                props.onEnter({
+                  useCodebase: isMetaEquivalentKeyPressed(e),
+                  noContext: useActiveFile ? e.altKey : !e.altKey,
+                });
+              }}
+            >
+              ⏎ Enter
+            </EnterButton>
+          </div>
         </span>
       </StyledDiv>
     </>

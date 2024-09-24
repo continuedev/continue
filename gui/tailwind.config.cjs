@@ -9,8 +9,13 @@ module.exports = {
   ],
   theme: {
     screens: {
-      xs: "425px",
-      ...defaultTheme.screens,
+      xxs: "170px", // Smallest width for Primary Sidebar in VS Code
+      xs: "250px", // Default sidebar width in VS Code
+      sm: "320px",
+      md: "480px",
+      lg: "640px", // Tailwind's default 'sm'
+      xl: "768px", // Tailwind's default 'md'
+      "2xl": "1024px", // Tailwind's default 'lg'
     },
     extend: {
       animation: {

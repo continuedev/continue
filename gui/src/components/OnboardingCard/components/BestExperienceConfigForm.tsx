@@ -65,13 +65,13 @@ function BestExperienceConfigForm({
           <div className="text-lg font-bold mb-1 flex flex-row justify-between gap-4">
             <label className="text-lg font-bold">Chat model</label>
             <div
-              className="flex items-center text-xs font-semibold justify-end"
+              className="flex items-center text-xs font-semibold justify-end hidden sm:flex"
               style={{ color: lightGray }}
             >
               <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0" />
               <span className="italic text-right inline">
                 {chatModel.title}{" "}
-                <span className="max-xs:hidden">by Anthropic</span>
+                <span className="hidden md:inline">by Anthropic</span>
               </span>
             </div>
           </div>
@@ -99,13 +99,13 @@ function BestExperienceConfigForm({
           <div className="text-lg font-bold mb-1 flex flex-row justify-between gap-4">
             <label className="text-lg font-bold">Autocomplete model</label>
             <div
-              className="flex items-center text-xs font-semibold"
+              className="flex items-center text-xs font-semibold  hidden sm:flex"
               style={{ color: lightGray }}
             >
               <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0  inline" />
               <span className="italic text-right">
                 {autocompleteModel.title}{" "}
-                <span className="max-xs:hidden">by Mistral</span>
+                <span className="hidden md:inline">by Mistral</span>
               </span>
             </div>
           </div>
@@ -129,7 +129,7 @@ function BestExperienceConfigForm({
           </div>
         </div>
 
-        <div className="mt-2 w-full">
+        <div className="w-full">
           <Button className="w-full" type="submit" disabled={!chatApiKey}>
             Connect
           </Button>
