@@ -330,6 +330,7 @@ function compileChatMessages(
   prompt: string | undefined = undefined,
   functions: any[] | undefined = undefined,
   systemMessage: string | undefined = undefined,
+  numHistory: number | undefined = undefined,
 ): ChatMessage[] {
   const msgsCopy = msgs
     ? msgs
@@ -392,9 +393,12 @@ function compileChatMessages(
     }
   }
 
+  const recentMsgs =
+    numHistory && numHistory > 0 ? msgsCopy.slice(-numHistory) : msgsCopy;
+
   const history = pruneChatHistory(
     modelName,
-    msgsCopy,
+    recentMsgs,
     contextLength,
     functionTokens + maxTokens + TOKEN_BUFFER_FOR_SAFETY,
   );

@@ -729,6 +729,7 @@ declare global {
     keepAlive?: number;
     raw?: boolean;
     stream?: boolean;
+    numHistory?: number;
   }
 
   export interface ModelCapability {

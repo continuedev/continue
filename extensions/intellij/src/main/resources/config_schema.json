@@ -65,6 +65,11 @@
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
           "type": "integer"
+        },
+        "numHistory": {
+          "title": "Number of conversation history",
+          "description": "The number of previous conversations to include in the current context. Adjusting this parameter helps manage the amount of retained conversational context to either provide more relevant responses or to reduce memory usage.",
+          "type": "integer"
         }
       }
     },
@@ -310,7 +315,8 @@
             "presencePenalty": null,
             "frequencyPenalty": null,
             "stop": null,
-            "maxTokens": 600
+            "maxTokens": 600,
+            "numHistory": null
           },
           "allOf": [
             {
@@ -2008,7 +2014,8 @@
             "presencePenalty": null,
             "frequencyPenalty": null,
             "stop": null,
-            "maxTokens": 600
+            "maxTokens": 600,
+            "numHistory": null
           },
           "allOf": [
             {

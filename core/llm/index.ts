@@ -235,6 +235,7 @@ export abstract class BaseLLM implements ILLM {
       undefined,
       functions,
       this.systemMessage,
+      options.numHistory,
     );
   }
 
