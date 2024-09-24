@@ -343,6 +343,7 @@ declare global {
     watsonxApiVersion?: string;
 
     cacheSystemMessage?: boolean;
+    cacheConversation?: boolean;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,

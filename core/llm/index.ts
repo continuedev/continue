@@ -121,6 +121,7 @@ export abstract class BaseLLM implements ILLM {
   watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
+  cacheConversation?: boolean;
 
   private _llmOptions: LLMOptions;
 
@@ -194,6 +195,7 @@ export abstract class BaseLLM implements ILLM {
     this.watsonxFullUrl = options.watsonxFullUrl;
 
     this.cacheSystemMessage = options.cacheSystemMessage;
+    this.cacheConversation = options.cacheConversation;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

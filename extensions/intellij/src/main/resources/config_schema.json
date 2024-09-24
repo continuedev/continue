@@ -704,6 +704,9 @@
               "cacheSystemMessage": {
                 "type": "boolean"
               },
+              "cacheConversation": {
+                "type": "boolean"
+              },
               "model": {
                 "anyOf": [
                   {
@@ -799,6 +802,9 @@
           "then": {
             "properties": {
               "cacheSystemMessage": {
+                "type": "boolean"
+              },
+              "cacheConversation": {
                 "type": "boolean"
               },
               "model": {
@@ -1020,6 +1026,9 @@
           "then": {
             "properties": {
               "cacheSystemMessage": {
+                "type": "boolean"
+              },
+              "cacheConversation": {
                 "type": "boolean"
               },
               "model": {

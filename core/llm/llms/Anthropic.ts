@@ -45,7 +45,7 @@ class Anthropic extends BaseLLM {
         // The second-to-last because it retrieves potentially already cached contents,
         // The last one because we want it cached for later retrieval.
         // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-        const addCaching = lastTwoUserMsgIndices.includes(filteredMsgIdx);
+        const addCaching = !!this.cacheConversation && lastTwoUserMsgIndices.includes(filteredMsgIdx);
 
         if (typeof message.content === "string") {
           var chatMessage = {
@@ -126,7 +126,7 @@ class Anthropic extends BaseLLM {
         Accept: "application/json",
         "anthropic-version": "2023-06-01",
         "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage
+        ...(shouldCacheSystemMessage || !!this.cacheConversation
           ? { "anthropic-beta": "prompt-caching-2024-07-31" }
           : {}),
       },

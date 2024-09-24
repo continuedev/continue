@@ -371,6 +371,7 @@ export interface LLMOptions {
   watsonxFullUrl?: string;
 
   cacheSystemMessage?: boolean;
+  cacheConversation?: boolean;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
