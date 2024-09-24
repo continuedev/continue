@@ -1933,6 +1933,36 @@
             },
             "required": ["host", "port", "user", "password", "database"]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["greptile"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "GithubToken": {
+                    "title": "GithubToken",
+                    "description": "Your github access token",
+                    "default": "",
+                    "type": "string"
+                  },
+                  "GreptileToken": {
+                    "title": "GreptileToken",
+                    "description": "Your greptile access token",
+                    "default": "",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": ["GreptileToken", "GithubToken"]
+          }
         }
       ],
       "required": ["name"]

@@ -21,16 +21,20 @@ import {
       extras: ContextProviderExtras,
     ): Promise<ContextItem[]> {
       const greptileToken = this.getGreptileToken();
-      const githubToken = process.env.GITHUB_TOKEN;
-  
-      if (!greptileToken || !githubToken) {
-        throw new Error("Greptile token or GitHub token not found.");
+      if (!greptileToken) {
+        throw new Error("Greptile token not found.");
+      }
+
+      const githubToken = this.getGithubToken();
+      if (!githubToken) {
+        throw new Error("GitHub token not found.");
       }
   
       let absPath = await this.getWorkspaceDir(extras);
       if (!absPath) {
         throw new Error("Failed to determine the workspace directory.");
       }
+
       var remoteUrl = getRemoteUrl(absPath)
       remoteUrl = getRemoteUrl(absPath);
       const repoName = extractRepoName(remoteUrl);
@@ -60,18 +64,10 @@ import {
           genius: true,
         }),
       };
-  
-      // Log request details for debugging
-      console.log("Request URL: https://api.greptile.com/v2/query");
-      console.log("Request Headers:", options.headers);
-      console.log("Request Body:", options.body);
-  
+    
       try {
         const response = await extras.fetch('https://api.greptile.com/v2/query', options);
-  
-        // Log the raw response text for debugging
         const rawText = await response.text();
-        console.log("Raw response from Greptile:", rawText);
   
         // Check for HTTP errors
         if (!response.ok) {
@@ -93,7 +89,11 @@ import {
     }
   
     private getGreptileToken(): string | undefined {
-      return this.options.token || process.env.GREPTILE_AUTH_TOKEN;
+      return this.options.GreptileToken || process.env.GREPTILE_AUTH_TOKEN;
+    }
+
+    private getGithubToken(): string | undefined {
+      return this.options.GithubToken || process.env.GITHUB_TOKEN;
     }
   
     private async getWorkspaceDir(extras: ContextProviderExtras): Promise<string | null> {
