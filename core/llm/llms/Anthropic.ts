@@ -35,17 +35,36 @@ class Anthropic extends BaseLLM {
   }
 
   private _convertMessages(msgs: ChatMessage[]): any[] {
-    const messages = msgs
-      .filter((m) => m.role !== "system")
-      .map((message) => {
+    const filteredmessages = msgs.filter((m) => m.role !== "system")
+    const lastTwoUserMsgIndices = filteredmessages 
+      .map((msg, index) => (msg.role === "user" ? index : -1))
+      .filter((index) => index !== -1).slice(-2);
+
+    const messages = filteredmessages.map((message, idx) => {
+        const addCachingHeader = lastTwoUserMsgIndices.includes(idx);
+
         if (typeof message.content === "string") {
-          return message;
+          var chatMessage = {...message, 
+                             content: [{
+                                        type: "text", 
+                                        text: message.content,
+                                        ...(addCachingHeader? { cache_control: { type: "ephemeral" } } : {})
+                                      }]
+                            };
+          return chatMessage;
         }
+
         return {
           ...message,
-          content: message.content.map((part) => {
+          content: message.content.map((part, contentIdx) => {
             if (part.type === "text") {
-              return part;
+              const newpart = {
+                      ...part,
+                      // Add caching header to the last content part of the last two user messages
+                      ...((addCachingHeader && contentIdx == message.content.length - 1) ? { cache_control: { type: "ephemeral" } } : {})
+                     };
+              console.log(newpart);
+              return newpart;
             }
             return {
               type: "image",
@@ -76,7 +95,23 @@ class Anthropic extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage =
-      !!this.systemMessage && !!this.cacheSystemMessage;
+      !!this.cacheSystemMessage;
+
+    const body = JSON.stringify({
+      ...this._convertArgs(options),
+      messages: this._convertMessages(messages),
+      system: shouldCacheSystemMessage
+        ? [
+            {
+              type: "text",
+              text: this.systemMessage,
+              cache_control: { type: "ephemeral" },
+            },
+          ]
+        : this.systemMessage,
+    });
+
+    console.log("request body:", JSON.stringify(body, null, 2));
 
     const systemMessage: string = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content,
@@ -108,6 +143,9 @@ class Anthropic extends BaseLLM {
       }),
     });
 
+    console.log("headers:", Object.fromEntries(response.headers.entries()));
+    // console.log("response body:", JSON.stringify(await response.json(), null, 2));
+
     if (options.stream === false) {
       const data = await response.json();
       yield { role: "assistant", content: data.content[0].text };
@@ -115,6 +153,7 @@ class Anthropic extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
+      if (value.type == "message_start") console.log(value);
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }
