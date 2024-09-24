@@ -40,17 +40,22 @@ class Anthropic extends BaseLLM {
       .map((msg, index) => (msg.role === "user" ? index : -1))
       .filter((index) => index !== -1).slice(-2);
 
-    const messages = filteredmessages.map((message, idx) => {
-        const addCachingHeader = lastTwoUserMsgIndices.includes(idx);
+    const messages = filteredmessages.map((message, filteredMsgIdx) => {
+        // Add cache_control parameter to the last two user messages
+        // The second-to-last because it retrieves potentially already cached contents,
+        // The last one because we want it cached for later retrieval.
+        // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+        const addCaching = lastTwoUserMsgIndices.includes(filteredMsgIdx);
 
         if (typeof message.content === "string") {
-          var chatMessage = {...message, 
-                             content: [{
-                                        type: "text", 
-                                        text: message.content,
-                                        ...(addCachingHeader? { cache_control: { type: "ephemeral" } } : {})
-                                      }]
-                            };
+          var chatMessage = {
+            ...message, 
+            content: [{
+              type: "text", 
+              text: message.content,
+              ...(addCaching? { cache_control: { type: "ephemeral" } } : {})
+            }]
+          };
           return chatMessage;
         }
 
@@ -60,10 +65,9 @@ class Anthropic extends BaseLLM {
             if (part.type === "text") {
               const newpart = {
                       ...part,
-                      // Add caching header to the last content part of the last two user messages
-                      ...((addCachingHeader && contentIdx == message.content.length - 1) ? { cache_control: { type: "ephemeral" } } : {})
+                      // If multiple text parts, only add cache_control to the last one
+                      ...((addCaching && contentIdx == message.content.length - 1) ? { cache_control: { type: "ephemeral" } } : {})
                      };
-              console.log(newpart);
               return newpart;
             }
             return {
@@ -111,8 +115,6 @@ class Anthropic extends BaseLLM {
         : this.systemMessage,
     });
 
-    console.log("request body:", JSON.stringify(body, null, 2));
-
     const systemMessage: string = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content,
     );
@@ -143,9 +145,6 @@ class Anthropic extends BaseLLM {
       }),
     });
 
-    console.log("headers:", Object.fromEntries(response.headers.entries()));
-    // console.log("response body:", JSON.stringify(await response.json(), null, 2));
-
     if (options.stream === false) {
       const data = await response.json();
       yield { role: "assistant", content: data.content[0].text };
@@ -153,7 +152,7 @@ class Anthropic extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      if (value.type == "message_start") console.log(value);
+      // if (value.type == "message_start") console.log(value);
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }
