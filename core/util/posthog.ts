@@ -42,7 +42,13 @@ export class Telemetry {
     Telemetry.client?.shutdown();
   }
 
-  static async setup(allow: boolean, uniqueId: string, ideInfo: IdeInfo) {
+  static async setup(
+      allow: boolean,
+      uniqueId: string,
+      ideInfo: IdeInfo,
+      apiKey: string = "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
+      apiHost: string = "https://app.posthog.com",
+  ) {
     Telemetry.uniqueId = uniqueId;
     Telemetry.os = os.platform();
     Telemetry.ideInfo = ideInfo;
@@ -54,9 +60,9 @@ export class Telemetry {
         if (!Telemetry.client) {
           const { PostHog } = await import("posthog-node");
           Telemetry.client = new PostHog(
-            "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
+            apiKey,
             {
-              host: "https://app.posthog.com",
+              host: apiHost,
             },
           );
         }

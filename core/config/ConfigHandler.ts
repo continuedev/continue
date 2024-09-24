@@ -1,7 +1,4 @@
-import {
-  ControlPlaneClient,
-  ControlPlaneSessionInfo,
-} from "../control-plane/client.js";
+import { ControlPlaneSessionInfo } from "../control-plane/client.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -13,13 +10,11 @@ import {
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { finalToBrowserConfig } from "./load.js";
-import {
-  LOCAL_ONBOARDING_CHAT_MODEL,
-  ONBOARDING_LOCAL_MODEL_TITLE,
-} from "./onboarding.js";
+import { LOCAL_ONBOARDING_CHAT_MODEL, ONBOARDING_LOCAL_MODEL_TITLE } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
+import { ControlPlaneProvider } from "../control-plane/provider";
 
 export interface ProfileDescription {
   title: string;
@@ -109,22 +104,30 @@ export class ConfigHandler {
   private additionalContextProviders: IContextProvider[] = [];
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string;
+  private controlPlaneProvider: ControlPlaneProvider | undefined;
 
   constructor(
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => Promise<void>,
-    private controlPlaneClient: ControlPlaneClient,
+    private readonly controlPlaneProviderPromise: Promise<ControlPlaneProvider>,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
     this.writeLog = writeLog;
 
+    this.controlPlaneProviderPromise = controlPlaneProviderPromise.then(
+      (provider) => {
+        this.controlPlaneProvider = provider;
+        return provider;
+      }
+    );
+
     // Set local profile as default
     const localProfileLoader = new LocalProfileLoader(
       ide,
       ideSettingsPromise,
-      controlPlaneClient,
+      this.controlPlaneProviderPromise,
       writeLog,
     );
     this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
@@ -132,13 +135,13 @@ export class ConfigHandler {
 
     // Always load local profile immediately in case control plane doesn't load
     try {
-      this.loadConfig();
+      void this.loadConfig();
     } catch (e) {
       console.error("Failed to load config: ", e);
     }
 
     // Load control plane profiles
-    this.fetchControlPlaneProfiles();
+    void this.fetchControlPlaneProfiles();
   }
 
   // This will be the local profile
@@ -159,7 +162,12 @@ export class ConfigHandler {
 
   private async fetchControlPlaneProfiles() {
     // Get the profiles and create their lifecycle managers
-    this.controlPlaneClient.listWorkspaces().then(async (workspaces) => {
+
+    await this.controlPlaneProviderPromise;
+
+    const util = require('util');
+
+    void this.controlPlaneProvider!.client.listWorkspaces().then(async (workspaces) => {
       this.profiles = this.profiles.filter(
         (profile) => profile.profileId === "local",
       );
@@ -167,7 +175,7 @@ export class ConfigHandler {
         const profileLoader = new ControlPlaneProfileLoader(
           workspace.id,
           workspace.name,
-          this.controlPlaneClient,
+          this.controlPlaneProvider!,
           this.ide,
           this.ideSettingsPromise,
           this.writeLog,
@@ -187,7 +195,7 @@ export class ConfigHandler {
       const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
       if (selectedWorkspaceId) {
         this.selectedProfileId = selectedWorkspaceId;
-        this.loadConfig();
+        await this.loadConfig();
       } else {
         // Otherwise we stick with local profile, and record choice
         lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
@@ -221,15 +229,14 @@ export class ConfigHandler {
   // Automatically refresh config when Continue-related IDE (e.g. VS Code) settings are changed
   updateIdeSettings(ideSettings: IdeSettings) {
     this.ideSettingsPromise = Promise.resolve(ideSettings);
-    this.reloadConfig();
+    void this.reloadConfig();
   }
 
-  updateControlPlaneSessionInfo(
+  async updateControlPlaneSessionInfo(
     sessionInfo: ControlPlaneSessionInfo | undefined,
   ) {
-    this.controlPlaneClient = new ControlPlaneClient(
-      Promise.resolve(sessionInfo),
-    );
+    this.controlPlaneProvider!.newClient(Promise.resolve(sessionInfo));
+
     this.fetchControlPlaneProfiles().catch((e) => {
       console.error("Failed to fetch control plane profiles: ", e);
     });
@@ -288,10 +295,9 @@ export class ConfigHandler {
     if (!model) {
       if (title === ONBOARDING_LOCAL_MODEL_TITLE) {
         // Special case, make calls to Ollama before we have it in the config
-        const ollama = new Ollama({
+        return new Ollama({
           model: LOCAL_ONBOARDING_CHAT_MODEL,
         });
-        return ollama;
       } else if (config.models.length > 0) {
         return config.models[0];
       }
@@ -304,6 +310,6 @@ export class ConfigHandler {
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
-    this.reloadConfig();
+    void this.reloadConfig();
   }
 }

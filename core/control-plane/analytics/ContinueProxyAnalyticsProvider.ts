@@ -1,26 +1,20 @@
 import { Analytics } from "@continuedev/config-types";
 import fetch from "node-fetch";
-import { ControlPlaneClient } from "../client.js";
-import {
-  ControlPlaneProxyInfo,
-  IAnalyticsProvider,
-} from "./IAnalyticsProvider.js";
+import { IAnalyticsProvider } from "./IAnalyticsProvider.js";
+import { ControlPlaneProvider } from "../provider";
 
 export default class ContinueProxyAnalyticsProvider
-  implements IAnalyticsProvider
-{
+  implements IAnalyticsProvider {
   uniqueId?: string;
-  controlPlaneProxyInfo?: ControlPlaneProxyInfo;
-
-  controlPlaneClient?: ControlPlaneClient;
+  controlPlaneProvider: ControlPlaneProvider | undefined;
 
   async capture(
     event: string,
     properties: { [key: string]: any },
   ): Promise<void> {
     const url = new URL(
-      `proxy/analytics/${this.controlPlaneProxyInfo?.workspaceId}/capture`,
-      this.controlPlaneProxyInfo?.controlPlaneProxyUrl,
+      `proxy/analytics/${this.controlPlaneProvider!.proxy?.workspaceId}/capture`,
+      this.controlPlaneProvider!.proxy?.url,
     ).toString();
     fetch(url, {
       method: "POST",
@@ -30,7 +24,7 @@ export default class ContinueProxyAnalyticsProvider
         uniqueId: this.uniqueId,
       }),
       headers: {
-        Authorization: `Bearer ${await this.controlPlaneClient?.getAccessToken()}`,
+        Authorization: `Bearer ${await this.controlPlaneProvider!.client.getAccessToken()}`,
       },
     });
   }
@@ -38,11 +32,12 @@ export default class ContinueProxyAnalyticsProvider
   async setup(
     config: Analytics,
     uniqueId: string,
-    controlPlaneProxyInfo?: ControlPlaneProxyInfo,
+    controlPlaneProvider: ControlPlaneProvider,
   ): Promise<void> {
     this.uniqueId = uniqueId;
-    this.controlPlaneProxyInfo = controlPlaneProxyInfo;
+    this.controlPlaneProvider = controlPlaneProvider;
   }
 
-  async shutdown(): Promise<void> {}
+  async shutdown(): Promise<void> {
+  }
 }

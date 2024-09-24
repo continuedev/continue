@@ -1,7 +1,7 @@
-import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
+import { ControlPlaneProvider } from "../../control-plane/provider";
 
 export default class LocalProfileLoader implements IProfileLoader {
   static ID = "local";
@@ -11,7 +11,7 @@ export default class LocalProfileLoader implements IProfileLoader {
   constructor(
     private ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
-    private controlPlaneClient: ControlPlaneClient,
+    private controlPlaneProviderPromise: Promise<ControlPlaneProvider>,
     private writeLog: (message: string) => Promise<void>,
   ) {}
 
@@ -19,7 +19,7 @@ export default class LocalProfileLoader implements IProfileLoader {
     return doLoadConfig(
       this.ide,
       this.ideSettingsPromise,
-      this.controlPlaneClient,
+      this.controlPlaneProviderPromise,
       this.writeLog,
       undefined,
     );

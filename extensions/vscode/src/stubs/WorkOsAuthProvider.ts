@@ -30,8 +30,12 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   }
 }
 
+const CONTROL_PLANE_URL =
+  process.env.CONTROL_PLANE_ENV === "local"
+    ? "http://localhost:3001/"
+    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/";
+
 import {
-  CONTROL_PLANE_URL,
   ControlPlaneSessionInfo,
 } from "core/control-plane/client";
 import crypto from "crypto";

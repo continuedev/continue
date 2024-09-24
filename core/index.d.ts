@@ -1,4 +1,5 @@
 import { GetGhTokenArgs } from "./protocol/ide";
+import { ControlPlaneProviderName } from "./control-plane/provider";
 
 declare global {
   interface Window {
@@ -455,6 +456,8 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
+  controlPlaneProviderName: ControlPlaneProviderName | undefined;
+  controlPlaneProviderParams: { [key: string]: string } | undefined;
   pauseCodebaseIndexOnStart: boolean;
   enableDebugLogs: boolean;
 }

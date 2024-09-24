@@ -1,13 +1,10 @@
 import { Analytics } from "@continuedev/config-types";
 import os from "node:os";
 import ContinueProxyAnalyticsProvider from "./analytics/ContinueProxyAnalyticsProvider.js";
-import {
-  ControlPlaneProxyInfo,
-  IAnalyticsProvider,
-} from "./analytics/IAnalyticsProvider.js";
+import { IAnalyticsProvider } from "./analytics/IAnalyticsProvider.js";
 import LogStashAnalyticsProvider from "./analytics/LogStashAnalyticsProvider.js";
 import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider.js";
-import { ControlPlaneClient } from "./client.js";
+import { ControlPlaneProvider } from "./provider";
 
 function createAnalyticsProvider(
   config: Analytics,
@@ -32,7 +29,7 @@ export class TeamAnalytics {
   static extensionVersion: string | undefined = undefined;
 
   static async capture(event: string, properties: { [key: string]: any }) {
-    TeamAnalytics.provider?.capture(event, {
+    void TeamAnalytics.provider?.capture(event, {
       ...properties,
       os: TeamAnalytics.os,
       extensionVersion: TeamAnalytics.extensionVersion,
@@ -43,8 +40,7 @@ export class TeamAnalytics {
     config: Analytics,
     uniqueId: string,
     extensionVersion: string,
-    controlPlaneClient: ControlPlaneClient,
-    controlPlaneProxyInfo: ControlPlaneProxyInfo,
+    controlPlaneProvider: ControlPlaneProvider,
   ) {
     TeamAnalytics.uniqueId = uniqueId;
     TeamAnalytics.os = os.platform();
@@ -58,13 +54,13 @@ export class TeamAnalytics {
       await TeamAnalytics.provider?.setup(
         config,
         uniqueId,
-        controlPlaneProxyInfo,
+        controlPlaneProvider,
       );
 
       if (config.provider === "continue-proxy") {
         (
           TeamAnalytics.provider as ContinueProxyAnalyticsProvider
-        ).controlPlaneClient = controlPlaneClient;
+        ).controlPlaneProvider = controlPlaneProvider;
       }
     }
   }

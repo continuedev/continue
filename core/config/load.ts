@@ -1,10 +1,7 @@
 import * as JSONC from "comment-json";
 import * as fs from "fs";
 import path from "path";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands/index.js";
+import { slashCommandFromDescription, slashFromCustomCommand } from "../commands/index.js";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
 import FileContextProvider from "../context/providers/FileContextProvider.js";
 import { contextProviderClassFromName } from "../context/providers/index.js";
@@ -43,10 +40,10 @@ import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
 import {
-  getConfigJsPath,
-  getConfigJsPathForRemote,
   getConfigJsonPath,
   getConfigJsonPathForRemote,
+  getConfigJsPath,
+  getConfigJsPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
   readAllGlobalPromptFiles,
@@ -57,11 +54,8 @@ import {
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
 } from "./default.js";
-import {
-  DEFAULT_PROMPTS_FOLDER,
-  getPromptFiles,
-  slashCommandFromPromptFile,
-} from "./promptFile.js";
+import { DEFAULT_PROMPTS_FOLDER, getPromptFiles, slashCommandFromPromptFile } from "./promptFile.js";
+import { ControlPlaneProvider } from "../control-plane/provider";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -213,9 +207,9 @@ async function intermediateToFinalConfig(
   config: Config,
   ide: IDE,
   ideSettings: IdeSettings,
+  controlPlaneProvider: ControlPlaneProvider,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
-  workOsAccessToken: string | undefined,
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   // Auto-detect models
@@ -390,8 +384,7 @@ async function intermediateToFinalConfig(
 
       // Handle continue-proxy
       if (instance.description.title === "continue-proxy") {
-        (instance as ContinueProxyContextProvider).workOsAccessToken =
-          workOsAccessToken;
+        (instance as ContinueProxyContextProvider).controlPlaneProvider = controlPlaneProvider;
       }
 
       contextProviders.push(instance);
@@ -572,10 +565,10 @@ async function loadFullConfigNode(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
+  controlPlaneProvider: ControlPlaneProvider,
   ideType: IdeType,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
-  workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ContinueConfig> {
   // Serialized config
@@ -628,15 +621,14 @@ async function loadFullConfigNode(
   }
 
   // Convert to final config format
-  const finalConfig = await intermediateToFinalConfig(
+  return await intermediateToFinalConfig(
     intermediate,
     ide,
     ideSettings,
+    controlPlaneProvider,
     uniqueId,
     writeLog,
-    workOsAccessToken,
   );
-  return finalConfig;
 }
 
 export {

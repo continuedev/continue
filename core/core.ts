@@ -12,8 +12,6 @@ import { createNewPromptFile } from "./config/promptFile";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
-import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
-import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import Ollama from "./llm/llms/Ollama";
@@ -28,6 +26,7 @@ import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
 import { streamDiffLines } from "./util/verticalEdit";
+import { ControlPlaneProvider, ControlPlaneProviderFactory } from "./control-plane/provider";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -36,7 +35,6 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
-  controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
 
@@ -47,6 +45,7 @@ export class Core {
   private abortedMessageIds: Set<string> = new Set();
 
   private selectedModelTitle: string | undefined;
+  private controlPlaneProvider: ControlPlaneProvider | undefined;
 
   private async config() {
     return this.configHandler.loadConfig();
@@ -84,14 +83,15 @@ export class Core {
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
     });
-
-    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
+    const controlPlaneProviderPromise = ControlPlaneProviderFactory.createProvider(
+      ideSettingsPromise, sessionInfoPromise,
+    ).then((provider) => { this.controlPlaneProvider = provider; return provider; });
 
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
       this.onWrite,
-      this.controlPlaneClient,
+      controlPlaneProviderPromise,
     );
 
     this.docsService = DocsService.createSingleton(
@@ -683,11 +683,10 @@ export class Core {
       this.configHandler.reloadConfig();
     });
     on("didChangeControlPlaneSessionInfo", async (msg) => {
-      this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+      await this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
     });
     on("auth/getAuthUrl", async (msg) => {
-      const url = await getAuthUrlForTokenPage();
-      return { url };
+      return { url: await this.controlPlaneProvider!.getAuthUrlForTokenPage() };
     });
 
     on("didChangeActiveTextEditor", ({ data: { filepath } }) => {

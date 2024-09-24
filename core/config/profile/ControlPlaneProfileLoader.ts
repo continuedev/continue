@@ -1,13 +1,8 @@
 import { ConfigJson } from "@continuedev/config-types";
-import { ControlPlaneClient } from "../../control-plane/client.js";
-import {
-  ContinueConfig,
-  IDE,
-  IdeSettings,
-  SerializedContinueConfig,
-} from "../../index.js";
+import { ContinueConfig, IDE, IdeSettings, SerializedContinueConfig } from "../../index.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 import doLoadConfig from "./doLoadConfig.js";
+import { ControlPlaneProvider, ControlPlaneProviderFactory } from "../../control-plane/provider";
 
 export default class ControlPlaneProfileLoader implements IProfileLoader {
   private static RELOAD_INTERVAL = 1000 * 60 * 15; // every 15 minutes
@@ -20,7 +15,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
   constructor(
     private readonly workspaceId: string,
     private workspaceTitle: string,
-    private readonly controlPlaneClient: ControlPlaneClient,
+    private readonly controlPlaneProvider: ControlPlaneProvider,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private writeLog: (message: string) => Promise<void>,
@@ -31,23 +26,21 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
 
     setInterval(async () => {
       this.workspaceSettings =
-        await this.controlPlaneClient.getSettingsForWorkspace(this.profileId);
+        await this.controlPlaneProvider.client.getSettingsForWorkspace(this.profileId);
       this.onReload();
     }, ControlPlaneProfileLoader.RELOAD_INTERVAL);
   }
 
   async doLoadConfig(): Promise<ContinueConfig> {
-    const settings =
-      this.workspaceSettings ??
-      ((await this.controlPlaneClient.getSettingsForWorkspace(
+    const serializedConfig: SerializedContinueConfig = this.workspaceSettings ??
+      ((await this.controlPlaneProvider.client!.getSettingsForWorkspace(
         this.profileId,
       )) as any);
-    const serializedConfig: SerializedContinueConfig = settings;
 
     return doLoadConfig(
       this.ide,
       this.ideSettingsPromise,
-      this.controlPlaneClient,
+      ControlPlaneProviderFactory.createProvider(this.ideSettingsPromise, this.controlPlaneProvider.client.sessionInfoPromise),
       this.writeLog,
       serializedConfig,
       this.workspaceId,

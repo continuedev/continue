@@ -7,6 +7,7 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
+import { ControlPlaneProvider } from "../../control-plane/provider";
 
 class ContinueProxyContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -16,6 +17,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
+  controlPlaneProvider: ControlPlaneProvider | undefined;
   workOsAccessToken: string | undefined = undefined;
 
   override get description(): ContextProviderDescription {
@@ -36,7 +38,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const response = await args.fetch(
-      new URL(`/proxy/context/${this.options.id}/list`, CONTROL_PLANE_URL),
+      new URL(`/proxy/context/${this.options.id}/list`, this.controlPlaneProvider!.client.url),
       {
         method: "GET",
         headers: {
@@ -54,7 +56,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const response = await extras.fetch(
-      new URL(`/proxy/context/${this.options.id}/retrieve`, CONTROL_PLANE_URL),
+      new URL(`/proxy/context/${this.options.id}/retrieve`, this.controlPlaneProvider!.client.url),
       {
         method: "POST",
         headers: {

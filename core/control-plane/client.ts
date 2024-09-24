@@ -1,6 +1,5 @@
 import { ConfigJson } from "@continuedev/config-types";
 import fetch, { RequestInit, Response } from "node-fetch";
-import { ModelDescription } from "../index.js";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -16,29 +15,28 @@ export interface ControlPlaneWorkspace {
   settings: ConfigJson;
 }
 
-export interface ControlPlaneModelDescription extends ModelDescription {}
+export interface ControlPlaneClient {
+  url: string;
+  proxyUrl: string;
+  sessionInfoPromise: Promise<ControlPlaneSessionInfo | undefined>;
+  userId: Promise<string | undefined>;
 
-export const DEFAULT_CONTROL_PLANE_PROXY_URL =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3001/proxy"
-    : "https://control-plane-proxy.continue.dev/";
+  getAccessToken(): Promise<string | undefined>;
 
-export const CONTROL_PLANE_URL =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3001/"
-    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/";
+  listWorkspaces(): Promise<ControlPlaneWorkspace[]>;
 
-export class ControlPlaneClient {
-  private static URL = CONTROL_PLANE_URL;
-  private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
+  getSettingsForWorkspace(workspaceId: string): Promise<ConfigJson>;
+}
 
-  private lastAccessTokenRefresh = 0;
-
+export class GenericControlPlaneClient implements ControlPlaneClient{
   constructor(
-    private readonly sessionInfoPromise: Promise<
+    readonly sessionInfoPromise: Promise<
       ControlPlaneSessionInfo | undefined
     >,
-  ) {}
+    readonly url: string,
+    readonly proxyUrl: string,
+  ) {
+  }
 
   get userId(): Promise<string | undefined> {
     return this.sessionInfoPromise.then(
@@ -48,29 +46,6 @@ export class ControlPlaneClient {
 
   async getAccessToken(): Promise<string | undefined> {
     return (await this.sessionInfoPromise)?.accessToken;
-  }
-
-  private async request(path: string, init: RequestInit): Promise<Response> {
-    const accessToken = await this.getAccessToken();
-    if (!accessToken) {
-      throw new Error("No access token");
-    }
-    const url = new URL(path, ControlPlaneClient.URL).toString();
-    const resp = await fetch(url, {
-      ...init,
-      headers: {
-        ...init.headers,
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    if (!resp.ok) {
-      throw new Error(
-        `Control plane request failed: ${resp.status} ${await resp.text()}`,
-      );
-    }
-
-    return resp;
   }
 
   public async listWorkspaces(): Promise<ControlPlaneWorkspace[]> {
@@ -99,5 +74,28 @@ export class ControlPlaneClient {
       method: "GET",
     });
     return ((await resp.json()) as any).settings;
+  }
+
+  private async request(path: string, init: RequestInit): Promise<Response> {
+    const accessToken = await this.getAccessToken();
+    if (!accessToken) {
+      throw new Error("No access token");
+    }
+    const url = new URL(path, this.url).toString();
+    const resp = await fetch(url, {
+      ...init,
+      headers: {
+        ...init.headers,
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(
+        `Control plane request failed: ${resp.status} ${await resp.text()}`,
+      );
+    }
+
+    return resp;
   }
 }
