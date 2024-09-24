@@ -57,6 +57,7 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
+import { v4 } from "uuid";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -729,7 +730,11 @@ function TipTapEditor(props: TipTapEditorProps) {
           description: `${relativePath} ${rangeStr}`,
           id: {
             providerTitle: "code",
-            itemId: rif.filepath,
+            itemId: v4(),
+          },
+          uri: {
+            type: "file",
+            value: rif.filepath,
           },
         };
 
@@ -810,19 +815,15 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, []);
 
-  const [optionKeyHeld, setOptionKeyHeld] = useState(false);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
 
   return (
     <InputBoxDiv
       onKeyDown={(e) => {
-        if (e.key === "Alt") {
-          setOptionKeyHeld(true);
-        }
+        setActiveKey(e.key);
       }}
       onKeyUp={(e) => {
-        if (e.key === "Alt") {
-          setOptionKeyHeld(false);
-        }
+        setActiveKey(null);
       }}
       className="cursor-text"
       onClick={() => {
@@ -874,7 +875,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
       />
       <InputToolbar
-        showNoContext={optionKeyHeld}
+        activeKey={activeKey}
         hidden={shouldHideToolbar && !props.isMainInput}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {

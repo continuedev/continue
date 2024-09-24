@@ -271,6 +271,13 @@ export interface ContextItemId {
   itemId: string;
 }
 
+export type ContextItemUriTypes = "file" | "url";
+
+export interface ContextItemUri {
+  type: ContextItemUriTypes;
+  value: string;
+}
+
 export interface ContextItem {
   content: string;
   name: string;
@@ -278,16 +285,11 @@ export interface ContextItem {
   editing?: boolean;
   editable?: boolean;
   icon?: string;
+  uri?: ContextItemUri;
 }
 
-export interface ContextItemWithId {
-  content: string;
-  name: string;
-  description: string;
+export interface ContextItemWithId extends ContextItem {
   id: ContextItemId;
-  editing?: boolean;
-  editable?: boolean;
-  icon?: string;
 }
 
 export interface InputModifiers {
