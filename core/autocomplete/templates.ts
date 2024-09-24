@@ -30,6 +30,7 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
   template: "<fim_prefix>{{{prefix}}}<fim_suffix>{{{suffix}}}<fim_middle>",
   completionOptions: {
     stop: [
+      "<|endoftext|>",
       "<fim_prefix>",
       "<fim_suffix>",
       "<fim_middle>",
