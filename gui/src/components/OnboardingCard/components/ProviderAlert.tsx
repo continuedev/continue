@@ -17,7 +17,7 @@ function ProviderAlert() {
   }
 
   return (
-    <div>
+    <div className="w-full">
       <Alert type="info">
         <p className="font-semibold text-sm m-0">
           Prefer to use an different provider like OpenAI?

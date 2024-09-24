@@ -1044,6 +1044,7 @@
                   "llama2-70b",
                   "mistral-8x7b",
                   "gemma",
+                  "gemma2",
                   "llama3-8b",
                   "llama3-70b",
                   "llama3.1-8b",
@@ -2112,6 +2113,13 @@
               "description": "The maximum number of tokens that each chunk of a document is allowed to have",
               "type": "integer",
               "minimum": 128,
+              "exclusiveMaximum": 2147483647
+            },
+            "maxBatchSize": {
+              "title": "Maximum Batch Size",
+              "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
+              "type": "integer",
+              "minimum": 1,
               "exclusiveMaximum": 2147483647
             },
             "region": {

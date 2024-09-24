@@ -2356,6 +2356,13 @@
               "minimum": 128,
               "exclusiveMaximum": 2147483647
             },
+            "maxBatchSize": {
+              "title": "Maximum Batch Size",
+              "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
+              "type": "integer",
+              "minimum": 1,
+              "exclusiveMaximum": 2147483647
+            },
             "region": {
               "title": "Region",
               "description": "The region where the model is hosted",

@@ -894,6 +894,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           });
         }}
       />
+
       {showDragOverMsg &&
         modelSupportsImages(
           defaultModel.provider,
