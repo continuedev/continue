@@ -22,6 +22,10 @@ const CLIENT_ID =
   process.env.CONTROL_PLANE_ENV === "local"
     ? "client_01J0FW6XCPMJMQ3CG51RB4HBZQ"
     : "client_01J0FW6XN8N2XJAECF7NE0Y65J";
+const APP_URL =
+  process.env.CONTROL_PLANE_ENV === "local"
+    ? "http://localhost:3000"
+    : "https://app.continue.dev";
 const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`;
 
 class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
@@ -122,10 +126,20 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return this._sessionChangeEmitter.event;
   }
 
-  get redirectUri() {
+  get ideRedirectUri() {
     const publisher = this.context.extension.packageJSON.publisher;
     const name = this.context.extension.packageJSON.name;
     return `${env.uriScheme}://${publisher}.${name}`;
+  }
+
+  get redirectUri() {
+    if (env.uriScheme === "vscode-insiders" || env.uriScheme === "vscode") {
+      // We redirect to a page that says "you can close this page", and that page finishes the redirect
+      const url = new URL(APP_URL);
+      url.pathname = `/auth/${env.uriScheme}-redirect`;
+      return url.toString();
+    }
+    return this.ideRedirectUri;
   }
 
   async initialize() {
