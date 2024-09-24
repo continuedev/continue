@@ -28,7 +28,6 @@ import ModelSelect from "../modelSelection/ModelSelect";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
-  display: flex;
   justify-content: space-between;
   gap: 1px;
   background-color: ${vscInputBackground};
@@ -110,6 +109,7 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
+        className="hidden xs:flex"
       >
         <span className="flex gap-2 items-center whitespace-nowrap">
           <ModelSelect />

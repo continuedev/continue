@@ -304,67 +304,65 @@ function ModelSelect() {
   }
 
   return (
-    <div className="hidden xs:flex">
-      <Listbox
-        onChange={async (val: string) => {
-          if (val === defaultModel?.title) return;
-          dispatch(setDefaultModel({ title: val }));
-          await ideMessenger.request("update/modelChange", val);
-        }}
-      >
-        <div className="relative">
-          <StyledListboxButton
-            ref={buttonRef}
-            className="h-[18px] overflow-hidden"
-            style={{ padding: 0 }}
-            onClick={calculatePosition}
-          >
-            <span className="hover:underline">
-              {modelSelectTitle(defaultModel) || "Select model"}{" "}
-              <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
+    <Listbox
+      onChange={async (val: string) => {
+        if (val === defaultModel?.title) return;
+        dispatch(setDefaultModel({ title: val }));
+        await ideMessenger.request("update/modelChange", val);
+      }}
+    >
+      <div className="relative">
+        <StyledListboxButton
+          ref={buttonRef}
+          className="h-[18px] overflow-hidden"
+          style={{ padding: 0 }}
+          onClick={calculatePosition}
+        >
+          <span className="hover:underline">
+            {modelSelectTitle(defaultModel) || "Select model"}{" "}
+            <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
+          </span>
+        </StyledListboxButton>
+        <StyledListboxOptions showAbove={showAbove} className="z-50">
+          <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
+            {sortedOptions.map((option, idx) => (
+              <ModelOption
+                option={option}
+                idx={idx}
+                key={idx}
+                showDelete={options.length > 1}
+                showMissingApiKeyMsg={option.apiKey === ""}
+              />
+            ))}
+          </div>
+
+          <div className="mt-auto">
+            {selectedProfileId === "local" && (
+              <>
+                {options.length > 0 && <Divider className="!my-0" />}
+
+                <StyledListboxOption
+                  key={options.length}
+                  onClick={onClickAddModel}
+                  value={"addModel" as any}
+                >
+                  <div className="flex items-center py-0.5">
+                    <PlusIcon className="w-4 h-4 mr-2" />
+                    Add Chat model
+                  </div>
+                </StyledListboxOption>
+              </>
+            )}
+
+            <Divider className="!my-0" />
+
+            <span className="block px-3 py-3" style={{ color: lightGray }}>
+              <code>{getMetaKeyLabel()} + '</code> to toggle
             </span>
-          </StyledListboxButton>
-          <StyledListboxOptions showAbove={showAbove} className="z-50">
-            <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
-              {sortedOptions.map((option, idx) => (
-                <ModelOption
-                  option={option}
-                  idx={idx}
-                  key={idx}
-                  showDelete={options.length > 1}
-                  showMissingApiKeyMsg={option.apiKey === ""}
-                />
-              ))}
-            </div>
-
-            <div className="mt-auto">
-              {selectedProfileId === "local" && (
-                <>
-                  {options.length > 0 && <Divider className="!my-0" />}
-
-                  <StyledListboxOption
-                    key={options.length}
-                    onClick={onClickAddModel}
-                    value={"addModel" as any}
-                  >
-                    <div className="flex items-center py-0.5">
-                      <PlusIcon className="w-4 h-4 mr-2" />
-                      Add Chat model
-                    </div>
-                  </StyledListboxOption>
-                </>
-              )}
-
-              <Divider className="!my-0" />
-
-              <span className="block px-3 py-3" style={{ color: lightGray }}>
-                <code>{getMetaKeyLabel()} + '</code> to toggle
-              </span>
-            </div>
-          </StyledListboxOptions>
-        </div>
-      </Listbox>
-    </div>
+          </div>
+        </StyledListboxOptions>
+      </div>
+    </Listbox>
   );
 }
 
