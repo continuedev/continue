@@ -43,7 +43,7 @@ class URLContextProvider extends BaseContextProvider {
       return [
         {
           icon,
-          description: title,
+          description: url.toString(),
           content: markdown,
           name: title,
           uri: {

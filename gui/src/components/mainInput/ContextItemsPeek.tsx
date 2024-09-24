@@ -26,7 +26,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
     const { uri, name, description, content } = contextItem;
 
     if (uri?.type === "url") {
-      window.open(description, "_blank");
+      ideMessenger.post("openUrl", uri.value);
     } else if (uri) {
       const isRangeInFile = name.includes(" (") && name.endsWith(")");
 
@@ -51,7 +51,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
     if (contextItem.icon) {
       return (
         <SafeImg
-          className="flex-shrink-0 mr-2 rounded p-1"
+          className="flex-shrink-0 mr-2 rounded-md p-1"
           src={contextItem.icon}
           height={dimensions}
           width={dimensions}
