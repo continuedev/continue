@@ -2,66 +2,128 @@ package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
+import com.intellij.notification.Notification
+import com.intellij.notification.NotificationAction
+import com.intellij.notification.NotificationType
+import com.intellij.notification.Notifications
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.*
 import com.intellij.openapi.options.Configurable
-import com.intellij.openapi.project.DumbAware
+import com.intellij.ui.JBColor
+import com.intellij.ui.TitledSeparator
+import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBPasswordField
+import com.intellij.ui.components.JBTextField
 import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.messages.Topic
+import com.intellij.util.ui.FormBuilder
+import com.intellij.util.ui.JBUI
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import java.io.File
 import java.io.IOException
+import java.net.URL
+import java.text.NumberFormat
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import javax.swing.*
 
-class ContinueSettingsComponent: DumbAware {
-    val panel: JPanel = JPanel(GridBagLayout())
-    val remoteConfigServerUrl: JTextField = JTextField()
-    val remoteConfigSyncPeriod: JTextField = JTextField()
-    val userToken: JTextField = JTextField()
-    val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
-    val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable Continue for Teams Beta (requires restart)")
-    val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
+
+public class ContinueSettingsComponent {
+    val panel: JPanel
+    val remoteConfigServerUrl: JFormattedTextField = JFormattedTextField()
+    val remoteConfigSyncPeriod: JFormattedTextField = JFormattedTextField(NumberFormat.getNumberInstance())
+    val userToken: JBPasswordField = JBPasswordField()
+    val enableTabAutocomplete: JBCheckBox = JBCheckBox("Enable tab autocomplete", false)
+    val enableContinueTeamsBeta: JBCheckBox = JBCheckBox("Enabled", false)
+    val displayEditorTooltip: JBCheckBox = JBCheckBox("Display editor tooltip", false)
+    val controlPlaneProvider: JComboBox<ControlPlaneProviderName> = JComboBox(ControlPlaneProviderName.values())
+    val controlPlaneProviderParams: MutableMap<JBLabel, JBTextField> = mutableMapOf()
+
+    private fun withPanelBorder(component: JComponent): JComponent {
+        component.setBorder(JBUI.Borders.emptyLeft(17))
+        return component
+    }
 
     init {
-        val constraints = GridBagConstraints()
 
-        constraints.fill = GridBagConstraints.HORIZONTAL
-        constraints.weightx = 1.0
-        constraints.weighty = 0.0
-        constraints.gridx = 0
-        constraints.gridy = GridBagConstraints.RELATIVE
+        remoteConfigSyncPeriod.value = 60 // default value;
 
-        panel.add(JLabel("Remote Config Server URL:"), constraints)
-        constraints.gridy++
-        panel.add(remoteConfigServerUrl, constraints)
-        constraints.gridy++
-        panel.add(JLabel("Remote Config Sync Period (in minutes):"), constraints)
-        constraints.gridy++
-        panel.add(remoteConfigSyncPeriod, constraints)
-        constraints.gridy++
-        panel.add(JLabel("User Token:"), constraints)
-        constraints.gridy++
-        panel.add(userToken, constraints)
-        constraints.gridy++
-        panel.add(enableTabAutocomplete, constraints)
-        constraints.gridy++
-        panel.add(enableContinueTeamsBeta, constraints)
-        constraints.gridy++
-        panel.add(displayEditorTooltip, constraints)
-        constraints.gridy++
+        val remoteConfigPanel = FormBuilder.createFormBuilder()
+            .addLabeledComponent("Remote config server URL:", remoteConfigServerUrl, 5, false)
+            .addLabeledComponent("Remote config sync period:", remoteConfigSyncPeriod, 5, false)
+            .addTooltip("IDE will sync remote config every set amount of minutes")
+            .addLabeledComponent("User token:", userToken, 5, false)
 
-        // Add a "filler" component that takes up all remaining vertical space
-        constraints.weighty = 1.0
-        val filler = JPanel()
-        panel.add(filler, constraints)
+        val autocompletePanel = FormBuilder.createFormBuilder()
+            .addComponent(enableTabAutocomplete, 5)
+            .addComponent(displayEditorTooltip, 5)
+
+        controlPlaneProvider.setEnabled(enableContinueTeamsBeta.isSelected)
+
+        enableContinueTeamsBeta.addChangeListener {
+            controlPlaneProvider.setEnabled(enableContinueTeamsBeta.isSelected)
+        }
+
+        val controlPlaneProviderParamsPanel = FormBuilder.createFormBuilder()
+            .addComponentFillVertically(JPanel(), 0)
+
+        controlPlaneProvider.addActionListener {
+            toggleControlPlaneProviderPanel(controlPlaneProviderParamsPanel)
+        }
+
+        val controlPlaneProviderPanel = FormBuilder.createFormBuilder()
+            .addComponent(enableContinueTeamsBeta, 5)
+            .addLabeledComponent("Provider", controlPlaneProvider, 5, false)
+            .addComponent(controlPlaneProviderParamsPanel.panel, 5)
+
+        panel = FormBuilder.createFormBuilder()
+            .addComponent(TitledSeparator("Remote Config Settings"), 5)
+            .addComponent(withPanelBorder(remoteConfigPanel.panel))
+            .addComponent(TitledSeparator("Completions Options"), 5)
+            .addComponent(withPanelBorder(autocompletePanel.panel))
+            .addComponent(TitledSeparator("Teams Settings"), 5)
+            .addTooltip("Enable/Disable requires restart")
+            .addComponent(withPanelBorder(controlPlaneProviderPanel.panel), 5)
+            .addComponentFillVertically(JPanel(), 0)
+            .panel;
+    }
+
+    private fun toggleControlPlaneProviderPanel(form: FormBuilder) {
+        val selectedProvider = controlPlaneProvider.selectedItem as ControlPlaneProviderName
+        val provider = when (selectedProvider) {
+            ControlPlaneProviderName.Continue -> ContinueControlPlaneProvider()
+            ControlPlaneProviderName.Generic -> GenericControlPlaneProvider()
+        }
+
+        form.panel.removeAll()
+        controlPlaneProviderParams.clear()
+
+        provider.params.forEach { (key, value) ->
+            controlPlaneProviderParams[JBLabel("${key}:")] = JBTextField(value)
+        }
+
+        controlPlaneProviderParams.forEach { (key, value) ->
+            form.addLabeledComponent(key.text, value, 5, false)
+        }
+    }
+
+    fun validateRemoteConfigServerUrl(): Boolean {
+        val defaultBorder = UIManager.getLookAndFeel().defaults.getBorder("TextField.border")
+        try {
+            URL(remoteConfigServerUrl.text).toURI()
+            remoteConfigServerUrl.foreground = JBColor.foreground()
+            remoteConfigServerUrl.border = defaultBorder
+            return true
+        } catch (e: Exception) {
+            remoteConfigServerUrl.foreground = JBColor.RED
+            remoteConfigServerUrl.border = BorderFactory.createCompoundBorder(defaultBorder, BorderFactory.createLineBorder(JBColor.RED))
+            return false
+        }
     }
 }
 
@@ -70,6 +132,35 @@ class ContinueRemoteConfigSyncResponse {
     var configJson: String? = null
     var configJs: String? = null
 }
+
+enum class ControlPlaneProviderName(private val displayName: String) {
+    Continue("Continue for Teams"),
+    Generic("Generic Teams Provider");
+
+    override fun toString() : String {
+        return displayName
+    }
+}
+
+interface ControlPlaneProvider {
+    val name: ControlPlaneProviderName
+    var params: MutableMap<String, String>
+}
+
+class ContinueControlPlaneProvider: ControlPlaneProvider {
+    override val name: ControlPlaneProviderName = ControlPlaneProviderName.Continue
+    override var params: MutableMap<String, String> = mutableMapOf()
+}
+
+class GenericControlPlaneProvider: ControlPlaneProvider {
+    override val name: ControlPlaneProviderName = ControlPlaneProviderName.Generic
+    override var params: MutableMap<String, String> = mutableMapOf(
+        "Auth redirect URL" to "",
+        "Auth token URL" to "",
+        "Client ID" to "",
+    )
+}
+
 
 @State(
     name = "com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings",
@@ -87,6 +178,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var ghAuthToken: String? = null
         var enableContinueTeamsBeta: Boolean = false
         var displayEditorTooltip: Boolean = true
+        var controlPlaneProvider: ControlPlaneProvider = ContinueControlPlaneProvider()
     }
 
     var continueState: ContinueState = ContinueState()
@@ -190,18 +282,34 @@ class ContinueExtensionConfigurable : Configurable {
     }
 
     override fun isModified(): Boolean {
+        mySettingsComponent?.validateRemoteConfigServerUrl();
+
         val settings = ContinueExtensionSettings.instance
-        val modified = mySettingsComponent?.remoteConfigServerUrl?.text != settings.continueState.remoteConfigServerUrl ||
-                mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
-                mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
-                mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
-                mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
-                mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip
+
+        val modified =
+            mySettingsComponent?.remoteConfigServerUrl?.text != settings.continueState.remoteConfigServerUrl ||
+            mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
+            mySettingsComponent?.userToken?.getPassword().toString() != settings.continueState.userToken ||
+            mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
+            mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
+            mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip
+            mySettingsComponent?.controlPlaneProvider?.selectedItem != settings.continueState.controlPlaneProvider.name
+            mySettingsComponent?.controlPlaneProviderParams?.forEach { (key, value) ->
+                if (settings.continueState.controlPlaneProvider.params?.get(key.text) != value.text) {
+                    return true
+                }
+            }
         return modified
     }
 
     override fun apply() {
+        if (!mySettingsComponent?.validateRemoteConfigServerUrl()!!) {
+            return
+        }
+
         val settings = ContinueExtensionSettings.instance
+        val restartRequired = mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta
+
         settings.continueState.remoteConfigServerUrl = mySettingsComponent?.remoteConfigServerUrl?.text
         settings.continueState.remoteConfigSyncPeriod = mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() ?: 60
         settings.continueState.userToken = mySettingsComponent?.userToken?.text
@@ -211,6 +319,10 @@ class ContinueExtensionConfigurable : Configurable {
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC).settingsUpdated(settings.continueState)
         ContinueExtensionSettings.instance.addRemoteSyncJob()
+
+        if (restartRequired) {
+            notifyRestart()
+        }
     }
 
     override fun reset() {
@@ -231,5 +343,20 @@ class ContinueExtensionConfigurable : Configurable {
 
     override fun getDisplayName(): String {
         return "Continue Extension Settings"
+    }
+
+    private fun notifyRestart() {
+        val notification = Notification(
+            "Continue Extension",
+            "Settings updated",
+            "Some changes require a restart to take effect.",
+            NotificationType.INFORMATION,
+        )
+
+        notification.addAction(NotificationAction.createSimple("Restart IDE") {
+            ApplicationManager.getApplication().restart()
+        })
+
+        Notifications.Bus.notify(notification)
     }
 }
