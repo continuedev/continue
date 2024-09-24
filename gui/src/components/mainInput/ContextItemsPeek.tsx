@@ -2,7 +2,6 @@ import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { contextItemToRangeInFileWithContents } from "core/commands/util";
 import React, { useContext } from "react";
-import styled from "styled-components";
 import { lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
