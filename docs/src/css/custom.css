@@ -28,3 +28,10 @@
   --ifm-color-primary-lightest: #59bc89ff;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+ol{
+  margin: 2em;
+}
+li {
+  margin-bottom: 1.2em; /* Add some space between list items */
+}
