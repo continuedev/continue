@@ -148,7 +148,9 @@ class AutocompleteService(private val project: Project) {
         val editor = completion.editor
         val offset = completion.offset
         editor.document.insertString(offset, text)
+
         editor.caretModel.moveToOffset(offset + text.length)
+
 
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/accept", completion.completionId, null, ({}))
         invokeLater {
@@ -177,6 +179,7 @@ class AutocompleteService(private val project: Project) {
 
     if (currentDelimiter.isNotEmpty()) {
         result.add(currentDelimiter)
+
     }
 
     return result

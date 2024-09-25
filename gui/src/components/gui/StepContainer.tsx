@@ -123,24 +123,13 @@ function StepContainer(props: StepContainerProps) {
         </ContentDiv>
         {(props.isLast || isHovered || typeof feedback !== "undefined") &&
           !active && (
-            <div
-              className="flex items-center gap-1 absolute -bottom-2 right-2 hidden xs:flex"
-              style={{
-                color: lightGray,
-                fontSize: getFontSize() - 3,
-              }}
-            >
+            <div className="flex items-center gap-1 absolute -bottom-2 right-2 hidden xs:flex text-xs text-gray-400">
               {props.modelTitle && (
                 <div className="hidden sm:flex">
-                  <div className="flex items-center">{props.modelTitle}</div>
-                  <div
-                    className="ml-2 mr-1"
-                    style={{
-                      width: "1px",
-                      height: "20px",
-                      backgroundColor: lightGray,
-                    }}
-                  ></div>
+                  <div className="flex items-center truncate max-w-[40vw]">
+                    {props.modelTitle}
+                  </div>
+                  <div className="ml-2 mr-1 w-px h-5 bg-gray-300" />
                 </div>
               )}
 

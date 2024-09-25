@@ -571,7 +571,9 @@ export class Core {
         );
       return outcome ? [outcome.completion] : [];
     });
-    on("autocomplete/accept", async (msg) => {});
+    on("autocomplete/accept", async (msg) => {
+      this.completionProvider.accept(msg.data.completionId);
+    });
     on("autocomplete/cancel", async (msg) => {
       this.completionProvider.cancel();
     });

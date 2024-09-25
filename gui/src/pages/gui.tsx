@@ -469,20 +469,22 @@ function GUI() {
               <br />
             </>
           ) : state.history.length > 0 ? (
-            <div className="mt-2">
+            <div className="mt-2 hidden xs:inline">
               <NewSessionButton
                 onClick={() => {
                   saveSession();
                 }}
                 className="mr-auto"
               >
-                New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+                <span className="hidden xs:inline">
+                  New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+                </span>
               </NewSessionButton>{" "}
             </div>
           ) : (
             <>
               {getLastSessionId() ? (
-                <div className="mt-2">
+                <div className="mt-2 hidden xs:inline">
                   <NewSessionButton
                     onClick={async () => {
                       loadLastSession().catch((e) =>
@@ -491,7 +493,7 @@ function GUI() {
                     }}
                     className="mr-auto flex items-center gap-2"
                   >
-                    <ArrowLeftIcon width="11px" height="11px" />
+                    <ArrowLeftIcon className="w-3 h-3" />
                     Last Session
                   </NewSessionButton>
                 </div>
