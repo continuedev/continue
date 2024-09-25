@@ -72,7 +72,7 @@ async function generateCodeChallenge(verifier: string) {
 interface ContinueAuthenticationSession extends AuthenticationSession {
   refreshToken: string;
   expiresInMs: number;
-  // loginNeeded: boolean;
+  loginNeeded: boolean;
 }
 
 export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
@@ -289,6 +289,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         accessToken: access_token,
         refreshToken: refresh_token,
         expiresInMs: this.getExpirationTimeMs(access_token),
+        loginNeeded: false,
         account: {
           label: user.first_name + " " + user.last_name,
           id: user.email,
