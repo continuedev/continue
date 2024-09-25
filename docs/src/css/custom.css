@@ -30,7 +30,10 @@
 }
 
 ol{
-  margin: 2em;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  margin-left: 1em;
+  margin-right: 1em;
 }
 li {
   margin-bottom: 1.2em; /* Add some space between list items */
