@@ -35,7 +35,7 @@ function OllamaModelDownload({
       ) : (
         <>
           <StyledActionButton data-tooltip-id={id} onClick={onClick}>
-            <p className="font-mono">{command}</p>
+            <p className="font-mono truncate">{command}</p>
             <CommandLineIcon width={24} height={24} />
           </StyledActionButton>
           {tooltipPortalDiv &&

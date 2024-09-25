@@ -9,7 +9,6 @@ import { useOnboardingCard } from "./hooks/useOnboardingCard";
 const StyledCard = styled.div`
   margin: auto;
   border-radius: ${defaultBorderRadius};
-  padding: 1rem 1.5rem;
   background-color: ${vscInputBackground};
   box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1),
     0 8px 10px -6px rgb(0 0 0 / 0.1);
@@ -43,13 +42,13 @@ export function OnboardingCard(props: OnboardingCardProps) {
   }
 
   return (
-    <StyledCard className="relative">
+    <StyledCard className="relative px-2 py-3 xs:py-4 xs:px-4">
       <OnboardingCardTabs
         activeTab={onboardingCard.activeTab}
         onTabClick={onboardingCard.setActiveTab}
       />
       <CloseButton onClick={onboardingCard.close}>
-        <XMarkIcon className="h-5 w-5" />
+        <XMarkIcon className="h-5 w-5 hidden sm:flex" />
       </CloseButton>
       <div className="content py-4">{renderTabContent()}</div>
     </StyledCard>

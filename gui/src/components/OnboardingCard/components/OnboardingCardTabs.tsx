@@ -9,23 +9,39 @@ interface OnboardingCardTabsProps {
 
 export type TabTitle = "Quickstart" | "Best" | "Local";
 
-export const TabTitles: { [k in TabTitle]: { xs: string; default: string } } = {
+export const TabTitles: { [k in TabTitle]: { md: string; default: string } } = {
   Quickstart: {
-    xs: "Quickstart",
+    md: "Quickstart",
     default: "Quickstart",
   },
   Best: {
-    xs: "Best",
+    md: "Best",
     default: "Best experience",
   },
   Local: {
-    xs: "Local",
+    md: "Local",
     default: "Local with Ollama",
   },
 };
 
+const StyledSelect = styled.select`
+  width: 100%;
+  padding: 0.5rem;
+  background-color: transparent;
+  color: ${vscForeground};
+  border: none;
+  border-bottom: 1px solid ${vscForeground};
+  border-radius: 0;
+  font-size: 1rem;
+  cursor: pointer;
+  display: block;
+
+  &:focus {
+    outline: none;
+  }
+`;
+
 const TabButton = styled.button<{ isActive: boolean }>`
-  padding: 1rem 1rem 0.5rem 1rem;
   margin-bottom: -1px;
   focus: outline-none;
   background: transparent;
@@ -54,23 +70,48 @@ export function OnboardingCardTabs({
   onTabClick,
 }: OnboardingCardTabsProps) {
   return (
-    <TabList>
-      {Object.entries(TabTitles).map(([tabType, titles]) => {
-        if (hasPassedFTL() && tabType === "Quickstart") {
-          return undefined;
-        }
+    <div>
+      <div className="hidden xs:block">
+        <TabList>
+          {Object.entries(TabTitles).map(([tabType, titles]) => {
+            if (hasPassedFTL() && tabType === "Quickstart") {
+              return undefined;
+            }
 
-        return (
-          <TabButton
-            key={tabType}
-            isActive={activeTab === tabType}
-            onClick={() => onTabClick(tabType as TabTitle)}
-          >
-            <p className="hidden xs:block m-0 font-medium">{titles.default}</p>
-            <p className="block xs:hidden m-0 font-medium">{titles.xs}</p>
-          </TabButton>
-        );
-      })}
-    </TabList>
+            return (
+              <TabButton
+                className="px-6 py-2 xs:py-2 xs:px-3 sm:px-5"
+                key={tabType}
+                isActive={activeTab === tabType}
+                onClick={() => onTabClick(tabType as TabTitle)}
+              >
+                <p className="hidden md:block m-0 font-medium">
+                  {titles.default}
+                </p>
+                <p className="block md:hidden m-0 font-medium">{titles.md}</p>
+              </TabButton>
+            );
+          })}
+        </TabList>
+      </div>
+      <div className="block xs:hidden">
+        <StyledSelect
+          value={activeTab}
+          onChange={(e) => onTabClick(e.target.value as TabTitle)}
+        >
+          {Object.entries(TabTitles).map(([tabType, titles]) => {
+            if (hasPassedFTL() && tabType === "Quickstart") {
+              return null;
+            }
+
+            return (
+              <option key={tabType} value={tabType}>
+                {titles.md}
+              </option>
+            );
+          })}
+        </StyledSelect>
+      </div>
+    </div>
   );
 }

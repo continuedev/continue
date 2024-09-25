@@ -318,10 +318,15 @@ function ModelSelect() {
           style={{ padding: 0 }}
           onClick={calculatePosition}
         >
-          <span className="hover:underline">
-            {modelSelectTitle(defaultModel) || "Select model"}{" "}
-            <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
-          </span>
+          <div className="text-gray-400 hover:text-gray-300 transition-colors duration-200 flex items-center gap-1 max-w-[33vw]">
+            <span className="truncate">
+              {modelSelectTitle(defaultModel) || "Select model"}{" "}
+            </span>
+            <ChevronDownIcon
+              className="h-3 w-3 flex-shrink-0"
+              aria-hidden="true"
+            />
+          </div>
         </StyledListboxButton>
         <StyledListboxOptions showAbove={showAbove} className="z-50">
           <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
@@ -339,8 +344,6 @@ function ModelSelect() {
           <div className="mt-auto">
             {selectedProfileId === "local" && (
               <>
-                {options.length > 0 && <Divider className="!my-0" />}
-
                 <StyledListboxOption
                   key={options.length}
                   onClick={onClickAddModel}

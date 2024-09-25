@@ -341,6 +341,10 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       name: row.title,
       description: getLastNPathParts(row.path, 2),
       content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
+      uri: {
+        type: "file",
+        value: row.path,
+      },
     };
   }
 

@@ -5,7 +5,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
-import { getMarkdownLanguageTagForFile } from "core/util";
+import { dedent, getMarkdownLanguageTagForFile } from "core/util";
 import React, { useContext } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
@@ -66,18 +66,14 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const [collapsed, setCollapsed] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
 
+  const content = dedent`${props.item.content}`;
+
   const fence = React.useMemo(() => {
-    const backticks = props.item.content.match(backticksRegex);
+    const backticks = content.match(backticksRegex);
     return backticks ? backticks.sort().at(-1) + "`" : "```";
   }, [props.item.content]);
 
   const codeBlockRef = React.useRef<HTMLDivElement>(null);
-  const codeBlockHeight = `${Math.min(
-    MAX_PREVIEW_HEIGHT,
-    codeBlockRef.current?.scrollHeight ??
-      // Best estimate of height I currently could find
-      props.item.content.split("\n").length * 18 + 36,
-  )}px`;
 
   return (
     <PreviewMarkdownDiv
@@ -105,8 +101,8 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             );
           } else {
             ideMessenger.post("showVirtualFile", {
+              content,
               name: props.item.name,
-              content: props.item.content,
             });
           }
         }}
@@ -142,36 +138,32 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       </PreviewMarkdownHeader>
       <div
         contentEditable={false}
-        className="m-0"
+        className={
+          collapsed ? "max-h-[33vh] overflow-hidden m-0" : "overflow-auto m-0"
+        }
         ref={codeBlockRef}
-        style={{
-          height: collapsed ? codeBlockHeight : undefined,
-          overflow: collapsed ? "hidden" : "auto",
-        }}
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description,
-          )}\n${props.item.content.trimEnd()}\n${fence}`}
+          )}\n${content}\n${fence}`}
           showCodeBorder={false}
         />
       </div>
 
       {(codeBlockRef.current?.scrollHeight ?? 0) > MAX_PREVIEW_HEIGHT && (
         <ButtonWithTooltip
-          className="bottom-1 right-1 absolute"
+          className="bottom-1 right-2 absolute"
           text={collapsed ? "Expand" : "Collapse"}
         >
           {collapsed ? (
             <ChevronDownIcon
-              width="1.2em"
-              height="1.2em"
+              className="h-5 w-5"
               onClick={() => setCollapsed(false)}
             />
           ) : (
             <ChevronUpIcon
-              width="1.2em"
-              height="1.2em"
+              className="h-5 w-5"
               onClick={() => setCollapsed(true)}
             />
           )}

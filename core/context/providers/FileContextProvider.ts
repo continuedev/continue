@@ -36,6 +36,10 @@ class FileContextProvider extends BaseContextProvider {
         name: query.split(/[\\/]/).pop() ?? query,
         description: query,
         content: `\`\`\`${query}\n${content}\n\`\`\``,
+        uri: {
+          type: "file",
+          value: query,
+        },
       },
     ];
   }
