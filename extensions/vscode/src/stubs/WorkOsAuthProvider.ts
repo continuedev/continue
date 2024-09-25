@@ -72,7 +72,7 @@ async function generateCodeChallenge(verifier: string) {
 interface ContinueAuthenticationSession extends AuthenticationSession {
   accessToken: string;
   refreshToken: string;
-  expiresIn: number;
+  expiresInMs: number;
   // loginNeeded: boolean;
 }
 
@@ -111,6 +111,13 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       Buffer.from(jwt.split(".")[1], "base64").toString(),
     );
     return decodedToken;
+  }
+
+  private getExpirationTimeMs(jwt: string): number {
+    const decodedToken = this.decodeJwt(jwt);
+    return decodedToken.exp && decodedToken.iat
+      ? (decodedToken.exp - decodedToken.iat) * 1000
+      : WorkOsAuthProvider.EXPIRATION_TIME_MS;
   }
 
   private jwtIsExpired(jwt: string): boolean {
@@ -196,7 +203,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         const newSession = await this._refreshSession(session.refreshToken);
         session.accessToken = newSession.accessToken;
         session.refreshToken = newSession.refreshToken;
-        session.expiresIn = newSession.expiresIn;
+        session.expiresInMs = newSession.expiresInMs;
         finalSessions.push(session);
       } catch (e: any) {
         console.debug(`Error refreshing session token: ${e.message}`);
@@ -216,19 +223,21 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       changed: this._sessions,
     });
 
-    if (this._sessions[0]?.expiresIn) {
+    if (this._sessions[0]?.expiresInMs) {
       setTimeout(
         async () => {
           await this._refreshSessions();
         },
-        (this._sessions[0].expiresIn * 2) / 3,
+        (this._sessions[0].expiresInMs * 2) / 3,
       );
     }
   }
 
-  private async _refreshSession(
-    refreshToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+  private async _refreshSession(refreshToken: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    expiresInMs: number;
+  }> {
     const response = await fetch(new URL("/auth/refresh", CONTROL_PLANE_URL), {
       method: "POST",
       headers: {
@@ -243,14 +252,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       throw new Error("Error refreshing token: " + text);
     }
     const data = (await response.json()) as any;
-    const decodedToken = this.decodeJwt(data.accessToken);
     return {
       accessToken: data.accessToken,
       refreshToken: data.refreshToken,
-      expiresIn:
-        decodedToken.exp && decodedToken.iat
-          ? (decodedToken.exp - decodedToken.iat) * 1000
-          : WorkOsAuthProvider.EXPIRATION_TIME_MS,
+      expiresInMs: this.getExpirationTimeMs(data.accessToken),
     };
   }
 
@@ -277,7 +282,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         id: uuidv4(),
         accessToken: access_token,
         refreshToken: refresh_token,
-        expiresIn: WorkOsAuthProvider.EXPIRATION_TIME_MS,
+        expiresInMs: this.getExpirationTimeMs(access_token),
         account: {
           label: user.first_name + " " + user.last_name,
           id: user.email,
