@@ -114,7 +114,7 @@ function InputToolbar(props: InputToolbarProps) {
                 defaultModel.capabilities,
               ) && (
                 <span
-                  className="ml-1 -mb-0.5 cursor-pointer"
+                  className="cursor-pointer"
                   onMouseLeave={() => setFileSelectHovered(false)}
                   onMouseEnter={() => setFileSelectHovered(true)}
                 >
@@ -170,11 +170,11 @@ function InputToolbar(props: InputToolbarProps) {
                   })
                 }
               >
-                <span className="hidden md:inline">
-                  {" "}
-                  {getMetaKeyLabel()}⏎ @codebase
+                <span className="hidden lg:inline">
+                  {getMetaKeyLabel()}⏎ Use @codebase
                 </span>
-                <span className="md:hidden">@codebase</span>
+
+                <span className="hidden md:inline lg:hidden">@codebase</span>
               </HoverItem>
             )}
           </div>
@@ -187,8 +187,8 @@ function InputToolbar(props: InputToolbarProps) {
               });
             }}
           >
-            <span className="hidden md:inline">⏎ Enter</span>
-            <span className="md:hidden">⏎</span>
+            <span className="hidden sm:inline">⏎ Enter</span>
+            <span className="sm:hidden">⏎</span>
           </EnterButton>
         </div>
       </StyledDiv>

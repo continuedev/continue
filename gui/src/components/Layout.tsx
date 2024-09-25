@@ -35,6 +35,7 @@ const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
   position: relative;
+  overflow-x: hidden;
 
   &::after {
     position: absolute;

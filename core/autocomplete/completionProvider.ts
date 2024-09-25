@@ -204,7 +204,7 @@ export class CompletionProvider {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       logDevData("autocomplete", outcome);
-      Telemetry.capture(
+      void Telemetry.capture(
         "autocomplete",
         {
           accepted: outcome.accepted,
@@ -378,7 +378,7 @@ export class CompletionProvider {
       outcome.accepted = false;
       logDevData("autocomplete", outcome);
       const { prompt, completion, ...restOfOutcome } = outcome;
-      Telemetry.capture(
+      void Telemetry.capture(
         "autocomplete",
         {
           ...restOfOutcome,
