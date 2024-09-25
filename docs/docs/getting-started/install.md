@@ -4,7 +4,9 @@ description: The open-source AI code assistant for developers
 keywords: [install, installation, getting started, vs code, jetbrains]
 ---
 
-## VS Code
+## VS Code Installation
+
+![vscode-logo](/img/vscode-logo-100.png)
 
 1. Click `Install` on the [Continue extension page in the Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Continue.continue)
 
@@ -18,7 +20,9 @@ keywords: [install, installation, getting started, vs code, jetbrains]
 If you have any problems, see the [troubleshooting guide](troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs)
 :::
 
-## JetBrains
+## JetBrains Installation
+
+![jetbrains-logo](/img/jetbrains-logo-100.png)
 
 1. Open your JetBrains IDE and open **Settings** using `cmd/ctrl + ,`
 
