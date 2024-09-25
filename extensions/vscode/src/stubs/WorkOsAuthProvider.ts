@@ -86,7 +86,6 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
   private _uriHandler = new UriEventHandler();
-  private _sessions: ContinueAuthenticationSession[] = [];
 
   private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
 
@@ -187,18 +186,18 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return this.ideRedirectUri;
   }
 
-  async initialize() {
-    this._sessions = await this.getSessions();
+  async refreshSessions() {
     await this._refreshSessions();
   }
 
   private async _refreshSessions(): Promise<void> {
-    if (!this._sessions.length) {
+    const sessions = await this.getSessions();
+    if (!sessions.length) {
       return;
     }
 
     const finalSessions = [];
-    for (const session of this._sessions) {
+    for (const session of sessions) {
       try {
         const newSession = await this._refreshSession(session.refreshToken);
         session.accessToken = newSession.accessToken;
@@ -206,29 +205,35 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         session.expiresInMs = newSession.expiresInMs;
         finalSessions.push(session);
       } catch (e: any) {
+        // If the refresh token doesn't work, we just drop the session
         console.debug(`Error refreshing session token: ${e.message}`);
         await this.debugAccessTokenValidity(
           session.accessToken,
           session.refreshToken,
         );
+        this._sessionChangeEmitter.fire({
+          added: [],
+          removed: [session],
+          changed: [],
+        });
+        // We don't need to refresh the sessions again, since we'll get a new one when we need it
         // setTimeout(() => this._refreshSessions(), 60 * 1000);
         // return;
       }
     }
-    this._sessions = finalSessions;
-    await this.storeSessions(this._sessions);
+    await this.storeSessions(finalSessions);
     this._sessionChangeEmitter.fire({
       added: [],
       removed: [],
-      changed: this._sessions,
+      changed: finalSessions,
     });
 
-    if (this._sessions[0]?.expiresInMs) {
+    if (finalSessions[0]?.expiresInMs) {
       setTimeout(
         async () => {
           await this._refreshSessions();
         },
-        (this._sessions[0].expiresInMs * 2) / 3,
+        (finalSessions[0].expiresInMs * 2) / 3,
       );
     }
   }
