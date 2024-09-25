@@ -1,4 +1,5 @@
 import {
+  ArrowRightStartOnRectangleIcon,
   BookOpenIcon,
   ClipboardDocumentIcon,
   Cog6ToothIcon,
@@ -7,7 +8,9 @@ import {
 } from "@heroicons/react/24/outline";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscBackground } from "..";
-import { getMetaKeyLabel } from "../../util";
+import { getMetaKeyLabel, isJetBrains } from "../../util";
+import { useContext } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 interface TutorialCardProps {
   onClose: () => void;
@@ -38,6 +41,8 @@ const CloseButton = styled.button`
 `;
 
 export function TutorialCard({ onClose }: TutorialCardProps) {
+  const ideMessenger = useContext(IdeMessengerContext);
+
   return (
     <TutorialCardDiv>
       <CloseButton onClick={onClose}>
@@ -45,46 +50,53 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
       </CloseButton>
 
       <ul className="space-y-4 pl-0" style={{ color: lightGray }}>
+        {!isJetBrains() && (
+          <li className="flex items-start">
+            <ArrowRightStartOnRectangleIcon className="align-middle pr-3 h-4 w-4" />
+            <span>
+              <span
+                className="underline cursor-pointer"
+                onClick={() =>
+                  ideMessenger.request(
+                    "vscode/openMoveRightMarkdown",
+                    undefined,
+                  )
+                }
+              >
+                Move Chat panel to the right
+              </span>{" "}
+              for the cleanest experience
+            </span>
+          </li>
+        )}
         <li className="flex items-start">
-          <PencilSquareIcon
-            width="1.4em"
-            height="1.4em"
-            className="align-middle pr-3"
-          />
+          <PencilSquareIcon className="align-middle pr-3 h-4 w-4" />
           <span>
             Highlight code and press <code>{getMetaKeyLabel() + "I"}</code> to
             quickly make natural language edits
           </span>
         </li>
         <li className="flex items-start">
-          <ClipboardDocumentIcon
-            width="1.4em"
-            height="1.4em"
-            className="align-middle pr-3"
-          />
+          <ClipboardDocumentIcon className="align-middle pr-3 h-4 w-4" />
           <span>
             Highlight code and press <code>{getMetaKeyLabel() + "L"}</code> to
             add it to the chat window
           </span>
         </li>
         <li className="flex items-start">
-          <Cog6ToothIcon
-            width="1.4em"
-            height="1.4em"
-            className="align-middle pr-3"
-          />
+          <Cog6ToothIcon className="align-middle pr-3 h-4 w-4" />
           <span>
             Click the gear icon in the bottom right to configure Continue
           </span>
         </li>
         <li className="flex items-start">
-          <BookOpenIcon
-            width="1.4em"
-            height="1.4em"
-            className="align-middle pr-3"
-          />
+          <BookOpenIcon className="align-middle pr-3 h-4 w-4" />
           <span>
-            <a href="https://docs.continue.dev" target="_blank">
+            <a
+              href="https://docs.continue.dev"
+              target="_blank"
+              className="text-inherit underline cursor-pointer hover:text-inherit"
+            >
               Read our documentation
             </a>{" "}
             to learn more
