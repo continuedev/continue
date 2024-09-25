@@ -304,6 +304,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         changed: [],
       });
 
+      setTimeout(
+        () => this._refreshSessions(),
+        (this.getExpirationTimeMs(session.accessToken) * 2) / 3,
+      );
+
       return session;
     } catch (e) {
       window.showErrorMessage(`Sign in failed: ${e}`);
