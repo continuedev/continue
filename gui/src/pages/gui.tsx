@@ -503,11 +503,11 @@ function GUI() {
                 </div>
               )}
 
-              {
+              {showTutorialCard !== false && !onboardingCard.open && (
                 <div className="flex justify-center w-full">
                   <TutorialCard onClose={closeTutorialCard} />
                 </div>
-              }
+              )}
             </>
           )}
         </div>
