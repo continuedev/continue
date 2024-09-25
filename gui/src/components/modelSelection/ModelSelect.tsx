@@ -344,8 +344,6 @@ function ModelSelect() {
           <div className="mt-auto">
             {selectedProfileId === "local" && (
               <>
-                {options.length > 0 && <Divider className="!my-0" />}
-
                 <StyledListboxOption
                   key={options.length}
                   onClick={onClickAddModel}
