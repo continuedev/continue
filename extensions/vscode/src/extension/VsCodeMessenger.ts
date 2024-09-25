@@ -89,7 +89,11 @@ export class VsCodeMessenger {
       vscode.commands.executeCommand(
         "markdown.showPreview",
         vscode.Uri.file(
-          path.join(getExtensionUri().fsPath, "media", "welcome.md"),
+          path.join(
+            getExtensionUri().fsPath,
+            "media",
+            "move-chat-panel-right.md",
+          ),
         ),
       );
     });
