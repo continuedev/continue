@@ -20,7 +20,6 @@ import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
-  showBorder?: boolean;
 }>`
   pre {
     background-color: ${vscEditorBackground};
@@ -30,7 +29,7 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    padding: ${(props) => (props.showBorder ? "8px 12px" : "0px 2px")};
+    padding: 6px;
     margin: 0px;
   }
 
@@ -180,9 +179,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.source]);
 
   return (
-    <StyledMarkdown fontSize={getFontSize()} showBorder={props.showCodeBorder}>
-      {reactContent}
-    </StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
   );
 });
 
