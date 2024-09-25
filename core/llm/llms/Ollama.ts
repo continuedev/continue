@@ -61,7 +61,7 @@ class Ollama extends BaseLLM {
                   this.completionOptions.stop.push(JSON.parse(value));
                 } catch (e) {
                   console.warn(
-                    "Error parsing stop parameter value \"{value}: ${e}",
+                    'Error parsing stop parameter value "{value}: ${e}',
                   );
                 }
                 break;
@@ -132,11 +132,13 @@ class Ollama extends BaseLLM {
   private _convertArgs(
     options: CompletionOptions,
     prompt: string | ChatMessage[],
+    suffix?: string,
   ) {
     const finalOptions: any = {
       model: this._getModel(),
       raw: true,
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
+      suffix,
       options: {
         temperature: options.temperature,
         top_p: options.topP,
@@ -238,6 +240,50 @@ class Ollama extends BaseLLM {
                 content: j.message.content,
               };
             } else if (j.error) {
+              throw new Error(j.error);
+            }
+          } catch (e) {
+            throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
+          }
+        }
+      }
+    }
+  }
+
+  supportsFim(): boolean {
+    return true;
+  }
+
+  protected async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string> {
+    const response = await this.fetch(this.getEndpoint("api/generate"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify(this._convertArgs(options, prefix, suffix)),
+    });
+
+    let buffer = "";
+    for await (const value of streamResponse(response)) {
+      // Append the received chunk to the buffer
+      buffer += value;
+      // Split the buffer into individual JSON chunks
+      const chunks = buffer.split("\n");
+      buffer = chunks.pop() ?? "";
+
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        if (chunk.trim() !== "") {
+          try {
+            const j = JSON.parse(chunk);
+            if ("response" in j) {
+              yield j.response;
+            } else if ("error" in j) {
               throw new Error(j.error);
             }
           } catch (e) {

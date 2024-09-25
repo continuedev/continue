@@ -430,7 +430,7 @@ export abstract class BaseLLM implements ILLM {
     return formatted;
   }
 
-  async *_streamFim(
+  protected async *_streamFim(
     prefix: string,
     suffix: string,
     options: CompletionOptions,
