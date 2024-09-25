@@ -86,8 +86,6 @@ function InputToolbar(props: InputToolbarProps) {
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
 
-  console.log(props.activeKey);
-
   return (
     <>
       <StyledDiv

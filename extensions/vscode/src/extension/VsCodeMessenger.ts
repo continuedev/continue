@@ -84,9 +84,24 @@ export class VsCodeMessenger {
     this.onWebview("showFile", (msg) => {
       this.ide.openFile(msg.data.filepath);
     });
+
+    this.onWebview("vscode/openMoveRightMarkdown", (msg) => {
+      vscode.commands.executeCommand(
+        "markdown.showPreview",
+        vscode.Uri.file(
+          path.join(
+            getExtensionUri().fsPath,
+            "media",
+            "move-chat-panel-right.md",
+          ),
+        ),
+      );
+    });
+
     this.onWebview("openConfigJson", (msg) => {
       this.ide.openFile(getConfigJsonPath());
     });
+
     this.onWebview("readRangeInFile", async (msg) => {
       return await vscode.workspace
         .openTextDocument(msg.data.filepath)
