@@ -70,7 +70,6 @@ async function generateCodeChallenge(verifier: string) {
 }
 
 interface ContinueAuthenticationSession extends AuthenticationSession {
-  accessToken: string;
   refreshToken: string;
   expiresInMs: number;
   // loginNeeded: boolean;
@@ -200,10 +199,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     for (const session of sessions) {
       try {
         const newSession = await this._refreshSession(session.refreshToken);
-        session.accessToken = newSession.accessToken;
-        session.refreshToken = newSession.refreshToken;
-        session.expiresInMs = newSession.expiresInMs;
-        finalSessions.push(session);
+        finalSessions.push({
+          ...session,
+          accessToken: newSession.accessToken,
+          refreshToken: newSession.refreshToken,
+          expiresInMs: newSession.expiresInMs,
+        });
       } catch (e: any) {
         // If the refresh token doesn't work, we just drop the session
         console.debug(`Error refreshing session token: ${e.message}`);
