@@ -45,7 +45,7 @@ class Anthropic extends BaseLLM {
         // The second-to-last because it retrieves potentially already cached contents,
         // The last one because we want it cached for later retrieval.
         // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-        const addCaching = !!this.cacheConversation && lastTwoUserMsgIndices.includes(filteredMsgIdx);
+        const addCaching = this.cacheBehavior?.cacheConversation && lastTwoUserMsgIndices.includes(filteredMsgIdx);
 
         if (typeof message.content === "string") {
           var chatMessage = {
@@ -98,7 +98,7 @@ class Anthropic extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage = !!this.systemMessage && !!this.cacheSystemMessage;
+    const shouldCacheSystemMessage = !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const systemMessage: string = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content,
     );
@@ -110,7 +110,7 @@ class Anthropic extends BaseLLM {
         Accept: "application/json",
         "anthropic-version": "2023-06-01",
         "x-api-key": this.apiKey as string,
-        ...(shouldCacheSystemMessage || !!this.cacheConversation
+        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
           ? { "anthropic-beta": "prompt-caching-2024-07-31" }
           : {}),
       },
@@ -136,7 +136,7 @@ class Anthropic extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      // if (value.type == "message_start") console.log(value);
+      if (value.type == "message_start") console.log(value);
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }
