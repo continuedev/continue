@@ -278,8 +278,10 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
                 horizontalAlignment = SwingConstants.RIGHT
             }
             selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
-                val index = modelTitles.indexOf(it)
-                if (index != -1) index else 0
+                if (modelTitles.isEmpty()) -1 else {
+                    val index = modelTitles.indexOf(it)
+                    if (index != -1) index else 0
+                }
             } ?: 0
 
             addActionListener {
