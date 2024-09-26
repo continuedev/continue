@@ -2,9 +2,7 @@ import * as vscode from "vscode";
 import { VerticalDiffCodeLens } from "../../../diff/vertical/manager";
 import { getAltOrOption, getMetaKeyLabel } from "../../../util/util";
 
-export class VerticalPerLineCodeLensProvider
-  implements vscode.CodeLensProvider
-{
+export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
   private _eventEmitter: vscode.EventEmitter<void> =
     new vscode.EventEmitter<void>();
 
