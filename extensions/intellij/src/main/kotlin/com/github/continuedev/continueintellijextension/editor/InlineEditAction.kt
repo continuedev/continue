@@ -103,7 +103,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
             return
      }
 
-    val manager = EditorComponentInlaysManager.from(editor)
+    val manager = EditorComponentInlaysManager.from(editor, true)
 
     // Get list of model titles
     val continuePluginService = project.service<ContinuePluginService>()
@@ -192,7 +192,9 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                 diffStreamService.reject(editor)
 
                 // Re-highlight the selected text
-                selectionModel.setSelection(start, end)
+                val documentLength = editor.document.textLength
+                val safeEnd = minOf(end, documentLength)
+                selectionModel.setSelection(start, safeEnd)
             } else if (e.keyCode == KeyEvent.VK_ENTER) {
                 if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
                     textArea.document.insertString(textArea.caretPosition, "\n", null)

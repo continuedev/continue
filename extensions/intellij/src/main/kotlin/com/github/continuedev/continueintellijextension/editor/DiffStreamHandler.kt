@@ -7,6 +7,7 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.RangeHighlighter
@@ -17,6 +18,7 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import java.awt.event.KeyEvent
+import javax.swing.BorderFactory
 import javax.swing.JTextArea
 import kotlin.math.min
 
@@ -34,6 +36,7 @@ class DiffStreamHandler(
         private val onClose: () -> Unit,
         private val onFinish: () -> Unit
 ) {
+    // Text attributes keys
     private val greenKey = run {
         val attributes = TextAttributes().apply {
             backgroundColor = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
@@ -61,11 +64,17 @@ class DiffStreamHandler(
         key
     }
 
+    private val editorComponentInlaysManager = EditorComponentInlaysManager.from(editor, false)
+
+    // State variables
     private var currentLine = startLine
     private var currentLineHighlighter: RangeHighlighter? = null
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
-    private var changeCount: Int = 0
+    private var changeCount: Int = 0  // Kept track of so we can count steps to undo when cancelling
     private var running: Boolean = false
+
+    private var deletionBufferStartLine: Int = -1
+    private val deletionsBuffer: MutableList<String> = mutableListOf()
 
     fun setup() {
         // Highlight the range with unfinished color
@@ -77,11 +86,44 @@ class DiffStreamHandler(
         }
     }
 
+    private fun deleteLineAt(index: Int) {
+        val startOffset = editor.document.getLineStartOffset(index)
+        val endOffset = editor.document.getLineEndOffset(index) + 1
+        editor.document.deleteString(startOffset, min(endOffset, editor.document.textLength))
+    }
+
+    private fun insertDeletionBuffer() {
+        // Insert red highlighted code between the real lines in the editor
+        if (deletionBufferStartLine != -1 && deletionsBuffer.isNotEmpty()) {
+            val component = JTextArea().apply {
+                text = deletionsBuffer.joinToString("                                     \n")
+                isEditable = false
+                background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
+                foreground = JBColor.GRAY
+                border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
+                lineWrap = false
+                wrapStyleWord = false
+                columns = Int.MAX_VALUE // This ensures the component takes up the full width
+                margin = java.awt.Insets(0, -100, 0, 0)
+
+                font = editor.colorsScheme.getFont(EditorFontType.PLAIN)
+                preferredSize = java.awt.Dimension(editor.contentComponent.width, preferredSize.height)
+            }
+
+            editorComponentInlaysManager.insertAfter(deletionBufferStartLine - 1, component)
+
+            // Clear the buffer
+            deletionsBuffer.clear()
+            deletionBufferStartLine = -1
+        }
+    }
+
     private fun handleDiffLine(type: DiffLineType, line: String) {
         println("DiffStreamHandler: handleDiffLine: $currentLine, $type, $line")
         try {
         when (type) {
             DiffLineType.SAME -> {
+                insertDeletionBuffer()
                 currentLine++
             }
             DiffLineType.NEW -> {
@@ -95,14 +137,21 @@ class DiffStreamHandler(
                 // Highlight the new line green
                 editor.markupModel.addLineHighlighter(greenKey, currentLine, HighlighterLayer.LAST)
 
+                insertDeletionBuffer()
+
                 currentLine++
                 changeCount++
             }
             DiffLineType.OLD -> {
                 // Remove old line
-                val startOffset = editor.document.getLineStartOffset(currentLine)
-                val endOffset = editor.document.getLineEndOffset(currentLine) + 1
-                editor.document.deleteString(startOffset, min(endOffset, editor.document.textLength))
+                deleteLineAt(currentLine)
+
+                // Add to deletions buffer
+                deletionsBuffer.add(line)
+                if (deletionBufferStartLine == -1) {
+                    deletionBufferStartLine = currentLine
+                }
+
                 changeCount++
             }
         }
@@ -175,12 +224,7 @@ class DiffStreamHandler(
         running = true
 
         // Highlight the range with unfinished color
-        for (i in startLine..endLine) {
-            val highlighter = editor.markupModel.addLineHighlighter(unfinishedKey, min(
-                    i, editor.document.lineCount - 1
-            ), HighlighterLayer.FIRST)
-            unfinishedHighlighters.add(highlighter)
-        }
+        setup()
 
         // Request diff stream from core
         val continuePluginService = ServiceManager.getService(
@@ -206,11 +250,14 @@ class DiffStreamHandler(
                 onFinish()
 
                 ApplicationManager.getApplication().invokeLater {
-                    // Clean up highlighters
+                    // Clean up progress highlighters
                     if (currentLineHighlighter != null) {
                         editor.markupModel.removeHighlighter(currentLineHighlighter!!)
                     }
                     unfinishedHighlighters.forEach { editor.markupModel.removeHighlighter(it) }
+
+                    // Flush deletion buffer
+                    insertDeletionBuffer()
 
                     // Add ", " to the text area
                     textArea.document.insertString(textArea.caretPosition, ", ", null)

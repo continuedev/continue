@@ -26,7 +26,7 @@ import kotlin.math.min
  * Copied from com.intellij.util.ui.codereview.diff.EditorComponentInlaysManager
  * via https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/EditorComponentInlaysManager.kt
  */
-class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
+class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneInlay: Boolean) : Disposable {
 
     private val managedInlays = mutableMapOf<ComponentWrapper, Disposable>()
     private val editorWidthWatcher = EditorTextWidthWatcher()
@@ -44,8 +44,10 @@ class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
     fun insertAfter(lineIndex: Int, component: JComponent): Disposable? {
         if (Disposer.isDisposed(this)) return null
 
-        // Dispose all other inlays
-        managedInlays.values.forEach(Disposer::dispose)
+        if (onlyOneInlay) {
+            // Dispose all other inlays
+            managedInlays.values.forEach(Disposer::dispose)
+        }
 
         val wrappedComponent = ComponentWrapper(component)
         val offset = editor.document.getLineEndOffset(lineIndex)
@@ -144,11 +146,11 @@ class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
     companion object {
         val INLAYS_KEY: Key<EditorComponentInlaysManager> = Key.create("EditorComponentInlaysManager")
 
-        fun from(editor: Editor): EditorComponentInlaysManager {
+        fun from(editor: Editor, onlyOneInlay: Boolean): EditorComponentInlaysManager {
             return synchronized(editor) {
                 val manager = editor.getUserData(INLAYS_KEY)
                 if (manager == null) {
-                    val newManager = EditorComponentInlaysManager(editor as EditorImpl)
+                    val newManager = EditorComponentInlaysManager(editor as EditorImpl, false)
                     editor.putUserData(INLAYS_KEY, newManager)
                     newManager
                 } else manager
