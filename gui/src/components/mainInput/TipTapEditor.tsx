@@ -878,9 +878,13 @@ function TipTapEditor(props: TipTapEditorProps) {
         activeKey={activeKey}
         hidden={shouldHideToolbar && !props.isMainInput}
         onAddContextItem={() => {
-          if (editor.getText().endsWith("@")) {
-          } else {
+          if (!editor.getText().endsWith("@")) {
             editor.commands.insertContent("@");
+          }
+        }}
+        onAddSlashCommand={() => {
+          if (!editor.getText().endsWith("/")) {
+            editor.commands.insertContent("/");
           }
         }}
         onEnter={onEnterRef.current}
