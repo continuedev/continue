@@ -166,7 +166,9 @@ export class VsCodeMessenger {
       const editor = vscode.window.activeTextEditor;
 
       if (!editor) {
-        vscode.window.showErrorMessage("No active editor to apply edits to");
+        vscode.window.showErrorMessage(
+          "No active editor to apply edits to. Please open a file you'd like to apply the edits to first.",
+        );
         return;
       }
 
