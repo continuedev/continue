@@ -10,12 +10,7 @@ import { stripImages } from "core/llm/images";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscBackground,
-  vscInputBackground,
-} from "..";
+import { defaultBorderRadius, vscBackground, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
@@ -49,30 +44,15 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
 
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const isUserInput = props.item.message.role === "user";
   const active = useSelector((store: RootState) => store.state.active);
+  const history = useSelector((state: RootState) => state.state.history);
+  const [truncatedEarly, setTruncatedEarly] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
-
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
-
   const sessionId = useSelector((store: RootState) => store.state.sessionId);
 
-  const sendFeedback = (feedback: boolean) => {
-    setFeedback(feedback);
-    if (props.item.promptLogs?.length) {
-      for (const promptLog of props.item.promptLogs) {
-        ideMessenger.post("devdata/log", {
-          tableName: "chat",
-          data: { ...promptLog, feedback, sessionId },
-        });
-      }
-    }
-  };
-
-  const [truncatedEarly, setTruncatedEarly] = useState(false);
-
+  const isUserInput = props.item.message.role === "user";
   const uiConfig = useUIConfig();
-
   useEffect(() => {
     if (!active) {
       const content = stripImages(props.item.message.content).trim();
@@ -91,6 +71,18 @@ function StepContainer(props: StepContainerProps) {
       }
     }
   }, [props.item.message.content, active]);
+
+  const sendFeedback = (feedback: boolean) => {
+    setFeedback(feedback);
+    if (props.item.promptLogs?.length) {
+      for (const promptLog of props.item.promptLogs) {
+        ideMessenger.post("devdata/log", {
+          tableName: "chat",
+          data: { ...promptLog, feedback, sessionId },
+        });
+      }
+    }
+  };
 
   return (
     <div
@@ -121,6 +113,7 @@ function StepContainer(props: StepContainerProps) {
             />
           )}
         </ContentDiv>
+
         {(props.isLast || isHovered || typeof feedback !== "undefined") &&
           !active && (
             <div className="flex items-center gap-1 absolute -bottom-2 right-2 hidden xs:flex text-xs text-gray-400">
@@ -129,7 +122,7 @@ function StepContainer(props: StepContainerProps) {
                   <div className="flex items-center truncate max-w-[40vw]">
                     {props.modelTitle}
                   </div>
-                  <div className="ml-2 mr-1 w-px h-5 bg-gray-300" />
+                  <div className="ml-2 mr-1 w-px h-5 bg-gray-400" />
                 </div>
               )}
 
@@ -137,38 +130,28 @@ function StepContainer(props: StepContainerProps) {
                 <ButtonWithTooltip
                   tabIndex={-1}
                   text="Continue generation"
-                  onClick={(e) => {
-                    props.onContinueGeneration();
-                  }}
+                  onClick={props.onContinueGeneration}
                 >
-                  <BarsArrowDownIcon
-                    color={lightGray}
-                    width="1.2em"
-                    height="1.2em"
-                  />
+                  <BarsArrowDownIcon className="h-4 w-4" />
                 </ButtonWithTooltip>
               )}
 
               <CopyButton
                 tabIndex={-1}
                 text={stripImages(props.item.message.content)}
-                color={lightGray}
               />
+
               <ButtonWithTooltip
                 tabIndex={-1}
                 text="Regenerate"
-                onClick={(e) => {
-                  props.onRetry();
-                }}
+                onClick={props.onRetry}
               >
-                <ArrowPathIcon color={lightGray} width="1.2em" height="1.2em" />
+                <ArrowPathIcon className="h-4 w-4" />
               </ButtonWithTooltip>
               {feedback === false || (
                 <ButtonWithTooltip text="Helpful" tabIndex={-1}>
                   <HandThumbUpIcon
-                    width="1.2em"
-                    height="1.2em"
-                    color={lightGray}
+                    className="h-4 w-4"
                     onClick={() => {
                       sendFeedback(true);
                     }}
@@ -178,25 +161,19 @@ function StepContainer(props: StepContainerProps) {
               {feedback === true || (
                 <ButtonWithTooltip text="Unhelpful" tabIndex={-1}>
                   <HandThumbDownIcon
-                    width="1.2em"
-                    height="1.2em"
-                    color={lightGray}
+                    className="h-4 w-4"
                     onClick={() => {
                       sendFeedback(false);
                     }}
                   />
                 </ButtonWithTooltip>
               )}
-              <ButtonWithTooltip text="Delete" tabIndex={-1}>
-                <TrashIcon
-                  color={lightGray}
-                  width="1.2em"
-                  height="1.2em"
-                  onClick={() => {
-                    props.onDelete();
-                  }}
-                />
-              </ButtonWithTooltip>
+
+              {props.index !== 1 && (
+                <ButtonWithTooltip text="Delete" tabIndex={-1}>
+                  <TrashIcon className="h-4 w-4" onClick={props.onDelete} />
+                </ButtonWithTooltip>
+              )}
             </div>
           )}
       </div>

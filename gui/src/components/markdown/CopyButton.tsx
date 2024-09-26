@@ -36,7 +36,7 @@ export function CopyButton(props: CopyButtonProps) {
         {copied ? (
           <CheckIcon className="w-4 h-4 text-green-500" />
         ) : (
-          <ClipboardIcon className="w-4 h-4" color={props.color} />
+          <ClipboardIcon className="w-4 h-4 text-inherit" />
         )}
       </ButtonWithTooltip>
     </>

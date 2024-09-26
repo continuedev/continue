@@ -1,11 +1,11 @@
 import {
   AtSymbolIcon,
-  PhotoIcon as OutlinePhotoIcon,
+  PhotoIcon,
+  SlashIcon,
 } from "@heroicons/react/24/outline";
-import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -48,11 +48,7 @@ const HoverItem = styled.span<{ isActive?: boolean }>`
   padding-top: 2px;
   padding-bottom: 2px;
   cursor: pointer;
-  transition: color 200ms;
-
-  &:hover {
-    color: #d1d5db;
-  }
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
 `;
 
 const EnterButton = styled.div`
@@ -73,6 +69,7 @@ const EnterButton = styled.div`
 interface InputToolbarProps {
   onEnter?: (modifiers: InputModifiers) => void;
   onAddContextItem?: () => void;
+  onAddSlashCommand?: () => void;
   onClick?: () => void;
   onImageFileSelected?: (file: File) => void;
   hidden?: boolean;
@@ -81,10 +78,17 @@ interface InputToolbarProps {
 
 function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [fileSelectHovered, setFileSelectHovered] = useState(false);
-
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
+
+  const supportsImages =
+    defaultModel &&
+    modelSupportsImages(
+      defaultModel.provider,
+      defaultModel.model,
+      defaultModel.title,
+      defaultModel.capabilities,
+    );
 
   return (
     <>
@@ -92,67 +96,56 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
-        className="hidden xs:flex"
+        className="hidden xs:flex "
       >
         <div className="flex gap-2 items-center whitespace-nowrap justify-start">
-          <div>
-            <ModelSelect />
-          </div>
-          <div className="items-center hidden xs:flex">
-            <HoverItem
-              onClick={props.onAddContextItem}
-              className="text-gray-400 hover:text-gray-300 transition-colors duration-200"
-            >
-              <AtSymbolIcon className="h-4 w-4" aria-hidden="true" />
-            </HoverItem>
-
-            {defaultModel &&
-              modelSupportsImages(
-                defaultModel.provider,
-                defaultModel.model,
-                defaultModel.title,
-                defaultModel.capabilities,
-              ) && (
-                <span
-                  className="cursor-pointer"
-                  onMouseLeave={() => setFileSelectHovered(false)}
-                  onMouseEnter={() => setFileSelectHovered(true)}
-                >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    style={{ display: "none" }}
-                    accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
-                    onChange={(e) => {
-                      for (const file of e.target.files) {
-                        props.onImageFileSelected(file);
-                      }
+          <ModelSelect />
+          <div className="items-center hidden xs:flex gap-1 text-gray-400 transition-colors duration-200">
+            {supportsImages && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                  onChange={(e) => {
+                    for (const file of e.target.files) {
+                      props.onImageFileSelected(file);
+                    }
+                  }}
+                />
+                <HoverItem className="hover:text-gray-300">
+                  <PhotoIcon
+                    className="h-4 w-4"
+                    onClick={(e) => {
+                      fileInputRef.current?.click();
                     }}
                   />
-                  {fileSelectHovered ? (
-                    <SolidPhotoIcon
-                      className="h-4 w-4 text-gray-400 hover:text-gray-300 transition-colors duration-200"
-                      onClick={(e) => {
-                        fileInputRef.current?.click();
-                      }}
-                    />
-                  ) : (
-                    <OutlinePhotoIcon
-                      className="h-4 w-4 text-gray-400 hover:text-gray-300 transition-colors duration-200"
-                      onClick={(e) => {
-                        fileInputRef.current?.click();
-                      }}
-                    />
-                  )}
-                </span>
-              )}
+                </HoverItem>
+              </>
+            )}
+
+            <HoverItem
+              className="hover:text-gray-300"
+              onClick={props.onAddContextItem}
+            >
+              <AtSymbolIcon className="h-4 w-4" />
+            </HoverItem>
+
+            <HoverItem
+              className="hover:text-gray-300"
+              onClick={props.onAddSlashCommand}
+              style={{ paddingLeft: 0 }}
+            >
+              <SlashIcon className="h-4 w-4" />
+            </HoverItem>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 whitespace-nowrap">
-          <div className="hidden sm:flex">
+        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400 ">
+          <div className="hidden sm:flex transition-colors duration-200">
             {props.activeKey === "Alt" ? (
-              <HoverItem>
+              <HoverItem className="text-gray-300 ">
                 {`${getAltKeyLabel()}⏎ 
                   ${useActiveFile ? "No active file" : "Active file"}`}
               </HoverItem>
@@ -161,7 +154,7 @@ function InputToolbar(props: InputToolbarProps) {
                 className={
                   props.activeKey === "Meta"
                     ? "text-gray-300"
-                    : "text-gray-400 hover:text-gray-300 transition-colors duration-200"
+                    : "hover:text-gray-300"
                 }
                 onClick={(e) =>
                   props.onEnter({
@@ -170,11 +163,11 @@ function InputToolbar(props: InputToolbarProps) {
                   })
                 }
               >
-                <span className="hidden lg:inline">
+                <span className="hidden md:inline">
                   {getMetaKeyLabel()}⏎ Use @codebase
                 </span>
 
-                <span className="hidden md:inline lg:hidden">@codebase</span>
+                <span className="md:hidden">@codebase</span>
               </HoverItem>
             )}
           </div>
@@ -187,8 +180,8 @@ function InputToolbar(props: InputToolbarProps) {
               });
             }}
           >
-            <span className="hidden sm:inline">⏎ Enter</span>
-            <span className="sm:hidden">⏎</span>
+            <span className="hidden md:inline">⏎ Enter</span>
+            <span className="md:hidden">⏎</span>
           </EnterButton>
         </div>
       </StyledDiv>

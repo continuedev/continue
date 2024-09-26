@@ -318,7 +318,7 @@ function ModelSelect() {
           style={{ padding: 0 }}
           onClick={calculatePosition}
         >
-          <div className="text-gray-400 hover:text-gray-300 transition-colors duration-200 flex items-center gap-1 max-w-[40vw]">
+          <div className="text-gray-400 hover:text-gray-300 transition-colors duration-200 flex items-center gap-0.5 max-w-[33vw]">
             <span className="truncate">
               {modelSelectTitle(defaultModel) || "Select model"}{" "}
             </span>
@@ -328,7 +328,10 @@ function ModelSelect() {
             />
           </div>
         </StyledListboxButton>
-        <StyledListboxOptions showAbove={showAbove} className="z-50">
+        <StyledListboxOptions
+          showAbove={showAbove}
+          className="z-50 max-w-[90vw]"
+        >
           <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
             {sortedOptions.map((option, idx) => (
               <ModelOption
