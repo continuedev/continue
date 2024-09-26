@@ -29,7 +29,7 @@ export function addContextProvider(provider: ContextProviderWithParams) {
   });
 }
 
-export function addModel(model: ModelDescription) {
+export function addModel(model: ModelDescription, role?: keyof ModelRoles) {
   editConfigJson((config) => {
     if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
       return config;
@@ -39,6 +39,18 @@ export function addModel(model: ModelDescription) {
     }
 
     config.models.push(model);
+
+    // Set the role for the model
+    if (role) {
+      if (!config.experimental) {
+        config.experimental = {};
+      }
+      if (!config.experimental.modelRoles) {
+        config.experimental.modelRoles = {};
+      }
+      config.experimental.modelRoles[role] = model.title;
+    }
+
     return config;
   });
 }

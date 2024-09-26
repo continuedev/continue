@@ -226,7 +226,7 @@ export class Core {
     // Edit config
     on("config/addModel", (msg) => {
       const model = msg.data.model;
-      addModel(model);
+      addModel(model, msg.data.role);
       void this.configHandler.reloadConfig();
     });
 

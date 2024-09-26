@@ -1,5 +1,3 @@
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -10,12 +8,15 @@ import type {
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
+  ModelRoles,
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
 } from "../";
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -50,7 +51,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
-    { model: SerializedContinueConfig["models"][number] },
+    {
+      model: SerializedContinueConfig["models"][number];
+      role?: keyof ModelRoles;
+    },
     void,
   ];
   "config/newPromptFile": [undefined, void];
