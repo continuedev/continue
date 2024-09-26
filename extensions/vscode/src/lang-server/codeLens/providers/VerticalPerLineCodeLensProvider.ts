@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { VerticalDiffCodeLens } from "../../../diff/verticalPerLine/manager";
+import { VerticalDiffCodeLens } from "../../../diff/vertical/manager";
 import { getAltOrOption, getMetaKeyLabel } from "../../../util/util";
 
 export class VerticalPerLineCodeLensProvider

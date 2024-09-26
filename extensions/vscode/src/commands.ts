@@ -25,7 +25,7 @@ import {
 } from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { VerticalDiffManager } from "./diff/vertical/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import { EXTENSION_NAME } from "./util/constants";
@@ -172,7 +172,7 @@ const commandsMap: (
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
-  verticalDiffManager: VerticalPerLineDiffManager,
+  verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
@@ -713,7 +713,7 @@ export function registerAllCommands(
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
-  verticalDiffManager: VerticalPerLineDiffManager,
+  verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,

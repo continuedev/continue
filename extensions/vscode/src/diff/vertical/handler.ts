@@ -9,12 +9,12 @@ import {
 } from "./decorations";
 import type { VerticalDiffCodeLens } from "./manager";
 
-export interface VerticalPerLineDiffHandlerOptions {
+export interface VerticalDiffHandlerOptions {
   input?: string;
   instant?: boolean;
 }
 
-export class VerticalPerLineDiffHandler implements vscode.Disposable {
+export class VerticalDiffHandler implements vscode.Disposable {
   private editor: vscode.TextEditor;
   private startLine: number;
   private endLine: number;
@@ -29,7 +29,7 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
 
   private newLinesAdded = 0;
 
-  public options: VerticalPerLineDiffHandlerOptions;
+  public options: VerticalDiffHandlerOptions;
 
   constructor(
     startLine: number,
@@ -44,7 +44,7 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
       accept: boolean,
     ) => void,
     private readonly refreshCodeLens: () => void,
-    options: VerticalPerLineDiffHandlerOptions,
+    options: VerticalDiffHandlerOptions,
   ) {
     this.currentLineIndex = startLine;
     this.startLine = startLine;

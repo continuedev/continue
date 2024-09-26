@@ -1,7 +1,7 @@
 import { ContinueConfig } from "core";
 import * as vscode from "vscode";
 import { DiffManager } from "../../diff/horizontal";
-import { VerticalDiffCodeLens } from "../../diff/verticalPerLine/manager";
+import { VerticalDiffCodeLens } from "../../diff/vertical/manager";
 import * as providers from "./providers";
 import {
   getQuickActionsConfig,

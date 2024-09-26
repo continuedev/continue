@@ -16,7 +16,7 @@ import {
 import { registerAllCommands } from "../commands";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { DiffManager } from "../diff/horizontal";
-import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
+import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
@@ -41,7 +41,7 @@ export class VsCodeExtension {
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private diffManager: DiffManager;
-  private verticalDiffManager: VerticalPerLineDiffManager;
+  private verticalDiffManager: VerticalDiffManager;
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
@@ -66,7 +66,7 @@ export class VsCodeExtension {
 
     // Dependencies of core
     let resolveVerticalDiffManager: any = undefined;
-    const verticalDiffManagerPromise = new Promise<VerticalPerLineDiffManager>(
+    const verticalDiffManagerPromise = new Promise<VerticalDiffManager>(
       (resolve) => {
         resolveVerticalDiffManager = resolve;
       },
@@ -124,9 +124,7 @@ export class VsCodeExtension {
     resolveConfigHandler?.(this.configHandler);
 
     this.configHandler.reloadConfig();
-    this.verticalDiffManager = new VerticalPerLineDiffManager(
-      this.configHandler,
-    );
+    this.verticalDiffManager = new VerticalDiffManager(this.configHandler);
     resolveVerticalDiffManager?.(this.verticalDiffManager);
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
 

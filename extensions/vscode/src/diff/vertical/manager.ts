@@ -5,10 +5,7 @@ import { getMarkdownLanguageTagForFile } from "core/util";
 import { DiffLine } from "core";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import * as vscode from "vscode";
-import {
-  VerticalPerLineDiffHandler,
-  VerticalPerLineDiffHandlerOptions,
-} from "./handler";
+import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
   start: number;
@@ -16,11 +13,10 @@ export interface VerticalDiffCodeLens {
   numGreen: number;
 }
 
-export class VerticalPerLineDiffManager {
+export class VerticalDiffManager {
   public refreshCodeLens: () => void = () => {};
 
-  private filepathToHandler: Map<string, VerticalPerLineDiffHandler> =
-    new Map();
+  private filepathToHandler: Map<string, VerticalDiffHandler> = new Map();
 
   filepathToCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
 
@@ -30,11 +26,11 @@ export class VerticalPerLineDiffManager {
     this.userChangeListener = undefined;
   }
 
-  createVerticalPerLineDiffHandler(
+  createVerticalDiffHandler(
     filepath: string,
     startLine: number,
     endLine: number,
-    options: VerticalPerLineDiffHandlerOptions,
+    options: VerticalDiffHandlerOptions,
   ) {
     if (this.filepathToHandler.has(filepath)) {
       this.filepathToHandler.get(filepath)?.clear(false);
@@ -42,7 +38,7 @@ export class VerticalPerLineDiffManager {
     }
     const editor = vscode.window.activeTextEditor; // TODO
     if (editor && editor.document.uri.fsPath === filepath) {
-      const handler = new VerticalPerLineDiffHandler(
+      const handler = new VerticalDiffHandler(
         startLine,
         endLine,
         editor,
@@ -92,7 +88,7 @@ export class VerticalPerLineDiffManager {
 
   private handleDocumentChange(
     event: vscode.TextDocumentChangeEvent,
-    handler: VerticalPerLineDiffHandler,
+    handler: VerticalDiffHandler,
   ) {
     // Loop through each change in the event
     event.contentChanges.forEach((change) => {
@@ -203,7 +199,7 @@ export class VerticalPerLineDiffManager {
     });
 
     // Create new handler with determined start/end
-    const diffHandler = this.createVerticalPerLineDiffHandler(
+    const diffHandler = this.createVerticalDiffHandler(
       filepath,
       startLine,
       endLine,
@@ -339,7 +335,7 @@ export class VerticalPerLineDiffManager {
     });
 
     // Create new handler with determined start/end
-    const diffHandler = this.createVerticalPerLineDiffHandler(
+    const diffHandler = this.createVerticalDiffHandler(
       filepath,
       startLine,
       endLine,
