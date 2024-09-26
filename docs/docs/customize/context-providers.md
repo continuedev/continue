@@ -441,6 +441,49 @@ Reference the architecture and platform of your current operating system.
 }
 ```
 
+### `@HTTP`
+
+The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "http",
+      "params": {
+        "url": "https://api.example.com/v1/users",
+      }
+    }
+  ]
+}
+```
+
+The receiving URL should expect to receive the following parameters:
+```json title="POST parameters"
+{
+  query: string,
+  fullInput: string
+}
+```
+
+The response 200 OK should be a JSON object with the following structure:
+```json title="Response"
+[
+  {
+    "name": "",
+    "description": "",
+    "content": ""
+  }
+]
+
+// OR
+{
+  "name": "",
+  "description": "",
+  "content": ""
+}
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new Context Provider.
