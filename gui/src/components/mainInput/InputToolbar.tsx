@@ -96,11 +96,11 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
-        className="hidden xs:flex text-gray-400 transition-colors duration-200"
+        className="hidden xs:flex "
       >
         <div className="flex gap-2 items-center whitespace-nowrap justify-start">
           <ModelSelect />
-          <div className="items-center hidden xs:flex gap-1">
+          <div className="items-center hidden xs:flex gap-1 text-gray-400 transition-colors duration-200">
             {supportsImages && (
               <>
                 <input

@@ -328,7 +328,10 @@ function ModelSelect() {
             />
           </div>
         </StyledListboxButton>
-        <StyledListboxOptions showAbove={showAbove} className="z-50">
+        <StyledListboxOptions
+          showAbove={showAbove}
+          className="z-50 max-w-[90vw]"
+        >
           <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
             {sortedOptions.map((option, idx) => (
               <ModelOption
