@@ -37,6 +37,7 @@ type State = {
   contextItems: ContextItemWithId[];
   ttsActive: boolean;
   active: boolean;
+  isGatheringContext: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
   sessionId: string;
@@ -50,6 +51,7 @@ const initialState: State = {
   contextItems: [],
   ttsActive: false,
   active: false,
+  isGatheringContext: false,
   config: {
     slashCommands: [
       {
@@ -112,6 +114,9 @@ export const stateSlice = createSlice({
     },
     setActive: (state) => {
       state.active = true;
+    },
+    setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
+      state.isGatheringContext = payload;
     },
     clearLastResponse: (state) => {
       if (state.history.length < 2) {
@@ -264,6 +269,7 @@ export const stateSlice = createSlice({
       historyItem.contextItems.push(...payload.contextItems);
     },
     setInactive: (state) => {
+      state.isGatheringContext = false;
       state.active = false;
     },
     streamUpdate: (state, action: PayloadAction<string>) => {
@@ -453,5 +459,7 @@ export const {
   consumeMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
+  setIsGatheringContext,
 } = stateSlice.actions;
+
 export default stateSlice.reducer;

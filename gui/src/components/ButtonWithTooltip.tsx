@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import ReactDOM from "react-dom";
 import { type PlacesType } from "react-tooltip";
 import { HeaderButton } from ".";
@@ -25,7 +25,6 @@ const ButtonWithTooltip = React.forwardRef<
   HTMLButtonElement,
   HeaderButtonWithTextProps
 >((props: HeaderButtonWithTextProps, ref) => {
-  const [hover, setHover] = useState(false);
   const id = uuidv4();
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
@@ -39,14 +38,6 @@ const ButtonWithTooltip = React.forwardRef<
         data-tooltip-id={tooltipId}
         inverted={props.inverted}
         disabled={props.disabled}
-        onMouseEnter={() => {
-          if (!props.disabled) {
-            setHover(true);
-          }
-        }}
-        onMouseLeave={() => {
-          setHover(false);
-        }}
         onClick={props.onClick}
         onKeyDown={props.onKeyDown}
         className={props.className}

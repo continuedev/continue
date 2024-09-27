@@ -18,12 +18,7 @@ import {
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { incrementNextCodeBlockToApplyIndex } from "../../redux/slices/uiStateSlice";
-import {
-  getAltKeyLabel,
-  getFontSize,
-  getMetaKeyLabel,
-  isJetBrains,
-} from "../../util";
+import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
 import FileIcon from "../FileIcon";
 import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton as CopyButtonHeader } from "./CopyButton";

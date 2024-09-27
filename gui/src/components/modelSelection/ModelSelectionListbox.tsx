@@ -141,11 +141,7 @@ function ModelSelectionListbox({
               <StyledListboxOption
                 selected={selectedProvider.title === option.title}
                 key={index}
-                className={({ active }: { active: boolean }) =>
-                  `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                    active ? "bg-amber-100 text-amber-900" : "text-gray-900"
-                  }`
-                }
+                className="relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                 value={option}
               >
                 {({ selected }) => (
