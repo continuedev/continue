@@ -41,7 +41,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
     }
 
     @RequiresEdt
-    fun insertAfter(lineIndex: Int, component: JComponent): Disposable? {
+    fun insert(lineIndex: Int, component: JComponent, showAbove: Boolean = false): Disposable? {
         if (Disposer.isDisposed(this)) return null
 
         if (onlyOneInlay) {
@@ -57,7 +57,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
                         EditorEmbeddedComponentManager.Properties(EditorEmbeddedComponentManager.ResizePolicy.none(),
                                 null,
                                 true,
-                                false,
+                                showAbove,
                                 0,
                                 offset))?.also {
                     managedInlays[wrappedComponent] = it

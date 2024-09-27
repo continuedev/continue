@@ -1,7 +1,6 @@
 package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.google.gson.Gson
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
@@ -18,7 +17,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
-import java.awt.event.KeyEvent
 import javax.swing.BorderFactory
 import javax.swing.JTextArea
 import kotlin.math.min
@@ -119,7 +117,7 @@ class DiffStreamHandler(
                 preferredSize = java.awt.Dimension(editor.contentComponent.width, preferredSize.height)
             }
 
-            val disposable = editorComponentInlaysManager.insertAfter(deletionBufferStartLine - 1, component)
+            val disposable = editorComponentInlaysManager.insert(deletionBufferStartLine, component, true)
             if (disposable != null) {
                 deletionInlays.add(disposable)
             }

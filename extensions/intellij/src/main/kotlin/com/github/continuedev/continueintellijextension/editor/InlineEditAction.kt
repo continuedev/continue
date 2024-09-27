@@ -179,7 +179,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         diffStreamService.reject(editor)
         inlayRef.get().dispose()
     })
-    val inlay = manager.insertAfter(lineNumber, panel)
+    val inlay = manager.insert(startLineNum, panel, true)
     panel.revalidate()
     inlayRef.set(inlay)
     val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
