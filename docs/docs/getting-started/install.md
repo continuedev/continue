@@ -2,7 +2,6 @@
 title: Install
 description: The open-source AI code assistant for developers
 keywords: [install, installation, getting started, vs code, jetbrains]
-pagination_next: getting-started/overview
 ---
 
 ## VS Code

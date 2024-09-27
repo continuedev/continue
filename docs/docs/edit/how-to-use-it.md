@@ -4,7 +4,6 @@ sidebar_position: 1
 sidebar_label: How to use it
 description: How to use Edit
 keywords: [edit, cmd l, use]
-pagination_next: edit/model-setup
 ---
 
 ![edit](/img/edit.gif)

@@ -4,7 +4,6 @@ description: How to use Actions
 sidebar_label: How to use it
 keywords: [how, slash, commands, prompt, right click, quick fix, debug, action]
 sidebar_position: 1
-pagination_next: actions/model-setup
 ---
 
 ![actions](/img/actions.gif)
