@@ -12,7 +12,7 @@ import GUI from "./pages/gui";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
-import { default as MorePage } from "./pages/More";
+import MorePage from "./pages/More";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 

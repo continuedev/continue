@@ -406,3 +406,25 @@ export const CloseButton = styled.button`
   justify-content: center;
   cursor: pointer;
 `;
+
+export const AnimatedEllipsis = styled.span`
+  &::after {
+    content: ".";
+    animation: ellipsis 2.5s infinite;
+    display: inline-block;
+    width: 12px;
+    text-align: left;
+  }
+
+  @keyframes ellipsis {
+    0% {
+      content: ".";
+    }
+    33% {
+      content: "..";
+    }
+    66% {
+      content: "...";
+    }
+  }
+`;

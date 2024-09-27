@@ -187,7 +187,7 @@ function ProfileSwitcher() {
         >
           <div className="relative">
             <StyledListboxButton>
-              <div>{selectedProfile()?.title}</div>
+              <span className="truncate">{selectedProfile()?.title}</span>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon
                   className="h-4 w-4 text-gray-400"

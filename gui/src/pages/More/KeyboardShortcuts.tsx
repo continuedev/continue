@@ -1,8 +1,12 @@
 import ReactDOM from "react-dom";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscForeground,
+} from "../../components";
 import { getPlatform, isJetBrains } from "../../util";
-import { ToolTip } from "../gui/Tooltip";
+import { ToolTip } from "../../components/gui/Tooltip";
 
 const GridDiv = styled.div`
   display: grid;
@@ -198,7 +202,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   },
 ];
 
-function KeyboardShortcutsDialog() {
+function KeyboardShortcuts() {
   return (
     <GridDiv>
       {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
@@ -217,4 +221,4 @@ function KeyboardShortcutsDialog() {
   );
 }
 
-export default KeyboardShortcutsDialog;
+export default KeyboardShortcuts;

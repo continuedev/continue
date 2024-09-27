@@ -41,8 +41,8 @@ function Footer() {
   }
 
   return (
-    <footer className="flex justify-between items-center p-2 h-7 border-0 border-t border-solid border-t-zinc-700">
-      <div className="flex gap-2">
+    <footer className="flex justify-between items-center overflow-hidden p-2 h-7 border-0 border-t border-solid border-t-zinc-700">
+      <div className="flex gap-2 max-w-[25vw]">
         {defaultModel?.provider === "free-trial" ? (
           <ProgressBar
             completed={parseInt(localStorage.getItem("ftc") || "0")}
