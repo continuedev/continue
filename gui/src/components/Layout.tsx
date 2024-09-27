@@ -5,28 +5,14 @@ import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius, vscInputBackground } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { setShowDialog, updateApplyState } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import ButtonWithTooltip from "./ButtonWithTooltip";
-import TextDialog from "./dialogs";
-import ProgressBar from "./loaders/ProgressBar";
-import { useOnboardingCard } from "./OnboardingCard";
-import { isNewUserOnboarding } from "./OnboardingCard/utils";
 import PostHogPageView from "./PosthogPageView";
-import ProfileSwitcher from "./ProfileSwitcher";
-import { isNewUserOnboarding } from "./OnboardingCard/utils";
-import { useOnboardingCard } from "./OnboardingCard";
-import {
-  setBottomMessage,
-  setBottomMessageCloseTimeout,
-  setShowDialog,
-} from "../redux/slices/uiStateSlice";
-import ButtonWithTooltip from "./ButtonWithTooltip";
-
-const FOOTER_HEIGHT = "1.8em";
+import Footer from "./Footer";
+import { updateApplyState, setShowDialog } from "../redux/slices/uiStateSlice";
+import TextDialog from "./dialogs";
+import { useOnboardingCard, isNewUserOnboarding } from "./OnboardingCard";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -43,22 +29,6 @@ const LayoutTopDiv = styled(CustomScrollbarDiv)`
     top: 0;
     left: 0;
   }
-`;
-
-const Footer = styled.footer`
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  justify-content: right;
-  padding: 8px;
-  align-items: center;
-  width: calc(100% - 16px);
-  height: ${FOOTER_HEIGHT};
-  background-color: transparent;
-  backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(136, 136, 136, 0.3);
-  border-bottom: 1px solid rgba(136, 136, 136, 0.3);
-  overflow: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -97,8 +67,6 @@ const Layout = () => {
   const showDialog = useSelector(
     (state: RootState) => state.uiState.showDialog,
   );
-
-  const defaultModel = useSelector(defaultModelSelector);
 
   const timeline = useSelector((state: RootState) => state.state.history);
 
