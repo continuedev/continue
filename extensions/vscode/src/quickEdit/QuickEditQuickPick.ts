@@ -13,6 +13,7 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 import { ConfigHandler } from "core/config/ConfigHandler";
 // @ts-ignore
 import { getModelByRole } from "core/config/util";
+// @ts-ignore
 import MiniSearch from "minisearch";
 
 /**

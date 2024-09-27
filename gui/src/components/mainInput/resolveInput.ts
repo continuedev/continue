@@ -207,4 +207,30 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
   return [text, contextItems, slashCommand];
 }
 
+export function hasSlashCommandOrContextProvider(
+  editorState: JSONContent,
+): boolean {
+  if (!editorState.content) {
+    return false;
+  }
+
+  for (const p of editorState.content) {
+    if (p.type === "paragraph" && p.content) {
+      for (const child of p.content) {
+        if (child.type === "slashcommand") {
+          return true;
+        }
+        if (
+          child.type === "mention" &&
+          child.attrs?.itemType === "contextProvider"
+        ) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
 export default resolveEditorContent;

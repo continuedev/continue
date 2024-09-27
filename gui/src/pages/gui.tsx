@@ -102,7 +102,6 @@ const StepsDiv = styled.div`
 
   .thread-message {
     margin: 8px 4px 0 4px;
-    padding-bottom: 8px;
   }
 `;
 
