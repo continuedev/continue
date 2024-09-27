@@ -124,7 +124,10 @@ export class VsCodeExtension {
     resolveConfigHandler?.(this.configHandler);
 
     this.configHandler.reloadConfig();
-    this.verticalDiffManager = new VerticalDiffManager(this.configHandler);
+    this.verticalDiffManager = new VerticalDiffManager(
+      this.configHandler,
+      this.sidebar.webviewProtocol,
+    );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
 

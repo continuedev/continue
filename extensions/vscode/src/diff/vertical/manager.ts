@@ -5,6 +5,7 @@ import { getMarkdownLanguageTagForFile } from "core/util";
 import { DiffLine } from "core";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import * as vscode from "vscode";
+import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -22,7 +23,10 @@ export class VerticalDiffManager {
 
   private userChangeListener: vscode.Disposable | undefined;
 
-  constructor(private readonly configHandler: ConfigHandler) {
+  constructor(
+    private readonly configHandler: ConfigHandler,
+    private readonly webviewProtocol: VsCodeWebviewProtocol,
+  ) {
     this.userChangeListener = undefined;
   }
 
@@ -176,6 +180,7 @@ export class VerticalDiffManager {
   async streamDiffLines(
     diffStream: AsyncGenerator<DiffLine>,
     instant: boolean,
+    streamId: string,
   ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
@@ -205,6 +210,11 @@ export class VerticalDiffManager {
       endLine,
       {
         instant,
+        onStatusUpdate: (status) =>
+          this.webviewProtocol.request("updateApplyState", {
+            streamId,
+            status,
+          }),
       },
     );
 
@@ -271,6 +281,7 @@ export class VerticalDiffManager {
   async streamEdit(
     input: string,
     modelTitle: string | undefined,
+    streamId?: string,
     onlyOneInsertion?: boolean,
     quickEdit?: string,
     range?: vscode.Range,
@@ -339,7 +350,15 @@ export class VerticalDiffManager {
       filepath,
       startLine,
       endLine,
-      { input },
+      {
+        input,
+        onStatusUpdate: (status) =>
+          streamId &&
+          this.webviewProtocol.request("updateApplyState", {
+            streamId,
+            status,
+          }),
+      },
     );
 
     if (!diffHandler) {

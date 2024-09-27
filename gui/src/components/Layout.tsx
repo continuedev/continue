@@ -2,19 +2,21 @@ import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import {
-  CustomScrollbarDiv,
-  defaultBorderRadius,
-  vscForeground,
-  vscInputBackground,
-} from ".";
+import { CustomScrollbarDiv, defaultBorderRadius, vscInputBackground } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
+import { setShowDialog, updateApplyState } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import ButtonWithTooltip from "./ButtonWithTooltip";
 import TextDialog from "./dialogs";
+import ProgressBar from "./loaders/ProgressBar";
+import { useOnboardingCard } from "./OnboardingCard";
+import { isNewUserOnboarding } from "./OnboardingCard/utils";
 import PostHogPageView from "./PosthogPageView";
+import ProfileSwitcher from "./ProfileSwitcher";
 import { isNewUserOnboarding } from "./OnboardingCard/utils";
 import { useOnboardingCard } from "./OnboardingCard";
 import {
@@ -22,7 +24,9 @@ import {
   setBottomMessageCloseTimeout,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import Footer from "./Footer";
+import ButtonWithTooltip from "./ButtonWithTooltip";
+
+const FOOTER_HEIGHT = "1.8em";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -41,21 +45,20 @@ const LayoutTopDiv = styled(CustomScrollbarDiv)`
   }
 `;
 
-const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
-  position: fixed;
-  bottom: ${(props) => (props.displayOnBottom ? "50px" : undefined)};
-  top: ${(props) => (props.displayOnBottom ? undefined : "50px")};
-  left: 0;
-  right: 0;
-  margin: 8px;
-  margin-top: 0;
-  background-color: ${vscInputBackground};
-  color: ${vscForeground};
-  border-radius: ${defaultBorderRadius};
-  padding: 12px;
-  z-index: 100;
-  box-shadow: 0px 0px 2px 0px ${vscForeground};
-  max-height: 35vh;
+const Footer = styled.footer`
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  justify-content: right;
+  padding: 8px;
+  align-items: center;
+  width: calc(100% - 16px);
+  height: ${FOOTER_HEIGHT};
+  background-color: transparent;
+  backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(136, 136, 136, 0.3);
+  border-bottom: 1px solid rgba(136, 136, 136, 0.3);
+  overflow: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -95,12 +98,7 @@ const Layout = () => {
     (state: RootState) => state.uiState.showDialog,
   );
 
-  const bottomMessage = useSelector(
-    (state: RootState) => state.uiState.bottomMessage,
-  );
-  const displayBottomMessageOnBottom = useSelector(
-    (state: RootState) => state.uiState.displayBottomMessageOnBottom,
-  );
+  const defaultModel = useSelector(defaultModelSelector);
 
   const timeline = useSelector((state: RootState) => state.state.history);
 
@@ -163,6 +161,14 @@ const Layout = () => {
   );
 
   useWebviewListener(
+    "updateApplyState",
+    async (state) => {
+      dispatch(updateApplyState(state));
+    },
+    [],
+  );
+
+  useWebviewListener(
     "openOnboardingCard",
     async () => {
       onboardingCard.open("Best");
@@ -215,21 +221,6 @@ const Layout = () => {
           <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
           <Footer />
         </GridDiv>
-
-        <BottomMessageDiv
-          displayOnBottom={displayBottomMessageOnBottom}
-          onMouseEnter={() => {
-            dispatch(setBottomMessageCloseTimeout(undefined));
-          }}
-          onMouseLeave={(e) => {
-            if (!e.buttons) {
-              dispatch(setBottomMessage(undefined));
-            }
-          }}
-          hidden={!bottomMessage}
-        >
-          {bottomMessage}
-        </BottomMessageDiv>
       </div>
       <div
         style={{ fontSize: `${getFontSize() - 4}px` }}
