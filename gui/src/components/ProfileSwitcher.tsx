@@ -1,9 +1,9 @@
 import { Listbox, Transition } from "@headlessui/react";
 import {
   ChevronUpDownIcon,
-  Cog6ToothIcon,
-  UserCircleIcon,
+  UserCircleIcon as UserCircleIconOutline,
 } from "@heroicons/react/24/outline";
+import { UserCircleIcon as UserCircleIconSolid } from "@heroicons/react/24/solid";
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
@@ -123,7 +123,7 @@ function ListBoxOption({
   );
 }
 
-function ProfileSwitcher(props: {}) {
+function ProfileSwitcher() {
   const ideMessenger = useContext(IdeMessengerContext);
   const { session, logout, login } = useAuth();
   const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
@@ -234,44 +234,24 @@ function ProfileSwitcher(props: {}) {
         </StyledListbox>
       )}
 
-      {/* Settings button (either opens config.json or /settings page in control plane) */}
-      <ButtonWithTooltip
-        tooltipPlacement="top-end"
-        onClick={() => {
-          if (selectedProfileId === "local") {
-            ideMessenger.post("openConfigJson", undefined);
-          } else {
-            ideMessenger.post(
-              "openUrl",
-              `http://app.continue.dev/workspaces/${selectedProfileId}/config`,
-            );
-          }
-        }}
-        text="Configure Continue"
-      >
-        <Cog6ToothIcon width="1.4em" height="1.4em" />
-      </ButtonWithTooltip>
-
-      {/* Only show login if beta explicitly enabled */}
-      {controlServerBetaEnabled && (
-        <ButtonWithTooltip
-          tooltipPlacement="top-end"
-          text={
-            session?.account
-              ? `Logged in as ${session.account.label}`
-              : "Click to login to Continue"
-          }
-          onClick={() => {
-            if (session?.account) {
-              logout();
-            } else {
-              login();
-            }
-          }}
-        >
-          <UserCircleIcon width="1.4em" height="1.4em" />
-        </ButtonWithTooltip>
-      )}
+      {controlServerBetaEnabled &&
+        (session?.account ? (
+          <ButtonWithTooltip
+            tooltipPlacement="top-end"
+            text={`Logged in as ${session.account.label}`}
+            onClick={logout}
+          >
+            <UserCircleIconSolid className="w-4 h-4" />
+          </ButtonWithTooltip>
+        ) : (
+          <ButtonWithTooltip
+            tooltipPlacement="top-end"
+            text="Click to login to Continue"
+            onClick={login}
+          >
+            <UserCircleIconOutline className="w-4 h-4" />
+          </ButtonWithTooltip>
+        ))}
     </>
   );
 }

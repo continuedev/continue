@@ -7,8 +7,8 @@ import { ToolTip } from "../gui/Tooltip";
 const GridDiv = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  grid-gap: 2rem;
-  padding: 1rem;
+  grid-gap: 1rem;
+  padding: 1rem 0;
   justify-items: center;
   align-items: center;
 `;
@@ -16,7 +16,7 @@ const GridDiv = styled.div`
 const StyledKeyDiv = styled.div`
   border: 0.5px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
-  padding: 4px;
+  padding: 2px;
   color: ${vscForeground};
 
   width: 16px;

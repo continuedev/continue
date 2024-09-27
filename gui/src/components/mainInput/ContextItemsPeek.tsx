@@ -4,7 +4,6 @@ import { ctxItemToRifWithContents } from "core/commands/util";
 import { useContext, useState } from "react";
 import { lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";

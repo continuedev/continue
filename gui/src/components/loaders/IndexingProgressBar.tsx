@@ -182,16 +182,6 @@ const IndexingProgressBar = ({
 
   return (
     <div>
-      <i
-        style={{
-          color: lightGray,
-          fontSize: getFontSize() - 2,
-        }}
-      >
-        Indexing generates embeddings used for codebase retrieval. The index is
-        stored entirely locally.
-      </i>
-
       <ProgressBarWrapper>
         <ProgressBarFill completed={fillPercentage} />
       </ProgressBarWrapper>
@@ -288,7 +278,7 @@ const IndexingProgressBar = ({
         </StyledButton>
       ) : null}
 
-      <div style={{ height: "40px", overflow: "hidden" }}>
+      <div>
         {indexingState.status === "failed" && (
           <p style={{ color: "red", fontSize: getFontSize() - 2 }}>
             {getIndexingErrMsg(indexingState.desc)}
