@@ -192,7 +192,14 @@ function ModelOption({
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center flex-grow">
             <CubeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className="flex-grow">{option.title}</span>
+            <span className="flex-grow">
+              {option.title}
+              {showMissingApiKeyMsg && (
+                <span className="ml-2 italic text-[10px]">
+                  (Missing API key)
+                </span>
+              )}
+            </span>
           </div>
           <div className="flex items-center ml-5">
             <StyledCog6ToothIcon hovered={hovered} onClick={onClickGear} />
@@ -201,12 +208,6 @@ function ModelOption({
             )}
           </div>
         </div>
-
-        {showMissingApiKeyMsg && (
-          <span className="ml-6 text-xs italic text-[8px]">
-            Missing API key
-          </span>
-        )}
       </div>
     </StyledListboxOption>
   );
