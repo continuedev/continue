@@ -88,8 +88,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     [props.isMainInput],
   );
 
-  console.log({ isGatheringContext, isGatheringContextStore });
-
   useEffect(() => {
     if (isGatheringContextStore && !isGatheringContext) {
       // 500ms delay when going from false -> true to prevent flashing loading indicator
@@ -107,10 +105,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   }, [isGatheringContextStore]);
 
   return (
-    <div
-      className={`pt-1 bg-[${vscBackground}] ${props.hidden ? "hidden" : ""}`}
-    >
-      <div className={`flex px-2 relative bg-[${vscBackground}]`}>
+    <div className={`mt-3 mb-1 ${props.hidden ? "hidden" : ""}`}>
+      <div className={`flex px-2 relative`}>
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}
           borderColor={
@@ -130,7 +126,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       <ContextItemsPeek
         contextItems={props.contextItems}
         isGatheringContext={isGatheringContext && props.isLastUserInput}
-      ></ContextItemsPeek>
+      />
     </div>
   );
 }

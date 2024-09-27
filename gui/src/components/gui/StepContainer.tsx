@@ -106,7 +106,7 @@ function StepContainer(props: StepContainerProps) {
       </ContentDiv>
 
       {shouldRenderActions && (
-        <div className="flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 p-2 cursor-default">
+        <div className="flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 p-2 pb-0 cursor-default">
           {truncatedEarly && (
             <ButtonWithTooltip
               tabIndex={-1}

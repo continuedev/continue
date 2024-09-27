@@ -57,8 +57,6 @@ export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
 export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #fff)`;
 export const vscSidebarBorder = `var(${VSC_SIDEBAR_BORDER_VAR}, transparent)`;
 
-// cececd
-
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
     if (isJetBrains()) {

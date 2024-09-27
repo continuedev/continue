@@ -230,6 +230,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
               itemId: currentFilePath,
               providerTitle: "file",
             },
+            uri: {
+              type: "file",
+              value: currentFilePath,
+            },
           });
         }
       }
