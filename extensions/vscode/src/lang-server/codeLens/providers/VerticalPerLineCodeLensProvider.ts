@@ -43,21 +43,6 @@ export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
         start.translate(block.numGreen + block.numRed),
       );
 
-      if (isFirstBlockInMultiBlockDocument) {
-        codeLenses.push(
-          new vscode.CodeLens(range, {
-            title: `Accept All (${getMetaKeyLabel()}⇧↩)`,
-            command: "continue.acceptDiff",
-            arguments: [filepath, i],
-          }),
-          new vscode.CodeLens(range, {
-            title: `Reject All (${getMetaKeyLabel()}⇧⌫)`,
-            command: "continue.rejectDiff",
-            arguments: [filepath, i],
-          }),
-        );
-      }
-
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: `Accept${
