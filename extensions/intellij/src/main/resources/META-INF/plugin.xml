@@ -5,7 +5,8 @@
     <vendor>continue-dev</vendor>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.json</depends>
-    <idea-version since-build="223.0"/>
+    <!-- com.intellij.openapi.module.ModuleManager.Companion is only available since this build -->
+    <idea-version since-build="223.7571.182"/>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
         <ProviderFactory implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
