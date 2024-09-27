@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ApplyState } from "core/protocol/ideWebview";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
@@ -10,6 +11,7 @@ type UiState = {
   dialogEntryOn: boolean;
   nextCodeBlockToApplyIndex: number;
   onboardingCard: OnboardingCardState;
+  applyStates: ApplyState[];
 };
 
 export const uiStateSlice = createSlice({
@@ -20,6 +22,7 @@ export const uiStateSlice = createSlice({
     dialogEntryOn: false,
     nextCodeBlockToApplyIndex: 0,
     onboardingCard: defaultOnboardingCardState,
+    applyStates: [],
   } as UiState,
   reducers: {
     setOnboardingCard: (
@@ -50,6 +53,19 @@ export const uiStateSlice = createSlice({
     incrementNextCodeBlockToApplyIndex: (state, action) => {
       state.nextCodeBlockToApplyIndex++;
     },
+    updateApplyState: (state, action: PayloadAction<ApplyState>) => {
+      const { streamId, status } = action.payload;
+      const index = state.applyStates.findIndex(
+        (applyState) => applyState.streamId === streamId,
+      );
+      if (status === "closed" && index !== -1) {
+        state.applyStates.splice(index, 1);
+      } else if (index === -1) {
+        state.applyStates.push(action.payload);
+      } else {
+        state.applyStates[index].status = status;
+      }
+    },
   },
 });
 
@@ -60,6 +76,7 @@ export const {
   setShowDialog,
   resetNextCodeBlockToApplyIndex,
   incrementNextCodeBlockToApplyIndex,
+  updateApplyState,
 } = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;

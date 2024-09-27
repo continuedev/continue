@@ -7,7 +7,7 @@ import { CustomScrollbarDiv, defaultBorderRadius, vscInputBackground } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { setShowDialog } from "../redux/slices/uiStateSlice";
+import { setShowDialog, updateApplyState } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
@@ -150,6 +150,14 @@ const Layout = () => {
       } else {
         setLocalStorage("ftc", 1);
       }
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "updateApplyState",
+    async (state) => {
+      dispatch(updateApplyState(state));
     },
     [],
   );

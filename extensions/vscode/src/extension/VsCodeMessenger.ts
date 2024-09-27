@@ -191,10 +191,14 @@ export class VsCodeMessenger {
       );
       const verticalDiffManager = await this.verticalDiffManagerPromise;
       if (instant) {
-        verticalDiffManager.streamDiffLines(diffLines, instant);
+        verticalDiffManager.streamDiffLines(
+          diffLines,
+          instant,
+          msg.data.streamId,
+        );
       } else {
         const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
-        verticalDiffManager.streamEdit(prompt, llm.title);
+        verticalDiffManager.streamEdit(prompt, llm.title, msg.data.streamId);
       }
     });
 

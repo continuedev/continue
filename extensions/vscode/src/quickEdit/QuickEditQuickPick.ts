@@ -296,6 +296,7 @@ export class QuickEdit {
       prompt,
       modelTitle,
       undefined,
+      undefined,
       this.previousInput,
       this.range,
     );

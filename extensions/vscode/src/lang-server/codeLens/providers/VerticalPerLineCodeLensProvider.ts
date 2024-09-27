@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { VerticalDiffCodeLens } from "../../../diff/vertical/manager";
-import { getAltOrOption, getMetaKeyLabel } from "../../../util/util";
+import { getMetaKeyLabel } from "../../../util/util";
 
 export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
   private _eventEmitter: vscode.EventEmitter<void> =
@@ -33,9 +33,6 @@ export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
     const codeLenses: vscode.CodeLens[] = [];
 
     for (let i = 0; i < blocks.length; i++) {
-      const isFirstBlockInMultiBlockDocument =
-        codeLenses.length === 0 && blocks.length > 1;
-
       const block = blocks[i];
       const start = new vscode.Position(block.start, 0);
       const range = new vscode.Range(
@@ -45,26 +42,18 @@ export class VerticalDiffCodeLensProvider implements vscode.CodeLensProvider {
 
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: `Accept${
-            codeLenses.length === 2
-              ? ` (${getAltOrOption()}${getMetaKeyLabel()}Y)`
-              : ""
-          }`,
+          title: `Accept`,
           command: "continue.acceptVerticalDiffBlock",
           arguments: [filepath, i],
         }),
         new vscode.CodeLens(range, {
-          title: `Reject${
-            codeLenses.length === 2
-              ? ` (${getAltOrOption()}${getMetaKeyLabel()}N)`
-              : ""
-          }`,
+          title: `Reject`,
           command: "continue.rejectVerticalDiffBlock",
           arguments: [filepath, i],
         }),
       );
 
-      if (codeLenses.length === 4) {
+      if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
             title: `${getMetaKeyLabel()}I to add instructions`,
