@@ -2,6 +2,7 @@ package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.command.undo.UndoManager
@@ -75,6 +76,14 @@ class DiffStreamHandler(
 
     private var deletionBufferStartLine: Int = -1
     private val deletionsBuffer: MutableList<String> = mutableListOf()
+    private val deletionInlays: MutableList<Disposable> = mutableListOf()
+
+    private fun removeDeletionInlays() {
+        deletionInlays.forEach {
+            it.dispose()
+        }
+        deletionInlays.clear()
+    }
 
     fun setup() {
         // Highlight the range with unfinished color
@@ -110,7 +119,10 @@ class DiffStreamHandler(
                 preferredSize = java.awt.Dimension(editor.contentComponent.width, preferredSize.height)
             }
 
-            editorComponentInlaysManager.insertAfter(deletionBufferStartLine - 1, component)
+            val disposable = editorComponentInlaysManager.insertAfter(deletionBufferStartLine - 1, component)
+            if (disposable != null) {
+                deletionInlays.add(disposable)
+            }
 
             // Clear the buffer
             deletionsBuffer.clear()
@@ -177,6 +189,9 @@ class DiffStreamHandler(
         // Remove all highlighters
         editor.markupModel.removeAllHighlighters()
 
+        // Remove all of the deletion inlays
+        removeDeletionInlays()
+
         // Undo changes just by using builtin undo
         WriteCommandAction.runWriteCommandAction(project) {
             val undoManager = UndoManager.getInstance(project)
@@ -197,6 +212,7 @@ class DiffStreamHandler(
     fun accept() {
         // Accept the changes
         editor.markupModel.removeAllHighlighters()
+        removeDeletionInlays()
         onClose()
         running = false
     }
@@ -204,6 +220,7 @@ class DiffStreamHandler(
     fun reject() {
         // Reject the changes
         resetState()
+        removeDeletionInlays()
         onClose()
         running = false
     }
