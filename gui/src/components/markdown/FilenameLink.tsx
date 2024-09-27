@@ -12,7 +12,6 @@ function FilenameLink({ rif }: FilenameLinkProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   function onClick() {
-    debugger;
     ideMessenger.post("showLines", {
       filepath: rif.filepath,
       startLine: rif.range.start.line,
