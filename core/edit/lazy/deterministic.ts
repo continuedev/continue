@@ -155,7 +155,25 @@ export function isLazyLine(text: string): boolean {
 }
 
 function isLazyBlock(node: Parser.SyntaxNode): boolean {
+  // Special case for "{/* ... existing code ... */}"
+  if (
+    node.type === "jsx_expression" &&
+    node.namedChildCount === 1 &&
+    isLazyBlock(node.namedChildren[0])
+  ) {
+    return true;
+  }
+
   return node.type.includes("comment") && isLazyLine(node.text);
+}
+
+function stringsWithinLevDistThreshold(
+  a: string,
+  b: string,
+  threshold: number,
+) {
+  const dist = distance(a, b);
+  return dist / Math.min(a.length, b.length) <= threshold;
 }
 
 /**
@@ -184,11 +202,23 @@ function nodesAreSimilar(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
     return true;
   }
 
+  // Matching jsx_elements needs to be different because they have such a minimal first line
+  if (
+    a.type === "jsx_element" &&
+    b.type === "jsx_element" &&
+    // Check that the tag names match
+    a.namedChildren[0]?.children[1]?.text ===
+      b.namedChildren[0]?.children[1]?.text
+  ) {
+    if (stringsWithinLevDistThreshold(a.text, b.text, 0.3)) {
+      return true;
+    }
+  }
+
   const lineOneA = a.text.split("\n")[0];
   const lineOneB = b.text.split("\n")[0];
 
-  const levDist = distance(lineOneA, lineOneB);
-  return levDist / Math.min(lineOneA.length, lineOneB.length) <= 0.2;
+  return stringsWithinLevDistThreshold(lineOneA, lineOneB, 0.2);
 }
 
 function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
