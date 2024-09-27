@@ -223,6 +223,7 @@ const commandsMap: (
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
+      undefined,
       onlyOneInsertion,
       undefined,
       range,
