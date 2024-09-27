@@ -135,10 +135,10 @@ export async function deterministicApplyLazyEdit(
     }
   }
 
-  const acc: AstReplacements = [];
-  findLazyBlockReplacements(oldTree.rootNode, newTree.rootNode, acc);
+  const replacements: AstReplacements = [];
+  findLazyBlockReplacements(oldTree.rootNode, newTree.rootNode, replacements);
 
-  const newFullFile = reconstructNewFile(oldFile, newLazyFile, acc);
+  const newFullFile = reconstructNewFile(oldFile, newLazyFile, replacements);
   const diff = myersDiff(oldFile, newFullFile);
 
   // If the diff is too messy and seems likely borked, we fall back to LLM strategy
@@ -204,7 +204,7 @@ function nodesAreExact(a: Parser.SyntaxNode, b: Parser.SyntaxNode): boolean {
 function findLazyBlockReplacements(
   oldNode: Parser.SyntaxNode,
   newNode: Parser.SyntaxNode,
-  acc: AstReplacements,
+  replacements: AstReplacements,
 ): void {
   // Base case
   if (nodesAreExact(oldNode, newNode)) {
@@ -254,7 +254,7 @@ function findLazyBlockReplacements(
       }
 
       // then recurse at the match
-      findLazyBlockReplacements(L, rightChildren[0], acc);
+      findLazyBlockReplacements(L, rightChildren[0], replacements);
 
       // then consume L and R
       leftChildren.shift();
@@ -263,7 +263,7 @@ function findLazyBlockReplacements(
       // Exit "lazy mode"
       if (isLazy) {
         // Record the replacement lines
-        acc.push({
+        replacements.push({
           nodeToReplace: currentLazyBlockNode!,
           replacementNodes: [...currentLazyBlockReplacementNodes],
         });
@@ -275,7 +275,7 @@ function findLazyBlockReplacements(
   }
 
   if (isLazy) {
-    acc.push({
+    replacements.push({
       nodeToReplace: currentLazyBlockNode!,
       replacementNodes: [...currentLazyBlockReplacementNodes, ...leftChildren],
     });
@@ -284,7 +284,7 @@ function findLazyBlockReplacements(
   // Cut out any extraneous lazy blocks
   for (const R of rightChildren) {
     if (isLazyBlock(R)) {
-      acc.push({
+      replacements.push({
         nodeToReplace: R,
         replacementNodes: [],
       });
