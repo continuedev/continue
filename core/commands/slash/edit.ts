@@ -14,7 +14,7 @@ import {
   getMarkdownLanguageTagForFile,
 } from "../../util/";
 import {
-  contextItemToRangeInFileWithContents,
+  ctxItemToRifWithContents,
   type RangeInFileWithContents,
 } from "../util";
 
@@ -250,7 +250,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     const rif: RangeInFileWithContents =
-      contextItemToRangeInFileWithContents(contextItemToEdit);
+      ctxItemToRifWithContents(contextItemToEdit);
 
     await ide.saveFile(rif.filepath);
     const fullFileContents = await ide.readFile(rif.filepath);

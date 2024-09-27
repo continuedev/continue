@@ -1,6 +1,6 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
-import { contextItemToRangeInFileWithContents } from "core/commands/util";
+import { ctxItemToRifWithContents } from "core/commands/util";
 import { useContext, useState } from "react";
 import { lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -10,6 +10,7 @@ import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getIconFromDropdownItem } from "./MentionList";
 import styled from "styled-components";
+import { getBasename } from "core/util";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -54,7 +55,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
       const isRangeInFile = name.includes(" (") && name.endsWith(")");
 
       if (isRangeInFile) {
-        const rif = contextItemToRangeInFileWithContents(contextItem);
+        const rif = ctxItemToRifWithContents(contextItem);
         ideMessenger.ide.showLines(
           rif.filepath,
           rif.range.start.line,
@@ -118,8 +119,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   return (
     <div
       onClick={openContextItem}
-      className="cursor-pointer px-1.5 py-1 flex items-center rounded hover:bg-white/10 overflow-hidden whitespace-nowrap text-ellipsis mr-2"
-      style={{ fontSize: `${getFontSize()}px` }}
+      className="text-xs cursor-pointer px-1.5 py-1 flex items-center rounded hover:bg-white/10 overflow-hidden whitespace-nowrap text-ellipsis mr-2"
     >
       <div className="flex items-center w-full">
         {getContextItemIcon()}
@@ -128,11 +128,11 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
             {contextItem.name}
           </div>
           <div
-            className={`text-[${
-              getFontSize() - 2
-            }px] text-gray-400 overflow-hidden truncate whitespace-nowrap text-xs flex-1 min-w-0`}
+            className={`text-xs text-gray-400 overflow-hidden truncate whitespace-nowrap text-xs flex-1 min-w-0`}
           >
-            {contextItem.description}
+            {contextItem.uri?.type === "file"
+              ? getBasename(contextItem.description)
+              : contextItem.description}
           </div>
         </div>
       </div>
