@@ -198,7 +198,23 @@ export class VsCodeMessenger {
         );
       } else {
         const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
-        verticalDiffManager.streamEdit(prompt, llm.title, msg.data.streamId);
+        const fullEditorRange = new vscode.Range(
+          0,
+          0,
+          editor.document.lineCount - 1,
+          editor.document.lineAt(editor.document.lineCount - 1).text.length,
+        );
+        const rangeToApplyTo = editor.selection.isEmpty
+          ? fullEditorRange
+          : editor.selection;
+        verticalDiffManager.streamEdit(
+          prompt,
+          llm.title,
+          msg.data.streamId,
+          undefined,
+          undefined,
+          rangeToApplyTo,
+        );
       }
     });
 
