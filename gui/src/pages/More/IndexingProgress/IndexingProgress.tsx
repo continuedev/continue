@@ -107,8 +107,6 @@ function IndexingProgress() {
     }
   }
 
-  update.status = "failed";
-
   return (
     <div className="flex flex-col mt-6">
       <div className="flex justify-between mb-0 text-sm">
