@@ -2,9 +2,11 @@
   "name": "binary",
   "version": "1.0.0",
   "author": "Continue Dev, Inc",
-  "description": "",
+  "description": "The purpose of this folder is to package Typescript code in a way that can be run from any IDE or platform. We first bundle with `esbuild` and then package into binaries with `pkg`.",
   "main": "out/index.js",
-  "bin": "out/index.js",
+  "bin": {
+    "binary": "out/index.js"
+  },
   "pkg": {
     "scripts": [
       "node_modules/axios/**/*"
@@ -25,7 +27,8 @@
     "build": "node build.js",
     "build:old": "ncc build src/index.ts -o out && pkg .",
     "build:dev": "tsc",
-    "esbuild": "node build.js --esbuild-only"
+    "esbuild": "node build.js --esbuild-only",
+    "typecheck": "tsc -noEmit"
   },
   "license": "Apache-2.0",
   "devDependencies": {
@@ -54,5 +57,9 @@
     "uuid": "^9.0.1",
     "vectordb": "^0.4.20",
     "win-ca": "^3.5.1"
-  }
+  },
+  "directories": {
+    "test": "test"
+  },
+  "keywords": []
 }

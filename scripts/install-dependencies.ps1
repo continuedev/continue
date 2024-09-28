@@ -48,41 +48,8 @@ if (($null -eq $node)) {
     return "`nSome dependencies that may require installation could not be found. Exiting"
 }
 
-Write-Host "`nInstalling Core extension dependencies..." -ForegroundColor White
-Push-Location core
-npm install
-npm link
-Pop-Location
-
-Write-Output "`nInstalling GUI extension dependencies..." -ForegroundColor White
-Push-Location gui
-npm install
-npm link @continuedev/core
-npm run build
-Pop-Location
-
-# VSCode Extension (will also package GUI)
-Write-Output "`nInstalling VSCode extension dependencies..." -ForegroundColor White
-Push-Location extensions/vscode
-
-# This does way too many things inline but is the common denominator between many of the scripts
-npm install
-npm link @continuedev/core
-npm run prepackage
-npm run package
-
-Pop-Location
-
-
-Write-Output "`nInstalling binary dependencies..." -ForegroundColor White
-Push-Location binary
-
+Write-Host "`nInstalling dependencies..." -ForegroundColor White
 npm install
 npm run build
-
-Pop-Location
-
-Write-Output "`nInstalling docs dependencies..." -ForegroundColor White
-Push-Location docs
-
-npm install
+npm run prepackage -w extensions/vscode
+npm run package -w extensions/vscode

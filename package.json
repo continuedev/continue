@@ -1,0 +1,16 @@
+{
+  "name": "continuedev",
+  "private": true,
+  "workspaces": [
+    "core",
+    "gui",
+    "extensions/vscode",
+    "binary",
+    "docs"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}

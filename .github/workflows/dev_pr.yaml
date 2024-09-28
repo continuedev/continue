@@ -20,73 +20,25 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - name: Cache extension node_modules
+      - name: Cache node_modules
         uses: actions/cache@v3
+        id: node-cache
         with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
+          path: |
+            **/node_modules
+            **/.eslintcache
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      - name: Cache core node_modules
-        uses: actions/cache@v3
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
-
-      - name: Cache gui node_modules
-        uses: actions/cache@v3
-        with:
-          path: gui/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
-
-      - name: Cache binary node_modules
-        uses: actions/cache@v3
-        with:
-          path: binary/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
-
-      - name: extensions/vscode install
-        run: |
-          cd extensions/vscode
-          npm ci
+      - name: Install dependencies
+        run: npm ci
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: core install
-        run: |
-          cd core
-          npm ci
+      - name: Type Check
+        run: npm run typecheck
 
-      - name: gui install
-        run: |
-          cd gui
-          npm ci
-
-      - name: binary install
-        run: |
-          cd binary
-          npm ci
-
-      - name: extensions/vscode checks
-        run: |
-          cd extensions/vscode
-          npx tsc --noEmit
-
-      - name: core checks
-        run: |
-          cd core
-          npm ci
-          npx tsc --noEmit
-          npm run lint
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-      - name: gui checks
-        run: |
-          cd gui
-          npx tsc --noEmit
-
-      - name: binary checks
-        run: |
-          cd binary
-          npx tsc --noEmit
+      - name: Lint
+        run: npm run lint

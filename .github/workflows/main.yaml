@@ -79,50 +79,25 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - name: Cache extension node_modules
+      - name: Cache node_modules
         uses: actions/cache@v3
+        id: node-cache
         with:
-          path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
+          path: |
+            **/node_modules
+            **/.eslintcache
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
-      - name: Cache core node_modules
-        uses: actions/cache@v3
-        with:
-          path: core/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
-
-      - name: Cache gui node_modules
-        uses: actions/cache@v3
-        with:
-          path: gui/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
-
-      - name: Install extension Dependencies
+      - name: NPM Install Dependencies
         run: |
-          cd extensions/vscode
           npm ci
+          # npm ci doesn't end up capturing the @lancedb/... dep because it's not in the package-lock.json
+          npm install vectordb --workspace=core
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-
-      - name: Install gui Dependencies
-        run: |
-          cd gui
-          npm ci
-
-      # npm ci doesn't end up capturing the @lancedb/... dep because it's not in the package-lock.json
-      - name: Install Core Dependencies
-        run: |
-          cd core
-          npm ci
-          npm i vectordb
-
-      # - name: Run core tests
-      #   run: |
-      #     cd core
-      #     npm run test
-      #   env:
-      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 2.5. Pre package
       - name: Set var for environment info
