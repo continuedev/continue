@@ -167,10 +167,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
 
-    editor.commands.deleteRange({
-      from: indexOfAt + 2,
-      to: contents.length + 1,
-    });
     inSubmenuRef.current = providerId;
 
     // to trigger refresh of suggestions
