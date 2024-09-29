@@ -22,14 +22,8 @@ import {
 } from "../util/parameters.js";
 import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
-import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
-import { BracketMatchingService } from "./brackets.js";
+
 import AutocompleteLruCache from "./cache.js";
-import {
-  noFirstCharNewline,
-  onlyWhitespaceAfterEndOfLine,
-  stopAtStopTokens,
-} from "./charStream.js";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
@@ -54,6 +48,13 @@ import { GeneratorReuseManager } from "./util.js";
 // @prettier-ignore
 import Handlebars from "handlebars";
 import { getConfigJsonPath } from "../util/paths.js";
+import { BracketMatchingService } from "./services/BracketMatchingService.js";
+import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+  stopAtStopTokens,
+} from "./streamTransforms/charStream.js";
 
 export interface AutocompleteInput {
   completionId: string;
