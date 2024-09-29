@@ -37,7 +37,10 @@ class HuggingFaceTGI extends BaseLLM {
       top_k: options.topK,
       presence_penalty: options.presencePenalty,
       frequency_penalty: options.frequencyPenalty,
-      stop: options.stop?.slice(0, HuggingFaceTGI.MAX_STOP_TOKENS),
+      stop: options.stop?.slice(
+        0,
+        this.maxStopWords ?? HuggingFaceTGI.MAX_STOP_TOKENS,
+      ),
     };
 
     return finalOptions;
