@@ -2,7 +2,7 @@ import {
   filterLeadingAndTrailingNewLineInsertion,
   filterLeadingNewline,
   stopAtLines,
-} from "../../autocomplete/lineStream.js";
+} from "../../autocomplete/streamTransforms/lineStream";
 import { streamDiff } from "../../diff/streamDiff.js";
 import { LineStream, streamLines } from "../../diff/util.js";
 import { DiffLine, ILLM } from "../../index.js";

@@ -882,6 +882,7 @@ export interface TabAutocompleteOptions {
   recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
   useImports?: boolean;
+  useHierarchicalContext?: boolean;
 }
 
 export interface ContinueUIConfig {

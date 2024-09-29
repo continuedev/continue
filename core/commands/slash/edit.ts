@@ -1,3 +1,4 @@
+import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -5,9 +6,8 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream";
+} from "../../autocomplete/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
-import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import { stripImages } from "../../llm/images";
 import {
   dedentAndGetCommonWhitespace,

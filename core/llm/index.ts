@@ -1,6 +1,7 @@
 import { findLlmInfo } from "@continuedev/llm-info";
 import Handlebars from "handlebars";
 import {
+  CacheBehavior,
   ChatMessage,
   ChatMessageRole,
   CompletionOptions,
@@ -14,7 +15,6 @@ import {
   PromptTemplate,
   RequestOptions,
   TemplateType,
-  CacheBehavior
 } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
