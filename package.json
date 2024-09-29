@@ -1,6 +1,8 @@
 {
   "name": "continuedev",
   "private": true,
+  "license": "Apache-2.0",
+  "author": "Continue Dev, Inc.",
   "workspaces": [
     "core",
     "gui",

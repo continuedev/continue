@@ -76,27 +76,22 @@ const exe = os === "win32" ? ".exe" : "";
   };
   fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
 
-  if (!process.cwd().endsWith("vscode")) {
-    // This is sometimes run from root dir instead (e.g. in VS Code tasks)
-    process.chdir("extensions/vscode");
-  }
-
   // Install node_modules //
-  execCmdSync("npm install");
-  console.log("[info] npm install in extensions/vscode completed");
-
-  process.chdir("../../gui");
-
-  execCmdSync("npm install");
-  console.log("[info] npm install in gui completed");
+  if (process.cwd().endsWith("vscode")) {
+    // This is sometimes run from root dir instead (e.g. in VS Code tasks)
+    process.chdir("../..");
+  }
+  execCmdSync("npm install -w extensions/vscode");
+  console.log("[info] npm install for extensions/vscode completed");
+  execCmdSync("npm install -w gui");
+  console.log("[info] npm install for gui completed");
 
   if (ghAction()) {
-    execCmdSync("npm run build");
+    execCmdSync("npm run build -w gui");
   }
 
   // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(
-    "..",
     "extensions",
     "intellij",
     "src",
@@ -132,14 +127,14 @@ const exe = os === "win32" ? ".exe" : "";
 
   // Copy over other misc. files
   fs.copyFileSync(
-    "../extensions/vscode/gui/onigasm.wasm",
+    "extensions/vscode/gui/onigasm.wasm",
     path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
   );
 
   console.log("[info] Copied gui build to JetBrains extension");
 
   // Then copy over the dist folder to the VSCode extension //
-  const vscodeGuiPath = path.join("../extensions/vscode/gui");
+  const vscodeGuiPath = path.join("extensions/vscode/gui");
   fs.mkdirSync(vscodeGuiPath, { recursive: true });
   await new Promise((resolve, reject) => {
     ncp("dist", vscodeGuiPath, (error) => {
@@ -156,15 +151,15 @@ const exe = os === "win32" ? ".exe" : "";
     });
   });
 
-  if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
+  if (!fs.existsSync(path.join("gui", "dist", "assets", "index.js"))) {
     throw new Error("gui build did not produce index.js");
   }
-  if (!fs.existsSync(path.join("dist", "assets", "index.css"))) {
+  if (!fs.existsSync(path.join("gui", "dist", "assets", "index.css"))) {
     throw new Error("gui build did not produce index.css");
   }
 
   // Copy over native / wasm modules //
-  process.chdir("../extensions/vscode");
+  process.chdir("extensions/vscode");
 
   fs.mkdirSync("bin", { recursive: true });
 
@@ -509,8 +504,8 @@ const exe = os === "win32" ? ".exe" : "";
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-        ? "libonnxruntime.so.1.14.0"
-        : "onnxruntime.dll"
+          ? "libonnxruntime.so.1.14.0"
+          : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -549,8 +544,8 @@ const exe = os === "win32" ? ".exe" : "";
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-        ? "win32-x64/esbuild.exe"
-        : `${target}/bin/esbuild`
+          ? "win32-x64/esbuild.exe"
+          : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"
