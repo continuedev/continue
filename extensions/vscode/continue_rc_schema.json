@@ -756,8 +756,17 @@
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "anyOf": [
@@ -872,8 +881,14 @@
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "enum": [
@@ -1115,8 +1130,17 @@
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "enum": [

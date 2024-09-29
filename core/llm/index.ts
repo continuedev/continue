@@ -14,6 +14,7 @@ import {
   PromptTemplate,
   RequestOptions,
   TemplateType,
+  CacheBehavior
 } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
@@ -102,6 +103,7 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
 
   engine?: string;
@@ -119,8 +121,6 @@ export abstract class BaseLLM implements ILLM {
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
   watsonxFullUrl?: string;
-
-  cacheSystemMessage?: boolean;
 
   private _llmOptions: LLMOptions;
 
@@ -184,6 +184,7 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+    this.cacheBehavior = options.cacheBehavior;
 
     // for watsonx only
     this.watsonxUrl = options.watsonxUrl;
@@ -192,8 +193,6 @@ export abstract class BaseLLM implements ILLM {
     this.watsonxStopToken = options.watsonxStopToken;
     this.watsonxApiVersion = options.watsonxApiVersion;
     this.watsonxFullUrl = options.watsonxFullUrl;
-
-    this.cacheSystemMessage = options.cacheSystemMessage;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
