@@ -101,7 +101,7 @@ export class ReverseMessageIde {
     });
 
     this.on("getDiff", (data) => {
-      return this.ide.getDiff(data.stagedOnly);
+      return this.ide.getDiff(data.includeUnstaged);
     });
 
     this.on("getTerminalContents", () => {

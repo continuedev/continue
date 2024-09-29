@@ -5,7 +5,8 @@ const CommitMessageCommand: SlashCommand = {
   name: "commit",
   description: "Generate a commit message for current changes",
   run: async function* ({ ide, llm, params }) {
-    const diff = await ide.getDiff(!params?.includeUnstaged);
+    const includeUnstaged = params ? params.includeUnstaged : false;
+    const diff = await ide.getDiff(includeUnstaged);
 
     if (!diff || diff.trim() === "") {
       yield "No changes detected. Make sure you are in a git repository with current changes.";

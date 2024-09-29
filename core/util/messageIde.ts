@@ -108,8 +108,8 @@ export class MessageIde implements IDE {
     return this.request("getWorkspaceConfigs", undefined);
   }
 
-  async getDiff(stagedOnly: boolean) {
-    return await this.request("getDiff", { stagedOnly });
+  async getDiff(includeUnstaged: boolean) {
+    return await this.request("getDiff", { includeUnstaged });
   }
 
   async getTerminalContents() {

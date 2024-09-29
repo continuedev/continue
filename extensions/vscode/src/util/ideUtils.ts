@@ -619,7 +619,7 @@ export class VsCodeIdeUtils {
     return repo?.state?.HEAD?.name || "NONE";
   }
 
-  async getDiff(stagedOnly: boolean): Promise<string> {
+  async getDiff(includeUnstaged: boolean): Promise<string> {
     let diffs: string[] = [];
     let repos = [];
 
@@ -633,7 +633,7 @@ export class VsCodeIdeUtils {
 
       const staged = await repo.diff(true);
       diffs.push(`${staged}`);
-      if (!stagedOnly) {
+      if (includeUnstaged) {
         const unstaged = await repo.diff(false);
         diffs.push(`\n${unstaged}`);
       }
