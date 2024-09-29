@@ -580,6 +580,7 @@ type ContextProviderName =
   | "gitlab-mr"
   | "os"
   | "currentFile"
+  | "greptile"
   | "outline"
   | "continue-proxy"
   | "highlights"
