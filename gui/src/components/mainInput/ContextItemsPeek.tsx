@@ -2,9 +2,8 @@ import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { useContext, useState } from "react";
-import { lightGray, vscBackground } from "..";
+import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
@@ -20,28 +19,6 @@ interface ContextItemsPeekProps {
 interface ContextItemsPeekItemProps {
   contextItem: ContextItemWithId;
 }
-
-const AnimatedEllipsis = styled.span`
-  &::after {
-    content: ".";
-    animation: ellipsis 2.5s infinite;
-    display: inline-block;
-    width: 12px;
-    text-align: left;
-  }
-
-  @keyframes ellipsis {
-    0% {
-      content: ".";
-    }
-    33% {
-      content: "..";
-    }
-    66% {
-      content: "...";
-    }
-  }
-`;
 
 function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   const ideMessenger = useContext(IdeMessengerContext);

@@ -86,7 +86,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
 
 const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
   border-radius: ${defaultBorderRadius};
-  padding: 8px 12px;
+  padding: 6px 12px;
 
   ${({ isDisabled }) =>
     !isDisabled &&

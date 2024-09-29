@@ -1,4 +1,3 @@
-import { EllipsisHorizontalCircleIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -6,21 +5,14 @@ import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius, vscInputBackground } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { setShowDialog, updateApplyState } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import ButtonWithTooltip from "./ButtonWithTooltip";
-import TextDialog from "./dialogs";
-import ProgressBar from "./loaders/ProgressBar";
-import { useOnboardingCard } from "./OnboardingCard";
-import { isNewUserOnboarding } from "./OnboardingCard/utils";
 import PostHogPageView from "./PosthogPageView";
-import ProfileSwitcher from "./ProfileSwitcher";
-
-const FOOTER_HEIGHT = "1.8em";
+import Footer from "./Footer";
+import { updateApplyState, setShowDialog } from "../redux/slices/uiStateSlice";
+import TextDialog from "./dialogs";
+import { useOnboardingCard, isNewUserOnboarding } from "./OnboardingCard";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -37,22 +29,6 @@ const LayoutTopDiv = styled(CustomScrollbarDiv)`
     top: 0;
     left: 0;
   }
-`;
-
-const Footer = styled.footer`
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  justify-content: right;
-  padding: 8px;
-  align-items: center;
-  width: calc(100% - 16px);
-  height: ${FOOTER_HEIGHT};
-  background-color: transparent;
-  backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(136, 136, 136, 0.3);
-  border-bottom: 1px solid rgba(136, 136, 136, 0.3);
-  overflow: hidden;
 `;
 
 const GridDiv = styled.div`
@@ -73,7 +49,7 @@ const ModelDropdownPortalDiv = styled.div`
 const ProfileDropdownPortalDiv = styled.div`
   background-color: ${vscInputBackground};
   position: relative;
-  margin-left: calc(100% - 190px);
+  margin-left: 8px;
   z-index: 200;
   font-size: ${getFontSize() - 2};
 `;
@@ -91,8 +67,6 @@ const Layout = () => {
   const showDialog = useSelector(
     (state: RootState) => state.uiState.showDialog,
   );
-
-  const defaultModel = useSelector(defaultModelSelector);
 
   const timeline = useSelector((state: RootState) => state.state.history);
 
@@ -213,31 +187,7 @@ const Layout = () => {
           <Outlet />
           <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
           <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
-          <Footer>
-            <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
-              {defaultModel?.provider === "free-trial" && (
-                <ProgressBar
-                  completed={parseInt(localStorage.getItem("ftc") || "0")}
-                  total={FREE_TRIAL_LIMIT_REQUESTS}
-                />
-              )}
-            </div>
-
-            <ProfileSwitcher />
-            <ButtonWithTooltip
-              tooltipPlacement="top-end"
-              text="More"
-              onClick={() => {
-                if (location.pathname === "/help") {
-                  navigate("/");
-                } else {
-                  navigate("/help");
-                }
-              }}
-            >
-              <EllipsisHorizontalCircleIcon width="1.4em" height="1.4em" />
-            </ButtonWithTooltip>
-          </Footer>
+          <Footer />
         </GridDiv>
       </div>
       <div
