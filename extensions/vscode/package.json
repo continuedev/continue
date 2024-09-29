@@ -524,6 +524,7 @@
     "@types/node": "16.x",
     "@types/react-dom": "^18.2.4",
     "@types/request": "^2.48.8",
+    "@types/sinon": "^17.0.3",
     "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
@@ -537,6 +538,7 @@
     "mocha": "^10.4.0",
     "ovsx": "^0.8.3",
     "rimraf": "^5.0.5",
+    "sinon": "^19.0.2",
     "typescript": "^5.3.3",
     "vite": "^4.3.9",
     "vsce": "^2.15.0"
