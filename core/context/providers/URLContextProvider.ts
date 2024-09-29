@@ -1,12 +1,13 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import { NodeHtmlMarkdown } from "node-html-markdown";
-import { BaseContextProvider } from "../index.js";
+import { BaseContextProvider } from "../";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
+import { fetchFavicon } from "../../util/fetchFavicon";
 
 class URLContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -22,6 +23,7 @@ class URLContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     try {
       const url = new URL(query);
+      const icon = await fetchFavicon(url);
       const resp = await extras.fetch(url);
       const html = await resp.text();
 
@@ -37,11 +39,17 @@ class URLContextProvider extends BaseContextProvider {
       );
 
       const title = article?.title || url.pathname;
+
       return [
         {
-          description: title,
+          icon,
+          description: url.toString(),
           content: markdown,
           name: title,
+          uri: {
+            type: "url",
+            value: url.toString(),
+          },
         },
       ];
     } catch (e) {

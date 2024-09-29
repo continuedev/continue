@@ -1,4 +1,11 @@
-import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
+import { ConfigHandler } from "core/config/ConfigHandler";
+import { getModelByRole } from "core/config/util";
+import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
+import {
+  FromCoreProtocol,
+  FromWebviewProtocol,
+  ToCoreProtocol,
+} from "core/protocol";
 import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
@@ -6,18 +13,20 @@ import {
   CORE_TO_WEBVIEW_PASS_THROUGH,
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
+import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
-import { VsCodeIde } from "../ideProtocol";
-import { getExtensionUri } from "../util/vscode";
+import { VerticalDiffManager } from "../diff/vertical/manager";
 import {
-  ToCoreOrIdeFromWebviewProtocol,
-  VsCodeWebviewProtocol,
-} from "../webviewProtocol";
+  getControlPlaneSessionInfo,
+  WorkOsAuthProvider,
+} from "../stubs/WorkOsAuthProvider";
+import { getExtensionUri } from "../util/vscode";
+import { VsCodeIde } from "../VsCodeIde";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 /**
  * A shared messenger class between Core and Webview
@@ -27,13 +36,11 @@ type TODO = any;
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
 export class VsCodeMessenger {
-  onWebview<T extends keyof ToCoreOrIdeFromWebviewProtocol>(
+  onWebview<T extends keyof FromWebviewProtocol>(
     messageType: T,
     handler: (
-      message: Message<ToCoreOrIdeFromWebviewProtocol[T][0]>,
-    ) =>
-      | Promise<ToCoreOrIdeFromWebviewProtocol[T][1]>
-      | ToCoreOrIdeFromWebviewProtocol[T][1],
+      message: Message<FromWebviewProtocol[T][0]>,
+    ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
     this.webviewProtocol.on(messageType, handler);
   }
@@ -68,15 +75,32 @@ export class VsCodeMessenger {
     >,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
-    private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
+    private readonly verticalDiffManagerPromise: Promise<VerticalDiffManager>,
+    private readonly configHandlerPromise: Promise<ConfigHandler>,
+    private readonly workOsAuthProvider: WorkOsAuthProvider,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
       this.ide.openFile(msg.data.filepath);
     });
+
+    this.onWebview("vscode/openMoveRightMarkdown", (msg) => {
+      vscode.commands.executeCommand(
+        "markdown.showPreview",
+        vscode.Uri.file(
+          path.join(
+            getExtensionUri().fsPath,
+            "media",
+            "move-chat-panel-right.md",
+          ),
+        ),
+      );
+    });
+
     this.onWebview("openConfigJson", (msg) => {
       this.ide.openFile(getConfigJsonPath());
     });
+
     this.onWebview("readRangeInFile", async (msg) => {
       return await vscode.workspace
         .openTextDocument(msg.data.filepath)
@@ -116,29 +140,84 @@ export class VsCodeMessenger {
         msg.data.stepIndex,
       );
     });
+
+    webviewProtocol.on("acceptDiff", async ({ data: { filepath } }) => {
+      await vscode.commands.executeCommand("continue.acceptDiff", filepath);
+    });
+
+    webviewProtocol.on("rejectDiff", async ({ data: { filepath } }) => {
+      await vscode.commands.executeCommand("continue.rejectDiff", filepath);
+    });
+
     this.onWebview("applyToCurrentFile", async (msg) => {
-      // Select the entire current file
+      // Get active text editor
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
       }
 
-      if (editor.selection.isEmpty) {
-        const document = editor.document;
-        const start = new vscode.Position(0, 0);
-        const end = new vscode.Position(
-          document.lineCount - 1,
-          document.lineAt(document.lineCount - 1).text.length,
+      // Get LLM from config
+      const configHandler = await configHandlerPromise;
+      const config = await configHandler.loadConfig();
+
+      let llm = getModelByRole(config, "applyCodeBlock");
+
+      if (!llm) {
+        const defaultModelTitle = await this.webviewProtocol.request(
+          "getDefaultModelTitle",
+          undefined,
         );
-        editor.selection = new vscode.Selection(start, end);
+
+        llm = config.models.find((model) => model.title === defaultModelTitle);
+
+        if (!llm) {
+          vscode.window.showErrorMessage(
+            `Model ${defaultModelTitle} not found in config.`,
+          );
+          return;
+        }
       }
 
-      (await this.verticalDiffManagerPromise).streamEdit(
-        `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
-        await this.webviewProtocol.request("getDefaultModelTitle", undefined),
+      const fastLlm = getModelByRole(config, "repoMapFileSelection") ?? llm;
+
+      // Generate the diff and pass through diff manager
+      const [instant, diffLines] = await applyCodeBlock(
+        editor.document.getText(),
+        msg.data.text,
+        getBasename(editor.document.fileName),
+        llm,
+        fastLlm,
       );
+      const verticalDiffManager = await this.verticalDiffManagerPromise;
+      if (instant) {
+        verticalDiffManager.streamDiffLines(
+          diffLines,
+          instant,
+          msg.data.streamId,
+        );
+      } else {
+        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
+        const fullEditorRange = new vscode.Range(
+          0,
+          0,
+          editor.document.lineCount - 1,
+          editor.document.lineAt(editor.document.lineCount - 1).text.length,
+        );
+        const rangeToApplyTo = editor.selection.isEmpty
+          ? fullEditorRange
+          : editor.selection;
+        verticalDiffManager.streamEdit(
+          prompt,
+          llm.title,
+          msg.data.streamId,
+          undefined,
+          undefined,
+          rangeToApplyTo,
+        );
+      }
     });
+
     this.onWebview("showTutorial", async (msg) => {
       const tutorialPath = path.join(
         getExtensionUri().fsPath,
@@ -156,7 +235,9 @@ export class VsCodeMessenger {
       const doc = await vscode.workspace.openTextDocument(
         vscode.Uri.file(tutorialPath),
       );
-      await vscode.window.showTextDocument(doc);
+      await vscode.window.showTextDocument(doc, {
+        preview: false,
+      });
     });
 
     this.onWebview("openUrl", (msg) => {
@@ -182,6 +263,7 @@ export class VsCodeMessenger {
         return (await this.inProcessMessenger.externalRequest(
           messageType,
           msg.data,
+          msg.messageId,
         )) as TODO;
       });
     });
@@ -216,12 +298,6 @@ export class VsCodeMessenger {
       return ide.getTopLevelCallStackSources(
         msg.data.threadIndex,
         msg.data.stackDepth,
-      );
-    });
-    this.onWebviewOrCore("listWorkspaceContents", async (msg) => {
-      return ide.listWorkspaceContents(
-        msg.data.directory,
-        msg.data.useGitIgnore,
       );
     });
     this.onWebviewOrCore("getWorkspaceDirs", async (msg) => {
@@ -271,18 +347,20 @@ export class VsCodeMessenger {
       const { filepath, startLine, endLine } = msg.data;
       return ide.showLines(filepath, startLine, endLine);
     });
-    // Other
-    this.onWebviewOrCore("errorPopup", (msg) => {
-      vscode.window
-        .showErrorMessage(msg.data.message, "Show Logs")
-        .then((selection) => {
-          if (selection === "Show Logs") {
-            vscode.commands.executeCommand("workbench.action.toggleDevTools");
-          }
-        });
+    this.onWebviewOrCore("showToast", (msg) => {
+      this.ide.showToast(...msg.data);
     });
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
-      ide.getGitHubAuthToken(),
+      ide.getGitHubAuthToken(msg.data),
     );
+    this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
+      return getControlPlaneSessionInfo(msg.data.silent);
+    });
+    this.onWebviewOrCore("logoutOfControlPlane", async (msg) => {
+      const sessions = await this.workOsAuthProvider.getSessions();
+      await Promise.all(
+        sessions.map((session) => workOsAuthProvider.removeSession(session.id)),
+      );
+    });
   }
 }

@@ -1,24 +1,12 @@
-import {
-  BranchAndDir,
-  Chunk,
-  ContextItem,
-  ContextProviderExtras,
-} from "../../index.js";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
-
-import { deduplicateArray, getRelativePath } from "../../util/index.js";
-import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
-import { retrieveFts } from "./fullTextSearch.js";
-
-function deduplicateChunks(chunks: Chunk[]): Chunk[] {
-  return deduplicateArray(chunks, (a, b) => {
-    return (
-      a.filepath === b.filepath &&
-      a.startLine === b.startLine &&
-      a.endLine === b.endLine
-    );
-  });
-}
+import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
+import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
+import { getRelativePath } from "../../util/";
+import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
+import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline";
+import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline";
+import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline";
+import path from "path";
 
 export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
@@ -30,21 +18,19 @@ export async function retrieveContextItemsFromEmbeddings(
   }
 
   // transformers.js not supported in JetBrains IDEs right now
-  if (
-    extras.embeddingsProvider.id === "all-MiniLM-L6-v2" &&
-    (await extras.ide.getIdeInfo()).ideType === "jetbrains"
-  ) {
+
+  const isJetBrainsAndTransformersJs =
+    extras.embeddingsProvider.id === TransformersJsEmbeddingsProvider.model &&
+    (await extras.ide.getIdeInfo()).ideType === "jetbrains";
+
+  if (isJetBrainsAndTransformersJs) {
     throw new Error(
-      "The transformers.js context provider is not currently supported in JetBrains. For now, you can use Ollama to set up local embeddings, or use our 'free-trial' embeddings provider. See here to learn more: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+      "The 'transformers.js' context provider is not currently supported in JetBrains. " +
+        "For now, you can use Ollama to set up local embeddings, or use our 'free-trial' " +
+        "embeddings provider. See here to learn more: " +
+        "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
     );
   }
-
-  const nFinal = options?.nFinal || RETRIEVAL_PARAMS.nFinal;
-  const useReranking = extras.reranker !== undefined;
-  const nRetrieve =
-    useReranking === false
-      ? nFinal
-      : options?.nRetrieve || RETRIEVAL_PARAMS.nRetrieve;
 
   // Get tags to retrieve for
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
@@ -52,6 +38,14 @@ export async function retrieveContextItemsFromEmbeddings(
   if (workspaceDirs.length === 0) {
     throw new Error("No workspace directories found");
   }
+
+  // Fill half of the context length, up to a max of 100 snippets
+  const contextLength = extras.llm.contextLength;
+  const tokensPerSnippet = 512;
+  const nFinal =
+    options?.nFinal ?? Math.min(50, contextLength / tokensPerSnippet / 2);
+  const useReranking = !!extras.reranker;
+  const nRetrieve = useReranking ? options?.nRetrieve || 2 * nFinal : nFinal;
 
   const branches = (await Promise.race([
     Promise.all(workspaceDirs.map((dir) => extras.ide.getBranch(dir))),
@@ -61,85 +55,38 @@ export async function retrieveContextItemsFromEmbeddings(
       }, 500);
     }),
   ])) as string[];
+
   const tags: BranchAndDir[] = workspaceDirs.map((directory, i) => ({
     directory,
     branch: branches[i],
   }));
 
-  // Get all retrieval results
-  const retrievalResults: Chunk[] = [];
+  const pipelineType = useReranking
+    ? RerankerRetrievalPipeline
+    : NoRerankerRetrievalPipeline;
 
-  // Source: Full-text search
-  const ftsResults = await retrieveFts(
-    extras.fullInput,
-    nRetrieve / 2,
-    tags,
-    filterDirectory,
-  );
-  retrievalResults.push(...ftsResults);
+  if (filterDirectory) {
+    // Handle relative paths
+    filterDirectory = await resolveRelativePathInWorkspace(
+      filterDirectory,
+      extras.ide,
+    );
+  }
 
-  // Source: expansion with code graph
-  // consider doing this after reranking? Or just having a lower reranking threshold
-  // This is VS Code only until we use PSI for JetBrains or build our own general solution
-  // TODO: Need to pass in the expandSnippet function as a function argument
-  // because this import causes `tsc` to fail
-  // if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
-  //   const { expandSnippet } = await import(
-  //     "../../../extensions/vscode/src/util/expandSnippet"
-  //   );
-  //   let expansionResults = (
-  //     await Promise.all(
-  //       extras.selectedCode.map(async (rif) => {
-  //         return expandSnippet(
-  //           rif.filepath,
-  //           rif.range.start.line,
-  //           rif.range.end.line,
-  //           extras.ide,
-  //         );
-  //       }),
-  //     )
-  //   ).flat() as Chunk[];
-  //   retrievalResults.push(...expansionResults);
-  // }
-
-  // Source: Open file exact match
-  // Source: Class/function name exact match
-
-  // Source: Embeddings
-  const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
-    extras.ide.readFile(path),
-  );
-  const vecResults = await lanceDbIndex.retrieve(
-    extras.fullInput,
+  const pipelineOptions: RetrievalPipelineOptions = {
+    nFinal,
     nRetrieve,
     tags,
+    pathSep: await extras.ide.pathSep(),
     filterDirectory,
-  );
-  retrievalResults.push(...vecResults);
+    ide: extras.ide,
+    input: extras.fullInput,
+    llm: extras.llm,
+    config: extras.config,
+  };
 
-  // De-duplicate
-  let results: Chunk[] = deduplicateChunks(retrievalResults);
-
-  // Re-rank
-  if (useReranking && extras.reranker) {
-    let scores: number[] = await extras.reranker.rerank(
-      extras.fullInput,
-      results,
-    );
-
-    // Filter out low-scoring results
-    results = results.filter(
-      (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
-    );
-    scores = scores.filter(
-      (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
-    );
-
-    results.sort(
-      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
-    );
-    results = results.slice(-nFinal);
-  }
+  const pipeline = new pipelineType(pipelineOptions);
+  const results = await pipeline.run();
 
   if (results.length === 0) {
     throw new Error(
@@ -148,20 +95,32 @@ export async function retrieveContextItemsFromEmbeddings(
   }
 
   return [
-    ...results.map((r) => {
-      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${r.startLine}-${r.endLine})`;
-      const description = `${r.filepath} (${r.startLine}-${r.endLine})`;
-      return {
-        name,
-        description,
-        content: `\`\`\`${name}\n${r.content}\n\`\`\``,
-      };
-    }),
     {
-      name: "Instructions",
-      description: "Instructions",
+      ...INSTRUCTIONS_BASE_ITEM,
       content:
         "Use the above code to answer the following question. You should not reference any files outside of what is shown, unless they are commonly known files, like a .gitignore or package.json. Reference the filenames whenever possible. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
     },
+    ...results
+      .sort((a, b) => a.filepath.localeCompare(b.filepath))
+      .map((r) => {
+        const name = `${path.basename(r.filepath)} (${r.startLine}-${
+          r.endLine
+        })`;
+        const description = `${r.filepath}`;
+
+        if (r.filepath.includes("package.json")) {
+          console.log();
+        }
+
+        return {
+          name,
+          description,
+          content: `\`\`\`${name}\n${r.content}\n\`\`\``,
+          uri: {
+            type: "file" as const,
+            value: r.filepath,
+          },
+        };
+      }),
   ];
 }

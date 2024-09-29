@@ -2,7 +2,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 
 import { llmCanGenerateInParallel } from "core/llm/autodetect";
-import { stripImages } from "core/llm/countTokens";
+import { stripImages } from "core/llm/images";
 import { useContext } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
@@ -30,7 +30,11 @@ function useHistory(dispatch: Dispatch) {
     offset?: number,
     limit?: number,
   ): Promise<SessionInfo[]> {
-    return await ideMessenger.request("history/list", { offset, limit });
+    const result = await ideMessenger.request("history/list", {
+      offset,
+      limit,
+    });
+    return result.status === "success" ? result.content : [];
   }
 
   async function saveSession() {
@@ -86,11 +90,11 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function getSession(id: string): Promise<PersistedSessionInfo> {
-    const json: PersistedSessionInfo = await ideMessenger.request(
-      "history/load",
-      { id },
-    );
-    return json;
+    const result = await ideMessenger.request("history/load", { id });
+    if (result.status === "error") {
+      throw new Error(result.error);
+    }
+    return result.content;
   }
 
   async function updateSession(sessionInfo: PersistedSessionInfo) {
@@ -103,22 +107,23 @@ function useHistory(dispatch: Dispatch) {
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
     setLocalStorage("lastSessionId", state.sessionId);
-    const json: PersistedSessionInfo = await ideMessenger.request(
-      "history/load",
-      { id },
-    );
+    const result = await ideMessenger.request("history/load", { id });
+    if (result.status === "error") {
+      throw new Error(result.error);
+    }
+    const json = result.content;
     dispatch(newSession(json));
     return json;
   }
 
-  async function loadLastSession(): Promise<PersistedSessionInfo> {
+  async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {
     const lastSessionId = getLocalStorage("lastSessionId");
     if (lastSessionId) {
       return await loadSession(lastSessionId);
     }
   }
 
-  function getLastSessionId(): string {
+  function getLastSessionId(): string | undefined {
     return getLocalStorage("lastSessionId");
   }
 

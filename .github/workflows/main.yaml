@@ -1,12 +1,27 @@
 name: Publish Extension
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [released]
 
 jobs:
+  check_release_name:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        working-directory: .
+        run: |
+          if [[ "${{ github.event.release.tag_name }}" == v0.8.*-vscode ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   build:
+    needs: check_release_name
+    if: needs.check_release_name.outputs.should_run == 'true'
     strategy:
       matrix:
         include:
@@ -45,8 +60,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       # 1. Check-out repository
-      - name: Check-out repository
+      - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # This ensures all tags are fetched
+
+      - name: Checkout tag
+        run: git checkout ${GITHUB_REF#refs/tags/}
 
       - name: Make sure version isn't odd
         run: |
@@ -90,10 +110,19 @@ jobs:
           cd gui
           npm ci
 
+      # npm ci doesn't end up capturing the @lancedb/... dep because it's not in the package-lock.json
       - name: Install Core Dependencies
         run: |
           cd core
           npm ci
+          npm i vectordb
+
+      # - name: Run core tests
+      #   run: |
+      #     cd core
+      #     npm run test
+      #   env:
+      #     OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 2.5. Pre package
       - name: Set var for environment info
@@ -105,8 +134,13 @@ jobs:
           cd extensions/vscode
           npm run prepackage -- --target ${{ env.target }}
 
-      # 3. Run tests for the extension
+      # 3. Re-install esbuild (for cases that we force installed for another arch in prepackage.js)
+      - name: Re-install esbuild
+        run: |
+          cd extensions/vscode
+          npm install -f esbuild
 
+      # 4. Run tests for the extension
       # - name: Install Xvfb for Linux and run tests
       #   run: |
       #     sudo apt-get install -y xvfb # Install Xvfb
@@ -122,20 +156,14 @@ jobs:
       #     npm run test
       #   if: matrix.os != 'ubuntu-latest'
 
-      # 4. Re-install esbuild (for cases that we force installed for another arch in prepackage.js)
-      - name: Re-install esbuild
-        run: |
-          cd extensions/vscode
-          npm install -f esbuild
-
       # 5. Package the extension
       - name: Package the extension
         run: cd extensions/vscode && npx vsce package --no-dependencies --target ${{ env.target }}
 
       # 6. Upload the .vsix as an artifact
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.target }}
+          name: ${{ env.target }}-vsix
           path: "extensions/vscode/*.vsix"
 
   release:
@@ -154,31 +182,18 @@ jobs:
           git config --local user.name "GitHub Action"
 
       # Download the .vsix artifacts
-      - uses: actions/download-artifact@v3
-
-      - name: Tag the repository
-        id: tag
-        run: |
-          # See https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
-          TAG=v$(grep -o '"version": "[^"]*' extensions/vscode/package.json | cut -d'"' -f4)-vscode
-          echo "$TAG"
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
-          git push origin $TAG
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.tag.outputs.tag }}
+          tag_name: ${{ github.ref_name }}
           files: |
-            alpine-x64/*.vsix
-            darwin-arm64/*.vsix
-            darwin-x64/*.vsix
-            linux-arm64/*.vsix
-            linux-armhf/*.vsix
-            linux-x64/*.vsix
-            win32-x64/*.vsix
-            win32-arm64/*.vsix
+            vsix-artifacts/*.vsix
           token: ${{ secrets.CI_GITHUB_TOKEN }}
           repository: continuedev/continue
 
@@ -202,39 +217,44 @@ jobs:
         run: git pull origin main
 
       # 1. Download the artifacts
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: "*-vsix"
+          path: vsix-artifacts
+          merge-multiple: true
 
       # 2. Publish the extension to VS Code Marketplace
       - name: Publish to VS Code Marketplace
         run: |
           cd extensions/vscode
-          npx vsce publish --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx vsce publish --packagePath ../../vsix-artifacts/*.vsix
         env:
           VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
 
       # 3. Publish the extension to Open VSX Registry
       - name: Publish (Open VSX Registry)
+        continue-on-error: true
         run: |
           cd extensions/vscode
-          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
+          npx ovsx publish -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../vsix-artifacts/*.vsix
 
       # 4. Update the package.json version and push changes
-      - name: Update version in package.json
-        run: |
-          cd extensions/vscode
-          npm version patch
+      # - name: Update version in package.json
+      #   run: |
+      #     cd extensions/vscode
+      #     npm version patch
 
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "💚 Update package.json version [skip ci]"
+      # - name: Commit changes
+      #   run: |
+      #     git config --local user.email "action@github.com"
+      #     git config --local user.name "GitHub Action"
+      #     git commit -am "💚 Update package.json version [skip ci]"
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+      # - name: Push changes
+      #   uses: ad-m/github-push-action@master
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     branch: ${{ github.ref }}
 
       # 5 Send to Discord Webhook
       - name: Discord Commits

@@ -1,24 +1,19 @@
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
-import useSetup from "./hooks/useSetup";
-import ErrorPage from "./pages/error";
-import { default as Help, default as HelpPage } from "./pages/help";
-import History from "./pages/history";
-import MigrationPage from "./pages/migration";
-import { ConfigureProvider, AddNewModel } from "./pages/AddNewModel";
-import MonacoPage from "./pages/monaco";
-import SettingsPage from "./pages/settings";
 import { SubmenuContextProvidersContext } from "./context/SubmenuContextProviders";
 import { VscThemeContext } from "./context/VscTheme";
+import useSetup from "./hooks/useSetup";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
+import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
+import ErrorPage from "./pages/error";
 import GUI from "./pages/gui";
-import LocalOnboarding from "./pages/localOnboarding";
-import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
-import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
-import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
-import Onboarding from "./pages/onboarding/onboarding";
+import History from "./pages/history";
+import MigrationPage from "./pages/migration";
+import MonacoPage from "./pages/monaco";
+import MorePage from "./pages/More";
+import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 
 const router = createMemoryRouter([
@@ -44,10 +39,6 @@ const router = createMemoryRouter([
         element: <Stats />,
       },
       {
-        path: "/help",
-        element: <Help />,
-      },
-      {
         path: "/settings",
         element: <SettingsPage />,
       },
@@ -60,36 +51,16 @@ const router = createMemoryRouter([
         element: <ConfigureProvider />,
       },
       {
-        path: "/help",
-        element: <HelpPage />,
+        path: "/more",
+        element: <MorePage />,
       },
       {
         path: "/monaco",
         element: <MonacoPage />,
       },
       {
-        path: "/onboarding",
-        element: <Onboarding />,
-      },
-      {
-        path: "/existingUserOnboarding",
-        element: <ExistingUserOnboarding />,
-      },
-      {
-        path: "/localOnboarding",
-        element: <LocalOnboarding />,
-      },
-      {
         path: "/migration",
         element: <MigrationPage />,
-      },
-      {
-        path: "/apiKeyOnboarding",
-        element: <ApiKeyOnboarding />,
-      },
-      {
-        path: "/apiKeyAutocompleteOnboarding",
-        element: <ApiKeyAutocompleteOnboarding />,
       },
     ],
   },

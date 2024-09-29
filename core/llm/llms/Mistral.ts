@@ -14,8 +14,15 @@ class Mistral extends OpenAI {
 
   constructor(options: LLMOptions) {
     super(options);
-    if (options.model.includes("codestral")) {
-      this.apiBase = "https://codestral.mistral.ai/v1/";
+    if (
+      options.model.includes("codestral") &&
+      !options.model.includes("mamba")
+    ) {
+      this.apiBase = options.apiBase ?? "https://codestral.mistral.ai/v1/";
+    }
+
+    if (!this.apiBase?.endsWith("/")) {
+      this.apiBase += "/";
     }
   }
 
@@ -31,7 +38,7 @@ class Mistral extends OpenAI {
     const finalOptions = super._convertArgs(options, messages);
 
     const lastMessage = finalOptions.messages[finalOptions.messages.length - 1];
-    if (lastMessage.role === "assistant") {
+    if (lastMessage?.role === "assistant") {
       (lastMessage as any).prefix = true;
     }
 

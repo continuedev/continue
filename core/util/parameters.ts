@@ -3,7 +3,7 @@ import { TabAutocompleteOptions } from "../index.js";
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
   useCopyBuffer: false,
-  useSuffix: true,
+  useFileSuffix: true,
   maxPromptTokens: 1024,
   prefixPercentage: 0.85,
   maxSuffixPercentage: 0.25,
@@ -28,7 +28,9 @@ export const DO_NOT_COUNT_REJECTED_BEFORE = 250;
 
 export const RETRIEVAL_PARAMS = {
   rerankThreshold: 0.3,
-  nFinal: 10,
-  nRetrieve: 20,
+  nFinal: 20,
+  nRetrieve: 50,
   bm25Threshold: -2.5,
+  nResultsToExpandWithEmbeddings: 5,
+  nEmbeddingsExpandTo: 5,
 };

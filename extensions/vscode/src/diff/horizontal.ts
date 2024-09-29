@@ -64,7 +64,10 @@ export class DiffManager {
   }
 
   private escapeFilepath(filepath: string): string {
-    return filepath.replace(/\//g, "_f_").replace(/\\/g, "_b_");
+    return filepath
+      .replace(/\//g, "_f_")
+      .replace(/\\/g, "_b_")
+      .replace(/:/g, "_c_");
   }
 
   private remoteTmpDir = "/tmp/continue";

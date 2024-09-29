@@ -1,10 +1,12 @@
 import { Response } from "node-fetch";
-import { EmbedOptions } from "../../index.js";
+import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxBatchSize = 96;
+
+  static providerName: EmbeddingsProviderName = "cohere";
 
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "https://api.cohere.ai/v1/",
@@ -16,16 +18,7 @@ class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
       this.options.apiBase += "/";
     }
 
-    const batchedChunks = [];
-    for (
-      let i = 0;
-      i < chunks.length;
-      i += CohereEmbeddingsProvider.maxBatchSize
-    ) {
-      batchedChunks.push(
-        chunks.slice(i, i + CohereEmbeddingsProvider.maxBatchSize),
-      );
-    }
+    const batchedChunks = this.getBatchedChunks(chunks);
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {

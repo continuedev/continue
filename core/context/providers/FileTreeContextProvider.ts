@@ -3,6 +3,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
+import { walkDir } from "../../indexing/walkDir.js";
 import { splitPath } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
@@ -33,6 +34,7 @@ class FileTreeContextProvider extends BaseContextProvider {
     description: "Attach a representation of the file tree",
     type: "normal",
     renderInlineAs: "",
+    dependsOnIndexing: true,
   };
 
   async getContextItems(
@@ -43,7 +45,7 @@ class FileTreeContextProvider extends BaseContextProvider {
     const trees = [];
 
     for (const workspaceDir of workspaceDirs) {
-      const contents = await extras.ide.listWorkspaceContents(workspaceDir);
+      const contents = await walkDir(workspaceDir, extras.ide);
 
       const subDirTree: Directory = {
         name: splitPath(workspaceDir).pop() ?? "",

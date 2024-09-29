@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { IProtocol } from "../protocol";
+import type { IProtocol } from "../protocol/index.js";
 
 export interface Message<T = any> {
   messageType: string;
@@ -75,7 +75,7 @@ export class InProcessMessenger<
     messageId?: string,
   ): ToProtocol[T][1] {
     const listener = this.myTypeListeners.get(messageType);
-    if (!listener) return;
+    if (!listener) {return;}
 
     const msg: Message = {
       messageType: messageType as string,
@@ -134,8 +134,9 @@ export class InProcessMessenger<
   externalRequest<T extends keyof ToProtocol>(
     messageType: T,
     data: ToProtocol[T][0],
+    _messageId?: string,
   ): Promise<ToProtocol[T][1]> {
-    const messageId = uuidv4();
+    const messageId = _messageId ?? uuidv4();
     const listener = this.myTypeListeners.get(messageType);
     if (!listener) {
       throw new Error(`No handler for message type "${String(messageType)}"`);

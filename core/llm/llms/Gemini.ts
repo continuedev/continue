@@ -5,7 +5,7 @@ import {
   MessagePart,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../countTokens.js";
+import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
@@ -202,7 +202,7 @@ class Gemini extends BaseLLM {
           }
         } else {
           // Handle the case where the expected data structure is not found
-          console.warn('Unexpected response format:', data);
+          console.warn("Unexpected response format:", data);
         }
       }
       if (foundIncomplete) {

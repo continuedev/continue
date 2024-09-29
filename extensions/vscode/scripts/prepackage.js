@@ -94,7 +94,7 @@ const exe = os === "win32" ? ".exe" : "";
     execCmdSync("npm run build");
   }
 
-  // Copy over the dist folder to the Intellij extension //
+  // Copy over the dist folder to the JetBrains extension //
   const intellijExtensionWebviewPath = path.join(
     "..",
     "extensions",
@@ -114,7 +114,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp("dist", intellijExtensionWebviewPath, (error) => {
       if (error) {
         console.warn(
-          "[error] Error copying React app build to Intellij extension: ",
+          "[error] Error copying React app build to JetBrains extension: ",
           error,
         );
         reject(error);
@@ -136,7 +136,7 @@ const exe = os === "win32" ? ".exe" : "";
     path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
   );
 
-  console.log("[info] Copied gui build to Intellij extension");
+  console.log("[info] Copied gui build to JetBrains extension");
 
   // Then copy over the dist folder to the VSCode extension //
   const vscodeGuiPath = path.join("../extensions/vscode/gui");
@@ -241,11 +241,20 @@ const exe = os === "win32" ? ".exe" : "";
     );
   });
 
-  fs.copyFileSync(
-    path.join(__dirname, "../../../core/vendor/tree-sitter.wasm"),
-    path.join(__dirname, "../out/tree-sitter.wasm"),
-  );
-  console.log("[info] Copied tree-sitter wasms");
+  const filesToCopy = [
+    "../../../core/vendor/tree-sitter.wasm",
+    "../../../core/llm/llamaTokenizerWorkerPool.mjs",
+    "../../../core/llm/llamaTokenizer.mjs",
+    "../../../core/llm/tiktokenWorkerPool.mjs",
+  ];
+
+  for (const f of filesToCopy) {
+    fs.copyFileSync(
+      path.join(__dirname, f),
+      path.join(__dirname, "..", "out", path.basename(f)),
+    );
+    console.log(`[info] Copied ${path.basename(f)}`);
+  }
 
   // tree-sitter tag query files
   // ncp(
@@ -427,13 +436,32 @@ const exe = os === "win32" ? ".exe" : "";
     );
   });
 
+  // Copied here as well for the VS Code test suite
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
+      path.join(__dirname, "../out"),
+      { dereference: true },
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying sqlite3 files", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+
   // Copy node_modules for pre-built binaries
   const NODE_MODULES_TO_COPY = [
     "esbuild",
     "@esbuild",
     "@lancedb",
     "@vscode/ripgrep",
+    "workerpool",
   ];
+
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
@@ -481,8 +509,8 @@ const exe = os === "win32" ? ".exe" : "";
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -491,7 +519,7 @@ const exe = os === "win32" ? ".exe" : "";
     "gui/assets/index.css",
 
     // Tutorial
-    "media/welcome.md",
+    "media/move-chat-panel-right.md",
     "continue_tutorial.py",
     "config_schema.json",
 
@@ -521,8 +549,8 @@ const exe = os === "win32" ? ".exe" : "";
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"

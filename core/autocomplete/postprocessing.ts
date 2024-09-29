@@ -1,6 +1,6 @@
-import type { ILLM } from "..";
-import { longestCommonSubsequence } from "../util/lcs";
-import { lineIsRepeated } from "./streamTransforms/lineStream";
+import type { ILLM } from "../index.js";
+import { longestCommonSubsequence } from "../util/lcs.js";
+import { lineIsRepeated } from "./lineStream.js";
 
 function rewritesLineAbove(completion: string, prefix: string): boolean {
   const lineAbove = prefix
@@ -94,6 +94,11 @@ export function postprocessCompletion({
 
   // If prefix ends with space and so does completion, then remove the space from completion
   if (prefix.endsWith(" ") && completion.startsWith(" ")) {
+    completion = completion.slice(1);
+  }
+
+  // Qwen often adds an extra space to the start
+  if (llm.model.toLowerCase().includes("qwen") && completion.startsWith(" ")) {
     completion = completion.slice(1);
   }
 

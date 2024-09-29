@@ -19,7 +19,8 @@ class ContinueCustomElementRenderer (
         val text: String,
 ) : EditorCustomElementRenderer {
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
-        return (inlay.editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(this.text)
+        val width = (inlay.editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(this.text)
+        return width
     }
 
     private fun font(editor: Editor): Font {

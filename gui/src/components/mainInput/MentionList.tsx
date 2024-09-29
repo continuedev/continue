@@ -2,12 +2,10 @@ import {
   ArrowRightIcon,
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
-  BeakerIcon,
+  BoltIcon,
   BookOpenIcon,
   CodeBracketIcon,
-  Cog6ToothIcon,
   CommandLineIcon,
-  CubeIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
@@ -15,7 +13,7 @@ import {
   GlobeAltIcon,
   HashtagIcon,
   MagnifyingGlassIcon,
-  PaintBrushIcon,
+  PencilIcon,
   PlusIcon,
   SparklesIcon,
   TrashIcon,
@@ -42,10 +40,11 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
-import { ComboBoxItem } from "./types";
+import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -60,17 +59,21 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   folder: FolderIcon,
   docs: BookOpenIcon,
   issue: ExclamationCircleIcon,
-  "/edit": PaintBrushIcon,
+  trash: TrashIcon,
+  "repo-map": FolderIcon,
+  "/edit": PencilIcon,
   "/clear": TrashIcon,
-  "/test": BeakerIcon,
-  "/config": Cog6ToothIcon,
   "/comment": HashtagIcon,
   "/share": ArrowUpOnSquareIcon,
   "/cmd": CommandLineIcon,
-  "/codebase": SparklesIcon,
-  "/so": GlobeAltIcon,
-  "/issue": ExclamationCircleIcon,
 };
+
+export function getIconFromDropdownItem(id: string, type: ComboBoxItemType) {
+  return (
+    ICONS_FOR_DROPDOWN[id] ??
+    (type === "contextProvider" ? AtSymbolIcon : BoltIcon)
+  );
+}
 
 function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
   if (props.item.type === "action") {
@@ -80,49 +83,38 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
   }
 
   const provider =
-    props.item.type === "contextProvider"
+    props.item.type === "contextProvider" || props.item.type === "slashCommand"
       ? props.item.id
-      : props.item.type === "slashCommand"
-        ? props.item.id
-        : props.item.type;
+      : props.item.type;
 
-  const iconClass = `${props.className} flex-shrink-0`;
+  const IconComponent = getIconFromDropdownItem(provider, props.item.type);
 
-  let fallbackIcon;
-  const Icon = ICONS_FOR_DROPDOWN[provider];
-  if (!Icon) {
-    fallbackIcon =
-      props.item.type === "contextProvider" ? (
-        <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
-      ) : (
-        <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
-      );
-  } else {
-    fallbackIcon = <Icon className={iconClass} height="1.2em" width="1.2em" />;
+  const fallbackIcon = (
+    <IconComponent
+      className={`${props.className} flex-shrink-0`}
+      height="1.2em"
+      width="1.2em"
+    />
+  );
+
+  if (!props.item.icon) {
+    return fallbackIcon;
   }
 
-  if (false && props.item.iconUrl) {
-    try {
-      return (
-        <SafeImg
-          className="flex-shrink-0 pr-2"
-          src={props.item.iconUrl}
-          height="18em"
-          width="18em"
-          fallback={fallbackIcon}
-        />
-      );
-    } catch (e) {}
-  }
-
-  return fallbackIcon;
+  return (
+    <SafeImg
+      className="flex-shrink-0 pr-2"
+      src={props.item.icon}
+      height="18em"
+      width="18em"
+      fallback={fallbackIcon}
+    />
+  );
 }
 
 const ItemsDiv = styled.div`
   border-radius: ${defaultBorderRadius};
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0px 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;
@@ -176,6 +168,7 @@ interface MentionListProps {
 
   editor: Editor;
   enterSubmenu?: (editor: Editor, providerId: string) => void;
+  onClose: () => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
@@ -213,6 +206,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
         description: "Add a new documentation source",
       });
     }
+
     setAllItems(items);
   }, [subMenuTitle, props.items, props.editor]);
 
@@ -242,6 +236,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
 
     if (item.contextProvider?.type === "query") {
+      // update editor to complete context provider title
+      const { tr } = props.editor.view.state;
+      const text = tr.doc.textBetween(0, tr.selection.from);
+      const partialText = text.slice(text.lastIndexOf("@") + 1);
+      const remainingText = item.title.slice(partialText.length);
+      props.editor.view.dispatch(
+        tr.insertText(remainingText, tr.selection.from),
+      );
+
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;
@@ -405,6 +408,22 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                           height="1.2em"
                         />
                       )}
+                    {item.subActions?.map((subAction) => {
+                      const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
+                      return (
+                        <ButtonWithTooltip
+                          onClick={(e) => {
+                            subAction.action(item);
+                            e.stopPropagation();
+                            e.preventDefault();
+                            props.onClose();
+                          }}
+                          text={undefined}
+                        >
+                          <Icon width="1.2em" height="1.2em" />
+                        </ButtonWithTooltip>
+                      );
+                    })}
                   </span>
                 </span>
               </ItemDiv>

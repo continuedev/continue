@@ -1,5 +1,5 @@
-const DEFAULT_MAX_TOKENS = 1024;
-const DEFAULT_CONTEXT_LENGTH = 4096;
+const DEFAULT_MAX_TOKENS = 2048;
+const DEFAULT_CONTEXT_LENGTH = 8096;
 const DEFAULT_TEMPERATURE = 0.5;
 
 const DEFAULT_ARGS = {
@@ -20,6 +20,7 @@ const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
   "gpt-4-32k": GPT_4_CTX_LEN,
   "gpt-4-turbo-preview": GPT_4_CTX_LEN,
   "gpt-4o": GPT_4_CTX_LEN,
+  "gpt-4o-mini": GPT_4_CTX_LEN,
   "gpt-4-vision": GPT_4_CTX_LEN,
   "gpt-4-0125-preview": GPT_4_CTX_LEN,
   "gpt-4-1106-preview": GPT_4_CTX_LEN,
@@ -28,14 +29,14 @@ const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
 const TOKEN_BUFFER_FOR_SAFETY = 350;
 const PROXY_URL = "http://localhost:65433";
 
-const MAX_CHUNK_SIZE = 500; // 512 - buffer for safety (in case of differing tokenizers)
+const DEFAULT_MAX_CHUNK_SIZE = 500; // 512 - buffer for safety (in case of differing tokenizers)
 
 export {
   CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
   DEFAULT_CONTEXT_LENGTH,
+  DEFAULT_MAX_CHUNK_SIZE,
   DEFAULT_MAX_TOKENS,
-  MAX_CHUNK_SIZE,
   PROXY_URL,
   TOKEN_BUFFER_FOR_SAFETY,
 };

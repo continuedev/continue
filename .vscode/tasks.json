@@ -45,8 +45,6 @@
         }
       ]
     },
-    // Tsc currently errors out due to testing setup issues, will be resolved in a different PR
-    // This will be useful for preventing debugging if there are compile errors
     {
       "label": "vscode-extension:tsc",
       "type": "npm",
@@ -159,11 +157,18 @@
       "label": "docs:start",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "start"],
+      "args": ["run", "start", "--", "--no-open"],
       "problemMatcher": [],
       "options": {
         "cwd": "docs"
       }
+    },
+    {
+      "label": "clean",
+      "type": "shell",
+      "command": "node",
+      "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "problemMatcher": []
     }
   ]
 }

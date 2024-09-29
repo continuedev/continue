@@ -12,10 +12,14 @@ const CustomPostHogProvider = ({ children }: PropsWithChildren) => {
   const [client, setClient] = React.useState<any>(undefined);
 
   useEffect(() => {
-    if (allowAnonymousTelemetry === true) {
+    if (allowAnonymousTelemetry) {
       posthog.init("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
         api_host: "https://app.posthog.com",
         disable_session_recording: true,
+        autocapture: false,
+        // // We need to manually track pageviews since we're a SPA
+        capture_pageleave: false,
+        capture_pageview: false,
       });
       posthog.identify(window.vscMachineId);
       posthog.opt_in_capturing();

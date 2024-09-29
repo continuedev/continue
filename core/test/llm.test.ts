@@ -1,8 +1,8 @@
 import * as dotenv from "dotenv";
 
-import { CompletionOptions } from "../index.js";
-import { BaseLLM } from "../llm/index.js";
-import OpenAI from "../llm/llms/OpenAI.js";
+import { CompletionOptions } from "../";
+import { BaseLLM } from "../llm/";
+import OpenAI from "../llm/llms/OpenAI";
 
 // jest.setTimeout(100_000);
 
@@ -33,7 +33,6 @@ function testLLM(llm: BaseLLM) {
       }
 
       expect(total.length).toBeGreaterThan(0);
-      console.log(total);
       return;
     });
 
@@ -44,7 +43,6 @@ function testLLM(llm: BaseLLM) {
       }
 
       expect(total.length).toBeGreaterThan(0);
-      console.log(total);
       return;
     });
 
@@ -52,7 +50,6 @@ function testLLM(llm: BaseLLM) {
       const completion = await llm.complete("Hi");
 
       expect(completion.length).toBeGreaterThan(0);
-      console.log(completion);
       return;
     });
   });

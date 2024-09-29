@@ -4,7 +4,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../countTokens.js";
+import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
@@ -35,17 +35,40 @@ class Anthropic extends BaseLLM {
   }
 
   private _convertMessages(msgs: ChatMessage[]): any[] {
-    const messages = msgs
-      .filter((m) => m.role !== "system")
-      .map((message) => {
+    const filteredmessages = msgs.filter((m) => m.role !== "system")
+    const lastTwoUserMsgIndices = filteredmessages 
+      .map((msg, index) => (msg.role === "user" ? index : -1))
+      .filter((index) => index !== -1).slice(-2);
+
+    const messages = filteredmessages.map((message, filteredMsgIdx) => {
+        // Add cache_control parameter to the last two user messages
+        // The second-to-last because it retrieves potentially already cached contents,
+        // The last one because we want it cached for later retrieval.
+        // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+        const addCaching = this.cacheBehavior?.cacheConversation && lastTwoUserMsgIndices.includes(filteredMsgIdx);
+
         if (typeof message.content === "string") {
-          return message;
+          var chatMessage = {
+            ...message, 
+            content: [{
+              type: "text", 
+              text: message.content,
+              ...(addCaching? { cache_control: { type: "ephemeral" } } : {})
+            }]
+          };
+          return chatMessage;
         }
+
         return {
           ...message,
-          content: message.content.map((part) => {
+          content: message.content.map((part, contentIdx) => {
             if (part.type === "text") {
-              return part;
+              const newpart = {
+                      ...part,
+                      // If multiple text parts, only add cache_control to the last one
+                      ...((addCaching && contentIdx == message.content.length - 1) ? { cache_control: { type: "ephemeral" } } : {})
+                     };
+              return newpart;
             }
             return {
               type: "image",
@@ -75,6 +98,11 @@ class Anthropic extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    const shouldCacheSystemMessage = !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
+    const systemMessage: string = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content,
+    );
+
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
@@ -82,11 +110,22 @@ class Anthropic extends BaseLLM {
         Accept: "application/json",
         "anthropic-version": "2023-06-01",
         "x-api-key": this.apiKey as string,
+        ...(shouldCacheSystemMessage || this.cacheBehavior?.cacheConversation
+          ? { "anthropic-beta": "prompt-caching-2024-07-31" }
+          : {}),
       },
       body: JSON.stringify({
         ...this._convertArgs(options),
         messages: this._convertMessages(messages),
-        system: this.systemMessage,
+        system: shouldCacheSystemMessage
+          ? [
+              {
+                type: "text",
+                text: this.systemMessage,
+                cache_control: { type: "ephemeral" },
+              },
+            ]
+          : systemMessage,
       }),
     });
 
@@ -97,6 +136,7 @@ class Anthropic extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
+      if (value.type == "message_start") console.log(value);
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }

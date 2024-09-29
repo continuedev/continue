@@ -8,18 +8,27 @@ import type {
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
+  ModelRoles,
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
-} from "..";
+} from "../";
 import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
   content: T;
 }>;
+
+export type OnboardingModes =
+  | "Local"
+  | "Best"
+  | "Custom"
+  | "Quickstart"
+  | "LocalAfterFreeTrial";
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -42,14 +51,21 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
-    { model: SerializedContinueConfig["models"][number] },
+    {
+      model: SerializedContinueConfig["models"][number];
+      role?: keyof ModelRoles;
+    },
     void,
   ];
   "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
-  "config/getBrowserSerialized": [undefined, BrowserSerializedContinueConfig];
+  "config/getSerializedProfileInfo": [
+    undefined,
+    { config: BrowserSerializedContinueConfig; profileId: string },
+  ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, BrowserSerializedContinueConfig];
+  "config/listProfiles": [undefined, ProfileDescription[]];
   "context/getContextItems": [
     {
       name: string;
@@ -62,6 +78,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
+  "context/removeDocs": [Pick<SiteIndexingConfig, "startUrl">, void];
+  "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [
@@ -121,21 +139,22 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
+  "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined | string, void];
+  "index/forceReIndex": [
+    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    void,
+  ];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {
-      mode:
-        | "local"
-        | "apiKeys"
-        | "custom"
-        | "freeTrial"
-        | "localExistingUser"
-        | "optimizedExistingUser"
-        | "localAfterFreeTrial";
+      mode: OnboardingModes;
     },
     void,
   ];
   addAutocompleteModel: [{ model: ModelDescription }, void];
+
+  "profiles/switch": [{ id: string }, undefined];
+
+  "auth/getAuthUrl": [undefined, { url: string }];
 };

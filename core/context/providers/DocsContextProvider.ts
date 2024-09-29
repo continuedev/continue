@@ -1,18 +1,20 @@
-import fetch from "node-fetch";
+import { INSTRUCTIONS_BASE_ITEM } from "./utils";
+import { BaseContextProvider } from "../";
 import {
+  Chunk,
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../../index.js";
-import configs from "../../indexing/docs/preIndexedDocs.js";
-import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { BaseContextProvider } from "../index.js";
+} from "../..";
+import DocsService from "../../indexing/docs/DocsService";
+import preIndexedDocs from "../../indexing/docs/preIndexedDocs";
+import { Telemetry } from "../../util/posthog";
 
 class DocsContextProvider extends BaseContextProvider {
-  static DEFAULT_N_RETRIEVE = 30;
-  static DEFAULT_N_FINAL = 15;
+  static nRetrieve = 30;
+  static nFinal = 15;
   static description: ContextProviderDescription = {
     title: "docs",
     displayTitle: "Docs",
@@ -20,121 +22,47 @@ class DocsContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
-  private async _getIconDataUrl(url: string): Promise<string | undefined> {
+  constructor(options: any) {
+    super(options);
+  }
+
+  private async _rerankChunks(
+    chunks: Chunk[],
+    reranker: NonNullable<ContextProviderExtras["reranker"]>,
+    fullInput: ContextProviderExtras["fullInput"],
+  ) {
+    let chunksCopy = [...chunks];
+
     try {
-      const response = await fetch(url);
-      if (!response.headers.get("content-type")?.startsWith("image/")) {
-        console.log("Not an image: ", await response.text());
-        return undefined;
-      }
-      const buffer = await response.buffer();
-      const base64data = buffer.toString("base64");
-      return `data:${response.headers.get("content-type")};base64,${base64data}`;
+      const scores = await reranker.rerank(fullInput, chunksCopy);
+
+      chunksCopy.sort(
+        (a, b) => scores[chunksCopy.indexOf(b)] - scores[chunksCopy.indexOf(a)],
+      );
+
+      chunksCopy = chunksCopy.splice(
+        0,
+        this.options?.nFinal ?? DocsContextProvider.nFinal,
+      );
     } catch (e) {
-      console.log("E: ", e);
-      return undefined;
-    }
-  }
+      console.warn(`Failed to rerank docs results: ${e}`);
 
-  async getContextItems(
-    query: string,
-    extras: ContextProviderExtras,
-  ): Promise<ContextItem[]> {
-    // Not supported in JetBrains IDEs right now
-    if ((await extras.ide.getIdeInfo()).ideType === "jetbrains") {
-      throw new Error(
-        "The @docs context provider is not currently supported in JetBrains IDEs. We'll have an update soon!",
+      chunksCopy = chunksCopy.splice(
+        0,
+        this.options?.nFinal ?? DocsContextProvider.nFinal,
       );
     }
 
-    const { retrieveDocs } = await import("../../indexing/docs/db.js");
-    const embeddingsProvider = new TransformersJsEmbeddingsProvider();
-    const [vector] = await embeddingsProvider.embed([extras.fullInput]);
-
-    let chunks = await retrieveDocs(
-      query,
-      vector,
-      this.options?.nRetrieve ?? DocsContextProvider.DEFAULT_N_RETRIEVE,
-      embeddingsProvider.id,
-    );
-
-    if (extras.reranker) {
-      try {
-        const scores = await extras.reranker.rerank(extras.fullInput, chunks);
-        chunks.sort(
-          (a, b) => scores[chunks.indexOf(b)] - scores[chunks.indexOf(a)],
-        );
-        chunks = chunks.splice(
-          0,
-          this.options?.nFinal ?? DocsContextProvider.DEFAULT_N_FINAL,
-        );
-      } catch (e) {
-        console.warn(`Failed to rerank docs results: ${e}`);
-        chunks = chunks.splice(
-          0,
-          this.options?.nFinal ?? DocsContextProvider.DEFAULT_N_FINAL,
-        );
-      }
-    }
-
-    return [
-      ...chunks
-        .map((chunk) => ({
-          name: chunk.filepath.includes("/tree/main") // For display of GitHub files
-            ? chunk.filepath
-                .split("/")
-                .slice(1)
-                .join("/")
-                .split("/tree/main/")
-                .slice(1)
-                .join("/")
-            : chunk.otherMetadata?.title || chunk.filepath,
-          description: chunk.filepath, // new URL(chunk.filepath, query).toString(),
-          content: chunk.content,
-        }))
-        .reverse(),
-      {
-        name: "Instructions",
-        description: "Instructions",
-        content:
-          "Use the above documentation to answer the following question. You should not reference anything outside of what is shown, unless it is a commonly known concept. Reference URLs whenever possible using markdown formatting. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
-      },
-    ];
+    return chunksCopy;
   }
 
-  async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs,
-  ): Promise<ContextSubmenuItem[]> {
-    const { listDocs } = await import("../../indexing/docs/db.js");
-    const docs = await listDocs();
-    const submenuItems: ContextSubmenuItem[] = docs.map((doc) => ({
-      title: doc.title,
-      description: new URL(doc.baseUrl).hostname,
-      id: doc.baseUrl,
-    }));
-
-    submenuItems.push(
-      ...configs
-        // After it's actually downloaded, we don't want to show twice
-        .filter(
-          (config) => !submenuItems.some((item) => item.id === config.startUrl),
-        )
-        .map((config) => ({
-          title: config.title,
-          description: new URL(config.startUrl).hostname,
-          id: config.startUrl,
-          // iconUrl: config.faviconUrl,
-        })),
-    );
-
+  private _sortByPreIndexedDocs(
+    submenuItems: ContextSubmenuItem[],
+  ): ContextSubmenuItem[] {
     // Sort submenuItems such that the objects with titles which don't occur in configs occur first, and alphabetized
-    submenuItems.sort((a, b) => {
-      const aTitleInConfigs = !!configs.find(
-        (config) => config.title === a.title,
-      );
-      const bTitleInConfigs = !!configs.find(
-        (config) => config.title === b.title,
-      );
+    return submenuItems.sort((a, b) => {
+      const aTitleInConfigs = a.metadata?.preIndexed ?? false;
+      const bTitleInConfigs = b.metadata?.preIndexed ?? false;
 
       // Primary criterion: Items not in configs come first
       if (!aTitleInConfigs && bTitleInConfigs) {
@@ -146,15 +74,138 @@ class DocsContextProvider extends BaseContextProvider {
         return a.title.toString().localeCompare(b.title.toString());
       }
     });
+  }
 
-    // const icons = await Promise.all(
-    //   submenuItems.map(async (item) =>
-    //     item.iconUrl ? this._getIconDataUrl(item.iconUrl) : undefined,
-    //   ),
-    // );
-    // icons.forEach((icon, i) => {
-    //   submenuItems[i].iconUrl = icon;
-    // });
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras,
+  ): Promise<ContextItem[]> {
+    const docsService = DocsService.getSingleton();
+
+    if (!docsService) {
+      console.error(`${DocsService.name} has not been initialized`);
+      return [];
+    }
+
+    const isJetBrainsAndPreIndexedDocsProvider =
+      await docsService.isJetBrainsAndPreIndexedDocsProvider();
+
+    if (isJetBrainsAndPreIndexedDocsProvider) {
+      await extras.ide.showToast(
+        "error",
+        `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
+          "the embeddings provider, but it cannot be used with JetBrains. " +
+          "Please select a different embeddings provider to use the '@docs' " +
+          "context provider.",
+      );
+
+      return [];
+    }
+
+    const preIndexedDoc = preIndexedDocs[query];
+
+    if (!!preIndexedDoc) {
+      void Telemetry.capture("docs_pre_indexed_doc_used", {
+        doc: preIndexedDoc["title"],
+      });
+    }
+
+    const embeddingsProvider = await docsService.getEmbeddingsProvider(
+      !!preIndexedDoc,
+    );
+
+    const [vector] = await embeddingsProvider.embed([extras.fullInput]);
+
+    let chunks = await docsService.retrieveChunks(
+      query,
+      vector,
+      this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
+    );
+
+    const favicon = await docsService.getFavicon(query);
+
+    if (extras.reranker) {
+      chunks = await this._rerankChunks(
+        chunks,
+        extras.reranker,
+        extras.fullInput,
+      );
+    }
+
+    return [
+      ...chunks
+        .map((chunk) => ({
+          icon: favicon,
+          name: chunk.filepath.includes("/tree/main") // For display of GitHub files
+            ? chunk.filepath
+                .split("/")
+                .slice(1)
+                .join("/")
+                .split("/tree/main/")
+                .slice(1)
+                .join("/")
+            : chunk.otherMetadata?.title || chunk.filepath,
+          description: chunk.filepath,
+          content: chunk.content,
+          uri: {
+            type: "url" as const,
+            value: chunk.filepath,
+          },
+        }))
+        .reverse(),
+      {
+        ...INSTRUCTIONS_BASE_ITEM,
+        content:
+          "Use the above documentation to answer the following question. You should not reference " +
+          "anything outside of what is shown, unless it is a commonly known concept. Reference URLs " +
+          "whenever possible using markdown formatting. If there isn't enough information to answer " +
+          "the question, suggest where the user might look to learn more.",
+      },
+    ];
+  }
+
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs,
+  ): Promise<ContextSubmenuItem[]> {
+    const docsService = DocsService.getSingleton();
+
+    if (!docsService) {
+      console.error(`${DocsService.name} has not been initialized`);
+      return [];
+    }
+
+    const docs = (await docsService.list()) ?? [];
+    const canUsePreindexedDocs = await docsService.canUsePreindexedDocs();
+
+    const submenuItemsMap = new Map<string, ContextSubmenuItem>();
+
+    if (canUsePreindexedDocs) {
+      for (const { startUrl, title } of Object.values(preIndexedDocs)) {
+        submenuItemsMap.set(startUrl, {
+          title,
+          id: startUrl,
+          description: new URL(startUrl).hostname,
+          metadata: {
+            preIndexed: true,
+          },
+        });
+      }
+    }
+
+    for (const { startUrl, title, favicon } of docs) {
+      submenuItemsMap.set(startUrl, {
+        title,
+        id: startUrl,
+        description: new URL(startUrl).hostname,
+        icon: favicon,
+      });
+    }
+
+    const submenuItems = Array.from(submenuItemsMap.values());
+
+    if (canUsePreindexedDocs) {
+      return this._sortByPreIndexedDocs(submenuItems);
+    }
 
     return submenuItems;
   }

@@ -36,9 +36,13 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  Telemetry.capture("deactivate", {
-    extensionVersion: getExtensionVersion(),
-  });
+  Telemetry.capture(
+    "deactivate",
+    {
+      extensionVersion: getExtensionVersion(),
+    },
+    true,
+  );
 
   Telemetry.shutdownPosthogClient();
 }

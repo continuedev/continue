@@ -1,8 +1,18 @@
 import { distance } from "fastest-levenshtein";
 import { ChatMessage } from "../index.js";
-import { stripImages } from "../llm/countTokens.js";
+import { stripImages } from "../llm/images.js";
 
 export type LineStream = AsyncGenerator<string>;
+
+export type MatchLineResult = {
+  /**
+   * -1 if it's a new line, otherwise the index of the first match
+   * in the old lines.
+   */
+  matchIndex: number;
+  isPerfectMatch: boolean;
+  newLine: string;
+};
 
 function linesMatchPerfectly(lineA: string, lineB: string): boolean {
   return lineA === lineB && lineA !== "";
@@ -18,15 +28,19 @@ function linesMatch(lineA: string, lineB: string, linesBetween = 0): boolean {
   }
 
   const d = distance(lineA, lineB);
+
   return (
     // Should be more unlikely for lines to fuzzy match if they are further away
-    (d / Math.max(lineA.length, lineB.length) < 0.5 - linesBetween * 0.05 ||
+    (d / Math.max(lineA.length, lineB.length) <=
+      Math.max(0, 0.48 - linesBetween * 0.06) ||
       lineA.trim() === lineB.trim()) &&
     lineA.trim() !== ""
   );
 }
 
 /**
+ * Used to find a match for a new line in an array of old lines.
+ *
  * Return the index of the first match and whether it is a perfect match
  * Also return a version of the line with correct indentation if needs fixing
  */
@@ -34,21 +48,26 @@ export function matchLine(
   newLine: string,
   oldLines: string[],
   permissiveAboutIndentation = false,
-): [number, boolean, string] {
+): MatchLineResult {
   // Only match empty lines if it's the next one:
   if (newLine.trim() === "" && oldLines[0]?.trim() === "") {
-    return [0, true, newLine.trim()];
+    return {
+      matchIndex: 0,
+      isPerfectMatch: true,
+      newLine: newLine.trim(),
+    };
   }
 
   const isEndBracket = END_BRACKETS.includes(newLine.trim());
+
   for (let i = 0; i < oldLines.length; i++) {
     // Don't match end bracket lines if too far away
     if (i > 4 && isEndBracket) {
-      return [-1, false, newLine];
+      return { matchIndex: -1, isPerfectMatch: false, newLine };
     }
 
     if (linesMatchPerfectly(newLine, oldLines[i])) {
-      return [i, true, newLine];
+      return { matchIndex: i, isPerfectMatch: true, newLine };
     }
     if (linesMatch(newLine, oldLines[i], i)) {
       // This is a way to fix indentation, but only for sufficiently long lines to avoid matching whitespace or short lines
@@ -56,13 +75,17 @@ export function matchLine(
         newLine.trimStart() === oldLines[i].trimStart() &&
         (permissiveAboutIndentation || newLine.trim().length > 8)
       ) {
-        return [i, true, oldLines[i]];
+        return {
+          matchIndex: i,
+          isPerfectMatch: true,
+          newLine: oldLines[i],
+        };
       }
-      return [i, false, newLine];
+      return { matchIndex: i, isPerfectMatch: false, newLine };
     }
   }
 
-  return [-1, false, newLine];
+  return { matchIndex: -1, isPerfectMatch: false, newLine };
 }
 
 /**
@@ -70,19 +93,38 @@ export function matchLine(
  */
 export async function* streamLines(
   streamCompletion: AsyncGenerator<string | ChatMessage>,
+  log: boolean = false,
 ): LineStream {
+  let allLines = [];
+
   let buffer = "";
-  for await (const update of streamCompletion) {
-    const chunk =
-      typeof update === "string" ? update : stripImages(update.content);
-    buffer += chunk;
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      yield line;
+
+  try {
+    for await (const update of streamCompletion) {
+      const chunk =
+        typeof update === "string" ? update : stripImages(update.content);
+      buffer += chunk;
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        yield line;
+        allLines.push(line);
+      }
+    }
+    if (buffer.length > 0) {
+      yield buffer;
+      allLines.push(buffer);
+    }
+  } finally {
+    if (log) {
+      console.log("Streamed lines: ", allLines.join("\n"));
     }
   }
-  if (buffer.length > 0) {
-    yield buffer;
+}
+
+export async function* generateLines<T>(lines: T[]): AsyncGenerator<T> {
+  for (const line of lines) {
+    yield line;
+    // await new Promise((resolve, reject) => setTimeout(() => resolve(null), 50));
   }
 }

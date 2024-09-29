@@ -79,18 +79,27 @@ export function getLastNPathParts(filepath: string, n: number): string {
   return filepath.split(SEP_REGEX).slice(-n).join("/");
 }
 
-export function groupByLastNPathParts(filepaths: string[], n: number): Record<string, string[]> {
-  return filepaths.reduce((groups, item) => {
-    const lastNParts = getLastNPathParts(item, n);
-    if (!groups[lastNParts]) {
-      groups[lastNParts] = [];
-    }
-    groups[lastNParts].push(item);
-    return groups;
-  }, {} as Record<string, string[]>);
+export function groupByLastNPathParts(
+  filepaths: string[],
+  n: number,
+): Record<string, string[]> {
+  return filepaths.reduce(
+    (groups, item) => {
+      const lastNParts = getLastNPathParts(item, n);
+      if (!groups[lastNParts]) {
+        groups[lastNParts] = [];
+      }
+      groups[lastNParts].push(item);
+      return groups;
+    },
+    {} as Record<string, string[]>,
+  );
 }
 
-export function getUniqueFilePath(item: string, itemGroups: Record<string, string[]>): string {
+export function getUniqueFilePath(
+  item: string,
+  itemGroups: Record<string, string[]>,
+): string {
   const lastTwoParts = getLastNPathParts(item, 2);
   const group = itemGroups[lastTwoParts];
 
@@ -100,18 +109,20 @@ export function getUniqueFilePath(item: string, itemGroups: Record<string, strin
       group.some(
         (otherItem) =>
           otherItem !== item &&
-          getLastNPathParts(otherItem, n) === getLastNPathParts(item, n)
+          getLastNPathParts(otherItem, n) === getLastNPathParts(item, n),
       )
     ) {
       n++;
     }
   }
-  
+
   return getLastNPathParts(item, n);
 }
 
 export function shortestRelativePaths(paths: string[]): string[] {
-  if (paths.length === 0) return [];
+  if (paths.length === 0) {
+    return [];
+  }
 
   const partsLengths = paths.map((x) => x.split(SEP_REGEX).length);
   const currentRelativePaths = paths.map(getBasename);
@@ -126,7 +137,9 @@ export function shortestRelativePaths(paths: string[]): string[] {
     const firstDuplicatedPath = currentRelativePaths.find(
       (x, i) => isDuplicated[i],
     );
-    if (!firstDuplicatedPath) break;
+    if (!firstDuplicatedPath) {
+      break;
+    }
 
     currentRelativePaths.forEach((x, i) => {
       if (x === firstDuplicatedPath) {
@@ -261,3 +274,33 @@ export function deduplicateArray<T>(
 }
 
 export type TODO = any;
+
+export function dedent(strings: TemplateStringsArray, ...values: any[]) {
+  let result = strings.reduce(
+    (acc, str, i) => acc + str + (values[i] || ""),
+    "",
+  );
+  result = result.replace(/^\n/, "").replace(/\n\s*$/, "");
+  let lines = result.split("\n");
+
+  // Remove leading white-space-only lines
+  while (lines.length > 0 && lines[0].trim() === "") {
+    lines.shift();
+  }
+
+  // Remove trailing white-space-only lines
+  while (lines.length > 0 && lines[lines.length - 1].trim() === "") {
+    lines.pop();
+  }
+
+  const minIndent = lines.reduce((min, line) => {
+    if (line.trim() === "") {
+      // Don't consider empty lines when calculating indentation
+      return min;
+    }
+    const match = line.match(/^\s*/);
+    return Math.min(min, match ? match[0].length : Infinity);
+  }, Infinity);
+
+  return lines.map((line) => line.slice(minIndent)).join("\n");
+}

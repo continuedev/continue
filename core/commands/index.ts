@@ -1,11 +1,7 @@
-import {
-  CustomCommand,
-  SlashCommand,
-  SlashCommandDescription,
-} from "../index.js";
-import { stripImages } from "../llm/countTokens.js";
-import { renderTemplatedString } from "../llm/llms/index.js";
-import SlashCommands from "./slash/index.js";
+import { CustomCommand, SlashCommand, SlashCommandDescription } from "../";
+import { stripImages } from "../llm/images";
+import { renderTemplatedString } from "../promptFiles/renderTemplatedString";
+import SlashCommands from "./slash";
 
 export function slashFromCustomCommand(
   customCommand: CustomCommand,

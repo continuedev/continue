@@ -21,14 +21,14 @@ export class DevDataSqliteDb {
 
     // Add tokens_prompt column if it doesn't exist
     const columnCheckResult = await db.all(
-      `PRAGMA table_info(tokens_generated);`,
+      "PRAGMA table_info(tokens_generated);",
     );
     const columnExists = columnCheckResult.some(
       (col: any) => col.name === "tokens_prompt",
     );
     if (!columnExists) {
       await db.exec(
-        `ALTER TABLE tokens_generated ADD COLUMN tokens_prompt INTEGER NOT NULL DEFAULT 0;`,
+        "ALTER TABLE tokens_generated ADD COLUMN tokens_prompt INTEGER NOT NULL DEFAULT 0;",
       );
     }
   }
@@ -41,7 +41,7 @@ export class DevDataSqliteDb {
   ) {
     const db = await DevDataSqliteDb.get();
     await db?.run(
-      `INSERT INTO tokens_generated (model, provider, tokens_prompt, tokens_generated) VALUES (?, ?, ?, ?)`,
+      "INSERT INTO tokens_generated (model, provider, tokens_prompt, tokens_generated) VALUES (?, ?, ?, ?)",
       [model, provider, promptTokens, generatedTokens],
     );
   }
@@ -78,6 +78,8 @@ export class DevDataSqliteDb {
       filename: devDataSqlitePath,
       driver: sqlite3.Database,
     });
+
+    await DevDataSqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
 
     await DevDataSqliteDb.createTables(DevDataSqliteDb.db!);
 

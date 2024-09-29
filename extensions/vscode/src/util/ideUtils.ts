@@ -1,9 +1,8 @@
 import type { FileEdit, RangeInFile, Thread } from "core";
-import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
-import { VsCodeExtension } from "../extension/vscodeExtension";
+import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
 import {
   SuggestionRanges,
@@ -12,12 +11,14 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "../suggestions";
-import { traverseDirectory } from "./traverseDirectory";
 import {
   getUniqueId,
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./vscode";
+
+import _ from "lodash";
+import { EXTENSION_NAME } from "./constants";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
@@ -135,25 +136,34 @@ export class VsCodeIdeUtils {
     );
   }
 
-  showMultiFileEdit(edits: FileEdit[]) {
-    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
-    const panel = vscode.window.createWebviewPanel(
-      "continue.continueGUIView",
-      "Continue",
-      vscode.ViewColumn.One,
-    );
-    // panel.webview.html = this.sidebar.getSidebarContent(
-    //   extensionContext,
-    //   panel,
-    //   this.ide,
-    //   "/monaco",
-    //   edits
-    // );
+  private async resolveAbsFilepathInWorkspace(
+    filepath: string,
+  ): Promise<string> {
+    // If the filepath is already absolute, return it as is
+    if (this.path.isAbsolute(filepath)) {
+      return filepath;
+    }
+
+    // Try to resolve for each workspace directory
+    const workspaceDirectories = this.getWorkspaceDirectories();
+    for (const dir of workspaceDirectories) {
+      const resolvedPath = this.path.resolve(dir, filepath);
+      if (await this.fileExists(resolvedPath)) {
+        return resolvedPath;
+      }
+    }
+
+    return filepath;
   }
 
-  openFile(filepath: string, range?: vscode.Range) {
+  async openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(
+      await this.resolveAbsFilepathInWorkspace(filepath),
+      range,
+      vscode.ViewColumn.One,
+      false,
+    );
   }
 
   async fileExists(filepath: string): Promise<boolean> {
@@ -186,7 +196,7 @@ export class VsCodeIdeUtils {
 
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
-    let secret = vscode.workspace.getConfiguration("continue").get(key);
+    let secret = vscode.workspace.getConfiguration(EXTENSION_NAME).get(key);
     if (typeof secret !== "undefined" && secret !== null) {
       return secret;
     }
@@ -199,7 +209,7 @@ export class VsCodeIdeUtils {
 
     // Add secret to VS Code settings
     vscode.workspace
-      .getConfiguration("continue")
+      .getConfiguration(EXTENSION_NAME)
       .update(key, secret, vscode.ConfigurationTarget.Global);
 
     return secret;
@@ -257,46 +267,27 @@ export class VsCodeIdeUtils {
       });
   }
 
-  async getDirectoryContents(
-    directory: string,
-    recursive: boolean,
-    useGitIgnore: boolean,
-  ): Promise<string[]> {
-    if (!recursive) {
-      return (
-        await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
-      )
-        .filter(([name, type]) => {
-          type === vscode.FileType.File && !defaultIgnoreFile.ignores(name);
-        })
-        .map(([name, type]) => path.join(directory, name));
+  private _cachedPath: path.PlatformPath | undefined;
+  get path(): path.PlatformPath {
+    if (this._cachedPath) {
+      return this._cachedPath;
     }
 
-    const allFiles: string[] = [];
-    const gitRoot = await this.getGitRoot(directory);
-    let onlyThisDirectory = undefined;
-    if (gitRoot) {
-      onlyThisDirectory = directory.slice(gitRoot.length).split(path.sep);
-      if (onlyThisDirectory[0] === "") {
-        onlyThisDirectory.shift();
-      }
-    }
-    for await (const file of traverseDirectory(
-      gitRoot ?? directory,
-      [],
-      true,
-      gitRoot === directory ? undefined : onlyThisDirectory,
-      useGitIgnore,
-    )) {
-      allFiles.push(file);
-    }
-    return allFiles;
+    // Return "path" module for either windows or posix depending on sample workspace folder path format
+    const sampleWorkspaceFolder =
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const isWindows = sampleWorkspaceFolder
+      ? !sampleWorkspaceFolder.startsWith("/")
+      : false;
+
+    this._cachedPath = isWindows ? path.win32 : path.posix;
+    return this._cachedPath;
   }
 
   getAbsolutePath(filepath: string): string {
     const workspaceDirectories = this.getWorkspaceDirectories();
-    if (!path.isAbsolute(filepath) && workspaceDirectories.length === 1) {
-      return path.join(workspaceDirectories[0], filepath);
+    if (!this.path.isAbsolute(filepath) && workspaceDirectories.length === 1) {
+      return this.path.join(workspaceDirectories[0], filepath);
     } else {
       return filepath;
     }
@@ -399,7 +390,9 @@ export class VsCodeIdeUtils {
     const lastLine = lines.pop()?.trim();
     if (lastLine) {
       let i = lines.length - 1;
-      while (i >= 0 && !lines[i].trim().startsWith(lastLine)) i--;
+      while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
+        i--;
+      }
       terminalContents = lines.slice(Math.max(i, 0)).join("\n");
     }
 
@@ -419,7 +412,9 @@ export class VsCodeIdeUtils {
 
   async getAvailableThreads(): Promise<Thread[]> {
     const session = vscode.debug.activeDebugSession;
-    if (!session) return [];
+    if (!session) {
+      return [];
+    }
 
     const threadsResponse = await this._getThreads(session);
     return threadsResponse.threads;
@@ -468,7 +463,9 @@ export class VsCodeIdeUtils {
     stackDepth = 3,
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
-    if (!session) return [];
+    if (!session) {
+      return [];
+    }
 
     const sourcesPromises = await session
       .customRequest("stackTrace", {
@@ -485,7 +482,9 @@ export class VsCodeIdeUtils {
 
             const scope = scopeResponse.scopes[0];
 
-            return await this.retrieveSource(scope.source ? scope : stackFrame);
+            return await this.retrieveSource(
+              scope.source && !_.isEmpty(scope.source) ? scope : stackFrame,
+            );
           }),
       );
 
@@ -493,7 +492,9 @@ export class VsCodeIdeUtils {
   }
 
   private async retrieveSource(sourceContainer: any): Promise<string> {
-    if (!sourceContainer.source) return "";
+    if (!sourceContainer.source) {
+      return "";
+    }
 
     const sourceRef = sourceContainer.source.sourceReference;
     if (sourceRef && sourceRef > 0) {
@@ -515,18 +516,20 @@ export class VsCodeIdeUtils {
           sourceContainer.endColumn,
         ),
       );
-    } else if (sourceContainer.line)
+    } else if (sourceContainer.line) {
       // fall back to 5 line of context
       return await this.readRangeInFile(
         sourceContainer.source.path,
         new vscode.Range(
-          sourceContainer.line - 3,
+          Math.max(0, sourceContainer.line - 3),
           0,
           sourceContainer.line + 2,
           0,
         ),
       );
-    else return "unavailable";
+    } else {
+      return "unavailable";
+    }
   }
 
   private async _getRepo(
@@ -555,6 +558,8 @@ export class VsCodeIdeUtils {
 
   private _repoWasNone: boolean = false;
   private repoCache: Map<string, Repository> = new Map();
+  private static secondsToWaitForGitToLoad =
+    process.env.NODE_ENV === "test" ? 1 : 20;
   async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
     const workspaceDirs = this.getWorkspaceDirectories();
     const parentDir = workspaceDirs.find((dir) =>
@@ -572,11 +577,13 @@ export class VsCodeIdeUtils {
 
     let i = 0;
     while (!repo?.state?.HEAD?.name) {
-      if (this._repoWasNone) return undefined;
+      if (this._repoWasNone) {
+        return undefined;
+      }
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
-      if (i >= 20) {
+      if (i >= VsCodeIdeUtils.secondsToWaitForGitToLoad) {
         this._repoWasNone = true;
         return undefined;
       }

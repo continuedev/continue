@@ -1,7 +1,8 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.165",
+  "author": "Continue Dev, Inc",
+  "version": "0.9.214",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -17,9 +18,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Codestral, GPT-4o, and more",
+  "displayName": "Continue - Codestral, Claude, and more",
   "pricing": "Free",
-  "description": "Open-source autopilot - build your own AI software development system",
+  "description": "The leading open-source AI code assistant",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
@@ -31,6 +32,8 @@
     "theme": "dark"
   },
   "categories": [
+    "AI",
+    "Chat",
     "Programming Languages",
     "Education",
     "Machine Learning",
@@ -40,6 +43,8 @@
     "chatgpt",
     "github",
     "copilot",
+    "claude",
+    "sonnet",
     "mistral",
     "codestral",
     "codegpt",
@@ -51,7 +56,6 @@
     "onView:continueGUIView"
   ],
   "main": "./out/extension.js",
-  "browser": "./out/extension.js",
   "contributes": {
     "languages": [
       {
@@ -70,15 +74,40 @@
           "default": true,
           "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
         },
+        "continue.enableContinueForTeams": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "_(Requires window reload)_ Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+        },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,
           "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
+        "continue.enableQuickActions": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/features/quick-actions)"
+        },
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
+        },
+        "continue.pauseTabAutocompleteOnBattery": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+        },
+        "continue.pauseCodebaseIndexOnStart": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause Continue's codebase index on start."
+        },
+        "continue.enableDebugLogs": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable Continue Debug Logs in the Output panel."
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -98,6 +127,12 @@
       }
     },
     "commands": [
+      {
+        "command": "continue.applyCodeFromChat",
+        "category": "Continue",
+        "title": "Apply code from chat",
+        "group": "Continue"
+      },
       {
         "command": "continue.acceptDiff",
         "category": "Continue",
@@ -130,12 +165,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "category": "Continue",
-        "title": "Toggle Right Sidebar",
-        "group": "Continue"
-      },
-      {
         "command": "continue.focusContinueInput",
         "category": "Continue",
         "title": "Add Highlighted Code to Context",
@@ -150,7 +179,7 @@
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Continue: Debug Terminal",
+        "title": "Debug Terminal",
         "group": "Continue"
       },
       {
@@ -175,7 +204,7 @@
       {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
-        "title": "Continue: Select Files as Context",
+        "title": "Select Files as Context",
         "group": "Continue"
       },
       {
@@ -221,6 +250,30 @@
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
         "group": "Continue"
+      },
+      {
+        "command": "continue.codebaseForceReIndex",
+        "category": "Continue",
+        "title": "Codebase Force Re-Index",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.rebuildCodebaseIndex",
+        "category": "Continue",
+        "title": "Rebuild codebase index",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.docsIndex",
+        "category": "Continue",
+        "title": "Docs Index",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.docsReIndex",
+        "category": "Continue",
+        "title": "Docs Force Re-Index",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -251,6 +304,18 @@
         "when": "continue.diffVisible"
       },
       {
+        "command": "continue.quickEditHistoryUp",
+        "mac": "up",
+        "key": "up",
+        "when": "false && continue.quickEditHistoryFocused"
+      },
+      {
+        "command": "continue.quickEditHistoryDown",
+        "mac": "down",
+        "key": "down",
+        "when": "false && continue.quickEditHistoryFocused"
+      },
+      {
         "command": "continue.acceptVerticalDiffBlock",
         "mac": "alt+cmd+y",
         "key": "alt+ctrl+y"
@@ -266,11 +331,6 @@
         "key": "ctrl+i"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+l",
-        "key": "alt+ctrl+l"
-      },
-      {
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
@@ -284,7 +344,13 @@
       {
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
-        "key": "ctrl+k ctrl+a"
+        "key": "ctrl+k ctrl+a",
+        "when": "!terminalFocus"
+      },
+      {
+        "command": "continue.applyCodeFromChat",
+        "mac": "alt+a",
+        "key": "alt+a"
       }
     ],
     "submenus": [
@@ -297,9 +363,6 @@
       "commandPalette": [
         {
           "command": "continue.quickEdit"
-        },
-        {
-          "command": "continue.toggleAuxiliaryBar"
         },
         {
           "command": "continue.focusContinueInput"
@@ -418,45 +481,6 @@
         }
       ]
     },
-    "walkthroughs": [
-      {
-        "id": "continue",
-        "title": "Getting Started",
-        "description": "Learn how to use Continue",
-        "steps": [
-          {
-            "id": "edit",
-            "title": "Edit in natural language",
-            "description": "Highlight a section of code and instruct Continue to refactor it (e.g. `/edit rewrite this function to be async`)",
-            "media": {
-              "image": "media/edit.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          },
-          {
-            "id": "explain",
-            "title": "Get possible explanations",
-            "description": "Ask Continue about a part of your code to get another perspective (e.g. `where in the page should I be making this request to the backend?`)",
-            "media": {
-              "image": "media/explain.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          },
-          {
-            "id": "generate",
-            "title": "Generate files from scratch",
-            "description": "Let Continue build the scaffolding of Python scripts, React components, and more (e.g. `/edit here is a connector for postgres, now write one for kafka`)",
-            "media": {
-              "image": "media/generate.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          }
-        ]
-      }
-    ],
     "jsonValidation": [
       {
         "fileMatch": "config.json",
@@ -478,7 +502,7 @@
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "npm run esbuild && node esbuild.test.mjs",
-    "test": "npm run prepackage && npm run build-test && node ./out/runTestOnVSCodeHost.js",
+    "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
@@ -527,8 +551,9 @@
     "axios": "^1.2.5",
     "core": "file:../../core",
     "cors": "^2.8.5",
-    "dbinfoz": "^0.1.4",
+    "dbinfoz": "^0.11.0",
     "downshift": "^7.6.0",
+    "esbuild": "^0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
@@ -541,6 +566,7 @@
     "https-proxy-agent": "^7.0.2",
     "ignore": "^5.3.0",
     "jsdom": "^24.0.0",
+    "minisearch": "^7.0.0",
     "monaco-editor": "^0.45.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "ncp": "^2.0.0",
@@ -553,12 +579,12 @@
     "request": "^2.88.2",
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
+    "systeminformation": "^5.22.10",
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.20",
-    "esbuild": "^0.17.19",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

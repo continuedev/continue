@@ -84,9 +84,9 @@ export class BracketMatchingService {
     // Add corresponding open brackets from suffix to stack
     // because we overwrite them and the diff is displayed, and this allows something to be edited after that
     for (let i = 0; i < suffix.length; i++) {
-      if (suffix[i] === " ") continue;
+      if (suffix[i] === " ") {continue;}
       const openBracket = BracketMatchingService.BRACKETS_REVERSE[suffix[i]];
-      if (!openBracket) break;
+      if (!openBracket) {break;}
       stack.unshift(openBracket);
     }
 

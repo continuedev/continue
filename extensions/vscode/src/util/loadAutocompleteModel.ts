@@ -1,5 +1,5 @@
 import type { ILLM } from "core";
-import type { ConfigHandler } from "core/config/handler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import Ollama from "core/llm/llms/Ollama";
 import { GlobalContext } from "core/util/GlobalContext";
 import * as vscode from "vscode";
@@ -42,7 +42,7 @@ export class TabAutocompleteModel {
               if (value === "Documentation") {
                 vscode.env.openExternal(
                   vscode.Uri.parse(
-                    "https://docs.continue.dev/walkthroughs/tab-autocomplete",
+                    "https://docs.continue.dev/features/tab-autocomplete",
                   ),
                 );
               } else if (value === "Copy Command") {
@@ -65,7 +65,7 @@ export class TabAutocompleteModel {
             if (value === "Documentation") {
               vscode.env.openExternal(
                 vscode.Uri.parse(
-                  "https://docs.continue.dev/walkthroughs/tab-autocomplete",
+                  "https://docs.continue.dev/features/tab-autocomplete",
                 ),
               );
             } else if (value === "Download Ollama") {

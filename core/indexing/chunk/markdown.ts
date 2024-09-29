@@ -1,6 +1,6 @@
-import { ChunkWithoutID } from "../../index.js";
-import { countTokens } from "../../llm/countTokens.js";
-import { basicChunker } from "./basic.js";
+import { ChunkWithoutID } from "../../";
+import { countTokens } from "../../llm/countTokens";
+import { basicChunker } from "./basic";
 
 export function cleanFragment(
   fragment: string | undefined,
@@ -78,7 +78,7 @@ export async function* markdownChunker(
   if (hLevel > 4) {
     const header = findHeader(content.split("\n"));
 
-    for (const chunk of basicChunker(content, maxChunkSize)) {
+    for await (const chunk of basicChunker(content, maxChunkSize)) {
       yield {
         ...chunk,
         otherMetadata: {

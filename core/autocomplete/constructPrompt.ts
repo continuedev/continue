@@ -6,6 +6,7 @@ import {
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
+import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
 import { AstPath, getAst, getTreePathAtCursor } from "./ast.js";
 import {
   AutocompleteLanguageInfo,
@@ -21,7 +22,6 @@ import {
 } from "./ranking.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
 import { HierarchicalContextService } from "./services/HierarchicalContextService.js";
-import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
 
 export function languageForFilepath(
   filepath: string,
@@ -207,7 +207,7 @@ export async function constructAutocompletePrompt(
         ).filter((symbol) => !language.topLevelKeywords.includes(symbol));
         for (const symbol of symbols) {
           const rifs = imports[symbol];
-          if (rifs) {
+          if (Array.isArray(rifs)) {
             importSnippets.push(...rifs);
           }
         }

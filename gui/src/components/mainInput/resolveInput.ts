@@ -1,13 +1,13 @@
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
+  DefaultContextProvider,
   InputModifiers,
   MessageContent,
   MessagePart,
   RangeInFile,
 } from "core";
-import { stripImages } from "core/llm/countTokens";
-import { getBasename, getRelativePath } from "core/util";
+import { stripImages } from "core/llm/images";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 
 interface MentionAttrs {
@@ -28,6 +28,7 @@ async function resolveEditorContent(
   editorState: JSONContent,
   modifiers: InputModifiers,
   ideMessenger: IIdeMessenger,
+  defaultContextProviders: DefaultContextProvider[],
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
@@ -99,36 +100,15 @@ async function resolveEditorContent(
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
-    if (item.itemType === "file") {
-      // This is a quick way to resolve @file references
-      const basename = getBasename(item.id);
-      const relativeFilePath = getRelativePath(
-        item.id,
-        await ideMessenger.ide.getWorkspaceDirs(),
-      );
-      const rawContent = await ideMessenger.ide.readFile(item.id);
-      const content = `\`\`\`${relativeFilePath}\n${rawContent}\n\`\`\`\n`;
-      contextItemsText += content;
-      contextItems.push({
-        name: basename,
-        description: item.id,
-        content,
-        id: {
-          providerTitle: "file",
-          itemId: item.id,
-        },
-      });
-    } else {
-      const data = {
-        name: item.itemType === "contextProvider" ? item.id : item.itemType,
-        query: item.query,
-        fullInput: stripImages(parts),
-        selectedCode,
-      };
-      const resolvedItems = await ideMessenger.request(
-        "context/getContextItems",
-        data,
-      );
+    const data = {
+      name: item.itemType === "contextProvider" ? item.id : item.itemType,
+      query: item.query,
+      fullInput: stripImages(parts),
+      selectedCode,
+    };
+    const result = await ideMessenger.request("context/getContextItems", data);
+    if (result.status === "success") {
+      const resolvedItems = result.content;
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
         contextItemsText += resolvedItem.content + "\n\n";
@@ -138,20 +118,39 @@ async function resolveEditorContent(
 
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {
-    const codebaseItems = await ideMessenger.request(
-      "context/getContextItems",
-      {
-        name: "codebase",
-        query: "",
-        fullInput: stripImages(parts),
-        selectedCode,
-      },
-    );
-    contextItems.push(...codebaseItems);
-    for (const codebaseItem of codebaseItems) {
-      contextItemsText += codebaseItem.content + "\n\n";
+    const result = await ideMessenger.request("context/getContextItems", {
+      name: "codebase",
+      query: "",
+      fullInput: stripImages(parts),
+      selectedCode,
+    });
+
+    if (result.status === "success") {
+      const codebaseItems = result.content;
+      contextItems.push(...codebaseItems);
+      for (const codebaseItem of codebaseItems) {
+        contextItemsText += codebaseItem.content + "\n\n";
+      }
     }
   }
+
+  // Include default context providers
+  const defaultContextItems = await Promise.all(
+    defaultContextProviders.map(async (provider) => {
+      const result = await ideMessenger.request("context/getContextItems", {
+        name: provider.name,
+        query: provider.query ?? "",
+        fullInput: stripImages(parts),
+        selectedCode,
+      });
+      if (result.status === "success") {
+        return result.content;
+      } else {
+        return [];
+      }
+    }),
+  );
+  contextItems.push(...defaultContextItems.flat());
 
   if (contextItemsText !== "") {
     contextItemsText += "\n";
@@ -206,6 +205,32 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
     }
   }
   return [text, contextItems, slashCommand];
+}
+
+export function hasSlashCommandOrContextProvider(
+  editorState: JSONContent,
+): boolean {
+  if (!editorState.content) {
+    return false;
+  }
+
+  for (const p of editorState.content) {
+    if (p.type === "paragraph" && p.content) {
+      for (const child of p.content) {
+        if (child.type === "slashcommand") {
+          return true;
+        }
+        if (
+          child.type === "mention" &&
+          child.attrs?.itemType === "contextProvider"
+        ) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 export default resolveEditorContent;

@@ -1,5 +1,5 @@
-import type { ContextSubmenuItem } from "..";
-import type { RangeInFileWithContents } from "../commands/util";
+import type { RangeInFileWithContents } from "../commands/util.js";
+import type { ContextSubmenuItem } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
@@ -15,7 +15,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
   ];
   openUrl: [string, void];
-  applyToCurrentFile: [{ text: string }, void];
+  applyToCurrentFile: [{ text: string; streamId: string }, void];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
@@ -26,11 +26,20 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
+  "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
+  acceptDiff: [{ filepath: string }, void];
+  rejectDiff: [{ filepath: string }, void];
 };
+
+export interface ApplyState {
+  streamId: string;
+  status: "streaming" | "done" | "closed";
+}
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setInactive: [undefined, void];
+  setTTSActive: [boolean, void];
   submitMessage: [{ message: any }, void]; // any -> JSONContent from TipTap
   updateSubmenuItems: [
     { provider: string; submenuItems: ContextSubmenuItem[] },
@@ -41,7 +50,14 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusContinueInput: [undefined, void];
   focusContinueInputWithoutClear: [undefined, void];
   focusContinueInputWithNewSession: [undefined, void];
-  highlightedCode: [{ rangeInFileWithContents: RangeInFileWithContents }, void];
+  highlightedCode: [
+    {
+      rangeInFileWithContents: RangeInFileWithContents;
+      prompt?: string;
+      shouldRun?: boolean;
+    },
+    void,
+  ];
   addModel: [undefined, void];
   openSettings: [undefined, void];
   viewHistory: [undefined, void];
@@ -50,7 +66,9 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
   addApiKey: [undefined, void];
-  setupLocalModel: [undefined, void];
+  setupLocalConfig: [undefined, void];
   incrementFtc: [undefined, void];
-  openOnboarding: [undefined, void];
+  openOnboardingCard: [undefined, void];
+  applyCodeFromChat: [undefined, void];
+  updateApplyState: [ApplyState, void];
 };

@@ -1,9 +1,8 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
-import { Chunk } from "../../index.js";
-import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
-import { cleanFragment, cleanHeader } from "../chunk/markdown.js";
-import { PageData } from "./crawl.js";
+import { Chunk } from "../../";
+import { cleanFragment, cleanHeader } from "../chunk/markdown";
+import { type PageData } from "./DocsCrawler";
 
 export type ArticleComponent = {
   title: string;
@@ -21,6 +20,7 @@ function breakdownArticleComponent(
   url: string,
   article: ArticleComponent,
   subpath: string,
+  max_chunk_size: number,
 ): Chunk[] {
   const chunks: Chunk[] = [];
 
@@ -32,7 +32,7 @@ function breakdownArticleComponent(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (content.length + line.length <= MAX_CHUNK_SIZE) {
+    if (content.length + line.length <= max_chunk_size) {
       content += `${line}\n`;
       endLine = i;
     } else {
@@ -79,7 +79,10 @@ function breakdownArticleComponent(
   return chunks.filter((c) => c.content.trim().length > 20);
 }
 
-export function chunkArticle(articleResult: Article): Chunk[] {
+export function chunkArticle(
+  articleResult: Article,
+  maxChunkSize: number,
+): Chunk[] {
   let chunks: Chunk[] = [];
 
   for (const article of articleResult.article_components) {
@@ -87,6 +90,7 @@ export function chunkArticle(articleResult: Article): Chunk[] {
       articleResult.url,
       article,
       articleResult.subpath,
+      maxChunkSize,
     );
     chunks = [...chunks, ...articleChunks];
   }
@@ -114,7 +118,6 @@ function extractTitlesAndBodies(html: string): ArticleComponent[] {
 
   return result;
 }
-
 export function stringToArticle(
   url: string,
   html: string,
@@ -145,7 +148,7 @@ export function stringToArticle(
 
 export function pageToArticle(page: PageData): Article | undefined {
   try {
-    return stringToArticle(page.url, page.html, page.path);
+    return stringToArticle(page.url, page.content, page.path);
   } catch (err) {
     console.error("Error converting URL to article components", err);
     return undefined;

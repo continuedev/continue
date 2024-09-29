@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import path from "node:path";
+import * as path from "node:path";
 import Parser, { Language } from "web-tree-sitter";
 
 export const supportedLanguages: { [key: string]: string } = {
@@ -35,7 +35,7 @@ export const supportedLanguages: { [key: string]: string } = {
   mts: "typescript",
   cts: "typescript",
   tsx: "tsx",
-  vue: "vue",
+  // vue: "vue",  // tree-sitter-vue parser is broken
   // The .wasm file being used is faulty, and yaml is split line-by-line anyway for the most part
   // yaml: "yaml",
   // yml: "yaml",
@@ -45,6 +45,7 @@ export const supportedLanguages: { [key: string]: string } = {
   mjs: "javascript",
   cjs: "javascript",
   py: "python",
+  ipynb: "python",
   pyw: "python",
   pyi: "python",
   el: "elisp",
@@ -84,14 +85,23 @@ export async function getParserForFile(filepath: string) {
     const parser = new Parser();
 
     const language = await getLanguageForFile(filepath);
+    if (!language) {
+      return undefined;
+    }
+
     parser.setLanguage(language);
 
     return parser;
   } catch (e) {
-    console.error("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file", filepath, e);
     return undefined;
   }
 }
+
+// Loading the wasm files to create a Language object is an expensive operation and with
+// sufficient number of files can result in errors, instead keep a map of language name
+// to Language object
+const nameToLanguage = new Map<string, Language>();
 
 export async function getLanguageForFile(
   filepath: string,
@@ -100,19 +110,18 @@ export async function getLanguageForFile(
     await Parser.init();
     const extension = path.extname(filepath).slice(1);
 
-    if (!supportedLanguages[extension]) {
+    const languageName = supportedLanguages[extension];
+    if (!languageName) {
       return undefined;
     }
-
-    const wasmPath = path.join(
-      __dirname,
-      "tree-sitter-wasms",
-      `tree-sitter-${supportedLanguages[extension]}.wasm`,
-    );
-    const language = await Parser.Language.load(wasmPath);
+    let language = nameToLanguage.get(languageName);
+    if (!language) {
+      language = await loadLanguageForFileExt(extension);
+      nameToLanguage.set(languageName, language);
+    }
     return language;
   } catch (e) {
-    console.error("Unable to load language for file", filepath, e);
+    console.debug("Unable to load language for file", filepath, e);
     return undefined;
   }
 }
@@ -151,4 +160,17 @@ export async function getQueryForFile(
 
   const query = language.query(querySource);
   return query;
+}
+
+async function loadLanguageForFileExt(
+  fileExtension: string,
+): Promise<Language> {
+  const wasmPath = path.join(
+    __dirname,
+    ...(process.env.NODE_ENV === "test"
+      ? ["node_modules", "tree-sitter-wasms", "out"]
+      : ["tree-sitter-wasms"]),
+    `tree-sitter-${supportedLanguages[fileExtension]}.wasm`,
+  );
+  return await Parser.Language.load(wasmPath);
 }

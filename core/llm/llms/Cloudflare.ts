@@ -1,6 +1,6 @@
 import { BaseLLM } from "../index.js";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
-import { stripImages } from "../countTokens.js";
+import { stripImages } from "../images.js";
 import { streamSse } from "../stream.js";
 
 export default class Cloudflare extends BaseLLM {
@@ -38,7 +38,6 @@ export default class Cloudflare extends BaseLLM {
     });
 
     for await (const value of streamSse(resp)) {
-      console.log(value);
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
       }

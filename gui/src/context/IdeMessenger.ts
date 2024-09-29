@@ -1,5 +1,6 @@
 import { ChatMessage, IDE, LLMFullCompletionOptions, PromptLog } from "core";
 import type { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import { WebviewMessengerResult } from "core/protocol/util";
 import { MessageIde } from "core/util/messageIde";
 import { Message } from "core/util/messenger";
 import { createContext } from "react";
@@ -12,8 +13,6 @@ interface vscode {
 }
 
 declare const vscode: any;
-
-type ToIdeOrCoreProtocol = FromWebviewProtocol;
 
 export interface IIdeMessenger {
   post<T extends keyof FromWebviewProtocol>(
@@ -32,7 +31,7 @@ export interface IIdeMessenger {
   request<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
-  ): Promise<FromWebviewProtocol[T][1]>;
+  ): Promise<WebviewMessengerResult<T>>;
 
   streamRequest<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -54,7 +53,16 @@ export class IdeMessenger implements IIdeMessenger {
   ide: IDE;
 
   constructor() {
-    this.ide = new MessageIde(this.request.bind(this), () => {});
+    this.ide = new MessageIde(
+      async (messageType, data) => {
+        const result = await this.request(messageType, data);
+        if (result.status === "error") {
+          throw new Error(result.error);
+        }
+        return result.content;
+      },
+      () => {},
+    );
   }
 
   private _postToIde(messageType: string, data: any, messageId?: string) {
@@ -123,7 +131,7 @@ export class IdeMessenger implements IIdeMessenger {
   request<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
-  ): Promise<FromWebviewProtocol[T][1]> {
+  ): Promise<WebviewMessengerResult<T>> {
     const messageId = uuidv4();
 
     return new Promise((resolve) => {
@@ -155,7 +163,6 @@ export class IdeMessenger implements IIdeMessenger {
 
     const handler = (event: { data: Message }) => {
       if (event.data.messageId === messageId) {
-        console.log("BB", typeof event.data.data);
         const responseData = event.data.data;
         if (responseData.done) {
           window.removeEventListener("message", handler);
@@ -217,6 +224,7 @@ export class IdeMessenger implements IIdeMessenger {
     }
 
     return {
+      modelTitle: next.value.content?.modelTitle,
       prompt: next.value.content?.prompt,
       completion: next.value.content?.completion,
       completionOptions: next.value.content?.completionOptions,

@@ -9,7 +9,7 @@ const esbuildConfig = {
   external: ["vscode", "esbuild", "./xhr-sync-worker.js"],
   format: "cjs",
   platform: "node",
-  sourcemap: true,
+  sourcemap: flags.includes("--sourcemap"),
   loader: {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     ".node": "file",
@@ -19,6 +19,7 @@ const esbuildConfig = {
   // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
   inject: ["./scripts/importMetaUrl.js"],
   define: { "import.meta.url": "importMetaUrl" },
+  supported: { "dynamic-import": false },
 };
 
 (async () => {

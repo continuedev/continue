@@ -20,7 +20,9 @@ class PostgresContextProvider extends BaseContextProvider {
   static DEFAULT_SAMPLE_ROWS = 3;
 
   private async getPool() {
-    const pg = await require("pg");
+    // @ts-ignore
+    const pg = await import("pg");
+
     return new pg.Pool({
       host: this.options.host,
       port: this.options.port,
@@ -35,7 +37,7 @@ class PostgresContextProvider extends BaseContextProvider {
     let tablesInfoQuery = `
 SELECT table_schema, table_name
 FROM information_schema.tables`;
-    if (schema != null) {
+    if (schema !== null) {
       tablesInfoQuery += ` WHERE table_schema = '${schema}'`;
     }
     const { rows: tablesInfo } = await pool.query(tablesInfoQuery);

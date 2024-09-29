@@ -1,12 +1,10 @@
 <!-- Plugin description -->
 
-![readme](../../media/readme.png)
-
 <h1 align="center">Continue</h1>
 
 <div align="center">
 
-**[Continue](https://docs.continue.dev) enables you to create your own AI code assistant inside your IDE. Keep your developers in flow with open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions that can be connected to any model, any context, and anything else you need**
+**[Continue](https://docs.continue.dev) is the leading open-source AI code assistant. You can connect any models and any context to build custom autocomplete and chat experiences inside [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 </div>
 
@@ -14,27 +12,19 @@
 
 ## Easily understand code sections
 
-![understand](../../docs/static/img/understand.gif)
-
 `cmd+J` (MacOS) / `ctrl+J` (Windows)
 
 ## Tab to autocomplete code suggestions
-
-![autocomplete](../../docs/static/img/autocomplete.gif)
 
 `tab` (MacOS) / `tab` (Windows)
 
 ## Refactor functions where you are coding
 
-![inline](../../docs/static/img/inline.gif)
-
 `cmd+I` (MacOS) / `ctrl+I` (Windows)
 
 ## Quickly use documentation as context
 
-![docs](../../docs/static/img/docs.gif)
-
-`@docs` (MacOS) / `@docs` (Windows)
+`@docs`
 
 </div>
 
@@ -46,6 +36,6 @@ Learn more about the models and providers [here](https://continue.dev/docs/setup
 
 ## License
 
-[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
+[Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
 
 <!-- Plugin description end -->

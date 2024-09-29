@@ -1,4 +1,8 @@
-import { EmbedOptions, FetchFunction } from "../../index.js";
+import {
+  EmbeddingsProviderName,
+  EmbedOptions,
+  FetchFunction,
+} from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 import BaseEmbeddingsProvider, {
   IBaseEmbeddingsProvider,
@@ -10,12 +14,22 @@ async function embedOne(
   customFetch: FetchFunction,
 ) {
   const embedding = await withExponentialBackoff<number[]>(async () => {
-    const resp = await customFetch(new URL("api/embeddings", options.apiBase), {
+    let apiBase = options.apiBase!;
+
+    if (!apiBase.endsWith("/")) {
+      apiBase += "/";
+    }
+
+    const resp = await customFetch(new URL("api/embed", apiBase), {
       method: "POST",
       body: JSON.stringify({
         model: options.model,
-        prompt: chunk,
+        input: chunk,
       }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${options.apiKey}`,
+      },
     });
 
     if (!resp.ok) {
@@ -23,7 +37,7 @@ async function embedOne(
     }
 
     const data = await resp.json();
-    const embedding = data.embedding;
+    const embedding = data.embeddings[0];
 
     if (!embedding || embedding.length === 0) {
       throw new Error("Ollama generated empty embedding");
@@ -35,6 +49,7 @@ async function embedOne(
 }
 
 class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static providerName: EmbeddingsProviderName = "ollama";
   static defaultOptions: IBaseEmbeddingsProvider["defaultOptions"] = {
     apiBase: "http://localhost:11434/",
     model: "nomic-embed-text",

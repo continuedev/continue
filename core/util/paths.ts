@@ -8,8 +8,21 @@ import Types from "../config/types.js";
 import { IdeType, SerializedContinueConfig } from "../index.js";
 
 dotenv.config();
+
 const CONTINUE_GLOBAL_DIR =
   process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
+
+export function getChromiumPath(): string {
+  return path.join(getContinueUtilsPath(), ".chromium-browser-snapshots");
+}
+
+export function getContinueUtilsPath(): string {
+  const utilsPath = path.join(getContinueGlobalPath(), ".utils");
+  if (!fs.existsSync(utilsPath)) {
+    fs.mkdirSync(utilsPath);
+  }
+  return utilsPath;
+}
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
@@ -139,6 +152,24 @@ export function getTsConfigPath(): string {
   return tsConfigPath;
 }
 
+export function getContinueRcPath(): string {
+  // Disable indexing of the config folder to prevent infinite loops
+  const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
+  if (!fs.existsSync(continuercPath)) {
+    fs.writeFileSync(
+      continuercPath,
+      JSON.stringify(
+        {
+          disableIndexing: true,
+        },
+        null,
+        2,
+      ),
+    );
+  }
+  return continuercPath;
+}
+
 export function devDataPath(): string {
   const sPath = path.join(getContinueGlobalPath(), "dev_data");
   if (!fs.existsSync(sPath)) {
@@ -177,12 +208,29 @@ function getMigrationsFolderPath(): string {
   return migrationsPath;
 }
 
-export function migrate(id: string, callback: () => void) {
+export async function migrate(
+  id: string,
+  callback: () => void | Promise<void>,
+  onAlreadyComplete?: () => void,
+) {
+  if (process.env.NODE_ENV === "test") {
+    return await Promise.resolve(callback());
+  }
+
   const migrationsPath = getMigrationsFolderPath();
   const migrationPath = path.join(migrationsPath, id);
+
   if (!fs.existsSync(migrationPath)) {
-    fs.writeFileSync(migrationPath, "");
-    callback();
+    try {
+      console.log(`Running migration: ${id}`);
+
+      fs.writeFileSync(migrationPath, "");
+      await Promise.resolve(callback());
+    } catch (e) {
+      console.warn(`Migration ${id} failed`, e);
+    }
+  } else if (onAlreadyComplete) {
+    onAlreadyComplete();
   }
 }
 
@@ -223,6 +271,11 @@ export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
     fs.mkdirSync(dir);
   }
   return dir;
+}
+
+export function internalBetaPathExists(): boolean {
+  const sPath = path.join(getContinueGlobalPath(), ".internal_beta");
+  return fs.existsSync(sPath);
 }
 
 export function getConfigJsonPathForRemote(
@@ -287,4 +340,8 @@ export function readAllGlobalPromptFiles(
   });
 
   return promptFiles;
+}
+
+export function getRepoMapFilePath(): string {
+  return path.join(getContinueUtilsPath(), "repo_map.txt");
 }

@@ -1,3 +1,5 @@
+import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -25,6 +27,7 @@ export interface ChunkWithoutID {
   content: string;
   startLine: number;
   endLine: number;
+  signature?: string;
   otherMetadata?: { [key: string]: any };
 }
 
@@ -37,7 +40,9 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
+  shouldClearIndexes?: boolean;
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  debugInfo?: string;
 }
 
 export type PromptTemplate =
@@ -56,6 +61,7 @@ export interface ILLM extends LLMOptions {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   promptTemplates?: Record<string, PromptTemplate>;
@@ -64,6 +70,7 @@ export interface ILLM extends LLMOptions {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   engine?: string;
   apiVersion?: string;
@@ -117,16 +124,18 @@ export interface ILLM extends LLMOptions {
 export type ContextProviderType = "normal" | "query" | "submenu";
 
 export interface ContextProviderDescription {
-  title: string;
+  title: ContextProviderName;
   displayTitle: string;
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
+  dependsOnIndexing?: boolean;
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 
 export interface ContextProviderExtras {
+  config: ContinueConfig;
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
   reranker: Reranker | undefined;
@@ -137,6 +146,7 @@ export interface ContextProviderExtras {
 }
 
 export interface LoadSubmenuItemsArgs {
+  config: ContinueConfig;
   ide: IDE;
   fetch: FetchFunction;
 }
@@ -160,15 +170,23 @@ export interface ContextSubmenuItem {
   id: string;
   title: string;
   description: string;
-  iconUrl?: string;
+  icon?: string;
+  metadata?: any;
+}
+
+export interface SiteIndexingConfig {
+  title: string;
+  startUrl: string;
+  rootUrl?: string;
+  maxDepth?: number;
+  faviconUrl?: string;
 }
 
 export interface SiteIndexingConfig {
   startUrl: string;
-  rootUrl: string;
+  rootUrl?: string;
   title: string;
   maxDepth?: number;
-  faviconUrl?: string;
 }
 
 export interface IContextProvider {
@@ -254,21 +272,25 @@ export interface ContextItemId {
   itemId: string;
 }
 
+export type ContextItemUriTypes = "file" | "url";
+
+export interface ContextItemUri {
+  type: ContextItemUriTypes;
+  value: string;
+}
+
 export interface ContextItem {
   content: string;
   name: string;
   description: string;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
+  uri?: ContextItemUri;
 }
 
-export interface ContextItemWithId {
-  content: string;
-  name: string;
-  description: string;
+export interface ContextItemWithId extends ContextItem {
   id: ContextItemId;
-  editing?: boolean;
-  editable?: boolean;
 }
 
 export interface InputModifiers {
@@ -277,6 +299,7 @@ export interface InputModifiers {
 }
 
 export interface PromptLog {
+  modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
@@ -299,6 +322,9 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
   model?: string;
 }
+
+export type ToastType = "info" | "error" | "warning";
+
 export interface LLMOptions {
   model: string;
 
@@ -306,6 +332,7 @@ export interface LLMOptions {
   uniqueId?: string;
   systemMessage?: string;
   contextLength?: number;
+  maxStopWords?: number;
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -316,6 +343,7 @@ export interface LLMOptions {
   apiKey?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -327,9 +355,24 @@ export interface LLMOptions {
   apiVersion?: string;
   apiType?: string;
 
-  // GCP Options
+  // AWS options
+  profile?: string;
+  modelArn?: string;
+
+  // AWS and GCP Options
   region?: string;
+
+  // GCP Options
   projectId?: string;
+  capabilities?: ModelCapability;
+
+  // IBM watsonx options
+  watsonxUrl?: string;
+  watsonxCreds?: string;
+  watsonxProjectId?: string;
+  watsonxStopToken?: string;
+  watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -366,8 +409,10 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
+export type DiffLineType = "new" | "old" | "same";
+
 export interface DiffLine {
-  type: "new" | "old" | "same";
+  type: DiffLineType;
   line: string;
 }
 
@@ -411,6 +456,9 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
+  enableControlServerBeta: boolean;
+  pauseCodebaseIndexOnStart: boolean;
+  enableDebugLogs: boolean;
 }
 
 export interface IDE {
@@ -426,13 +474,10 @@ export interface IDE {
     stackDepth: number,
   ): Promise<string[]>;
   getAvailableThreads(): Promise<Thread[]>;
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
+  fileExists(filepath: string): Promise<boolean>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
@@ -460,19 +505,22 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
-  errorPopup(message: string): Promise<void>;
-  infoPopup(message: string): Promise<void>;
-
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<any>;
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
-  getGitHubAuthToken(): Promise<string | undefined>;
+  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
+  pathSep(): Promise<string>;
 }
 
 // Slash Commands
@@ -531,7 +579,16 @@ type ContextProviderName =
   | "docs"
   | "gitlab-mr"
   | "os"
-  | "currentFile";
+  | "currentFile"
+  | "greptile"
+  | "outline"
+  | "continue-proxy"
+  | "highlights"
+  | "file"
+  | "issue"
+  | "repo-map"
+  | "url"
+  | string;
 
 type TemplateType =
   | "llama2"
@@ -560,6 +617,7 @@ type ModelProvider =
   | "ollama"
   | "huggingface-tgi"
   | "huggingface-inference-api"
+  | "kindo"
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"
@@ -568,6 +626,8 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "bedrockimport"
+  | "sagemaker"
   | "deepinfra"
   | "flowise"
   | "groq"
@@ -577,7 +637,14 @@ type ModelProvider =
   | "cloudflare"
   | "deepseek"
   | "azure"
-  | "openai-aiohttp";
+  | "openai-aiohttp"
+  | "msty"
+  | "watsonx"
+  | "openrouter"
+  | "sambanova"
+  | "nvidia"
+  | "vllm"
+  | "mock";
 
 export type ModelName =
   | "AUTODETECT"
@@ -588,6 +655,7 @@ export type ModelName =
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
   | "gpt-4o"
+  | "gpt-4o-mini"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
@@ -600,6 +668,10 @@ export type ModelName =
   | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
+  | "mistral-tiny"
+  | "mistral-small"
+  | "mistral-medium"
+  | "mistral-embed"
   // Llama 2
   | "llama2-7b"
   | "llama2-13b"
@@ -622,6 +694,8 @@ export type ModelName =
   | "deepseek-7b"
   | "deepseek-33b"
   | "neural-chat-7b"
+  | "gemma-7b-it"
+  | "gemma2-9b-it"
   // Anthropic
   | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"
@@ -638,10 +712,6 @@ export type ModelName =
   | "gemini-1.5-pro"
   | "gemini-1.5-flash-latest"
   | "gemini-1.5-flash"
-  // Mistral
-  | "mistral-tiny"
-  | "mistral-small"
-  | "mistral-medium"
   // Tab autocomplete
   | "deepseek-1b"
   | "starcoder-1b"
@@ -657,6 +727,18 @@ export interface RequestOptions {
   headers?: { [key: string]: string };
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
+  clientCertificate?: ClientCertificateOptions;
+}
+
+export interface CacheBehavior {
+  cacheSystemMessage?: boolean;
+  cacheConversation?: boolean;
+}
+
+export interface ClientCertificateOptions {
+  cert: string;
+  key: string;
+  passphrase?: string;
 }
 
 export interface StepWithParams {
@@ -697,6 +779,10 @@ interface BaseCompletionOptions {
   stream?: boolean;
 }
 
+export interface ModelCapability {
+  uploadImage?: boolean;
+}
+
 export interface ModelDescription {
   title: string;
   provider: ModelProvider;
@@ -704,26 +790,46 @@ export interface ModelDescription {
   apiKey?: string;
   apiBase?: string;
   contextLength?: number;
+  maxStopWords?: number;
   template?: TemplateType;
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
+  capabilities?: ModelCapability;
+  cacheBehavior?: CacheBehavior;
 }
 
 export type EmbeddingsProviderName =
+  | "bedrock"
+  | "huggingface-tei"
   | "transformers.js"
   | "ollama"
   | "openai"
   | "cohere"
   | "free-trial"
-  | "gemini";
+  | "gemini"
+  | "continue-proxy"
+  | "deepinfra"
+  | "nvidia"
+  | "voyage"
+  | "mistral";
 
 export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
+  engine?: string;
+  apiType?: string;
+  apiVersion?: string;
   requestOptions?: RequestOptions;
+  maxChunkSize?: number;
+  maxBatchSize?: number;
+  // AWS options
+  profile?: string;
+
+  // AWS and GCP Options
+  region?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -732,10 +838,18 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  providerName: EmbeddingsProviderName;
+  maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
+export type RerankerName =
+  | "cohere"
+  | "voyage"
+  | "llm"
+  | "free-trial"
+  | "huggingface-tei"
+  | "continue-proxy";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -750,7 +864,7 @@ export interface Reranker {
 export interface TabAutocompleteOptions {
   disable: boolean;
   useCopyBuffer: boolean;
-  useSuffix: boolean;
+  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;
@@ -774,6 +888,8 @@ export interface TabAutocompleteOptions {
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
+  displayRawMarkdown?: boolean;
+  showChatScrollbar?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -786,13 +902,68 @@ interface ContextMenuConfig {
 
 interface ModelRoles {
   inlineEdit?: string;
+  applyCodeBlock?: string;
+  repoMapFileSelection?: string;
 }
+
+/**
+ * Represents the configuration for a quick action in the Code Lens.
+ * Quick actions are custom commands that can be added to function and class declarations.
+ */
+interface QuickActionConfig {
+  /**
+   * The title of the quick action that will display in the Code Lens.
+   */
+  title: string;
+
+  /**
+   * The prompt that will be sent to the model when the quick action is invoked,
+   * with the function or class body concatenated.
+   */
+  prompt: string;
+
+  /**
+   * If `true`, the result of the quick action will be sent to the chat panel.
+   * If `false`, the streamed result will be inserted into the document.
+   *
+   * Defaults to `false`.
+   */
+  sendToChat: boolean;
+}
+
+export type DefaultContextProvider = ContextProviderWithParams & {
+  query?: string;
+};
 
 interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
-  defaultContext?: "activeFile"[];
+  defaultContext?: DefaultContextProvider[];
   promptPath?: string;
+
+  /**
+   * Quick actions are a way to add custom commands to the Code Lens of
+   * function and class declarations.
+   */
+  quickActions?: QuickActionConfig[];
+
+  /**
+   * Automatically read LLM chat responses aloud using system TTS models
+   */
+  readResponseTTS?: boolean;
+
+  /**
+   * If set to true, we will attempt to pull down and install an instance of Chromium
+   * that is compatible with the current version of Puppeteer.
+   * This is needed to crawl a large number of documentation sites that are dynamically rendered.
+   */
+  useChromiumForDocsCrawling?: boolean;
+}
+
+interface AnalyticsConfig {
+  type: string;
+  url?: string;
+  clientKey?: string;
 }
 
 // config.json
@@ -815,6 +986,8 @@ export interface SerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -865,6 +1038,8 @@ export interface Config {
   reranker?: RerankerDescription | Reranker;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
+  /** Analytics configuration */
+  analytics?: AnalyticsConfig;
 }
 
 // in the actual Continue source code
@@ -885,6 +1060,8 @@ export interface ContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: Reranker;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -902,4 +1079,5 @@ export interface BrowserSerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
 }

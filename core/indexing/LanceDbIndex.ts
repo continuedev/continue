@@ -1,6 +1,7 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
+import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
-import { Table } from "vectordb";
+import lance, { Table } from "vectordb";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import {
   BranchAndDir,
@@ -9,14 +10,14 @@ import {
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
-import { MAX_CHUNK_SIZE } from "../llm/constants.js";
 import { getBasename } from "../util/index.js";
-import { getLanceDbPath } from "../util/paths.js";
-import { chunkDocument } from "./chunk/chunk.js";
+import { getLanceDbPath, migrate } from "../util/paths.js";
+import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
+  MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types.js";
@@ -30,20 +31,24 @@ interface LanceDbRow {
   [key: string]: any;
 }
 
+type ItemWithChunks = { item: PathAndCacheKey; chunks: Chunk[] };
+
+type ChunkMap = Map<string, ItemWithChunks>;
+
 export class LanceDbIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 13;
   get artifactId(): string {
     return `vectordb::${this.embeddingsProvider.id}`;
   }
 
-  static MAX_CHUNK_SIZE = MAX_CHUNK_SIZE;
-
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly pathSep: string,
     private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
-  private tableNameForTag(tag: IndexTag) {
+  tableNameForTag(tag: IndexTag) {
     return tagToString(tag).replace(/[^\w-_.]/g, "");
   }
 
@@ -52,138 +57,185 @@ export class LanceDbIndex implements CodebaseIndex {
         uuid TEXT PRIMARY KEY,
         cacheKey TEXT NOT NULL,
         path TEXT NOT NULL,
+        artifact_id TEXT NOT NULL,
         vector TEXT NOT NULL,
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL,
         contents TEXT NOT NULL
     )`);
+
+    await new Promise((resolve) =>
+      migrate(
+        "lancedb_sqlite_artifact_id_column",
+        async () => {
+          try {
+            const pragma = await db.all("PRAGMA table_info(lance_db_cache)");
+
+            const hasArtifactIdCol = pragma.some(
+              (pragma) => pragma.name === "artifact_id",
+            );
+
+            if (!hasArtifactIdCol) {
+              await db.exec(
+                "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
+              );
+            }
+          } finally {
+            resolve(undefined);
+          }
+        },
+        () => resolve(undefined),
+      ),
+    );
   }
 
-  private async *computeChunks(
-    items: PathAndCacheKey[],
-  ): AsyncGenerator<
-    | [
-        number,
-        LanceDbRow,
-        { startLine: number; endLine: number; contents: string },
-        string,
-      ]
-    | PathAndCacheKey
-  > {
-    const contents = await Promise.all(
-      items.map(({ path }) => this.readFile(path)),
+  private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
+    const chunkMap = await this.collectChunks(items);
+    const allChunks = Array.from(chunkMap.values()).flatMap(
+      ({ chunks }) => chunks,
     );
+    const embeddings = await this.getEmbeddings(allChunks);
 
-    for (let i = 0; i < items.length; i++) {
-      // Break into chunks
-      const content = contents[i];
-      const chunks: Chunk[] = [];
+    // Remove undefined embeddings and their corresponding chunks
+    for (let i = embeddings.length - 1; i >= 0; i--) {
+      if (embeddings[i] === undefined) {
+        const chunk = allChunks[i];
+        const chunks = chunkMap.get(chunk.filepath)?.chunks;
 
-      let hasEmptyChunks = false;
-
-      for await (const chunk of chunkDocument(
-        items[i].path,
-        content,
-        LanceDbIndex.MAX_CHUNK_SIZE,
-        items[i].cacheKey,
-      )) {
-        if (chunk.content.length == 0) {
-          hasEmptyChunks = true;
-          break;
+        if (chunks) {
+          const index = chunks.findIndex((c) => c === chunk);
+          if (index !== -1) {
+            chunks.splice(index, 1);
+          }
         }
-        chunks.push(chunk);
+
+        embeddings.splice(i, 1);
       }
-
-      if (hasEmptyChunks) {
-        // File did not chunk properly, let's skip it.
-        continue;
-      }
-
-      if (chunks.length > 20) {
-        // Too many chunks to index, probably a larger file than we want to include
-        continue;
-      }
-
-      // Calculate embeddings
-      const embeddings = await this.embeddingsProvider.embed(
-        chunks.map((c) => c.content),
-      );
-
-      if (embeddings.some((emb) => emb === undefined)) {
-        throw new Error(
-          `Failed to generate embedding for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}`,
-        );
-      }
-
-      // Create row format
-      for (let j = 0; j < chunks.length; j++) {
-        const progress = (i + j / chunks.length) / items.length;
-        const row = {
-          vector: embeddings[j],
-          path: items[i].path,
-          cachekey: items[i].cacheKey,
-          uuid: uuidv4(),
-        };
-        const chunk = chunks[j];
-        yield [
-          progress,
-          row,
-          {
-            contents: chunk.content,
-            startLine: chunk.startLine,
-            endLine: chunk.endLine,
-          },
-          `Indexing ${getBasename(chunks[j].filepath)}`,
-        ];
-      }
-
-      yield items[i];
     }
+
+    return this.createLanceDbRows(chunkMap, embeddings);
+  }
+
+  private async collectChunks(items: PathAndCacheKey[]): Promise<ChunkMap> {
+    const chunkMap: ChunkMap = new Map();
+
+    for (const item of items) {
+      try {
+        const content = await this.readFile(item.path);
+
+        if (!shouldChunk(this.pathSep, item.path, content)) {
+          continue;
+        }
+
+        const chunks = await this.getChunks(item, content);
+        chunkMap.set(item.path, { item, chunks });
+      } catch (err) {
+        console.log(`LanceDBIndex, skipping ${item.path}: ${err}`);
+      }
+    }
+
+    return chunkMap;
+  }
+
+  private async getChunks(
+    item: PathAndCacheKey,
+    content: string,
+  ): Promise<Chunk[]> {
+    const chunks: Chunk[] = [];
+
+    const chunkParams = {
+      filepath: item.path,
+      contents: content,
+      maxChunkSize: this.embeddingsProvider.maxChunkSize,
+      digest: item.cacheKey,
+    };
+
+    for await (const chunk of chunkDocument(chunkParams)) {
+      if (chunk.content.length === 0) {
+        throw new Error("did not chunk properly");
+      }
+
+      chunks.push(chunk);
+    }
+
+    return chunks;
+  }
+
+  private async getEmbeddings(chunks: Chunk[]): Promise<number[][]> {
+    try {
+      return await this.embeddingsProvider.embed(chunks.map((c) => c.content));
+    } catch (err) {
+      throw new Error(
+        `Failed to generate embeddings for ${chunks.length} chunks with provider: ${this.embeddingsProvider.id}: ${err}`,
+        { cause: err },
+      );
+    }
+  }
+
+  private createLanceDbRows(
+    chunkMap: ChunkMap,
+    embeddings: number[][],
+  ): LanceDbRow[] {
+    const results: LanceDbRow[] = [];
+    let embeddingIndex = 0;
+
+    for (const [path, { item, chunks }] of chunkMap) {
+      for (const chunk of chunks) {
+        results.push({
+          path,
+          cachekey: item.cacheKey,
+          uuid: uuidv4(),
+          vector: embeddings[embeddingIndex],
+          startLine: chunk.startLine,
+          endLine: chunk.endLine,
+          contents: chunk.content,
+        });
+        embeddingIndex++;
+      }
+    }
+
+    return results;
   }
 
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    markComplete: (
-      items: PathAndCacheKey[],
-      resultType: IndexResultType,
-    ) => void,
+    markComplete: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const lancedb = await import("vectordb");
-    const tableName = this.tableNameForTag(tag);
-    const db = await lancedb.connect(getLanceDbPath());
+    const sqliteDb = await SqliteDb.get();
+    await this.createSqliteCacheTable(sqliteDb);
 
-    const sqlite = await SqliteDb.get();
-    await this.createSqliteCacheTable(sqlite);
+    const lanceTableName = this.tableNameForTag(tag);
+    const lanceDb = await lance.connect(getLanceDbPath());
+    const existingLanceTables = await lanceDb.tableNames();
+
+    let lanceTable: Table<number[]> | undefined = undefined;
+    let needToCreateLanceTable = !existingLanceTables.includes(lanceTableName);
 
     // Compute
-    let table: Table<number[]> | undefined = undefined;
-    const existingTables = await db.tableNames();
-    let needToCreateTable = !existingTables.includes(tableName);
-
     const addComputedLanceDbRows = async (
-      pathAndCacheKey: PathAndCacheKey,
+      pathAndCacheKeys: PathAndCacheKey[],
       computedRows: LanceDbRow[],
     ) => {
       // Create table if needed, add computed rows
-      if (table) {
+      if (lanceTable) {
         if (computedRows.length > 0) {
-          await table.add(computedRows);
+          await lanceTable.add(computedRows);
         }
-      } else if (existingTables.includes(tableName)) {
-        table = await db.openTable(tableName);
-        needToCreateTable = false;
+      } else if (existingLanceTables.includes(lanceTableName)) {
+        lanceTable = await lanceDb.openTable(lanceTableName);
+        needToCreateLanceTable = false;
         if (computedRows.length > 0) {
-          await table.add(computedRows);
+          await lanceTable.add(computedRows);
         }
       } else if (computedRows.length > 0) {
-        table = await db.createTable(tableName, computedRows);
-        needToCreateTable = false;
+        lanceTable = await lanceDb.createTable(lanceTableName, computedRows);
+        needToCreateLanceTable = false;
       }
 
       // Mark item complete
-      markComplete([pathAndCacheKey], IndexResultType.Compute);
+      await markComplete(pathAndCacheKeys, IndexResultType.Compute);
     };
 
     // Check remote cache
@@ -219,11 +271,12 @@ export class LanceDbIndex implements CodebaseIndex {
             };
             rows.push(row);
 
-            await sqlite.run(
-              "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            await sqliteDb.run(
+              "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
               row.uuid,
               row.cachekey,
               row.path,
+              this.artifactId,
               JSON.stringify(row.vector),
               chunk.startLine,
               chunk.endLine,
@@ -231,7 +284,7 @@ export class LanceDbIndex implements CodebaseIndex {
             );
           }
 
-          await addComputedLanceDbRows({ cacheKey, path }, rows);
+          await addComputedLanceDbRows([{ cacheKey, path }], rows);
         }
 
         // Remove items that don't need to be recomputed
@@ -243,78 +296,106 @@ export class LanceDbIndex implements CodebaseIndex {
       }
     }
 
-    let computedRows: LanceDbRow[] = [];
-    for await (const update of this.computeChunks(results.compute)) {
-      if (Array.isArray(update)) {
-        const [progress, row, data, desc] = update;
-        computedRows.push(row);
+    yield {
+      progress: 0,
+      desc: `Computing embeddings for ${
+        results.compute.length
+      } ${this.formatListPlurality("file", results.compute.length)}`,
+      status: "indexing",
+    };
 
-        // Add the computed row to the cache
-        await sqlite.run(
-          "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
-          row.uuid,
-          row.cachekey,
-          row.path,
-          JSON.stringify(row.vector),
-          data.startLine,
-          data.endLine,
-          data.contents,
-        );
-
-        yield { progress, desc, status: "indexing" };
-      } else {
-        await addComputedLanceDbRows(update, computedRows);
-        computedRows = [];
-      }
-    }
+    const dbRows = await this.computeRows(results.compute);
+    await this.insertRows(sqliteDb, dbRows);
+    await addComputedLanceDbRows(results.compute, dbRows);
+    let accumulatedProgress = 0;
 
     // Add tag - retrieve the computed info from lance sqlite cache
     for (const { path, cacheKey } of results.addTag) {
-      const stmt = await sqlite.prepare(
-        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
+      const stmt = await sqliteDb.prepare(
+        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
         cacheKey,
         path,
+        this.artifactId,
       );
       const cachedItems = await stmt.all();
 
-      const lanceRows: LanceDbRow[] = cachedItems.map((item) => {
-        return {
+      const lanceRows: LanceDbRow[] = cachedItems.map(
+        ({ uuid, vector, startLine, endLine, contents }) => ({
           path,
+          uuid,
+          startLine,
+          endLine,
+          contents,
           cachekey: cacheKey,
-          uuid: item.uuid,
-          vector: JSON.parse(item.vector),
-        };
-      });
+          vector: JSON.parse(vector),
+        }),
+      );
 
-      if (needToCreateTable && lanceRows.length > 0) {
-        table = await db.createTable(tableName, lanceRows);
-        needToCreateTable = false;
-      } else if (lanceRows.length > 0) {
-        await table?.add(lanceRows);
+      if (lanceRows.length > 0) {
+        if (needToCreateLanceTable) {
+          lanceTable = await lanceDb.createTable(lanceTableName, lanceRows);
+          needToCreateLanceTable = false;
+        } else if (!lanceTable) {
+          lanceTable = await lanceDb.openTable(lanceTableName);
+          needToCreateLanceTable = false;
+          await lanceTable.add(lanceRows);
+        } else {
+          await lanceTable?.add(lanceRows);
+        }
       }
 
-      markComplete([{ path, cacheKey }], IndexResultType.AddTag);
+      await markComplete([{ path, cacheKey }], IndexResultType.AddTag);
+      accumulatedProgress += 1 / results.addTag.length / 3;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Indexing ${getBasename(path)}`,
+        status: "indexing",
+      };
     }
 
     // Delete or remove tag - remove from lance table)
-    if (!needToCreateTable) {
-      for (const { path, cacheKey } of [...results.removeTag, ...results.del]) {
+    if (!needToCreateLanceTable) {
+      const toDel = [...results.removeTag, ...results.del];
+
+      if (!lanceTable) {
+        lanceTable = await lanceDb.openTable(lanceTableName);
+      }
+
+      for (const { path, cacheKey } of toDel) {
         // This is where the aforementioned lowercase conversion problem shows
-        await table?.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
+        await lanceTable.delete(
+          `cachekey = '${cacheKey}' AND path = '${path}'`,
+        );
+
+        accumulatedProgress += 1 / toDel.length / 3;
+        yield {
+          progress: accumulatedProgress,
+          desc: `Stashing ${getBasename(path)}`,
+          status: "indexing",
+        };
       }
     }
-    markComplete(results.removeTag, IndexResultType.RemoveTag);
+
+    await markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     // Delete - also remove from sqlite cache
     for (const { path, cacheKey } of results.del) {
-      await sqlite.run(
-        "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
+      await sqliteDb.run(
+        "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
         cacheKey,
         path,
+        this.artifactId,
       );
+      accumulatedProgress += 1 / results.del.length / 3;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Removing ${getBasename(path)}`,
+        status: "indexing",
+      };
     }
 
-    markComplete(results.del, IndexResultType.Delete);
+    await markComplete(results.del, IndexResultType.Delete);
+
     yield {
       progress: 1,
       desc: "Completed Calculating Embeddings",
@@ -354,12 +435,8 @@ export class LanceDbIndex implements CodebaseIndex {
     tags: BranchAndDir[],
     filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
-    const lancedb = await import("vectordb");
-    if (!lancedb.connect) {
-      throw new Error("LanceDB failed to load a native module");
-    }
     const [vector] = await this.embeddingsProvider.embed([query]);
-    const db = await lancedb.connect(getLanceDbPath());
+    const db = await lance.connect(getLanceDbPath());
 
     let allResults = [];
     for (const tag of tags) {
@@ -394,5 +471,63 @@ export class LanceDbIndex implements CodebaseIndex {
         content: d.contents,
       };
     });
+  }
+
+  private async insertRows(
+    db: DatabaseConnection,
+    rows: LanceDbRow[],
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      db.db.serialize(() => {
+        db.db.exec("BEGIN", (err: Error | null) => {
+          if (err) {
+            reject(new Error("error creating transaction", { cause: err }));
+          }
+        });
+
+        const sql =
+          "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        rows.map((r) => {
+          db.db.run(
+            sql,
+            [
+              r.uuid,
+              r.cachekey,
+              r.path,
+              this.artifactId,
+              JSON.stringify(r.vector),
+              r.startLine,
+              r.endLine,
+              r.contents,
+            ],
+            (result: RunResult, err: Error) => {
+              if (err) {
+                reject(
+                  new Error("error inserting into lance_db_cache table", {
+                    cause: err,
+                  }),
+                );
+              }
+            },
+          );
+        });
+        db.db.exec("COMMIT", (err: Error | null) => {
+          if (err) {
+            reject(
+              new Error(
+                "error while committing insert into lance_db_rows transaction",
+                { cause: err },
+              ),
+            );
+          } else {
+            resolve();
+          }
+        });
+      });
+    });
+  }
+
+  private formatListPlurality(word: string, length: number): string {
+    return length <= 1 ? word : `${word}s`;
   }
 }

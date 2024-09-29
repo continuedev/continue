@@ -1,5 +1,5 @@
 import { IContextProvider } from "core";
-import { VsCodeExtension } from "../extension/vscodeExtension";
+import { VsCodeExtension } from "../extension/VsCodeExtension";
 
 export class VsCodeContinueApi {
   constructor(private readonly vscodeExtension: VsCodeExtension) {}

@@ -1,45 +1,35 @@
-import { getTsConfigPath, migrate } from "core/util/paths";
+import { getContinueRcPath, getTsConfigPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import path from "node:path";
 import * as vscode from "vscode";
-import { VsCodeExtension } from "../extension/vscodeExtension";
+import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 
-let resolveVsCodeExtension = (_: VsCodeExtension): void => {};
-export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
-  (resolve) => (resolveVsCodeExtension = resolve),
-);
-
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
+  getContinueRcPath();
 
   // Register commands and providers
   registerQuickFixProvider();
   setupInlineTips(context);
 
   const vscodeExtension = new VsCodeExtension(context);
-  resolveVsCodeExtension(vscodeExtension);
-
-  migrate("showWelcome_1", () => {
-    vscode.commands.executeCommand(
-      "markdown.showPreview",
-      vscode.Uri.file(
-        path.join(getExtensionUri().fsPath, "media", "welcome.md"),
-      ),
-    );
-  });
 
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {
     context.globalState.update("hasBeenInstalled", true);
-    Telemetry.capture("install", {
-      extensionVersion: getExtensionVersion(),
-    });
+    Telemetry.capture(
+      "install",
+      {
+        extensionVersion: getExtensionVersion(),
+      },
+      true,
+    );
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);
@@ -48,5 +38,11 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   };
 
   // 'export' public api-surface
-  return continuePublicApi;
+  // or entire extension for testing
+  return process.env.NODE_ENV === "test"
+    ? {
+        ...continuePublicApi,
+        extension: vscodeExtension,
+      }
+    : continuePublicApi;
 }

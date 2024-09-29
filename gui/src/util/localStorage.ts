@@ -1,8 +1,10 @@
 import { JSONContent } from "@tiptap/react";
 import { IndexingProgressUpdate } from "core";
+import { OnboardingStatus } from "../components/OnboardingCard";
 
 type LocalStorageTypes = {
-  onboardingComplete: boolean;
+  onboardingStatus?: OnboardingStatus;
+  hasDismissedOnboardingCard: boolean;
   mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
   ftc: number;
@@ -11,16 +13,20 @@ type LocalStorageTypes = {
   inputHistory: JSONContent[];
   extensionVersion: string;
   indexingState: IndexingProgressUpdate;
-  signedInToGh: boolean;
+  showTutorialCard: boolean;
+  shownProfilesIntroduction: boolean;
+  disableIndexing: boolean;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(
   key: T,
 ): LocalStorageTypes[T] | undefined {
   const value = localStorage.getItem(key);
+
   if (value === null) {
     return undefined;
   }
+
   try {
     return JSON.parse(value);
   } catch (error) {

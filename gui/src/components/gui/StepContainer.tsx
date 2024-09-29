@@ -1,24 +1,21 @@
 import {
-  ArrowUturnLeftIcon,
+  ArrowPathIcon,
   BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { stripImages } from "core/llm/countTokens";
+import { stripImages } from "core/llm/images";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  lightGray,
-  vscBackground,
-  vscInputBackground,
-} from "..";
+import { vscBackground, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
-import HeaderButtonWithText from "../HeaderButtonWithText";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
@@ -33,59 +30,27 @@ interface StepContainerProps {
   isFirst: boolean;
   isLast: boolean;
   index: number;
+  modelTitle?: string;
 }
 
-// #region styled components
-
-const ButtonsDiv = styled.div`
-  display: flex;
-  gap: 2px;
-  align-items: center;
-  background-color: ${vscBackground};
-  box-shadow: 1px 1px 10px ${vscBackground};
-  border-radius: ${defaultBorderRadius};
-  z-index: 100;
-  position: absolute;
-  right: 8px;
-  top: 16px;
-  height: 0;
-`;
-
 const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
-  padding: 2px;
-  padding-right: 0px;
+  padding-top: 4px;
   background-color: ${(props) =>
     props.isUserInput ? vscInputBackground : vscBackground};
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-  border-radius: ${defaultBorderRadius};
   overflow: hidden;
 `;
 
-// #endregion
-
 function StepContainer(props: StepContainerProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const isUserInput = props.item.message.role === "user";
   const active = useSelector((store: RootState) => store.state.active);
+  const [truncatedEarly, setTruncatedEarly] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
-
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
-
   const sessionId = useSelector((store: RootState) => store.state.sessionId);
 
-  const sendFeedback = (feedback: boolean) => {
-    setFeedback(feedback);
-    if (props.item.promptLogs?.length) {
-      for (const promptLog of props.item.promptLogs) {
-        ideMessenger.post("devdata/log", {
-          tableName: "chat",
-          data: { ...promptLog, feedback, sessionId },
-        });
-      }
-    }
-  };
-
-  const [truncatedEarly, setTruncatedEarly] = useState(false);
+  const isUserInput = props.item.message.role === "user";
+  const uiConfig = useUIConfig();
+  const shouldRenderActions = !props.isLast || (props.isLast && !active);
 
   useEffect(() => {
     if (!active) {
@@ -106,98 +71,85 @@ function StepContainer(props: StepContainerProps) {
     }
   }, [props.item.message.content, active]);
 
-  return (
-    <div
-      onMouseEnter={() => {
-        setIsHovered(true);
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
-    >
-      <div className="relative">
-        <ContentDiv
-          hidden={!props.open}
-          isUserInput={isUserInput}
-          fontSize={getFontSize()}
-        >
-          <StyledMarkdownPreview
-            source={stripImages(props.item.message.content)}
-            showCodeBorder={true}
-          />
-        </ContentDiv>
-        <div className="h-2"></div>
-        {(isHovered || typeof feedback !== "undefined") && !active && (
-          <div
-            className="flex items-center gap-2 right-2 absolute -bottom-1"
-            style={{ zIndex: 200 }}
-          >
-            {truncatedEarly && (
-              <HeaderButtonWithText
-                text="Continue generation"
-                onClick={(e) => {
-                  props.onContinueGeneration();
-                }}
-              >
-                <BarsArrowDownIcon
-                  color={lightGray}
-                  width="1.2em"
-                  height="1.2em"
-                />
-              </HeaderButtonWithText>
-            )}
+  const sendFeedback = (feedback: boolean) => {
+    setFeedback(feedback);
+    if (props.item.promptLogs?.length) {
+      for (const promptLog of props.item.promptLogs) {
+        ideMessenger.post("devdata/log", {
+          tableName: "chat",
+          data: { ...promptLog, feedback, sessionId },
+        });
+      }
+    }
+  };
 
-            <CopyButton
-              text={stripImages(props.item.message.content)}
-              color={lightGray}
-            />
-            <HeaderButtonWithText
-              text="Regenerate"
-              onClick={(e) => {
-                props.onRetry();
-              }}
-            >
-              <ArrowUturnLeftIcon
-                color={lightGray}
-                width="1.2em"
-                height="1.2em"
-              />
-            </HeaderButtonWithText>
-            {feedback === false || (
-              <HeaderButtonWithText text="Helpful">
-                <HandThumbUpIcon
-                  className={
-                    "cursor-pointer hover:text-green-500" +
-                    (feedback === true ? " text-green-500" : "")
-                  }
-                  width="1.2em"
-                  height="1.2em"
-                  color={lightGray}
-                  onClick={() => {
-                    sendFeedback(true);
-                  }}
-                />
-              </HeaderButtonWithText>
-            )}
-            {feedback === true || (
-              <HeaderButtonWithText text="Unhelpful">
-                <HandThumbDownIcon
-                  className={
-                    "cursor-pointer hover:text-red-500" +
-                    (feedback === false ? " text-red-500" : "")
-                  }
-                  width="1.2em"
-                  height="1.2em"
-                  color={lightGray}
-                  onClick={() => {
-                    sendFeedback(false);
-                  }}
-                />
-              </HeaderButtonWithText>
-            )}
-          </div>
+  return (
+    <div className="relative">
+      <ContentDiv
+        hidden={!props.open}
+        isUserInput={isUserInput}
+        fontSize={getFontSize()}
+      >
+        {uiConfig?.displayRawMarkdown ? (
+          <pre
+            className="whitespace-pre-wrap break-words p-4 max-w-full overflow-x-auto"
+            style={{ fontSize: getFontSize() - 2 }}
+          >
+            {stripImages(props.item.message.content)}
+          </pre>
+        ) : (
+          <StyledMarkdownPreview
+            showCodeBorder
+            source={stripImages(props.item.message.content)}
+          />
         )}
-      </div>
+      </ContentDiv>
+
+      {shouldRenderActions && (
+        <div className="flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 p-2 pb-0 cursor-default">
+          {truncatedEarly && (
+            <ButtonWithTooltip
+              tabIndex={-1}
+              text="Continue generation"
+              onClick={props.onContinueGeneration}
+            >
+              <BarsArrowDownIcon className="h-3.5 w-3.5 text-gray-500" />
+            </ButtonWithTooltip>
+          )}
+
+          {props.index !== 1 && (
+            <ButtonWithTooltip
+              text="Delete"
+              tabIndex={-1}
+              onClick={props.onDelete}
+            >
+              <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
+            </ButtonWithTooltip>
+          )}
+
+          <CopyButton
+            tabIndex={-1}
+            text={stripImages(props.item.message.content)}
+            clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
+          />
+
+          <ButtonWithTooltip
+            text="Helpful"
+            tabIndex={-1}
+            onClick={() => sendFeedback(true)}
+          >
+            <HandThumbUpIcon className="h-3.5 w-3.5 text-gray-500 mx-0.5" />
+          </ButtonWithTooltip>
+
+          <ButtonWithTooltip
+            text="Unhelpful"
+            tabIndex={-1}
+            onClick={() => sendFeedback(false)}
+          >
+            <HandThumbDownIcon className="h-3.5 w-3.5 text-gray-500" />
+          </ButtonWithTooltip>
+        </div>
+      )}
     </div>
   );
 }

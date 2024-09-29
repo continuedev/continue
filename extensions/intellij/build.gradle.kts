@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.changelog) // Gradle Changelog Plugin
     alias(libs.plugins.qodana) // Gradle Qodana Plugin
     alias(libs.plugins.kover) // Gradle Kover Plugin
+    kotlin("plugin.serialization") version "1.8.0"
 }
 
 group = properties("pluginGroup").get()
@@ -37,6 +38,9 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:2.3.7"){
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
+    implementation("com.posthog.java:posthog:1.+")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
+//    implementation("com.jetbrains.jsonSchema")
 }
 
 
@@ -82,6 +86,9 @@ tasks {
     prepareSandbox {
         from("../../binary/bin") {
             into("${intellij.pluginName.get()}/core/")
+        }
+        from("../vscode/node_modules/@vscode/ripgrep") {
+            into("${intellij.pluginName.get()}/ripgrep/")
         }
     }
 
@@ -142,6 +149,9 @@ tasks {
         // The pluginVersion is based on the SemVer (https://semver.org) and supports pre-release labels, like 2.1.7-alpha.3
         // Specify pre-release label to publish the plugin in a custom Release Channel automatically. Read more:
         // https://plugins.jetbrains.com/docs/intellij/deployment.html#specifying-a-release-channel
-        channels = properties("pluginVersion").map { listOf(it.split('-').getOrElse(1) { "default" }.split('.').first()) }
+        channels.set(listOf(environment("RELEASE_CHANNEL").getOrElse("eap")))
+
+        // We always hide the stable releases until a few days of EAP have proven them stable
+//        hidden = environment("RELEASE_CHANNEL").map { it == "stable" }.getOrElse(false)
     }
 }

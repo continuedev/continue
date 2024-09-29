@@ -13,7 +13,7 @@ import {
 } from "../../components";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
 import ModelCard from "../../components/modelSelection/ModelCard";
-import ModelProviderTag from "../../components/modelSelection/ModelProviderTag";
+import { ModelProviderTag } from "../../components/modelSelection/ModelProviderTag";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
@@ -140,7 +140,7 @@ function ConfigureProvider() {
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={d.label}
+                      placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}
@@ -170,7 +170,7 @@ function ConfigureProvider() {
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={d.label}
+                      placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}

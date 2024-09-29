@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   ContinueRcJson,
   FileType,
@@ -11,15 +12,26 @@ import {
   Range,
   RangeInFile,
   Thread,
+  ToastType,
 } from "../index.d.js";
 
+import { GetGhTokenArgs } from "../protocol/ide.js";
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
-  static workspaceDir = "/tmp/continue";
-
-  constructor() {
-    fs.mkdirSync(FileSystemIde.workspaceDir, { recursive: true });
+  constructor(private readonly workspaceDir: string) {}
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<void> {
+    return Promise.resolve();
+  }
+  pathSep(): Promise<string> {
+    return Promise.resolve(path.sep);
+  }
+  fileExists(filepath: string): Promise<boolean> {
+    return Promise.resolve(fs.existsSync(filepath));
   }
 
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
@@ -34,17 +46,25 @@ class FileSystemIde implements IDE {
       remoteConfigServerUrl: undefined,
       remoteConfigSyncPeriod: 60,
       userToken: "",
+      enableControlServerBeta: false,
+      pauseCodebaseIndexOnStart: false,
+      enableDebugLogs: false,
     };
   }
-  async getGitHubAuthToken(): Promise<string | undefined> {
+  async getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
     return undefined;
   }
-  getLastModified(files: string[]): Promise<{ [path: string]: number }> {
-    return new Promise((resolve) => {
-      resolve({
-        [files[0]]: 1234567890,
-      });
-    });
+  async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
+    const result: { [path: string]: number } = {};
+    for (const file of files) {
+      try {
+        const stats = fs.statSync(file);
+        result[file] = stats.mtimeMs;
+      } catch (error) {
+        console.error(`Error getting last modified time for ${file}:`, error);
+      }
+    }
+    return result;
   }
   getGitRootPath(dir: string): Promise<string | undefined> {
     return Promise.resolve(dir);
@@ -53,27 +73,29 @@ class FileSystemIde implements IDE {
     const all: [string, FileType][] = fs
       .readdirSync(dir, { withFileTypes: true })
       .map((dirent: any) => [
-        dirent.path,
+        dirent.name,
         dirent.isDirectory()
-          ? FileType.Directory
+          ? (2 as FileType.Directory)
           : dirent.isSymbolicLink()
-            ? FileType.SymbolicLink
-            : FileType.File,
+            ? (64 as FileType.SymbolicLink)
+            : (1 as FileType.File),
       ]);
     return Promise.resolve(all);
   }
-  infoPopup(message: string): Promise<void> {
-    return Promise.resolve();
-  }
-  errorPopup(message: string): Promise<void> {
-    return Promise.resolve();
-  }
+
   getRepoName(dir: string): Promise<string | undefined> {
     return Promise.resolve(undefined);
   }
 
-  getTags(artifactId: string): Promise<IndexTag[]> {
-    return Promise.resolve([]);
+  async getTags(artifactId: string): Promise<IndexTag[]> {
+    const directory = (await this.getWorkspaceDirs())[0];
+    return [
+      {
+        artifactId,
+        branch: await this.getBranch(directory),
+        directory,
+      },
+    ];
   }
 
   getIdeInfo(): Promise<IdeInfo> {
@@ -133,29 +155,8 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.readdir(FileSystemIde.workspaceDir, (err, files) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(files);
-      });
-    });
-  }
-
   getWorkspaceDirs(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.mkdtemp(FileSystemIde.workspaceDir, (err, folder) => {
-        if (err) {
-          reject(err);
-        }
-        resolve([folder]);
-      });
-    });
+    return Promise.resolve([this.workspaceDir]);
   }
 
   listFolders(): Promise<string[]> {

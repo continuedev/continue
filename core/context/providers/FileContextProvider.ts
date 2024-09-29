@@ -4,9 +4,14 @@ import {
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../../index.js";
-import { getBasename, groupByLastNPathParts, getUniqueFilePath } from "../../util/index.js";
-import { BaseContextProvider } from "../index.js";
+} from "../../";
+import { walkDir } from "../../indexing/walkDir";
+import {
+  getBasename,
+  getUniqueFilePath,
+  groupByLastNPathParts,
+} from "../../util/";
+import { BaseContextProvider } from "../";
 
 const MAX_SUBMENU_ITEMS = 10_000;
 
@@ -16,6 +21,7 @@ class FileContextProvider extends BaseContextProvider {
     displayTitle: "Files",
     description: "Type to search",
     type: "submenu",
+    dependsOnIndexing: true,
   };
 
   async getContextItems(
@@ -30,6 +36,10 @@ class FileContextProvider extends BaseContextProvider {
         name: query.split(/[\\/]/).pop() ?? query,
         description: query,
         content: `\`\`\`${query}\n${content}\n\`\`\``,
+        uri: {
+          type: "file",
+          value: query,
+        },
       },
     ];
   }
@@ -40,12 +50,12 @@ class FileContextProvider extends BaseContextProvider {
     const workspaceDirs = await args.ide.getWorkspaceDirs();
     const results = await Promise.all(
       workspaceDirs.map((dir) => {
-        return args.ide.listWorkspaceContents(dir);
+        return walkDir(dir, args.ide);
       }),
     );
-    const files = results.flat().slice(-MAX_SUBMENU_ITEMS);    
+    const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
     const fileGroups = groupByLastNPathParts(files, 2);
-    
+
     return files.map((file) => {
       return {
         id: file,

@@ -1,8 +1,11 @@
-import { PhotoIcon as OutlinePhotoIcon } from "@heroicons/react/24/outline";
-import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
+import {
+  AtSymbolIcon,
+  PhotoIcon,
+  SlashIcon,
+} from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -21,173 +24,148 @@ import {
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
+import ModelSelect from "../modelSelection/ModelSelect";
 
-const StyledDiv = styled.div<{ hidden?: boolean }>`
-  position: absolute;
-  display: flex;
-  gap: 4px;
-  right: 4px;
-  bottom: 4px;
-  width: calc(100% - 10px);
+const StyledDiv = styled.div<{ isHidden: boolean }>`
+  padding: 4px 0;
+  justify-content: space-between;
+  gap: 1px;
   background-color: ${vscInputBackground};
-
-  ${(props) => (props.hidden ? "display: none;" : "")}
-
   align-items: center;
-  z-index: 50;
-  font-size: ${getFontSize() - 4}px;
-
-  cursor: text;
+  font-size: ${getFontSize() - 2}px;
+  cursor: ${(props) => (props.isHidden ? "default" : "text")};
+  opacity: ${(props) => (props.isHidden ? 0 : 1)};
+  pointer-events: ${(props) => (props.isHidden ? "none" : "auto")};
+  user-select: none;
 
   & > * {
     flex: 0 0 auto;
   }
 `;
 
-const EnterButton = styled.div<{ offFocus: boolean }>`
+const HoverItem = styled.span<{ isActive?: boolean }>`
+  padding: 0 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  cursor: pointer;
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+`;
+
+const EnterButton = styled.div`
   padding: 2px 4px;
   display: flex;
   align-items: center;
-
-  background-color: ${(props) =>
-    props.offFocus ? undefined : lightGray + "33"};
+  background-color: ${lightGray}33;
   border-radius: ${defaultBorderRadius};
   color: ${vscForeground};
-
-  &:hover {
-    background-color: ${vscBadgeBackground};
-    color: ${vscBadgeForeground};
-  }
-
   cursor: pointer;
 `;
 
 interface InputToolbarProps {
   onEnter?: (modifiers: InputModifiers) => void;
-  usingCodebase?: boolean;
   onAddContextItem?: () => void;
-
+  onAddSlashCommand?: () => void;
   onClick?: () => void;
-
   onImageFileSelected?: (file: File) => void;
-
   hidden?: boolean;
-  showNoContext: boolean;
+  activeKey: string | null;
 }
 
 function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [fileSelectHovered, setFileSelectHovered] = useState(false);
-
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
 
+  const supportsImages =
+    defaultModel &&
+    modelSupportsImages(
+      defaultModel.provider,
+      defaultModel.model,
+      defaultModel.title,
+      defaultModel.capabilities,
+    );
+
   return (
-    <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
-      <span className="cursor-pointer mr-auto flex items-center">
-        <span
-          style={{
-            color: lightGray,
-          }}
-          onClick={(e) => {
-            props.onAddContextItem();
-          }}
-          className="hover:underline cursor-pointer"
-        >
-          + Add Context
-        </span>
-        {defaultModel &&
-          modelSupportsImages(
-            defaultModel.provider,
-            defaultModel.model,
-            defaultModel.title,
-          ) && (
-            <span
-              className="ml-1.5 mt-0.5"
-              onMouseLeave={() => setFileSelectHovered(false)}
-              onMouseEnter={() => setFileSelectHovered(true)}
-            >
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
-                onChange={(e) => {
-                  for (const file of e.target.files) {
-                    props.onImageFileSelected(file);
-                  }
-                }}
-              />
-              {fileSelectHovered ? (
-                <SolidPhotoIcon
-                  width="1.4em"
-                  height="1.4em"
-                  color={lightGray}
-                  onClick={(e) => {
-                    fileInputRef.current?.click();
-                  }}
-                />
-              ) : (
-                <OutlinePhotoIcon
-                  width="1.4em"
-                  height="1.4em"
-                  color={lightGray}
-                  onClick={(e) => {
-                    fileInputRef.current?.click();
-                  }}
-                />
-              )}
-            </span>
-          )}
-      </span>
-      {props.showNoContext ? (
-        <span
-          style={{
-            color: props.usingCodebase ? vscBadgeBackground : lightGray,
-            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-            borderRadius: defaultBorderRadius,
-            padding: "2px 4px",
-          }}
-        >
-          {getAltKeyLabel()} ⏎{" "}
-          {useActiveFile ? "No context" : "Use active file"}
-        </span>
-      ) : (
-        <span
-          style={{
-            color: props.usingCodebase ? vscBadgeBackground : lightGray,
-            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-            borderRadius: defaultBorderRadius,
-            padding: "2px 4px",
-          }}
-          onClick={(e) => {
-            props.onEnter({
-              useCodebase: true,
-              noContext: !useActiveFile,
-            });
-          }}
-          className={"hover:underline cursor-pointer float-right"}
-        >
-          {getMetaKeyLabel()} ⏎ Use codebase
-        </span>
-      )}
-      <EnterButton
-        offFocus={props.usingCodebase}
-        // disabled={
-        //   !active &&
-        //   (!(inputRef.current as any)?.value ||
-        //     typeof client === "undefined")
-        // }
-        onClick={(e) => {
-          props.onEnter({
-            useCodebase: isMetaEquivalentKeyPressed(e),
-            noContext: useActiveFile ? e.altKey : !e.altKey,
-          });
-        }}
+    <>
+      <StyledDiv
+        isHidden={props.hidden}
+        onClick={props.onClick}
+        id="input-toolbar"
+        className="hidden xs:flex "
       >
-        ⏎ Enter
-      </EnterButton>
-    </StyledDiv>
+        <div className="flex gap-2 items-center whitespace-nowrap justify-start">
+          <ModelSelect />
+          <div className="items-center hidden xs:flex gap-1 text-gray-400 transition-colors duration-200 -mb-1">
+            {supportsImages && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                  onChange={(e) => {
+                    for (const file of e.target.files) {
+                      props.onImageFileSelected(file);
+                    }
+                  }}
+                />
+                <HoverItem>
+                  <PhotoIcon
+                    className="h-4 w-4"
+                    onClick={(e) => {
+                      fileInputRef.current?.click();
+                    }}
+                  />
+                </HoverItem>
+              </>
+            )}
+
+            <HoverItem onClick={props.onAddContextItem}>
+              <AtSymbolIcon className="h-4 w-4" />
+            </HoverItem>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400 ">
+          <div className="hidden sm:flex transition-colors duration-200 hover:underline">
+            {props.activeKey === "Alt" ? (
+              <HoverItem className="underline">
+                {`${getAltKeyLabel()}⏎ 
+                  ${useActiveFile ? "No active file" : "Active file"}`}
+              </HoverItem>
+            ) : (
+              <HoverItem
+                className={props.activeKey === "Meta" && "underline"}
+                onClick={(e) =>
+                  props.onEnter({
+                    useCodebase: true,
+                    noContext: !useActiveFile,
+                  })
+                }
+              >
+                <span className="hidden md:inline">
+                  {getMetaKeyLabel()}⏎ Use @codebase
+                </span>
+
+                <span className="md:hidden">@codebase</span>
+              </HoverItem>
+            )}
+          </div>
+
+          <EnterButton
+            onClick={(e) => {
+              props.onEnter({
+                useCodebase: isMetaEquivalentKeyPressed(e),
+                noContext: useActiveFile ? e.altKey : !e.altKey,
+              });
+            }}
+          >
+            <span className="hidden md:inline">⏎ Enter</span>
+            <span className="md:hidden">⏎</span>
+          </EnterButton>
+        </div>
+      </StyledDiv>
+    </>
   );
 }
 

@@ -42,7 +42,7 @@ export function fetchwithRequestOptions(
 
   const timeout = (requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
 
-  const agentOptions = {
+  const agentOptions: {[key: string]: any} = {
     ca,
     rejectUnauthorized: requestOptions?.verifySsl,
     timeout,
@@ -50,6 +50,15 @@ export function fetchwithRequestOptions(
     keepAlive: true,
     keepAliveMsecs: timeout,
   };
+
+  // Handle ClientCertificateOptions
+  if (requestOptions?.clientCertificate){
+    agentOptions.cert = fs.readFileSync(requestOptions.clientCertificate.cert,"utf8");
+    agentOptions.key = fs.readFileSync(requestOptions.clientCertificate.key,"utf8");
+    if(requestOptions.clientCertificate.passphrase){
+      agentOptions.passphrase = requestOptions.clientCertificate.passphrase;
+    }
+  }
 
   const proxy = requestOptions?.proxy;
 

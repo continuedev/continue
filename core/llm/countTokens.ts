@@ -1,29 +1,61 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+import {
+  AsyncEncoder,
+  GPTAsyncEncoder,
+  LlamaAsyncEncoder,
+} from "./asyncEncoder.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
+import { stripImages } from "./images.js";
 import llamaTokenizer from "./llamaTokenizer.js";
-
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
 }
 
 class LlamaEncoding implements Encoding {
-  encode(
-    text: string,
-    allowedSpecial?: string[] | "all" | undefined,
-    disallowedSpecial?: string[] | "all" | undefined,
-  ): number[] {
+  encode(text: string): number[] {
     return llamaTokenizer.encode(text);
   }
+
   decode(tokens: number[]): string {
     return llamaTokenizer.decode(tokens);
   }
 }
 
+class NonWorkerAsyncEncoder implements AsyncEncoder {
+  constructor(private readonly encoding: Encoding) {}
+
+  async close(): Promise<void> {}
+
+  async encode(text: string): Promise<number[]> {
+    return this.encoding.encode(text);
+  }
+
+  async decode(tokens: number[]): Promise<string> {
+    return this.encoding.decode(tokens);
+  }
+}
+
 let gptEncoding: Encoding | null = null;
+const gptAsyncEncoder = new GPTAsyncEncoder();
 const llamaEncoding = new LlamaEncoding();
+const llamaAsyncEncoder = new LlamaAsyncEncoder();
+
+function asyncEncoderForModel(modelName: string): AsyncEncoder {
+  // Temporary due to issues packaging the worker files
+  if (process.env.IS_BINARY) {
+    const encoding = encodingForModel(modelName);
+    return new NonWorkerAsyncEncoder(encoding);
+  }
+
+  const modelType = autodetectTemplateType(modelName);
+  if (!modelType || modelType === "none") {
+    return gptAsyncEncoder;
+  }
+  return llamaAsyncEncoder;
+}
 
 function encodingForModel(modelName: string): Encoding {
   const modelType = autodetectTemplateType(modelName);
@@ -44,6 +76,24 @@ function countImageTokens(content: MessagePart): number {
     return 85;
   }
   throw new Error("Non-image content type");
+}
+
+async function countTokensAsync(
+  content: MessageContent,
+  // defaults to llama2 because the tokenizer tends to produce more tokens
+  modelName = "llama2",
+): Promise<number> {
+  const encoding = asyncEncoderForModel(modelName);
+  if (Array.isArray(content)) {
+    const promises = content.map(async (part) => {
+      if (part.type === "imageUrl") {
+        return countImageTokens(part);
+      }
+      return (await encoding.encode(part.text ?? "")).length;
+    });
+    return (await Promise.all(promises)).reduce((sum, val) => sum + val, 0);
+  }
+  return (await encoding.encode(content ?? "")).length;
 }
 
 function countTokens(
@@ -77,16 +127,6 @@ function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
     }
   }
   return flattened;
-}
-
-export function stripImages(content: MessageContent): string {
-  if (Array.isArray(content)) {
-    return content
-      .filter((part) => part.type === "text")
-      .map((part) => part.text)
-      .join("\n");
-  }
-  return content;
 }
 
 function countChatMessageTokens(
@@ -292,7 +332,9 @@ function compileChatMessages(
   systemMessage: string | undefined = undefined,
 ): ChatMessage[] {
   const msgsCopy = msgs
-    ? msgs.map((msg) => ({ ...msg })).filter((msg) => msg.content !== "")
+    ? msgs
+        .map((msg) => ({ ...msg }))
+        .filter((msg) => msg.content !== "" && msg.role !== "system")
     : [];
 
   if (prompt) {
@@ -303,10 +345,24 @@ function compileChatMessages(
     msgsCopy.push(promptMsg);
   }
 
-  if (systemMessage && systemMessage.trim() !== "") {
+  if (
+    (systemMessage && systemMessage.trim() !== "") ||
+    msgs?.[0].role === "system"
+  ) {
+    let content = "";
+    if (msgs?.[0].role === "system") {
+      content = stripImages(msgs?.[0].content);
+    }
+    if (systemMessage && systemMessage.trim() !== "") {
+      const shouldAddNewLines = content !== "";
+      if (shouldAddNewLines) {
+        content += "\n\n";
+      }
+      content += systemMessage;
+    }
     const systemChatMsg: ChatMessage = {
       role: "system",
-      content: systemMessage,
+      content,
     };
     // Insert as second to last
     // Later moved to top, but want second-priority to last user message
@@ -360,6 +416,7 @@ function compileChatMessages(
 export {
   compileChatMessages,
   countTokens,
+  countTokensAsync,
   pruneLinesFromBottom,
   pruneLinesFromTop,
   pruneRawPromptFromTop,

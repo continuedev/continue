@@ -1,11 +1,14 @@
+import { findLlmInfo } from "@continuedev/llm-info";
 import Handlebars from "handlebars";
 import {
+  CacheBehavior,
   ChatMessage,
   ChatMessageRole,
   CompletionOptions,
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
+  ModelCapability,
   ModelName,
   ModelProvider,
   PromptLog,
@@ -35,8 +38,8 @@ import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
-  stripImages,
 } from "./countTokens.js";
+import { stripImages } from "./images.js";
 import CompletionOptionsForModels from "./templates/options.js";
 
 export abstract class BaseLLM implements ILLM {
@@ -52,15 +55,21 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsImages(): boolean {
-    return modelSupportsImages(this.providerName, this.model, this.title);
+    return modelSupportsImages(
+      this.providerName,
+      this.model,
+      this.title,
+      this.capabilities,
+    );
   }
 
   supportsCompletions(): boolean {
-    if (this.providerName === "openai") {
+    if (["openai", "azure"].includes(this.providerName)) {
       if (
         this.apiBase?.includes("api.groq.com") ||
         this.apiBase?.includes("api.mistral.ai") ||
         this.apiBase?.includes(":1337") ||
+        this.apiBase?.includes("integrate.api.nvidia.com") ||
         this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
       ) {
         // Jan + Groq + Mistral don't support completions : (
@@ -68,7 +77,7 @@ export abstract class BaseLLM implements ILLM {
         return false;
       }
     }
-    if (["groq", "mistral"].includes(this.providerName)) {
+    if (["groq", "mistral", "deepseek"].includes(this.providerName)) {
       return false;
     }
     return true;
@@ -84,6 +93,7 @@ export abstract class BaseLLM implements ILLM {
   title?: string;
   systemMessage?: string;
   contextLength: number;
+  maxStopWords?: number | undefined;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
@@ -93,6 +103,8 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
+  capabilities?: ModelCapability;
 
   engine?: string;
   apiVersion?: string;
@@ -101,6 +113,14 @@ export abstract class BaseLLM implements ILLM {
   projectId?: string;
   accountId?: string;
   aiGatewaySlug?: string;
+
+  // For IBM watsonx only.
+  watsonxUrl?: string;
+  watsonxCreds?: string;
+  watsonxProjectId?: string;
+  watsonxStopToken?: string;
+  watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -114,18 +134,32 @@ export abstract class BaseLLM implements ILLM {
       ..._options,
     };
 
+    this.model = options.model;
+    // Use @continuedev/llm-info package to autodetect certain parameters
+    const llmInfo = findLlmInfo(this.model);
+
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+    this.contextLength =
+      options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+    this.maxStopWords = options.maxStopWords ?? this.maxStopWords;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
-      maxTokens: options.completionOptions?.maxTokens ?? DEFAULT_MAX_TOKENS,
+      maxTokens:
+        options.completionOptions?.maxTokens ??
+        (llmInfo?.maxCompletionTokens
+          ? Math.min(
+              llmInfo.maxCompletionTokens,
+              // Even if the model has a large maxTokens, we don't want to use that every time,
+              // because it takes away from the context length
+              this.contextLength / 4,
+            )
+          : DEFAULT_MAX_TOKENS),
     };
     if (CompletionOptionsForModels[options.model as ModelName]) {
       this.completionOptions = mergeJson(
@@ -150,10 +184,21 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+    this.cacheBehavior = options.cacheBehavior;
+
+    // for watsonx only
+    this.watsonxUrl = options.watsonxUrl;
+    this.watsonxCreds = options.watsonxCreds;
+    this.watsonxProjectId = options.watsonxProjectId;
+    this.watsonxStopToken = options.watsonxStopToken;
+    this.watsonxApiVersion = options.watsonxApiVersion;
+    this.watsonxFullUrl = options.watsonxFullUrl;
+
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
     }
     this.accountId = options.accountId;
+    this.capabilities = options.capabilities;
 
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;
@@ -216,16 +261,29 @@ export abstract class BaseLLM implements ILLM {
     prompt: string,
     completionOptions: CompletionOptions,
   ): string {
-    const dict = { contextLength: this.contextLength, ...completionOptions };
-    const settings = Object.entries(dict)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join("\n");
-    return `Settings:
-${settings}
+    const completionOptionsLog = JSON.stringify(
+      {
+        contextLength: this.contextLength,
+        ...completionOptions,
+      },
+      null,
+      2,
+    );
 
-############################################
+    let requestOptionsLog = "";
+    if (this.requestOptions) {
+      requestOptionsLog = JSON.stringify(this.requestOptions, null, 2);
+    }
 
-${prompt}`;
+    return (
+      "##### Completion options #####\n" +
+      completionOptionsLog +
+      (requestOptionsLog
+        ? "\n\n##### Request options #####\n" + requestOptionsLog
+        : "") +
+      "\n\n##### Prompt #####\n" +
+      prompt
+    );
   }
 
   private _logTokensGenerated(
@@ -235,18 +293,25 @@ ${prompt}`;
   ) {
     let promptTokens = this.countTokens(prompt);
     let generatedTokens = this.countTokens(completion);
-    Telemetry.capture("tokens_generated", {
-      model: model,
-      provider: this.providerName,
-      promptTokens: promptTokens,
-      generatedTokens: generatedTokens,
-    });
-    DevDataSqliteDb.logTokensGenerated(
+
+    void Telemetry.capture(
+      "tokens_generated",
+      {
+        model: model,
+        provider: this.providerName,
+        promptTokens: promptTokens,
+        generatedTokens: generatedTokens,
+      },
+      true,
+    );
+
+    void DevDataSqliteDb.logTokensGenerated(
       model,
       this.providerName,
       promptTokens,
       generatedTokens,
     );
+
     logDevData("tokens_generated", {
       model: model,
       provider: this.providerName,
@@ -285,6 +350,20 @@ ${prompt}`;
           ) {
             text =
               "You may need to add pre-paid credits before using the OpenAI API.";
+          } else if (
+            resp.status === 401 &&
+            (resp.url.includes("api.mistral.ai") ||
+              resp.url.includes("codestral.mistral.ai"))
+          ) {
+            if (resp.url.includes("codestral.mistral.ai")) {
+              throw new Error(
+                "You are using a Mistral API key, which is not compatible with the Codestral API. Please either obtain a Codestral API key, or use the Mistral API by setting 'apiBase' to 'https://api.mistral.ai/v1' in config.json.",
+              );
+            } else {
+              throw new Error(
+                "You are using a Codestral API key, which is not compatible with the Mistral API. Please either obtain a Mistral API key, or use the the Codestral API by setting 'apiBase' to 'https://codestral.mistral.ai/v1' in config.json.",
+              );
+            }
           }
           throw new Error(
             `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
@@ -294,8 +373,14 @@ ${prompt}`;
         return resp;
       } catch (e: any) {
         // Errors to ignore
-        if (!e.message.includes("/api/show")) {
-          console.warn(
+        if (e.message.includes("/api/tags")) {
+          throw new Error(`Error fetching tags: ${e.message}`);
+        } else if (e.message.includes("/api/show")) {
+          throw new Error(
+            `HTTP ${e.response.status} ${e.response.statusText} from ${e.response.url}\n\n${e.response.body}`,
+          );
+        } else {
+          console.debug(
             `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
           );
 
@@ -344,7 +429,7 @@ ${prompt}`;
     return formatted;
   }
 
-  async *_streamFim(
+  protected async *_streamFim(
     prefix: string,
     suffix: string,
     options: CompletionOptions,
@@ -437,7 +522,12 @@ ${prompt}`;
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
 
-    return { prompt, completion, completionOptions };
+    return {
+      modelTitle: this.title ?? completionOptions.model,
+      prompt,
+      completion,
+      completionOptions,
+    };
   }
 
   async complete(_prompt: string, options: LLMFullCompletionOptions = {}) {
@@ -467,6 +557,7 @@ ${prompt}`;
     const completion = await this._complete(prompt, completionOptions);
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
+
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
@@ -529,11 +620,13 @@ ${prompt}`;
     }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
+
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
 
     return {
+      modelTitle: this.title ?? completionOptions.model,
       prompt,
       completion,
       completionOptions,

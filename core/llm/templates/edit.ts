@@ -25,9 +25,11 @@ const gptEditPrompt: PromptTemplate = (_, otherData) => {
 ${otherData.prefix}[BLANK]${otherData.codeToEdit}${otherData.suffix}
 \`\`\`
 
-Given the user's request: "${otherData.userInput}"
+Above is the file of code that the user is currently editing in. Their cursor is located at the "[BLANK]". They have requested that you fill in the "[BLANK]" with code that satisfies the following request:
 
-Here is the code that should fill in the [BLANK]:`;
+"${otherData.userInput}"
+
+Please generate this code. Your output will be only the code that should replace the "[BLANK]", without repeating any of the prefix or suffix, without any natural language explanation, and without messing up indentation. Here is the code that will replace the "[BLANK]":`;
   }
 
   const paragraphs = [
@@ -95,7 +97,7 @@ ${otherData.codeToEdit}
 ${suffixTag}
 \`\`\`
 
-Please rewrite the entire code block above in order to satisfy the following request: "${otherData.userInput}".${suffixExplanation}`,
+Please rewrite the entire code block above in order to satisfy the following request: "${otherData.userInput}". You should rewrite the entire code block without leaving placeholders, even if the code is the same as before.${suffixExplanation}`,
       },
       {
         role: "assistant",
@@ -115,7 +117,7 @@ ${otherData.codeToEdit}
 ${suffixTag}
 \`\`\`
 
-Please rewrite the entire code block above, editing the portion below "${START_TAG}" in order to satisfy the following request: "${otherData.userInput}".${suffixExplanation}
+Please rewrite the entire code block above, editing the portion below "${START_TAG}" in order to satisfy the following request: "${otherData.userInput}". You should rewrite the entire code block without leaving placeholders, even if the code is the same as before.${suffixExplanation}
 `,
     },
     {

@@ -2,6 +2,7 @@ import type {
   ContinueRcJson,
   DiffLine,
   FileType,
+  IDE,
   IdeInfo,
   IdeSettings,
   IndexTag,
@@ -10,15 +11,16 @@ import type {
   Range,
   RangeInFile,
   Thread,
-} from "..";
+} from "../";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
+
+export interface GetGhTokenArgs {
+  force?: boolean;
+}
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
   getIdeInfo: [undefined, IdeInfo];
-  listWorkspaceContents: [
-    { directory?: string; useGitIgnore?: boolean },
-    string[],
-  ];
   getWorkspaceDirs: [undefined, string[]];
   listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
@@ -29,6 +31,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getSearchResults: [{ query: string }, string];
   subprocess: [{ command: string }, [string, string]];
   saveFile: [{ filepath: string }, void];
+  fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
   showDiff: [
     { filepath: string; newContents: string; stepIndex: number },
@@ -69,13 +72,29 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getBranch: [{ dir: string }, string];
   getRepoName: [{ dir: string }, string | undefined];
 
-  errorPopup: [{ message: string }, void];
-  infoPopup: [{ message: string }, void];
+  showToast: [
+    Parameters<IDE["showToast"]>,
+    Awaited<ReturnType<IDE["showToast"]>>,
+  ];
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
   getLastModified: [{ files: string[] }, { [path: string]: number }];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
-  getGitHubAuthToken: [undefined, string | undefined];
+  getGitHubAuthToken: [GetGhTokenArgs, string | undefined];
+  getControlPlaneSessionInfo: [
+    { silent: boolean },
+    ControlPlaneSessionInfo | undefined,
+  ];
+  logoutOfControlPlane: [undefined, void];
+  pathSep: [undefined, string];
+};
+
+export type ToWebviewOrCoreFromIdeProtocol = {
+  didChangeActiveTextEditor: [{ filepath: string }, void];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
 };
