@@ -11,7 +11,10 @@ import type {
   RangeInFile,
   Thread,
 } from "../index.js";
-import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
+import {
+  GetGhTokenArgs,
+  ToIdeFromWebviewOrCoreProtocol,
+} from "../protocol/ide.js";
 import { FromIdeProtocol } from "../protocol/index.js";
 
 export class MessageIde implements IDE {
@@ -25,6 +28,7 @@ export class MessageIde implements IDE {
       callback: (data: FromIdeProtocol[T][0]) => FromIdeProtocol[T][1],
     ) => void,
   ) {}
+
   pathSep(): Promise<string> {
     return this.request("pathSep", undefined);
   }
@@ -41,8 +45,8 @@ export class MessageIde implements IDE {
   getIdeSettings(): Promise<IdeSettings> {
     return this.request("getIdeSettings", undefined);
   }
-  getGitHubAuthToken(): Promise<string | undefined> {
-    return this.request("getGitHubAuthToken", undefined);
+  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined> {
+    return this.request("getGitHubAuthToken", args);
   }
   getLastModified(files: string[]): Promise<{ [path: string]: number }> {
     return this.request("getLastModified", { files });
@@ -54,13 +58,9 @@ export class MessageIde implements IDE {
     return this.request("listDir", { dir });
   }
 
-  infoPopup(message: string): Promise<void> {
-    return this.request("infoPopup", { message });
-  }
-
-  errorPopup(message: string): Promise<void> {
-    return this.request("errorPopup", { message });
-  }
+  showToast: IDE["showToast"] = (...params) => {
+    return this.request("showToast", params);
+  };
 
   getRepoName(dir: string): Promise<string | undefined> {
     return this.request("getRepoName", { dir });

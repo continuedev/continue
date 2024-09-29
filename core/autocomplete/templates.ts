@@ -33,10 +33,29 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
       "<fim_prefix>",
       "<fim_suffix>",
       "<fim_middle>",
-      "<|endoftext|>",
       "<file_sep>",
+      "<|endoftext|>",
       "</fim_middle>",
       "</code>",
+    ],
+  },
+};
+
+// https://github.com/QwenLM/Qwen2.5-Coder?tab=readme-ov-file#3-file-level-code-completion-fill-in-the-middle
+const qwenCoderFimTemplate: AutocompleteTemplate = {
+  template:
+    "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  completionOptions: {
+    stop: [
+      "<|endoftext|>",
+      "<|fim_prefix|>",
+      "<|fim_middle|>",
+      "<|fim_suffix|>",
+      "<|fim_pad|>",
+      "<|repo_name|>",
+      "<|file_sep|>",
+      "<|im_start|>",
+      "<|im_end|>",
     ],
   },
 };
@@ -70,7 +89,9 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
       .join("\n\n");
     return [
-      `${otherFiles}\n\n+++++ ${relativePaths[relativePaths.length - 1]}\n${prefix}`,
+      `${otherFiles}\n\n+++++ ${
+        relativePaths[relativePaths.length - 1]
+      }\n${prefix}`,
       suffix,
     ];
   },
@@ -132,8 +153,8 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
       "<fim_prefix>",
       "<fim_suffix>",
       "<fim_middle>",
-      "<|endoftext|>",
       "<file_sep>",
+      "<|endoftext|>",
     ],
   },
 };
@@ -172,8 +193,10 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       ...snippets.map((snippet) => snippet.filepath),
       filepath,
     ]);
-    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]}\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
-    if (snippets.length == 0) {
+    const baseTemplate = `###PATH:${
+      relativePaths[relativePaths.length - 1]
+    }\n###LANGUAGE:${language}\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
+    if (snippets.length === 0) {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
     const references = `###REFERENCE:\n${snippets
@@ -313,6 +336,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
   // if (lowerCaseModel.includes("starcoder2")) {
   //   return starcoder2FimTemplate;
   // }
+
+  if (lowerCaseModel.includes("qwen") && lowerCaseModel.includes("coder")) {
+    return qwenCoderFimTemplate;
+  }
 
   if (
     lowerCaseModel.includes("starcoder") ||

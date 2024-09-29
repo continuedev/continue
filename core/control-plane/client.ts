@@ -18,10 +18,15 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
+export const DEFAULT_CONTROL_PLANE_PROXY_URL =
+  process.env.CONTROL_PLANE_ENV === "local"
+    ? "http://localhost:3001/"
+    : "https://control-plane-proxy.continue.dev/";
+
 export const CONTROL_PLANE_URL =
   process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3001"
-    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app";
+    ? "http://localhost:3001/"
+    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/";
 
 export class ControlPlaneClient {
   private static URL = CONTROL_PLANE_URL;
@@ -50,7 +55,8 @@ export class ControlPlaneClient {
     if (!accessToken) {
       throw new Error("No access token");
     }
-    const resp = await fetch(new URL(path, ControlPlaneClient.URL).toString(), {
+    const url = new URL(path, ControlPlaneClient.URL).toString();
+    const resp = await fetch(url, {
       ...init,
       headers: {
         ...init.headers,
@@ -74,7 +80,7 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request(`/workspaces`, {
+      const resp = await this.request("workspaces", {
         method: "GET",
       });
       return (await resp.json()) as any;
@@ -89,7 +95,7 @@ export class ControlPlaneClient {
       throw new Error("No user id");
     }
 
-    const resp = await this.request(`/workspaces/${workspaceId}`, {
+    const resp = await this.request(`workspaces/${workspaceId}`, {
       method: "GET",
     });
     return ((await resp.json()) as any).settings;

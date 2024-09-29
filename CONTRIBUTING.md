@@ -68,11 +68,18 @@ You can run the documentation server locally using either of the following metho
 
 #### Method 1: NPM Script
 
-1. Open your terminal and navigate to the root directory of the project.
+1. Open your terminal and navigate to the `docs` subdirectory of the project.  The `docusaurus.config.js` file you'll see there is a sign you're in the right place.
 
-2. Run the following command to start the documentation server:
+2. Run the following command to install the necessary dependencies for the documentation server:
+
    ```bash
-   npm run start --prefix docs
+   npm install
+   ```
+
+3. Run the following command to start the documentation server:
+
+   ```bash
+   npm run start
    ```
 
 #### Method 2: VS Code Task
@@ -116,7 +123,7 @@ nvm use
 2. Start debugging:
 
    1. Switch to Run and Debug view
-   2. Select `Extension (VS Code)` from drop down
+   2. Select `Launch extension` from drop down
    3. Hit play button
    4. This will start the extension in debug mode and open a new VS Code window with it installed
       1. The new VS Code window with the extension is referred to as the _Host VS Code_
@@ -151,7 +158,7 @@ Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](h
 
 ##### Debugging
 
-Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `binary` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
+Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `binary` directory. The JetBrains extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
 
 For the sake of rapid development, it is also possible to configure this communication to happen over local TCP sockets:
 
@@ -161,6 +168,10 @@ For the sake of rapid development, it is also possible to configure this communi
 4. You can now set breakpoints in any of the TypeScript files in VS Code. If you make changes to the code, restart the "Core Binary" debug configuration and reload the _Host IntelliJ_ window.
 
 If you make changes to Kotlin code, they can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes".
+
+### Our Git Workflow
+
+We keep two permanent branches: `main` and `dev`. All contributions should be made as pull requests to the `dev` branch. When we are ready to create a "pre-release" version, we create a tag on the `dev` branch, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will merge its tag into the `main` branch. Creating a tag on the `main` branch will then trigger a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question.
 
 ### Formatting
 
@@ -206,9 +217,9 @@ Continue has support for more than a dozen different LLM "providers", making it 
 - At least one of `_streamComplete` or `_streamChat` - This is the function that makes the request to the API and returns the streamed response. You only need to implement one because Continue can automatically convert between "chat" and "raw completion".
 
 2. Add your provider to the `LLMs` array in [core/llm/llms/index.ts](./core/llm/llms/index.ts).
-3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array in [core/llm/index.ts](./core/llm/index.ts).
+3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array in [core/llm/autodetect.ts](./core/llm/autodetect.ts).
 4. Add the necessary JSON Schema types to [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what options are available for your provider when they are editing `config.json`.
-5. Add a documentation page for your provider in [`docs/docs/reference/Model Providers`](./docs/docs/reference/Model%20Providers). This should show an example of configuring your provider in `config.json` and explain what options are available.
+5. Add a documentation page for your provider in [`docs/docs/customize/model-providers`](./docs/docs/customize/model-providers). This should show an example of configuring your provider in `config.json` and explain what options are available.
 
 ### Adding Models
 
@@ -233,7 +244,7 @@ Continue consists of 2 parts that are split so that it can be extended to work i
 
 1. **Continue GUI** - The Continue GUI is a React application that gives the user control over Continue. It displays the current chat history, allows the user to ask questions, invoke slash commands, and use context providers. The GUI also handles most state and holds as much of the logic as possible so that it can be reused between IDEs.
 
-2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/debugPanel.ts).
+2. **Continue Extension** - The Continue Extension is a plugin for the IDE which implements the [IDE Interface](./core/index.d.ts#L229). This allows the GUI to request information from or actions to be taken within the IDE. This same interface is used regardless of IDE. The first Continue extensions we have built are for VS Code and JetBrains, but we plan to build clients for other IDEs in the future. The IDE Client must 1. implement IDE Interface, as is done [here](./extensions/vscode/src/ideProtocol.ts) for VS Code and 2. display the Continue GUI in a sidebar, like [here](./extensions/vscode/src/ContinueGUIWebviewViewProvider.ts).
 
 ### Continue VS Code Extension
 

@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-import type { AutocompleteInput } from "../autocomplete/completionProvider.js";
-import { ProfileDescription } from "../config/ConfigHandler.js";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -11,17 +8,27 @@ import type {
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
+  ModelRoles,
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
-} from "../index.js";
+} from "../";
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
   content: T;
 }>;
+
+export type OnboardingModes =
+  | "Local"
+  | "Best"
+  | "Custom"
+  | "Quickstart"
+  | "LocalAfterFreeTrial";
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -44,7 +51,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
-    { model: SerializedContinueConfig["models"][number] },
+    {
+      model: SerializedContinueConfig["models"][number];
+      role?: keyof ModelRoles;
+    },
     void,
   ];
   "config/newPromptFile": [undefined, void];
@@ -129,18 +139,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined,
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
+  "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined | string, void];
+  "index/forceReIndex": [
+    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    void,
+  ];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {
-      mode:
-        | "local"
-        | "apiKeys"
-        | "custom"
-        | "freeTrial"
-        | "localAfterFreeTrial"
-        | "bestExperience";
+      mode: OnboardingModes;
     },
     void,
   ];

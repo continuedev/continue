@@ -6,6 +6,24 @@
   "compounds": [],
   "configurations": [
     {
+      "name": "Launch extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/extensions/vscode",
+      "args": [
+        // Pass a directory to manually test in
+        "${workspaceFolder}/manual-testing-sandbox",
+        "${workspaceFolder}/manual-testing-sandbox/test.js",
+        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
+      ],
+      "pauseForSourceMap": false,
+      "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],
+      "preLaunchTask": "vscode-extension:build",
+      "env": {
+        // "CONTROL_PLANE_ENV": "local"
+      }
+    },
+    {
       "type": "node",
       "request": "launch",
       "name": "Core Binary",
@@ -52,30 +70,9 @@
       "sourceMaps": true
       // "preLaunchTask": "gui:dev"
     },
-    {
-      "name": "Extension (VSCode)",
-      "type": "extensionHost",
-      "request": "launch",
-      "cwd": "${workspaceFolder}/extensions/vscode",
-      "args": [
-        // Pass a directory to manually test in
-        "${workspaceFolder}/extensions/vscode",
-        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/test.js",
-        "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
-      ],
-      "pauseForSourceMap": false,
-      "outFiles": [
-        "${workspaceFolder}/extensions/vscode/out/extension.js",
-        "/Users/natesesti/.continue/config.ts"
-      ],
-      "preLaunchTask": "vscode-extension:build",
-      "env": {
-        // "CONTROL_PLANE_ENV": "local"
-      }
-    },
     // Has to be run after starting the server (separately or using the compound configuration)
     {
-      "name": "Tests (VSCode)",
+      "name": "Run tests",
       "type": "extensionHost",
       "request": "launch",
       "cwd": "${workspaceFolder}/extensions/vscode",
@@ -139,5 +136,24 @@
         "NODE_OPTIONS": "--experimental-vm-modules"
       }
     }
+    // {
+    //   "name": "[openai-adapters] Jest Test Debugger, Current Open File",
+    //   "type": "node",
+    //   "request": "launch",
+    //   "runtimeArgs": [
+    //     "--inspect-brk",
+    //     "${workspaceRoot}/packages/openai-adapters/node_modules/jest/bin/jest.js",
+    //     "--runInBand",
+    //     "--config",
+    //     "${workspaceRoot}/packages/openai-adapters/jest.config.mjs",
+    //     "${relativeFile}"
+    //   ],
+    //   "cwd": "${workspaceRoot}/packages/openai-adapters",
+    //   "console": "integratedTerminal",
+    //   "internalConsoleOptions": "neverOpen",
+    //   "env": {
+    //     "NODE_OPTIONS": "--experimental-vm-modules"
+    //   }
+    // }
   ]
 }

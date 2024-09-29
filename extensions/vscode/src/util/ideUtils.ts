@@ -18,6 +18,7 @@ import {
 } from "./vscode";
 
 import _ from "lodash";
+import { EXTENSION_NAME } from "./constants";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
@@ -135,9 +136,34 @@ export class VsCodeIdeUtils {
     );
   }
 
-  openFile(filepath: string, range?: vscode.Range) {
+  private async resolveAbsFilepathInWorkspace(
+    filepath: string,
+  ): Promise<string> {
+    // If the filepath is already absolute, return it as is
+    if (this.path.isAbsolute(filepath)) {
+      return filepath;
+    }
+
+    // Try to resolve for each workspace directory
+    const workspaceDirectories = this.getWorkspaceDirectories();
+    for (const dir of workspaceDirectories) {
+      const resolvedPath = this.path.resolve(dir, filepath);
+      if (await this.fileExists(resolvedPath)) {
+        return resolvedPath;
+      }
+    }
+
+    return filepath;
+  }
+
+  async openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(
+      await this.resolveAbsFilepathInWorkspace(filepath),
+      range,
+      vscode.ViewColumn.One,
+      false,
+    );
   }
 
   async fileExists(filepath: string): Promise<boolean> {
@@ -170,7 +196,7 @@ export class VsCodeIdeUtils {
 
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
-    let secret = vscode.workspace.getConfiguration("continue").get(key);
+    let secret = vscode.workspace.getConfiguration(EXTENSION_NAME).get(key);
     if (typeof secret !== "undefined" && secret !== null) {
       return secret;
     }
@@ -183,7 +209,7 @@ export class VsCodeIdeUtils {
 
     // Add secret to VS Code settings
     vscode.workspace
-      .getConfiguration("continue")
+      .getConfiguration(EXTENSION_NAME)
       .update(key, secret, vscode.ConfigurationTarget.Global);
 
     return secret;

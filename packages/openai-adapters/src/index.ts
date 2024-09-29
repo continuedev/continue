@@ -53,6 +53,11 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
         ...config,
         apiBase: "https://api.groq.com/openai/v1/",
       });
+    case "nvidia":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://integrate.api.nvidia.com/v1/",
+      });
     case "fireworks":
       return new OpenAIApi({
         ...config,
@@ -62,6 +67,11 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
       return new OpenAIApi({
         ...config,
         apiBase: "https://api.together.xyz/v1/",
+      });
+    case "sambanova":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://api.sambanova.ai/v1/",
       });
     default:
       throw new Error(`Unsupported LLM API format: ${config.provider}`);

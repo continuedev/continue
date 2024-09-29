@@ -9,8 +9,8 @@
 
 ## Screenshots
 
-[ "For visual changes, include screenshots." ]
+[ For visual changes, include screenshots. ]
 
 ## Testing
 
-[ For new or modified features, provide testing instructions. ]
+[ For new or modified features, provide step-by-step testing instructions to validate the intended behavior of the change. ]

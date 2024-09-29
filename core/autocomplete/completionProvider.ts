@@ -37,7 +37,7 @@ import {
 import { isOnlyPunctuationAndWhitespace } from "./filter.js";
 import { AutocompleteLanguageInfo } from "./languages.js";
 import {
-  avoidPathLine,
+  avoidPathLineAndEmptyComments,
   noTopLevelKeywordsMidline,
   skipPrefixes,
   stopAtLines,
@@ -204,7 +204,7 @@ export class CompletionProvider {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       logDevData("autocomplete", outcome);
-      Telemetry.capture(
+      void Telemetry.capture(
         "autocomplete",
         {
           accepted: outcome.accepted,
@@ -311,7 +311,14 @@ export class CompletionProvider {
 
       // Get completion
       const llm = await this.getLlm();
+
       if (!llm) {
+        return undefined;
+      }
+
+      // Ignore empty API keys for Mistral since we currently write
+      // a template provider without one during onboarding
+      if (llm.providerName === "mistral" && llm.apiKey === "") {
         return undefined;
       }
 
@@ -371,7 +378,7 @@ export class CompletionProvider {
       outcome.accepted = false;
       logDevData("autocomplete", outcome);
       const { prompt, completion, ...restOfOutcome } = outcome;
-      Telemetry.capture(
+      void Telemetry.capture(
         "autocomplete",
         {
           ...restOfOutcome,
@@ -478,9 +485,9 @@ export class CompletionProvider {
       const lines = fullPrefix.split("\n");
       fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
         lang.singleLineComment
-      } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
-        lines[lines.length - 1]
-      }`;
+      } ${input.injectDetails
+        .split("\n")
+        .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
     }
 
     const fullSuffix = getRangeInString(fileContents, {
@@ -581,7 +588,10 @@ export class CompletionProvider {
         prefix = `${formattedSnippets}\n\n${prefix}`;
       } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
         // If it's an empty file, include the file name as a comment
-        prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
+        prefix = `${lang.singleLineComment} ${getLastNPathParts(
+          filepath,
+          2,
+        )}\n${prefix}`;
       }
 
       prompt = compiledTemplate({
@@ -689,7 +699,10 @@ export class CompletionProvider {
       let lineGenerator = streamLines(charGenerator);
       lineGenerator = stopAtLines(lineGenerator, fullStop);
       lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-      lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+      lineGenerator = avoidPathLineAndEmptyComments(
+        lineGenerator,
+        lang.singleLineComment,
+      );
       lineGenerator = skipPrefixes(lineGenerator);
       lineGenerator = noTopLevelKeywordsMidline(
         lineGenerator,

@@ -10,8 +10,13 @@ import {
   IdeSettings,
   ILLM,
 } from "../index.js";
+import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
 import { finalToBrowserConfig } from "./load.js";
+import {
+  LOCAL_ONBOARDING_CHAT_MODEL,
+  ONBOARDING_LOCAL_MODEL_TITLE,
+} from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
@@ -51,12 +56,12 @@ class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  reloadConfig(): Promise<ContinueConfig> {
+  async reloadConfig(): Promise<ContinueConfig> {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.pendingConfigPromise = undefined;
 
-    return this.profileLoader.doLoadConfig();
+    return await this.profileLoader.doLoadConfig();
   }
 
   async loadConfig(
@@ -225,7 +230,9 @@ export class ConfigHandler {
     this.controlPlaneClient = new ControlPlaneClient(
       Promise.resolve(sessionInfo),
     );
-    this.fetchControlPlaneProfiles();
+    this.fetchControlPlaneProfiles().catch((e) => {
+      console.error("Failed to fetch control plane profiles: ", e);
+    });
   }
 
   private profilesListeners: ((profiles: ProfileDescription[]) => void)[] = [];
@@ -258,6 +265,7 @@ export class ConfigHandler {
     const newConfig = await this.currentProfile.reloadConfig();
     this.inactiveProfiles.forEach((profile) => profile.clearConfig());
     this.notifyConfigListeners(newConfig);
+    return newConfig;
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
@@ -276,9 +284,18 @@ export class ConfigHandler {
 
   async llmFromTitle(title?: string): Promise<ILLM> {
     const config = await this.loadConfig();
-    const model =
-      config.models.find((m) => m.title === title) || config.models[0];
+    const model = config.models.find((m) => m.title === title);
     if (!model) {
+      if (title === ONBOARDING_LOCAL_MODEL_TITLE) {
+        // Special case, make calls to Ollama before we have it in the config
+        const ollama = new Ollama({
+          model: LOCAL_ONBOARDING_CHAT_MODEL,
+        });
+        return ollama;
+      } else if (config.models.length > 0) {
+        return config.models[0];
+      }
+
       throw new Error("No model found");
     }
 

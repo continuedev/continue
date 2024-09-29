@@ -1,5 +1,7 @@
 import { Chunk, ChunkWithoutID } from "../../index.js";
-import { countTokens, countTokensAsync } from "../../llm/countTokens.js";
+import { countTokensAsync } from "../../llm/countTokens.js";
+import { extractMinimalStackTraceInfo } from "../../util/extractMinimalStackTraceInfo.js";
+import { Telemetry } from "../../util/posthog.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
 import { basicChunker } from "./basic.js";
 import { codeChunker } from "./code.js";
@@ -28,8 +30,11 @@ async function* chunkDocumentWithoutId(
         yield chunk;
       }
       return;
-    } catch (e) {
-      // console.error(`Failed to parse ${filepath}: `, e);
+    } catch (e: any) {
+      Telemetry.capture("code_chunker_error", {
+        fileExtension: ext,
+        stack: extractMinimalStackTraceInfo(e.stack),
+      });
       // falls back to basicChunker
     }
   }
@@ -50,22 +55,24 @@ export async function* chunkDocument({
     contents,
     maxChunkSize,
   )) {
-    chunkPromises.push(new Promise(async (resolve) => {
-      if (await countTokensAsync(chunkWithoutId.content) > maxChunkSize) {
-        console.warn(
-          `Chunk with more than ${maxChunkSize} tokens constructed: `,
+    chunkPromises.push(
+      new Promise(async (resolve) => {
+        if ((await countTokensAsync(chunkWithoutId.content)) > maxChunkSize) {
+          // console.debug(
+          //   `Chunk with more than ${maxChunkSize} tokens constructed: `,
+          //   filepath,
+          //   countTokens(chunkWithoutId.content),
+          // );
+          return resolve(undefined);
+        }
+        resolve({
+          ...chunkWithoutId,
+          digest,
+          index,
           filepath,
-          countTokens(chunkWithoutId.content),
-        );
-        return resolve(undefined);
-      }
-      resolve({
-        ...chunkWithoutId,
-        digest,
-        index,
-        filepath,
-      });
-    }));
+        });
+      }),
+    );
     index++;
   }
   for await (const chunk of chunkPromises) {
@@ -74,4 +81,21 @@ export async function* chunkDocument({
     }
     yield chunk;
   }
+}
+
+export function shouldChunk(
+  pathSep: string,
+  filepath: string,
+  contents: string,
+): boolean {
+  if (contents.length > 1000000) {
+    // if a file has more than 1m characters then skip it
+    return false;
+  }
+  if (contents.length === 0) {
+    return false;
+  }
+  const basename = filepath.split(pathSep).pop();
+  // files without extensions are often binary files, skip it if so
+  return basename?.includes(".") ?? false;
 }

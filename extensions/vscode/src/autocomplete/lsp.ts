@@ -59,13 +59,15 @@ export async function executeGotoProvider(
     if (gotoCache.size >= MAX_CACHE_SIZE) {
       // Remove the oldest item from the cache
       const oldestKey = gotoCache.keys().next().value;
-      gotoCache.delete(oldestKey);
+      if (oldestKey) {
+        gotoCache.delete(oldestKey);
+      }
     }
     gotoCache.set(cacheKey, results);
 
     return results;
   } catch (e) {
-    console.warn(`Error executing ${name}:`, e);
+    console.warn(`Error executing ${input.name}:`, e);
     return [];
   }
 }

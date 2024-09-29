@@ -1,6 +1,6 @@
 import { ILLM, ModelProvider } from "core";
-import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { InputDescriptor } from "./providers";
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
 // You would set options to the field that should be changed for that option in the params field of ModelPackage
@@ -67,6 +67,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "sambanova",
     ],
     isOpenSource: true,
   },
@@ -454,7 +455,7 @@ export const models: { [key: string]: ModelPackage } = {
   codestral: {
     title: "Codestral",
     description:
-      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion. Trained on more than 80 programming languages, Codestral demonstrates proficiency in both widely-used and less-common languages.",
+      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion.",
     params: {
       title: "Codestral",
       model: "codestral-latest",
@@ -722,7 +723,7 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   graniteChat: {
-    title: "WatsonX - Granite Chat",
+    title: "watsonx - Granite Chat",
     description:
       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
@@ -735,39 +736,38 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   graniteCode: {
-    title: "WatsonX - Granite Code",
+    title: "watsonx - Granite Code 20b",
     description:
       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
-      model: "ibm/granite-13b-instruct-v2",
+      model: "ibm/granite-20b-code-instruct",
       contextLength: 20_000,
-      title: "Granite Code",
-      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
+      title: "watsonx - Granite Code 20b",
     },
     providerOptions: ["watsonx"],
-    icon: "WatsonX.png",
+    icon: "watsonx.png",
     isOpenSource: false,
   },
   MistralLarge: {
-    title: "WatsonX - Mistral",
+    title: "watsonx - Mistral Large",
     description:
       "Mistral Large, the most advanced Large Language Model (LLM) developed by Mistral Al, is an exceptionally powerful model.",
     params: {
       model: "mistralai/mistral-large",
       contextLength: 20_000,
-      title: "WatsonX - Mistral",
+      title: "watsonx - Mistral Large",
     },
     providerOptions: ["watsonx"],
     icon: "mistral.png",
     isOpenSource: false,
   },
   MetaLlama3: {
-    title: "Meta Llama 3",
+    title: "watsonx - Llama 3.1",
     description:
       "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
     params: {
-      title: "Meta-llama3-8b",
-      model: "meta-llama/llama-3-8b-instruct",
+      title: "watsonx - Llama 3.1 8b",
+      model: "meta-llama/llama-3-1-8b-instruct",
       contextLength: 20_000,
     },
     icon: "meta.png",
@@ -777,12 +777,12 @@ export const models: { [key: string]: ModelPackage } = {
         description: "The number of parameters in the model",
         options: {
           "8b": {
-            model: "meta-llama/llama-3-8b-instruct",
-            title: "Meta-llama3-8b",
+            model: "meta-llama/llama-3-1-8b-instruct",
+            title: "watsonx - Llama 3.1 8b",
           },
           "70b": {
-            model: "meta-llama/llama-3-70b-instruct",
-            title: "Meta-llama3-70b",
+            model: "meta-llama/llama-3-1-70b-instruct",
+            title: "watsonx - Llama 3.1 70b",
           },
         },
       },

@@ -36,6 +36,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import { execSync } from "child_process";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
@@ -61,7 +62,7 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-import { execSync } from "child_process";
+
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
@@ -305,7 +306,7 @@ async function intermediateToFinalConfig(
       (model) => model.providerName === "free-trial",
     );
     if (freeTrialModels.length > 0) {
-      const ghAuthToken = await ide.getGitHubAuthToken();
+      const ghAuthToken = await ide.getGitHubAuthToken({});
       for (const model of freeTrialModels) {
         (model as FreeTrial).setupGhAuthToken(ghAuthToken);
       }
@@ -340,7 +341,7 @@ async function intermediateToFinalConfig(
                 // This shouldn't happen
                 throw new Error("Free trial cannot be used with control plane");
               }
-              const ghAuthToken = await ide.getGitHubAuthToken();
+              const ghAuthToken = await ide.getGitHubAuthToken({});
               (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
             }
             return llm;
@@ -354,9 +355,18 @@ async function intermediateToFinalConfig(
 
   // These context providers are always included, regardless of what, if anything,
   // the user has configured in config.json
+
+  const codebaseContextParams =
+    (
+      (config.contextProviders || [])
+        .filter(isContextProviderWithParams)
+        .find((cp) => cp.name === "codebase") as
+        | ContextProviderWithParams
+        | undefined
+    )?.params || {};
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
-    new CodebaseContextProvider({}),
+    new CodebaseContextProvider(codebaseContextParams),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
@@ -585,8 +595,23 @@ async function loadFullConfigNode(
     try {
       // Try config.ts first
       const configJsPath = getConfigJsPath();
-      const module = await import(configJsPath);
-      delete require.cache[require.resolve(configJsPath)];
+      let module: any;
+
+      try {
+        module = await import(configJsPath);
+      } catch (e) {
+        console.log(e)
+        console.log("Could not load config.ts as absolute path, retrying as file url ...");
+        try {
+          module = await import(`file://${configJsPath}`);
+        } catch (e) {
+          throw new Error("Could not load config.ts as file url either", { cause: e });
+        }
+      }
+      
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPath)];
+      }
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }
@@ -603,7 +628,9 @@ async function loadFullConfigNode(
         ideSettings.remoteConfigServerUrl,
       );
       const module = await import(configJsPathForRemote);
-      delete require.cache[require.resolve(configJsPathForRemote)];
+      if (typeof require !== "undefined") {
+        delete require.cache[require.resolve(configJsPathForRemote)];
+      }
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }

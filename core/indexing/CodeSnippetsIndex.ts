@@ -1,3 +1,4 @@
+import Parser from "web-tree-sitter";
 import type {
   ChunkWithoutID,
   ContextItem,
@@ -5,21 +6,23 @@ import type {
   IDE,
   IndexTag,
   IndexingProgressUpdate,
-} from "../index.js";
-import { getBasename, getLastNPathParts } from "../util/index.js";
-import { migrate } from "../util/paths.js";
+} from "../";
+import { getBasename, getLastNPathParts } from "../util/";
+import { migrate } from "../util/paths";
 import {
   TSQueryType,
   getParserForFile,
   getQueryForFile,
-} from "../util/treeSitter.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
+} from "../util/treeSitter";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
   type CodebaseIndex,
-} from "./types.js";
+} from "./types";
+
+type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
@@ -28,14 +31,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   constructor(private readonly ide: IDE) {}
 
   private static async _createTables(db: DatabaseConnection) {
-    await db.exec("PRAGMA journal_mode=WAL;");
-
     await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL,
         cacheKey TEXT NOT NULL,
         content TEXT NOT NULL,
         title TEXT NOT NULL,
+        signature TEXT,
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL
     )`);
@@ -46,6 +48,20 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       snippetId INTEGER NOT NULL,
       FOREIGN KEY (snippetId) REFERENCES code_snippets (id)
     )`);
+
+    migrate("add_signature_column", async () => {
+      const tableInfo = await db.all("PRAGMA table_info(code_snippets)");
+      const signatureColumnExists = tableInfo.some(
+        (column) => column.name === "signature",
+      );
+
+      if (!signatureColumnExists) {
+        await db.exec(`
+        ALTER TABLE code_snippets
+        ADD COLUMN signature TEXT;
+      `);
+      }
+    });
 
     migrate("delete_duplicate_code_snippets", async () => {
       // Delete duplicate entries in code_snippets
@@ -97,31 +113,81 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     });
   }
 
+  private getSnippetsFromMatch(match: Parser.QueryMatch): SnippetChunk {
+    const bodyTypesToTreatAsSignatures = [
+      "interface_declaration", // TypeScript, Java
+      "struct_item", // Rust
+      "type_spec", // Go
+    ];
+
+    const bodyCaptureGroupPrefixes = ["definition", "reference"];
+
+    let title = "",
+      content = "",
+      signature = "",
+      startLine = 0,
+      endLine = 0,
+      hasSeenBody = false;
+
+    // This loop assumes that the ordering of the capture groups is represenatative
+    // of the structure of the language, e.g. for a TypeScript match on a function,
+    // `function myFunc(param: string): string`, the first capture would be the `myFunc`
+    // the second capture would be the `(param: string)`, etc
+    for (const { name, node } of match.captures) {
+      // Assume we are capturing groups using a dot syntax for more precise groupings
+      // However, for this case, we only care about the first substring
+      const trimmedCaptureName = name.split(".")[0];
+
+      const nodeText = node.text;
+      const nodeType = node.type;
+
+      if (bodyCaptureGroupPrefixes.includes(trimmedCaptureName)) {
+        if (bodyTypesToTreatAsSignatures.includes(nodeType)) {
+          // Note we override whatever existing value there is here
+          signature = nodeText;
+          hasSeenBody = true;
+        }
+
+        content = nodeText;
+        startLine = node.startPosition.row;
+        endLine = node.endPosition.row;
+      } else {
+        if (trimmedCaptureName === "name") {
+          title = nodeText;
+        }
+
+        if (!hasSeenBody) {
+          signature += nodeText + " ";
+
+          if (trimmedCaptureName === "comment") {
+            signature += "\n";
+          }
+        }
+      }
+    }
+
+    return { title, content, signature, startLine, endLine };
+  }
+
   async getSnippetsInFile(
     filepath: string,
     contents: string,
-  ): Promise<(ChunkWithoutID & { title: string })[]> {
+  ): Promise<SnippetChunk[]> {
     const parser = await getParserForFile(filepath);
+
     if (!parser) {
       return [];
     }
+
     const ast = parser.parse(contents);
     const query = await getQueryForFile(filepath, TSQueryType.CodeSnippets);
     const matches = query?.matches(ast.rootNode);
 
-    return (
-      matches?.flatMap((match) => {
-        const node = match.captures[0].node;
-        const title = match.captures[1].node.text;
-        const results = {
-          title,
-          content: node.text,
-          startLine: node.startPosition.row,
-          endLine: node.endPosition.row,
-        };
-        return results;
-      }) ?? []
-    );
+    if (!matches) {
+      return [];
+    }
+
+    return matches.map(this.getSnippetsFromMatch);
   }
 
   async *update(
@@ -134,10 +200,11 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     await CodeSnippetsCodebaseIndex._createTables(db);
     const tagString = tagToString(tag);
 
+    // Compute
     for (let i = 0; i < results.compute.length; i++) {
       const compute = results.compute[i];
 
-      let snippets: (ChunkWithoutID & { title: string })[] = [];
+      let snippets: SnippetChunk[] = [];
       try {
         snippets = await this.getSnippetsInFile(
           compute.path,
@@ -151,12 +218,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       // Add snippets to sqlite
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          "REPLACE INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
+          "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             compute.path,
             compute.cacheKey,
             snippet.content,
             snippet.title,
+            snippet.signature,
             snippet.startLine,
             snippet.endLine,
           ],
@@ -176,21 +244,32 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       markComplete([compute], IndexResultType.Compute);
     }
 
+    // Delete
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
-      const deleted = await db.run(
-        "DELETE FROM code_snippets WHERE path = ? AND cacheKey = ?",
+
+      const snippets = await db.all(
+        "SELECT id FROM code_snippets WHERE path = ? AND cacheKey = ?",
         [del.path, del.cacheKey],
       );
-      await db.run("DELETE FROM code_snippets_tags WHERE snippetId = ?", [
-        deleted.lastID,
-      ]);
+
+      if (snippets) {
+        const snippetIds = snippets.map((row) => row.id).join(",");
+
+        await db.run(`DELETE FROM code_snippets WHERE id IN (${snippetIds})`);
+
+        await db.run(
+          `DELETE FROM code_snippets_tags WHERE snippetId IN (${snippetIds})`,
+        );
+      }
+
       markComplete([del], IndexResultType.Delete);
     }
 
+    // Add tag
     for (let i = 0; i < results.addTag.length; i++) {
       const addTag = results.addTag[i];
-      let snippets: (ChunkWithoutID & { title: string })[] = [];
+      let snippets: SnippetChunk[] = [];
       try {
         snippets = await this.getSnippetsInFile(
           addTag.path,
@@ -203,18 +282,19 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          "INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
+          "REPLACE INTO code_snippets (path, cacheKey, content, title, signature, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?, ?)",
           [
             addTag.path,
             addTag.cacheKey,
             snippet.content,
             snippet.title,
+            snippet.signature,
             snippet.startLine,
             snippet.endLine,
           ],
         );
         await db.run(
-          "INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
+          "REPLACE INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
           [lastID, tagString],
         );
       }
@@ -222,19 +302,33 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       markComplete([results.addTag[i]], IndexResultType.AddTag);
     }
 
+    // Remove tag
     for (let i = 0; i < results.removeTag.length; i++) {
-      const item = results.removeTag[i];
-      await db.run(
-        `
-        DELETE FROM code_snippets_tags
-        WHERE tag = ?
-          AND snippetId IN (
-            SELECT id FROM code_snippets
-            WHERE cacheKey = ? AND path = ?
-          )
-      `,
-        [tagString, item.cacheKey, item.path],
+      const removeTag = results.removeTag[i];
+
+      let snippets = await db.get(
+        `SELECT id FROM code_snippets
+            WHERE cacheKey = ? AND path = ?`,
+        [removeTag.cacheKey, removeTag.path],
       );
+
+      if (snippets) {
+        if (!Array.isArray(snippets)) {
+          snippets = [snippets];
+        }
+
+        const snippetIds = snippets.map((row: any) => row.id).join(",");
+
+        await db.run(
+          `
+          DELETE FROM code_snippets_tags
+          WHERE tag = ?
+            AND snippetId IN (${snippetIds})
+        `,
+          [tagString],
+        );
+      }
+
       markComplete([results.removeTag[i]], IndexResultType.RemoveTag);
     }
   }
@@ -247,6 +341,10 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       name: row.title,
       description: getLastNPathParts(row.path, 2),
       content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
+      uri: {
+        type: "file",
+        value: row.path,
+      },
     };
   }
 
@@ -272,5 +370,43 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       console.warn("Error getting all code snippets: ", e);
       return [];
     }
+  }
+
+  static async getPathsAndSignatures(
+    workspaceDirs: string[],
+    offset: number = 0,
+    batchSize: number = 100,
+  ): Promise<{
+    groupedByPath: { [path: string]: string[] };
+    hasMore: boolean;
+  }> {
+    const db = await SqliteDb.get();
+    await CodeSnippetsCodebaseIndex._createTables(db);
+
+    const likePatterns = workspaceDirs.map((dir) => `${dir}%`);
+    const placeholders = likePatterns.map(() => "?").join(" OR path LIKE ");
+
+    const query = `
+    SELECT DISTINCT path, signature
+    FROM code_snippets
+    WHERE path LIKE ${placeholders}
+    ORDER BY path, signature
+    LIMIT ? OFFSET ?
+  `;
+
+    const rows = await db.all(query, [...likePatterns, batchSize, offset]);
+
+    const groupedByPath: { [path: string]: string[] } = {};
+
+    for (const { path, signature } of rows) {
+      if (!groupedByPath[path]) {
+        groupedByPath[path] = [];
+      }
+      groupedByPath[path].push(signature);
+    }
+
+    const hasMore = rows.length === batchSize;
+
+    return { groupedByPath, hasMore };
   }
 }

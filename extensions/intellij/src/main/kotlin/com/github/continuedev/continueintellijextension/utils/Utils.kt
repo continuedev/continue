@@ -1,11 +1,9 @@
 package com.github.continuedev.continueintellijextension.utils
 
-import java.awt.Toolkit
-import java.awt.event.KeyEvent
-
 enum class Os {
     MAC, WINDOWS, LINUX
 }
+
 fun getOs(): Os {
     val osName = System.getProperty("os.name").toLowerCase()
     val os = when {

@@ -16,8 +16,8 @@ function getSuggestion(
     items,
     allowSpaces: true,
     render: () => {
-      let component;
-      let popup;
+      let component: any;
+      let popup: any;
 
       const onExit = () => {
         popup?.[0]?.destroy();
@@ -26,7 +26,7 @@ function getSuggestion(
       };
 
       return {
-        onStart: (props) => {
+        onStart: (props: any) => {
           component = new ReactRenderer(MentionList, {
             props: { ...props, enterSubmenu, onClose: onExit },
             editor: props.editor,
@@ -51,7 +51,7 @@ function getSuggestion(
           onOpen();
         },
 
-        onUpdate(props) {
+        onUpdate(props: any) {
           component.updateProps({ ...props, enterSubmenu });
 
           if (!props.clientRect) {
@@ -63,7 +63,7 @@ function getSuggestion(
           });
         },
 
-        onKeyDown(props) {
+        onKeyDown(props: any) {
           if (props.event.key === "Escape") {
             popup[0].hide();
 
@@ -112,7 +112,7 @@ export function getContextProviderDropdownOptions(
   inSubmenu: MutableRefObject<string | undefined>,
   ideMessenger: IIdeMessenger,
 ) {
-  const items = async ({ query }) => {
+  const items = async ({ query }: { query: string }) => {
     if (inSubmenu.current) {
       const results = getSubmenuContextItemsRef.current(
         inSubmenu.current,
@@ -186,7 +186,7 @@ export function getSlashCommandDropdownOptions(
   onOpen: () => void,
   ideMessenger: IIdeMessenger,
 ) {
-  const items = async ({ query }) => {
+  const items = async ({ query }: { query: string }) => {
     const options = [
       ...availableSlashCommandsRef.current,
       {

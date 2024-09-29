@@ -3,9 +3,30 @@ import {
   ModelDescription,
   SerializedContinueConfig,
   SlashCommandDescription,
-} from "../index.js";
+} from "../";
+
+export const DEFAULT_CHAT_MODEL_CONFIG: ModelDescription = {
+  model: "claude-3-5-sonnet-20240620",
+  provider: "anthropic",
+  apiKey: "",
+  title: "Claude 3.5 Sonnet",
+};
+
+export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
+  title: "Codestral",
+  provider: "mistral",
+  model: "codestral-latest",
+  apiKey: "",
+};
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
+  {
+    title: "Claude 3.5 Sonnet (Free Trial)",
+    provider: "free-trial",
+    model: "claude-3-5-sonnet-20240620",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses.",
+  },
   {
     title: "GPT-4o (Free Trial)",
     provider: "free-trial",
@@ -14,21 +35,18 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
       "You are an expert software developer. You give helpful and concise responses.",
   },
   {
-    title: "Llama3 70b (Free Trial)",
+    title: "Llama3.1 70b (Free Trial)",
     provider: "free-trial",
-    model: "llama3-70b",
+    model: "llama3.1-70b",
     systemMessage:
-      "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
+      "You are an expert software developer. You give helpful and concise responses.",
   },
   {
     title: "Codestral (Free Trial)",
     provider: "free-trial",
-    model: "codestral",
-  },
-  {
-    title: "Claude 3 Sonnet (Free Trial)",
-    provider: "free-trial",
-    model: "claude-3-sonnet-20240229",
+    model: "codestral-latest",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses.",
   },
 ];
 
@@ -91,7 +109,8 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [],
+  models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {
       name: "test",
@@ -100,17 +119,13 @@ export const defaultConfig: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "ollama",
-    model: "starcoder2:3b",
-  },
   contextProviders: defaultContextProvidersVsCode,
   slashCommands: defaultSlashCommandsVscode,
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: FREE_TRIAL_MODELS,
+  models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {
       name: "test",
@@ -119,11 +134,6 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "ollama",
-    model: "starcoder2:3b",
-  },
   contextProviders: defaultContextProvidersJetBrains,
   slashCommands: defaultSlashCommandsJetBrains,
 };

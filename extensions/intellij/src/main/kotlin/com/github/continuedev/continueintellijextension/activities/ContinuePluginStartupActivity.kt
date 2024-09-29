@@ -24,12 +24,11 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import kotlinx.coroutines.*
 import java.io.*
 import java.nio.charset.StandardCharsets
-import java.nio.file.Files
 import java.nio.file.Paths
 import javax.swing.*
-import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.extensions.PluginId
+import com.intellij.openapi.module.ModuleManager
+import com.intellij.openapi.roots.ModuleRootManager
 
 fun showTutorial(project: Project) {
     ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
@@ -61,9 +60,22 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
 
-       ApplicationManager.getApplication().executeOnPooledThread {
-           initializePlugin(project)
-       }
+//        project.messageBus.connect().subscribe(
+//            ToolWindowManagerListener.TOPIC,
+//            object : ToolWindowManagerListener {
+//                override fun stateChanged(toolWindowManager: ToolWindowManager) {
+//                    if (toolWindowManager.activeToolWindowId == TerminalToolWindowFactory.TOOL_WINDOW_ID
+//                        || TerminalView.getInstance(project).isNotAvailable()
+//                    ) {
+//                        project.service<TerminalActivityTrackingService>().update(
+//                            TerminalView.getInstance(project).widgets
+//                        )
+//                    }
+//                }
+//            }
+//        )
+
+        initializePlugin(project)
     }
 
     private fun getPlatformSpecificKeyStroke(key: String): String {
@@ -112,6 +124,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 showTutorial(project)
             }
 
+            settings.addRemoteSyncJob()
+
             val ideProtocolClient = IdeProtocolClient(
                     continuePluginService,
                     defaultStrategy,
@@ -156,73 +170,32 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
             })
 
-            GlobalScope.async(Dispatchers.IO) {
-                val listener =
-                        ContinuePluginSelectionListener(
-                                ideProtocolClient,
-                                coroutineScope
-                        )
+            val listener =
+                    ContinuePluginSelectionListener(
+                            ideProtocolClient,
+                            coroutineScope
+                    )
 
-                // Reload the WebView
-                continuePluginService?.let {
-                    val workspacePaths =
-                            if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
+            // Reload the WebView
+            continuePluginService?.let { pluginService ->
+                val allModulePaths = ModuleManager.getInstance(project).modules
+                    .flatMap { module -> ModuleRootManager.getInstance(module).contentRoots.map { it.path } }
+                    .map { Paths.get(it).normalize() }
 
-                    continuePluginService.workspacePaths = workspacePaths as Array<String>
-                }
+                val topLevelModulePaths = allModulePaths
+                    .filter { modulePath -> allModulePaths.none { it != modulePath && modulePath.startsWith(it) } }
+                    .map { it.toString() }
 
-                EditorFactory.getInstance().eventMulticaster.addSelectionListener(
-                        listener,
-                        this@ContinuePluginStartupActivity
-                )
+                pluginService.workspacePaths = topLevelModulePaths.toTypedArray()
             }
 
-            GlobalScope.async(Dispatchers.IO) {
-                val myPluginId = "com.github.continuedev.continueintellijextension"
-                val pluginDescriptor = PluginManager.getPlugin(PluginId.getId(myPluginId))
+            EditorFactory.getInstance().eventMulticaster.addSelectionListener(
+                    listener,
+                    this@ContinuePluginStartupActivity
+            )
 
-                if (pluginDescriptor == null) {
-                    throw Exception("Plugin not found")
-                }
-                val pluginPath = pluginDescriptor.pluginPath
-                val osName = System.getProperty("os.name").toLowerCase()
-                val os = when {
-                    osName.contains("mac") || osName.contains("darwin") -> "darwin"
-                    osName.contains("win") -> "win32"
-                    osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
-                    else -> "linux"
-                }
-                val osArch = System.getProperty("os.arch").toLowerCase()
-                val arch = when {
-                    osArch.contains("aarch64") || (osArch.contains("arm") && osArch.contains("64")) -> "arm64"
-                    osArch.contains("amd64") || osArch.contains("x86_64") -> "x64"
-                    else -> "x64"
-                }
-                val target = "$os-$arch"
-
-                println("Identified OS: $os, Arch: $arch")
-
-                val corePath = Paths.get(pluginPath.toString(), "core").toString()
-                val targetPath = Paths.get(corePath, target).toString()
-                val continueCorePath = Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
-
-                // Copy targetPath / node_sqlite3.node to core / node_sqlite3.node
-                val nodeSqlite3Path = Paths.get(targetPath, "node_sqlite3.node")
-
-                // Create the build/Release path first
-                File(Paths.get(corePath, "build", "Release").toString()).mkdirs()
-
-                val coreNodeSqlite3Path = Paths.get(corePath, "build", "Release", "node_sqlite3.node")
-                if (!File(coreNodeSqlite3Path.toString()).exists()) {
-                    Files.copy(nodeSqlite3Path, coreNodeSqlite3Path)
-                }
-
-                // esbuild needs permissions
-                val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
-
-                val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient)
-                continuePluginService.coreMessenger = coreMessenger
-            }
+            val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)
+            continuePluginService.coreMessengerManager = coreMessengerManager
         }
     }
 

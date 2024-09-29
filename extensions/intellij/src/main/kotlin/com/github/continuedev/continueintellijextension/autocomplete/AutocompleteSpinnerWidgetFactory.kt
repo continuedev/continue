@@ -34,6 +34,7 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
     )
 
     init {
+        Disposer.register(project, this)
         updateIcon()
     }
 
@@ -49,7 +50,7 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
 
     override fun getTooltipText(): String? {
         val enabled = service<ContinueExtensionSettings>().state.enableTabAutocomplete
-        return if (enabled) "Continue Autocomplete Enabled" else "Continue Autocomplete Disabled"
+        return if (enabled) "Continue autocomplete enabled" else "Continue autocomplete disabled"
     }
 
     override fun getClickConsumer(): Consumer<MouseEvent>? {
@@ -70,7 +71,7 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
 
         // Update the widget
         val statusBar = WindowManager.getInstance().getStatusBar(project)
-        statusBar.updateWidget(ID())
+        statusBar?.updateWidget(ID())
     }
 
     override fun install(statusBar: StatusBar) {

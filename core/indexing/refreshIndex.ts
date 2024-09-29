@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import * as fs from "node:fs";
+import plimit from "p-limit";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { IndexTag, IndexingProgressUpdate } from "../index.js";
@@ -91,6 +92,8 @@ export class SqliteDb {
       driver: sqlite3.Database,
     });
 
+    await SqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
+
     await SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;
@@ -110,11 +113,6 @@ async function getSavedItemsForTag(
   );
   const rows = await stmt.all();
   return rows;
-}
-
-interface PathAndOptionalCacheKey {
-  path: string;
-  cacheKey?: string;
 }
 
 enum AddRemoveResultType {
@@ -143,7 +141,6 @@ async function getAddRemoveForTag(
 
   const saved = await getSavedItemsForTag(tag);
 
-  const add: PathAndCacheKey[] = [];
   const updateNewVersion: PathAndCacheKey[] = [];
   const updateOldVersion: PathAndCacheKey[] = [];
   const remove: PathAndCacheKey[] = [];
@@ -178,15 +175,16 @@ async function getAddRemoveForTag(
     }
   }
 
-  // Any leftover in current files need to be added
-  add.push(
-    ...(await Promise.all(
-      Object.keys(files).map(async (path) => {
-        const fileContents = await readFile(path);
-        return { path, cacheKey: calculateHash(fileContents) };
-      }),
-    )),
-  );
+  // limit to only 10 concurrent file reads to avoid issues such as
+  // "too many file handles". A large number here does not improve
+  // throughput due to the nature of disk or network i/o -- huge
+  // amounts of readers generally does not improve performance
+  const limit = plimit(10);
+  const promises = Object.keys(files).map(async (path) => {
+    const fileContents = await limit(() => readFile(path));
+    return { path, cacheKey: calculateHash(fileContents) };
+  });
+  const add: PathAndCacheKey[] = await Promise.all(promises);
 
   // Create the markComplete callback function
   const db = await SqliteDb.get();
@@ -230,7 +228,7 @@ async function getAddRemoveForTag(
           break;
         case AddRemoveResultType.Add:
           await db.run(
-            "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
+            "REPLACE INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
             path,
             cacheKey,
             newLastUpdatedTimestamp,
@@ -395,7 +393,7 @@ export async function getComputeDeleteAddRemove(
     lastUpdated,
     async (items, resultType) => {
       // Update tag catalog
-      markComplete(items, resultType);
+      await markComplete(items, resultType);
 
       // Update the global cache
       const results: any = {
@@ -408,7 +406,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        () => {},
+        async () => {},
         repoName,
       )) {
       }
@@ -435,7 +433,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     _: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const add = results.addTag;
+    const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
       ...remove.map(({ cacheKey }) => {

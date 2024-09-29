@@ -1,69 +1,82 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ApplyState } from "core/protocol/ideWebview";
+import {
+  defaultOnboardingCardState,
+  OnboardingCardState,
+} from "../../components/OnboardingCard";
+
 type UiState = {
-  bottomMessage: JSX.Element | undefined;
-  bottomMessageCloseTimeout: NodeJS.Timeout | undefined;
-  displayBottomMessageOnBottom: boolean;
   showDialog: boolean;
-  dialogMessage: string | JSX.Element;
+  dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
+  nextCodeBlockToApplyIndex: number;
+  onboardingCard: OnboardingCardState;
+  applyStates: ApplyState[];
 };
 
 export const uiStateSlice = createSlice({
   name: "uiState",
   initialState: {
-    bottomMessage: undefined,
-    bottomMessageCloseTimeout: undefined,
     showDialog: false,
     dialogMessage: "",
     dialogEntryOn: false,
-    displayBottomMessageOnBottom: true,
+    nextCodeBlockToApplyIndex: 0,
+    onboardingCard: defaultOnboardingCardState,
+    applyStates: [],
   } as UiState,
   reducers: {
-    setBottomMessage: (
+    setOnboardingCard: (
       state,
-      action: PayloadAction<UiState["bottomMessage"]>
+      action: PayloadAction<Partial<OnboardingCardState>>,
     ) => {
-      state.bottomMessage = action.payload;
-    },
-    setBottomMessageCloseTimeout: (
-      state,
-      action: PayloadAction<UiState["bottomMessageCloseTimeout"]>
-    ) => {
-      if (state.bottomMessageCloseTimeout) {
-        clearTimeout(state.bottomMessageCloseTimeout);
-      }
-      state.bottomMessageCloseTimeout = action.payload;
+      state.onboardingCard = { ...state.onboardingCard, ...action.payload };
     },
     setDialogMessage: (
       state,
-      action: PayloadAction<UiState["dialogMessage"]>
+      action: PayloadAction<UiState["dialogMessage"]>,
     ) => {
       state.dialogMessage = action.payload;
     },
     setDialogEntryOn: (
       state,
-      action: PayloadAction<UiState["dialogEntryOn"]>
+      action: PayloadAction<UiState["dialogEntryOn"]>,
     ) => {
       state.dialogEntryOn = action.payload;
     },
     setShowDialog: (state, action: PayloadAction<UiState["showDialog"]>) => {
       state.showDialog = action.payload;
     },
-    setDisplayBottomMessageOnBottom: (
-      state,
-      action: PayloadAction<UiState["displayBottomMessageOnBottom"]>
-    ) => {
-      state.displayBottomMessageOnBottom = action.payload;
+
+    resetNextCodeBlockToApplyIndex: (state) => {
+      state.nextCodeBlockToApplyIndex = 0;
+    },
+    incrementNextCodeBlockToApplyIndex: (state, action) => {
+      state.nextCodeBlockToApplyIndex++;
+    },
+    updateApplyState: (state, action: PayloadAction<ApplyState>) => {
+      const { streamId, status } = action.payload;
+      const index = state.applyStates.findIndex(
+        (applyState) => applyState.streamId === streamId,
+      );
+      if (status === "closed" && index !== -1) {
+        state.applyStates.splice(index, 1);
+      } else if (index === -1) {
+        state.applyStates.push(action.payload);
+      } else {
+        state.applyStates[index].status = status;
+      }
     },
   },
 });
 
 export const {
-  setBottomMessage,
-  setBottomMessageCloseTimeout,
+  setOnboardingCard,
   setDialogMessage,
   setDialogEntryOn,
   setShowDialog,
-  setDisplayBottomMessageOnBottom,
+  resetNextCodeBlockToApplyIndex,
+  incrementNextCodeBlockToApplyIndex,
+  updateApplyState,
 } = uiStateSlice.actions;
+
 export default uiStateSlice.reducer;

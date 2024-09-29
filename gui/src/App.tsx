@@ -9,14 +9,10 @@ import { useVscTheme } from "./hooks/useVscTheme";
 import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
 import ErrorPage from "./pages/error";
 import GUI from "./pages/gui";
-import { default as Help, default as HelpPage } from "./pages/help";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
-import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
-import ApiKeysOnboarding from "./pages/onboarding/ApiKeysOnboarding";
-import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
-import Onboarding from "./pages/onboarding/Onboarding";
+import MorePage from "./pages/More";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 
@@ -43,10 +39,6 @@ const router = createMemoryRouter([
         element: <Stats />,
       },
       {
-        path: "/help",
-        element: <Help />,
-      },
-      {
         path: "/settings",
         element: <SettingsPage />,
       },
@@ -59,32 +51,16 @@ const router = createMemoryRouter([
         element: <ConfigureProvider />,
       },
       {
-        path: "/help",
-        element: <HelpPage />,
+        path: "/more",
+        element: <MorePage />,
       },
       {
         path: "/monaco",
         element: <MonacoPage />,
       },
       {
-        path: "/onboarding",
-        element: <Onboarding />,
-      },
-      {
-        path: "/localOnboarding",
-        element: <LocalOnboarding />,
-      },
-      {
         path: "/migration",
         element: <MigrationPage />,
-      },
-      {
-        path: "/apiKeysOnboarding",
-        element: <ApiKeysOnboarding />,
-      },
-      {
-        path: "/apiKeyAutocompleteOnboarding",
-        element: <ApiKeyAutocompleteOnboarding />,
       },
     ],
   },

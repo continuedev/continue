@@ -24,6 +24,7 @@ const {
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
+  copyTokenizers,
 } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -104,6 +105,9 @@ async function package(target, os, arch, exe) {
   // *** onnxruntime-node ***
   await copyOnnxRuntimeFromNodeModules(target);
 
+  // copy llama tokenizers to out
+  copyTokenizers();
+
   // *** Install @lancedb binary ***
   const lancePackageToInstall = {
     "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
@@ -153,8 +157,8 @@ async function package(target, os, arch, exe) {
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -163,7 +167,7 @@ async function package(target, os, arch, exe) {
     "gui/assets/index.css",
 
     // Tutorial
-    "media/welcome.md",
+    "media/move-chat-panel-right.md",
     "continue_tutorial.py",
     "config_schema.json",
 
@@ -193,8 +197,8 @@ async function package(target, os, arch, exe) {
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"

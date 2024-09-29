@@ -1,3 +1,4 @@
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
@@ -5,9 +6,6 @@ import { useDispatch } from "react-redux";
 import { Button, HelperText, Input, lightGray } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
-
-const DEFAULT_MAX_DEPTH = 3;
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -17,9 +15,7 @@ function AddDocsDialog() {
 
   const [title, setTitle] = useState("");
   const [startUrl, setStartUrl] = useState("");
-  const [rootUrl, setRootUrl] = useState("");
   const [faviconUrl, setFaviconUrl] = useState("");
-  const [maxDepth, setMaxDepth] = useState<number | string>("");
   const [isOpen, setIsOpen] = useState(false);
 
   const ideMessenger = useContext(IdeMessengerContext);
@@ -34,23 +30,19 @@ function AddDocsDialog() {
     }, 100);
   }, [ref]);
 
-  function onSubmit(e) {
+  function onSubmit(e: any) {
     e.preventDefault();
 
     const siteIndexingConfig: SiteIndexingConfig = {
       startUrl,
-      rootUrl,
       title,
-      maxDepth: typeof maxDepth === "string" ? DEFAULT_MAX_DEPTH : maxDepth,
-      faviconUrl: new URL("/favicon.ico", startUrl).toString(),
+      faviconUrl,
     };
 
     ideMessenger.post("context/addDocs", siteIndexingConfig);
 
     setTitle("");
     setStartUrl("");
-    setRootUrl("");
-    setMaxDepth("");
     setFaviconUrl("");
 
     dispatch(setShowDialog(false));
@@ -127,22 +119,6 @@ function AddDocsDialog() {
         {isOpen && (
           <div className="pt-2">
             <label>
-              Root URL [Optional]
-              <Input
-                type="url"
-                placeholder="Root URL"
-                value={rootUrl}
-                onChange={(e) => {
-                  setRootUrl(e.target.value);
-                }}
-              />
-              <HelperText>
-                Limits the crawler to pages within the same domain and path as
-                the Root URL
-              </HelperText>
-            </label>
-
-            <label>
               Favicon URL [Optional]
               <Input
                 type="url"
@@ -155,29 +131,6 @@ function AddDocsDialog() {
               <HelperText>
                 The URL path to a favicon for the site - by default, it will be
                 `/favicon.ico` path from the Start URL
-              </HelperText>
-            </label>
-
-            <label>
-              Max Depth [Optional]
-              <Input
-                type="text"
-                inputMode="numeric"
-                placeholder={`Default: ${DEFAULT_MAX_DEPTH}`}
-                title="The maximum search tree depth - where your input url is the root node"
-                value={maxDepth}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value == "") {
-                    setMaxDepth("");
-                  } else if (!isNaN(+value) && Number(value) > 0) {
-                    setMaxDepth(Number(value));
-                  }
-                }}
-              />
-              <HelperText>
-                Limits the maximum search tree depth of the crawler - 3 by
-                default
               </HelperText>
             </label>
           </div>

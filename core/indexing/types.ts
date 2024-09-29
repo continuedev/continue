@@ -5,13 +5,13 @@ export enum IndexResultType {
   Delete = "del",
   AddTag = "addTag",
   RemoveTag = "removeTag",
-  UpdateLastUpdated = "updateLastUpdated"
+  UpdateLastUpdated = "updateLastUpdated",
 }
 
 export type MarkCompleteCallback = (
   items: PathAndCacheKey[],
   resultType: IndexResultType,
-) => void;
+) => Promise<void>;
 
 export interface CodebaseIndex {
   artifactId: string;

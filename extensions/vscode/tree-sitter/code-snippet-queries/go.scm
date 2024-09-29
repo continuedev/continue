@@ -1,19 +1,26 @@
 (
-  (comment)* @doc
+  (comment)* @comment
   .
   (function_declaration
-    name: (identifier) @name.definition.function) @definition.function
-  (#strip! @doc "^//\\s*")
-  (#set-adjacent! @doc @definition.function)
+    name: (identifier) @name.definition.function
+    parameters: (_) @parameters
+    result: (_)? @return_type
+  ) @definition.function
+  (#strip! @comment "^//\\s*")
+  (#set-adjacent! @comment @definition.function)
 )
 
 (
-  (comment)* @doc
+  (comment)* @comment
   .
   (method_declaration
-    name: (field_identifier) @name.definition.method) @definition.method
-  (#strip! @doc "^//\\s*")
-  (#set-adjacent! @doc @definition.method)
+    receiver: (_) @receiver
+    name: (field_identifier) @name.definition.method
+    parameters: (_) @parameters
+    result: (_)? @return_type
+  ) @definition.method
+  (#strip! @comment "^//\\s*")
+  (#set-adjacent! @comment @definition.method)
 )
 
 (type_spec

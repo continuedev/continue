@@ -3,17 +3,19 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 6,
-    "sourceType": "module"
+    "sourceType": "module",
+    "project": "./tsconfig.json"
   },
   "plugins": ["@typescript-eslint", "import"],
   "rules": {
     "quotes": ["warn", "double", {}],
-    "@typescript-eslint/naming-convention": "warn",
+    "@typescript-eslint/naming-convention": "off",
     "@typescript-eslint/semi": "warn",
     "curly": "warn",
     "eqeqeq": "warn",
     "no-throw-literal": "warn",
-    "semi": "off"
+    "semi": "off",
+    "@typescript-eslint/no-floating-promises": "warn"
   },
   "ignorePatterns": ["out", "dist", "**/*.d.ts"]
 }

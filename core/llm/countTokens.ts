@@ -24,18 +24,37 @@ class LlamaEncoding implements Encoding {
   }
 }
 
+class NonWorkerAsyncEncoder implements AsyncEncoder {
+  constructor(private readonly encoding: Encoding) {}
+
+  async close(): Promise<void> {}
+
+  async encode(text: string): Promise<number[]> {
+    return this.encoding.encode(text);
+  }
+
+  async decode(tokens: number[]): Promise<string> {
+    return this.encoding.decode(tokens);
+  }
+}
+
 let gptEncoding: Encoding | null = null;
 const gptAsyncEncoder = new GPTAsyncEncoder();
 const llamaEncoding = new LlamaEncoding();
 const llamaAsyncEncoder = new LlamaAsyncEncoder();
 
 function asyncEncoderForModel(modelName: string): AsyncEncoder {
+  // Temporary due to issues packaging the worker files
+  if (process.env.IS_BINARY) {
+    const encoding = encodingForModel(modelName);
+    return new NonWorkerAsyncEncoder(encoding);
+  }
+
   const modelType = autodetectTemplateType(modelName);
   if (!modelType || modelType === "none") {
     return gptAsyncEncoder;
   }
-  // Temporary due to issues packaging the worker files
-  return process.env.IS_BINARY ? gptAsyncEncoder : llamaAsyncEncoder;
+  return llamaAsyncEncoder;
 }
 
 function encodingForModel(modelName: string): Encoding {
@@ -313,7 +332,9 @@ function compileChatMessages(
   systemMessage: string | undefined = undefined,
 ): ChatMessage[] {
   const msgsCopy = msgs
-    ? msgs.map((msg) => ({ ...msg })).filter((msg) => msg.content !== "")
+    ? msgs
+        .map((msg) => ({ ...msg }))
+        .filter((msg) => msg.content !== "" && msg.role !== "system")
     : [];
 
   if (prompt) {
@@ -324,10 +345,24 @@ function compileChatMessages(
     msgsCopy.push(promptMsg);
   }
 
-  if (systemMessage && systemMessage.trim() !== "") {
+  if (
+    (systemMessage && systemMessage.trim() !== "") ||
+    msgs?.[0].role === "system"
+  ) {
+    let content = "";
+    if (msgs?.[0].role === "system") {
+      content = stripImages(msgs?.[0].content);
+    }
+    if (systemMessage && systemMessage.trim() !== "") {
+      const shouldAddNewLines = content !== "";
+      if (shouldAddNewLines) {
+        content += "\n\n";
+      }
+      content += systemMessage;
+    }
     const systemChatMsg: ChatMessage = {
       role: "system",
-      content: systemMessage,
+      content,
     };
     // Insert as second to last
     // Later moved to top, but want second-priority to last user message

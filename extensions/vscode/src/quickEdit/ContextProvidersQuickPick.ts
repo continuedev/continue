@@ -1,6 +1,6 @@
 import { ContinueConfig, IDE } from "core";
-import { QuickPickItem, window } from "vscode";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
+import { QuickPickItem, window } from "vscode";
 
 export async function getContextProviderItems({
   contextProviders,
@@ -74,12 +74,12 @@ export async function getContextProviderQuickPickVal(
   const val = await new Promise<string>((resolve) => {
     quickPick.onDidAccept(async () => {
       const selectedItems = Array.from(quickPick.selectedItems);
-      const context = await getContextProvidersString(
-        selectedItems,
-        config,
-        ide,
-      );
-      resolve(context);
+      getContextProvidersString(selectedItems, config, ide)
+        .then(resolve)
+        .catch((e) => {
+          console.warn(`Fail to get context providers: ${e}`);
+          resolve("");
+        });
     });
   });
 

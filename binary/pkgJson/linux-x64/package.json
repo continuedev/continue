@@ -10,7 +10,10 @@
     "assets": [
       "../../../core/node_modules/sqlite3/**/*",
       "../../out/tree-sitter.wasm",
-      "../../out/tree-sitter-wasms/*"
+      "../../out/tree-sitter-wasms/*",
+      "../../out/llamaTokenizer.mjs",
+      "../../out/llamaTokenizerWorkerPool.mjs",
+      "../../out/tiktokenWorkerPool.mjs"
     ],
     "targets": [
       "node18-linux-x64"

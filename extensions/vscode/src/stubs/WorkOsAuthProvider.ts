@@ -16,12 +16,15 @@ import {
 } from "vscode";
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
-export const AUTH_TYPE = "continue";
 const AUTH_NAME = "Continue";
 const CLIENT_ID =
   process.env.CONTROL_PLANE_ENV === "local"
     ? "client_01J0FW6XCPMJMQ3CG51RB4HBZQ"
     : "client_01J0FW6XN8N2XJAECF7NE0Y65J";
+const APP_URL =
+  process.env.CONTROL_PLANE_ENV === "local"
+    ? "http://localhost:3000"
+    : "https://app.continue.dev";
 const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`;
 
 class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
@@ -35,6 +38,8 @@ import {
   ControlPlaneSessionInfo,
 } from "core/control-plane/client";
 import crypto from "crypto";
+import { AUTH_TYPE } from "../util/constants";
+import { SecretStorage } from "./SecretStorage";
 
 // Function to generate a random string of specified length
 function generateRandomString(length: number): string {
@@ -65,9 +70,9 @@ async function generateCodeChallenge(verifier: string) {
 }
 
 interface ContinueAuthenticationSession extends AuthenticationSession {
-  accessToken: string;
   refreshToken: string;
-  expiresIn: number;
+  expiresInMs: number;
+  loginNeeded: boolean;
 }
 
 export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
@@ -80,9 +85,10 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
   private _uriHandler = new UriEventHandler();
-  private _sessions: ContinueAuthenticationSession[] = [];
 
-  private static EXPIRATION_TIME_MS = 1000 * 60 * 5; // 5 minutes
+  private static EXPIRATION_TIME_MS = 1000 * 60 * 15; // 15 minutes
+
+  private secretStorage: SecretStorage;
 
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
@@ -94,62 +100,150 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       ),
       window.registerUriHandler(this._uriHandler),
     );
+
+    this.secretStorage = new SecretStorage(context);
+  }
+
+  private decodeJwt(jwt: string): any {
+    const decodedToken = JSON.parse(
+      Buffer.from(jwt.split(".")[1], "base64").toString(),
+    );
+    return decodedToken;
+  }
+
+  private getExpirationTimeMs(jwt: string): number {
+    const decodedToken = this.decodeJwt(jwt);
+    return decodedToken.exp && decodedToken.iat
+      ? (decodedToken.exp - decodedToken.iat) * 1000
+      : WorkOsAuthProvider.EXPIRATION_TIME_MS;
+  }
+
+  private jwtIsExpired(jwt: string): boolean {
+    const decodedToken = this.decodeJwt(jwt);
+    return decodedToken.exp * 1000 < Date.now();
+  }
+
+  private async serverThinksAccessTokenIsValid(
+    accessToken: string,
+  ): Promise<boolean> {
+    const url = new URL(CONTROL_PLANE_URL);
+    url.pathname = "/hello-secure";
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.status === 200;
+  }
+
+  private async debugAccessTokenValidity(jwt: string, refreshToken: string) {
+    const expired = this.jwtIsExpired(jwt);
+    const serverThinksInvalid = await this.serverThinksAccessTokenIsValid(jwt);
+    if (expired || serverThinksInvalid) {
+      console.debug(`Invalid JWT: ${expired}, ${serverThinksInvalid}`);
+    } else {
+      console.debug(`Valid JWT: ${expired}, ${serverThinksInvalid}`);
+    }
+  }
+
+  private async storeSessions(value: ContinueAuthenticationSession[]) {
+    const data = JSON.stringify(value, null, 2);
+    await this.secretStorage.store(SESSIONS_SECRET_KEY, data);
+  }
+
+  public async getSessions(
+    scopes?: string[],
+  ): Promise<ContinueAuthenticationSession[]> {
+    const data = await this.secretStorage.get(SESSIONS_SECRET_KEY);
+    if (!data) {
+      return [];
+    }
+
+    const value = JSON.parse(data) as ContinueAuthenticationSession[];
+    return value;
   }
 
   get onDidChangeSessions() {
     return this._sessionChangeEmitter.event;
   }
 
-  get redirectUri() {
+  get ideRedirectUri() {
     const publisher = this.context.extension.packageJSON.publisher;
     const name = this.context.extension.packageJSON.name;
     return `${env.uriScheme}://${publisher}.${name}`;
   }
 
-  async initialize() {
-    let sessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
-    this._sessions = sessions ? JSON.parse(sessions) : [];
+  get redirectUri() {
+    if (env.uriScheme === "vscode-insiders" || env.uriScheme === "vscode") {
+      // We redirect to a page that says "you can close this page", and that page finishes the redirect
+      const url = new URL(APP_URL);
+      url.pathname = `/auth/${env.uriScheme}-redirect`;
+      return url.toString();
+    }
+    return this.ideRedirectUri;
+  }
+
+  async refreshSessions() {
     await this._refreshSessions();
   }
 
   private async _refreshSessions(): Promise<void> {
-    if (!this._sessions.length) {
+    const sessions = await this.getSessions();
+    if (!sessions.length) {
       return;
     }
-    for (const session of this._sessions) {
+
+    const finalSessions = [];
+    for (const session of sessions) {
       try {
         const newSession = await this._refreshSession(session.refreshToken);
-        session.accessToken = newSession.accessToken;
-        session.refreshToken = newSession.refreshToken;
-        session.expiresIn = newSession.expiresIn;
+        finalSessions.push({
+          ...session,
+          accessToken: newSession.accessToken,
+          refreshToken: newSession.refreshToken,
+          expiresInMs: newSession.expiresInMs,
+        });
       } catch (e: any) {
-        if (e.message === "Network failure") {
-          setTimeout(() => this._refreshSessions(), 60 * 1000);
-          return;
-        }
+        // If the refresh token doesn't work, we just drop the session
+        console.debug(`Error refreshing session token: ${e.message}`);
+        await this.debugAccessTokenValidity(
+          session.accessToken,
+          session.refreshToken,
+        );
+        this._sessionChangeEmitter.fire({
+          added: [],
+          removed: [session],
+          changed: [],
+        });
+        // We don't need to refresh the sessions again, since we'll get a new one when we need it
+        // setTimeout(() => this._refreshSessions(), 60 * 1000);
+        // return;
       }
     }
-    await this.context.secrets.store(
-      SESSIONS_SECRET_KEY,
-      JSON.stringify(this._sessions),
-    );
+    await this.storeSessions(finalSessions);
     this._sessionChangeEmitter.fire({
       added: [],
       removed: [],
-      changed: this._sessions,
+      changed: finalSessions,
     });
 
-    if (this._sessions[0].expiresIn) {
+    if (finalSessions[0]?.expiresInMs) {
       setTimeout(
-        () => this._refreshSessions(),
-        (this._sessions[0].expiresIn * 2) / 3,
+        async () => {
+          await this._refreshSessions();
+        },
+        (finalSessions[0].expiresInMs * 2) / 3,
       );
     }
   }
 
-  private async _refreshSession(
-    refreshToken: string,
-  ): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+  private async _refreshSession(refreshToken: string): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    expiresInMs: number;
+  }> {
     const response = await fetch(new URL("/auth/refresh", CONTROL_PLANE_URL), {
       method: "POST",
       headers: {
@@ -167,25 +261,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     return {
       accessToken: data.accessToken,
       refreshToken: data.refreshToken,
-      expiresIn: WorkOsAuthProvider.EXPIRATION_TIME_MS,
+      expiresInMs: this.getExpirationTimeMs(data.accessToken),
     };
-  }
-
-  /**
-   * Get the existing sessions
-   * @param scopes
-   * @returns
-   */
-  public async getSessions(
-    scopes?: string[],
-  ): Promise<readonly ContinueAuthenticationSession[]> {
-    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
-
-    if (allSessions) {
-      return JSON.parse(allSessions) as ContinueAuthenticationSession[];
-    }
-
-    return [];
   }
 
   /**
@@ -211,7 +288,8 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         id: uuidv4(),
         accessToken: access_token,
         refreshToken: refresh_token,
-        expiresIn: WorkOsAuthProvider.EXPIRATION_TIME_MS,
+        expiresInMs: this.getExpirationTimeMs(access_token),
+        loginNeeded: false,
         account: {
           label: user.first_name + " " + user.last_name,
           id: user.email,
@@ -219,16 +297,18 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         scopes: [],
       };
 
-      await this.context.secrets.store(
-        SESSIONS_SECRET_KEY,
-        JSON.stringify([session]),
-      );
+      await this.storeSessions([session]);
 
       this._sessionChangeEmitter.fire({
         added: [session],
         removed: [],
         changed: [],
       });
+
+      setTimeout(
+        () => this._refreshSessions(),
+        (this.getExpirationTimeMs(session.accessToken) * 2) / 3,
+      );
 
       return session;
     } catch (e) {
@@ -242,25 +322,19 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
    * @param sessionId
    */
   public async removeSession(sessionId: string): Promise<void> {
-    const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
-    if (allSessions) {
-      let sessions = JSON.parse(allSessions) as ContinueAuthenticationSession[];
-      const sessionIdx = sessions.findIndex((s) => s.id === sessionId);
-      const session = sessions[sessionIdx];
-      sessions.splice(sessionIdx, 1);
+    const sessions = await this.getSessions();
+    const sessionIdx = sessions.findIndex((s) => s.id === sessionId);
+    const session = sessions[sessionIdx];
+    sessions.splice(sessionIdx, 1);
 
-      await this.context.secrets.store(
-        SESSIONS_SECRET_KEY,
-        JSON.stringify(sessions),
-      );
+    await this.storeSessions(sessions);
 
-      if (session) {
-        this._sessionChangeEmitter.fire({
-          added: [],
-          removed: [session],
-          changed: [],
-        });
-      }
+    if (session) {
+      this._sessionChangeEmitter.fire({
+        added: [],
+        removed: [session],
+        changed: [],
+      });
     }
   }
 
@@ -405,7 +479,7 @@ export async function getControlPlaneSessionInfo(
   silent: boolean,
 ): Promise<ControlPlaneSessionInfo | undefined> {
   const session = await authentication.getSession(
-    "continue",
+    AUTH_TYPE,
     [],
     silent ? { silent: true } : { createIfNone: true },
   );

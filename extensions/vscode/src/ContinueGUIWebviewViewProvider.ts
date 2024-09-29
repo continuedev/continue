@@ -1,6 +1,7 @@
 import type { FileEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import * as vscode from "vscode";
+import { EXTENSION_NAME } from "./util/constants";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
@@ -13,7 +14,7 @@ export class ContinueGUIWebviewViewProvider
   public webviewProtocol: VsCodeWebviewProtocol;
 
   private updateDebugLogsStatus() {
-    const settings = vscode.workspace.getConfiguration("continue");
+    const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
     this.enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
     if (this.enableDebugLogs) {
       this.outputChannel.show(true);
@@ -25,8 +26,8 @@ export class ContinueGUIWebviewViewProvider
   // Show or hide the output channel on enableDebugLogs
   private setupDebugLogsListener() {
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('continue.enableDebugLogs')) {
-        const settings = vscode.workspace.getConfiguration("continue");
+      if (event.affectsConfiguration("continue.enableDebugLogs")) {
+        const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
         const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
         if (enableDebugLogs) {
           this.outputChannel.show(true);
@@ -38,19 +39,19 @@ export class ContinueGUIWebviewViewProvider
   }
 
   private async handleWebviewMessage(message: any) {
-  if (message.messageType === "log") {
-    const settings = vscode.workspace.getConfiguration("continue");
-    const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
+    if (message.messageType === "log") {
+      const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
+      const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
 
-    if (message.level === "debug" && !enableDebugLogs) {
-      return; // Skip debug logs if enableDebugLogs is false
+      if (message.level === "debug" && !enableDebugLogs) {
+        return; // Skip debug logs if enableDebugLogs is false
+      }
+
+      const timestamp = new Date().toISOString().split(".")[0];
+      const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${message.text}`;
+      this.outputChannel.appendLine(logMessage);
     }
-
-    const timestamp = new Date().toISOString().split(".")[0];
-    const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${message.text}`;
-    this.outputChannel.appendLine(logMessage);
   }
-}
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -94,7 +95,6 @@ export class ContinueGUIWebviewViewProvider
       input,
     });
   }
-
 
   constructor(
     private readonly configHandlerPromise: Promise<ConfigHandler>,

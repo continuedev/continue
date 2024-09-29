@@ -38,7 +38,7 @@ class IPCMessengerBase<
             }
             this.send(msg.messageType, { done: true }, msg.messageId);
           } else {
-            this.send(msg.messageType, response || {}, msg.messageId);
+            this.send(msg.messageType, response, msg.messageId);
           }
         } catch (e: any) {
           console.warn(`Error running handler for "${msg.messageType}": `, e);

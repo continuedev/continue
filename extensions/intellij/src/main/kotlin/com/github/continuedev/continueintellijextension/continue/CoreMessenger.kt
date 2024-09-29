@@ -1,22 +1,21 @@
 package com.github.continuedev.continueintellijextension.`continue`
+
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
-
-import java.io.*
-
+import com.github.continuedev.continueintellijextension.services.TelemetryService
+import com.github.continuedev.continueintellijextension.toolWindow.MessageTypes
 import com.google.gson.Gson
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import kotlinx.coroutines.*
+import java.io.*
 import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
+class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient, private val coroutineScope: CoroutineScope) {
     private var writer: Writer? = null
     private var reader: BufferedReader? = null
     private var process: Process? = null
@@ -59,7 +58,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         val data = responseMap["data"]
 
         // IDE listeners
-        if (ideMessageTypes.contains(messageType)) {
+        if (MessageTypes.ideMessageTypes.contains(messageType)) {
             ideProtocolClient.handleMessage(json) { data ->
                 val message = gson.toJson(mapOf(
                         "messageId" to messageId,
@@ -71,7 +70,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         }
 
         // Forward to webview
-        if (PASS_THROUGH_TO_WEBVIEW.contains(messageType)) {
+        if (MessageTypes.PASS_THROUGH_TO_WEBVIEW.contains(messageType)) {
             // TODO: Currently we aren't set up to receive a response back from the webview
             // Can circumvent for getDefaultsModelTitle here for now
             if (messageType == "getDefaultModelTitle") {
@@ -91,7 +90,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)
-            if (generatorTypes.contains(messageType)) {
+            if (MessageTypes.generatorTypes.contains(messageType)) {
                 val done = (data as Map<String, Boolean?>)["done"]
                 if (done == true) {
                     responseListeners.remove(messageId)
@@ -102,63 +101,6 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
 
         }
     }
-
-    private val generatorTypes = listOf(
-            "llm/streamComplete",
-            "llm/streamChat",
-            "command/run",
-            "streamDiffLines"
-    )
-
-    private val ideMessageTypes = listOf(
-        "readRangeInFile",
-        "isTelemetryEnabled",
-        "getUniqueId",
-        "getWorkspaceConfigs",
-        "getDiff",
-        "getTerminalContents",
-        "getWorkspaceDirs",
-        "showLines",
-        "listFolders",
-        "getContinueDir",
-        "writeFile",
-        "fileExists",
-        "showVirtualFile",
-        "openFile",
-        "runCommand",
-        "saveFile",
-        "readFile",
-        "showDiff",
-        "getOpenFiles",
-        "getCurrentFile",
-        "getPinnedFiles",
-        "getSearchResults",
-        "getProblems",
-        "subprocess",
-        "getBranch",
-        "getIdeInfo",
-        "getIdeSettings",
-        "errorPopup",
-        "getRepoName",
-        "listDir",
-        "getGitRootPath",
-        "getLastModified",
-        "insertAtCursor",
-        "applyToFile",
-        "getGitHubAuthToken",
-        "setGitHubAuthToken",
-        "pathSep",
-        "getControlPlaneSessionInfo",
-        "logoutOfControlPlane"
-    )
-
-    private val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
-            "configUpdate",
-            "getDefaultModelTitle",
-            "indexProgress",
-            "refreshSubmenuItems",
-            "didChangeAvailableProfiles"
-    )
 
     private fun setPermissions(destination: String) {
         val osName = System.getProperty("os.name").toLowerCase()
@@ -181,6 +123,11 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         if (posixPermissions.contains("w")) perms.add(PosixFilePermission.OWNER_WRITE)
         if (posixPermissions.contains("x")) perms.add(PosixFilePermission.OWNER_EXECUTE)
         Files.setPosixFilePermissions(Paths.get(path), perms)
+    }
+
+    private val exitCallbacks: MutableList<() -> Unit> = mutableListOf()
+    fun onDidExit(callback: () -> Unit) {
+        exitCallbacks.add(callback)
     }
 
     init {
@@ -223,8 +170,10 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             }
         } else {
             // Set proper permissions
-            setPermissions(continueCorePath)
-            setPermissions(esbuildPath)
+            coroutineScope.launch(Dispatchers.IO) {
+                setPermissions(continueCorePath)
+                setPermissions(esbuildPath)
+            }
 
             // Start the subprocess
             val processBuilder = ProcessBuilder(continueCorePath)
@@ -238,12 +187,35 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
             process!!.onExit().thenRun {
-                val err = process?.errorStream?.bufferedReader()?.readText()?.trim()
+                exitCallbacks.forEach { it() }
+                var err = process?.errorStream?.bufferedReader()?.readText()?.trim()
+                if (err != null) {
+                    // There are often "⚡️Done in Xms" messages, and we want everything after the last one
+                    val delimiter = "⚡ Done in"
+                    val doneIndex = err.lastIndexOf(delimiter)
+                    if (doneIndex != -1) {
+                        err = err.substring(doneIndex + delimiter.length)
+                    }
+                }
+
                 println("Core process exited with output: $err")
-                ideProtocolClient.showMessage("Core process exited with output: $err")
+                CoroutineScope(Dispatchers.Main).launch {
+                    ideProtocolClient.showMessage("Core process exited with output: $err")
+                }
+
+                // Log the cause of the failure
+                val telemetryService = service<TelemetryService>()
+                telemetryService.capture("jetbrains_core_exit", mapOf(
+                    "error" to err
+                ))
+
+                // Clean up all resources
+                writer?.close()
+                reader?.close()
+                process?.destroy()
             }
 
-            Thread {
+            coroutineScope.launch(Dispatchers.IO) {
                 try {
                     while (true) {
                         val line = reader?.readLine()
@@ -255,7 +227,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                                 println(e)
                             }
                         } else {
-                            Thread.sleep(100)
+                            delay(100)
                         }
                     }
                 } catch (e: IOException) {
@@ -271,7 +243,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                         e.printStackTrace()
                     }
                 }
-            }.start()
+            }
         }
     }
 }
