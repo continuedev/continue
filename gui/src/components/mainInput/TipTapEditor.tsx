@@ -19,6 +19,7 @@ import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import { v4 } from "uuid";
 import {
   defaultBorderRadius,
   lightGray,
@@ -57,7 +58,6 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
-import { v4 } from "uuid";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -167,6 +167,10 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
 
+    editor.commands.deleteRange({
+      from: indexOfAt + 2,
+      to: editor.state.selection.anchor,
+    });
     inSubmenuRef.current = providerId;
 
     // to trigger refresh of suggestions
