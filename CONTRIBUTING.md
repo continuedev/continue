@@ -68,12 +68,18 @@ You can run the documentation server locally using either of the following metho
 
 #### Method 1: NPM Script
 
-1. Open your terminal and navigate to the root directory of the project.
+1. Open your terminal and navigate to the `docs` subdirectory of the project.  The `docusaurus.config.js` file you'll see there is a sign you're in the right place.
 
-2. Run the following command to start the documentation server:
+2. Run the following command to install the necessary dependencies for the documentation server:
 
    ```bash
-   npm run start --prefix docs
+   npm install
+   ```
+
+3. Run the following command to start the documentation server:
+
+   ```bash
+   npm run start
    ```
 
 #### Method 2: VS Code Task
