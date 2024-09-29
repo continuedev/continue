@@ -20,8 +20,8 @@ import {
   type AutocompleteSnippet,
 } from "./ranking.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
-import { HierarchicalContextService } from "./services/HierarchicalContextService.js";
 import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
+import { RootPathContextService } from "./services/RootPathContextService.js";
 
 export function languageForFilepath(
   filepath: string,
@@ -115,7 +115,7 @@ export async function constructAutocompletePrompt(
   modelName: string,
   extraSnippets: AutocompleteSnippet[],
   importDefinitionsService: ImportDefinitionsService,
-  hierarchicalContextService: HierarchicalContextService,
+  rootPathContextService: RootPathContextService,
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -216,7 +216,7 @@ export async function constructAutocompletePrompt(
     }
 
     if (options.useHierarchicalContext && treePath) {
-      const ctx = await hierarchicalContextService.getContextForPath(
+      const ctx = await rootPathContextService.getContextForPath(
         filepath,
         treePath,
       );

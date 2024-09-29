@@ -33,7 +33,7 @@ import { AutocompleteLanguageInfo } from "./languages.js";
 import { postprocessCompletion } from "./postprocessing.js";
 import { AutocompleteSnippet } from "./ranking.js";
 import { RecentlyEditedRange } from "./recentlyEdited.js";
-import { HierarchicalContextService } from "./services/HierarchicalContextService.js";
+import { RootPathContextService } from "./services/RootPathContextService.js";
 import {
   avoidPathLineAndEmptyComments,
   noTopLevelKeywordsMidline,
@@ -160,14 +160,14 @@ export class CompletionProvider {
       this.onError.bind(this),
     );
     this.importDefinitionsService = new ImportDefinitionsService(this.ide);
-    this.hierarchicalContextService = new HierarchicalContextService(
+    this.rootPathContextService = new RootPathContextService(
       this.importDefinitionsService,
       this.ide,
     );
   }
 
   private importDefinitionsService: ImportDefinitionsService;
-  private hierarchicalContextService: HierarchicalContextService;
+  private rootPathContextService: RootPathContextService;
   private generatorReuseManager: GeneratorReuseManager;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
@@ -549,7 +549,7 @@ export class CompletionProvider {
         llm.model,
         extrasSnippets,
         this.importDefinitionsService,
-        this.hierarchicalContextService,
+        this.rootPathContextService,
       );
 
     // If prefix is manually passed

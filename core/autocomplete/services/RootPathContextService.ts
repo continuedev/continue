@@ -7,7 +7,7 @@ import { AstPath } from "../ast";
 import { AutocompleteSnippet } from "../ranking";
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
 
-export class HierarchicalContextService {
+export class RootPathContextService {
   private cache = new LRUCache<string, AutocompleteSnippet[]>({
     max: 100,
   });
@@ -37,7 +37,7 @@ export class HierarchicalContextService {
     return createHash("sha256")
       .update(parentKey)
       .update(astNode.type)
-      .update(HierarchicalContextService.getNodeId(astNode))
+      .update(RootPathContextService.getNodeId(astNode))
       .digest("hex");
   }
 
@@ -108,9 +108,9 @@ export class HierarchicalContextService {
 
     let parentKey = filepath;
     for (const astNode of astPath.filter((node) =>
-      HierarchicalContextService.TYPES_TO_USE.has(node.type),
+      RootPathContextService.TYPES_TO_USE.has(node.type),
     )) {
-      const key = HierarchicalContextService.keyFromNode(parentKey, astNode);
+      const key = RootPathContextService.keyFromNode(parentKey, astNode);
 
       const foundInCache = this.cache.get(key);
       const newSnippets =

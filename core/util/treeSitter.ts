@@ -130,10 +130,10 @@ export enum TSQueryType {
   CodeSnippets = "code-snippet-queries",
   Imports = "import-queries",
   // Used in HierarchicalContextService.ts
-  FunctionDeclaration = "hierarchical-context-queries/function_declaration",
-  MethodDefinition = "hierarchical-context-queries/method_definition",
-  FunctionDefinition = "hierarchical-context-queries/function_definition",
-  MethodDeclaration = "hierarchical-context-queries/method_declaration",
+  FunctionDeclaration = "root-path-context-queries/function_declaration",
+  MethodDefinition = "root-path-context-queries/method_definition",
+  FunctionDefinition = "root-path-context-queries/function_definition",
+  MethodDeclaration = "root-path-context-queries/method_declaration",
 }
 
 export async function getQueryForFile(
