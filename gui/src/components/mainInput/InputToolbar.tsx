@@ -91,7 +91,7 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
-        className="hidden xs:flex "
+        className="flex"
       >
         <div className="flex gap-2 items-center whitespace-nowrap justify-start">
           <ModelSelect />
