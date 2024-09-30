@@ -1746,6 +1746,82 @@
             "properties": {
               "name": {
                 "enum": [
+                  "discord"
+                ]
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "params": {
+                    "properties": {
+                      "discordKey": {
+                        "type": "string",
+                        "description": "Your Discord bot token to access the Discord API. Required to fetch messages from servers."
+                      },
+                      "guildId": {
+                        "type": "string",
+                        "description": "The ID of the guild (server) from which to fetch channels and messages."
+                      },
+                      "channels": {
+                        "type": "array",
+                        "description": "A list of channel objects to search for messages",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "The unique ID of the channel"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the channel"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "discordKey"
+                    ]
+                  }
+                }
+              },
+              {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "params": {
+                        "required": [
+                          "guildId"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "params": {
+                        "required": [
+                          "channels"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
                   "google"
                 ]
               }
@@ -2354,6 +2430,13 @@
               "description": "The maximum number of tokens that each chunk of a document is allowed to have",
               "type": "integer",
               "minimum": 128,
+              "exclusiveMaximum": 2147483647
+            },
+            "maxBatchSize": {
+              "title": "Maximum Batch Size",
+              "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
+              "type": "integer",
+              "minimum": 1,
               "exclusiveMaximum": 2147483647
             },
             "region": {
