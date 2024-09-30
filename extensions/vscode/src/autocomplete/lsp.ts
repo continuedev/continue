@@ -1,4 +1,4 @@
-import type { IDE, RangeInFile } from "core";
+import type { IDE, Range, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
 import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider";
 import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
@@ -303,6 +303,19 @@ export async function getDefinitionsForNode(
   }
   return await Promise.all(
     ranges.map(async (rif) => {
+      // Convert the VS Code Range type to ours
+      const range: Range = {
+        start: {
+          line: rif.range.start.line,
+          character: rif.range.start.character,
+        },
+        end: {
+          line: rif.range.end.line,
+          character: rif.range.end.character,
+        },
+      };
+      rif.range = range;
+
       if (!isRifWithContents(rif)) {
         return {
           ...rif,

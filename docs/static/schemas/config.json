@@ -1552,7 +1552,8 @@
                 "url",
                 "database",
                 "os",
-                "repo-map"
+                "repo-map",
+                "greptile"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1576,7 +1577,8 @@
                 "Reference the contents of a page at a URL",
                 "Reference table schemas",
                 "Operating system and CPU Information",
-                "Map of files in the repository with important code highlights"
+                "Map of files in the repository with important code highlights",
+                "Query your greptile index of the current repo"
               ],
               "type": "string"
             },
@@ -1953,6 +1955,36 @@
               }
             },
             "required": ["host", "port", "user", "password", "database"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["greptile"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "GithubToken": {
+                    "title": "GithubToken",
+                    "description": "Your github access token",
+                    "default": "",
+                    "type": "string"
+                  },
+                  "GreptileToken": {
+                    "title": "GreptileToken",
+                    "description": "Your greptile access token",
+                    "default": "",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": ["GreptileToken", "GithubToken"]
           }
         }
       ],

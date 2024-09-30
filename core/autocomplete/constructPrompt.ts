@@ -215,7 +215,7 @@ export async function constructAutocompletePrompt(
       snippets.push(...importSnippets);
     }
 
-    if (options.useHierarchicalContext && treePath) {
+    if (options.useRootPathContext && treePath) {
       const ctx = await rootPathContextService.getContextForPath(
         filepath,
         treePath,
