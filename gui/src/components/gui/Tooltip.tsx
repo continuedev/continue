@@ -7,7 +7,7 @@ const TooltipStyles = {
   backgroundColor: vscInputBackground,
   boxShadow: `0px 0px 2px 1px ${vscBadgeBackground}`,
   color: vscForeground,
-  padding: "2px 6px",
+  padding: "4px 8px",
   zIndex: 1000,
   maxWidth: "80vw",
   textAlign: "center",

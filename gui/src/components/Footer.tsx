@@ -3,7 +3,7 @@ import {
   EllipsisHorizontalCircleIcon,
 } from "@heroicons/react/24/outline";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
-import ProgressBar from "./loaders/ProgressBar";
+import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
 import ProfileSwitcher from "./ProfileSwitcher";
 import ButtonWithTooltip from "./ButtonWithTooltip";
 import { useSelector } from "react-redux";
@@ -42,9 +42,9 @@ function Footer() {
 
   return (
     <footer className="flex justify-between items-center overflow-hidden p-2 h-7 border-0 border-t border-solid border-t-zinc-700">
-      <div className="flex gap-2 max-w-[25vw]">
+      <div className="flex gap-2 max-w-[40vw]">
         {defaultModel?.provider === "free-trial" ? (
-          <ProgressBar
+          <FreeTrialProgressBar
             completed={parseInt(localStorage.getItem("ftc") || "0")}
             total={FREE_TRIAL_LIMIT_REQUESTS}
           />
