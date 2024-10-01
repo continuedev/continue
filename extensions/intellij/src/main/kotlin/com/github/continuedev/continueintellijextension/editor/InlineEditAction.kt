@@ -244,7 +244,16 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 }
 
-class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>, comboBoxRef: Ref<JComboBox<String>>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel(layout) {
+class CustomPanel(
+    layout: MigLayout,
+    project: Project,
+    modelTitles: List<String>,
+    comboBoxRef: Ref<JComboBox<String>>,
+    private val onEnter: () -> Unit,
+    private val onCancel: () -> Unit,
+    private val onAccept: () -> Unit,
+    private val onReject: () -> Unit
+) : JPanel(layout) {
     private val shadowSize = 5
     private val cornerRadius = 8
     private val shadowColor = Color(0, 0, 0, 40) // Lighter shadow
@@ -252,24 +261,28 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
     private val borderThickness = 1
     private val triangleSize = 6
     private val rightMargin = 3.0
+    private val closeButton: JComponent = createCloseButton()
 
     init {
         isOpaque = false
+        add(closeButton, "pos 100% 0 -3 3, w 20!, h 20!")
     }
 
+    private fun createCloseButton(): JComponent {
+        return CustomButton("X") { onCancel() }.apply {
+            foreground = Color(128, 128, 128, 200)
+            background = Color(0, 0, 0, 0)
+            font = UIUtil.getFontWithFallback("Arial", Font.BOLD, 12)
+            border = EmptyBorder(2, 6, 2, 6)
+        }
+    }
 
     private val subPanelA: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
-
-        val leftButton = CustomButton("Esc to cancel") { onCancel() }.apply {
-            foreground = Color(128, 128, 128, 200)
-            background = defaultBackground
-        }
-
         val continueSettingsService = service<ContinueExtensionSettings>()
-
         val dropdown = JComboBox(modelTitles.toTypedArray()).apply {
+            setUI(TransparentArrowButtonUI())
             isEditable = true
             background = defaultBackground
             foreground = Color(128, 128, 128, 200)
@@ -279,7 +292,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             isEditable = false
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             renderer = DefaultListCellRenderer().apply {
-                horizontalAlignment = SwingConstants.RIGHT
+                horizontalAlignment = SwingConstants.LEFT
             }
             selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
                 val index = modelTitles.indexOf(it)
@@ -289,8 +302,6 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             addActionListener {
                 continueSettingsService.continueState.lastSelectedInlineEditModel = selectedItem as String
             }
-
-//            setUI(TransparentArrowButtonUI())
         }
 
         comboBoxRef.set(dropdown)
@@ -309,8 +320,8 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
 
         border = EmptyBorder(0, 0, 18, 12) // Increased bottom padding from 4 to 8
 
-        add(leftButton, "align left")
-        add(rightPanel, "align right")
+        add(dropdown, "align left")
+        add(rightPanel, "align right, split 2")
         isOpaque = false
 
         cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
@@ -496,34 +507,37 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
         override fun paintComponent(g: Graphics) {
             val g2 = g as Graphics2D
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-            val size = 6
+            g2.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+
+            val size = 4 // Smaller size
             val x = (width - size) / 2
-            val y = (height - size / 2) / 2
-            val triangle = Polygon(
-                    intArrayOf(x, x + size, x + size / 2),
-                    intArrayOf(y, y, (y + size / 1.16).toInt()),
-                    3
-            )
-            g2.color = Color.GRAY
-            g2.fill(triangle)
+            val y = (height - size) / 2
+
+            val path = Path2D.Double()
+            path.moveTo(x.toDouble(), y.toDouble())
+            path.lineTo((x + size).toDouble(), y.toDouble())
+            path.lineTo((x + size / 2.0), (y + size).toDouble())
+            path.closePath()
+
+            g2.color = Color(128, 128, 128, 200) // Light gray, semi-transparent
+            g2.fill(path)
+        }
+
+        override fun getPreferredSize(): Dimension {
+            return Dimension(12, 12) // Smaller button size
         }
     }.apply {
-        border = EmptyBorder(0, 0, 0, 0)
-//        background = Color(0, 0, 0, 0)
         isOpaque = false
-    }
-
-    override fun getInsets(): Insets {
-        return JBUI.insets(0, 0, 0, 0)
+        isFocusable = false
+        isBorderPainted = false
+        isContentAreaFilled = false
     }
 
     override fun installUI(c: JComponent?) {
         super.installUI(c)
-        comboBox.border = EmptyBorder(0, 0, 0, 0)
+        comboBox.border = EmptyBorder(2, 0, 2, 0)
         comboBox.isOpaque = false
-        val globalScheme = EditorColorsManager.getInstance().globalScheme
-        val defaultBackground = globalScheme.defaultBackground
-        comboBox.background = defaultBackground
+        comboBox.background = Color(0, 0, 0, 0) // Fully transparent background
     }
 }
 
