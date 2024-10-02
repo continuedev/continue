@@ -45,25 +45,43 @@ fun makeTextArea(): JTextArea {
         isOpaque = false
         background = GetTheme().getSecondaryDark()
         maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-        margin = JBUI.insets(6, 4, 0, 4)
+        margin = JBUI.insets(6, 4, 6, 4)
         font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
-        // Set a preferred size with a taller height
-        preferredSize = Dimension(400, 75)  // Added this line
+        preferredSize = Dimension(400, 75)
     }
     textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
     return textArea
 }
 
-fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, comboBoxRef: Ref<JComboBox<String>>, leftInset: Int, modelTitles: List<String>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
+fun makePanel(
+    project: Project,
+    customPanelRef: Ref<CustomPanel>,
+    textArea: JTextArea,
+    inlayRef: Ref<Disposable>,
+    comboBoxRef: Ref<JComboBox<String>>,
+    leftInset: Int,
+    modelTitles: List<String>,
+    onEnter: () -> Unit,
+    onCancel: () -> Unit,
+    onAccept: () -> Unit,
+    onReject: () -> Unit
+): JPanel {
     val topPanel = ShadowPanel(MigLayout("wrap 1, insets 2 ${leftInset} 2 2, gap 0!")).apply {
-        val globalScheme = EditorColorsManager.getInstance().globalScheme
-        val defaultBackground = globalScheme.defaultBackground
-//            background = defaultBackground
-        background =  JBColor(0x20888888.toInt(), 0x20888888.toInt())
+        background = JBColor(0x20888888.toInt(), 0x20888888.toInt())
         isOpaque = false
     }
 
-    val panel = CustomPanel(MigLayout("wrap 1, insets 4 10 0 2, gap 0!, fillx"), project, modelTitles, comboBoxRef, onEnter, onCancel, onAccept, onReject, textArea).apply {
+    val panel = CustomPanel(
+        MigLayout("wrap 1, insets 4 10 0 2, gap 0!, fillx"),
+        project,
+        modelTitles,
+        comboBoxRef,
+        onEnter,
+        onCancel,
+        onAccept,
+        onReject,
+        textArea
+    ).apply {
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
         background = defaultBackground
@@ -92,9 +110,9 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     if (project == null) return
 
     // Don't open in terminal
-     if (EditorUtils().isTerminal(editor)) {
-            return
-     }
+    if (EditorUtils().isTerminal(editor)) {
+        return
+    }
 
     val manager = EditorComponentInlaysManager.from(editor)
 
@@ -135,7 +153,8 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
     val text = editor.document.getText(TextRange(lineStart, lineEnd))
     val indentation = text.takeWhile { it == ' ' }.length
-    val charWidth = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN)).charWidth(' ')
+    val charWidth =
+        editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN)).charWidth(' ')
     val leftInset = indentation * charWidth * 2 / 3
 
     val inlayRef = Ref<Disposable>()
@@ -162,16 +181,17 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, comboBoxRef.get().selectedItem as String)
     }
 
-    val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
-        diffStreamService.reject(editor)
-        selectionModel.setSelection(start, end)
-    }, {
-        diffStreamService.accept(editor)
-        inlayRef.get().dispose()
-    }, {
-        diffStreamService.reject(editor)
-        inlayRef.get().dispose()
-    })
+    val panel =
+        makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, { onEnter() }, {
+            diffStreamService.reject(editor)
+            selectionModel.setSelection(start, end)
+        }, {
+            diffStreamService.accept(editor)
+            inlayRef.get().dispose()
+        }, {
+            diffStreamService.reject(editor)
+            inlayRef.get().dispose()
+        })
     val inlay = manager.insertAfter(lineNumber, panel)
     panel.revalidate()
     inlayRef.set(inlay)
@@ -216,6 +236,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                 viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
             }
         }
+
         override fun insertUpdate(e: DocumentEvent?) {
             updateSize()
         }
@@ -293,6 +314,7 @@ class CustomPanel(
                 override fun mouseEntered(e: MouseEvent) {
                     foreground = Color(128, 128, 128, 255)
                 }
+
                 override fun mouseExited(e: MouseEvent) {
                     foreground = Color(128, 128, 128, 128)
                 }
@@ -329,7 +351,7 @@ class CustomPanel(
 
         comboBoxRef.set(dropdown)
 
-        val rightButton = CustomButton("↵ Enter") { onEnter() }.apply {
+        val rightButton = CustomButton("⏎  Enter") { onEnter() }.apply {
             background = JBColor(0x33999998.toInt(), 0x33999998.toInt())
             foreground = Color.WHITE
             border = EmptyBorder(2, 6, 2, 6)
@@ -359,14 +381,12 @@ class CustomPanel(
         }
 
         add(progressBar, BorderLayout.CENTER)
-
-        // Add right and bottom insets
         border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
     }
 
     private val subPanelC: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
         val leftLabel = JLabel("Type to re-prompt").apply {
-            foreground = Color(128, 128, 128, 200)
+            foreground = Color(156, 163, 175) // text-gray-400
             font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
             border = EmptyBorder(0, 4, 0, 0)
         }
@@ -390,7 +410,6 @@ class CustomPanel(
 
         add(leftLabel, "align left")
         add(rightPanel, "align right")
-        // Add right and bottom insets
         border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
         isOpaque = false
     }
@@ -436,16 +455,33 @@ class CustomPanel(
         shape.moveTo(borderThickness / 2.0, cornerRadius.toDouble())
         shape.quadTo(borderThickness / 2.0, borderThickness / 2.0, cornerRadius.toDouble(), borderThickness / 2.0)
         shape.lineTo(w - cornerRadius.toDouble() - rightMargin, borderThickness / 2.0)
-        shape.quadTo(w - borderThickness / 2.0 - rightMargin, borderThickness / 2.0, w - borderThickness / 2.0 - rightMargin, cornerRadius.toDouble())
+        shape.quadTo(
+            w - borderThickness / 2.0 - rightMargin,
+            borderThickness / 2.0,
+            w - borderThickness / 2.0 - rightMargin,
+            cornerRadius.toDouble()
+        )
         shape.lineTo(w - borderThickness / 2.0 - rightMargin, h - cornerRadius - triangleSize.toDouble())
-        shape.quadTo(w - borderThickness / 2.0 - rightMargin, h - triangleSize.toDouble(), w - cornerRadius.toDouble() - rightMargin, h - triangleSize.toDouble())
+        shape.quadTo(
+            w - borderThickness / 2.0 - rightMargin,
+            h - triangleSize.toDouble(),
+            w - cornerRadius.toDouble() - rightMargin,
+            h - triangleSize.toDouble()
+        )
         shape.lineTo(triangleSize.toDouble(), h - triangleSize.toDouble())
         shape.lineTo(borderThickness / 2.0, h.toDouble())
         shape.lineTo(borderThickness / 2.0, cornerRadius.toDouble())
 
         // Draw shadow
         g2.color = shadowColor
-        g2.fill(shape.createTransformedShape(AffineTransform.getTranslateInstance(shadowSize.toDouble(), shadowSize.toDouble())))
+        g2.fill(
+            shape.createTransformedShape(
+                AffineTransform.getTranslateInstance(
+                    shadowSize.toDouble(),
+                    shadowSize.toDouble()
+                )
+            )
+        )
 
         // Draw main shape
         g2.color = background
@@ -484,13 +520,21 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
         font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
         border = EmptyBorder(2, 4, 2, 4)
     }
+
     override fun paintComponent(g: Graphics) {
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         val cornerRadius = 8
         val rect = Rectangle(0, 0, width, height)
-        val roundRect = RoundRectangle2D.Float(rect.x.toFloat(), rect.y.toFloat(), rect.width.toFloat(), rect.height.toFloat(), cornerRadius.toFloat(), cornerRadius.toFloat())
+        val roundRect = RoundRectangle2D.Float(
+            rect.x.toFloat(),
+            rect.y.toFloat(),
+            rect.width.toFloat(),
+            rect.height.toFloat(),
+            cornerRadius.toFloat(),
+            cornerRadius.toFloat()
+        )
         if (isHovered) {
             g2.color = background.brighter()
         } else {
@@ -498,8 +542,10 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
         }
         g2.fill(roundRect)
         g2.color = foreground
-        g2.drawString(text, (width / 2 - g.fontMetrics.stringWidth(text) / 2).toFloat(),
-                (height / 2 + g.fontMetrics.ascent / 2).toFloat())
+        g2.drawString(
+            text, (width / 2 - g.fontMetrics.stringWidth(text) / 2).toFloat(),
+            (height / 2 + g.fontMetrics.ascent / 2).toFloat()
+        )
     }
 }
 
@@ -570,26 +616,26 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
 
     override fun paintCurrentValueBackground(g: Graphics, bounds: Rectangle, hasFocus: Boolean) {
 
-    // Do nothing to prevent painting the background
-}
-
-override fun paintCurrentValue(g: Graphics, bounds: Rectangle, hasFocus: Boolean) {
-    val renderer = comboBox.renderer
-    val item = comboBox.selectedItem
-
-    if (item != null) {
-        val c = renderer.getListCellRendererComponent(listBox, item, -1, false, false)
-        c.font = comboBox.font
-        c.foreground = comboBox.foreground
-        c.background = comboBox.background
-
-        if (c is JComponent) {
-            c.isOpaque = false
-        }
-
-        val currentValuePane = currentValuePane
-        currentValuePane.paintComponent(g, c, comboBox, bounds.x, bounds.y, bounds.width, bounds.height, true)
+        // Do nothing to prevent painting the background
     }
-}
+
+    override fun paintCurrentValue(g: Graphics, bounds: Rectangle, hasFocus: Boolean) {
+        val renderer = comboBox.renderer
+        val item = comboBox.selectedItem
+
+        if (item != null) {
+            val c = renderer.getListCellRendererComponent(listBox, item, -1, false, false)
+            c.font = comboBox.font
+            c.foreground = Color(156, 163, 175) // text-gray-400
+            c.background = comboBox.background
+
+            if (c is JComponent) {
+                c.isOpaque = false
+            }
+
+            val currentValuePane = currentValuePane
+            currentValuePane.paintComponent(g, c, comboBox, bounds.x, bounds.y, bounds.width, bounds.height, true)
+        }
+    }
 }
 
