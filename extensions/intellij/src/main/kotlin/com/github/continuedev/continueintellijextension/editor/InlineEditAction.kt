@@ -35,6 +35,7 @@ import javax.swing.plaf.basic.BasicComboBoxUI
 import kotlin.math.max
 import java.awt.geom.RoundRectangle2D
 import java.awt.geom.AffineTransform
+import javax.swing.event.ListDataListener
 
 const val MAIN_FONT_SIZE = 13
 
@@ -582,24 +583,9 @@ class ShadowPanel(layout: LayoutManager) : JXPanel(layout) {
 }
 
 class TransparentArrowButtonUI : BasicComboBoxUI() {
-    override fun createArrowButton() = object : JButton() {
-        override fun paintComponent(g: Graphics) {
-            val g2 = g as Graphics2D
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-            val size = 6
-            val x = (width - size) / 2
-            val y = (height - size / 2) / 2
-            val triangle = Polygon(
-                intArrayOf(x, x + size, x + size / 2),
-                intArrayOf(y, y, (y + size / 1.16).toInt()),
-                3
-            )
-            g2.color = Color.GRAY
-            g2.fill(triangle)
-        }
-    }.apply {
-        border = EmptyBorder(0, 0, 0, 0)
-        isOpaque = false
+    override fun createArrowButton() = JButton().apply {
+        isVisible = false
+        preferredSize = Dimension(0, 0)
     }
 
     override fun getInsets(): Insets {
@@ -612,12 +598,36 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
         comboBox.background = defaultBackground
+
+        // Modify the ComboBoxModel to include the down symbol
+        val originalModel = comboBox.model
+        comboBox.model = object : ComboBoxModel<Any> {
+            override fun getSize(): Int = originalModel.size
+            override fun getElementAt(index: Int): Any? = originalModel.getElementAt(index)
+            override fun setSelectedItem(anItem: Any?) {
+                originalModel.selectedItem = anItem
+            }
+
+            override fun getSelectedItem(): Any? {
+                val item = originalModel.selectedItem
+                return if (item is String) "$item ▾" else item
+            }
+
+            override fun addListDataListener(l: ListDataListener?) {
+                originalModel.addListDataListener(l)
+            }
+
+            override fun removeListDataListener(l: ListDataListener?) {
+                originalModel.removeListDataListener(l)
+            }
+        }
     }
+
 
     override fun paintCurrentValueBackground(g: Graphics, bounds: Rectangle, hasFocus: Boolean) {
-
         // Do nothing to prevent painting the background
     }
+
 
     override fun paintCurrentValue(g: Graphics, bounds: Rectangle, hasFocus: Boolean) {
         val renderer = comboBox.renderer
