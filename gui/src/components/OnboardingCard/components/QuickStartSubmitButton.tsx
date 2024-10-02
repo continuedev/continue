@@ -40,8 +40,14 @@ function QuickstartSubmitButton() {
     const result = await ideMessenger.request("getGitHubAuthToken", {
       force: true,
     });
-    if (result.status === "success") {
+
+    if (result.status === "success" && typeof result.content === "string") {
       onComplete();
+    } else {
+      ideMessenger.post("showToast", [
+        "error",
+        "Failed to sign up for Continue free trial through GitHub",
+      ]);
     }
   }
 

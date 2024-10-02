@@ -12,7 +12,7 @@ function MoreHelpRow({ title, description, onClick, Icon }: MoreHelpRowProps) {
       className="flex items-center gap-2 justify-between cursor-pointer"
       onClick={onClick}
     >
-      <div className="w-4/5 truncate flex flex-col justify-center">
+      <div className="w-4/5 flex flex-col justify-center">
         <h3 className="text-sm my-0">{title}</h3>
         <span className="text-stone-500 py-1">{description}</span>
       </div>

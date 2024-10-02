@@ -87,6 +87,7 @@ class VsCodeIde implements IDE {
     const session = await vscode.authentication.getSession("github", [], {
       silent: true,
     });
+
     if (session) {
       this.authToken = session.accessToken;
       return this.authToken;
