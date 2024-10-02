@@ -38,13 +38,11 @@ We recommend configuring **text-embedding-004** as your embeddings model.
 
 ```json title="config.json"
 {
-  "embeddingsProvider": [
-    {
-      "provider": "gemini",
-      "model": "models/text-embedding-004",
-      "apiKey": "[API_KEY]"
-    }
-  ]
+  "embeddingsProvider": {
+    "provider": "gemini",
+    "model": "models/text-embedding-004",
+    "apiKey": "[API_KEY]"
+  }
 }
 ```
 

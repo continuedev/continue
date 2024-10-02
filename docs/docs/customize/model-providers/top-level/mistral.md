@@ -46,14 +46,12 @@ We recommend configuring **Mistral Embed** as your embeddings model.
 
 ```json title="config.json"
 {
-  "embeddingsProvider": [
-    {
-      "provider": "mistral",
-      "model": "mistral-embed",
-      "apiKey": "[API_KEY]",
-      "apiBase": "https://api.mistral.ai/v1"
-    }
-  ]
+  "embeddingsProvider": {
+    "provider": "mistral",
+    "model": "mistral-embed",
+    "apiKey": "[API_KEY]",
+    "apiBase": "https://api.mistral.ai/v1"
+  }
 }
 ```
 

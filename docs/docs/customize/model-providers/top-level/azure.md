@@ -42,7 +42,7 @@ We recommend configuring **Codestral** as your autocomplete model.
 We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 ```json title="config.json"
-"embeddingsProvider": [{
+"embeddingsProvider": {
     "provider": "azure",
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
@@ -50,7 +50,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     "apiVersion": "<YOUR_API_VERSION>",
     "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
-}]
+}
 ```
 
 ## Reranking model
