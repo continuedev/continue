@@ -50,7 +50,8 @@ class MessageTypes {
             "pathSep",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents"
+            "getTerminalContents",
+            "showToast"
         )
 
         val PASS_THROUGH_TO_WEBVIEW = listOf<String>(

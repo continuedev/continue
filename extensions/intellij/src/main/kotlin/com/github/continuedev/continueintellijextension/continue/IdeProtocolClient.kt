@@ -14,6 +14,9 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.notification.NotificationDisplayType
+import com.intellij.notification.NotificationGroup
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
@@ -191,6 +194,7 @@ class IdeProtocolClient (
     private val project: Project
 ): DumbAware {
     val diffManager = DiffManager(project)
+    private val CONTINUE_NOTIFICATION_GROUP = NotificationGroup("Continue", NotificationDisplayType.BALLOON, true)
     private val ripgrep: String
 
     init {
@@ -599,6 +603,13 @@ class IdeProtocolClient (
                         respond(null)
                         // Running commands not yet supported in JetBrains
                     }
+                    "showToast" -> {
+                        val data = data as ArrayList<String>
+                        val toast_type =  data[0]
+                        val message = data[1]
+                        showToast(toast_type, message)
+                        respond(null)
+                    }
                     "errorPopup" -> {
                         val data = data as Map<String, Any>
                         val message = data["message"] as String
@@ -974,6 +985,17 @@ class IdeProtocolClient (
         val editor = fileEditorManager.selectedTextEditor
         val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
         return virtualFile?.path
+    }
+
+    private fun showToast(type: String, content:String) {
+        val notificationType = when (type.uppercase()) {
+            "ERROR" -> NotificationType.ERROR
+            "WARNING" -> NotificationType.WARNING
+            else -> NotificationType.INFORMATION
+        }
+
+        CONTINUE_NOTIFICATION_GROUP.createNotification(content, notificationType)
+        .notify(project);
     }
 
 suspend fun showMessage(msg: String) {
