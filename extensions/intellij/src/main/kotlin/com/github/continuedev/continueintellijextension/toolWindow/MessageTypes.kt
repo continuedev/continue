@@ -38,7 +38,6 @@ class MessageTypes {
             "getTags",
             "getIdeInfo",
             "getIdeSettings",
-            "errorPopup",
             "getRepoName",
             "listDir",
             "getGitRootPath",
@@ -50,7 +49,8 @@ class MessageTypes {
             "pathSep",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents"
+            "getTerminalContents",
+            "showToast"
         )
 
         val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
