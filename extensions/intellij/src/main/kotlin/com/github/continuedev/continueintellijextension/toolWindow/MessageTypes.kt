@@ -38,7 +38,6 @@ class MessageTypes {
             "getTags",
             "getIdeInfo",
             "getIdeSettings",
-            "errorPopup",
             "getRepoName",
             "listDir",
             "getGitRootPath",
