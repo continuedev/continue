@@ -38,13 +38,11 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 ```json title="config.json"
 {
-  "embeddingsProvider": [
-    {
-      "provider": "openai",
-      "model": "text-embedding-3-large",
-      "apiKey": "[API_KEY]"
-    }
-  ]
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-3-large",
+    "apiKey": "[API_KEY]"
+  }
 }
 ```
 
