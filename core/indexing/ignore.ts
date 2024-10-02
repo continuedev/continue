@@ -68,6 +68,8 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.uasset",
   "*.pdb",
   "*.bin",
+  "*.pag",
+  "*.swp",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
 
