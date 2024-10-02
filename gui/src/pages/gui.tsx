@@ -57,7 +57,12 @@ import {
   getFontSize,
   getMetaKeyLabel,
   isJetBrains,
+  setJetBrains,
   isMetaEquivalentKeyPressed,
+  setSplitMode,
+  setCurrentProject,
+  setServerToken,
+  setOverrideWsHost
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -162,7 +167,21 @@ function GUI() {
   const state = useSelector((state: RootState) => state.state);
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
-
+  const searchParams = new URLSearchParams(window.location.search);
+  const splitModePram = searchParams.get("splitMode");
+  const splitMode = splitModePram == "true" || splitModePram == '1';
+  if (splitMode) {
+    setJetBrains();
+    const currentProject = searchParams.get("currentProject");
+    setCurrentProject(currentProject)
+    const serverToken = searchParams.get("serverToken");
+    setServerToken(serverToken)
+    const debugWsHost = searchParams.get("debugWsHost");
+    if (debugWsHost && debugWsHost.length > 0) {
+      setOverrideWsHost(debugWsHost)
+    }
+  }
+  setSplitMode(splitMode);
   useEffect(() => {
     if (!active || !topGuiDivRef.current) return;
 

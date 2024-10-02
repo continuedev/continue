@@ -2552,6 +2552,36 @@
               }
             }
           }
+        },
+        "useOsr":{
+          "title": "useOsr",
+          "type": "boolean",
+          "markdownDescription": "Force change toolwindow Jcef Osr mode, default enabled if os is Linux"
+        },
+        "splitMode":{
+          "title": "splitMode",
+          "type": "boolean",
+          "markdownDescription": "Split toolwindow content to external browser, default is false"
+        },
+        "serverHost":{
+          "title": "serverHost",
+          "type": "string",
+          "markdownDescription": "Effective when splitMode = true, embedded server listen address, default is 127.0.0.1"
+        },
+        "serverPort":{
+          "title": "serverPort",
+          "type": "string",
+          "markdownDescription": "Effective when splitMode = true, embedded server listen address, default is 8080"
+        },
+        "serverToken":{
+          "title": "serverToken",
+          "type": "string",
+          "markdownDescription": "Effective when splitMode = true, embedded server websocket auth token, default is random"
+        },
+        "serverExternalHostPort":{
+          "title": "serverExternalHostPort",
+          "type": "string",
+          "markdownDescription": "Effective when splitMode = true, embedded server access address, default is serverHost:serverPort, useful when port mapping exists"
         }
       }
     }

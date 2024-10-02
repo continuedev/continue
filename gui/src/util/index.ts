@@ -1,7 +1,43 @@
 import _ from "lodash";
-import { getLocalStorage } from "./localStorage";
+import { getLocalStorage, setLocalStorage } from "./localStorage";
 
 type Platform = "mac" | "linux" | "windows" | "unknown";
+export function getOverrideWsHost(): string {
+  return getLocalStorage("overrideWsHost")
+}
+
+export function setOverrideWsHost(value: string): string {
+  setLocalStorage("overrideWsHost", value)
+  return getOverrideWsHost()
+}
+
+export function inSplitMode(): boolean {
+  return getLocalStorage("inSplitMode") || false
+}
+
+export function setSplitMode(value: boolean): boolean {
+  setLocalStorage("inSplitMode", value)
+  console.log("inSplitMode", value)
+  return inSplitMode()
+}
+
+export function getCurrentProject(): string {
+  return getLocalStorage("currentProject")
+}
+
+export function setCurrentProject(project: string): string {
+  setLocalStorage("currentProject", project)
+  return getCurrentProject()
+}
+
+export function getServerToken(): string {
+  return getLocalStorage("serverToken")
+}
+
+export function setServerToken(token: string): string {
+  setLocalStorage("serverToken", token)
+  return getServerToken()
+}
 
 export function getPlatform(): Platform {
   const platform = window.navigator.platform.toUpperCase();
@@ -61,6 +97,10 @@ export function getFontSize(): number {
 
 export function isJetBrains() {
   return getLocalStorage("ide") === "jetbrains";
+}
+
+export function setJetBrains() {
+  return setLocalStorage("ide", "jetbrains");
 }
 
 export function isWebEnvironment(): boolean {

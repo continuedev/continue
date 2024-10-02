@@ -149,7 +149,7 @@ fun getMachineUniqueID(): String {
     return "No MAC Address Found"
 }
 
-private fun readConfigJson(): Map<String, Any> {
+fun readConfigJson(): Map<String, Any> {
     val gson = GsonBuilder().setPrettyPrinting().create()
     val configJsonPath = getConfigJsonPath()
     val reader = FileReader(configJsonPath)

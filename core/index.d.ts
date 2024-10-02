@@ -15,6 +15,8 @@ declare global {
     };
     colorThemeName?: string;
     workspacePaths?: string[];
+    project:string,
+    embeddedSocketInfo?: IEmbeddedSocketManager;
     postIntellijMessage?: (
       messageType: string,
       data: any,
@@ -22,7 +24,17 @@ declare global {
     ) => void;
   }
 }
-
+export interface IEmbeddedSocketManager {
+  socket: WebSocket,
+  authed: boolean;
+  isConnected: boolean;
+  error?: Error;
+  internal?: {
+    timeout?: NodeJS.Timeout;
+  };
+  project:string?,
+  serverToken:string
+}
 export interface ChunkWithoutID {
   content: string;
   startLine: number;
