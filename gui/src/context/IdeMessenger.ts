@@ -109,9 +109,6 @@ export class IdeMessenger implements IIdeMessenger {
       }
       socket.onclose = () => {
         clearTimeout(socketInfo.internal.timeout);
-      }
-      socket.onclose = () => {
-        clearTimeout(socketInfo.internal.timeout);
         socketInfo.socket = null
         socketInfo.isConnected = false;
         socketInfo.authed = false;
@@ -124,7 +121,10 @@ export class IdeMessenger implements IIdeMessenger {
           const retry = data.replace("auth failed|", "")
           socket.send(serverToken)
           socket.send(retry)
-        } else if (data == "auth succ" || data == "auth failed") {
+        } else if (data == "auth failed") {
+          // status query response ,ignore it
+        } else if (data == "auth succ") {
+          socketInfo.authed = true
         } else {
           window.postMessage(JSON.parse(data), "*")
         }
