@@ -25,6 +25,7 @@ const {
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
   copyTokenizers,
+  continueDir,
 } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -139,7 +140,10 @@ async function package(target, os, arch, exe) {
 
   // Copy over any worker files
   fs.cpSync(
-    "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+    path.join(
+      continueDir,
+      "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+    ),
     "out/xhr-sync-worker.js",
   );
 

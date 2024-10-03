@@ -8,6 +8,8 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
+const ROOT_DIR = path.join(__dirname, "..", "..", "..");
+
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
 rimrafSync(path.join(__dirname, "..", "out"));
@@ -82,16 +84,13 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execCmdSync("npm install");
-  console.log("[info] npm install in extensions/vscode completed");
+  execCmdSync("npm install -w core -w gui -w extensions/vscode");
+  console.log("[info] npm install completed");
 
   process.chdir("../../gui");
 
-  execCmdSync("npm install");
-  console.log("[info] npm install in gui completed");
-
   if (ghAction()) {
-    execCmdSync("npm run build");
+    execCmdSync("npm run build -w gui");
   }
 
   // Copy over the dist folder to the JetBrains extension //
@@ -171,7 +170,7 @@ const exe = os === "win32" ? ".exe" : "";
   // onnxruntime-node
   await new Promise((resolve, reject) => {
     ncp(
-      path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
+      path.join(__dirname, "../../../node_modules/onnxruntime-node/bin"),
       path.join(__dirname, "../bin"),
       {
         dereference: true,
@@ -227,7 +226,7 @@ const exe = os === "win32" ? ".exe" : "";
 
   await new Promise((resolve, reject) => {
     ncp(
-      path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
+      path.join(__dirname, "../../../node_modules/tree-sitter-wasms/out"),
       path.join(__dirname, "../out/tree-sitter-wasms"),
       { dereference: true },
       (error) => {
@@ -260,7 +259,7 @@ const exe = os === "win32" ? ".exe" : "";
   // ncp(
   //   path.join(
   //     __dirname,
-  //     "../../../core/node_modules/llm-code-highlighter/dist/tag-qry",
+  //     "../../../node_modules/llm-code-highlighter/dist/tag-qry",
   //   ),
   //   path.join(__dirname, "../out/tag-qry"),
   //   (error) => {
@@ -339,7 +338,7 @@ const exe = os === "win32" ? ".exe" : "";
       await new Promise((resolve, reject) => {
         ncp(
           path.join(tempDir, "node_modules", toCopy),
-          path.join(currentDir, "node_modules", toCopy),
+          path.join(ROOT_DIR, "node_modules", toCopy),
           { dereference: true },
           (error) => {
             if (error) {
@@ -385,7 +384,7 @@ const exe = os === "win32" ? ".exe" : "";
 
       // Replace the installed with pre-built
       console.log("[info] Downloading pre-built sqlite3 binary");
-      rimrafSync("../../core/node_modules/sqlite3/build");
+      rimrafSync("../../node_modules/sqlite3/build");
       const downloadUrl = {
         "darwin-arm64":
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
@@ -393,12 +392,10 @@ const exe = os === "win32" ? ".exe" : "";
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
       }[target];
       execCmdSync(
-        `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
+        `curl -L -o ../../node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
       );
-      execCmdSync(
-        "cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz",
-      );
-      fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
+      execCmdSync("cd ../../node_modules/sqlite3 && tar -xvzf build.tar.gz");
+      fs.unlinkSync("../../node_modules/sqlite3/build.tar.gz");
     }
 
     // Download and unzip esbuild
@@ -422,7 +419,7 @@ const exe = os === "win32" ? ".exe" : "";
   console.log("[info] Copying sqlite node binding from core");
   await new Promise((resolve, reject) => {
     ncp(
-      path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
+      path.join(__dirname, "../../../node_modules/sqlite3/build"),
       path.join(__dirname, "../out/build"),
       { dereference: true },
       (error) => {
@@ -439,7 +436,7 @@ const exe = os === "win32" ? ".exe" : "";
   // Copied here as well for the VS Code test suite
   await new Promise((resolve, reject) => {
     ncp(
-      path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
+      path.join(__dirname, "../../../node_modules/sqlite3/build"),
       path.join(__dirname, "../out"),
       { dereference: true },
       (error) => {
@@ -470,7 +467,7 @@ const exe = os === "win32" ? ".exe" : "";
         new Promise((resolve, reject) => {
           fs.mkdirSync(`out/node_modules/${mod}`, { recursive: true });
           ncp(
-            `node_modules/${mod}`,
+            path.join(ROOT_DIR, "node_modules", mod),
             `out/node_modules/${mod}`,
             { dereference: true },
             function (error) {
@@ -491,7 +488,10 @@ const exe = os === "win32" ? ".exe" : "";
 
   // Copy over any worker files
   fs.cpSync(
-    "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+    path.join(
+      ROOT_DIR,
+      "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+    ),
     "out/xhr-sync-worker.js",
   );
 
@@ -530,9 +530,6 @@ const exe = os === "win32" ? ".exe" : "";
     "models/all-MiniLM-L6-v2/tokenizer.json",
     "models/all-MiniLM-L6-v2/vocab.txt",
     "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
-
-    // node_modules (it's a bit confusing why this is necessary)
-    `node_modules/@vscode/ripgrep/bin/rg${exe}`,
 
     // out directory (where the extension.js lives)
     // "out/extension.js", This is generated afterward by vsce

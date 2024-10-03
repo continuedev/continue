@@ -59,14 +59,9 @@ function installNodeModules() {
     process.chdir(path.join(continueDir, "extensions", "vscode"));
   }
 
-  // Install node_modules //
-  execCmdSync("npm install");
-  console.log("[info] npm install in extensions/vscode completed");
-
-  process.chdir(path.join(continueDir, "gui"));
-
-  execCmdSync("npm install");
-  console.log("[info] npm install in gui completed");
+  // Install node_modules
+  execCmdSync("npm install -w core -w gui -w extensions/vscode");
+  console.log("[info] npm install completed");
 }
 
 async function buildGui(isGhAction) {
@@ -154,7 +149,7 @@ async function copyOnnxRuntimeFromNodeModules(target) {
 
   await new Promise((resolve, reject) => {
     ncp(
-      path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
+      path.join(__dirname, "../../../node_modules/onnxruntime-node/bin"),
       path.join(__dirname, "../bin"),
       {
         dereference: true,
@@ -212,7 +207,7 @@ async function copyTreeSitterWasms() {
 
   await new Promise((resolve, reject) => {
     ncp(
-      path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
+      path.join(__dirname, "../../../node_modules/tree-sitter-wasms/out"),
       path.join(__dirname, "../out/tree-sitter-wasms"),
       { dereference: true },
       (error) => {
@@ -237,7 +232,7 @@ async function copyTreeSitterTagQryFiles() {
   // ncp(
   //   path.join(
   //     __dirname,
-  //     "../../../core/node_modules/llm-code-highlighter/dist/tag-qry",
+  //     "../../../node_modules/llm-code-highlighter/dist/tag-qry",
   //   ),
   //   path.join(__dirname, "../out/tag-qry"),
   //   (error) => {
@@ -266,7 +261,7 @@ async function copyNodeModules() {
         new Promise((resolve, reject) => {
           fs.mkdirSync(`out/node_modules/${mod}`, { recursive: true });
           ncp(
-            `node_modules/${mod}`,
+            `${continueDir}/node_modules/${mod}`,
             `out/node_modules/${mod}`,
             { dereference: true },
             function (error) {
@@ -358,7 +353,7 @@ async function downloadEsbuildBinary(target) {
 
 async function downloadSqliteBinary(target) {
   console.log("[info] Downloading pre-built sqlite3 binary");
-  rimrafSync("../../core/node_modules/sqlite3/build");
+  rimrafSync("../../node_modules/sqlite3/build");
   const downloadUrl = {
     "darwin-arm64":
       "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
@@ -374,10 +369,10 @@ async function downloadSqliteBinary(target) {
       "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-win32-x64.tar.gz",
   }[target];
   execCmdSync(
-    `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
+    `curl -L -o ../../node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
   );
-  execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
-  fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
+  execCmdSync("cd ../../node_modules/sqlite3 && tar -xvzf build.tar.gz");
+  fs.unlinkSync("../../node_modules/sqlite3/build.tar.gz");
 }
 
 async function copySqliteBinary() {
@@ -385,7 +380,7 @@ async function copySqliteBinary() {
   console.log("[info] Copying sqlite node binding from core");
   await new Promise((resolve, reject) => {
     ncp(
-      path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
+      path.join(__dirname, "../../../node_modules/sqlite3/build"),
       path.join(__dirname, "../out/build"),
       { dereference: true },
       (error) => {
@@ -510,4 +505,5 @@ module.exports = {
   downloadSqliteBinary,
   downloadRipgrepBinary,
   copyTokenizers,
+  continueDir,
 };

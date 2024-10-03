@@ -510,7 +510,8 @@
     "package:pre-release": "node scripts/package.js --pre-release",
     "build:rust": "cargo-cp-artifact -ac sync sync.node -- cargo build --manifest-path ../../sync/Cargo.toml --message-format=json-render-diagnostics",
     "build-debug:rust": "npm run build:rust --",
-    "build-release:rust": "npm run build:rust -- --release"
+    "build-release:rust": "npm run build:rust -- --release",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.4",
@@ -587,6 +588,7 @@
     "vectordb": "^0.4.20",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
-    "yarn": "^1.22.21"
+    "yarn": "^1.22.21",
+    "@continuedev/core": "file:../../core"
   }
 }

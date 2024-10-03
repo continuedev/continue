@@ -6,7 +6,8 @@
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "build:npm": "tsc -p ./tsconfig.npm.json",
     "lint": "eslint . --ext ts",
-    "lint:fix": "eslint . --ext ts --fix"
+    "lint:fix": "eslint . --ext ts --fix",
+    "typecheck": "tsc --noEmit"
   },
   "type": "module",
   "author": "Continue Dev, Inc",
