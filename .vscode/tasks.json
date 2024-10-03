@@ -60,15 +60,12 @@
     {
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
-      "command": "node",
-      "args": ["${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
+      "command": "npm",
+      "args": ["run", "prepackage", "-w", "extensions/vscode"],
       "problemMatcher": ["$tsc"],
       "presentation": {
         "revealProblems": "onProblem",
         "clear": true
-      },
-      "options": {
-        "cwd": "${workspaceFolder}/extensions/vscode"
       }
     },
     //
@@ -166,8 +163,7 @@
     {
       "label": "clean",
       "type": "shell",
-      "command": "node",
-      "args": ["${workspaceFolder}/scripts/uninstall.js"],
+      "command": "npm run clean",
       "problemMatcher": []
     }
   ]
