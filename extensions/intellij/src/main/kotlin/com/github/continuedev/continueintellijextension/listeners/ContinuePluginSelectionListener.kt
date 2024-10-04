@@ -80,45 +80,51 @@ class ContinuePluginSelectionListener(
                 ApplicationManager.getApplication().invokeLater {
                     editor.contentComponent.layout = null
 
-                    var topLine = startLine
-                    var hasText = false
-                    
-                    for (line in startLine until endLine) {
+                    val startOffset = model.selectionStart
+                    val endOffset = model.selectionEnd
+                    var startLine = document.getLineNumber(startOffset)
+                    val endLine = document.getLineNumber(endOffset)
+
+                    // Find the first non-empty line
+                    var nonEmptyLine = -1
+                    for (line in startLine..endLine) {
                         val lineStartOffset = document.getLineStartOffset(line)
                         val lineEndOffset = document.getLineEndOffset(line)
                         val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset)).trim()
                         if (lineText.isNotEmpty()) {
-                            topLine = line
-                            hasText = true
+                            nonEmptyLine = line
                             break
                         }
                     }
 
-                    if (hasText && topLine < endLine) {
-                        // Get the text on the top line
-                        val lineStartOffset = document.getLineStartOffset(topLine)
-                        val lineEndOffset = document.getLineEndOffset(topLine)
-                        val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset))
-
-                        // Calculate the position 20px to the right of the end of the line
-                        val endOfLinePos = LogicalPosition(topLine, lineText.length)
-                        val endOfLineX = editor.logicalPositionToXY(endOfLinePos).x
-                        val tooltipX = endOfLineX + 40
-
-                        // Calculate the Y position (vertically centered on the line)
-                        val lineTopY = editor.logicalPositionToXY(LogicalPosition(topLine, 0)).y
-                        val lineHeight = editor.lineHeight
-                        val y = lineTopY + (lineHeight / 2)
-
-                        // Check if x is out of bounds
-                        val maxEditorWidth = editor.contentComponent.width
-                        val maxToolTipWidth = 600
-                        val x = max(0, min(tooltipX, maxEditorWidth - maxToolTipWidth))
-
-                        val toolTipComponent = ToolTipComponent(editor, x, y)
-                        toolTipComponents.add(toolTipComponent)
-                        editor.contentComponent.add(toolTipComponent)
+                    // If no non-empty line found, don't render anything
+                    if (nonEmptyLine == -1) {
+                        return@invokeLater
                     }
+
+                    // Get the text of the first non-empty line
+                    val lineStartOffset = document.getLineStartOffset(nonEmptyLine)
+                    val lineEndOffset = document.getLineEndOffset(nonEmptyLine)
+                    val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset))
+
+                    // Calculate the position 20px to the right of the end of the line
+                    val endOfLinePos = LogicalPosition(nonEmptyLine, lineText.length)
+                    val endOfLineX = editor.logicalPositionToXY(endOfLinePos).x
+                    val tooltipX = endOfLineX + 40
+
+                    // Calculate the Y position (vertically centered on the line)
+                    val lineTopY = editor.logicalPositionToXY(LogicalPosition(nonEmptyLine, 0)).y
+                    val lineHeight = editor.lineHeight
+                    val y = lineTopY + (lineHeight / 2)
+
+                    // Check if x is out of bounds
+                    val maxEditorWidth = editor.contentComponent.width
+                    val maxToolTipWidth = 600
+                    val x = max(0, min(tooltipX, maxEditorWidth - maxToolTipWidth))
+
+                    val toolTipComponent = ToolTipComponent(editor, x, y)
+                    toolTipComponents.add(toolTipComponent)
+                    editor.contentComponent.add(toolTipComponent)
 
                     editor.contentComponent.revalidate()
                     editor.contentComponent.repaint()
