@@ -78,14 +78,6 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
     val browser: JBCefBrowser
 
     init {
-        val osName = System.getProperty("os.name").toLowerCase()
-        val os = when {
-            osName.contains("mac") || osName.contains("darwin") -> "darwin"
-            osName.contains("win") -> "win32"
-            osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
-            else -> "linux"
-        }
-
         this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
 
         browser.jbCefClient.setProperty(
