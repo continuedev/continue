@@ -14,4 +14,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     void,
   ];
   setTTSActive: [boolean, void];
+  setCurrentChatTitle: [string, void];
 };
