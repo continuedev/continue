@@ -59,7 +59,7 @@ class StyledButton(text: String) : JButton(text) {
         g2.fill(RoundRectangle2D.Float(0f, 0f, width, height, arc, arc))
 
         // Draw border
-        g2.color = if (isHovered) foreground.brighter() else foreground.darker()
+        g2.color = if (isHovered) foreground else foreground.darker()
         g2.stroke = BasicStroke(1f)
         g2.draw(RoundRectangle2D.Float(0.5f, 0.5f, width - 1f, height - 1f, arc, arc))
 
