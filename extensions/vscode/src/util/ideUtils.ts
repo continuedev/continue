@@ -225,7 +225,7 @@ export class VsCodeIdeUtils {
       .flat()
       .filter(Boolean) // filter out undefined values
       .filter((uri) => this.documentIsCode(uri)) // Filter out undesired documents
-      .map((uri) => uri.fsPath);
+      .map((uri) => uriFromFilePath(uri.fsPath).fsPath);
   }
 
   getVisibleFiles(): string[] {

@@ -431,42 +431,7 @@ class VsCodeIde implements IDE {
   }
 
   async getOpenFiles(): Promise<string[]> {
-    const openFiles = await this.ideUtils.getOpenFiles();
-    return this.convertWslPathsIfNeeded(openFiles);
-  }
-
-  private async convertWslPathsIfNeeded(paths: string[]): Promise<string[]> {
-    if (!this.isWsl()) {
-      return paths;
-    }
-
-    const convertedPaths = await Promise.all(paths.map(async (path) => {
-      if (path.startsWith('/mnt/')) {
-        try {
-          const [stdout, stderr] = await this.subprocess(`wslpath -w "${path}"`);
-          if (stderr) {
-            console.error(`Error converting WSL path: ${stderr}`);
-            return path;
-          }
-          return stdout.trim();
-        } catch (error) {
-          console.error(`Error executing wslpath command: ${error}`);
-          return path;
-        }
-      }
-      return path;
-    }));
-
-    return convertedPaths;
-  }
-
-  /**
-   * Tests the remote name of the vscode.env.remoteName to see if it starts with 'wsl'
-   *
-   * @returns boolean
-   */
-  private isWsl(): boolean {
-    return !!vscode.env.remoteName?.toLowerCase().startsWith('wsl');
+    return await this.ideUtils.getOpenFiles();
   }
 
   async getCurrentFile(): Promise<string | undefined> {
