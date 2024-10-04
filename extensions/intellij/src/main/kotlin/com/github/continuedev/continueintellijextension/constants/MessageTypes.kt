@@ -1,4 +1,4 @@
-package com.github.continuedev.continueintellijextension.toolWindow
+package com.github.continuedev.continueintellijextension.constants
 
 class MessageTypes {
     companion object {
@@ -50,7 +50,7 @@ class MessageTypes {
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
             "getTerminalContents",
-            "showToast"
+            "showToast",
         )
 
         val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
