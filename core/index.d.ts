@@ -801,6 +801,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "sagemaker"
   | "bedrock"
   | "huggingface-tei"
   | "transformers.js"
