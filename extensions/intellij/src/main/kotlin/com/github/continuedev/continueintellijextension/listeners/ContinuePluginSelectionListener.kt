@@ -12,24 +12,42 @@ import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
-import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.vfs.VirtualFile
 import kotlinx.coroutines.CoroutineScope
-import kotlin.math.max
-import kotlin.math.min
+import com.intellij.openapi.editor.Document
 
 class ContinuePluginSelectionListener(
     private val ideProtocolClient: IdeProtocolClient,
     private val coroutineScope: CoroutineScope
 ) : SelectionListener, DumbAware {
-    private val debouncer = Debouncer(100L, coroutineScope)
+    private val debouncer = Debouncer(500, coroutineScope)
+    private var toolTipComponents: ArrayList<ToolTipComponent> = ArrayList()
+
     override fun selectionChanged(e: SelectionEvent) {
         debouncer.debounce { handleSelection(e) }
     }
 
-    private var toolTipComponents: ArrayList<ToolTipComponent> = ArrayList()
+    private fun handleSelection(e: SelectionEvent) {
+        ApplicationManager.getApplication().runReadAction {
+            val editor = e.editor
+            val model: SelectionModel = editor.selectionModel
+            val selectedText = model.selectedText
+
+            if (shouldRemoveTooltip(selectedText, editor)) {
+                removeExistingTooltips(editor)
+                return@runReadAction
+            }
+
+            updateTooltip(editor, model)
+        }
+    }
+
+    private fun shouldRemoveTooltip(selectedText: String?, editor: Editor): Boolean {
+        return selectedText.isNullOrEmpty() ||
+                !service<ContinueExtensionSettings>().continueState.displayEditorTooltip ||
+                EditorUtils().isTerminal(editor)
+    }
 
     private fun removeExistingTooltips(editor: Editor, onComplete: () -> Unit = {}) {
         ApplicationManager.getApplication().invokeLater {
@@ -43,98 +61,114 @@ class ContinuePluginSelectionListener(
         }
     }
 
-    private fun handleSelection(e: SelectionEvent) {
-        ApplicationManager.getApplication().runReadAction {
-            val editor = e.editor
-            val model: SelectionModel = editor.selectionModel
-            val selectedText = model.selectedText
+    private fun updateTooltip(editor: Editor, model: SelectionModel) {
+        removeExistingTooltips(editor) {
+            ApplicationManager.getApplication().invokeLater {
+                val document = editor.document
+                val (startLine, endLine, isFullLineSelection) = getSelectionInfo(model, document)
+                val selectionTopY = calculateSelectionTopY(editor, startLine, endLine, isFullLineSelection)
+                val tooltipX = calculateTooltipX(editor, document, startLine, endLine, isFullLineSelection)
 
-            // If selected text is empty, remove the tooltip
-            if (selectedText.isNullOrEmpty()) {
-                removeExistingTooltips(editor)
-                return@runReadAction
-            }
-
-            // Allow user to disable editor tooltip
-            // Note that we still check for empty selected text before this
-            val extensionSettingsService = service<ContinueExtensionSettings>()
-            if (extensionSettingsService.continueState.displayEditorTooltip == false) {
-                return@runReadAction
-            }
-
-            // Don't display in the terminal
-            if (EditorUtils().isTerminal(editor)) {
-                return@runReadAction
-            }
-
-            val document = editor.document
-            val startOffset = model.selectionStart
-            val endOffset = model.selectionEnd
-            val startLine = document.getLineNumber(startOffset)
-            val endLine = document.getLineNumber(endOffset)
-            val virtualFile: VirtualFile? =
-                FileDocumentManager.getInstance().getFile(document)
-
-
-            removeExistingTooltips(editor) {
-                ApplicationManager.getApplication().invokeLater {
-                    editor.contentComponent.layout = null
-
-                    val startOffset = model.selectionStart
-                    val endOffset = model.selectionEnd
-                    var startLine = document.getLineNumber(startOffset)
-                    val endLine = document.getLineNumber(endOffset)
-
-                    // Find the first non-empty line
-                    var nonEmptyLine = -1
-                    for (line in startLine..endLine) {
-                        val lineStartOffset = document.getLineStartOffset(line)
-                        val lineEndOffset = document.getLineEndOffset(line)
-                        val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset)).trim()
-                        if (lineText.isNotEmpty()) {
-                            nonEmptyLine = line
-                            break
-                        }
-                    }
-
-                    // If no non-empty line found, don't render anything
-                    if (nonEmptyLine == -1) {
-                        return@invokeLater
-                    }
-
-                    // Get the text of the first non-empty line
-                    val lineStartOffset = document.getLineStartOffset(nonEmptyLine)
-                    val lineEndOffset = document.getLineEndOffset(nonEmptyLine)
-                    val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset))
-
-                    // Calculate the position 20px to the right of the end of the line
-                    val endOfLinePos = LogicalPosition(nonEmptyLine, lineText.length)
-                    val endOfLineX = editor.logicalPositionToXY(endOfLinePos).x
-                    val tooltipX = endOfLineX + 40
-
-                    // Calculate the Y position (vertically centered on the line)
-                    val lineTopY = editor.logicalPositionToXY(LogicalPosition(nonEmptyLine, 0)).y
-                    val lineHeight = editor.lineHeight
-                    val y = lineTopY + (lineHeight / 2)
-
-                    // Check if x is out of bounds
-                    val maxEditorWidth = editor.contentComponent.width
-                    val maxToolTipWidth = 600
-                    val x = max(0, min(tooltipX, maxEditorWidth - maxToolTipWidth))
-
-                    val toolTipComponent = ToolTipComponent(editor, x, y)
-                    toolTipComponents.add(toolTipComponent)
-                    editor.contentComponent.add(toolTipComponent)
-
-                    editor.contentComponent.revalidate()
-                    editor.contentComponent.repaint()
+                if (tooltipX != null) {
+                    addToolTipComponent(editor, tooltipX, selectionTopY)
                 }
             }
         }
     }
+
+    private fun getSelectionInfo(model: SelectionModel, document: Document): Triple<Int, Int, Boolean> {
+        val startOffset = model.selectionStart
+        val endOffset = model.selectionEnd
+        val startLine = document.getLineNumber(startOffset)
+        val endLine = document.getLineNumber(endOffset)
+
+        val isFullLineSelection = startOffset == document.getLineStartOffset(startLine) &&
+                (endOffset == document.getLineEndOffset(endLine - 1) || endOffset == document.getLineStartOffset(endLine))
+
+        val adjustedEndLine = if (isFullLineSelection && endLine > startLine) endLine - 1 else endLine
+
+        return Triple(startLine, adjustedEndLine, isFullLineSelection)
+    }
+
+    private fun calculateSelectionTopY(
+        editor: Editor,
+        startLine: Int,
+        endLine: Int,
+        isFullLineSelection: Boolean
+    ): Int {
+        return if (startLine == endLine || isFullLineSelection) {
+            val lineTopY = editor.logicalPositionToXY(LogicalPosition(startLine, 0)).y
+            lineTopY + (editor.lineHeight / 2)
+        } else {
+            editor.logicalPositionToXY(LogicalPosition(startLine, 0)).y
+        }
+    }
+
+    private fun calculateTooltipX(
+        editor: Editor,
+        document: Document,
+        startLine: Int,
+        endLine: Int,
+        isFullLineSelection: Boolean
+    ): Int? {
+        fun isLineEmpty(lineNumber: Int): Boolean {
+            val lineStartOffset = document.getLineStartOffset(lineNumber)
+            val lineEndOffset = document.getLineEndOffset(lineNumber)
+            return document.getText(TextRange(lineStartOffset, lineEndOffset)).trim().isEmpty()
+        }
+
+        fun getLineEndX(lineNumber: Int): Int {
+            val lineStartOffset = document.getLineStartOffset(lineNumber)
+            val lineEndOffset = document.getLineEndOffset(lineNumber)
+            val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset)).trimEnd()
+            val endOfLinePos = LogicalPosition(lineNumber, lineText.length)
+            return editor.logicalPositionToXY(endOfLinePos).x
+        }
+
+        val offset = 40
+
+        // If only one line is selected and it's empty, return null
+        if (startLine == endLine && isLineEmpty(startLine) && !isFullLineSelection) {
+            return null
+        }
+
+        // Find the topmost non-empty line within the selection
+        var topNonEmptyLine = startLine
+        while (topNonEmptyLine <= endLine && isLineEmpty(topNonEmptyLine)) {
+            topNonEmptyLine++
+        }
+
+        // If all lines in the selection are empty, return null
+        if (topNonEmptyLine > endLine) {
+            return null
+        }
+
+        // Always display inline if the selection is a single line
+        if (isFullLineSelection || startLine == endLine) {
+            return getLineEndX(topNonEmptyLine) + offset
+        }
+
+        // Check the line above the start of the selection (if it exists)
+        val lineAboveSelection = maxOf(0, startLine - 1)
+
+        // Get x-coordinates
+        val xCoordTopNonEmpty = getLineEndX(topNonEmptyLine)
+        val xCoordLineAbove = getLineEndX(lineAboveSelection)
+
+        // Use the maximum of the two x-coordinates
+        val baseXCoord = maxOf(xCoordTopNonEmpty, xCoordLineAbove)
+
+        // Calculate the final x-coordinate
+        return baseXCoord + offset
+    }
+
+    private fun addToolTipComponent(editor: Editor, tooltipX: Int, selectionTopY: Int) {
+        val toolTipComponent = ToolTipComponent(editor, tooltipX, selectionTopY)
+        toolTipComponents.add(toolTipComponent)
+        editor.contentComponent.add(toolTipComponent)
+        editor.contentComponent.revalidate()
+        editor.contentComponent.repaint()
+    }
 }
-
-
-
 
 
