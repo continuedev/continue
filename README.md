@@ -54,7 +54,7 @@
 
 ## Getting Started
 
-Learn about how to install and use Continue in the docs [here](https://continue.dev/docs/getting-started)
+Learn about how to install and use Continue in the docs [here](https://continue.dev/docs/getting-started/install)
 
 ## Contributing
 

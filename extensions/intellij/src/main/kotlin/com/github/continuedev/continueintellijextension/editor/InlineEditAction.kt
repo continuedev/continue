@@ -599,26 +599,23 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
         val defaultBackground = globalScheme.defaultBackground
         comboBox.background = defaultBackground
 
-        // Modify the ComboBoxModel to include the down symbol
-        val originalModel = comboBox.model
-        comboBox.model = object : ComboBoxModel<Any> {
-            override fun getSize(): Int = originalModel.size
-            override fun getElementAt(index: Int): Any? = originalModel.getElementAt(index)
-            override fun setSelectedItem(anItem: Any?) {
-                originalModel.selectedItem = anItem
-            }
-
-            override fun getSelectedItem(): Any? {
-                val item = originalModel.selectedItem
-                return if (item is String) "$item ▾" else item
-            }
-
-            override fun addListDataListener(l: ListDataListener?) {
-                originalModel.addListDataListener(l)
-            }
-
-            override fun removeListDataListener(l: ListDataListener?) {
-                originalModel.removeListDataListener(l)
+        // Custom renderer to add the down caret symbol
+        comboBox.renderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(
+                list: JList<*>?,
+                value: Any?,
+                index: Int,
+                isSelected: Boolean,
+                cellHasFocus: Boolean
+            ): Component {
+                val component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+                if (component is JLabel && index == -1) {  // -1 indicates it's the selected item in the ComboBox
+                    text = "$text ▾"
+                }
+                foreground = Color(156, 163, 175) // text-gray-400
+                background = comboBox.background
+                isOpaque = false
+                return component
             }
         }
     }
