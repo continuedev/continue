@@ -2,48 +2,94 @@ import com.github.continuedev.continueintellijextension.actions.focusContinueInp
 import com.github.continuedev.continueintellijextension.editor.openInlineEdit
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
+import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.EditorColorsManager
+import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.ui.components.JBPanel
 import java.awt.*
 import java.awt.event.ActionEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.util.*
 import javax.swing.JButton
 import java.awt.geom.RoundRectangle2D
 
-class StyledButton(text: String, foregroundColor: Color) : JButton(text) {
+class StyledButton(text: String, foregroundColor: Color, backgroundColor: Color) : JButton(text) {
+    private var isHovered = false
+    private val borderColor: Color
+    private val hoverBackgroundColor: Color
+    private val hoverForegroundColor: Color
+    private val originalForegroundColor: Color
+
     init {
         cursor = Cursor(Cursor.HAND_CURSOR)
         isOpaque = false
         isContentAreaFilled = false
         isFocusPainted = false
-        border = null // Remove the border
+        border = null
         foreground = foregroundColor
+        background = Color(backgroundColor.red, backgroundColor.green, backgroundColor.blue, 0)
+
+        // Store the original foreground color
+        originalForegroundColor = foregroundColor
+
+        // Calculate colors for different states
+        borderColor = Color(foregroundColor.red, foregroundColor.green, foregroundColor.blue, 40) // More subtle border
+        hoverBackgroundColor = Color(backgroundColor.red, backgroundColor.green, backgroundColor.blue, 40)
+        hoverForegroundColor = Color(
+            foregroundColor.red,
+            foregroundColor.green,
+            foregroundColor.blue,
+            160
+        )
+
+        // Get the editor font and its size
+        val scheme = EditorColorsManager.getInstance().globalScheme
+        val editorFont = scheme.getFont(EditorFontType.PLAIN)
+        val editorFontSize = editorFont.size
+
+        // Set the button's font to be slightly smaller than the editor
+        font = font.deriveFont(editorFontSize.toFloat() * 0.75f)
+
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseEntered(e: MouseEvent) {
+                isHovered = true
+                repaint()
+            }
+
+            override fun mouseExited(e: MouseEvent) {
+                isHovered = false
+                repaint()
+            }
+        })
     }
+
 
     override fun paintComponent(g: Graphics) {
         val g2 = g.create() as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-        val arc = 24f // Corner radius
-        val padding = 0f
-        val x = padding
-        val y = padding
-        val w = (width - 2 * padding)
-        val h = (height - 2 * padding)
+        val width = width.toFloat()
+        val height = height.toFloat()
+        val arc = 4f
 
-        // Draw flat background
-//        g2.color = if (model.isPressed) Color(70, 70, 70) else Color(100, 100, 100)
-//        g2.fill(RoundRectangle2D.Float(x, y, w, h, arc, arc))
+        // Draw button background
+        g2.color = if (isHovered) hoverBackgroundColor else background
+        g2.fill(RoundRectangle2D.Float(0f, 0f, width, height, arc, arc))
 
         // Draw border
-//        g2.color = Color(120, 120, 120)
-//        g2.draw(RoundRectangle2D.Float(x, y, w - 1, h - 1, arc, arc))
+        g2.color = if (isHovered) hoverForegroundColor else borderColor
+        g2.draw(RoundRectangle2D.Float(0.5f, 0.5f, width - 1f, height - 1f, arc, arc))
 
         g2.dispose()
+
+        // Set text color
+        foreground = if (isHovered) hoverForegroundColor else originalForegroundColor
 
         super.paintComponent(g)
     }
 }
+
 
 class ToolTipComponent(editor: Editor, x: Int, y: Int) :
     JBPanel<ToolTipComponent>() {
@@ -56,7 +102,10 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
         layout = null // Remove the FlowLayout
 
         val globalScheme = EditorColorsManager.getInstance().globalScheme
-        backgroundColor = globalScheme.defaultBackground
+
+        backgroundColor = globalScheme.getColor(EditorColors.SELECTION_BACKGROUND_COLOR)
+            ?: globalScheme.defaultBackground
+
         foregroundColor = Color(
             globalScheme.defaultForeground.red,
             globalScheme.defaultForeground.green,
@@ -64,9 +113,17 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
             200
         )
 
-        val cmdCtrlChar = if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac")) "⌘" else "Ctrl"
-        addToChatButton = StyledButton("${cmdCtrlChar}J Chat", foregroundColor)
-        editButton = StyledButton("${cmdCtrlChar}I Edit", foregroundColor)
+        val cmdCtrlChar =
+            if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac")) "⌘" else "Ctrl"
+
+        val buttonHeight = 16
+        val buttonHorizontalPadding = 2
+        val buttonVerticalPadding = 2
+        val componentHorizontalPadding = 4
+        val buttonMargin = 4
+
+        addToChatButton = StyledButton("Chat (${cmdCtrlChar}J)", foregroundColor, backgroundColor)
+        editButton = StyledButton("Edit (${cmdCtrlChar}I)", foregroundColor, backgroundColor)
 
         addToChatButton.addActionListener { e: ActionEvent? ->
             focusContinueInput(editor.project)
@@ -77,45 +134,32 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
             editor.contentComponent.remove(this)
         }
 
-        // Set bounds for buttons to remove spacing
-        addToChatButton.setBounds(0, 0, addToChatButton.preferredSize.width, addToChatButton.preferredSize.height)
-        editButton.setBounds(addToChatButton.preferredSize.width, 0, editButton.preferredSize.width, editButton.preferredSize.height)
+
+        // Calculate button widths
+        val addToChatWidth = addToChatButton.preferredSize.width + (2 * buttonHorizontalPadding)
+        val editWidth = editButton.preferredSize.width + (2 * buttonHorizontalPadding)
+
+        // Set bounds for buttons
+        addToChatButton.setBounds(componentHorizontalPadding, buttonVerticalPadding, addToChatWidth, buttonHeight)
+        editButton.setBounds(
+            componentHorizontalPadding + addToChatWidth + buttonMargin,
+            buttonVerticalPadding,
+            editWidth,
+            buttonHeight
+        )
 
         add(addToChatButton)
         add(editButton)
 
-        val totalWidth = addToChatButton.preferredSize.width + editButton.preferredSize.width
-        val totalHeight = addToChatButton.preferredSize.height
-        setBounds(x, y, totalWidth, totalHeight)
+        val totalWidth = addToChatWidth + editWidth + buttonMargin + (2 * componentHorizontalPadding)
+        val totalHeight = buttonHeight + (2 * buttonVerticalPadding)
+
+        // Center the component on the provided y coordinate
+        val yPosition = y - (totalHeight / 2)
+        setBounds(x, yPosition, totalWidth, totalHeight)
 
         // Make the background transparent
         isOpaque = false
         background = Color(0, 0, 0, 0)
-    }
-
-    override fun paintComponent(g: Graphics) {
-        val arc = 12f
-
-        val g2 = g.create() as Graphics2D
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
-        // Draw rounded rectangle background
-        g2.color = backgroundColor
-        g2.fill(RoundRectangle2D.Float(0f, 0f, width.toFloat(), height.toFloat(), arc, arc))
-
-        // Draw rounded rectangle border
-        g2.color = Color(120, 120, 120)
-        val strokeWidth = 1.0f
-        g2.stroke = BasicStroke(1.0f)
-        g2.draw(RoundRectangle2D.Float(0f, 0f, width.toFloat() - strokeWidth, height.toFloat() - strokeWidth, arc, arc))
-
-        // Draw border between buttons
-        g2.color = Color(120, 120, 120)
-        g2.stroke = BasicStroke(1.0f)
-        val middleX = addToChatButton.width.toFloat()
-        g2.drawLine(middleX.toInt(), 0, middleX.toInt(), height)
-
-        g2.dispose()
-        super.paintComponent(g)
     }
 }
