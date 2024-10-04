@@ -80,9 +80,21 @@ class ContinuePluginSelectionListener(
                 ApplicationManager.getApplication().invokeLater {
                     editor.contentComponent.layout = null
 
-                    val topLine = startLine
+                    var topLine = startLine
+                    var hasText = false
+                    
+                    for (line in startLine until endLine) {
+                        val lineStartOffset = document.getLineStartOffset(line)
+                        val lineEndOffset = document.getLineEndOffset(line)
+                        val lineText = document.getText(TextRange(lineStartOffset, lineEndOffset)).trim()
+                        if (lineText.isNotEmpty()) {
+                            topLine = line
+                            hasText = true
+                            break
+                        }
+                    }
 
-                    if (topLine > 0 && startLine < endLine) {
+                    if (hasText && topLine < endLine) {
                         // Get the text on the top line
                         val lineStartOffset = document.getLineStartOffset(topLine)
                         val lineEndOffset = document.getLineEndOffset(topLine)

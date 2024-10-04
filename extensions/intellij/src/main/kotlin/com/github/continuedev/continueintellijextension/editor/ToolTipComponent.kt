@@ -103,7 +103,6 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
 
         val globalScheme = EditorColorsManager.getInstance().globalScheme
 
-        // Get the selection background color
         backgroundColor = globalScheme.getColor(EditorColors.SELECTION_BACKGROUND_COLOR)
             ?: globalScheme.defaultBackground
 
@@ -117,13 +116,11 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
         val cmdCtrlChar =
             if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac")) "⌘" else "Ctrl"
 
-        val buttonHeight = 16 // Reduced height
-        val buttonHorizontalPadding = 2 // Reduced horizontal padding inside buttons
-        val buttonVerticalPadding = 2 // Vertical padding above and below buttons
-        val componentHorizontalPadding = 4 // Padding on the left and right of the component
-        val buttonMargin = 4 // New margin between buttons
-
-
+        val buttonHeight = 16
+        val buttonHorizontalPadding = 2
+        val buttonVerticalPadding = 2
+        val componentHorizontalPadding = 4
+        val buttonMargin = 4
 
         addToChatButton = StyledButton("Chat (${cmdCtrlChar}J)", foregroundColor, backgroundColor)
         editButton = StyledButton("Edit (${cmdCtrlChar}I)", foregroundColor, backgroundColor)
