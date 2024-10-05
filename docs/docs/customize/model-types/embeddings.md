@@ -69,7 +69,3 @@ See [here](../model-providers/more/cohere.md#embeddings-model) for instructions 
 ### Gemini
 
 See [here](../model-providers/top-level/gemini.md#embeddings-model) for instructions on how to use Gemini for embeddings.
-
-### Amazon
-
-You can use either [Bedrock](../model-providers/top-level/bedrock.md#embeddings-model) or [SageMaker](../model-providers/more/sagemaker.md) for generating embeddings.
