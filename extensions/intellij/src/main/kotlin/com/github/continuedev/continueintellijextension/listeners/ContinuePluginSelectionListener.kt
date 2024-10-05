@@ -21,7 +21,7 @@ class ContinuePluginSelectionListener(
     private val ideProtocolClient: IdeProtocolClient,
     private val coroutineScope: CoroutineScope
 ) : SelectionListener, DumbAware {
-    private val debouncer = Debouncer(500, coroutineScope)
+    private val debouncer = Debouncer(100, coroutineScope)
     private var toolTipComponents: ArrayList<ToolTipComponent> = ArrayList()
 
     override fun selectionChanged(e: SelectionEvent) {

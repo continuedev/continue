@@ -202,28 +202,41 @@ fun openInlineEdit(project: Project?, editor: Editor) {
 
     // Add key listener to text area
     textArea.addKeyListener(object : KeyAdapter() {
-        override fun keyPressed(e: KeyEvent) {
-            if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                diffStreamService.reject(editor)
-
-                // Re-highlight the selected text
-                selectionModel.setSelection(start, end)
-            } else if (e.keyCode == KeyEvent.VK_ENTER) {
-                if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
-                    textArea.document.insertString(textArea.caretPosition, "\n", null)
-                } else if (e.modifiersEx == 0) {
-                    onEnter()
-                    e.consume()
-                }
-            }
-        }
-    })
-
-    // Listen for key typed events after diff streaming is finished
-    textArea.addKeyListener(object : KeyAdapter() {
         override fun keyTyped(e: KeyEvent) {
             if (customPanelRef.get().isFinished) {
                 customPanelRef.get().setup()
+            }
+        }
+
+
+        override fun keyPressed(e: KeyEvent) {
+            when (e.keyCode) {
+                KeyEvent.VK_ESCAPE -> {
+                    diffStreamService.reject(editor)
+                    selectionModel.setSelection(start, end)
+                }
+
+                KeyEvent.VK_ENTER -> {
+                    when (e.modifiersEx) {
+                        KeyEvent.SHIFT_DOWN_MASK -> {
+                            textArea.document.insertString(textArea.caretPosition, "\n", null)
+                        }
+
+                        0 -> {
+                            onEnter()
+                            e.consume()
+                        }
+                    }
+                }
+            }
+        }
+
+        // We need this because backspace/delete is not registering properly on keyPressed for an unknown reason
+        override fun keyReleased(e: KeyEvent) {
+            if (e.keyCode == KeyEvent.VK_BACK_SPACE || e.keyCode == KeyEvent.VK_DELETE) {
+                if (customPanelRef.get().isFinished) {
+                    customPanelRef.get().setup()
+                }
             }
         }
     })
@@ -305,20 +318,27 @@ class CustomPanel(
     }
 
     private fun createCloseButton(): JComponent {
-        return CustomButton("X") { onCancel() }.apply {
+        return JLabel("X").apply {
             foreground = Color(128, 128, 128, 128)
             background = Color(0, 0, 0, 0)
             font = UIUtil.getFontWithFallback("Arial", Font.BOLD, 10)
             border = EmptyBorder(2, 6, 2, 6)
             toolTipText = "`esc` to cancel"
+            isOpaque = false
 
             addMouseListener(object : MouseAdapter() {
                 override fun mouseEntered(e: MouseEvent) {
                     foreground = Color(128, 128, 128, 255)
+                    cursor = Cursor(Cursor.HAND_CURSOR)
                 }
 
                 override fun mouseExited(e: MouseEvent) {
                     foreground = Color(128, 128, 128, 128)
+                    cursor = Cursor.getDefaultCursor()
+                }
+
+                override fun mouseClicked(e: MouseEvent) {
+                    onCancel()
                 }
             })
         }
