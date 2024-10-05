@@ -131,6 +131,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
+  "chatDescriber/describe": [string, string | undefined];
   "stats/getTokensPerDay": [
     undefined,
     { day: string; promptTokens: number; generatedTokens: number }[],

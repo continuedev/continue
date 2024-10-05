@@ -36,6 +36,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "llm/streamChat",
     "llm/listModels",
     "streamDiffLines",
+    "chatDescriber/describe",
     "stats/getTokensPerDay",
     "stats/getTokensPerModel",
     "index/setPaused",
@@ -58,6 +59,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "refreshSubmenuItems",
     "isContinueInputFocused",
     "didChangeAvailableProfiles",
-    "setCurrentChatTitle",
     "setTTSActive",
   ];

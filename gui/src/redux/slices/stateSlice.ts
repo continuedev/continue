@@ -159,9 +159,6 @@ export const stateSlice = createSlice({
       }
       // TODO
     },
-    setCurrentChatTitle: (state, { payload }: PayloadAction<string>) => {
-      state.title = payload;
-    },
     addContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
       state.contextItems = state.contextItems.concat(action.payload);
     },
@@ -462,8 +459,7 @@ export const {
   consumeMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
-  setIsGatheringContext,
-  setCurrentChatTitle
+  setIsGatheringContext
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

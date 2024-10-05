@@ -402,12 +402,6 @@ export class Core {
       if (config.experimental?.readResponseTTS && "completion" in next.value) {
         void TTS.read(next.value?.completion);
       }
-      
-      // TODO: better detection of when we should prompt for a title; currently only doing it on the user's first chat
-      if (config.experimental?.getChatTitles && "completion" in next.value && msg.data.messages.filter(m => m.role === "user").length === 1) {
-        void ChatDescriber.describe(model, msg.data.completionOptions, next.value?.completion);
-      }
-
       return { done: true, content: next.value };
     }
 
@@ -488,6 +482,11 @@ export class Core {
 
     on("tts/kill", async () => {
       void TTS.kill();
+    });
+    
+    on("chatDescriber/describe", async (msg) => {
+      const currentModel = await this.getSelectedModel();
+      return await ChatDescriber.describe(currentModel, {}, msg.data);
     });
 
     async function* runNodeJsSlashCommand(

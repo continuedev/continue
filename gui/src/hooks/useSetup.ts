@@ -9,8 +9,7 @@ import {
   setConfig,
   setInactive,
   setSelectedProfileId,
-  setTTSActive,
-  setCurrentChatTitle
+  setTTSActive
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -93,10 +92,6 @@ function useSetup(dispatch: Dispatch<any>) {
 
   useWebviewListener("setTTSActive", async (status) => {
     dispatch(setTTSActive(status));
-  });
-
-  useWebviewListener("setCurrentChatTitle", async (newTitle) => {
-    dispatch(setCurrentChatTitle(newTitle));
   });
 
   useWebviewListener("setColors", async (colors) => {

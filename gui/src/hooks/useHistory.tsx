@@ -33,6 +33,14 @@ function useHistory(dispatch: Dispatch) {
     return result.status === "success" ? result.content : [];
   }
 
+  async function getChatTitle(message?: string): Promise<string | undefined> {
+    const result = await ideMessenger.request(
+      "chatDescriber/describe",
+      message,
+    );
+    return result.status === "success" ? result.content : undefined;
+  }
+
   async function saveSession() {
     if (state.history.length === 0) return;
 
@@ -40,7 +48,25 @@ function useHistory(dispatch: Dispatch) {
     dispatch(newSession());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    // Set default title if it isn't set (=== "New Session"), if it is set then use that title, fallback use the first user message
+    if (
+      state.config?.experimental?.getChatTitles &&
+      stateCopy.title === "New Session"
+    ) {
+      try {
+        // Check if we have first assistant response
+        let assistantResponse = stateCopy.history
+          ?.filter((h) => h.message.role === "assistant")[0]
+          ?.message?.content?.toString();
+
+        if (assistantResponse) {
+          stateCopy.title = await getChatTitle(assistantResponse);
+        }
+      } catch (e) {
+        throw new Error("Unable to get chat title");
+      }
+    }
+
+    // Fallback if we get an error above or if the user has not set getChatTitles
     let title =
       stateCopy.title === "New Session"
         ? truncateText(
