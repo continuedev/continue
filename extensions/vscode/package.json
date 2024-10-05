@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.214",
+  "version": "0.9.218",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -542,6 +542,8 @@
     "vsce": "^2.15.0"
   },
   "dependencies": {
+    "apache-arrow": "^14.0.2",
+    "@apache-arrow/ts": "^14.0.2",
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/node-fetch": "^2.6.11",

@@ -586,6 +586,7 @@ declare global {
     | "gemini"
     | "mistral"
     | "bedrock"
+    | "bedrock-cohere"
     | "bedrockimport"
     | "sagemaker"
     | "deepinfra"
@@ -759,6 +760,7 @@ declare global {
   }
 
   export type EmbeddingsProviderName =
+    | "bedrock-cohere"
     | "huggingface-tei"
     | "transformers.js"
     | "ollama"

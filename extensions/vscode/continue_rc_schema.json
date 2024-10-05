@@ -2391,7 +2391,8 @@
                 "gemini",
                 "voyage",
                 "nvidia",
-                "bedrock"
+                "bedrock",
+                "bedrock-cohere"
               ]
             },
             "model": {

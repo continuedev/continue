@@ -39,6 +39,8 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
+    "apache-arrow": "^14.0.2",
+    "@apache-arrow/ts": "^14.0.2",
     "@aws-sdk/client-bedrock-runtime": "^3.620.1",
     "@aws-sdk/client-sagemaker-runtime": "^3.621.0",
     "@aws-sdk/credential-providers": "^3.620.1",
