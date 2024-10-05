@@ -14,8 +14,10 @@ import com.intellij.util.concurrency.annotations.RequiresEdt
 import com.intellij.util.ui.JBUI
 import java.awt.Dimension
 import java.awt.Font
+import java.awt.Insets
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import javax.swing.BorderFactory
 import javax.swing.JComponent
 import javax.swing.ScrollPaneConstants
 import kotlin.math.ceil
@@ -53,16 +55,20 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
         val offset = editor.document.getLineEndOffset(lineIndex)
 
         return EditorEmbeddedComponentManager.getInstance()
-                .addComponent(editor, wrappedComponent,
-                        EditorEmbeddedComponentManager.Properties(EditorEmbeddedComponentManager.ResizePolicy.none(),
-                                null,
-                                true,
-                                showAbove,
-                                0,
-                                offset))?.also {
-                    managedInlays[wrappedComponent] = it
-                    Disposer.register(it, Disposable { managedInlays.remove(wrappedComponent) })
-                }
+            .addComponent(
+                editor, wrappedComponent,
+                EditorEmbeddedComponentManager.Properties(
+                    EditorEmbeddedComponentManager.ResizePolicy.none(),
+                    null,
+                    true,
+                    showAbove,
+                    0,
+                    offset
+                )
+            )?.also {
+                managedInlays[wrappedComponent] = it
+                Disposer.register(it, Disposable { managedInlays.remove(wrappedComponent) })
+            }
     }
 
     private inner class ComponentWrapper(private val component: JComponent) : JBScrollPane(component) {
@@ -79,12 +85,12 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
 
             component.addComponentListener(object : ComponentAdapter() {
                 override fun componentResized(e: ComponentEvent) =
-                        dispatchEvent(ComponentEvent(component, ComponentEvent.COMPONENT_RESIZED))
+                    dispatchEvent(ComponentEvent(component, ComponentEvent.COMPONENT_RESIZED))
             })
         }
 
         override fun getPreferredSize(): Dimension {
-            return Dimension(editorWidthWatcher.editorTextWidth, component.preferredSize.height)
+            return Dimension(editor.contentComponent.width, component.preferredSize.height)
         }
     }
 
@@ -107,7 +113,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
 
             val scrollbarFlip = editor.scrollPane.getClientProperty(JBScrollPane.Flip::class.java)
             verticalScrollbarFlipped =
-                    scrollbarFlip == JBScrollPane.Flip.HORIZONTAL || scrollbarFlip == JBScrollPane.Flip.BOTH
+                scrollbarFlip == JBScrollPane.Flip.HORIZONTAL || scrollbarFlip == JBScrollPane.Flip.BOTH
         }
 
         override fun componentResized(e: ComponentEvent) = updateWidthForAllInlays()
@@ -126,7 +132,8 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
         }
 
         private fun calcWidth(): Int {
-            val visibleEditorTextWidth = editor.scrollPane.viewport.width - getVerticalScrollbarWidth() - getGutterTextGap()
+            val visibleEditorTextWidth =
+                editor.scrollPane.viewport.width - getVerticalScrollbarWidth() - getGutterTextGap()
             return min(max(visibleEditorTextWidth, 0), maximumEditorTextWidth)
         }
 
