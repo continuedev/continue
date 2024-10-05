@@ -14,42 +14,23 @@ import java.util.*
 import javax.swing.JButton
 import java.awt.geom.RoundRectangle2D
 
-class StyledButton(text: String, foregroundColor: Color, backgroundColor: Color) : JButton(text) {
+class StyledButton(text: String) : JButton(text) {
     private var isHovered = false
-    private val borderColor: Color
-    private val hoverBackgroundColor: Color
-    private val hoverForegroundColor: Color
-    private val originalForegroundColor: Color
+    private val editorBackground: Color
 
     init {
-        cursor = Cursor(Cursor.HAND_CURSOR)
-        isOpaque = false
+        border = null
         isContentAreaFilled = false
         isFocusPainted = false
-        border = null
-        foreground = foregroundColor
-        background = Color(backgroundColor.red, backgroundColor.green, backgroundColor.blue, 0)
+        cursor = Cursor(Cursor.HAND_CURSOR)
 
-        // Store the original foreground color
-        originalForegroundColor = foregroundColor
-
-        // Calculate colors for different states
-        borderColor = Color(foregroundColor.red, foregroundColor.green, foregroundColor.blue, 40) // More subtle border
-        hoverBackgroundColor = Color(backgroundColor.red, backgroundColor.green, backgroundColor.blue, 40)
-        hoverForegroundColor = Color(
-            foregroundColor.red,
-            foregroundColor.green,
-            foregroundColor.blue,
-            160
-        )
-
-        // Get the editor font and its size
         val scheme = EditorColorsManager.getInstance().globalScheme
         val editorFont = scheme.getFont(EditorFontType.PLAIN)
         val editorFontSize = editorFont.size
 
-        // Set the button's font to be slightly smaller than the editor
         font = font.deriveFont(editorFontSize.toFloat() * 0.75f)
+
+        editorBackground = scheme.defaultBackground
 
         addMouseListener(object : MouseAdapter() {
             override fun mouseEntered(e: MouseEvent) {
@@ -71,22 +52,19 @@ class StyledButton(text: String, foregroundColor: Color, backgroundColor: Color)
 
         val width = width.toFloat()
         val height = height.toFloat()
-        val arc = 4f
+        val arc = 6f
 
-        // Draw button background
-        g2.color = if (isHovered) hoverBackgroundColor else background
+        // Draw semi-transparent background
+        g2.color = editorBackground
         g2.fill(RoundRectangle2D.Float(0f, 0f, width, height, arc, arc))
 
         // Draw border
-        g2.color = if (isHovered) hoverForegroundColor else borderColor
+        g2.color = if (isHovered) foreground else foreground.darker()
+        g2.stroke = BasicStroke(1f)
         g2.draw(RoundRectangle2D.Float(0.5f, 0.5f, width - 1f, height - 1f, arc, arc))
 
-        g2.dispose()
-
-        // Set text color
-        foreground = if (isHovered) hoverForegroundColor else originalForegroundColor
-
         super.paintComponent(g)
+        g2.dispose()
     }
 }
 
@@ -95,23 +73,13 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
     JBPanel<ToolTipComponent>() {
     private var addToChatButton: StyledButton
     private var editButton: StyledButton
-    private var backgroundColor: Color
-    private var foregroundColor: Color
 
     init {
         layout = null // Remove the FlowLayout
 
-        val globalScheme = EditorColorsManager.getInstance().globalScheme
-
-        backgroundColor = globalScheme.getColor(EditorColors.SELECTION_BACKGROUND_COLOR)
-            ?: globalScheme.defaultBackground
-
-        foregroundColor = Color(
-            globalScheme.defaultForeground.red,
-            globalScheme.defaultForeground.green,
-            globalScheme.defaultForeground.blue,
-            200
-        )
+        // Make the background transparent
+        isOpaque = false
+        background = Color(0, 0, 0, 0)
 
         val cmdCtrlChar =
             if (System.getProperty("os.name").lowercase(Locale.getDefault()).contains("mac")) "⌘" else "Ctrl"
@@ -122,8 +90,8 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
         val componentHorizontalPadding = 4
         val buttonMargin = 4
 
-        addToChatButton = StyledButton("Chat (${cmdCtrlChar}J)", foregroundColor, backgroundColor)
-        editButton = StyledButton("Edit (${cmdCtrlChar}I)", foregroundColor, backgroundColor)
+        addToChatButton = StyledButton("Chat (${cmdCtrlChar}J)")
+        editButton = StyledButton("Edit (${cmdCtrlChar}I)")
 
         addToChatButton.addActionListener { e: ActionEvent? ->
             focusContinueInput(editor.project)
@@ -157,9 +125,5 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
         // Center the component on the provided y coordinate
         val yPosition = y - (totalHeight / 2)
         setBounds(x, yPosition, totalWidth, totalHeight)
-
-        // Make the background transparent
-        isOpaque = false
-        background = Color(0, 0, 0, 0)
     }
 }
