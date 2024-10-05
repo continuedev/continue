@@ -28,7 +28,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
   artifactId = "codeSnippets";
 
-  constructor(private readonly ide: IDE) {}
+  constructor(private readonly ide: IDE) { }
 
   private static async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets (
@@ -129,7 +129,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       endLine = 0,
       hasSeenBody = false;
 
-    // This loop assumes that the ordering of the capture groups is represenatative
+    // This loop assumes that the ordering of the capture groups is representative
     // of the structure of the language, e.g. for a TypeScript match on a function,
     // `function myFunc(param: string): string`, the first capture would be the `myFunc`
     // the second capture would be the `(param: string)`, etc

@@ -606,7 +606,8 @@ type TemplateType =
   | "codellama-70b"
   | "llava"
   | "gemma"
-  | "llama3";
+  | "llama3"
+  | "granite";
 
 type ModelProvider =
   | "openai"
@@ -813,7 +814,8 @@ export type EmbeddingsProviderName =
   | "deepinfra"
   | "nvidia"
   | "voyage"
-  | "mistral";
+  | "mistral"
+  | "watsonx";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -830,6 +832,13 @@ export interface EmbedOptions {
 
   // AWS and GCP Options
   region?: string;
+
+  // Watsonx Options
+  watsonxUrl?: string;
+  watsonxCreds?: string;
+  watsonxProjectId?: string;
+  watsonxApiVersion?: string;
+  watsonxFullUrl?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {

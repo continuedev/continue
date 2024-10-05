@@ -512,7 +512,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         label: "watsonx API version",
         placeholder: "Enter the API Version",
         defaultValue: "2023-05-29",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
@@ -526,7 +526,8 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         inputType: "text",
         key: "watsonxStopToken",
         label: "Stop Token",
-        placeholder: "<|im_end|>",
+        placeholder: "<end of code>",
+        required: false,
       },
 
       ...completionParamsInputsConfigs,
@@ -534,7 +535,10 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     icon: "watsonx.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
-      models.graniteCode,
+      models.graniteCode3b,
+      models.graniteCode8b,
+      models.graniteCode20b,
+      models.graniteCode34b,
       models.graniteChat,
       models.MistralLarge,
       models.MetaLlama3,

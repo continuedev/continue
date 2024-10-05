@@ -188,7 +188,7 @@ class WatsonX extends BaseLLM {
 
     const stopToken =
       this.watsonxStopToken ??
-      (options.model?.includes("granite") ? "<|im_end|>" : undefined);
+      (options.model?.includes("granite") ? "<end of code>" : undefined);
     const url = this.getWatsonxEndpoint();
     const headers = this._getHeaders();
 
@@ -198,13 +198,13 @@ class WatsonX extends BaseLLM {
       min_new_tokens: 1,
       stop_sequences: stopToken ? [stopToken] : [],
       include_stop_sequence: false,
-      repetition_penalty: 1,
+      repetition_penalty: options.frequencyPenalty || 1,
     };
     if (!!options.temperature) {
       parameters.decoding_method = "sample";
       parameters.temperature = options.temperature;
       parameters.top_p = options.topP || 1.0;
-      parameters.top_k = options.topK;
+      parameters.top_k = options.topK || 100;
     }
 
     const payload: any = {
@@ -246,7 +246,8 @@ class WatsonX extends BaseLLM {
                 generatedChunk += result.generated_text || "";
               });
             } catch (e) {
-              console.error(`Error parsing JSON string: ${dataStr}`, e);
+              // parsing error is expected with streaming response
+              // console.error(`Error parsing JSON string: ${dataStr}`, e);
             }
           }
         });
