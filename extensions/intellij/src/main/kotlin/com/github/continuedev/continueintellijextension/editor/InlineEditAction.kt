@@ -115,7 +115,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         return
     }
 
-    val manager = EditorComponentInlaysManager.from(editor)
+    val manager = EditorComponentInlaysManager.from(editor, true)
 
     // Get list of model titles
     val continuePluginService = project.service<ContinuePluginService>()
@@ -183,18 +183,18 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret)
     }
 
-    val panel =
-        makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, { onEnter() }, {
-            diffStreamService.reject(editor)
-            selectionModel.setSelection(start, end)
-        }, {
-            diffStreamService.accept(editor)
-            inlayRef.get().dispose()
-        }, {
-            diffStreamService.reject(editor)
-            inlayRef.get().dispose()
-        })
-    val inlay = manager.insertAfter(lineNumber, panel)
+    val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
+        diffStreamService.reject(editor)
+        selectionModel.setSelection(start, end)
+    }, {
+        diffStreamService.accept(editor)
+        inlayRef.get().dispose()
+    }, {
+        diffStreamService.reject(editor)
+        inlayRef.get().dispose()
+    })
+    val inlay = manager.insert(startLineNum, panel, true)
+
     panel.revalidate()
     inlayRef.set(inlay)
     val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
@@ -362,8 +362,10 @@ class CustomPanel(
                 horizontalAlignment = SwingConstants.LEFT
             }
             selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
-                val index = modelTitles.indexOf(it)
-                if (index != -1) index else 0
+                if (modelTitles.isEmpty()) -1 else {
+                    val index = modelTitles.indexOf(it)
+                    if (index != -1) index else 0
+                }
             } ?: 0
 
             addActionListener {
