@@ -10,7 +10,11 @@ import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 
 const { anthropic: chatProvider, mistral: autocompleteProvider } = providers;
-const { claude35Sonnet: chatModel, codestral: autocompleteModel } = models;
+const {
+  claude35Sonnet: chatModel,
+  claude3Haiku: repoMapModel,
+  codestral: autocompleteModel,
+} = models;
 
 interface BestExperienceConfigFormProps {
   onComplete: () => void;
@@ -36,6 +40,13 @@ function BestExperienceConfigForm({
       title: chatModel.params.title,
     };
 
+    const repoMapConfig = {
+      model: repoMapModel.params.model,
+      provider: chatProvider.provider,
+      apiKey: chatApiKey,
+      title: repoMapModel.params.title,
+    };
+
     const autocompleteModelConfig = {
       title: autocompleteModel.params.title,
       provider: autocompleteProvider.provider,
@@ -47,6 +58,10 @@ function BestExperienceConfigForm({
       title: DEFAULT_CHAT_MODEL_CONFIG.title,
     });
     ideMessenger.post("config/addModel", { model: chatModelConfig });
+    ideMessenger.post("config/addModel", {
+      model: repoMapConfig,
+      role: "repoMapFileSelection",
+    });
     dispatch(setDefaultModel({ title: chatModelConfig.title, force: true }));
 
     if (!!autocompleteApiKey) {

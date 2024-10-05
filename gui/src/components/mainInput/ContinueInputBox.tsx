@@ -9,6 +9,16 @@ import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
+import { useState, useRef, useEffect } from "react";
+
+interface ContinueInputBoxProps {
+  isLastUserInput: boolean;
+  isMainInput?: boolean;
+  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
+  editorState?: JSONContent;
+  contextItems?: ContextItemWithId[];
+  hidden?: boolean;
+}
 
 const gradient = keyframes`
   0% {
@@ -22,8 +32,6 @@ const gradient = keyframes`
 const GradientBorder = styled.div<{
   borderRadius?: string;
   borderColor?: string;
-  isFirst: boolean;
-  isLast: boolean;
   loading: 0 | 1;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
@@ -47,17 +55,7 @@ const GradientBorder = styled.div<{
   display: flex;
   flex-direction: row;
   align-items: center;
-  margin-top: 8px;
 `;
-
-interface ContinueInputBoxProps {
-  isLastUserInput: boolean;
-  isMainInput?: boolean;
-  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
-  editorState?: JSONContent;
-  contextItems?: ContextItemWithId[];
-  hidden?: boolean;
-}
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const dispatch = useDispatch();
@@ -67,6 +65,12 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
   );
+  const isGatheringContextStore = useSelector(
+    (store: RootState) => store.state.isGatheringContext,
+  );
+
+  const [isGatheringContext, setIsGatheringContext] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useWebviewListener(
     "newSessionWithPrompt",
@@ -84,24 +88,27 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     [props.isMainInput],
   );
 
+  useEffect(() => {
+    if (isGatheringContextStore && !isGatheringContext) {
+      // 500ms delay when going from false -> true to prevent flashing loading indicator
+      timeoutRef.current = setTimeout(() => setIsGatheringContext(true), 500);
+    } else {
+      // Update immediately otherwise (i.e. true -> false)
+      setIsGatheringContext(isGatheringContextStore);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isGatheringContextStore]);
+
   return (
-    <div
-      style={{
-        paddingTop: "4px",
-        backgroundColor: vscBackground,
-        display: props.hidden ? "none" : "inherit",
-      }}
-    >
-      <div
-        className="flex px-2 relative"
-        style={{
-          backgroundColor: vscBackground,
-        }}
-      >
+    <div className={`mt-3 mb-1 ${props.hidden ? "hidden" : ""}`}>
+      <div className={`flex px-2 relative`}>
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}
-          isFirst={false}
-          isLast={false}
           borderColor={
             active && props.isLastUserInput ? undefined : vscBackground
           }
@@ -113,10 +120,13 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             isMainInput={props.isMainInput ?? false}
             availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}
-          ></TipTapEditor>
+          />
         </GradientBorder>
       </div>
-      <ContextItemsPeek contextItems={props.contextItems}></ContextItemsPeek>
+      <ContextItemsPeek
+        contextItems={props.contextItems}
+        isGatheringContext={isGatheringContext && props.isLastUserInput}
+      />
     </div>
   );
 }

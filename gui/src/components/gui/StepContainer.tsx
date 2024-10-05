@@ -10,7 +10,7 @@ import { stripImages } from "core/llm/images";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, vscBackground, vscInputBackground } from "..";
+import { vscBackground, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
@@ -34,18 +34,15 @@ interface StepContainerProps {
 }
 
 const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
-  padding: 4px 0px 8px 0px;
+  padding-top: 4px;
   background-color: ${(props) =>
     props.isUserInput ? vscInputBackground : vscBackground};
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-  // border-radius: ${defaultBorderRadius};
   overflow: hidden;
 `;
 
 function StepContainer(props: StepContainerProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const active = useSelector((store: RootState) => store.state.active);
-  const history = useSelector((state: RootState) => state.state.history);
   const [truncatedEarly, setTruncatedEarly] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
@@ -53,6 +50,8 @@ function StepContainer(props: StepContainerProps) {
 
   const isUserInput = props.item.message.role === "user";
   const uiConfig = useUIConfig();
+  const shouldRenderActions = !props.isLast || (props.isLast && !active);
+
   useEffect(() => {
     if (!active) {
       const content = stripImages(props.item.message.content).trim();
@@ -85,98 +84,72 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div
-      onMouseEnter={() => {
-        setIsHovered(true);
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
-    >
-      <div className="relative">
-        <ContentDiv
-          hidden={!props.open}
-          isUserInput={isUserInput}
-          fontSize={getFontSize()}
-        >
-          {uiConfig?.displayRawMarkdown ? (
-            <pre
-              className="whitespace-pre-wrap break-words p-4 max-w-full overflow-x-auto"
-              style={{ fontSize: getFontSize() - 2 }}
+    <div className="relative">
+      <ContentDiv
+        hidden={!props.open}
+        isUserInput={isUserInput}
+        fontSize={getFontSize()}
+      >
+        {uiConfig?.displayRawMarkdown ? (
+          <pre
+            className="whitespace-pre-wrap break-words p-4 max-w-full overflow-x-auto"
+            style={{ fontSize: getFontSize() - 2 }}
+          >
+            {stripImages(props.item.message.content)}
+          </pre>
+        ) : (
+          <StyledMarkdownPreview
+            showCodeBorder
+            source={stripImages(props.item.message.content)}
+          />
+        )}
+      </ContentDiv>
+
+      {shouldRenderActions && (
+        <div className="flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 p-2 pb-0 cursor-default">
+          {truncatedEarly && (
+            <ButtonWithTooltip
+              tabIndex={-1}
+              text="Continue generation"
+              onClick={props.onContinueGeneration}
             >
-              {stripImages(props.item.message.content)}
-            </pre>
-          ) : (
-            <StyledMarkdownPreview
-              source={stripImages(props.item.message.content)}
-              showCodeBorder={true}
-            />
+              <BarsArrowDownIcon className="h-3.5 w-3.5 text-gray-500" />
+            </ButtonWithTooltip>
           )}
-        </ContentDiv>
 
-        {(props.isLast || isHovered || typeof feedback !== "undefined") &&
-          !active && (
-            <div className="flex items-center gap-1 absolute -bottom-2 right-2 hidden xs:flex text-xs text-gray-400">
-              {props.modelTitle && (
-                <div className="hidden sm:flex">
-                  <div className="flex items-center truncate max-w-[40vw]">
-                    {props.modelTitle}
-                  </div>
-                  <div className="ml-2 mr-1 w-px h-5 bg-gray-400" />
-                </div>
-              )}
-
-              {truncatedEarly && (
-                <ButtonWithTooltip
-                  tabIndex={-1}
-                  text="Continue generation"
-                  onClick={props.onContinueGeneration}
-                >
-                  <BarsArrowDownIcon className="h-4 w-4" />
-                </ButtonWithTooltip>
-              )}
-
-              <CopyButton
-                tabIndex={-1}
-                text={stripImages(props.item.message.content)}
-              />
-
-              <ButtonWithTooltip
-                tabIndex={-1}
-                text="Regenerate"
-                onClick={props.onRetry}
-              >
-                <ArrowPathIcon className="h-4 w-4" />
-              </ButtonWithTooltip>
-              {feedback === false || (
-                <ButtonWithTooltip text="Helpful" tabIndex={-1}>
-                  <HandThumbUpIcon
-                    className="h-4 w-4"
-                    onClick={() => {
-                      sendFeedback(true);
-                    }}
-                  />
-                </ButtonWithTooltip>
-              )}
-              {feedback === true || (
-                <ButtonWithTooltip text="Unhelpful" tabIndex={-1}>
-                  <HandThumbDownIcon
-                    className="h-4 w-4"
-                    onClick={() => {
-                      sendFeedback(false);
-                    }}
-                  />
-                </ButtonWithTooltip>
-              )}
-
-              {props.index !== 1 && (
-                <ButtonWithTooltip text="Delete" tabIndex={-1}>
-                  <TrashIcon className="h-4 w-4" onClick={props.onDelete} />
-                </ButtonWithTooltip>
-              )}
-            </div>
+          {props.index !== 1 && (
+            <ButtonWithTooltip
+              text="Delete"
+              tabIndex={-1}
+              onClick={props.onDelete}
+            >
+              <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
+            </ButtonWithTooltip>
           )}
-      </div>
+
+          <CopyButton
+            tabIndex={-1}
+            text={stripImages(props.item.message.content)}
+            clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
+          />
+
+          <ButtonWithTooltip
+            text="Helpful"
+            tabIndex={-1}
+            onClick={() => sendFeedback(true)}
+          >
+            <HandThumbUpIcon className="h-3.5 w-3.5 text-gray-500 mx-0.5" />
+          </ButtonWithTooltip>
+
+          <ButtonWithTooltip
+            text="Unhelpful"
+            tabIndex={-1}
+            onClick={() => sendFeedback(false)}
+          >
+            <HandThumbDownIcon className="h-3.5 w-3.5 text-gray-500" />
+          </ButtonWithTooltip>
+        </div>
+      )}
     </div>
   );
 }

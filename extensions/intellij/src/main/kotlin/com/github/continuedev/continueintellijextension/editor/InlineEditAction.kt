@@ -24,46 +24,65 @@ import com.intellij.util.ui.UIUtil
 import net.miginfocom.swing.MigLayout
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTextArea
-import org.jdesktop.swingx.border.DropShadowBorder
 import java.awt.*
 import java.awt.event.*
-import java.awt.geom.RoundRectangle2D
+import java.awt.geom.Path2D
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.plaf.basic.BasicComboBoxUI
 import kotlin.math.max
+import java.awt.geom.RoundRectangle2D
+import java.awt.geom.AffineTransform
+import javax.swing.event.ListDataListener
 
-
-const val SHADOW_SIZE = 7
 const val MAIN_FONT_SIZE = 13
 
 fun makeTextArea(): JTextArea {
-    val textArea = CustomTextArea( 2, 40).apply {
+    val textArea = CustomTextArea(1, 40).apply {
         lineWrap = true
         wrapStyleWord = true
         isOpaque = false
         background = GetTheme().getSecondaryDark()
         maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-        margin = JBUI.insets(8)
+        margin = JBUI.insets(6, 4, 6, 4)
         font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
+        preferredSize = Dimension(400, 75)
     }
     textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
-
     return textArea
 }
 
-fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, comboBoxRef: Ref<JComboBox<String>>, leftInset: Int, modelTitles: List<String>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
-    val topPanel = ShadowPanel(MigLayout("wrap 1, insets 4 $leftInset 2 2, gap 0!")).apply {
-        val globalScheme = EditorColorsManager.getInstance().globalScheme
-        val defaultBackground = globalScheme.defaultBackground
-//            background = defaultBackground
-        background =  JBColor(0x20888888.toInt(), 0x20888888.toInt())
+fun makePanel(
+    project: Project,
+    customPanelRef: Ref<CustomPanel>,
+    textArea: JTextArea,
+    inlayRef: Ref<Disposable>,
+    comboBoxRef: Ref<JComboBox<String>>,
+    leftInset: Int,
+    modelTitles: List<String>,
+    onEnter: () -> Unit,
+    onCancel: () -> Unit,
+    onAccept: () -> Unit,
+    onReject: () -> Unit
+): JPanel {
+    val topPanel = ShadowPanel(MigLayout("wrap 1, insets 2 ${leftInset} 2 2, gap 0!")).apply {
+        background = JBColor(0x20888888.toInt(), 0x20888888.toInt())
         isOpaque = false
     }
 
-    val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx"), project, modelTitles, comboBoxRef, onEnter, onCancel, onAccept, onReject).apply {
+    val panel = CustomPanel(
+        MigLayout("wrap 1, insets 4 10 0 2, gap 0!, fillx"),
+        project,
+        modelTitles,
+        comboBoxRef,
+        onEnter,
+        onCancel,
+        onAccept,
+        onReject,
+        textArea
+    ).apply {
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
         background = defaultBackground
@@ -71,16 +90,9 @@ fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTex
 
         putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
         preferredSize = textArea.preferredSize
-        isOpaque = false
         setup()
-
-        val shadow = DropShadowBorder()
-        shadow.shadowColor = JBColor(0xb0b0b0, 0x505050)
-        shadow.isShowRightShadow = true
-        shadow.isShowBottomShadow = true
-        shadow.shadowSize = SHADOW_SIZE
-        border = shadow
     }
+
     customPanelRef.set(panel)
 
     textArea.addComponentListener(object : ComponentAdapter() {
@@ -99,9 +111,9 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     if (project == null) return
 
     // Don't open in terminal
-     if (EditorUtils().isTerminal(editor)) {
-            return
-     }
+    if (EditorUtils().isTerminal(editor)) {
+        return
+    }
 
     val manager = EditorComponentInlaysManager.from(editor, true)
 
@@ -142,7 +154,8 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
     val text = editor.document.getText(TextRange(lineStart, lineEnd))
     val indentation = text.takeWhile { it == ' ' }.length
-    val charWidth = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN)).charWidth(' ')
+    val charWidth =
+        editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN)).charWidth(' ')
     val leftInset = indentation * charWidth * 2 / 3
 
     val inlayRef = Ref<Disposable>()
@@ -165,8 +178,9 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val comboBoxRef = Ref<JComboBox<String>>()
 
     fun onEnter() {
+        val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(" ▾")
         customPanelRef.get().enter()
-        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, comboBoxRef.get().selectedItem as String)
+        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret)
     }
 
     val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
@@ -180,6 +194,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         inlayRef.get().dispose()
     })
     val inlay = manager.insert(startLineNum, panel, true)
+
     panel.revalidate()
     inlayRef.set(inlay)
     val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
@@ -187,20 +202,40 @@ fun openInlineEdit(project: Project?, editor: Editor) {
 
     // Add key listener to text area
     textArea.addKeyListener(object : KeyAdapter() {
-        override fun keyPressed(e: KeyEvent) {
-            if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                diffStreamService.reject(editor)
+        override fun keyTyped(e: KeyEvent) {
+            if (customPanelRef.get().isFinished) {
+                customPanelRef.get().setup()
+            }
+        }
 
-                // Re-highlight the selected text
-                val documentLength = editor.document.textLength
-                val safeEnd = minOf(end, documentLength)
-                selectionModel.setSelection(start, safeEnd)
-            } else if (e.keyCode == KeyEvent.VK_ENTER) {
-                if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
-                    textArea.document.insertString(textArea.caretPosition, "\n", null)
-                } else if (e.modifiersEx == 0) {
-                    onEnter()
-                    e.consume()
+
+        override fun keyPressed(e: KeyEvent) {
+            when (e.keyCode) {
+                KeyEvent.VK_ESCAPE -> {
+                    diffStreamService.reject(editor)
+                    selectionModel.setSelection(start, end)
+                }
+
+                KeyEvent.VK_ENTER -> {
+                    when (e.modifiersEx) {
+                        KeyEvent.SHIFT_DOWN_MASK -> {
+                            textArea.document.insertString(textArea.caretPosition, "\n", null)
+                        }
+
+                        0 -> {
+                            onEnter()
+                            e.consume()
+                        }
+                    }
+                }
+            }
+        }
+
+        // We need this because backspace/delete is not registering properly on keyPressed for an unknown reason
+        override fun keyReleased(e: KeyEvent) {
+            if (e.keyCode == KeyEvent.VK_BACK_SPACE || e.keyCode == KeyEvent.VK_DELETE) {
+                if (customPanelRef.get().isFinished) {
+                    customPanelRef.get().setup()
                 }
             }
         }
@@ -216,6 +251,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
                 viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
             }
         }
+
         override fun insertUpdate(e: DocumentEvent?) {
             updateSize()
         }
@@ -253,19 +289,67 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 }
 
-class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>, comboBoxRef: Ref<JComboBox<String>>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel(layout) {
+class CustomPanel(
+    layout: MigLayout,
+    project: Project,
+    modelTitles: List<String>,
+    comboBoxRef: Ref<JComboBox<String>>,
+    private val onEnter: () -> Unit,
+    private val onCancel: () -> Unit,
+    private val onAccept: () -> Unit,
+    private val onReject: () -> Unit,
+    private val textArea: JTextArea
+) : JPanel(layout) {
+    private val shadowSize = 5
+    private val cornerRadius = 8
+    private val shadowColor = Color(0, 0, 0, 40) // Lighter shadow
+    private val borderColor = Color(128, 128, 128, 128)
+    private val borderThickness = 1
+    private val triangleSize = 6
+    private val rightMargin = 3.0
+    private val closeButton: JComponent = createCloseButton()
+    private val originalTextColor: Color = textArea.foreground
+    private val greyTextColor: Color = Color(128, 128, 128, 200)
+    public var isFinished = false
+
+    init {
+        isOpaque = false
+        add(closeButton, "pos 100%-25 0 -3 3, w 20!, h 20!")
+    }
+
+    private fun createCloseButton(): JComponent {
+        return JLabel("X").apply {
+            foreground = Color(128, 128, 128, 128)
+            background = Color(0, 0, 0, 0)
+            font = UIUtil.getFontWithFallback("Arial", Font.BOLD, 10)
+            border = EmptyBorder(2, 6, 2, 6)
+            toolTipText = "`esc` to cancel"
+            isOpaque = false
+
+            addMouseListener(object : MouseAdapter() {
+                override fun mouseEntered(e: MouseEvent) {
+                    foreground = Color(128, 128, 128, 255)
+                    cursor = Cursor(Cursor.HAND_CURSOR)
+                }
+
+                override fun mouseExited(e: MouseEvent) {
+                    foreground = Color(128, 128, 128, 128)
+                    cursor = Cursor.getDefaultCursor()
+                }
+
+                override fun mouseClicked(e: MouseEvent) {
+                    onCancel()
+                }
+            })
+        }
+    }
+
     private val subPanelA: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
-
-        val leftButton = CustomButton("Esc to cancel") { onCancel() }.apply {
-            foreground = Color(128, 128, 128, 200)
-            background = defaultBackground
-        }
-
         val continueSettingsService = service<ContinueExtensionSettings>()
-
         val dropdown = JComboBox(modelTitles.toTypedArray()).apply {
+            setUI(TransparentArrowButtonUI())
             isEditable = true
             background = defaultBackground
             foreground = Color(128, 128, 128, 200)
@@ -275,7 +359,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             isEditable = false
             cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
             renderer = DefaultListCellRenderer().apply {
-                horizontalAlignment = SwingConstants.RIGHT
+                horizontalAlignment = SwingConstants.LEFT
             }
             selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
                 if (modelTitles.isEmpty()) -1 else {
@@ -287,16 +371,14 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             addActionListener {
                 continueSettingsService.continueState.lastSelectedInlineEditModel = selectedItem as String
             }
-
-//            setUI(TransparentArrowButtonUI())
         }
 
         comboBoxRef.set(dropdown)
 
-        val rightButton = CustomButton("Submit") { onEnter() }.apply {
-//            background = GetTheme().getHighlight()
-            background = JBColor(0xe04573e8.toInt(), 0xe04573e8.toInt())
-            foreground = JBColor(0xffffffff.toInt(), 0xffffffff.toInt())
+        val rightButton = CustomButton("⏎  Enter") { onEnter() }.apply {
+            background = JBColor(0x999998.toInt(), 0x999998.toInt())
+            foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
+            border = EmptyBorder(2, 6, 2, 6)
         }
 
         val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -306,75 +388,43 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             add(rightButton, "align right")
         }
 
-        border = EmptyBorder(4, 8, 4, 8)
+        border = EmptyBorder(0, 0, 20, 16)
 
-        add(leftButton, "align left")
-        add(rightPanel, "align right")
+        add(dropdown, "align left")
+        add(rightPanel, "align right, split 2")
         isOpaque = false
 
         cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
     }
 
-    private val subPanelB: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
-        // Get the global color scheme and default background color
-        val globalScheme = EditorColorsManager.getInstance().globalScheme
-        val defaultBackground = globalScheme.defaultBackground
-
-        val leftButton = CustomButton("Esc to cancel") { onCancel() }.apply {
-            foreground = Color(128, 128, 128, 200)
-            background = defaultBackground
-        }
-
-        val dropdown = JComboBox(modelTitles.toTypedArray()).apply {
-            isEditable = true
-            background = defaultBackground
-            foreground = Color(128, 128, 128, 200)
-            font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
-            border = EmptyBorder(2, 4, 2, 4)
-            isOpaque = false
-            isEditable = false
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            renderer = DefaultListCellRenderer().apply {
-                horizontalAlignment = SwingConstants.RIGHT
-            }
-
-            isVisible = false
-
-//            setUI(TransparentArrowButtonUI())
-        }
-
-        val progressBar = JProgressBar()
-        progressBar.isIndeterminate = true
-
-        val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
-            isOpaque = false
-            border = EmptyBorder(0, 0, 0, 0)
-            add(dropdown, "align right")
-            add(progressBar, "align right")
-        }
-
-
-
-        border = EmptyBorder(4, 8, 4, 8)
-        add(leftButton, "align left")
-        add(rightPanel, "align right")
+    private val subPanelB: JPanel = JPanel(BorderLayout()).apply {
         isOpaque = false
 
-        cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
+        val progressBar = JProgressBar().apply {
+            isIndeterminate = true
+        }
+
+        add(progressBar, BorderLayout.CENTER)
+        border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
     }
 
     private val subPanelC: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
-        val leftLabel = JLabel("Enter follow-up instructions").apply {
-            foreground = Color(128, 128, 128, 200)
+        val leftLabel = JLabel("Type to re-prompt").apply {
+            foreground = Color(156, 163, 175) // text-gray-400
             font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
+            border = EmptyBorder(0, 4, 0, 0)
         }
 
-        val leftButton = CustomButton("${getAltKeyLabel()}⇧N") { onReject() }.apply {
-            background = Color(255, 0, 0, 64)
+        val leftButton = CustomButton("Reject (${getAltKeyLabel()}⇧N)") { onReject() }.apply {
+            background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
+            foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
+
         }
 
-        val rightButton = CustomButton("${getAltKeyLabel()}⇧Y") { onAccept() }.apply {
-            background = Color(0, 255, 0, 64)
+        val rightButton = CustomButton("Accept (${getAltKeyLabel()}⇧Y)") { onAccept() }.apply {
+            background = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
+            foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
+
         }
 
         val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -386,7 +436,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
 
         add(leftLabel, "align left")
         add(rightPanel, "align right")
-        border = EmptyBorder(4, 8, 4, 8)
+        border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
         isOpaque = false
     }
 
@@ -394,6 +444,10 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
         remove(subPanelB)
         remove(subPanelC)
         add(subPanelA, "grow, gap 0!")
+        isFinished = false
+        revalidate()
+        repaint()
+        textArea.foreground = originalTextColor
     }
 
     fun enter() {
@@ -409,32 +463,62 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
         add(subPanelC, "grow, gap 0!")
         revalidate()
         repaint()
+        isFinished = true
+        textArea.foreground = greyTextColor
     }
 
     override fun paintComponent(g: Graphics) {
+        super.paintComponent(g)
+
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
-        // Draw the rounded border
-        val borderColor = Color(128, 128, 128, 128)
-        val borderThickness = 1
-        val borderRadius = 8
+        val w = width - shadowSize
+        val h = height - shadowSize
 
-        g2.color = borderColor
-        g2.stroke = BasicStroke(borderThickness.toFloat())
-        g2.drawRoundRect(
-                borderThickness / 2,
-                borderThickness / 2,
-                width - borderThickness - SHADOW_SIZE + 1,
-                height - borderThickness - SHADOW_SIZE + 1,
-                borderRadius,
-                borderRadius
+        // Create the shape for the tooltip/triangle
+        val shape = Path2D.Double()
+        shape.moveTo(borderThickness / 2.0, cornerRadius.toDouble())
+        shape.quadTo(borderThickness / 2.0, borderThickness / 2.0, cornerRadius.toDouble(), borderThickness / 2.0)
+        shape.lineTo(w - cornerRadius.toDouble() - rightMargin, borderThickness / 2.0)
+        shape.quadTo(
+            w - borderThickness / 2.0 - rightMargin,
+            borderThickness / 2.0,
+            w - borderThickness / 2.0 - rightMargin,
+            cornerRadius.toDouble()
+        )
+        shape.lineTo(w - borderThickness / 2.0 - rightMargin, h - cornerRadius - triangleSize.toDouble())
+        shape.quadTo(
+            w - borderThickness / 2.0 - rightMargin,
+            h - triangleSize.toDouble(),
+            w - cornerRadius.toDouble() - rightMargin,
+            h - triangleSize.toDouble()
+        )
+        shape.lineTo(triangleSize.toDouble(), h - triangleSize.toDouble())
+        shape.lineTo(borderThickness / 2.0, h.toDouble())
+        shape.lineTo(borderThickness / 2.0, cornerRadius.toDouble())
+
+        // Draw shadow
+        g2.color = shadowColor
+        g2.fill(
+            shape.createTransformedShape(
+                AffineTransform.getTranslateInstance(
+                    shadowSize.toDouble(),
+                    shadowSize.toDouble()
+                )
+            )
         )
 
-        super.paintComponent(g)
+        // Draw main shape
+        g2.color = background
+        g2.fill(shape)
+
+        // Draw border
+        g2.color = borderColor
+        g2.stroke = BasicStroke(borderThickness.toFloat())
+        g2.draw(shape)
     }
 }
-
 
 class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
     private var isHovered = false
@@ -458,26 +542,41 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
             }
         })
 
-//        verticalAlignment = CENTER
         font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
-        border = EmptyBorder(2, 4, 2, 4)
+        border = EmptyBorder(2, 6, 2, 6)
     }
+
     override fun paintComponent(g: Graphics) {
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
 
         val cornerRadius = 8
         val rect = Rectangle(0, 0, width, height)
-        val roundRect = RoundRectangle2D.Float(rect.x.toFloat(), rect.y.toFloat(), rect.width.toFloat(), rect.height.toFloat(), cornerRadius.toFloat(), cornerRadius.toFloat())
+        val roundRect = RoundRectangle2D.Float(
+            rect.x.toFloat(),
+            rect.y.toFloat(),
+            rect.width.toFloat(),
+            rect.height.toFloat(),
+            cornerRadius.toFloat(),
+            cornerRadius.toFloat()
+        )
         if (isHovered) {
-            g2.color = background.brighter()
+            val brightenFactor = 1.1f
+            val brighterColor = Color(
+                (background.red * brightenFactor).toInt(),
+                (background.green * brightenFactor).toInt(),
+                (background.blue * brightenFactor).toInt()
+            )
+            g2.color = brighterColor
         } else {
             g2.color = background
         }
         g2.fill(roundRect)
         g2.color = foreground
-        g2.drawString(text, (width / 2 - g.fontMetrics.stringWidth(text) / 2).toFloat(),
-                (height / 2 + g.fontMetrics.ascent / 2).toFloat())
+        g2.drawString(
+            text, (width / 2 - g.fontMetrics.stringWidth(text) / 2).toFloat(),
+            (height / 2 + g.fontMetrics.ascent / 2).toFloat()
+        )
     }
 }
 
@@ -492,7 +591,7 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
         if (text.isEmpty()) {
             g.color = Color(128, 128, 128, 255)
             g.font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
-            g.drawString("Enter instructions to edit highlighted code", 8, 20)
+            g.drawString("Enter instructions...", 3, 20)
         }
 
         super.paintComponent(g)
@@ -514,37 +613,69 @@ class ShadowPanel(layout: LayoutManager) : JXPanel(layout) {
 }
 
 class TransparentArrowButtonUI : BasicComboBoxUI() {
-    override fun createArrowButton() = object : JButton() {
-        override fun paintComponent(g: Graphics) {
-            val g2 = g as Graphics2D
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-            val size = 6
-            val x = (width - size) / 2
-            val y = (height - size / 2) / 2
-            val triangle = Polygon(
-                    intArrayOf(x, x + size, x + size / 2),
-                    intArrayOf(y, y, (y + size / 1.16).toInt()),
-                    3
-            )
-            g2.color = Color.GRAY
-            g2.fill(triangle)
-        }
-    }.apply {
-        border = EmptyBorder(0, 0, 0, 0)
-//        background = Color(0, 0, 0, 0)
-        isOpaque = false
+    override fun createArrowButton() = JButton().apply {
+        isVisible = false
+        preferredSize = Dimension(0, 0)
     }
 
     override fun getInsets(): Insets {
-        return JBUI.insets(0, 0, 0, 0)
+        return JBUI.insets(0, 6, 0, 0)
     }
 
     override fun installUI(c: JComponent?) {
         super.installUI(c)
-        comboBox.border = EmptyBorder(0, 0, 0, 0)
         comboBox.isOpaque = false
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
         comboBox.background = defaultBackground
+
+        // Modify the ComboBoxModel to include the down symbol
+        val originalModel = comboBox.model
+        comboBox.model = object : ComboBoxModel<Any> {
+            override fun getSize(): Int = originalModel.size
+            override fun getElementAt(index: Int): Any? = originalModel.getElementAt(index)
+            override fun setSelectedItem(anItem: Any?) {
+                originalModel.selectedItem = anItem
+            }
+
+            override fun getSelectedItem(): Any? {
+                val item = originalModel.selectedItem
+                return "$item ▾"
+            }
+
+            override fun addListDataListener(l: ListDataListener?) {
+                originalModel.addListDataListener(l)
+            }
+
+            override fun removeListDataListener(l: ListDataListener?) {
+                originalModel.removeListDataListener(l)
+            }
+        }
+    }
+
+
+    override fun paintCurrentValueBackground(g: Graphics, bounds: Rectangle, hasFocus: Boolean) {
+        // Do nothing to prevent painting the background
+    }
+
+
+    override fun paintCurrentValue(g: Graphics, bounds: Rectangle, hasFocus: Boolean) {
+        val renderer = comboBox.renderer
+        val item = comboBox.selectedItem
+
+        if (item != null) {
+            val c = renderer.getListCellRendererComponent(listBox, item, -1, false, false)
+            c.font = comboBox.font
+            c.foreground = Color(156, 163, 175) // text-gray-400
+            c.background = comboBox.background
+
+            if (c is JComponent) {
+                c.isOpaque = false
+            }
+
+            val currentValuePane = currentValuePane
+            currentValuePane.paintComponent(g, c, comboBox, bounds.x, bounds.y, bounds.width, bounds.height, true)
+        }
     }
 }
+

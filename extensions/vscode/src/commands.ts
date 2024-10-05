@@ -223,6 +223,7 @@ const commandsMap: (
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
+      undefined,
       onlyOneInsertion,
       undefined,
       range,
@@ -641,6 +642,12 @@ const commandsMap: (
       }
       quickPick.items = [
         {
+          label: "$(comment) Open chat (Cmd+L)",
+        },
+        {
+          label: "$(screen-full) Open full screen chat (Cmd+K Cmd+M)",
+        },
+        {
           label: quickPickStatusText(targetStatus),
         },
         {
@@ -684,6 +691,13 @@ const commandsMap: (
           configHandler.reloadConfig();
         } else if (selectedOption === "$(feedback) Give feedback") {
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
+        } else if (selectedOption === "$(comment) Open chat (Cmd+L)") {
+          vscode.commands.executeCommand("continue.focusContinueInput");
+        } else if (
+          selectedOption ===
+          "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
+        ) {
+          vscode.commands.executeCommand("continue.toggleFullScreen");
         }
         quickPick.dispose();
       });

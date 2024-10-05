@@ -66,19 +66,15 @@ function Stats() {
       }}
     >
       <div
-        className="items-center flex m-0 p-0 sticky top-0"
+        onClick={() => navigate(-1)}
+        className="items-center flex m-0 p-0 sticky top-0 cursor-pointer"
         style={{
           borderBottom: `0.5px solid ${lightGray}`,
           backgroundColor: vscBackground,
         }}
       >
-        <ArrowLeftIcon
-          width="1.2em"
-          height="1.2em"
-          onClick={() => navigate(-1)}
-          className="inline-block ml-4 cursor-pointer"
-        />
-        <h3 className="text-lg font-bold m-2 inline-block">My Usage</h3>
+        <ArrowLeftIcon className="inline-block ml-4 cursor-pointer w-3 h-3" />
+        <span className="text-sm font-bold m-2 inline-block">More</span>
       </div>
 
       <div className="p-2">

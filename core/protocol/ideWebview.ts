@@ -15,7 +15,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
   ];
   openUrl: [string, void];
-  applyToCurrentFile: [{ text: string }, void];
+  applyToCurrentFile: [{ text: string; streamId: string }, void];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
@@ -31,6 +31,11 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   acceptDiff: [{ filepath: string }, void];
   rejectDiff: [{ filepath: string }, void];
 };
+
+export interface ApplyState {
+  streamId: string;
+  status: "streaming" | "done" | "closed";
+}
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setInactive: [undefined, void];
@@ -65,4 +70,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   incrementFtc: [undefined, void];
   openOnboardingCard: [undefined, void];
   applyCodeFromChat: [undefined, void];
+  updateApplyState: [ApplyState, void];
 };

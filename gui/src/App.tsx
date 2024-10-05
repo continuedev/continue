@@ -12,7 +12,7 @@ import GUI from "./pages/gui";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
-import { default as More, default as MorePage } from "./pages/more";
+import MorePage from "./pages/More";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 
@@ -37,10 +37,6 @@ const router = createMemoryRouter([
       {
         path: "/stats",
         element: <Stats />,
-      },
-      {
-        path: "/help",
-        element: <More />,
       },
       {
         path: "/settings",

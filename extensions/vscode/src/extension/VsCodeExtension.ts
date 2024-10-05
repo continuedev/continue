@@ -24,6 +24,7 @@ import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { arePathsEqual } from "../util/arePathsEqual";
 import { Battery } from "../util/battery";
 import { AUTH_TYPE, EXTENSION_NAME } from "../util/constants";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -124,7 +125,10 @@ export class VsCodeExtension {
     resolveConfigHandler?.(this.configHandler);
 
     this.configHandler.reloadConfig();
-    this.verticalDiffManager = new VerticalDiffManager(this.configHandler);
+    this.verticalDiffManager = new VerticalDiffManager(
+      this.configHandler,
+      this.sidebar.webviewProtocol,
+    );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
 
@@ -225,7 +229,7 @@ export class VsCodeExtension {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
-      if (filepath === getConfigJsonPath()) {
+      if (arePathsEqual(filepath, getConfigJsonPath())) {
         // Trigger a toast notification to provide UI feedback that config
         // has been updated
         const showToast = context.globalState.get<boolean>(
@@ -326,6 +330,16 @@ export class VsCodeExtension {
 
     this.ide.onDidChangeActiveTextEditor((filepath) => {
       this.core.invoke("didChangeActiveTextEditor", { filepath });
+    });
+
+    vscode.workspace.onDidChangeConfiguration(async (event) => {
+      if (event.affectsConfiguration(EXTENSION_NAME)) {
+        const settings = this.ide.getIdeSettingsSync();
+        const webviewProtocol = await this.webviewProtocolPromise;
+        webviewProtocol.request("didChangeIdeSettings", {
+          settings,
+        });
+      }
     });
   }
 

@@ -1,14 +1,18 @@
 import ReactDOM from "react-dom";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscForeground,
+} from "../../components";
 import { getPlatform, isJetBrains } from "../../util";
-import { ToolTip } from "../gui/Tooltip";
+import { ToolTip } from "../../components/gui/Tooltip";
 
 const GridDiv = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  grid-gap: 2rem;
-  padding: 1rem;
+  grid-gap: 1rem;
+  padding: 1rem 0;
   justify-items: center;
   align-items: center;
 `;
@@ -16,7 +20,7 @@ const GridDiv = styled.div`
 const StyledKeyDiv = styled.div`
   border: 0.5px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
-  padding: 4px;
+  padding: 2px;
   color: ${vscForeground};
 
   width: 16px;
@@ -198,7 +202,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   },
 ];
 
-function KeyboardShortcutsDialog() {
+function KeyboardShortcuts() {
   return (
     <GridDiv>
       {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
@@ -217,4 +221,4 @@ function KeyboardShortcutsDialog() {
   );
 }
 
-export default KeyboardShortcutsDialog;
+export default KeyboardShortcuts;

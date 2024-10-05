@@ -1,7 +1,7 @@
 import {
   ChevronDownIcon,
   ChevronUpIcon,
-  PaintBrushIcon,
+  PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
@@ -107,11 +107,11 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           }
         }}
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-1">
           <FileIcon height="20px" width="20px" filename={props.item.name} />
           {props.item.name}
         </div>
-        <div className="flex items-center">
+        <div className="flex items-center gap-1">
           {props.onEdit && (
             <StyledHeaderButtonWithText
               text="Edit"
@@ -122,7 +122,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               }}
               {...(props.editing && { color: "#f0f4" })}
             >
-              <PaintBrushIcon width="1.1em" height="1.1em" />
+              <PencilIcon width="1.1em" height="1.1em" />
             </StyledHeaderButtonWithText>
           )}
           <ButtonWithTooltip

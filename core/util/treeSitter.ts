@@ -129,6 +129,11 @@ export async function getLanguageForFile(
 export enum TSQueryType {
   CodeSnippets = "code-snippet-queries",
   Imports = "import-queries",
+  // Used in RootPathContextService.ts
+  FunctionDeclaration = "root-path-context-queries/function_declaration",
+  MethodDefinition = "root-path-context-queries/method_definition",
+  FunctionDefinition = "root-path-context-queries/function_definition",
+  MethodDeclaration = "root-path-context-queries/method_declaration",
 }
 
 export async function getQueryForFile(

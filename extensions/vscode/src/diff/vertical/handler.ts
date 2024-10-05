@@ -1,4 +1,5 @@
 import type { DiffLine } from "core";
+import { ApplyState } from "core/protocol/ideWebview";
 import * as vscode from "vscode";
 import {
   DecorationTypeRangeManager,
@@ -12,6 +13,7 @@ import type { VerticalDiffCodeLens } from "./manager";
 export interface VerticalDiffHandlerOptions {
   input?: string;
   instant?: boolean;
+  onStatusUpdate: (status: ApplyState["status"]) => void;
 }
 
 export class VerticalDiffHandler implements vscode.Disposable {
@@ -268,6 +270,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
       },
     );
 
+    this.options.onStatusUpdate("closed");
+
     this.cancelled = true;
     this.refreshCodeLens();
     this.dispose();
@@ -351,6 +355,8 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.clearIndexLineDecorations();
 
       this.refreshCodeLens();
+
+      this.options.onStatusUpdate("done");
 
       // Reject on user typing
       // const listener = vscode.workspace.onDidChangeTextDocument((e) => {

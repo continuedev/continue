@@ -86,7 +86,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
 
 const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
   border-radius: ${defaultBorderRadius};
-  padding: 8px 12px;
+  padding: 6px 12px;
 
   ${({ isDisabled }) =>
     !isDisabled &&
@@ -192,7 +192,14 @@ function ModelOption({
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center flex-grow">
             <CubeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-            <span className="flex-grow">{option.title}</span>
+            <span className="flex-grow">
+              {option.title}
+              {showMissingApiKeyMsg && (
+                <span className="ml-2 italic text-[10px]">
+                  (Missing API key)
+                </span>
+              )}
+            </span>
           </div>
           <div className="flex items-center ml-5">
             <StyledCog6ToothIcon hovered={hovered} onClick={onClickGear} />
@@ -201,12 +208,6 @@ function ModelOption({
             )}
           </div>
         </div>
-
-        {showMissingApiKeyMsg && (
-          <span className="ml-6 text-xs italic text-[8px]">
-            Missing API key
-          </span>
-        )}
       </div>
     </StyledListboxOption>
   );
@@ -318,7 +319,7 @@ function ModelSelect() {
           style={{ padding: 0 }}
           onClick={calculatePosition}
         >
-          <div className="text-gray-400 hover:text-gray-300 transition-colors duration-200 flex items-center gap-0.5 max-w-[33vw]">
+          <div className="text-gray-400 transition-colors duration-200 flex items-center gap-0.5 max-w-[33vw]">
             <span className="truncate">
               {modelSelectTitle(defaultModel) || "Select model"}{" "}
             </span>

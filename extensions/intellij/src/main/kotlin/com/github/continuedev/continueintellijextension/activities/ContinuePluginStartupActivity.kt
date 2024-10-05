@@ -141,6 +141,9 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             connection.subscribe(SettingsListener.TOPIC, object : SettingsListener {
                 override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
                     continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
+                    continuePluginService.sendToWebview("didChangeIdeSettings", mapOf(
+                        "settings" to settings
+                    ))
                 }
             })
 

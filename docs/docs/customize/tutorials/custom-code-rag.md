@@ -48,7 +48,8 @@ func = get_registry().get("openai").create(
 class CodeChunks(LanceModel):
     filename: str
     text: str = func.SourceField()
-    vector: Vector(func.ndims()) = func.VectorField()
+    # 1536 is the embedding dimension of the `voyage-code-2` model.
+    vector: Vector(1536) = func.VectorField()
 
 table = db.create_table("code_chunks", schema=CodeChunks, mode="overwrite")
 table.add([

@@ -59,11 +59,6 @@ const EnterButton = styled.div`
   border-radius: ${defaultBorderRadius};
   color: ${vscForeground};
   cursor: pointer;
-
-  &:hover {
-    background-color: ${vscBadgeBackground};
-    color: ${vscBadgeForeground};
-  }
 `;
 
 interface InputToolbarProps {
@@ -96,11 +91,11 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
-        className="hidden xs:flex "
+        className="flex"
       >
         <div className="flex gap-2 items-center whitespace-nowrap justify-start">
           <ModelSelect />
-          <div className="items-center hidden xs:flex gap-1 text-gray-400 transition-colors duration-200">
+          <div className="items-center hidden xs:flex gap-1 text-gray-400 transition-colors duration-200 -mb-1">
             {supportsImages && (
               <>
                 <input
@@ -114,7 +109,7 @@ function InputToolbar(props: InputToolbarProps) {
                     }
                   }}
                 />
-                <HoverItem className="hover:text-gray-300">
+                <HoverItem>
                   <PhotoIcon
                     className="h-4 w-4"
                     onClick={(e) => {
@@ -125,37 +120,22 @@ function InputToolbar(props: InputToolbarProps) {
               </>
             )}
 
-            <HoverItem
-              className="hover:text-gray-300"
-              onClick={props.onAddContextItem}
-            >
+            <HoverItem onClick={props.onAddContextItem}>
               <AtSymbolIcon className="h-4 w-4" />
-            </HoverItem>
-
-            <HoverItem
-              className="hover:text-gray-300"
-              onClick={props.onAddSlashCommand}
-              style={{ paddingLeft: 0 }}
-            >
-              <SlashIcon className="h-4 w-4" />
             </HoverItem>
           </div>
         </div>
 
         <div className="flex items-center gap-2 whitespace-nowrap text-gray-400 ">
-          <div className="hidden sm:flex transition-colors duration-200">
+          <div className="hidden sm:flex transition-colors duration-200 hover:underline">
             {props.activeKey === "Alt" ? (
-              <HoverItem className="text-gray-300 ">
+              <HoverItem className="underline">
                 {`${getAltKeyLabel()}⏎ 
                   ${useActiveFile ? "No active file" : "Active file"}`}
               </HoverItem>
             ) : (
               <HoverItem
-                className={
-                  props.activeKey === "Meta"
-                    ? "text-gray-300"
-                    : "hover:text-gray-300"
-                }
+                className={props.activeKey === "Meta" && "underline"}
                 onClick={(e) =>
                   props.onEnter({
                     useCodebase: true,

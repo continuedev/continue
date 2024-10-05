@@ -3,7 +3,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.TelemetryService
-import com.github.continuedev.continueintellijextension.toolWindow.MessageTypes
+import com.github.continuedev.continueintellijextension.constants.MessageTypes
 import com.google.gson.Gson
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -15,7 +15,13 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient, private val coroutineScope: CoroutineScope) {
+class CoreMessenger(
+    private val project: Project,
+    esbuildPath: String,
+    continueCorePath: String,
+    ideProtocolClient: IdeProtocolClient,
+    private val coroutineScope: CoroutineScope
+) {
     private var writer: Writer? = null
     private var reader: BufferedReader? = null
     private var process: Process? = null
@@ -42,11 +48,13 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
 
     fun request(messageType: String, data: Any?, messageId: String?, onResponse: (Any?) -> Unit) {
         val id = messageId ?: uuid()
-        val message = gson.toJson(mapOf(
+        val message = gson.toJson(
+            mapOf(
                 "messageId" to id,
                 "messageType" to messageType,
                 "data" to data
-        ))
+            )
+        )
         responseListeners[id] = onResponse
         write(message)
     }
@@ -60,11 +68,13 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         // IDE listeners
         if (MessageTypes.ideMessageTypes.contains(messageType)) {
             ideProtocolClient.handleMessage(json) { data ->
-                val message = gson.toJson(mapOf(
+                val message = gson.toJson(
+                    mapOf(
                         "messageId" to messageId,
                         "messageType" to messageType,
                         "data" to data
-                ))
+                    )
+                )
                 write(message)
             };
         }
@@ -76,11 +86,13 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             if (messageType == "getDefaultModelTitle") {
                 val continueSettingsService = service<ContinueExtensionSettings>()
                 val defaultModelTitle = continueSettingsService.continueState.lastSelectedInlineEditModel;
-                val message = gson.toJson(mapOf(
+                val message = gson.toJson(
+                    mapOf(
                         "messageId" to messageId,
                         "messageType" to messageType,
                         "data" to defaultModelTitle
-                ))
+                    )
+                )
                 write(message)
             }
             val continuePluginService = project.service<ContinuePluginService>()
@@ -94,7 +106,8 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
                 val done = (data as Map<String, Boolean?>)["done"]
                 if (done == true) {
                     responseListeners.remove(messageId)
-                } else {}
+                } else {
+                }
             } else {
                 responseListeners.remove(messageId)
             }
@@ -106,10 +119,10 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         val osName = System.getProperty("os.name").toLowerCase()
         if (osName.contains("mac") || osName.contains("darwin")) {
             ProcessBuilder(
-                    "xattr",
-                    "-dr",
-                    "com.apple.quarantine",
-                    destination
+                "xattr",
+                "-dr",
+                "com.apple.quarantine",
+                destination
             ).start()
             setFilePermissions(destination, "rwxr-xr-x")
         } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("mac")) {
@@ -177,7 +190,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
 
             // Start the subprocess
             val processBuilder = ProcessBuilder(continueCorePath)
-                    .directory(File(continueCorePath).parentFile)
+                .directory(File(continueCorePath).parentFile)
             process = processBuilder.start()
 
             val outputStream = process!!.outputStream
@@ -200,14 +213,16 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
 
                 println("Core process exited with output: $err")
                 CoroutineScope(Dispatchers.Main).launch {
-                    ideProtocolClient.showMessage("Core process exited with output: $err")
+                    ideProtocolClient.showToast("error", "Core process exited with output: $err")
                 }
 
                 // Log the cause of the failure
                 val telemetryService = service<TelemetryService>()
-                telemetryService.capture("jetbrains_core_exit", mapOf(
-                    "error" to err
-                ))
+                telemetryService.capture(
+                    "jetbrains_core_exit", mapOf(
+                        "error" to err
+                    )
+                )
 
                 // Clean up all resources
                 writer?.close()

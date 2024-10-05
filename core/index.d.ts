@@ -70,6 +70,7 @@ export interface ILLM extends LLMOptions {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   engine?: string;
   apiVersion?: string;
@@ -342,6 +343,7 @@ export interface LLMOptions {
   apiKey?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -371,8 +373,6 @@ export interface LLMOptions {
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
   watsonxFullUrl?: string;
-
-  cacheSystemMessage?: boolean;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -580,6 +580,7 @@ type ContextProviderName =
   | "gitlab-mr"
   | "os"
   | "currentFile"
+  | "greptile"
   | "outline"
   | "continue-proxy"
   | "highlights"
@@ -729,6 +730,11 @@ export interface RequestOptions {
   clientCertificate?: ClientCertificateOptions;
 }
 
+export interface CacheBehavior {
+  cacheSystemMessage?: boolean;
+  cacheConversation?: boolean;
+}
+
 export interface ClientCertificateOptions {
   cert: string;
   key: string;
@@ -791,6 +797,7 @@ export interface ModelDescription {
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   capabilities?: ModelCapability;
+  cacheBehavior?: CacheBehavior;
 }
 
 export type EmbeddingsProviderName =
@@ -875,6 +882,7 @@ export interface TabAutocompleteOptions {
   recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
   useImports?: boolean;
+  useRootPathContext?: boolean;
 }
 
 export interface ContinueUIConfig {

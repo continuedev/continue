@@ -136,10 +136,30 @@ export class VsCodeIdeUtils {
     );
   }
 
-  openFile(filepath: string, range?: vscode.Range) {
+  private async resolveAbsFilepathInWorkspace(
+    filepath: string,
+  ): Promise<string> {
+    // If the filepath is already absolute, return it as is
+    if (this.path.isAbsolute(filepath)) {
+      return filepath;
+    }
+
+    // Try to resolve for each workspace directory
+    const workspaceDirectories = this.getWorkspaceDirectories();
+    for (const dir of workspaceDirectories) {
+      const resolvedPath = this.path.resolve(dir, filepath);
+      if (await this.fileExists(resolvedPath)) {
+        return resolvedPath;
+      }
+    }
+
+    return filepath;
+  }
+
+  async openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
     return openEditorAndRevealRange(
-      filepath,
+      await this.resolveAbsFilepathInWorkspace(filepath),
       range,
       vscode.ViewColumn.One,
       false,
@@ -226,7 +246,7 @@ export class VsCodeIdeUtils {
       .flat()
       .filter(Boolean) // filter out undefined values
       .filter((uri) => this.documentIsCode(uri)) // Filter out undesired documents
-      .map((uri) => uri.fsPath);
+      .map((uri) => uriFromFilePath(uri.fsPath).fsPath);
   }
 
   getVisibleFiles(): string[] {

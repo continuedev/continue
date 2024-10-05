@@ -28,7 +28,7 @@ If there is information from the codebase, documentation, IDE, or other tools th
 
 ## Apply generated code to your file
 
-When the LLM replies with code, you can hover over the top right of the code block and select “Apply to current file” to update the existing code in the editor to this new version.
+When the LLM replies with edits to a file, you can click the “Apply” button. This will update the existing code in the editor to reflect the suggested changes.
 
 ## Start a fresh session for a new task
 

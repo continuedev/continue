@@ -154,4 +154,8 @@ describe("deterministicApplyLazyEdit(", () => {
   test("no lazy blocks in single top level class", async () => {
     await expectDiff("no-lazy-single-class.js");
   });
+
+  test("should acknowledge jsx_expression lazy comments", async () => {
+    await expectDiff("migration-page.tsx");
+  });
 });

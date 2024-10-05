@@ -97,4 +97,5 @@ export type ToWebviewOrCoreFromIdeProtocol = {
     { sessionInfo: ControlPlaneSessionInfo | undefined },
     void,
   ];
+  didChangeIdeSettings: [{ settings: IdeSettings }, void];
 };

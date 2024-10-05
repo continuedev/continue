@@ -2,7 +2,7 @@ import { debounce } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray } from "..";
+import { defaultBorderRadius } from "..";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import CodeBlockToolBar from "./CodeBlockToolbar";
@@ -47,16 +47,20 @@ function PreWithToolbar(props: {
   );
 
   useEffect(() => {
-    const debouncedEffect = debounce(() => {
+    if (copyValue === "") {
       setCopyValue(childrenToText(props.children.props.children));
-    }, 100);
+    } else {
+      const debouncedEffect = debounce(() => {
+        setCopyValue(childrenToText(props.children.props.children));
+      }, 100);
 
-    debouncedEffect();
+      debouncedEffect();
 
-    return () => {
-      debouncedEffect.cancel();
-    };
-  }, [props.children]);
+      return () => {
+        debouncedEffect.cancel();
+      };
+    }
+  }, [props.children, copyValue]);
 
   return (
     <TopDiv
