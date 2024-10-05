@@ -1,6 +1,6 @@
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -9,6 +9,7 @@ import {
   defaultBorderRadius,
   vscForeground,
   vscInputBackground,
+  vscBackground,
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
@@ -37,6 +38,7 @@ const isMac = platform.includes("mac");
 const isWindows = platform.includes("win");
 
 // #region Styled Components
+const HEADER_HEIGHT = "1.55rem";
 const FOOTER_HEIGHT = "1.8em";
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`

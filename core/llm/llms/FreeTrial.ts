@@ -18,7 +18,7 @@ class FreeTrial extends BaseLLM {
   private async _getHeaders() {
     if (!this.ghAuthToken) {
       throw new Error(
-        "Please sign in with GitHub in order to use the free trial. If you'd like to use Continue without signing in, you can set up your own local model or API key.",
+        "Please sign in with GitHub in order to use the free trial. If you'd like to use PearAI without signing in, you can set up your own local model or API key.",
       );
     }
     return {

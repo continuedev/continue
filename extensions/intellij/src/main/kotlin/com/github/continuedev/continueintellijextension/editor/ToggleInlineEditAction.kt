@@ -15,7 +15,7 @@ class ToggleInlineEditAction : AnAction(), DumbAware {
         val diffService = project.service<DiffStreamService>()
         val handler = diffService.getHandler(editor)
         if (handler == null) {
-            val actionId = "continue.inlineEdit"
+            val actionId = "pearai.inlineEdit"
             val action = ActionManager.getInstance().getAction(actionId)
             if (action != null) {
                 e.actionManager.tryToExecute(action, e.inputEvent, null, null, true)

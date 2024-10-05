@@ -145,7 +145,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     provider: "azure",
     description:
       "Azure OpenAI Service offers industry-leading coding and language AI models that you can fine-tune to your specific needs for a variety of use cases.",
-    longDescription: `[Visit our documentation](https://docs.continue.dev/reference/Model%20Providers/azure) for information on obtaining an API key.
+    longDescription: `[Visit our documentation](https://trypear.ai/reference/Model%20Providers/azure) for information on obtaining an API key.
 
 Select the \`GPT-4o\` model below to complete your provider configuration, but note that this will not affect the specific model you need to select when creating your Azure deployment.`,
     icon: "azure.png",
@@ -381,7 +381,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     description:
       "One of the fastest ways to get started with local models on Mac or Windows",
     longDescription:
-      "LMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.",
+      "LMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using PearAI.",
     icon: "lmstudio.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     params: {
@@ -459,7 +459,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
 .\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf
 \`\`\`
 
-After it's up and running, you can start using Continue.`,
+After it's up and running, you can start using PearAI.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: openSourceModels,

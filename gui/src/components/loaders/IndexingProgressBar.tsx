@@ -113,7 +113,7 @@ const IndexingProgressBar = ({
       isJetBrains() &&
       embeddingsProvider === TransformersJsEmbeddingsProvider.model
     ) {
-      return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers";
+      return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://trypear.ai/walkthroughs/codebase-embeddings#embeddings-providers";
     }
     return msg;
   }

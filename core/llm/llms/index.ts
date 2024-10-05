@@ -35,6 +35,7 @@ import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
 import WatsonX from "./WatsonX.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
+import PearAIServer from "./PearAIServer.js";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -128,6 +129,7 @@ const LLMs = [
   Msty,
   Azure,
   WatsonX,
+  PearAIServer,
 ];
 
 export async function llmFromDescription(

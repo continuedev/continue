@@ -1,4 +1,4 @@
-import type { FileEdit, RangeInFile, Thread } from "core";
+import type { FileEdit, RangeInFile, Thread, PearAuth } from "core";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
@@ -138,7 +138,7 @@ export class VsCodeIdeUtils {
   showMultiFileEdit(edits: FileEdit[]) {
     vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     const panel = vscode.window.createWebviewPanel(
-      "continue.continueGUIView",
+      "pearai.continueGUIView",
       "Continue",
       vscode.ViewColumn.One,
     );
@@ -186,7 +186,7 @@ export class VsCodeIdeUtils {
 
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
-    let secret = vscode.workspace.getConfiguration("continue").get(key);
+    let secret = vscode.workspace.getConfiguration("pearai").get(key);
     if (typeof secret !== "undefined" && secret !== null) {
       return secret;
     }
@@ -199,7 +199,7 @@ export class VsCodeIdeUtils {
 
     // Add secret to VS Code settings
     vscode.workspace
-      .getConfiguration("continue")
+      .getConfiguration("pearai")
       .update(key, secret, vscode.ConfigurationTarget.Global);
 
     return secret;
@@ -653,5 +653,26 @@ export class VsCodeIdeUtils {
         });
       });
     return rangeInFiles;
+  }
+
+  /**
+   * Request credentials object from vscode
+   */
+  async getPearCredentials(): Promise<PearAuth> {
+    return await vscode.commands.executeCommand("pearai.getPearAuth");
+  }
+
+  /**
+   * Send login request to IDE via commands, this opens the website
+   */
+  async executePearLogin() {
+    vscode.commands.executeCommand("pearai.login");
+  }
+
+  /**
+   * Set the stored credentials in vscode
+   */
+  async updatePearCredentials(auth: PearAuth) {
+    await vscode.commands.executeCommand("pearai.updateUserAuth", auth);
   }
 }

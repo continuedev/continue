@@ -6,6 +6,10 @@
     "lib": ["ES2021", "dom", "es6", "es5", "dom.iterable", "scripthost"],
     "sourceMap": true,
     "rootDir": "../../",
+    "typeRoots": ["./node_modules/@types"],
+    "paths": {
+      "web-tree-sitter": ["../../core/node_modules/web-tree-sitter"]
+    },
     "strict": true /* enable all strict type-checking options */,
     /* Additional Checks */
     // "noImplicitReturns": true, /* Report error when not all code paths in function return a value. */

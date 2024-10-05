@@ -3,7 +3,7 @@ import { getUserToken } from "./auth";
 import { RemoteConfigSync } from "./remoteConfig";
 
 export async function setupRemoteConfigSync(reloadConfig: () => void) {
-  const settings = vscode.workspace.getConfiguration("continue");
+  const settings = vscode.workspace.getConfiguration("pearai");
   const remoteConfigServerUrl = settings.get<string | null>(
     "remoteConfigServerUrl",
     null,
@@ -17,7 +17,7 @@ export async function setupRemoteConfigSync(reloadConfig: () => void) {
   }
   getUserToken().then(async (token) => {
     await vscode.workspace
-      .getConfiguration("continue")
+      .getConfiguration("pearai")
       .update("userToken", token, vscode.ConfigurationTarget.Global);
     try {
       const configSync = new RemoteConfigSync(reloadConfig, token);

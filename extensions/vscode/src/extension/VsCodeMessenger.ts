@@ -1,3 +1,5 @@
+// Note: This file has been modified significantly from its original contents. New commands have been added, and there has been renaming from Continue to PearAI. pearai-submodule is a fork of Continue (https://github.com/continuedev/continue).
+
 import { ConfigHandler } from "core/config/ConfigHandler";
 import {
   FromCoreProtocol,
@@ -97,7 +99,7 @@ export class VsCodeMessenger {
     });
     this.onWebview("toggleDevTools", (msg) => {
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
-      vscode.commands.executeCommand("continue.viewLogs");
+      vscode.commands.executeCommand("pearai.viewLogs");
     });
     this.onWebview("reloadWindow", (msg) => {
       vscode.commands.executeCommand("workbench.action.reloadWindow");
@@ -194,7 +196,7 @@ export class VsCodeMessenger {
     this.onWebview("showTutorial", async (msg) => {
       const tutorialPath = path.join(
         getExtensionUri().fsPath,
-        "continue_tutorial.py",
+        "pearai_tutorial.py",
       );
       // Ensure keyboard shortcuts match OS
       if (process.platform !== "darwin") {

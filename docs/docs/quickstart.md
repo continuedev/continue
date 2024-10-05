@@ -1,6 +1,6 @@
 ---
 title: ⚡️ Quickstart
-description: Getting started with Continue
+description: Getting started with PearAI
 keywords: [quickstart, start, install, vscode, jetbrains]
 ---
 

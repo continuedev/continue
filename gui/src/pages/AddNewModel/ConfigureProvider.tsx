@@ -164,7 +164,7 @@ function ConfigureProvider() {
             className="inline-block ml-4 cursor-pointer"
           />
           <h3 className="text-lg font-bold m-2 inline-block">
-            Configure provider
+            Configure Provider
           </h3>
         </div>
 
@@ -432,65 +432,6 @@ function ConfigureProvider() {
             </>
           )}
         </div>
-        <GridDiv>
-          {modelInfo?.packages.map((pkg, idx) => {
-            return (
-              <ModelCard
-                key={idx}
-                disabled={
-                  disableModelCards() &&
-                  enablecardsForApikey() &&
-                  enablecardsForCredentials()
-                }
-                title={pkg.title}
-                description={pkg.description}
-                tags={pkg.tags}
-                refUrl={pkg.refUrl}
-                icon={pkg.icon || modelInfo.icon}
-                dimensions={pkg.dimensions}
-                onClick={(e, dimensionChoices) => {
-                  if (
-                    disableModelCards() &&
-                    enablecardsForApikey() &&
-                    enablecardsForCredentials()
-                  )
-                    return;
-                  let formParams: any = {};
-                  for (const d of modelInfo.collectInputFor || []) {
-                    const val = formMethods.watch(d.key);
-                    if (val === "" || val === undefined || val === null) {
-                      continue;
-                    }
-                    formParams = updatedObj(formParams, {
-                      [d.key]: d.inputType === "text" ? val : parseFloat(val),
-                    });
-                  }
-
-                  const model = {
-                    ...pkg.params,
-                    ...modelInfo.params,
-                    ..._.merge(
-                      {},
-                      ...(pkg.dimensions?.map((dimension, i) => {
-                        if (!dimensionChoices?.[i]) return {};
-                        return {
-                          ...dimension.options[dimensionChoices[i]],
-                        };
-                      }) || []),
-                    ),
-                    ...formParams,
-                    provider: modelInfo.provider,
-                  };
-                  ideMessenger.post("config/addModel", { model });
-                  dispatch(
-                    setDefaultModel({ title: model.title, force: true }),
-                  );
-                  navigate("/");
-                }}
-              />
-            );
-          })}
-        </GridDiv>
       </div>
     </FormProvider>
   );

@@ -511,7 +511,8 @@ declare global {
     | "flowise"
     | "groq"
     | "custom"
-    | "msty";
+    | "msty"
+    | "pearai_server";
   
   export type ModelName =
     | "AUTODETECT"
@@ -575,7 +576,8 @@ declare global {
     | "starcoder-1b"
     | "starcoder-3b"
     | "starcoder2-3b"
-    | "stable-code-3b";
+    | "stable-code-3b"
+    | "pearai_model";
   
   export interface RequestOptions {
     timeout?: number;
@@ -630,6 +632,7 @@ declare global {
     model: string;
     apiKey?: string;
     apiBase?: string;
+    refreshToken?: string;
     contextLength?: number;
     template?: TemplateType;
     completionOptions?: BaseCompletionOptions;
@@ -648,6 +651,7 @@ declare global {
   
   export interface EmbedOptions {
     apiBase?: string;
+    refreshToken?: string;
     apiKey?: string;
     model?: string;
     requestOptions?: RequestOptions;
@@ -743,7 +747,7 @@ declare global {
   };
   
   export interface Config {
-    /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
+    /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://trypear.ai/telemetry */
     allowAnonymousTelemetry?: boolean;
     /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
      * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either \`streamCompletion\` or \`streamChat\` (or both).

@@ -27,7 +27,7 @@ async function writeFile(uri: vscode.Uri, contents: string) {
 
 // THIS IS LOCAL
 export const DIFF_DIRECTORY = path
-  .join(os.homedir(), ".continue", ".diffs")
+  .join(os.homedir(), ".pearai", ".diffs")
   .replace(/^C:/, "c:");
 
 export class DiffManager {
@@ -119,7 +119,7 @@ export class DiffManager {
 
     if (
       this.extensionContext.globalState.get<boolean>(
-        "continue.showDiffInfoMessage",
+        "pearai.showDiffInfoMessage",
       ) !== false
     ) {
       vscode.window
@@ -132,7 +132,7 @@ export class DiffManager {
           if (selection === "Don't show again") {
             // Get the global state
             this.extensionContext.globalState.update(
-              "continue.showDiffInfoMessage",
+              "pearai.showDiffInfoMessage",
               false,
             );
           }

@@ -35,14 +35,14 @@ Thereafter, the following steps are performed:
 
 ### Files created
 
-Several files are stored and updated on disk in the ~/.continue/index folder to keep track of indexed files:
+Several files are stored and updated on disk in the ~/.pearai/index folder to keep track of indexed files:
 
-- `~/.continue/index/tags/<dir>/<branch>/<provider_id>/merkle_tree` - the last computed Merkle tree of the codebase for a given tag
-- `~/.continue/index/tags/<dir>/<branch>/<provider_id>/.last_sync` - the last time the tag was synced
+- `~/.pearai/index/tags/<dir>/<branch>/<provider_id>/merkle_tree` - the last computed Merkle tree of the codebase for a given tag
+- `~/.pearai/index/tags/<dir>/<branch>/<provider_id>/.last_sync` - the last time the tag was synced
 - The index cache contains a list of hashes that have already been computed both in general and per tag. These are always kept in sync.
-  - `~/.continue/index/.index_cache` - contains the global cache (flat file of hashes)
-  - `~/.continue/index/tags/<dir>/<branch>/<provider_id>/.index_cache` - contains the tag-specific cache (flat file of hashes)
-  - `~/.continue/index/rev_tags` - contains a mapping from hash to tags that the hash is currently indexed for. This is a directory of files, where each file is prefixed with the first 2 characters of the hash. The file is a JSON mapping from hash to list of tags.
+  - `~/.pearai/index/.index_cache` - contains the global cache (flat file of hashes)
+  - `~/.pearai/index/tags/<dir>/<branch>/<provider_id>/.index_cache` - contains the tag-specific cache (flat file of hashes)
+  - `~/.pearai/index/rev_tags` - contains a mapping from hash to tags that the hash is currently indexed for. This is a directory of files, where each file is prefixed with the first 2 characters of the hash. The file is a JSON mapping from hash to list of tags.
 
 ### Files
 
@@ -52,5 +52,5 @@ Several files are stored and updated on disk in the ~/.continue/index folder to 
 
 ### Current limitations:
 
-- Only handles local files, so is not currently being used in situations where the Continue server is on a different machine from the IDE or the workspace (Remote SSH, WSL, or a Continue server being run for a team).
-- Currently not using stat to check for recent changes to files, is instaed re-calculating the entire Merkle tree on every IDE reload. This is fine for now since it only takes 0.2 seconds on the Continue codebase, but is a quick improvement we can make later.
+- Only handles local files, so is not currently being used in situations where the PearAI server is on a different machine from the IDE or the workspace (Remote SSH, WSL, or a PearAI server being run for a team).
+- Currently not using stat to check for recent changes to files, is instaed re-calculating the entire Merkle tree on every IDE reload. This is fine for now since it only takes 0.2 seconds on the PearAI codebase, but is a quick improvement we can make later.

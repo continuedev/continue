@@ -1,3 +1,5 @@
+// Note: This file has been modified significantly from its original contents. New commands have been added, and there has been renaming from Continue to PearAI. pearai-submodule is a fork of Continue (https://github.com/continuedev/continue).
+
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { Core } from "core/core";
@@ -50,8 +52,8 @@ export class VsCodeExtension {
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context);
-    this.workOsAuthProvider.initialize();
-    context.subscriptions.push(this.workOsAuthProvider);
+    // this.workOsAuthProvider.initialize();
+    // context.subscriptions.push(this.workOsAuthProvider);
 
     let resolveWebviewProtocol: any = undefined;
     this.webviewProtocolPromise = new Promise<VsCodeWebviewProtocol>(
@@ -84,7 +86,7 @@ export class VsCodeExtension {
     // Sidebar
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
-        "continue.continueGUIView",
+        "pearai.continueGUIView",
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
@@ -95,7 +97,7 @@ export class VsCodeExtension {
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion",
+      "PearAI",
     );
     const inProcessMessenger = new InProcessMessenger<
       ToCoreProtocol,
@@ -134,6 +136,31 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig.bind(this.configHandler),
     );
 
+    // handleURI
+    context.subscriptions.push(
+      vscode.window.registerUriHandler({
+        handleUri(uri: vscode.Uri) {
+          console.log(uri);
+          console.log("Received a custom URI!");
+          if (uri.authority === "pearai.pearai") {
+            if (uri.path === "/ping") {
+              vscode.window.showInformationMessage(
+                "PearAI received a custom URI!",
+              );
+            } else if (uri.path === "/auth") {
+              const queryParams = new URLSearchParams(uri.query);
+              const data = {
+                accessToken: queryParams.get("accessToken"),
+                refreshToken: queryParams.get("refreshToken"),
+              };
+
+              vscode.commands.executeCommand("pearai.updateUserAuth", data);
+            }
+          }
+        },
+      }),
+    );
+
     // Indexing + pause token
     this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
 
@@ -163,7 +190,7 @@ export class VsCodeExtension {
     });
 
     // Tab autocomplete
-    const config = vscode.workspace.getConfiguration("continue");
+    const config = vscode.workspace.getConfiguration("pearai");
     const enabled = config.get<boolean>("enableTabAutocomplete");
 
     // Register inline completion provider
@@ -221,6 +248,21 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
+    // Create a file system watcher
+    const watcher = vscode.workspace.createFileSystemWatcher('**/*', false, false, false);
+
+    // Handle file creation
+    watcher.onDidCreate(uri => {
+      this.refreshContextProviders();
+    });
+
+    // Handle file deletion
+    watcher.onDidDelete(uri => {
+      this.refreshContextProviders();
+    });
+
+    context.subscriptions.push(watcher);
+
     vscode.workspace.onDidSaveTextDocument(async (event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
@@ -244,7 +286,7 @@ export class VsCodeExtension {
       }
 
       if (
-        filepath.endsWith(".continuerc.json") ||
+        filepath.endsWith(".pearairc.json") ||
         filepath.endsWith(".prompt")
       ) {
         this.configHandler.reloadConfig();
@@ -268,7 +310,7 @@ export class VsCodeExtension {
     vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
-      } else if (e.provider.id === "continue") {
+      } else if (e.provider.id === "pearai") {
         const sessionInfo = await getControlPlaneSessionInfo(true);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
           webviewProtocol.request("didChangeControlPlaneSessionInfo", {
@@ -331,10 +373,14 @@ export class VsCodeExtension {
     });
   }
 
-  static continueVirtualDocumentScheme = "continue";
+  static continueVirtualDocumentScheme = "pearai";
 
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
+
+  private async refreshContextProviders() {
+    this.sidebar.webviewProtocol.request("refreshSubmenuItems", undefined); // Refresh all context providers
+  }
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.configHandler.registerCustomContextProvider(contextProvider);

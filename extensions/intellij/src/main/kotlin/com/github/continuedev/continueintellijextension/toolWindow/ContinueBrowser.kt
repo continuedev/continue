@@ -78,7 +78,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
     private fun registerAppSchemeHandler() {
         CefApp.getInstance().registerSchemeHandlerFactory(
                 "http",
-                "continue",
+                "pearai",
                 CustomSchemeHandlerFactory()
         )
     }

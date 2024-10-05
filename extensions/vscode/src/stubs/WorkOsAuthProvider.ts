@@ -16,7 +16,7 @@ import {
 } from "vscode";
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
-export const AUTH_TYPE = "continue";
+export const AUTH_TYPE = "pearai";
 const AUTH_NAME = "Continue";
 const CLIENT_ID =
   process.env.CONTROL_PLANE_ENV === "local"
@@ -92,7 +92,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         this,
         { supportsMultipleAccounts: false },
       ),
-      window.registerUriHandler(this._uriHandler),
+      // window.registerUriHandler(this._uriHandler),
     );
   }
 
@@ -404,7 +404,7 @@ export async function getControlPlaneSessionInfo(
   silent: boolean,
 ): Promise<ControlPlaneSessionInfo | undefined> {
   const session = await authentication.getSession(
-    "continue",
+    "pearai",
     [],
     silent ? { silent: true } : { createIfNone: true },
   );

@@ -32,6 +32,16 @@ const ContextItemDiv = styled.div`
   }
 `;
 
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    return ['http:', 'https:'].includes(parsedUrl.protocol);
+  } catch {
+    return false;
+  }
+}
+
+
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
 }
@@ -47,7 +57,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
 
   function openContextItem(contextItem: ContextItemWithId) {
     if (contextItem.description.startsWith("http")) {
-      window.open(contextItem.description, "_blank");
+      window.open(isSafeUrl(contextItem.description) ? contextItem.description : '#', "_blank");
     } else if (
       contextItem.description.startsWith("/") ||
       contextItem.description.startsWith("\\")
@@ -112,7 +122,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
               return (
                 <a
                   key={idx}
-                  href={contextItem.description}
+                  href={isSafeUrl(contextItem.description) ? contextItem.description : '#'} // Protects against Client-side URL Redirects
                   target="_blank"
                   style={{ color: vscForeground, textDecoration: "none" }}
                 >

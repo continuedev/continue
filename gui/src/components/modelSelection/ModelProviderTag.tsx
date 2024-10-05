@@ -5,6 +5,8 @@ export enum ModelProviderTags {
   Local = "Local",
   Free = "Free",
   OpenSource = "Open-Source",
+  Recommended = "Recommended",
+  Hosted = "Hosted",
 }
 
 export interface ModelProviderTagProps {
@@ -16,6 +18,8 @@ export const MODEL_PROVIDER_TAG_COLORS = {
   [ModelProviderTags.Local]: "#00bb00",
   [ModelProviderTags.OpenSource]: "#0033FF",
   [ModelProviderTags.Free]: "#ffff00",
+  [ModelProviderTags.Recommended]: "#1E90FF",
+  [ModelProviderTags.Hosted]: "#008000",
 };
 
 export default function ModelProviderTag({ tag }: ModelProviderTagProps) {

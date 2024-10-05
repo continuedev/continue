@@ -87,7 +87,8 @@ async function getLinksFromUrl(url: string, path: string) {
   const html = await response.text();
   let links: string[] = [];
 
-  if (url.includes("github.com")) {
+  // URL Sanitation
+  if (/^https?:\/\/(?:www\.)?github\.com(?:\/|$)/i.test(url)) {
     return {
       html,
       links,

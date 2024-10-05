@@ -48,7 +48,7 @@ export class RemoteConfigSync {
   }
 
   private loadVsCodeSettings() {
-    const settings = vscode.workspace.getConfiguration("continue");
+    const settings = vscode.workspace.getConfiguration("pearai");
     const userToken = settings.get<string | null>("userToken", null);
     const remoteConfigServerUrl = settings.get<string | null>(
       "remoteConfigServerUrl",

@@ -103,12 +103,17 @@ function useHistory(dispatch: Dispatch) {
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
     setLocalStorage("lastSessionId", state.sessionId);
+
     const json: PersistedSessionInfo = await ideMessenger.request(
       "history/load",
       { id },
     );
     dispatch(newSession(json));
     return json;
+  }
+
+  async function loadMostRecentChat(): Promise<PersistedSessionInfo> {
+    return await loadLastSession();
   }
 
   async function loadLastSession(): Promise<PersistedSessionInfo> {
@@ -131,6 +136,7 @@ function useHistory(dispatch: Dispatch) {
     getLastSessionId,
     updateSession,
     getSession,
+    loadMostRecentChat
   };
 }
 

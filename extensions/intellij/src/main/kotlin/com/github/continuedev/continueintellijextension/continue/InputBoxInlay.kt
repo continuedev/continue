@@ -24,7 +24,7 @@ class InputBoxInlayProvider: InlayHintsProvider<NoSettings> {
 
     private class Collector(editor: Editor): FactoryInlayHintsCollector(editor) {
         override fun collect(element: PsiElement, editor: Editor, sink: InlayHintsSink): Boolean {
-            if (element.text == "continue") {
+            if (element.text == "pearai") {
 //                val presentation = HorizontalBarPresentation.create(factory, editor, element)
 //                sink.addInlineElement(element.textOffset, true, presentation)
             }

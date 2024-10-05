@@ -215,7 +215,7 @@ export class CodebaseIndexer {
 
           if (match) {
             const [_, valuesLength, expectedLength] = match;
-            errMsg = `Generated embedding had length ${valuesLength} but was expected to be ${expectedLength}. This may be solved by deleting ~/.continue/index and refreshing the window to re-index.`;
+            errMsg = `Generated embedding had length ${valuesLength} but was expected to be ${expectedLength}. This may be solved by deleting ~/.pearai/index and refreshing the window to re-index.`;
           }
 
           yield {

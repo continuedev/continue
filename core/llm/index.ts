@@ -168,6 +168,7 @@ export abstract class BaseLLM implements ILLM {
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
+    this.refreshToken = options.refreshToken;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
     // for watsonx only

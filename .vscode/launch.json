@@ -19,7 +19,7 @@
       "cwd": "${workspaceFolder}/binary",
       "env": {
         "CONTINUE_DEVELOPMENT": "true",
-        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/binary/.continue"
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/binary/.pearai"
       }
     },
     {
@@ -66,7 +66,7 @@
       "pauseForSourceMap": false,
       "outFiles": [
         "${workspaceFolder}/extensions/vscode/out/extension.js",
-        "/Users/natesesti/.continue/config.ts"
+        "/Users/natesesti/.pearai/config.ts"
       ],
       "preLaunchTask": "vscode-extension:build",
       "env": {

@@ -29,7 +29,7 @@ export async function retrieveContextItemsFromEmbeddings(
       "The 'transformers.js' context provider is not currently supported in JetBrains. " +
         "For now, you can use Ollama to set up local embeddings, or use our 'free-trial' " +
         "embeddings provider. See here to learn more: " +
-        "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+        "https://trypear.ai/walkthroughs/codebase-embeddings#embeddings-providers",
     );
   }
 
