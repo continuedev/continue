@@ -26,7 +26,7 @@ function copyConfigSchema() {
       "config_schema.json",
     ),
   );
-  // Modify and copy for .continuerc.json
+  // Modify and copy for .pearairc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
   schema.definitions.SerializedContinueConfig.properties.mergeBehavior = {
     type: "string",
@@ -34,7 +34,7 @@ function copyConfigSchema() {
     default: "merge",
     title: "Merge behavior",
     markdownDescription:
-      "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
+      "If set to 'merge', .pearairc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .pearairc.json will overwrite that property from config.json.",
   };
   fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
 }

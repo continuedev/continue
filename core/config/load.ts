@@ -28,6 +28,7 @@ import {
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
+  PearAuth,
 } from "../index.js";
 import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { allEmbeddingsProviders } from "../indexing/embeddings/index.js";
@@ -64,6 +65,7 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
+import PearAIServer from "../llm/llms/PearAIServer.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -188,7 +190,7 @@ async function serializedToIntermediateConfig(
       .flat()
       .filter(({ path }) => path.endsWith(".prompt"));
 
-    // Also read from ~/.continue/.prompts
+    // Also read from ~/.pearai/.prompts
     promptFiles.push(...readAllGlobalPromptFiles());
 
     for (const file of promptFiles) {
@@ -225,7 +227,7 @@ async function intermediateToFinalConfig(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
-  allowFreeTrial: boolean = true,
+  allowFreeTrial: boolean = false,
 ): Promise<ContinueConfig> {
   // Auto-detect models
   let models: BaseLLM[] = [];
@@ -242,6 +244,19 @@ async function intermediateToFinalConfig(
       );
       if (!llm) {
         continue;
+      }
+
+      // TODO: There is most definately a better way to do this
+      //       windows is bad so its hard to set this up locally - Ender
+      // inject callbacks to backend
+      if (llm instanceof PearAIServer) {
+        llm.getCredentials = async () => {
+          return await ide.getPearAuth();
+        };
+
+        llm.setCredentials = async (auth: PearAuth) => {
+          await ide.updatePearCredentials(auth);
+        };
       }
 
       if (llm.model === "AUTODETECT") {
@@ -320,9 +335,11 @@ async function intermediateToFinalConfig(
         (model as FreeTrial).setupGhAuthToken(ghAuthToken);
       }
     }
+    console.log("Free trial models:", freeTrialModels);
   } else {
     // Remove free trial models
     models = models.filter((model) => model.providerName !== "free-trial");
+    console.log("Models:", models);
   }
 
   // Tab autocomplete model
@@ -580,7 +597,7 @@ async function buildConfigTs() {
     }
   } catch (e) {
     console.log(
-      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
+      `Build error. Please check your ~/.pearai/config.ts file: ${e}`,
     );
     return undefined;
   }

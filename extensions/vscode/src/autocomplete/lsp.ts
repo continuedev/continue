@@ -65,7 +65,8 @@ export async function executeGotoProvider(
 
     return results;
   } catch (e) {
-    console.warn(`Error executing ${name}:`, e);
+    console.warn(`Error executing %s:`, name);
+    console.warn(e);
     return [];
   }
 }

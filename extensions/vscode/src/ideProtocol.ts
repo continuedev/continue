@@ -13,6 +13,7 @@ import type {
   Problem,
   RangeInFile,
   Thread,
+  PearAuth,
 } from "core";
 import { Range } from "core";
 import { walkDir } from "core/indexing/walkDir";
@@ -72,7 +73,7 @@ class VsCodeIde implements IDE {
   }
 
   private authToken: string | undefined;
-  private askedForAuth = false;
+  private askedForAuth = true;
 
   async getGitHubAuthToken(): Promise<string | undefined> {
     // Saved auth token
@@ -272,7 +273,7 @@ class VsCodeIde implements IDE {
     const globalEnabled = vscode.env.isTelemetryEnabled;
     const continueEnabled: boolean =
       (await vscode.workspace
-        .getConfiguration("continue")
+        .getConfiguration("pearai")
         .get("telemetryEnabled")) ?? true;
     return globalEnabled && continueEnabled;
   }
@@ -313,7 +314,7 @@ class VsCodeIde implements IDE {
     for (const workspaceDir of workspaceDirs) {
       const files = await vscode.workspace.fs.readDirectory(workspaceDir);
       for (const [filename, type] of files) {
-        if (type === vscode.FileType.File && filename === ".continuerc.json") {
+        if (type === vscode.FileType.File && filename === ".pearairc.json") {
           const contents = await this.ideUtils.readFile(
             vscode.Uri.joinPath(workspaceDir, filename).fsPath,
           );
@@ -509,7 +510,7 @@ class VsCodeIde implements IDE {
   }
 
   getIdeSettingsSync(): IdeSettings {
-    const settings = vscode.workspace.getConfiguration("continue");
+    const settings = vscode.workspace.getConfiguration("pearai");
     const remoteConfigServerUrl = settings.get<string | undefined>(
       "remoteConfigServerUrl",
       undefined,

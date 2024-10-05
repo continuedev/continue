@@ -1,5 +1,6 @@
 {
-  "name": "continue",
+  "name": "pearai",
+  "publisher": "pearai",
   "icon": "media/icon.png",
   "version": "1.2.0",
   "repository": {
@@ -11,16 +12,14 @@
     "workspace"
   ],
   "bugs": {
-    "url": "https://github.com/continuedev/continue/issues",
-    "email": "nate@continue.dev"
+    "url": "https://github.com/trypear/pearai-app/issues"
   },
-  "homepage": "https://continue.dev",
-  "qna": "https://github.com/continuedev/continue/issues/new/choose",
+  "homepage": "https://trypear.ai",
+  "qna": "https://github.com/trypear/pearai-app/issues/new/choose",
+  "displayName": "PearAI",
   "license": "Apache-2.0",
-  "displayName": "Continue - Codestral, Claude, and more",
   "pricing": "Free",
-  "description": "The leading open-source AI code assistant",
-  "publisher": "Continue",
+  "description": "Supercharge your development with AI",
   "engines": {
     "vscode": "^1.70.0",
     "node": ">=20.11.0"
@@ -61,65 +60,65 @@
       {
         "filenames": [
           "config.json",
-          ".continuerc.json"
+          ".pearairc.json"
         ],
         "id": "jsonc"
       }
     ],
     "configuration": {
-      "title": "Continue",
+      "title": "PearAI",
       "properties": {
-        "continue.telemetryEnabled": {
+        "pearai.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
+          "markdownDescription": "PearAI collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [pearai.dev › Telemetry](https://trypear.ai/telemetry)."
         },
-        "continue.enableContinueForTeams": {
+        "pearai.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "_(Requires window reload)_ Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+          "markdownDescription": "_(Requires window reload)_ Enable PearAI for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
         },
-        "continue.showInlineTip": {
+        "pearai.showInlineTip": {
           "type": "boolean",
           "default": true,
-          "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
+          "description": "Show inline suggestion to use the PearAI keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
-        "continue.enableQuickActions": {
+        "pearai.enableQuickActions": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/features/quick-actions)"
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [pearai.dev › Walkthrough: Quick Actions (experimental)](https://trypear.ai/features/quick-actions)"
         },
-        "continue.enableTabAutocomplete": {
+        "pearai.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
           "markdownDescription": "Enable PearAI's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [pearai.dev › Walkthrough: Tab Autocomplete (beta)](https://trypear.ai/docs/tab-autocomplete)"
         },
-        "continue.pauseTabAutocompleteOnBattery": {
+        "pearai.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+          "markdownDescription": "Pause PearAI's tab autocomplete feature when your battery is low."
         },
-        "continue.pauseCodebaseIndexOnStart": {
+        "pearai.pauseCodebaseIndexOnStart": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause Continue's codebase index on start."
+          "markdownDescription": "Pause PearAI's codebase index on start."
         },
-        "continue.enableDebugLogs": {
+        "pearai.enableDebugLogs": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable Continue Debug Logs in the Output panel."
+          "markdownDescription": "Enable PearAI Debug Logs in the Output panel."
         },
-        "continue.remoteConfigServerUrl": {
+        "pearai.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
         },
-        "continue.userToken": {
+        "pearai.userToken": {
           "type": "string",
           "default": null,
           "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
         },
-        "continue.remoteConfigSyncPeriod": {
+        "pearai.remoteConfigSyncPeriod": {
           "type": "number",
           "default": 60,
           "description": "The period of time in minutes between automatic syncs."
@@ -128,66 +127,66 @@
     },
     "commands": [
       {
-        "command": "continue.acceptDiff",
-        "category": "Continue",
+        "command": "pearai.acceptDiff",
+        "category": "PearAI",
         "title": "Accept Diff",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.rejectDiff",
-        "category": "Continue",
+        "command": "pearai.rejectDiff",
+        "category": "PearAI",
         "title": "Reject Diff",
-        "group": "Continue",
+        "group": "PearAI",
         "icon": "$(stop)"
       },
       {
-        "command": "continue.acceptVerticalDiffBlock",
-        "category": "Continue",
+        "command": "pearai.acceptVerticalDiffBlock",
+        "category": "PearAI",
         "title": "Accept Vertical Diff Block",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.rejectVerticalDiffBlock",
-        "category": "Continue",
+        "command": "pearai.rejectVerticalDiffBlock",
+        "category": "PearAI",
         "title": "Reject Vertical Diff Block",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.quickEdit",
-        "category": "Continue",
+        "command": "pearai.quickEdit",
+        "category": "PearAI",
         "title": "Generate Code",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.focusContinueInput",
-        "category": "Continue",
+        "command": "pearai.focusContinueInput",
+        "category": "PearAI",
         "title": "Add Highlighted Code to Context",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.focusContinueInputWithoutClear",
-        "category": "Continue",
+        "command": "pearai.focusContinueInputWithoutClear",
+        "category": "PearAI",
         "title": "Add Highlighted Code to Context",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.debugTerminal",
-        "category": "Continue",
-        "title": "Continue: Debug Terminal",
-        "group": "Continue"
+        "command": "pearai.debugTerminal",
+        "category": "PearAI",
+        "title": "PearAI: Debug Terminal",
+        "group": "PearAI"
       },
       {
-        "command": "continue.toggleFullScreen",
-        "category": "Continue",
+        "command": "pearai.toggleFullScreen",
+        "category": "PearAI",
         "title": "Toggle Full Screen",
         "icon": "$(fullscreen)",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.openConfigJson",
-        "category": "Continue",
+        "command": "pearai.openConfigJson",
+        "category": "PearAI",
         "title": "Open config.json",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
         "command": "pearai.openPearAiWelcome",
@@ -199,73 +198,73 @@
         "command": "pearai.toggleTabAutocompleteEnabled",
         "category": "PearAI",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.selectFilesAsContext",
-        "category": "Continue",
-        "title": "Continue: Select Files as Context",
-        "group": "Continue"
+        "command": "pearai.selectFilesAsContext",
+        "category": "PearAI",
+        "title": "PearAI: Select Files as Context",
+        "group": "PearAI"
       },
       {
-        "command": "continue.newSession",
-        "category": "Continue",
+        "command": "pearai.newSession",
+        "category": "PearAI",
         "title": "New Session",
         "icon": "$(add)",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.viewHistory",
-        "category": "Continue",
+        "command": "pearai.viewHistory",
+        "category": "PearAI",
         "title": "View History",
         "icon": "$(history)",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.writeCommentsForCode",
-        "category": "Continue",
+        "command": "pearai.writeCommentsForCode",
+        "category": "PearAI",
         "title": "Write Comments for this Code",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.writeDocstringForCode",
-        "category": "Continue",
+        "command": "pearai.writeDocstringForCode",
+        "category": "PearAI",
         "title": "Write a Docstring for this Code",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.fixCode",
-        "category": "Continue",
+        "command": "pearai.fixCode",
+        "category": "PearAI",
         "title": "Fix this Code",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.optimizeCode",
-        "category": "Continue",
+        "command": "pearai.optimizeCode",
+        "category": "PearAI",
         "title": "Optimize this Code",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.fixGrammar",
-        "category": "Continue",
+        "command": "pearai.fixGrammar",
+        "category": "PearAI",
         "title": "Fix Grammar / Spelling",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.codebaseForceReIndex",
-        "category": "Continue",
+        "command": "pearai.codebaseForceReIndex",
+        "category": "PearAI",
         "title": "Codebase Force Re-Index",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.docsIndex",
-        "category": "Continue",
+        "command": "pearai.docsIndex",
+        "category": "PearAI",
         "title": "Docs Index",
-        "group": "Continue"
+        "group": "PearAI"
       },
       {
-        "command": "continue.docsReIndex",
-        "category": "Continue",
+        "command": "pearai.docsReIndex",
+        "category": "PearAI",
         "title": "Docs Force Re-Index",
         "group": "PearAI"
       },
@@ -318,66 +317,66 @@
         "key": "ctrl+shift+l"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
+        "command": "pearai.toggleAuxiliaryBar",
         "mac": "alt+cmd+l",
         "key": "alt+ctrl+l"
       },
       {
-        "command": "continue.acceptDiff",
+        "command": "pearai.acceptDiff",
         "mac": "shift+cmd+enter",
         "key": "shift+ctrl+enter"
       },
       {
-        "command": "continue.rejectDiff",
+        "command": "pearai.rejectDiff",
         "mac": "shift+cmd+backspace",
         "key": "shift+ctrl+backspace"
       },
       {
-        "command": "continue.rejectDiff",
+        "command": "pearai.rejectDiff",
         "mac": "cmd+z",
         "key": "ctrl+z",
-        "when": "continue.diffVisible"
+        "when": "pearai.diffVisible"
       },
       {
-        "command": "continue.quickEditHistoryUp",
+        "command": "pearai.quickEditHistoryUp",
         "mac": "up",
         "key": "up",
-        "when": "false && continue.quickEditHistoryFocused"
+        "when": "false && pearai.quickEditHistoryFocused"
       },
       {
-        "command": "continue.quickEditHistoryDown",
+        "command": "pearai.quickEditHistoryDown",
         "mac": "down",
         "key": "down",
-        "when": "false && continue.quickEditHistoryFocused"
+        "when": "false && pearai.quickEditHistoryFocused"
       },
       {
-        "command": "continue.acceptVerticalDiffBlock",
+        "command": "pearai.acceptVerticalDiffBlock",
         "mac": "alt+cmd+y",
         "key": "alt+ctrl+y"
       },
       {
-        "command": "continue.rejectVerticalDiffBlock",
+        "command": "pearai.rejectVerticalDiffBlock",
         "mac": "alt+cmd+n",
         "key": "alt+ctrl+n"
       },
       {
-        "command": "continue.quickEdit",
+        "command": "pearai.quickEdit",
         "mac": "cmd+i",
         "key": "ctrl+i"
       },
       {
-        "command": "continue.debugTerminal",
+        "command": "pearai.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
       },
       {
-        "command": "continue.toggleFullScreen",
+        "command": "pearai.toggleFullScreen",
         "mac": "cmd+k cmd+m",
         "key": "ctrl+k ctrl+m",
         "when": "!terminalFocus"
       },
       {
-        "command": "continue.toggleTabAutocompleteEnabled",
+        "command": "pearai.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
         "when": "!terminalFocus"
@@ -400,109 +399,109 @@
     ],
     "submenus": [
       {
-        "id": "continue.continueSubMenu",
-        "label": "Continue"
+        "id": "pearai.continueSubMenu",
+        "label": "PearAI"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "continue.quickEdit"
+          "command": "pearai.quickEdit"
         },
         {
-          "command": "continue.focusContinueInput"
+          "command": "pearai.focusContinueInput"
         },
         {
-          "command": "continue.focusContinueInputWithoutClear"
+          "command": "pearai.focusContinueInputWithoutClear"
         },
         {
-          "command": "continue.debugTerminal"
+          "command": "pearai.debugTerminal"
         },
         {
-          "command": "continue.toggleFullScreen"
+          "command": "pearai.toggleFullScreen"
         },
         {
-          "command": "continue.newSession"
+          "command": "pearai.newSession"
         }
       ],
       "editor/context": [
         {
-          "submenu": "continue.continueSubMenu",
+          "submenu": "pearai.continueSubMenu",
           "group": "0_acontinue"
         }
       ],
       "editor/title/run": [
         {
-          "command": "continue.rejectDiff",
-          "group": "Continue",
-          "when": "continue.streamingDiff"
+          "command": "pearai.rejectDiff",
+          "group": "PearAI",
+          "when": "pearai.streamingDiff"
         }
       ],
-      "continue.continueSubMenu": [
+      "pearai.continueSubMenu": [
         {
-          "command": "continue.focusContinueInputWithoutClear",
-          "group": "Continue",
+          "command": "pearai.focusContinueInputWithoutClear",
+          "group": "PearAI",
           "when": "editorHasSelection"
         },
         {
-          "command": "continue.writeCommentsForCode",
-          "group": "Continue",
+          "command": "pearai.writeCommentsForCode",
+          "group": "PearAI",
           "when": "editorHasSelection"
         },
         {
-          "command": "continue.writeDocstringForCode",
-          "group": "Continue",
+          "command": "pearai.writeDocstringForCode",
+          "group": "PearAI",
           "when": "editorHasSelection"
         },
         {
-          "command": "continue.fixCode",
-          "group": "Continue",
+          "command": "pearai.fixCode",
+          "group": "PearAI",
           "when": "editorHasSelection"
         },
         {
-          "command": "continue.optimizeCode",
-          "group": "Continue",
+          "command": "pearai.optimizeCode",
+          "group": "PearAI",
           "when": "editorHasSelection"
         },
         {
-          "command": "continue.fixGrammar",
-          "group": "Continue",
+          "command": "pearai.fixGrammar",
+          "group": "PearAI",
           "when": "editorHasSelection && editorLangId == 'markdown'"
         }
       ],
       "explorer/context": [
         {
-          "command": "continue.selectFilesAsContext",
+          "command": "pearai.selectFilesAsContext",
           "group": "1_debug@1"
         }
       ],
       "view/title": [
         {
-          "command": "continue.newSession",
+          "command": "pearai.newSession",
           "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
+          "when": "view == pearai.continueGUIView"
         },
         {
-          "command": "continue.toggleFullScreen",
+          "command": "pearai.toggleFullScreen",
           "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
+          "when": "view == pearai.continueGUIView"
         },
         {
-          "command": "continue.viewHistory",
+          "command": "pearai.viewHistory",
           "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
+          "when": "view == pearai.continueGUIView"
         }
       ],
       "editor/title": [
         {
-          "command": "continue.toggleFullScreen",
+          "command": "pearai.toggleFullScreen",
           "group": "navigation@1",
-          "when": "activeWebviewPanelId == continue.continueGUIView"
+          "when": "activeWebviewPanelId == pearai.continueGUIView"
         }
       ],
       "terminal/context": [
         {
-          "command": "continue.debugTerminal",
+          "command": "pearai.debugTerminal",
           "group": "navigation@top"
         }
       ]
@@ -510,17 +509,17 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "continue",
-          "title": "Continue",
+          "id": "PearAI",
+          "title": "PearAI",
           "icon": "media/sidebar-icon.png"
         }
       ]
     },
     "views": {
-      "continue": [
+      "PearAI": [
         {
           "type": "webview",
-          "id": "continue.continueGUIView",
+          "id": "pearai.continueGUIView",
           "name": "",
           "visibility": "visible"
         }
@@ -532,7 +531,7 @@
         "url": "./config_schema.json"
       },
       {
-        "fileMatch": ".continuerc.json",
+        "fileMatch": ".pearairc.json",
         "url": "./continue_rc_schema.json"
       }
     ]

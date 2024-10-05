@@ -12,6 +12,7 @@ import {
   Range,
   RangeInFile,
   Thread,
+  PearAuth,
 } from "../index.d.js";
 
 import { getContinueGlobalPath } from "./paths.js";

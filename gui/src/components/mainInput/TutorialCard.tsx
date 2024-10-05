@@ -64,7 +64,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             className="align-middle pr-3"
           />
           <span>
-            Click the gear icon in the bottom right to configure Continue
+            Click the gear icon in the bottom right to configure PearAI
           </span>
         </li>
         <li className="flex items-start">
@@ -74,7 +74,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             className="align-middle pr-3"
           />
           <span>
-            <a href="https://docs.continue.dev" target="_blank">
+            <a href="https://trypear.ai" target="_blank">
               Read our documentation
             </a>{" "}
             to learn more

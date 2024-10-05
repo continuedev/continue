@@ -726,7 +726,7 @@ export default class DocsService {
         "The 'transformers.js' embeddings provider currently cannot be used to index " +
           "documentation in JetBrains. To enable documentation indexing, you can use " +
           "any of the other providers described in the docs: " +
-          "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+          "https://trypear.ai/walkthroughs/codebase-embeddings#embeddings-providers",
       );
 
       this.globalContext.update(

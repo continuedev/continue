@@ -10,7 +10,7 @@ interface TutorialCodeLensItems {
   commands: vscode.Command[];
 }
 
-const TUTORIAL_FILE_NAME = "continue_tutorial.py";
+const TUTORIAL_FILE_NAME = "pearai_tutorial.py";
 
 const cmdCtrl = getPlatform() === "mac" ? "Cmd" : "Ctrl";
 
@@ -20,7 +20,7 @@ const actions: TutorialCodeLensItems[] = [
     commands: [
       {
         title: `${cmdCtrl}+L`,
-        command: "continue.focusContinueInput",
+        command: "pearai.focusContinueInput",
       },
     ],
   },
@@ -29,12 +29,12 @@ const actions: TutorialCodeLensItems[] = [
     commands: [
       {
         title: `"what does this code do?"`,
-        command: "continue.sendMainUserInput",
+        command: "pearai.sendMainUserInput",
         arguments: ["what does this code do?"],
       },
       {
         title: `"what is an alternative to this?"`,
-        command: "continue.sendMainUserInput",
+        command: "pearai.sendMainUserInput",
         arguments: ["what is an alternative to this?"],
       },
     ],
@@ -44,7 +44,7 @@ const actions: TutorialCodeLensItems[] = [
     commands: [
       {
         title: `${cmdCtrl}+I`,
-        command: "continue.quickEdit",
+        command: "pearai.quickEdit",
         arguments: [{ initialPrompt: "Add comments" } as QuickEditShowParams],
       },
     ],
@@ -54,11 +54,11 @@ const actions: TutorialCodeLensItems[] = [
     commands: [
       {
         title: "Run the file",
-        command: "continue.sendToTerminal",
+        command: "pearai.sendToTerminal",
         arguments: [
           `python ${path.join(
             getExtensionUri().fsPath,
-            "continue_tutorial.py",
+            "pearai_tutorial.py",
           )}\n`,
         ],
       },
@@ -69,7 +69,7 @@ const actions: TutorialCodeLensItems[] = [
     commands: [
       {
         title: "Debug the error",
-        command: "continue.debugTerminal",
+        command: "pearai.debugTerminal",
       },
     ],
   },
@@ -78,7 +78,7 @@ const actions: TutorialCodeLensItems[] = [
     commands: [
       {
         title: `${cmdCtrl}+Shift+R`,
-        command: "continue.debugTerminal",
+        command: "pearai.debugTerminal",
       },
     ],
   },

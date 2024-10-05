@@ -6,7 +6,7 @@ Begin your journey by logging in on the PearAI panel (Cmd/Ctrl+;)
 
 **For a quick tutorial on what PearAI can do, open <span style="font-size: 1.2em;">[tutorial.py](../pearai_tutorial.py)</span>.**
 
-## 🔑 Most important shortcuts
+## 🔑 Important Shortcuts
 
 | Description                        | Keybinds                                    |
 |------------------------------------|---------------------------------------------|

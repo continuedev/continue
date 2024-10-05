@@ -6,6 +6,7 @@ import App from "./App";
 import CustomPostHogProvider from "./hooks/CustomPostHogProvider";
 import "./index.css";
 import { persistor, store } from "./redux/store";
+import "./shortcuts-bar.css";
 
 (async () => {
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(

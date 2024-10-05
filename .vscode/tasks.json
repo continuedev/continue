@@ -108,10 +108,10 @@
     //
     // Install or update all dependencies for all projects in the monrepo
     {
-      "label": "install-all-dependencies",
+      "label": "install-and-build",
       "type": "shell",
-      "windows": { "command": "./scripts/install-dependencies.ps1" },
-      "command": "./scripts/install-dependencies.sh",
+      "windows": { "command": "./scripts/install-and-build.ps1" },
+      "command": "./scripts/install-and-build.sh",
       "problemMatcher": [] // Empty so users are not prompted to select progress reporting
     },
     //

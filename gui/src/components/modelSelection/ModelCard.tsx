@@ -35,6 +35,7 @@ const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
   position: relative;
   width: 100%;
   transition: all 0.5s;
+  text-align: center; /* Center the text */
 
   ${(props) =>
     props.disabled
@@ -128,6 +129,7 @@ function ModelCard(props: ModelCardProps) {
           style={{
             display: "flex",
             alignItems: "center",
+            justifyContent: "center",
           }}
         >
           {window.vscMediaUrl && props.icon && (
@@ -143,7 +145,7 @@ function ModelCard(props: ModelCardProps) {
               }}
             />
           )}
-          <h3>{props.title}</h3>
+          <h3 className={!props.description && "my-2"}>{props.title}</h3>
         </div>
 
         {props.tags?.map((tag, i) => <ModelProviderTag key={i} tag={tag} />)}
@@ -160,9 +162,9 @@ function ModelCard(props: ModelCardProps) {
             href={props.refUrl}
             target="_blank"
           >
-            <HeaderButtonWithText text="Read the docs">
+            {/* <HeaderButtonWithText text="Read the docs">
               <BookOpenIcon width="1.6em" height="1.6em" />
-            </HeaderButtonWithText>
+            </HeaderButtonWithText> */}
           </a>
         )}
       </div>
@@ -249,3 +251,4 @@ function ModelCard(props: ModelCardProps) {
 }
 
 export default ModelCard;
+

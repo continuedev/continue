@@ -23,7 +23,7 @@ function MigrationPage() {
         For a summary of what changed and examples of <code>config.json</code>,
         please see the{" "}
         <a
-          href="https://docs.continue.dev/walkthroughs/config-file-migration"
+          href="https://trypear.ai/walkthroughs/config-file-migration"
           target="_blank"
         >
           migration walkthrough

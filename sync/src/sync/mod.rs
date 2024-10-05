@@ -51,7 +51,7 @@ fn path_for_tag(tag: &Tag) -> PathBuf {
     return path;
 }
 
-/// Stored in ~/.continue/index/.last_sync
+/// Stored in ~/.pearai/index/.last_sync
 fn get_last_sync_time(tag: &Tag) -> u64 {
     // TODO: Error handle here
     let path = path_for_tag(tag).join(".last_sync");

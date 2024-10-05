@@ -49,7 +49,7 @@ mod tests {
         let temp_dir = tempdir()?;
         let temp_path = temp_dir.path();
 
-        // Create some directories and .gitignore/.continueignore files
+        // Create some directories and .gitignore/.pearaiignore files
         let dir_structure = [
             ("dir1", Some(".gitignore"), "node_modules/"),
             ("dir2", Some(".continueignore"), "target/"),

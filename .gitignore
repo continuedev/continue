@@ -135,7 +135,7 @@ cached_embeddings.pkl
 .ruff_cache
 codeql
 
-**/.continue
+**/.pearai
 .DS_Store
 .continue
 .test

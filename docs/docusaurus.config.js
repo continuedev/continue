@@ -7,21 +7,21 @@ const darkCodeTheme = themes.dracula;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: "Continue",
+  title: "PearAI",
   tagline:
     "the open-source library for accelerating software development with language models",
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
-  url: "https://continue.dev",
+  url: "https://trypear.ai",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: "continuedev", // Usually your GitHub org/user name.
-  projectName: "continue", // Usually your repo name.
+  organizationName: "trypearai", // Usually your GitHub org/user name.
+  projectName: "pearai", // Usually your repo name.
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -44,7 +44,7 @@ const config = {
         docs: {
           routeBasePath: "/",
           sidebarPath: require.resolve("./sidebars.js"),
-          editUrl: "https://github.com/continuedev/continue/tree/main/docs",
+          editUrl: "https://github.com/trypear/pearai-app/tree/main/docs",
         },
         theme: {
           customCss: require.resolve("./src/css/custom.css"),
@@ -67,9 +67,9 @@ const config = {
         },
       ],
       // Replace with your project's social card
-      image: "https://docs.continue.dev/img/continue-social-card.png",
+      image: "https://trypear.ai/img/continue-social-card.png",
       navbar: {
-        title: "Continue",
+        title: "PearAI",
         logo: {
           alt: "PearAI Logo",
           src: "img/logo-dark.png",
@@ -84,7 +84,7 @@ const config = {
             label: "Docs",
           },
           {
-            to: "https://github.com/continuedev/continue",
+            to: "https://github.com/trypear/pearai-app",
             label: "GitHub",
             position: "right",
             className: "github-navbar",
@@ -105,7 +105,7 @@ const config = {
             items: [
               {
                 label: "VS Code",
-                to: "https://marketplace.visualstudio.com/items?itemName=Continue.continue",
+                to: "https://marketplace.visualstudio.com/items?itemName=PearAI.continue",
               },
               {
                 label: "JetBrains",
@@ -122,7 +122,7 @@ const config = {
               },
               {
                 label: "GitHub",
-                to: "https://github.com/continuedev/continue",
+                to: "https://github.com/trypear/pearai-app",
               },
             ],
           },
@@ -140,7 +140,7 @@ const config = {
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Continue Dev, Inc.`,
+        copyright: `Copyright © ${new Date().getFullYear()} PearAI Dev, Inc.`,
       },
       prism: {
         theme: lightCodeTheme,
@@ -154,7 +154,7 @@ const config = {
         // Public API key: it is safe to commit it
         apiKey: "6795de0f612eebe17018f8061a9ef18e",
 
-        indexName: "continue",
+        indexName: "pearai",
 
         // Optional: see doc section below
         contextualSearch: true,
@@ -185,26 +185,6 @@ const config = {
           {
             from: "/model-setup/configuration",
             to: "/setup/configuration",
-          },
-          {
-            from: "/setup/select-provider",
-            to: "/setup/model-providers",
-          },
-          {
-            from: "/walkthroughs/codebase-embeddings",
-            to: "/features/codebase-embeddings",
-          },
-          {
-            from: "/walkthroughs/tab-autocomplete",
-            to: "/features/tab-autocomplete",
-          },
-          {
-            from: "/walkthroughs/prompt-files",
-            to: "/features/prompt-files",
-          },
-          {
-            from: "/walkthroughs/quick-actions",
-            to: "/features/quick-actions",
           },
         ],
       },

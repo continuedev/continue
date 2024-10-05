@@ -46,8 +46,8 @@
 
 You can try out PearAI with our free trial models before configuring your setup.
 
-Learn more about the models and providers [here](https://continue.dev/docs/setup/overview).
+Learn more about the models and providers [here](https://pearai.dev/docs/setup/overview).
 
 ## License
 
-[Apache 2.0 © 2023-2024 Continue Dev, Inc.](./LICENSE)
+[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)

@@ -7,7 +7,7 @@
     <idea-version since-build="223.0"/>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
-        <ProviderFactory implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
+        <ProviderFactory implementation="com.github.continuedev.continueintellijextension.pearai.ConfigJsonSchemaProviderFactory"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
@@ -35,14 +35,14 @@
                 parentId="tools"
                 instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
                 id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
-                displayName="Continue"/>
+                displayName="PearAI"/>
         <applicationService
                 serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
     </extensions>
 
     <actions>
         <action class="com.github.continuedev.continueintellijextension.editor.InlineEditAction"
-                id="continue.inlineEdit"
+                id="pearai.inlineEdit"
                 description="Inline Edit"
                 text="Inline Edit">
             <keyboard-shortcut keymap="$default"
@@ -52,7 +52,7 @@
         </action>
 
         <action class="com.github.continuedev.continueintellijextension.editor.ToggleInlineEditAction"
-                id="continue.toggleInlineEdit"
+                id="pearai.toggleInlineEdit"
                 description="Toggle Inline Edit"
                 text="Toggle Inline Edit">
             <keyboard-shortcut keymap="$default"
@@ -61,7 +61,7 @@
                                first-keystroke="meta shift I"/>
         </action>
 
-        <action id="continue.acceptDiff"
+        <action id="pearai.acceptDiff"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Diff">
             <keyboard-shortcut keymap="$default"
@@ -69,7 +69,7 @@
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift Y"/>
         </action>
-        <action id="continue.rejectDiff"
+        <action id="pearai.rejectDiff"
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Diff">
             <keyboard-shortcut keymap="$default"
@@ -77,7 +77,7 @@
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift N"/>
         </action>
-        <action id="continue.quickTextEntry"
+        <action id="pearai.quickTextEntry"
                 class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction"
                 text="Quick Text Entry" description="Quick Text Entry">
             <keyboard-shortcut keymap="$default"
@@ -85,7 +85,7 @@
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift J"/>
         </action>
-        <action id="continue.viewLogs"
+        <action id="pearai.viewLogs"
                 class="com.github.continuedev.continueintellijextension.actions.ViewLogsAction"
                 text="View Continue Server Logs"
                 description="View Continue Server Logs">
@@ -105,20 +105,20 @@
 <!--        <action id="InsertLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction" />-->
 <!--        <action id="SurroundWithLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction"/>-->
 
-        <action id="continue.newContinueSession"
+        <action id="pearai.newContinueSession"
                 class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
                 text="Start New Continue Session"
                 icon="AllIcons.General.Add"
                 description="Start New Continue Session">
         </action>
 
-        <action id="continue.viewHistory"
+        <action id="pearai.viewHistory"
                 class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
                 text="View History"
                 icon="AllIcons.Vcs.History"
                 description="View History">
         </action>
-        <action id="continue.focusContinueInput"
+        <action id="pearai.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
                 text="Add selected code to context"
                 description="Focus Continue Input">
@@ -130,8 +130,8 @@
         </action>
 
         <group id="ContinueSidebarActionsGroup">
-            <reference ref="continue.newContinueSession"/>
-            <reference ref="continue.viewHistory"/>
+            <reference ref="pearai.newContinueSession"/>
+            <reference ref="pearai.viewHistory"/>
         </group>
 
         <action id="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"

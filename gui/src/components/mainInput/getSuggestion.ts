@@ -168,7 +168,7 @@ export function getContextProviderDropdownOptions(
         action: () => {
           ideMessenger.request(
             "openUrl",
-            "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
+            "https://trypear.ai/customization/context-providers#built-in-context-providers",
           );
         },
         description: "",
