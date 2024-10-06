@@ -21,4 +21,5 @@
     "**/extensions/vscode/gui/**": true,
     "**/extensions/vscode/out/**": true
   },
+    "eslint.workingDirectories": ["./core"]
 }
