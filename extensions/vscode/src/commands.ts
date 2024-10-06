@@ -165,6 +165,17 @@ async function addEntireFileToContext(
   });
 }
 
+function focusGUI() {
+  const fullScreenTab = getFullScreenTab();
+  if (!fullScreenTab) {
+    // focus sidebar
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+  } else {
+    // focus fullscreen
+    fullScreenPanel?.reveal();
+  }
+}
+
 // Copy everything over from extension.ts
 const commandsMap: (
   ide: IDE,
@@ -315,14 +326,7 @@ const commandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
-      const fullScreenTab = getFullScreenTab();
-      if (!fullScreenTab) {
-        // focus sidebar
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      } else {
-        // focus fullscreen
-        fullScreenPanel?.reveal();
-      }
+      focusGUI();
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       await addHighlightedCodeToContext(sidebar.webviewProtocol);
     },
@@ -631,8 +635,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -641,6 +645,9 @@ const commandsMap: (
             : StatusBarStatus.Disabled;
       }
       quickPick.items = [
+        {
+          label: "$(question) Open help center",
+        },
         {
           label: "$(comment) Open chat (Cmd+L)",
         },
@@ -698,6 +705,9 @@ const commandsMap: (
           "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
         ) {
           vscode.commands.executeCommand("continue.toggleFullScreen");
+        } else if (selectedOption === "$(question) Open help center") {
+          focusGUI();
+          vscode.commands.executeCommand("continue.navigateTo", "/more");
         }
         quickPick.dispose();
       });
@@ -716,6 +726,10 @@ const commandsMap: (
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);
       }
+    },
+    "continue.navigateTo": (path: string) => {
+      sidebar.webviewProtocol?.request("navigateTo", { path });
+      focusGUI();
     },
   };
 };

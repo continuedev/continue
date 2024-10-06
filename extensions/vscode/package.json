@@ -222,6 +222,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.navigateTo",
+        "category": "Continue",
+        "title": "Navigate to a path",
+        "group": "Continue"
+      },
+      {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
         "title": "Write Comments for this Code",
