@@ -39,14 +39,15 @@ class HttpContextProvider extends BaseContextProvider {
       }),
     });
 
-    const json: any = await response.json();
-    return [
-      {
-        description: json.description || "HTTP Context Item",
-        content: json.content || "",
-        name: json.name || this.options.title || "HTTP",
-      },
-    ];
+    const json = await response.json();
+
+    const createContextItem = (item: any) => ({
+      description: item.description ?? "HTTP Context Item",
+      content: item.content ?? "",
+      name: item.name ?? this.options.title ?? "HTTP",
+    });
+
+    return Array.isArray(json) ? json.map(createContextItem) : [createContextItem(json)];
   }
 }
 

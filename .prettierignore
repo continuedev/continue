@@ -1,3 +1,4 @@
 extensions/vscode/continue_rc_schema.json
 **/.continueignore
 CHANGELOG.md
+**/continue_tutorial.py

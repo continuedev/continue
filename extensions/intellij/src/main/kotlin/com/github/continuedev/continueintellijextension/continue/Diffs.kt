@@ -114,7 +114,7 @@ class DiffManager(private val project: Project): DumbAware {
         cleanUpFile(file)
     }
 
-    fun openDiffWindow(
+    private fun openDiffWindow(
         file1: String,
         file2: String,
         stepIndex: Int

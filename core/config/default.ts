@@ -21,9 +21,11 @@ export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
-    title: "Claude 3 Sonnet (Free Trial)",
+    title: "Claude 3.5 Sonnet (Free Trial)",
     provider: "free-trial",
-    model: "claude-3-sonnet-20240229",
+    model: "claude-3-5-sonnet-20240620",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses.",
   },
   {
     title: "GPT-4o (Free Trial)",
@@ -33,16 +35,18 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
       "You are an expert software developer. You give helpful and concise responses.",
   },
   {
-    title: "Llama3 70b (Free Trial)",
+    title: "Llama3.1 70b (Free Trial)",
     provider: "free-trial",
-    model: "llama3-70b",
+    model: "llama3.1-70b",
     systemMessage:
-      "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
+      "You are an expert software developer. You give helpful and concise responses.",
   },
   {
     title: "Codestral (Free Trial)",
     provider: "free-trial",
-    model: "codestral",
+    model: "codestral-latest",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses.",
   },
 ];
 

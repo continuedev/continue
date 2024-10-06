@@ -4,6 +4,7 @@ import { DiffLine, DiffLineType } from "../index.js";
 // @ts-ignore no typings available
 import { changed, diff as myersDiff } from "myers-diff";
 import path from "node:path";
+import { generateLines } from "./util.js";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";
@@ -13,12 +14,6 @@ const UNIFIED_DIFF_SYMBOLS = {
   new: "+",
   old: "-",
 };
-
-async function* generateLines(lines: string[]): AsyncGenerator<string> {
-  for (const line of lines) {
-    yield line;
-  }
-}
 
 async function collectDiffs(
   oldLines: string[],
@@ -224,18 +219,18 @@ describe("streamDiff(", () => {
   });
 
   test("tabs vs. spaces differences are ignored", async () => {
-    await expectDiff("fastapi-tabs-vs-spaces");
+    await expectDiff("fastapi-tabs-vs-spaces.py");
   });
 
   test("FastAPI example", async () => {
-    await expectDiff("fastapi");
+    await expectDiff("fastapi.py");
   });
 
   test("FastAPI comments", async () => {
-    await expectDiff("add-comments");
+    await expectDiff("add-comments.py");
   });
 
   test("Mock LLM example", async () => {
-    await expectDiff("mock-llm");
+    await expectDiff("mock-llm.ts");
   });
 });

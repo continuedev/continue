@@ -1,21 +1,15 @@
 import fetch from "node-fetch";
-import { CONTROL_PLANE_URL } from "../../control-plane/client.js";
+import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { Chunk, Reranker } from "../../index.js";
 
 export class ContinueProxyReranker implements Reranker {
   name = "continue-proxy";
 
-  private _workOsAccessToken: string | undefined = undefined;
+  private _controlPlaneProxyInfo?: ControlPlaneProxyInfo;
 
-  get workOsAccessToken(): string | undefined {
-    return this._workOsAccessToken;
-  }
-
-  set workOsAccessToken(value: string | undefined) {
-    if (this._workOsAccessToken !== value) {
-      this._workOsAccessToken = value;
-      this.params.apiKey = value!;
-    }
+  set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
+    this.params.apiKey = value.workOsAccessToken!;
+    this._controlPlaneProxyInfo = value;
   }
 
   constructor(
@@ -26,7 +20,10 @@ export class ContinueProxyReranker implements Reranker {
   ) {}
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    const url = new URL("/model-proxy/v1/rerank", CONTROL_PLANE_URL);
+    const url = new URL(
+      "openai/v1/rerank",
+      this._controlPlaneProxyInfo?.controlPlaneProxyUrl,
+    );
     const resp = await fetch(url, {
       method: "POST",
       headers: {

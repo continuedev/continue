@@ -3,6 +3,7 @@ export interface LlmInfo {
   displayName?: string;
   description?: string;
   contextLength?: number;
+  maxCompletionTokens?: number;
   regex?: RegExp;
 
   /** If not set, assumes "text" only */

@@ -14,6 +14,7 @@ const FileIcon = ({
     ? filename.split(" ")
     : [filename, ""];
   filenameParts.pop();
+
   const getIcon = themeIcons({
     blue: "#268bd2",
     grey: "#657b83",
@@ -27,6 +28,7 @@ const FileIcon = ({
     yellow: "#b58900",
     ignore: "#586e75",
   });
+
   // Sanitize the SVG string before rendering it
   const { svg, color } = getIcon(filenameParts.join(" "));
   const sanitizedSVG = DOMPurify.sanitize(svg);

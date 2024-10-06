@@ -128,7 +128,7 @@ export type UiOptions = z.infer<typeof uiOptionsSchema>;
 export const tabAutocompleteOptionsSchema = z.object({
   disable: z.boolean(),
   useCopyBuffer: z.boolean(),
-  useSuffix: z.boolean(),
+  useFileSuffix: z.boolean(),
   maxPromptTokens: z.number(),
   debounceDelay: z.number(),
   maxSuffixPercentage: z.number(),
@@ -206,6 +206,10 @@ export const siteIndexingConfigSchema = z.object({
   faviconUrl: z.string().optional(),
 });
 
+export const controlPlaneConfigSchema = z.object({
+  proxyUrl: z.string().optional(),
+});
+
 export const configJsonSchema = z.object({
   models: z.array(modelDescriptionSchema),
   tabAutocompleteModel: modelDescriptionSchema.optional(),
@@ -224,5 +228,6 @@ export const configJsonSchema = z.object({
   tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
   ui: uiOptionsSchema.optional(),
   docs: z.array(siteIndexingConfigSchema).optional(),
+  controlPlane: controlPlaneConfigSchema.optional(),
 });
 export type ConfigJson = z.infer<typeof configJsonSchema>;

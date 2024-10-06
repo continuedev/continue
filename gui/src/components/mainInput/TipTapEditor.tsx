@@ -19,6 +19,7 @@ import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import { v4 } from "uuid";
 import {
   defaultBorderRadius,
   lightGray,
@@ -47,7 +48,7 @@ import {
   isMetaEquivalentKeyPressed,
   isWebEnvironment,
 } from "../../util";
-import CodeBlockExtension from "./CodeBlockExtension";
+import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
 import { Mention } from "./MentionExtension";
@@ -168,7 +169,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     editor.commands.deleteRange({
       from: indexOfAt + 2,
-      to: contents.length + 1,
+      to: editor.state.selection.anchor,
     });
     inSubmenuRef.current = providerId;
 
@@ -337,7 +338,7 @@ function TipTapEditor(props: TipTapEditorProps) {
               return true;
             },
 
-            "Cmd-Enter": () => {
+            "Mod-Enter": () => {
               onEnterRef.current({
                 useCodebase: true,
                 noContext: !useActiveFile,
@@ -354,7 +355,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
               return true;
             },
-            "Cmd-Backspace": () => {
+            "Mod-Backspace": () => {
               // If you press cmd+backspace wanting to cancel,
               // but are inside of a text box, it shouldn't
               // delete the text
@@ -729,7 +730,11 @@ function TipTapEditor(props: TipTapEditorProps) {
           description: `${relativePath} ${rangeStr}`,
           id: {
             providerTitle: "code",
-            itemId: rif.filepath,
+            itemId: v4(),
+          },
+          uri: {
+            type: "file",
+            value: rif.filepath,
           },
         };
 
@@ -810,19 +815,15 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, []);
 
-  const [optionKeyHeld, setOptionKeyHeld] = useState(false);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
 
   return (
     <InputBoxDiv
       onKeyDown={(e) => {
-        if (e.key === "Alt") {
-          setOptionKeyHeld(true);
-        }
+        setActiveKey(e.key);
       }}
       onKeyUp={(e) => {
-        if (e.key === "Alt") {
-          setOptionKeyHeld(false);
-        }
+        setActiveKey(null);
       }}
       className="cursor-text"
       onClick={() => {
@@ -874,12 +875,16 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
       />
       <InputToolbar
-        showNoContext={optionKeyHeld}
+        activeKey={activeKey}
         hidden={shouldHideToolbar && !props.isMainInput}
         onAddContextItem={() => {
-          if (editor.getText().endsWith("@")) {
-          } else {
+          if (!editor.getText().endsWith("@")) {
             editor.commands.insertContent("@");
+          }
+        }}
+        onAddSlashCommand={() => {
+          if (!editor.getText().endsWith("/")) {
+            editor.commands.insertContent("/");
           }
         }}
         onEnter={onEnterRef.current}
@@ -894,6 +899,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           });
         }}
       />
+
       {showDragOverMsg &&
         modelSupportsImages(
           defaultModel.provider,

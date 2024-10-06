@@ -94,8 +94,7 @@ class AutocompleteService(private val project: Project) {
             if (completions.isNotEmpty()) {
                 val completion = completions[0].toString()
 
-                if (completion.isNotEmpty() && (completion.lines().size === 1 || column >= lineLength)) {
-                    // Do not render if completion is multi-line and caret is in middle of line
+                if (shouldRenderCompletion(completion, column, lineLength, editor)) {
                     renderCompletion(editor, offset, completion)
                     pendingCompletion = pendingCompletion?.copy(text = completion)
 
@@ -104,6 +103,28 @@ class AutocompleteService(private val project: Project) {
                 }
             }
         }))
+    }
+
+    private fun shouldRenderCompletion(completion: String, column: Int, lineLength: Int, editor: Editor): Boolean {
+        if (completion.isEmpty()) {
+            return false
+        }
+
+        // Check if completion matches the first 10 characters after the cursor
+        val document = editor.document
+        val caretOffset = editor.caretModel.offset
+        val textAfterCursor = if (caretOffset + 10 <= document.textLength) {
+            document.getText(com.intellij.openapi.util.TextRange(caretOffset, caretOffset + 10))
+        } else {
+            document.getText(com.intellij.openapi.util.TextRange(caretOffset, document.textLength))
+        }
+
+        if (completion.startsWith(textAfterCursor)) {
+            return false
+        }
+
+        // Do not render if completion is multi-line and caret is in middle of line
+        return completion.lines().size > 1 && column < lineLength
     }
 
     private fun renderCompletion(editor: Editor, offset: Int, text: String) {
@@ -148,7 +169,9 @@ class AutocompleteService(private val project: Project) {
         val editor = completion.editor
         val offset = completion.offset
         editor.document.insertString(offset, text)
+
         editor.caretModel.moveToOffset(offset + text.length)
+
 
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/accept", completion.completionId, null, ({}))
         invokeLater {
@@ -177,6 +200,7 @@ class AutocompleteService(private val project: Project) {
 
     if (currentDelimiter.isNotEmpty()) {
         result.add(currentDelimiter)
+
     }
 
     return result

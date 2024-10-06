@@ -1,18 +1,19 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import * as vscode from "vscode";
 import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { getModelByRole } from "core/config/util";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import readLastLines from "read-last-lines";
+import * as vscode from "vscode";
 import {
   StatusBarStatus,
   getAutocompleteStatusBarDescription,
@@ -24,9 +25,11 @@ import {
 } from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { VerticalDiffManager } from "./diff/vertical/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
+import { EXTENSION_NAME } from "./util/constants";
+import { getFullyQualifiedPath } from "./util/util";
 import { uriFromFilePath } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -169,7 +172,7 @@ const commandsMap: (
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
-  verticalDiffManager: VerticalPerLineDiffManager,
+  verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
@@ -207,18 +210,20 @@ const commandsMap: (
   ) {
     const config = await configHandler.loadConfig();
 
+    const defaultModelTitle = await sidebar.webviewProtocol.request(
+      "getDefaultModelTitle",
+      undefined,
+    );
+
     const modelTitle =
-      config.experimental?.modelRoles?.inlineEdit ??
-      (await sidebar.webviewProtocol.request(
-        "getDefaultModelTitle",
-        undefined,
-      ));
+      getModelByRole(config, "inlineEdit")?.title ?? defaultModelTitle;
 
     sidebar.webviewProtocol.request("incrementFtc", undefined);
 
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
+      undefined,
       onlyOneInsertion,
       undefined,
       range,
@@ -229,20 +234,30 @@ const commandsMap: (
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("acceptDiff");
 
-      if (newFilepath instanceof vscode.Uri) {
-        newFilepath = newFilepath.fsPath;
+      let fullPath = newFilepath;
+
+      if (fullPath instanceof vscode.Uri) {
+        fullPath = fullPath.fsPath;
+      } else {
+        fullPath = getFullyQualifiedPath(fullPath);
       }
-      verticalDiffManager.clearForFilepath(newFilepath, true);
-      await diffManager.acceptDiff(newFilepath);
+
+      verticalDiffManager.clearForFilepath(fullPath, true);
+      await diffManager.acceptDiff(fullPath);
     },
     "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("rejectDiff");
 
-      if (newFilepath instanceof vscode.Uri) {
-        newFilepath = newFilepath.fsPath;
+      let fullPath = newFilepath;
+
+      if (fullPath instanceof vscode.Uri) {
+        fullPath = fullPath.fsPath;
+      } else {
+        fullPath = getFullyQualifiedPath(fullPath);
       }
-      verticalDiffManager.clearForFilepath(newFilepath, false);
-      await diffManager.rejectDiff(newFilepath);
+
+      verticalDiffManager.clearForFilepath(fullPath, false);
+      await diffManager.rejectDiff(fullPath);
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
@@ -409,7 +424,7 @@ const commandsMap: (
     },
     "continue.hideInlineTip": () => {
       vscode.workspace
-        .getConfiguration("continue")
+        .getConfiguration(EXTENSION_NAME)
         .update("showInlineTip", false, vscode.ConfigurationTarget.Global);
     },
 
@@ -460,6 +475,9 @@ const commandsMap: (
     },
     "continue.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined);
+    },
+    "continue.applyCodeFromChat": () => {
+      sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
     "continue.toggleFullScreen": () => {
       // Check if full screen is already open by checking open tabs
@@ -551,7 +569,7 @@ const commandsMap: (
     "continue.toggleTabAutocompleteEnabled": () => {
       captureCommandTelemetry("toggleTabAutocompleteEnabled");
 
-      const config = vscode.workspace.getConfiguration("continue");
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const enabled = config.get("enableTabAutocomplete");
       const pauseOnBattery = config.get<boolean>(
         "pauseTabAutocompleteOnBattery",
@@ -587,7 +605,7 @@ const commandsMap: (
     "continue.openTabAutocompleteConfigMenu": async () => {
       captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
-      const config = vscode.workspace.getConfiguration("continue");
+      const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();
       const autocompleteModels =
         (await configHandler.loadConfig())?.tabAutocompleteModels ?? [];
@@ -613,8 +631,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-            ? StatusBarStatus.Paused
-            : StatusBarStatus.Disabled;
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -696,7 +714,7 @@ export function registerAllCommands(
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
-  verticalDiffManager: VerticalPerLineDiffManager,
+  verticalDiffManager: VerticalDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,

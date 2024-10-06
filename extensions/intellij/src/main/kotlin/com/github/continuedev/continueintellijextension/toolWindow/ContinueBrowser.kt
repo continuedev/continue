@@ -8,17 +8,20 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.ui.jcef.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 
 class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false) {
+    private val coroutineScope = CoroutineScope(
+        SupervisorJob() + Dispatchers.Default
+    )
     private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
     fun onHeightChange(listener: (Int) -> Unit) {
         heightChangeListeners.add(listener)
@@ -135,7 +138,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
                     heightChangeListeners.forEach { it(height) }
                 }
                 "onLoad" -> {
-                    GlobalScope.launch {
+                    coroutineScope.launch {
                         // Set the colors to match Intellij theme
                         val colors = GetTheme().getTheme();
                         sendToWebview("setColors", colors)

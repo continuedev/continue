@@ -1,4 +1,4 @@
-import type { IDE, RangeInFile } from "core";
+import type { IDE, Range, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
 import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider";
 import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
@@ -59,13 +59,15 @@ export async function executeGotoProvider(
     if (gotoCache.size >= MAX_CACHE_SIZE) {
       // Remove the oldest item from the cache
       const oldestKey = gotoCache.keys().next().value;
-      gotoCache.delete(oldestKey);
+      if (oldestKey) {
+        gotoCache.delete(oldestKey);
+      }
     }
     gotoCache.set(cacheKey, results);
 
     return results;
   } catch (e) {
-    console.warn(`Error executing ${name}:`, e);
+    console.warn(`Error executing ${input.name}:`, e);
     return [];
   }
 }
@@ -301,6 +303,19 @@ export async function getDefinitionsForNode(
   }
   return await Promise.all(
     ranges.map(async (rif) => {
+      // Convert the VS Code Range type to ours
+      const range: Range = {
+        start: {
+          line: rif.range.start.line,
+          character: rif.range.start.character,
+        },
+        end: {
+          line: rif.range.end.line,
+          character: rif.range.end.character,
+        },
+      };
+      rif.range = range;
+
       if (!isRifWithContents(rif)) {
         return {
           ...rif,

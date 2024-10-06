@@ -12,6 +12,7 @@ class Groq extends OpenAI {
     "llama2-70b": "llama2-70b-4096",
     "mistral-8x7b": "mixtral-8x7b-32768",
     gemma: "gemma-7b-it",
+    gemma2: "gemma2-9b-it",
     "llama3-8b": "llama3-8b-8192",
     "llama3-70b": "llama3-70b-8192",
     "llama3.1-8b": "llama-3.1-8b-instant",
