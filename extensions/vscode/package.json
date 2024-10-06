@@ -2,7 +2,7 @@
   "name": "pearai",
   "publisher": "pearai",
   "icon": "media/icon.png",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/trypear/pearai-submodule"
@@ -516,8 +516,9 @@
       "activitybar": [
         {
           "id": "PearAI",
-          "title": "PearAI",
-          "icon": "media/sidebar-icon.png"
+          "title": "PearAI Chat",
+          "icon": "media/sidebar-icon.png",
+          "description": "Fork of Continue"
         }
       ]
     },
