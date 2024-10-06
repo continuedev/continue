@@ -1,6 +1,6 @@
 import { ILLM, ModelProvider } from "core";
-import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { InputDescriptor } from "./providers";
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
 // You would set options to the field that should be changed for that option in the params field of ModelPackage

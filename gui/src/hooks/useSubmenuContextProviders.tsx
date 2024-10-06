@@ -1,4 +1,5 @@
 import { ContextSubmenuItem } from "core";
+import { WebviewMessengerResult } from "core/protocol/util";
 import {
   deduplicateArray,
   getBasename,
@@ -10,9 +11,8 @@ import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { useWebviewListener } from "./useWebviewListener";
-import { WebviewMessengerResult } from "core/protocol/util";
 import { getLocalStorage } from "../util/localStorage";
+import { useWebviewListener } from "./useWebviewListener";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -55,7 +55,6 @@ function useSubmenuContextProviders() {
   }, [ideMessenger]);
 
   useWebviewListener("refreshSubmenuItems", async (data) => {
-    console.debug("refreshSubmenuItems called with data:", data);
     if (!isLoading) {
       setLoaded(false);
       setInitialLoadComplete(false);
@@ -64,7 +63,6 @@ function useSubmenuContextProviders() {
   });
 
   useWebviewListener("updateSubmenuItems", async (data) => {
-    console.debug("updateSubmenuItems called with data:", data);
     const minisearch = new MiniSearch<ContextSubmenuItem>({
       fields: ["title", "description"],
       storeFields: ["id", "title", "description"],
@@ -128,23 +126,12 @@ function useSubmenuContextProviders() {
   const getSubmenuSearchResults = useMemo(
     () =>
       (providerTitle: string | undefined, query: string): SearchResult[] => {
-        console.debug(
-          "Executing getSubmenuSearchResults. Provider:",
-          providerTitle,
-          "Query:",
-          query,
-        );
-        console.debug("Current minisearches:", Object.keys(minisearches));
         if (providerTitle === undefined) {
           // Return search combined from all providers
           const results = Object.keys(minisearches).map((providerTitle) => {
             const results = minisearches[providerTitle].search(
               query,
               MINISEARCH_OPTIONS,
-            );
-            console.debug(
-              `Search results for ${providerTitle}:`,
-              results.length,
             );
             return results.map((result) => {
               return { ...result, providerTitle };
@@ -154,7 +141,6 @@ function useSubmenuContextProviders() {
           return results.flat().sort((a, b) => b.score - a.score);
         }
         if (!minisearches[providerTitle]) {
-          console.debug(`No minisearch found for provider: ${providerTitle}`);
           return [];
         }
 
@@ -163,7 +149,6 @@ function useSubmenuContextProviders() {
           .map((result) => {
             return { ...result, providerTitle };
           });
-        console.debug(`Search results for ${providerTitle}:`, results.length);
 
         return results;
       },
@@ -177,29 +162,6 @@ function useSubmenuContextProviders() {
         query: string,
         limit: number = MAX_LENGTH,
       ): (ContextSubmenuItem & { providerTitle: string })[] => {
-        console.debug(
-          "Executing getSubmenuContextItems. Provider:",
-          providerTitle,
-          "Query:",
-          query,
-          "Limit:",
-          limit,
-        );
-        console.debug("Current fallbackResults:", fallbackResults);
-        console.debug("Current minisearches:", Object.keys(minisearches));
-
-        if (!initialLoadComplete) {
-          console.debug("Initial load not complete, returning loading state");
-          return [
-            {
-              id: "loading",
-              title: "Loading...",
-              description: "Please wait while items are being loaded",
-              providerTitle: providerTitle || "unknown",
-            },
-          ];
-        }
-
         try {
           const results = getSubmenuSearchResults(providerTitle, query);
           if (results.length === 0) {
@@ -211,8 +173,18 @@ function useSubmenuContextProviders() {
                   providerTitle,
                 };
               });
-            console.debug("Using fallback results:", fallbackItems.length);
-            console.debug("Fallback items:", fallbackItems);
+
+            if (fallbackItems.length === 0 && !initialLoadComplete) {
+              return [
+                {
+                  id: "loading",
+                  title: "Loading...",
+                  description: "Please wait while items are being loaded",
+                  providerTitle: providerTitle || "unknown",
+                },
+              ];
+            }
+
             return fallbackItems;
           }
           const limitedResults = results.slice(0, limit).map((result) => {
@@ -240,12 +212,6 @@ function useSubmenuContextProviders() {
     setIsLoading(true);
 
     const loadSubmenuItems = async () => {
-      console.debug("Starting loadSubmenuItems");
-      console.debug(
-        "contextProviderDescriptions:",
-        contextProviderDescriptions,
-      );
-
       try {
         const disableIndexing = getLocalStorage("disableIndexing") ?? false;
 
@@ -261,25 +227,18 @@ function useSubmenuContextProviders() {
               return;
             }
 
-            console.debug(`Processing provider: ${description.title}`);
-
             try {
               const minisearch = new MiniSearch<ContextSubmenuItem>({
                 fields: ["title", "description"],
                 storeFields: ["id", "title", "description"],
               });
-              console.debug(`Requesting items for ${description.title}`);
+
               const result = (await ideMessenger.request(
                 "context/loadSubmenuItems",
                 {
                   title: description.title,
                 },
               )) as WebviewMessengerResult<"context/loadSubmenuItems">;
-
-              console.debug(
-                `Received result for ${description.title}:`,
-                result,
-              );
 
               if (result.status === "error") {
                 console.error(
@@ -290,21 +249,15 @@ function useSubmenuContextProviders() {
               }
               const items = result.content;
 
-              console.debug(
-                `Adding ${items.length} items to minisearch for ${description.title}`,
-              );
               minisearch.addAll(items);
 
-              console.debug(`Updating minisearches for ${description.title}`);
               setMinisearches((prev) => ({
                 ...prev,
                 [description.title]: minisearch,
               }));
 
               if (description.title === "file") {
-                console.debug("Processing file provider");
                 const openFiles = await memoizedGetOpenFileItems();
-                console.debug(`Got ${openFiles.length} open files`);
                 setFallbackResults((prev) => ({
                   ...prev,
                   file: [
@@ -313,9 +266,6 @@ function useSubmenuContextProviders() {
                   ],
                 }));
               } else {
-                console.debug(
-                  `Updating fallbackResults for ${description.title}`,
-                );
                 setFallbackResults((prev) => ({
                   ...prev,
                   [description.title]: items.slice(0, MAX_LENGTH),
@@ -333,23 +283,16 @@ function useSubmenuContextProviders() {
       } catch (error) {
         console.error("Error in loadSubmenuItems:", error);
       } finally {
-        console.debug("Finished loadSubmenuItems");
-        console.debug("Final minisearches:", Object.keys(minisearches));
-        console.debug("Final fallbackResults:", Object.keys(fallbackResults));
         setInitialLoadComplete(true);
         setIsLoading(false);
       }
     };
 
-    loadSubmenuItems()
-      .then(() => {
-        console.debug("loadSubmenuItems completed successfully");
-      })
-      .catch((error) => {
-        console.error("Error in loadSubmenuItems:", error);
-        setInitialLoadComplete(true);
-        setIsLoading(false);
-      });
+    loadSubmenuItems().catch((error) => {
+      console.error("Error in loadSubmenuItems:", error);
+      setInitialLoadComplete(true);
+      setIsLoading(false);
+    });
   }, [contextProviderDescriptions, loaded, autoLoadTriggered]);
 
   useWebviewListener("configUpdate", async () => {

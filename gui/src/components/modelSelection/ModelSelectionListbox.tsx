@@ -111,7 +111,7 @@ function ModelSelectionListbox({
 }: ModelSelectionListboxProps) {
   return (
     <StyledListbox value={selectedProvider} onChange={setSelectedProvider}>
-      <div className="relative mt-1">
+      <div className="relative mt-1 mb-2">
         <StyledListboxButton>
           <span className="flex items-center">
             {window.vscMediaUrl && selectedProvider.icon && (
@@ -141,11 +141,7 @@ function ModelSelectionListbox({
               <StyledListboxOption
                 selected={selectedProvider.title === option.title}
                 key={index}
-                className={({ active }: { active: boolean }) =>
-                  `relative cursor-default select-none py-2 pl-10 pr-4 ${
-                    active ? "bg-amber-100 text-amber-900" : "text-gray-900"
-                  }`
-                }
+                className="relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
                 value={option}
               >
                 {({ selected }) => (
@@ -160,7 +156,7 @@ function ModelSelectionListbox({
                     <span className="text-md">{option.title}</span>
 
                     {selected ? (
-                      <span className="inset-y-0 ml-auto flex items-center pl-3 text-amber-600">
+                      <span className="inset-y-0 ml-auto flex items-center pl-3">
                         <CheckIcon className="h-5 w-5" aria-hidden="true" />
                       </span>
                     ) : null}

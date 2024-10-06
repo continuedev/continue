@@ -48,14 +48,17 @@ Anthropic currently does not offer any reranking models.
 
 Anthropic supports [prompt caching with Claude](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching).
 
-Currently, we only allow caching of the system message. To enable this feature, update your your model configuration with `"cacheSystemMessage": true`:
+To enable caching of the system message and the turn-by-turn conversation, update your your model configuration as following:
 
 ```json
 {
   "models": [
     {
       // Enable prompt caching
-      "cacheSystemMessage": true,
+      "cacheBehavior": {
+        "cacheSystemMessage": true,
+        "cacheConversation": true
+      },
       "title": "Anthropic",
       "provider": "anthropic",
       "model": "claude-3-5-sonnet-20240620",

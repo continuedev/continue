@@ -7,7 +7,9 @@ function OnboardingBestTab() {
 
   return (
     <div className="flex flex-col gap-8">
-      <ProviderAlert />
+      <div className="hidden xs:flex w-full">
+        <ProviderAlert />
+      </div>
       <BestExperienceConfigForm onComplete={submitOnboarding} />
     </div>
   );

@@ -1,9 +1,10 @@
 import * as vscode from "vscode";
+import { EXTENSION_NAME } from "../util/constants";
 import { getUserToken } from "./auth";
 import { RemoteConfigSync } from "./remoteConfig";
 
 export async function setupRemoteConfigSync(reloadConfig: () => void) {
-  const settings = vscode.workspace.getConfiguration("continue");
+  const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
   const remoteConfigServerUrl = settings.get<string | null>(
     "remoteConfigServerUrl",
     null,
@@ -17,7 +18,7 @@ export async function setupRemoteConfigSync(reloadConfig: () => void) {
   }
   getUserToken().then(async (token) => {
     await vscode.workspace
-      .getConfiguration("continue")
+      .getConfiguration(EXTENSION_NAME)
       .update("userToken", token, vscode.ConfigurationTarget.Global);
     try {
       const configSync = new RemoteConfigSync(reloadConfig, token);

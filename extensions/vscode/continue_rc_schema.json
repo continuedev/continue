@@ -658,9 +658,7 @@
                   "llama3.1-70b",
                   "llama3.1-405b",
                   "gpt-3.5-turbo",
-                  "phind-codellama-34b",
                   "gemini-pro",
-                  "mistral-8x7b",
                   "claude-3-5-sonnet-20240620",
                   "claude-3-haiku-20240307",
                   "AUTODETECT"
@@ -758,8 +756,17 @@
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "anyOf": [
@@ -874,8 +881,14 @@
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "enum": [
@@ -1117,8 +1130,17 @@
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "enum": [
@@ -1149,6 +1171,7 @@
                   "llama2-70b",
                   "mistral-8x7b",
                   "gemma",
+                  "gemma2",
                   "llama3-8b",
                   "llama3-70b",
                   "llama3.1-8b",
@@ -1700,7 +1723,8 @@
                 "url",
                 "database",
                 "os",
-                "repo-map"
+                "repo-map",
+                "greptile"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1724,7 +1748,8 @@
                 "Reference the contents of a page at a URL",
                 "Reference table schemas",
                 "Operating system and CPU Information",
-                "Map of files in the repository with important code highlights"
+                "Map of files in the repository with important code highlights",
+                "Query your greptile index of the current repo"
               ],
               "type": "string"
             },
@@ -2167,6 +2192,41 @@
               "database"
             ]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "greptile"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "GithubToken": {
+                    "title": "GithubToken",
+                    "description": "Your github access token",
+                    "default": "",
+                    "type": "string"
+                  },
+                  "GreptileToken": {
+                    "title": "GreptileToken",
+                    "description": "Your greptile access token",
+                    "default": "",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "GreptileToken",
+              "GithubToken"
+            ]
+          }
         }
       ],
       "required": [
@@ -2353,6 +2413,13 @@
               "description": "The maximum number of tokens that each chunk of a document is allowed to have",
               "type": "integer",
               "minimum": 128,
+              "exclusiveMaximum": 2147483647
+            },
+            "maxBatchSize": {
+              "title": "Maximum Batch Size",
+              "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
+              "type": "integer",
+              "minimum": 1,
               "exclusiveMaximum": 2147483647
             },
             "region": {

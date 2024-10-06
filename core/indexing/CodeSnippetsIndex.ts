@@ -341,6 +341,10 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       name: row.title,
       description: getLastNPathParts(row.path, 2),
       content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
+      uri: {
+        type: "file",
+        value: row.path,
+      },
     };
   }
 
@@ -383,20 +387,18 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const placeholders = likePatterns.map(() => "?").join(" OR path LIKE ");
 
     const query = `
-  SELECT path, signature
-  FROM code_snippets
-  WHERE path LIKE ${placeholders}
-  ORDER BY path
-  LIMIT ? OFFSET ?
-`;
+    SELECT DISTINCT path, signature
+    FROM code_snippets
+    WHERE path LIKE ${placeholders}
+    ORDER BY path, signature
+    LIMIT ? OFFSET ?
+  `;
 
     const rows = await db.all(query, [...likePatterns, batchSize, offset]);
 
-    const validRows = rows.filter((row) => row.path && row.signature !== null);
-
     const groupedByPath: { [path: string]: string[] } = {};
 
-    for (const { path, signature } of validRows) {
+    for (const { path, signature } of rows) {
       if (!groupedByPath[path]) {
         groupedByPath[path] = [];
       }

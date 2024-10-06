@@ -595,7 +595,24 @@ async function loadFullConfigNode(
     try {
       // Try config.ts first
       const configJsPath = getConfigJsPath();
-      const module = await import(configJsPath);
+      let module: any;
+
+      try {
+        module = await import(configJsPath);
+      } catch (e) {
+        console.log(e);
+        console.log(
+          "Could not load config.ts as absolute path, retrying as file url ...",
+        );
+        try {
+          module = await import(`file://${configJsPath}`);
+        } catch (e) {
+          throw new Error("Could not load config.ts as file url either", {
+            cause: e,
+          });
+        }
+      }
+
       if (typeof require !== "undefined") {
         delete require.cache[require.resolve(configJsPath)];
       }

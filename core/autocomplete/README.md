@@ -25,7 +25,7 @@ You can also set up tab-autocomplete with a local LM Studio instance by followin
 
 Example:
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
   "tabAutocompleteModel": {
       "title": "Starcoder2 3b",
@@ -40,7 +40,7 @@ Example:
 
 All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote vLLM instance you would edit your `config.json` like this (note that it is not inside the models array), filling in the correct model name and vLLM endpoint:
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
@@ -54,7 +54,7 @@ All of the configuration options available for chat models are available to use 
 
 As another example, say you want to use a different model, `deepseek-coder:6.7b-base`, with Ollama:
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
@@ -100,7 +100,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 
 ### Full example
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",

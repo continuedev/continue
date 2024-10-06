@@ -1,10 +1,11 @@
+import { ILLM } from "core";
 import * as vscode from "vscode";
 import { Battery } from "../util/battery";
+import { EXTENSION_NAME } from "../util/constants";
 import {
   CONTINUE_WORKSPACE_KEY,
   getContinueWorkspaceConfig,
 } from "../util/workspaceConfig";
-import { ILLM } from "core";
 
 export enum StatusBarStatus {
   Disabled,
@@ -121,7 +122,7 @@ export function getStatusBarStatus(): StatusBarStatus | undefined {
 
 export function monitorBatteryChanges(battery: Battery): vscode.Disposable {
   return battery.onChangeAC((acConnected: boolean) => {
-    const config = vscode.workspace.getConfiguration("continue");
+    const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
     const enabled = config.get<boolean>("enableTabAutocomplete");
     if (!!enabled) {
       const pauseOnBattery = config.get<boolean>(

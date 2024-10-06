@@ -1,4 +1,4 @@
-import { ContextProviderName } from "../../";
+import { ContextItem, ContextProviderName } from "../../";
 import { BaseContextProvider } from "../";
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
@@ -22,6 +22,7 @@ import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";
+import GreptileContextProvider from "./GreptileContextProvider";
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
@@ -30,7 +31,7 @@ import RepoMapContextProvider from "./RepoMapContextProvider";
  *
  * See this issue for details: https://github.com/continuedev/continue/issues/1365
  */
-const Providers: (typeof BaseContextProvider)[] = [
+export const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,
@@ -53,6 +54,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   URLContextProvider,
   ContinueProxyContextProvider,
   RepoMapContextProvider,
+  GreptileContextProvider,
 ];
 
 export function contextProviderClassFromName(

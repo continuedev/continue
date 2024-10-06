@@ -70,6 +70,7 @@ export interface ILLM extends LLMOptions {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   engine?: string;
   apiVersion?: string;
@@ -271,6 +272,13 @@ export interface ContextItemId {
   itemId: string;
 }
 
+export type ContextItemUriTypes = "file" | "url";
+
+export interface ContextItemUri {
+  type: ContextItemUriTypes;
+  value: string;
+}
+
 export interface ContextItem {
   content: string;
   name: string;
@@ -278,16 +286,11 @@ export interface ContextItem {
   editing?: boolean;
   editable?: boolean;
   icon?: string;
+  uri?: ContextItemUri;
 }
 
-export interface ContextItemWithId {
-  content: string;
-  name: string;
-  description: string;
+export interface ContextItemWithId extends ContextItem {
   id: ContextItemId;
-  editing?: boolean;
-  editable?: boolean;
-  icon?: string;
 }
 
 export interface InputModifiers {
@@ -340,6 +343,7 @@ export interface LLMOptions {
   apiKey?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -369,8 +373,6 @@ export interface LLMOptions {
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
   watsonxFullUrl?: string;
-
-  cacheSystemMessage?: boolean;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -578,6 +580,7 @@ type ContextProviderName =
   | "gitlab-mr"
   | "os"
   | "currentFile"
+  | "greptile"
   | "outline"
   | "continue-proxy"
   | "highlights"
@@ -691,6 +694,8 @@ export type ModelName =
   | "deepseek-7b"
   | "deepseek-33b"
   | "neural-chat-7b"
+  | "gemma-7b-it"
+  | "gemma2-9b-it"
   // Anthropic
   | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"
@@ -723,6 +728,11 @@ export interface RequestOptions {
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
   clientCertificate?: ClientCertificateOptions;
+}
+
+export interface CacheBehavior {
+  cacheSystemMessage?: boolean;
+  cacheConversation?: boolean;
 }
 
 export interface ClientCertificateOptions {
@@ -787,6 +797,7 @@ export interface ModelDescription {
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   capabilities?: ModelCapability;
+  cacheBehavior?: CacheBehavior;
 }
 
 export type EmbeddingsProviderName =
@@ -871,6 +882,7 @@ export interface TabAutocompleteOptions {
   recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
   useImports?: boolean;
+  useRootPathContext?: boolean;
 }
 
 export interface ContinueUIConfig {

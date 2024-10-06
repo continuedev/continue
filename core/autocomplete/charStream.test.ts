@@ -1,4 +1,4 @@
-import { stopAtStopTokens } from "./charStream";
+import { stopAtStopTokens } from "./streamTransforms/charStream";
 
 describe("stopAtStopTokens", () => {
   async function* createMockStream(chunks: string[]): AsyncGenerator<string> {

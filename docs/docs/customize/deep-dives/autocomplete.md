@@ -32,7 +32,7 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 
 All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
@@ -73,7 +73,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 
 ### Full example
 
-```json title=~/.continue/config.json
+```json title="config.json"
 {
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",
@@ -119,7 +119,7 @@ To ensure that you receive multi-line completions, you can set `"multilineComple
 
 Yes, in VS Code, if you don't want to be shown suggestions automatically you can:
 
-1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disabe automatic suggestions
+1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disable automatic suggestions
 2. Open "Keyboard Shortcuts" (cmd/ctrl+k, cmd/ctrl+s) and search for `editor.action.inlineSuggest.trigger`
 3. Click the "+" icon to add a new keybinding
 4. Press the key combination you want to use to trigger suggestions (e.g. `ctrl+space`)

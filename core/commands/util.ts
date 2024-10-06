@@ -1,4 +1,4 @@
-import { ContextItemWithId } from "../index.js";
+import { ContextItemWithId } from "../";
 
 export interface RangeInFileWithContents {
   filepath: string;
@@ -9,20 +9,29 @@ export interface RangeInFileWithContents {
   contents: string;
 }
 
-export function contextItemToRangeInFileWithContents(
+export function ctxItemToRifWithContents(
   item: ContextItemWithId,
 ): RangeInFileWithContents {
-  const lines = item.name.split("(")[1].split(")")[0].split("-");
+  let startLine = 0;
+  let endLine = 0;
+
+  const nameSplit = item.name.split("(");
+
+  if (nameSplit.length > 1) {
+    const lines = nameSplit[1].split(")")[0].split("-");
+    startLine = Number.parseInt(lines[0], 10);
+    endLine = Number.parseInt(lines[1], 10);
+  }
 
   const rif: RangeInFileWithContents = {
-    filepath: item.id.itemId,
+    filepath: item.uri?.value || "",
     range: {
       start: {
-        line: Number.parseInt(lines[0]),
+        line: startLine,
         character: 0,
       },
       end: {
-        line: Number.parseInt(lines[1]),
+        line: endLine,
         character: 0,
       },
     },

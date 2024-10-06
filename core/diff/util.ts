@@ -93,19 +93,38 @@ export function matchLine(
  */
 export async function* streamLines(
   streamCompletion: AsyncGenerator<string | ChatMessage>,
+  log: boolean = false,
 ): LineStream {
+  let allLines = [];
+
   let buffer = "";
-  for await (const update of streamCompletion) {
-    const chunk =
-      typeof update === "string" ? update : stripImages(update.content);
-    buffer += chunk;
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      yield line;
+
+  try {
+    for await (const update of streamCompletion) {
+      const chunk =
+        typeof update === "string" ? update : stripImages(update.content);
+      buffer += chunk;
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        yield line;
+        allLines.push(line);
+      }
+    }
+    if (buffer.length > 0) {
+      yield buffer;
+      allLines.push(buffer);
+    }
+  } finally {
+    if (log) {
+      console.log("Streamed lines: ", allLines.join("\n"));
     }
   }
-  if (buffer.length > 0) {
-    yield buffer;
+}
+
+export async function* generateLines<T>(lines: T[]): AsyncGenerator<T> {
+  for (const line of lines) {
+    yield line;
+    // await new Promise((resolve, reject) => setTimeout(() => resolve(null), 50));
   }
 }

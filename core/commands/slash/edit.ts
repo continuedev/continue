@@ -1,3 +1,4 @@
+import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -5,16 +6,15 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream";
+} from "../../autocomplete/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
-import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import { stripImages } from "../../llm/images";
 import {
   dedentAndGetCommonWhitespace,
   getMarkdownLanguageTagForFile,
 } from "../../util/";
 import {
-  contextItemToRangeInFileWithContents,
+  ctxItemToRifWithContents,
   type RangeInFileWithContents,
 } from "../util";
 
@@ -250,7 +250,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     const rif: RangeInFileWithContents =
-      contextItemToRangeInFileWithContents(contextItemToEdit);
+      ctxItemToRifWithContents(contextItemToEdit);
 
     await ide.saveFile(rif.filepath);
     const fullFileContents = await ide.readFile(rif.filepath);

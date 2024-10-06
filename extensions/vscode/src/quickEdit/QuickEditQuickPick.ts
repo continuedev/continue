@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { ContinueConfig, IDE } from "core";
+import { IDE } from "core";
 import { walkDir } from "core/indexing/walkDir";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
+import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
@@ -11,6 +11,8 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 
 // @ts-ignore - error finding typings
 import { ConfigHandler } from "core/config/ConfigHandler";
+// @ts-ignore
+import { getModelByRole } from "core/config/util";
 // @ts-ignore
 import MiniSearch from "minisearch";
 
@@ -85,7 +87,7 @@ export class QuickEdit {
   private _curModelTitle?: string;
 
   constructor(
-    private readonly verticalDiffManager: VerticalPerLineDiffManager,
+    private readonly verticalDiffManager: VerticalDiffManager,
     private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: IDE,
@@ -215,37 +217,28 @@ export class QuickEdit {
     );
 
     this.editorWhenOpened = editor;
-    this.previousInput = existingHandler?.input;
+    this.previousInput = existingHandler?.options.input;
   }
 
   /**
    * Gets the model title the user has chosen, or their default model
    */
   private async getCurModelTitle() {
-    const config = await this.configHandler.loadConfig();
-
     if (this._curModelTitle) {
       return this._curModelTitle;
     }
 
-    const inlineEditModel = config.experimental?.modelRoles?.inlineEdit;
+    const config = await this.configHandler.loadConfig();
 
-    if (inlineEditModel) {
-      return inlineEditModel;
-    }
-
-    let defaultModelTitle: string | undefined =
-      await this.webviewProtocol.request(
+    return (
+      getModelByRole(config, "inlineEdit")?.title ??
+      (await this.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
         false,
-      );
-
-    if (!defaultModelTitle) {
-      defaultModelTitle = config.models[0].title;
-    }
-
-    return defaultModelTitle || inlineEditModel;
+      )) ??
+      config.models[0]?.title
+    );
   }
 
   /**
@@ -302,6 +295,7 @@ export class QuickEdit {
     await this.verticalDiffManager.streamEdit(
       prompt,
       modelTitle,
+      undefined,
       undefined,
       this.previousInput,
       this.range,

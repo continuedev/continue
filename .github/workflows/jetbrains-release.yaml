@@ -203,6 +203,7 @@ jobs:
           ls
           echo "---"
           FILENAME=`ls continue-intellij-extension-*.zip`
+          echo "Filename=${FILENAME}"
           unzip "$FILENAME" -d content
 
           echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
@@ -330,10 +331,10 @@ jobs:
 
       - name: Upload logs
         if: ${{ always() }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
-          path: binary/.continue/logs/core.log
+          path: ~/.continue/logs/core.log
 
   # Run tests and upload a code coverage report
   test:

@@ -411,7 +411,7 @@ class ChromiumCrawler {
 
       for (const link of linkGroup) {
         enqueuedLinkCount++;
-        console.log({ enqueuedLinkCount, url: this.startUrl });
+        console.log({ enqueuedLinkCount, url: this.startUrl.toString() });
         if (enqueuedLinkCount <= this.maxRequestsPerCrawl) {
           yield* this.crawlSitePages(page, new URL(link), visitedLinks);
         }

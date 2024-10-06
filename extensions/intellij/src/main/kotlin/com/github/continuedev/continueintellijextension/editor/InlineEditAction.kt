@@ -98,6 +98,11 @@ fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTex
 fun openInlineEdit(project: Project?, editor: Editor) {
     if (project == null) return
 
+    // Don't open in terminal
+     if (EditorUtils().isTerminal(editor)) {
+            return
+     }
+
     val manager = EditorComponentInlaysManager.from(editor)
 
     // Get list of model titles
@@ -270,7 +275,10 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             renderer = DefaultListCellRenderer().apply {
                 horizontalAlignment = SwingConstants.RIGHT
             }
-            selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let { modelTitles.indexOf(it) } ?: 0
+            selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
+                val index = modelTitles.indexOf(it)
+                if (index != -1) index else 0
+            } ?: 0
 
             addActionListener {
                 continueSettingsService.continueState.lastSelectedInlineEditModel = selectedItem as String

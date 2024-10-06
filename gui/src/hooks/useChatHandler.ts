@@ -17,7 +17,9 @@ import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
-import resolveEditorContent from "../components/mainInput/resolveInput";
+import resolveEditorContent, {
+  hasSlashCommandOrContextProvider,
+} from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -27,9 +29,11 @@ import {
   initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
+  setIsGatheringContext,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
@@ -51,6 +55,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const history = useSelector((store: RootState) => store.state.history);
   const active = useSelector((store: RootState) => store.state.active);
   const activeRef = useRef(active);
+
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
@@ -178,6 +183,16 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         dispatch(initNewActiveMessage({ editorState }));
       }
 
+      // Reset current code block index
+      dispatch(resetNextCodeBlockToApplyIndex());
+
+      const shouldGatherContext =
+        modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
+
+      if (shouldGatherContext) {
+        dispatch(setIsGatheringContext(true));
+      }
+
       // Resolve context providers and construct new history
       const [selectedContextItems, selectedCode, content] =
         await resolveEditorContent(
@@ -186,6 +201,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           ideMessenger,
           defaultContextProviders,
         );
+
+      dispatch(setIsGatheringContext(false));
 
       // Automatically use currently open file
       if (!modifiers.noContext) {
@@ -213,21 +230,24 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
               itemId: currentFilePath,
               providerTitle: "file",
             },
+            uri: {
+              type: "file",
+              value: currentFilePath,
+            },
           });
         }
       }
+
       dispatch(addContextItems(contextItems));
 
       const message: ChatMessage = {
         role: "user",
         content,
       };
+
       const historyItem: ChatHistoryItem = {
         message,
         contextItems: selectedContextItems,
-        // : typeof index === "number"
-        //   ? history[index].contextItems
-        //   : contextItems,
         editorState,
       };
 
@@ -250,7 +270,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       });
       posthog.capture("userInput", {});
 
-      const messages = constructMessages(newHistory);
+      const messages = constructMessages(newHistory, defaultModel.model);
 
       // Determine if the input is a slash command
       let commandAndInput = getSlashCommandForInput(content);

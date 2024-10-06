@@ -36,12 +36,6 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
         coroutineScope.cancel()
     }
 
-    fun launchInScope(block: suspend CoroutineScope.() -> Unit) {
-        coroutineScope.launch {
-            block()
-        }
-    }
-
     fun sendToWebview(
         messageType: String,
         data: Any?,

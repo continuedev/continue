@@ -332,7 +332,9 @@ function compileChatMessages(
   systemMessage: string | undefined = undefined,
 ): ChatMessage[] {
   const msgsCopy = msgs
-    ? msgs.map((msg) => ({ ...msg })).filter((msg) => msg.content !== "")
+    ? msgs
+        .map((msg) => ({ ...msg }))
+        .filter((msg) => msg.content !== "" && msg.role !== "system")
     : [];
 
   if (prompt) {
@@ -343,10 +345,24 @@ function compileChatMessages(
     msgsCopy.push(promptMsg);
   }
 
-  if (systemMessage && systemMessage.trim() !== "") {
+  if (
+    (systemMessage && systemMessage.trim() !== "") ||
+    msgs?.[0].role === "system"
+  ) {
+    let content = "";
+    if (msgs?.[0].role === "system") {
+      content = stripImages(msgs?.[0].content);
+    }
+    if (systemMessage && systemMessage.trim() !== "") {
+      const shouldAddNewLines = content !== "";
+      if (shouldAddNewLines) {
+        content += "\n\n";
+      }
+      content += systemMessage;
+    }
     const systemChatMsg: ChatMessage = {
       role: "system",
-      content: systemMessage,
+      content,
     };
     // Insert as second to last
     // Later moved to top, but want second-priority to last user message

@@ -5,7 +5,11 @@ import FileSystemIde from "core/util/filesystem";
 import { IMessenger } from "core/util/messenger";
 import { ReverseMessageIde } from "core/util/reverseMessageIde";
 import fs from "fs";
-import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import {
+  ChildProcessWithoutNullStreams,
+  execSync,
+  spawn,
+} from "node:child_process";
 import path from "path";
 import {
   CoreBinaryMessenger,
@@ -59,21 +63,66 @@ describe("Test Suite", () => {
 
   beforeAll(async () => {
     const [platform, arch] = autodetectPlatformAndArch();
-    const binaryPath = path.join(
-      __dirname,
-      "..",
-      "bin",
-      `${platform}-${arch}`,
-      `continue-binary${platform === "win32" ? ".exe" : ""}`,
-    );
-    expect(fs.existsSync(binaryPath)).toBe(true);
+    const binaryDir = path.join(__dirname, "..", "bin", `${platform}-${arch}`);
+    const exe = platform === "win32" ? ".exe" : "";
+    const binaryPath = path.join(binaryDir, `continue-binary${exe}`);
+    const expectedItems = [
+      `continue-binary${exe}`,
+      `esbuild${exe}`,
+      "index.node",
+      "package.json",
+      "build/Release/node_sqlite3.node",
+    ];
+    expectedItems.forEach((item) => {
+      expect(fs.existsSync(path.join(binaryDir, item))).toBe(true);
+    });
+
+    // Set execute permissions and remove quarantine attribute if on macOS
+    if (platform !== "win32") {
+      try {
+        fs.chmodSync(binaryPath, 0o755);
+        console.log("Execute permissions set for the binary");
+
+        if (platform === "darwin") {
+          const indexNodePath = path.join(binaryDir, "index.node");
+          const filesToUnquarantine = [binaryPath, indexNodePath];
+
+          for (const file of filesToUnquarantine) {
+            try {
+              execSync(`xattr -d com.apple.quarantine "${file}"`, {
+                stdio: "ignore",
+              });
+              console.log(
+                `Quarantine attribute removed from ${path.basename(file)}`,
+              );
+            } catch (error) {
+              console.warn(
+                `Failed to remove quarantine attribute from ${path.basename(file)}:`,
+                error,
+              );
+            }
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Error setting permissions or removing quarantine:",
+          error,
+        );
+      }
+    }
 
     if (USE_TCP) {
       messenger = new CoreBinaryTcpMessenger<ToIdeProtocol, FromIdeProtocol>();
     } else {
-      subprocess = spawn(binaryPath, {
-        env: { ...process.env, CONTINUE_GLOBAL_DIR },
-      });
+      try {
+        subprocess = spawn(binaryPath, {
+          env: { ...process.env, CONTINUE_GLOBAL_DIR },
+        });
+        console.log("Successfully spawned subprocess");
+      } catch (error) {
+        console.error("Error spawning subprocess:", error);
+        throw error;
+      }
       messenger = new CoreBinaryMessenger<ToIdeProtocol, FromIdeProtocol>(
         subprocess,
       );
@@ -123,13 +172,17 @@ describe("Test Suite", () => {
       "package.json",
       "logs/core.log",
       "index/autocompleteCache.sqlite",
-      "out/config.js",
       "types/core/index.d.ts",
     ];
 
-    for (const file of expectedFiles) {
+    const missingFiles = expectedFiles.filter((file) => {
       const filePath = path.join(CONTINUE_GLOBAL_DIR, file);
-      expect(fs.existsSync(filePath)).toBe(true);
+      return !fs.existsSync(filePath);
+    });
+
+    expect(missingFiles).toEqual([]);
+    if (missingFiles.length > 0) {
+      console.log("Missing files:", missingFiles);
     }
   });
 

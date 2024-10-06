@@ -42,6 +42,7 @@ class AutocompleteDocumentListener(private val editorManager: FileEditorManager,
 
         // Invoke later is important, otherwise the completion will be triggered before the document is updated
         // causing the old caret offset to be used
+        // TODO: concurrency
         invokeLater {
             service.triggerCompletion(editor)
         }

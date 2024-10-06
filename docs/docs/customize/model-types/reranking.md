@@ -7,7 +7,7 @@ sidebar_position: 4
 
 A "reranking model" is trained to take two pieces of text (often a user question and a document) and return a relevancy score between 0 and 1, estimating how useful the document will be in answering the question. Rerankers are typically much smaller than LLMs, and will be extremely fast and cheap in comparison.
 
-In Continue, reranking is used by [@codebase](../deep-dives/codebase.md) in order to select the most relevant code snippets after vector search.
+In Continue, reranking is used by [@Codebase](../deep-dives/codebase.md) in order to select the most relevant code snippets after vector search.
 
 ## Recommended reranking models
 

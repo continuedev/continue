@@ -264,7 +264,7 @@ class OpenAI extends BaseLLM {
     }
   }
 
-  async *_streamFim(
+  protected async *_streamFim(
     prefix: string,
     suffix: string,
     options: CompletionOptions,

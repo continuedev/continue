@@ -7,22 +7,16 @@ import com.github.continuedev.continueintellijextension.constants.getConfigJsonP
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.services.TerminalActivityTrackingService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
-import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
-import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
-import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
-import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
@@ -33,7 +27,6 @@ import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
-import com.intellij.openapi.fileEditor.impl.FileEditorManagerImpl
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
@@ -43,13 +36,10 @@ import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiDocumentManager
-import com.intellij.terminal.TerminalUtils
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.concurrency.annotations.RequiresEdt
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.*
@@ -354,6 +344,16 @@ class IdeProtocolClient (
                         respond(workspaceDirectories())
                     }
 
+                    "getTags" -> {
+                        val artifactId = data as? String
+                        if (artifactId == null) {
+                            respond(emptyList<Any>())
+                            return@launch
+                        }
+                        val tags = getTags(artifactId)
+                        respond(tags)
+                    }
+
                     "getWorkspaceConfigs" -> {
                         val workspaceDirs = workspaceDirectories()
 
@@ -481,15 +481,8 @@ class IdeProtocolClient (
                     "getBranch" -> {
                         // Get the current branch name
                         val dir = (data as Map<String, Any>)["dir"] as String
-                        val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
-                        builder.directory(File(dir))
-                        val process = builder.start()
-
-                        val reader = BufferedReader(InputStreamReader(process.inputStream))
-                        val output = reader.readLine()
-                        process.waitFor()
-
-                        respond(output ?: "NONE")
+                        val branch = getBranch(dir)
+                        respond(branch)
                     }
                     "getRepoName" -> {
                         // Get the current repository name
@@ -544,35 +537,38 @@ class IdeProtocolClient (
                         val document: Document = editor!!.document
                         val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@launch
 
-                        val analyzer = DaemonCodeAnalyzer.getInstance(project) as DaemonCodeAnalyzerImpl
-                        val highlightInfos = ReadAction.compute<MutableList<HighlightInfo>, Throwable> {
-                            analyzer.getFileLevelHighlights(project, psiFile)
-                        }
-
                         val problems = ArrayList<Map<String, Any?>>()
-                        for (highlightInfo in highlightInfos) {
-                            if (highlightInfo.severity === HighlightSeverity.ERROR ||
-                                    highlightInfo.severity === HighlightSeverity.WARNING) {
-                                val startOffset = highlightInfo.getStartOffset()
-                                val endOffset = highlightInfo.getEndOffset()
-                                val description = highlightInfo.description
-                                problems.add(mapOf(
-                                        "filepath" to psiFile.virtualFile?.path,
-                                        "range" to mapOf(
-                                                "start" to mapOf(
-                                                        "line" to document.getLineNumber(startOffset),
-                                                        "character" to startOffset - document.getLineStartOffset(document.getLineNumber(startOffset))
-                                                ),
-                                                "end" to mapOf(
-                                                        "line" to document.getLineNumber(endOffset),
-                                                        "character" to endOffset - document.getLineStartOffset(document.getLineNumber(endOffset))
-                                                )
-                                        ),
-                                        "message" to description
-                                ))
-                            }
-                        }
                         respond(problems)
+
+                        // DaemonCodeAnalyzerImpl has been made internal, which means we cannot access this
+//                        val analyzer = DaemonCodeAnalyzer.getInstance(project) as DaemonCodeAnalyzerImpl
+//                        val highlightInfos = ReadAction.compute<MutableList<HighlightInfo>, Throwable> {
+//                            analyzer.getFileLevelHighlights(project, psiFile)
+//                        }
+//
+//                        for (highlightInfo in highlightInfos) {
+//                            if (highlightInfo.severity === HighlightSeverity.ERROR ||
+//                                    highlightInfo.severity === HighlightSeverity.WARNING) {
+//                                val startOffset = highlightInfo.getStartOffset()
+//                                val endOffset = highlightInfo.getEndOffset()
+//                                val description = highlightInfo.description
+//                                problems.add(mapOf(
+//                                        "filepath" to psiFile.virtualFile?.path,
+//                                        "range" to mapOf(
+//                                                "start" to mapOf(
+//                                                        "line" to document.getLineNumber(startOffset),
+//                                                        "character" to startOffset - document.getLineStartOffset(document.getLineNumber(startOffset))
+//                                                ),
+//                                                "end" to mapOf(
+//                                                        "line" to document.getLineNumber(endOffset),
+//                                                        "character" to endOffset - document.getLineStartOffset(document.getLineNumber(endOffset))
+//                                                )
+//                                        ),
+//                                        "message" to description
+//                                ))
+//                            }
+//                        }
+//                        respond(problems)
                     }
                     "getConfigJsUrl" -> {
                         // Calculate a data URL for the config.js file
@@ -746,6 +742,41 @@ class IdeProtocolClient (
         return getMachineUniqueID()
     }
 
+    suspend fun getBranch(dir: String): String = withContext(Dispatchers.IO) {
+        try {
+            val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
+            builder.directory(File(dir))
+            val process = builder.start()
+
+            val reader = BufferedReader(InputStreamReader(process.inputStream))
+            val output = reader.readLine()
+
+            process.waitFor()
+
+            output ?: "NONE"
+        } catch (e: Exception) {
+            "NONE"
+        }
+    }
+
+    data class IndexTag(val directory: String, val branch: String, val artifactId: String)
+
+    suspend fun getTags(artifactId: String): List<IndexTag> {
+        val workspaceDirs = workspaceDirectories()
+
+        // Collect branches concurrently using Kotlin coroutines
+        val branches = withContext(Dispatchers.IO) {
+            workspaceDirs.map { dir ->
+                async { getBranch(dir) }
+            }.map { it.await() }
+        }
+
+        // Create the list of IndexTag objects
+        return workspaceDirs.mapIndexed { index, directory ->
+            IndexTag(directory, branches[index], artifactId)
+        }
+    }
+
     fun readFile(filepath: String): String {
         try {
             val content = ApplicationManager.getApplication().runReadAction<String?> {
@@ -888,52 +919,6 @@ class IdeProtocolClient (
         return arrayOf()
     }
 
-    private fun listDirectoryContents(directory: String?): List<String> {
-        val dirs: Array<String>;
-        if (directory != null) {
-            dirs = arrayOf(directory)
-        } else {
-            dirs = workspaceDirectories()
-        }
-
-        val contents = ArrayList<String>()
-        for (dir in dirs) {
-            if (DEFAULT_IGNORE_DIRS.any { dir.contains(it) }) {
-                continue
-            }
-
-            val workspacePath = File(dir)
-            val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
-
-            if (workspaceDir != null) {
-                val filter = object : VirtualFileFilter {
-                    override fun accept(file: VirtualFile): Boolean {
-                        if (file.isDirectory) {
-                            return !shouldIgnoreDirectory(file.name)
-                        } else {
-                            val filePath = file.path
-                            return !shouldIgnoreDirectory(filePath) && !DEFAULT_IGNORE_FILETYPES.any { filePath.endsWith(it) }
-                        }
-                    }
-                }
-                VfsUtil.iterateChildrenRecursively(workspaceDir, filter) { virtualFile: VirtualFile ->
-                    if (!virtualFile.isDirectory) {
-                        contents.add(virtualFile.path)
-
-                        // Set a hard limit on the number of files to list
-                        if (contents.size > 10000) {
-                            // Completely exit the iteration
-                            return@iterateChildrenRecursively false
-                        }
-                    }
-                    true
-                }
-            }
-        }
-
-        return contents
-    }
-
     private fun saveFile(filepath: String) {
         ApplicationManager.getApplication().invokeLater {
             val file = LocalFileSystem.getInstance().findFileByPath(filepath) ?: return@invokeLater
@@ -976,10 +961,12 @@ class IdeProtocolClient (
 
     @RequiresEdt
     private fun pinnedFiles(): List<String> {
-        val fileEditorManager = FileEditorManager.getInstance(project) as? FileEditorManagerImpl ?: return listOf()
-        val openFiles = fileEditorManager.openFiles.map { it.path }.toList()
-        val pinnedFiles = fileEditorManager.windows.flatMap { window -> window.files.filter { window.isFilePinned(it) } }.map { it.path }.toSet()
-        return openFiles.intersect(pinnedFiles).toList()
+        // Caused incompatibility issue with JetBrains new release
+        return visibleFiles()
+//        val fileEditorManager = FileEditorManager.getInstance(project) as? FileEditorManagerImpl ?: return listOf() // FileEditorManagerImpl should be the type, but this was marked as internal
+//        val openFiles = fileEditorManager.openFiles.map { it.path }.toList()
+//        val pinnedFiles = fileEditorManager.windows.flatMap { window -> window.files.filter { window.isFilePinned(it) } }.map { it.path }.toSet()
+//        return openFiles.intersect(pinnedFiles).toList()
     }
 
     private fun currentFile(): String? {
@@ -989,7 +976,8 @@ class IdeProtocolClient (
         return virtualFile?.path
     }
 
-    fun showMessage(msg: String) {
+suspend fun showMessage(msg: String) {
+    withContext(Dispatchers.Main) {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
 
         JBPopupFactory.getInstance()
@@ -1002,6 +990,7 @@ class IdeProtocolClient (
                 Balloon.Position.atRight
             )
     }
+}
 
     fun highlightCode(rangeInFile: RangeInFile, color: String?) {
         val file =
@@ -1033,22 +1022,23 @@ class IdeProtocolClient (
     }
 
     private fun terminalContents(): String {
-        val contents = project.service<TerminalActivityTrackingService>().latest()?.run {
-            TerminalUtils.getTextInTerminal(terminalPanel)
-        } ?: ""
-
-        var lines = contents.split("\n").dropLastWhile { it.isEmpty() }
-        val lastLine = lines.lastOrNull()?.trim()
-        if (lastLine != null) {
-            lines = lines.dropLast(1)
-            var i = lines.size - 1
-            while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
-                i--
-            }
-            return lines.subList(maxOf(i, 0), lines.size).joinToString("\n")
-        }
-
-        return contents
+        return ""
+//        val contents = project.service<TerminalActivityTrackingService>().latest()?.run {
+//            TerminalUtils.getTextInTerminal(terminalPanel)
+//        } ?: ""
+//
+//        var lines = contents.split("\n").dropLastWhile { it.isEmpty() }
+//        val lastLine = lines.lastOrNull()?.trim()
+//        if (lastLine != null) {
+//            lines = lines.dropLast(1)
+//            var i = lines.size - 1
+//            while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
+//                i--
+//            }
+//            return lines.subList(maxOf(i, 0), lines.size).joinToString("\n")
+//        }
+//
+//        return contents
     }
 
     private fun search(query: String): String {

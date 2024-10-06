@@ -10,7 +10,7 @@ sidebar_position: 1
 
 ## How to use it
 
-Chat makes it easy to ask for help from an LLM without needing to leave the IDE. You send it a task, including any relevant information, and it replies with the text / code most likely to complete the task. If it does not give you want you want, then you can send follow up messages to clarify and adjust its approach until the task is completed.
+Chat makes it easy to ask for help from an LLM without needing to leave the IDE. You send it a task, including any relevant information, and it replies with the text / code most likely to complete the task. If it does not give you what you want, then you can send follow up messages to clarify and adjust its approach until the task is completed.
 
 Chat is best used to understand and iterate on code or as a replacement for search engine queries.
 
@@ -28,7 +28,7 @@ If there is information from the codebase, documentation, IDE, or other tools th
 
 ## Apply generated code to your file
 
-When the LLM replies with code, you can hover over the top right of the code block and select “Apply to current file” to update the existing code in the editor to this new version.
+When the LLM replies with edits to a file, you can click the “Apply” button. This will update the existing code in the editor to reflect the suggested changes.
 
 ## Start a fresh session for a new task
 
