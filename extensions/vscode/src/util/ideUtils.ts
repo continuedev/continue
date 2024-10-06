@@ -233,7 +233,7 @@ export class VsCodeIdeUtils {
   // In some cases vscode.window.visibleTextEditors can return non-code editors
   // e.g. terminal editors in side-by-side mode
   private documentIsCode(uri: vscode.Uri) {
-    return uri.scheme === "file";
+    return uri.scheme === "file" || uri.scheme === "vscode-remote";
   }
 
   getOpenFiles(): string[] {
@@ -246,7 +246,7 @@ export class VsCodeIdeUtils {
       .flat()
       .filter(Boolean) // filter out undefined values
       .filter((uri) => this.documentIsCode(uri)) // Filter out undesired documents
-      .map((uri) => uriFromFilePath(uri.fsPath).fsPath);
+      .map((uri) => uri.fsPath);
   }
 
   getVisibleFiles(): string[] {
