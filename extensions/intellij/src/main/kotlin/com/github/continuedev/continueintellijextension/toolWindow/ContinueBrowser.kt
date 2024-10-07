@@ -9,6 +9,8 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.ide.plugins.PluginManager
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -17,6 +19,8 @@ import kotlinx.coroutines.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
+import com.intellij.openapi.application.ApplicationInfo
+import com.intellij.openapi.extensions.PluginId
 
 class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false) {
     private val coroutineScope = CoroutineScope(
@@ -69,27 +73,23 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
 
     private fun registerAppSchemeHandler() {
         CefApp.getInstance().registerSchemeHandlerFactory(
-                "http",
-                "continue",
-                CustomSchemeHandlerFactory()
+            "http",
+            "continue",
+            CustomSchemeHandlerFactory()
         )
     }
 
     val browser: JBCefBrowser
-    init {
-        val osName = System.getProperty("os.name").toLowerCase()
-        val os = when {
-            osName.contains("mac") || osName.contains("darwin") -> "darwin"
-            osName.contains("win") -> "win32"
-            osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
-            else -> "linux"
-        }
 
-        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(os == "linux" || useOsr).build()
+    init {
+        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(shouldRenderOffScreen()).build()
+
+
         browser.jbCefClient.setProperty(
-                JBCefClient.Properties.JS_QUERY_POOL_SIZE,
-                JS_QUERY_POOL_SIZE
+            JBCefClient.Properties.JS_QUERY_POOL_SIZE,
+            JS_QUERY_POOL_SIZE
         )
+
         registerAppSchemeHandler()
         browser.loadURL(url);
         Disposer.register(project, browser)
@@ -104,8 +104,8 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
             val messageId = json.get("messageId")?.asString
 
             val continuePluginService = ServiceManager.getService(
-                    project,
-                    ContinuePluginService::class.java
+                project,
+                ContinuePluginService::class.java
             )
 
             val ide = continuePluginService.ideProtocolClient;
@@ -137,6 +137,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
                     val height = data.asJsonObject.get("height").asInt
                     heightChangeListeners.forEach { it(height) }
                 }
+
                 "onLoad" -> {
                     coroutineScope.launch {
                         // Set the colors to match Intellij theme
@@ -144,58 +145,73 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
                         sendToWebview("setColors", colors)
 
                         val jsonData = mutableMapOf(
-                                "windowId" to continuePluginService.windowId,
-                                "workspacePaths" to continuePluginService.workspacePaths,
-                                "vscMachineId" to getMachineUniqueID(),
-                                "vscMediaUrl" to "http://continue",
+                            "windowId" to continuePluginService.windowId,
+                            "workspacePaths" to continuePluginService.workspacePaths,
+                            "vscMachineId" to getMachineUniqueID(),
+                            "vscMediaUrl" to "http://continue",
                         )
                         respond(jsonData)
                     }
 
                 }
+
                 "showLines" -> {
                     val data = data.asJsonObject
                     ide?.setFileOpen(data.get("filepath").asString)
-                    ide?.highlightCode(RangeInFile(
+                    ide?.highlightCode(
+                        RangeInFile(
                             data.get("filepath").asString,
-                            Range(Position(
+                            Range(
+                                Position(
                                     data.get("start").asInt,
                                     0
-                            ), Position(
+                                ), Position(
                                     data.get("end").asInt,
                                     0
-                            )),
+                                )
+                            ),
 
-                            ),"#00ff0022")
+                            ), "#00ff0022"
+                    )
                 }
+
                 "showTutorial" -> {
                     showTutorial(project)
                 }
+
                 "showVirtualFile" -> {
                     val data = data.asJsonObject
                     ide?.showVirtualFile(data.get("name").asString, data.get("content").asString)
                 }
+
                 "showFile" -> {
                     val data = data.asJsonObject
                     ide?.setFileOpen(data.get("filepath").asString)
                 }
+
                 "reloadWindow" -> {}
                 "openConfigJson" -> {
                     ide?.setFileOpen(getConfigJsonPath())
                 }
+
                 "readRangeInFile" -> {
                     val data = data.asJsonObject
-                    ide?.readRangeInFile(RangeInFile(
+                    ide?.readRangeInFile(
+                        RangeInFile(
                             data.get("filepath").asString,
-                            Range(Position(
+                            Range(
+                                Position(
                                     data.get("start").asInt,
                                     0
-                            ), Position(
+                                ), Position(
                                     data.get("end").asInt + 1,
                                     0
-                            )),
-                    ))
+                                )
+                            ),
+                        )
+                    )
                 }
+
                 "focusEditor" -> {}
 
                 // IDE //
@@ -213,10 +229,10 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         // Listen for the page load event
         browser.jbCefClient.addLoadHandler(object : CefLoadHandlerAdapter() {
             override fun onLoadingStateChange(
-                    browser: CefBrowser?,
-                    isLoading: Boolean,
-                    canGoBack: Boolean,
-                    canGoForward: Boolean
+                browser: CefBrowser?,
+                isLoading: Boolean,
+                canGoBack: Boolean,
+                canGoForward: Boolean
             ) {
                 if (!isLoading) {
                     // The page has finished loading
@@ -226,6 +242,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         }, browser.cefBrowser)
 
     }
+
     fun executeJavaScript(browser: CefBrowser?, myJSQueryOpenInBrowser: JBCefJSQuery) {
         // Execute JavaScript - you might want to handle potential exceptions here
         val script = """window.postIntellijMessage = function(messageType, data, messageId) {
@@ -237,16 +254,16 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
     }
 
     fun sendToWebview(
-            messageType: String,
-            data: Any?,
-            messageId: String = uuid()
+        messageType: String,
+        data: Any?,
+        messageId: String = uuid()
     ) {
         val jsonData = Gson().toJson(
-                mapOf(
-                        "messageId" to messageId,
-                        "messageType" to messageType,
-                        "data" to data
-                )
+            mapOf(
+                "messageId" to messageId,
+                "messageType" to messageType,
+                "data" to data
+            )
         )
         val jsCode = buildJavaScript(jsonData)
 
@@ -259,5 +276,35 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
 
     private fun buildJavaScript(jsonData: String): String {
         return """window.postMessage($jsonData, "*");"""
+    }
+
+    /**
+     * This function checks if the pluginSinceBuild is greater than or equal to 233, which corresponds
+     * to IntelliJ platform version 2023.3 and later.
+     *
+     * Setting `setOffScreenRendering` to `false` causes a number of issues such as a white screen flash when loading
+     * the GUI and the inability to set `cursor: pointer`. However, setting `setOffScreenRendering` to `true` on
+     * platform versions prior to 2023.3.4 causes larger issues such as an inability to type input for certain langauges,
+     * e.g. Korean.
+     *
+     * References:
+     * 1. https://youtrack.jetbrains.com/issue/IDEA-347828/JCEF-white-flash-when-tool-window-show#focus=Comments-27-9334070.0-0
+     *    This issue mentions that white screen flash problems were resolved in platformVersion 2023.3.4.
+     * 2. https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html#earlier-versions
+     *    This documentation shows mappings from platformVersion to branchNumber.
+     *
+     * We use the branchNumber (e.g., 233) instead of the full version number (e.g., 2023.3.4) because
+     * it's a simple integer without dot notation, making it easier to compare.
+     *
+     * @return Boolean True if off-screen rendering should be used, false otherwise.
+     */
+    private fun shouldRenderOffScreen(): Boolean {
+        val minBuildNumber = 233
+
+        val applicationInfo = ApplicationInfo.getInstance()
+        val currentBuildNumber = applicationInfo.build.baselineVersion
+
+        println("Current IntelliJ IDEA build number: $currentBuildNumber")
+        return currentBuildNumber >= minBuildNumber
     }
 }
