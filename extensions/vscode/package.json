@@ -456,6 +456,16 @@
       ],
       "editor/title": [
         {
+          "command": "continue.newSession",
+          "group": "navigation@1",
+          "when": "activeWebviewPanelId == continue.continueGUIView"
+        },
+        {
+          "command": "continue.viewHistory",
+          "group": "navigation@1",
+          "when": "activeWebviewPanelId == continue.continueGUIView"
+        },
+        {
           "command": "continue.toggleFullScreen",
           "group": "navigation@1",
           "when": "activeWebviewPanelId == continue.continueGUIView"
