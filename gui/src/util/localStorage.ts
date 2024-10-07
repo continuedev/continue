@@ -8,6 +8,10 @@ type LocalStorageTypes = {
   mainTextEntryCounter: number;
   ide: "vscode" | "jetbrains";
   ftc: number;
+  overrideWsHost: string;
+  inSplitMode: boolean;
+  currentProject: string;
+  serverToken: string;
   fontSize: number;
   lastSessionId: string | undefined;
   inputHistory: JSONContent[];

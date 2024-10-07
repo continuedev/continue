@@ -38,6 +38,15 @@ dependencies {
     implementation("io.ktor:ktor-server-cors:2.3.7"){
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
+    implementation("io.ktor:ktor-server-websockets:2.3.7"){
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+    implementation("io.ktor:ktor-server-webjars:2.3.7"){
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
+//    implementation("io.ktor:ktor-server-auth:2.3.7"){
+//        exclude(group = "org.slf4j", module = "slf4j-api")
+//    }
     implementation("com.posthog.java:posthog:1.+")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0")
 //    implementation("com.jetbrains.jsonSchema")
