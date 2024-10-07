@@ -331,6 +331,16 @@ export class VsCodeExtension {
     this.ide.onDidChangeActiveTextEditor((filepath) => {
       this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
+
+    vscode.workspace.onDidChangeConfiguration(async (event) => {
+      if (event.affectsConfiguration(EXTENSION_NAME)) {
+        const settings = this.ide.getIdeSettingsSync();
+        const webviewProtocol = await this.webviewProtocolPromise;
+        webviewProtocol.request("didChangeIdeSettings", {
+          settings,
+        });
+      }
+    });
   }
 
   static continueVirtualDocumentScheme = EXTENSION_NAME;

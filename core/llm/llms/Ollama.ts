@@ -15,6 +15,8 @@ class Ollama extends BaseLLM {
     model: "codellama-7b",
   };
 
+  private fimSupported: boolean = false;
+
   constructor(options: LLMOptions) {
     super(options);
 
@@ -70,6 +72,13 @@ class Ollama extends BaseLLM {
             }
           }
         }
+
+        /**
+         * There is no API to get the model's FIM capabilities, so we have to
+         * make an educated guess. If a ".Suffix" variable appears in the template
+         * it's a good indication the model supports FIM.
+         */
+        this.fimSupported = !!body?.template?.includes(".Suffix");
       })
       .catch((e) => {
         // console.warn("Error calling the Ollama /api/show endpoint: ", e);
@@ -251,7 +260,7 @@ class Ollama extends BaseLLM {
   }
 
   supportsFim(): boolean {
-    return true;
+    return this.fimSupported;
   }
 
   protected async *_streamFim(

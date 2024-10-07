@@ -77,7 +77,7 @@
         "continue.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "_(Requires window reload)_ Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -219,6 +219,12 @@
         "category": "Continue",
         "title": "View History",
         "icon": "$(history)",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.navigateTo",
+        "category": "Continue",
+        "title": "Navigate to a path",
         "group": "Continue"
       },
       {

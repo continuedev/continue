@@ -58,7 +58,7 @@ Reference all of the changes you've made to your current branch. This is useful 
 
 ### `@Terminal`
 
-Reference the contents of your IDE's terminal.
+Reference the last command you ran in your IDE's terminal and its output.
 
 ```json title="config.json"
 {

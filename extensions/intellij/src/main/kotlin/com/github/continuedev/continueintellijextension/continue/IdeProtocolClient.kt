@@ -16,6 +16,9 @@ import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
+import com.intellij.notification.NotificationDisplayType
+import com.intellij.notification.NotificationGroup
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
@@ -156,8 +159,8 @@ private fun readConfigJson(): Map<String, Any> {
     val configJsonPath = getConfigJsonPath()
     val reader = FileReader(configJsonPath)
     val config: Map<String, Any> = gson.fromJson(
-            reader,
-            object : TypeToken<Map<String, Any>>() {}.type
+        reader,
+        object : TypeToken<Map<String, Any>>() {}.type
     )
     reader.close()
     return config
@@ -169,9 +172,13 @@ class AsyncFileSaveListener : AsyncFileListener {
     constructor(ideProtocolClient: IdeProtocolClient) {
         this.ideProtocolClient = ideProtocolClient
     }
+
     override fun prepareChange(events: MutableList<out VFileEvent>): AsyncFileListener.ChangeApplier? {
         for (event in events) {
-            if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(".continue\\config.json") || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json")) {
+            if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(
+                    ".continue\\config.json"
+                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json")
+            ) {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
                         val config = readConfigJson()
@@ -185,14 +192,15 @@ class AsyncFileSaveListener : AsyncFileListener {
 
 }
 
-class IdeProtocolClient (
+class IdeProtocolClient(
     private val continuePluginService: ContinuePluginService,
     private val textSelectionStrategy: TextSelectionStrategy,
     private val coroutineScope: CoroutineScope,
     private val workspacePath: String?,
     private val project: Project
-): DumbAware {
+) : DumbAware {
     val diffManager = DiffManager(project)
+    private val CONTINUE_NOTIFICATION_GROUP = NotificationGroup("Continue", NotificationDisplayType.BALLOON, true)
     private val ripgrep: String
 
     init {
@@ -204,7 +212,8 @@ class IdeProtocolClient (
         })
 
         val myPluginId = "com.github.continuedev.continueintellijextension"
-        val pluginDescriptor = PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
+        val pluginDescriptor =
+            PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
 
         val pluginPath = pluginDescriptor.pluginPath
         val osName = System.getProperty("os.name").toLowerCase()
@@ -215,7 +224,8 @@ class IdeProtocolClient (
             else -> "linux"
         }
 
-        ripgrep = Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + (if (os == "win32") ".exe" else "")).toString()
+        ripgrep =
+            Paths.get(pluginPath.toString(), "ripgrep", "bin", "rg" + (if (os == "win32") ".exe" else "")).toString()
     }
 
     private fun send(messageType: String, data: Any?, messageId: String? = null) {
@@ -226,8 +236,8 @@ class IdeProtocolClient (
     fun handleMessage(text: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val parsedMessage: Map<String, Any> = Gson().fromJson(
-                    text,
-                    object : TypeToken<Map<String, Any>>() {}.type
+                text,
+                object : TypeToken<Map<String, Any>>() {}.type
             )
             val messageType = parsedMessage["messageType"] as? String
             if (messageType == null) {
@@ -241,16 +251,20 @@ class IdeProtocolClient (
                     "uniqueId" -> respond(
                         mapOf("uniqueId" to uniqueId())
                     )
+
                     "getIdeSettings" -> {
                         val settings =
-                                ServiceManager.getService(ContinueExtensionSettings::class.java)
-                        respond(mapOf(
-                            "remoteConfigServerUrl" to settings.continueState.remoteConfigServerUrl,
-                            "remoteConfigSyncPeriod" to settings.continueState.remoteConfigSyncPeriod,
-                            "userToken" to settings.continueState.userToken,
-                            "enableControlServerBeta" to settings.continueState.enableContinueTeamsBeta
-                        ))
+                            ServiceManager.getService(ContinueExtensionSettings::class.java)
+                        respond(
+                            mapOf(
+                                "remoteConfigServerUrl" to settings.continueState.remoteConfigServerUrl,
+                                "remoteConfigSyncPeriod" to settings.continueState.remoteConfigSyncPeriod,
+                                "userToken" to settings.continueState.userToken,
+                                "enableControlServerBeta" to settings.continueState.enableContinueTeamsBeta
+                            )
+                        )
                     }
+
                     "getControlPlaneSessionInfo" -> {
                         val silent = (data as? Map<String, Any>)?.get("silent") as? Boolean ?: false
 
@@ -263,12 +277,15 @@ class IdeProtocolClient (
                             respond(null)
                         }
                     }
+
                     "logoutOfControlPlane" -> {
                         val authService = service<ContinueAuthService>()
                         authService.signOut()
-                        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC).handleUpdatedSessionInfo(null)
+                        ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
+                            .handleUpdatedSessionInfo(null)
                         respond(null)
                     }
+
                     "getIdeInfo" -> {
                         val applicationInfo = ApplicationInfo.getInstance()
                         val ideName: String = applicationInfo.fullApplicationName
@@ -285,13 +302,15 @@ class IdeProtocolClient (
                         val plugin = PluginManagerCore.getPlugin(PluginId.getId(pluginId))
                         val extensionVersion = plugin?.version ?: "Unknown"
 
-                        respond(mapOf(
-                            "ideType" to "jetbrains",
-                            "name" to ideName,
-                            "version" to ideVersion,
-                            "remoteName" to remoteName,
-                            "extensionVersion" to extensionVersion
-                        ))
+                        respond(
+                            mapOf(
+                                "ideType" to "jetbrains",
+                                "name" to ideName,
+                                "version" to ideVersion,
+                                "remoteName" to remoteName,
+                                "extensionVersion" to extensionVersion
+                            )
+                        )
                     }
 
                     "getUniqueId" -> {
@@ -309,9 +328,9 @@ class IdeProtocolClient (
                     "showDiff" -> {
                         val data = data as Map<String, Any>
                         diffManager.showDiff(
-                                data["filepath"] as String,
-                                data["newContents"] as String,
-                                (data["stepIndex"] as Double).toInt()
+                            data["filepath"] as String,
+                            data["newContents"] as String,
+                            (data["stepIndex"] as Double).toInt()
                         )
                         respond(null)
                     }
@@ -335,7 +354,8 @@ class IdeProtocolClient (
                         val endLine = end["line"] as Int
                         val endCharacter = end["character"] as Int
 
-                        val firstLine = fullContents.split("\n")[startLine].slice(startCharacter until fullContents.split("\n")[startLine].length)
+                        val firstLine =
+                            fullContents.split("\n")[startLine].slice(startCharacter until fullContents.split("\n")[startLine].length)
                         val lastLine = fullContents.split("\n")[endLine].slice(0 until endCharacter)
                         val between = fullContents.split("\n").slice(startLine + 1 until endLine).joinToString("\n")
 
@@ -393,6 +413,7 @@ class IdeProtocolClient (
                         saveFile((data as Map<String, String>)["filepath"] ?: throw Exception("No filepath provided"))
                         respond(null)
                     }
+
                     "showVirtualFile" -> {
                         val data = data as Map<String, Any>
                         showVirtualFile(
@@ -403,15 +424,11 @@ class IdeProtocolClient (
                     }
 
                     "connected" -> {}
-                    "showMessage" -> {
-                        showMessage(data as String)
-                        respond(null)
-                    }
                     "setFileOpen" -> {
                         val data = data as Map<String, Any>
                         setFileOpen(
-                                data["filepath"] as String,
-                                data["open"] as Boolean
+                            data["filepath"] as String,
+                            data["open"] as Boolean
                         )
                         respond(null)
                     }
@@ -422,14 +439,14 @@ class IdeProtocolClient (
                         val startLine = (data["startLine"] as Double).toInt()
                         val endLine = (data["endLine"] as Double).toInt()
                         highlightCode(
-                                RangeInFile(
-                                        filepath,
-                                        Range(
-                                                Position(startLine, 0),
-                                                Position(endLine, 0)
-                                        )
-                                ),
-                                data["color"] as String?
+                            RangeInFile(
+                                filepath,
+                                Range(
+                                    Position(startLine, 0),
+                                    Position(endLine, 0)
+                                )
+                            ),
+                            data["color"] as String?
                         )
                         respond(null)
                     }
@@ -440,7 +457,7 @@ class IdeProtocolClient (
                         val json = gson.toJson(data["rangeInFile"])
                         val type = object : TypeToken<RangeInFile>() {}.type
                         val rangeInFile =
-                                gson.fromJson<RangeInFile>(json, type)
+                            gson.fromJson<RangeInFile>(json, type)
                         highlightCode(rangeInFile, data["color"] as String)
                         respond(null)
                     }
@@ -458,6 +475,7 @@ class IdeProtocolClient (
                         }.toMap()
                         respond(pathToLastModified)
                     }
+
                     "listDir" -> {
                         val data = data as Map<String, Any>
                         val dir = data["dir"] as String
@@ -467,6 +485,7 @@ class IdeProtocolClient (
                         } ?: emptyList()
                         respond(files)
                     }
+
                     "getGitRootPath" -> {
                         val data = data as Map<String, Any>
                         val directory = data["dir"] as String
@@ -480,12 +499,14 @@ class IdeProtocolClient (
 
                         respond(output)
                     }
+
                     "getBranch" -> {
                         // Get the current branch name
                         val dir = (data as Map<String, Any>)["dir"] as String
                         val branch = getBranch(dir)
                         respond(branch)
                     }
+
                     "getRepoName" -> {
                         // Get the current repository name
                         val dir = (data as Map<String, Any>)["dir"] as String
@@ -524,6 +545,7 @@ class IdeProtocolClient (
 
                         respond(output.toString());
                     }
+
                     "getProblems" -> {
                         // Get currently active editor
                         var editor: Editor? = null
@@ -579,46 +601,58 @@ class IdeProtocolClient (
                             respond(problems)
                         }
                     }
+
                     "getConfigJsUrl" -> {
                         // Calculate a data URL for the config.js file
                         val configJsPath = getConfigJsPath()
                         val configJsContents = File(configJsPath).readText()
-                        val configJsDataUrl = "data:text/javascript;base64,${Base64.getEncoder().encodeToString(configJsContents.toByteArray())}"
+                        val configJsDataUrl = "data:text/javascript;base64,${
+                            Base64.getEncoder().encodeToString(configJsContents.toByteArray())
+                        }"
                         respond(configJsDataUrl)
                     }
+
                     "writeFile" -> {
                         val msg = data as Map<String, String>;
                         val file = File(msg["path"])
                         file.writeText(msg["contents"] as String)
                         respond(null);
                     }
+
                     "fileExists" -> {
                         val msg = data as Map<String, String>;
                         val file = File(msg["filepath"])
                         respond(file.exists())
                     }
+
                     "getContinueDir" -> {
                         respond(getContinueGlobalPath())
                     }
+
                     "openFile" -> {
                         setFileOpen((data as Map<String, Any>)["path"] as String)
                         respond(null)
                     }
+
                     "runCommand" -> {
                         respond(null)
                         // Running commands not yet supported in JetBrains
                     }
-                    "errorPopup" -> {
-                        val data = data as Map<String, Any>
-                        val message = data["message"] as String
-                        showMessage(message)
+
+                    "showToast" -> {
+                        val data = data as ArrayList<String>
+                        val toast_type = data[0]
+                        val message = data[1]
+                        showToast(toast_type, message)
                         respond(null)
                     }
 
                     "listFolders" -> {
                         val workspacePath = workspacePath ?: return@launch
                         val workspaceDir = File(workspacePath)
-                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath } ?: emptyList()
+                        val folders =
+                            workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath }
+                                ?: emptyList()
                         respond(folders)
                     }
 
@@ -632,16 +666,19 @@ class IdeProtocolClient (
                         val openFiles = visibleFiles()
                         respond(openFiles)
                     }
+
                     "getCurrentFile" -> {
                         val currentFile = currentFile()
                         respond(currentFile)
                     }
+
                     "getPinnedFiles" -> {
                         ApplicationManager.getApplication().invokeLater {
                             val pinnedFiles = pinnedFiles()
                             respond(pinnedFiles)
                         }
                     }
+
                     "insertAtCursor" -> {
                         val msg = data as Map<String, String>;
                         val text = msg["text"] as String
@@ -658,8 +695,10 @@ class IdeProtocolClient (
                             }
                         }
                     }
+
                     "applyToFile" -> {
                     }
+
                     "getGitHubAuthToken" -> {
                         val continueSettingsService = service<ContinueExtensionSettings>()
                         val ghAuthToken = continueSettingsService.continueState.ghAuthToken;
@@ -672,26 +711,30 @@ class IdeProtocolClient (
                             respond(ghAuthToken)
                         }
                     }
+
                     "setGitHubAuthToken" -> {
                         val continueSettingsService = service<ContinueExtensionSettings>()
                         val data = data as Map<String, String>
                         continueSettingsService.continueState.ghAuthToken = data["token"]
                         respond(null)
                     }
+
                     "openUrl" -> {
                         val url = data as String
                         java.awt.Desktop.getDesktop().browse(java.net.URI(url))
                         respond(null)
                     }
+
                     "pathSep" -> {
                         respond(File.separator)
                     }
+
                     else -> {
                         println("Unknown messageType: $messageType")
                     }
                 }
             } catch (error: Exception) {
-                showMessage("Error handling message of type $messageType: $error")
+                showToast("error", "Error handling message of type $messageType: $error")
             }
         }
     }
@@ -705,8 +748,8 @@ class IdeProtocolClient (
         val configJsonPath = getConfigJsonPath()
         val reader = FileReader(configJsonPath)
         val config: MutableMap<String, Any> = gson.fromJson(
-                reader,
-                object : TypeToken<Map<String, Any>>() {}.type
+            reader,
+            object : TypeToken<Map<String, Any>>() {}.type
         )
         reader.close()
 
@@ -827,7 +870,8 @@ class IdeProtocolClient (
         val result = ApplicationManager.getApplication().runReadAction<RangeInFileWithContents?> {
             // Get the editor instance for the currently active editor window
             val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@runReadAction null
-            val virtualFile = editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return@runReadAction null
+            val virtualFile =
+                editor.let { FileDocumentManager.getInstance().getFile(it.document) } ?: return@runReadAction null
 
             // Get the selection range and content
             val selectionModel: SelectionModel = editor.selectionModel
@@ -847,10 +891,12 @@ class IdeProtocolClient (
             val startChar = startOffset - document.getLineStartOffset(startLine)
             val endChar = endOffset - document.getLineStartOffset(endLine)
 
-            return@runReadAction RangeInFileWithContents(virtualFile.path, Range(
+            return@runReadAction RangeInFileWithContents(
+                virtualFile.path, Range(
                     Position(startLine, startChar),
                     Position(endLine, endChar)
-            ), selectedText)
+                ), selectedText
+            )
         }
 
         return result
@@ -865,8 +911,8 @@ class IdeProtocolClient (
 //        ))
 
         continuePluginService.sendToWebview(
-"highlightedCode",
-           mapOf(
+            "highlightedCode",
+            mapOf(
                 "rangeInFileWithContents" to rif,
                 "edit" to edit
             )
@@ -886,29 +932,30 @@ class IdeProtocolClient (
     }
 
     private val DEFAULT_IGNORE_DIRS = listOf(
-            ".git",
-            ".vscode",
-            ".idea",
-            ".vs",
-            "venv",
-            ".venv",
-            "env",
-            ".env",
-            "node_modules",
-            "dist",
-            "build",
-            "target",
-            "out",
-            "bin",
-            ".pytest_cache",
-            ".vscode-test",
-            ".continue",
-            "__pycache__",
-            "site-packages",
-            ".gradle",
-            ".cache",
-            "gems",
+        ".git",
+        ".vscode",
+        ".idea",
+        ".vs",
+        "venv",
+        ".venv",
+        "env",
+        ".env",
+        "node_modules",
+        "dist",
+        "build",
+        "target",
+        "out",
+        "bin",
+        ".pytest_cache",
+        ".vscode-test",
+        ".continue",
+        "__pycache__",
+        "site-packages",
+        ".gradle",
+        ".cache",
+        "gems",
     )
+
     private fun shouldIgnoreDirectory(name: String): Boolean {
         val components = File(name).path.split(File.separator)
         return DEFAULT_IGNORE_DIRS.any { dir ->
@@ -985,21 +1032,16 @@ class IdeProtocolClient (
         return virtualFile?.path
     }
 
-suspend fun showMessage(msg: String) {
-    withContext(Dispatchers.Main) {
-        val statusBar = WindowManager.getInstance().getStatusBar(project)
+    fun showToast(type: String, content: String) {
+        val notificationType = when (type.uppercase()) {
+            "ERROR" -> NotificationType.ERROR
+            "WARNING" -> NotificationType.WARNING
+            else -> NotificationType.INFORMATION
+        }
 
-        JBPopupFactory.getInstance()
-            .createHtmlTextBalloonBuilder(msg, MessageType.INFO, null)
-            .setFadeoutTime(10000)
-            .setHideOnAction(false)
-            .createBalloon()
-            .show(
-                RelativePoint.getSouthEastOf(statusBar.component),
-                Balloon.Position.atRight
-            )
+        CONTINUE_NOTIFICATION_GROUP.createNotification(content, notificationType)
+            .notify(project);
     }
-}
 
     fun highlightCode(rangeInFile: RangeInFile, color: String?) {
         val file =
