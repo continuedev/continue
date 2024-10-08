@@ -10,12 +10,15 @@ module.exports = {
   theme: {
     // Note that these breakpoints are primarily optimized for the input toolbar
     screens: {
-      xxs: "170px", // Smallest width for Primary Sidebar in VS Code
+      "2xs": "170px", // Smallest width for Primary Sidebar in VS Code
       xs: "250px", // Avg default sidebar width in VS Code
       sm: "330px",
       md: "460px",
       lg: "590px",
       xl: "720px",
+      "2xl": "860px",
+      "3xl": "1000px",
+      "4xl": "1140px",
     },
     extend: {
       animation: {

@@ -1,8 +1,4 @@
-import {
-  ArrowLeftIcon,
-  PencilSquareIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionInfo } from "core";
 import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
@@ -12,16 +8,12 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   Input,
-  lightGray,
-  vscBackground,
   vscBadgeBackground,
   vscForeground,
   vscInputBackground,
-} from "../components";
-import ButtonWithTooltip from "../components/ButtonWithTooltip";
+} from ".";
+import ButtonWithTooltip from "./ButtonWithTooltip";
 import useHistory from "../hooks/useHistory";
-import { useNavigationListener } from "../hooks/useNavigationListener";
-import { getFontSize } from "../util";
 
 const SearchBarContainer = styled.div`
   display: flex;
@@ -71,7 +63,7 @@ const SectionHeader = styled.tr`
   user-select: none;
   padding: 4px;
   background-color: ${vscInputBackground};
-  width: 100%;
+  width: calc(100% - 8px);
   font-weight: bold;
   text-align: center;
   align-items: center;
@@ -79,15 +71,6 @@ const SectionHeader = styled.tr`
   margin: 0;
   position: sticky;
   height: 1.5em;
-`;
-
-const TdDiv = styled.div`
-  cursor: pointer;
-  flex-grow: 1;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
 `;
 
 function TableRow({
@@ -132,17 +115,18 @@ function TableRow({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="flex justify-between items-center w-full">
-        <TdDiv
-          onClick={async () => {
-            // Save current session
-            saveSession();
-            await loadSession(session.sessionId);
-            navigate("/");
-          }}
-        >
-          <div className="text-md w-100">
-            {editing ? (
+      <div
+        className="flex max-w-full box-border px-4 py-2"
+        onClick={async () => {
+          // Save current session
+          saveSession();
+          await loadSession(session.sessionId);
+          navigate("/");
+        }}
+      >
+        <div className="cursor-pointer flex-1">
+          {editing ? (
+            <div className="text-md">
               <Input
                 type="text"
                 style={{ width: "100%" }}
@@ -152,15 +136,17 @@ function TableRow({
                 onKeyUp={(e) => handleKeyUp(e)}
                 onBlur={() => setEditing(false)}
               />
-            ) : (
-              JSON.stringify(session.title).slice(1, -1)
-            )}
-          </div>
+            </div>
+          ) : (
+            <span className="truncate max-w-60 block">
+              {JSON.stringify(session.title).slice(1, -1)}
+            </span>
+          )}
 
-          <div style={{ color: "#9ca3af" }}>
-            {lastPartOfPath(session.workspaceDirectory || "")}
+          <div className="flex" style={{ color: "#9ca3af" }}>
+            <span>{lastPartOfPath(session.workspaceDirectory || "")}</span>
             {!hovered && (
-              <span className="inline-block float-right">
+              <span className="inline-block ml-auto">
                 {date.toLocaleString("en-US", {
                   year: "2-digit",
                   month: "2-digit",
@@ -172,31 +158,29 @@ function TableRow({
               </span>
             )}
           </div>
-        </TdDiv>
+        </div>
 
         {hovered && (
-          <ButtonWithTooltip
-            className="mr-2"
-            text="Edit"
-            onClick={async () => {
-              setEditing(true);
-            }}
-          >
-            <PencilSquareIcon width="1.3em" height="1.3em" />
-          </ButtonWithTooltip>
-        )}
-
-        {hovered && (
-          <ButtonWithTooltip
-            className="mr-2"
-            text="Delete"
-            onClick={async () => {
-              deleteSession(session.sessionId);
-              onDelete(session.sessionId);
-            }}
-          >
-            <TrashIcon width="1.3em" height="1.3em" />
-          </ButtonWithTooltip>
+          <div className="ml-auto pl-2 gap-x-2 flex">
+            <ButtonWithTooltip
+              text="Edit"
+              onClick={async (e) => {
+                e.stopPropagation();
+                setEditing(true);
+              }}
+            >
+              <PencilSquareIcon width="1.3em" height="1.3em" />
+            </ButtonWithTooltip>
+            <ButtonWithTooltip
+              text="Delete"
+              onClick={async () => {
+                deleteSession(session.sessionId);
+                onDelete(session.sessionId);
+              }}
+            >
+              <TrashIcon width="1.3em" height="1.3em" />
+            </ButtonWithTooltip>
+          </div>
         )}
       </div>
     </td>
@@ -208,10 +192,7 @@ function lastPartOfPath(path: string): string {
   return path.split(sep).pop() || path;
 }
 
-function History() {
-  useNavigationListener();
-  const navigate = useNavigate();
-
+export function History() {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
@@ -226,9 +207,6 @@ function History() {
   };
 
   const searchInputRef = React.useRef<HTMLInputElement>(null);
-
-  const stickyHistoryHeaderRef = React.useRef<HTMLDivElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
 
   const dispatch = useDispatch();
   const { getHistory } = useHistory(dispatch);
@@ -297,138 +275,90 @@ function History() {
     );
   }, [sessions, searchTerm, minisearch]);
 
-  useEffect(() => {
-    setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
-  }, [stickyHistoryHeaderRef.current]);
-
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
   const lastWeek = new Date(Date.now() - 1000 * 60 * 60 * 24 * 7);
   const lastMonth = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30);
   const earlier = new Date(0);
 
   return (
-    <div className="overflow-y-scroll" style={{ fontSize: getFontSize() }}>
-      <div
-        ref={stickyHistoryHeaderRef}
-        className="sticky top-0"
-        style={{ backgroundColor: vscBackground }}
-      >
-        <div
-          className="items-center flex m-0 p-0"
+    <div>
+      <SearchBarContainer className="space-x-2">
+        <SearchBar
+          className="flex-1 w-full"
+          ref={searchInputRef}
+          placeholder="Search past sessions"
+          type="text"
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <span
+          className="block text-center px-2 py-1.5 rounded-md w-12 mx-1 my-2 select-none cursor-pointer"
           style={{
-            borderBottom: `0.5px solid ${lightGray}`,
+            fontSize: "11px",
+            backgroundColor:
+              searchTerm !== "" ? vscInputBackground : vscBadgeBackground,
+          }}
+          onClick={() => {
+            if (searchInputRef.current.value === "") {
+              searchInputRef.current.value = "*";
+              setSearchTerm("*");
+            } else {
+              searchInputRef.current.value = "";
+              setSearchTerm("");
+            }
           }}
         >
-          <ArrowLeftIcon
-            width="1.2em"
-            height="1.2em"
-            onClick={() => navigate("/")}
-            className="inline-block ml-4 cursor-pointer"
-          />
-          <h3 className="text-lg font-bold m-2 inline-block">History</h3>
+          {searchTerm === "" ? "Show All" : "Clear"}
+        </span>
+      </SearchBarContainer>
+
+      {filteredAndSortedSessions.length === 0 && (
+        <div className="text-center m-4">
+          No past sessions found. To start a new session, either click the "+"
+          button or use the keyboard shortcut: <b>Option + Command + N</b>
         </div>
-        {/* {workspacePaths && workspacePaths.length > 0 && (
-          <CheckDiv
-            checked={filteringByWorkspace}
-            onClick={() => setFilteringByWorkspace((prev) => !prev)}
-            title={`Show only sessions from ${lastPartOfPath(
-              workspacePaths[workspacePaths.length - 1]
-            )}/`}
-          />
-        )} */}
-      </div>
+      )}
 
-      <div>
-        <SearchBarContainer className="space-x-2">
-          <SearchBar
-            className="flex-1 w-full"
-            ref={searchInputRef}
-            placeholder="Search past sessions"
-            type="text"
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <span
-            className="block text-center px-2 py-1.5 rounded-md w-12 mx-1 my-2 select-none cursor-pointer"
-            style={{
-              fontSize: "11px",
-              backgroundColor:
-                searchTerm !== "" ? vscInputBackground : vscBadgeBackground,
-            }}
-            onClick={() => {
-              if (searchInputRef.current.value === "") {
-                searchInputRef.current.value = "*";
-                setSearchTerm("*");
-              } else {
-                searchInputRef.current.value = "";
-                setSearchTerm("");
-              }
-            }}
-          >
-            {searchTerm === "" ? "Show All" : "Clear"}
-          </span>
-        </SearchBarContainer>
-
-        {filteredAndSortedSessions.length === 0 && (
-          <div className="text-center m-4">
-            No past sessions found. To start a new session, either click the "+"
-            button or use the keyboard shortcut: <b>Option + Command + N</b>
-          </div>
-        )}
-
-        <table className="w-full border-spacing-0 border-collapse">
-          <tbody>
-            {filteredAndSortedSessions.map((session, index) => {
-              const prevDate =
-                index > 0
-                  ? parseDate(filteredAndSortedSessions[index - 1].dateCreated)
-                  : earlier;
-              const date = parseDate(session.dateCreated);
-              return (
-                <Fragment key={index}>
-                  {index === 0 && date > yesterday && (
-                    <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
-                      Today
-                    </SectionHeader>
+      <table className="w-full border-spacing-0 border-collapse">
+        <tbody>
+          {filteredAndSortedSessions.map((session, index) => {
+            const prevDate =
+              index > 0
+                ? parseDate(filteredAndSortedSessions[index - 1].dateCreated)
+                : earlier;
+            const date = parseDate(session.dateCreated);
+            return (
+              <Fragment key={index}>
+                {index === 0 && date > yesterday && (
+                  <SectionHeader>Today</SectionHeader>
+                )}
+                {date < yesterday &&
+                  date > lastWeek &&
+                  prevDate > yesterday && (
+                    <SectionHeader>This Week</SectionHeader>
                   )}
-                  {date < yesterday &&
-                    date > lastWeek &&
-                    prevDate > yesterday && (
-                      <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
-                        This Week
-                      </SectionHeader>
-                    )}
-                  {date < lastWeek &&
-                    date > lastMonth &&
-                    prevDate > lastWeek && (
-                      <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
-                        This Month
-                      </SectionHeader>
-                    )}
-                  {date < lastMonth && prevDate > lastMonth && (
-                    <SectionHeader style={{ top: `${headerHeight - 1}px` }}>
-                      Older
-                    </SectionHeader>
-                  )}
+                {date < lastWeek && date > lastMonth && prevDate > lastWeek && (
+                  <SectionHeader>This Month</SectionHeader>
+                )}
+                {date < lastMonth && prevDate > lastMonth && (
+                  <SectionHeader>Older</SectionHeader>
+                )}
 
-                  <Tr key={index}>
-                    <TableRow
-                      session={session}
-                      date={date}
-                      onDelete={() => deleteSessionInUI(session.sessionId)}
-                    ></TableRow>
-                  </Tr>
-                </Fragment>
-              );
-            })}
-          </tbody>
-        </table>
-        <br />
-        <i className="text-sm ml-4">
-          All session data is saved in ~/.continue/sessions
-        </i>
-      </div>
+                <Tr key={index}>
+                  <TableRow
+                    session={session}
+                    date={date}
+                    onDelete={() => deleteSessionInUI(session.sessionId)}
+                  ></TableRow>
+                </Tr>
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+      <br />
+      <i className="text-sm ml-4">
+        All session data is saved in ~/.continue/sessions
+      </i>
     </div>
   );
 }
-
-export default History;
