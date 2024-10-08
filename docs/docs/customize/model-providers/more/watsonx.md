@@ -49,7 +49,7 @@ Add the following configuration to your `config.json` file to use the watsonx pr
       "watsonxUrl": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
       "watsonxProjectId": "PROJECT_ID",
       "watsonxCreds": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
-      "watsonxApiVersion": "2023-05-29",
+      "watsonxApiVersion": "2024-03-14",
       "provider": "watsonx"
     }
   ]
@@ -71,11 +71,70 @@ Add the full watsonx URL to `watsonxFullUrl` if you are using a custom endpoint.
       "watsonxUrl": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
       "watsonxProjectId": "PROJECT_ID",
       "watsonxCreds": "API_KEY",
-      "watsonxApiVersion": "2023-05-29",
+      "watsonxApiVersion": "2024-03-14",
       "provider": "watsonx",
       "watsonxFullUrl": "https://us-south.ml.cloud.ibm.com/m1/v1/text/generation"
     }
   ]
+}
+```
+
+You can also configure generation parameters, such as temperature, topP and topK:
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "model": "ibm/granite-20b-code-instruct",
+      "title": "Granite Code 20b",
+      "watsonxUrl": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+      "watsonxProjectId": "PROJECT_ID",
+      "watsonxCreds": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+      "watsonxApiVersion": "2024-03-14",
+      "provider": "watsonx",
+      "contextLength": 8000,
+      "completionOptions": {
+        "temperature": 0.3,
+        "topP": 0.28,
+        "topK": 20,
+        "maxTokens": 2000
+      }
+    }
+  ]
+}
+```
+
+## Tab Auto Complete Model
+
+Granite models are recommended for tab auto complete. The configuration is similar to that of the chat models:
+```json title="~/.continue/config.json"
+{
+    "tabAutocompleteModel": {
+      "model": "ibm/granite-8b-code-instruct",
+      "title": "granite 8b",
+      "watsonxUrl": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+      "watsonxProjectId": "PROJECT_ID",
+      "watsonxCreds": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+      "watsonxApiVersion": "2024-03-14",
+      "provider": "watsonx",
+      "contextLength": 4000
+    }
+}
+```
+
+## Embeddings Model
+
+To view the list of available embeddings models, visit [this page](https://dataplatform.cloud.ibm.com/docs/content/wsj/analyze-data/fm-models-embed.html?context=wx&pos=2#ibm-provided).
+```json title="~/.continue/config.json
+{
+  "embeddingsProvider": {
+    "provider": "watsonx",
+    "model": "ibm/slate-30m-english-rtrvr-v2",
+    "watsonxUrl": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
+    "watsonxProjectId": "PROJECT_ID",
+    "watsonxCreds": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
+    "watsonxApiVersion": "2024-03-14"
+  }
 }
 ```
 
