@@ -81,7 +81,8 @@ class ContinueAuthService {
                 setControlPlaneSessionInfo(sessionInfo)
 
                 // Notify listeners
-                ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC).handleUpdatedSessionInfo(sessionInfo)
+                ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
+                    .handleUpdatedSessionInfo(sessionInfo)
 
             } catch (e: Exception) {
                 // Handle any exceptions

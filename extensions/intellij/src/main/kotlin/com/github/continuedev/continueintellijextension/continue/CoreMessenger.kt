@@ -98,7 +98,7 @@ class CoreMessenger(
             val continuePluginService = project.service<ContinuePluginService>()
             continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }
-
+        
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)

@@ -17,11 +17,11 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.PsiElement
 
-data class PendingCompletion (
-        val editor: Editor,
-        var offset: Int,
-        val completionId: String,
-        var text: String?
+data class PendingCompletion(
+    val editor: Editor,
+    var offset: Int,
+    val completionId: String,
+    var text: String?
 )
 
 
@@ -50,7 +50,7 @@ class AutocompleteService(private val project: Project) {
 
     fun triggerCompletion(editor: Editor) {
         val settings =
-                ServiceManager.getService(ContinueExtensionSettings::class.java)
+            ServiceManager.getService(ContinueExtensionSettings::class.java)
         if (!settings.continueState.enableTabAutocomplete) {
             return
         }
@@ -72,8 +72,8 @@ class AutocompleteService(private val project: Project) {
             "completionId" to completionId,
             "filepath" to virtualFile?.path,
             "pos" to mapOf(
-                    "line" to editor.caretModel.primaryCaret.logicalPosition.line,
-                    "character" to column
+                "line" to editor.caretModel.primaryCaret.logicalPosition.line,
+                "character" to column
             ),
             "recentlyEditedFiles" to emptyList<String>(),
             "recentlyEditedRanges" to emptyList<String>(),
@@ -84,23 +84,28 @@ class AutocompleteService(private val project: Project) {
         val lineEnd = editor.document.getLineEndOffset(editor.caretModel.primaryCaret.logicalPosition.line)
         val lineLength = lineEnd - lineStart
 
-        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", input, null, ({ response ->
-            widget?.setLoading(false)
+        project.service<ContinuePluginService>().coreMessenger?.request(
+            "autocomplete/complete",
+            input,
+            null,
+            ({ response ->
+                widget?.setLoading(false)
 
-            val completions = response as List<*>
-            if (completions.isNotEmpty()) {
-                val completion = completions[0].toString()
-                val finalTextToInsert = deduplicateCompletion(editor, offset, completion)
+                val completions = response as List<*>
+                if (completions.isNotEmpty()) {
+                    val completion = completions[0].toString()
+                    val finalTextToInsert = deduplicateCompletion(editor, offset, completion)
 
-                if (shouldRenderCompletion(finalTextToInsert, column, lineLength, editor)) {
-                    renderCompletion(editor, offset, finalTextToInsert)
-                    pendingCompletion = pendingCompletion?.copy(text = finalTextToInsert)
+                    if (shouldRenderCompletion(finalTextToInsert, column, lineLength, editor)) {
+                        renderCompletion(editor, offset, finalTextToInsert)
+                        pendingCompletion = pendingCompletion?.copy(text = finalTextToInsert)
 
-                    // Hide auto-popup
+                        // Hide auto-popup
 //                    AutoPopupController.getInstance(project).cancelAllRequests()
+                    }
                 }
-            }
-        }))
+            })
+        )
     }
 
     private fun shouldRenderCompletion(completion: String, column: Int, lineLength: Int, editor: Editor): Boolean {
@@ -155,9 +160,17 @@ class AutocompleteService(private val project: Project) {
                 properties.disableSoftWrapping(true)
 
                 if (completion.lines().size > 1) {
-                    editor.inlayModel.addBlockElement(offset, properties, ContinueMultilineCustomElementRenderer(editor, completion))
+                    editor.inlayModel.addBlockElement(
+                        offset,
+                        properties,
+                        ContinueMultilineCustomElementRenderer(editor, completion)
+                    )
                 } else {
-                    editor.inlayModel.addInlineElement(offset, properties, ContinueCustomElementRenderer(editor, completion))
+                    editor.inlayModel.addInlineElement(
+                        offset,
+                        properties,
+                        ContinueCustomElementRenderer(editor, completion)
+                    )
                 }
 
 //                val attributes = TextAttributes().apply {
@@ -180,38 +193,43 @@ class AutocompleteService(private val project: Project) {
         editor.caretModel.moveToOffset(offset + text.length)
 
 
-        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/accept", completion.completionId, null, ({}))
+        project.service<ContinuePluginService>().coreMessenger?.request(
+            "autocomplete/accept",
+            completion.completionId,
+            null,
+            ({})
+        )
         invokeLater {
             clearCompletions(editor)
         }
     }
 
     private fun splitKeepingDelimiters(input: String, delimiterPattern: String = "\\s+"): List<String> {
-    val initialSplit = input.split("(?<=$delimiterPattern)|(?=$delimiterPattern)".toRegex())
-                .filter { it.isNotEmpty() }
+        val initialSplit = input.split("(?<=$delimiterPattern)|(?=$delimiterPattern)".toRegex())
+            .filter { it.isNotEmpty() }
 
-    val result = mutableListOf<String>()
-    var currentDelimiter = ""
+        val result = mutableListOf<String>()
+        var currentDelimiter = ""
 
-    for (part in initialSplit) {
-        if (part.matches(delimiterPattern.toRegex())) {
-            currentDelimiter += part
-        } else {
-            if (currentDelimiter.isNotEmpty()) {
-                result.add(currentDelimiter)
-                currentDelimiter = ""
-    }
-            result.add(part)
+        for (part in initialSplit) {
+            if (part.matches(delimiterPattern.toRegex())) {
+                currentDelimiter += part
+            } else {
+                if (currentDelimiter.isNotEmpty()) {
+                    result.add(currentDelimiter)
+                    currentDelimiter = ""
+                }
+                result.add(part)
+            }
         }
+
+        if (currentDelimiter.isNotEmpty()) {
+            result.add(currentDelimiter)
+
+        }
+
+        return result
     }
-
-    if (currentDelimiter.isNotEmpty()) {
-        result.add(currentDelimiter)
-
-    }
-
-    return result
-}
 
     fun partialAccept() {
         val completion = pendingCompletion ?: return
@@ -238,7 +256,7 @@ class AutocompleteService(private val project: Project) {
     private fun cancelCompletion(completion: PendingCompletion) {
         // Send cancellation message to core
         widget?.setLoading(false)
-        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/cancel", null,null, ({}))
+        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/cancel", null, null, ({}))
     }
 
     fun clearCompletions(editor: Editor) {

@@ -130,7 +130,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
         Thread.sleep(20)
     }
-
+    
     // Get highlighted range
     val selectionModel = editor.selectionModel
     val startLineNumber = editor.document.getLineNumber(selectionModel.selectionStart)
@@ -183,16 +183,17 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret)
     }
 
-    val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
-        diffStreamService.reject(editor)
-        selectionModel.setSelection(start, end)
-    }, {
-        diffStreamService.accept(editor)
-        inlayRef.get().dispose()
-    }, {
-        diffStreamService.reject(editor)
-        inlayRef.get().dispose()
-    })
+    val panel =
+        makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, { onEnter() }, {
+            diffStreamService.reject(editor)
+            selectionModel.setSelection(start, end)
+        }, {
+            diffStreamService.accept(editor)
+            inlayRef.get().dispose()
+        }, {
+            diffStreamService.reject(editor)
+            inlayRef.get().dispose()
+        })
     val inlay = manager.insert(startLineNum, panel, true)
 
     panel.revalidate()

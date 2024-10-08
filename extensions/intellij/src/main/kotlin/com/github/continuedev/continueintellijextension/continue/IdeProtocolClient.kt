@@ -559,7 +559,8 @@ class IdeProtocolClient(
                         val project = editor!!.project ?: return@launch
                         ApplicationManager.getApplication().invokeLater {
                             val document = editor!!.document
-                            val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@invokeLater
+                            val psiFile =
+                                PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@invokeLater
                             val problems = ArrayList<Map<String, Any?>>()
                             val highlightInfos =
                                 DocumentMarkupModel.forDocument(document, project, true).allHighlighters.mapNotNull(

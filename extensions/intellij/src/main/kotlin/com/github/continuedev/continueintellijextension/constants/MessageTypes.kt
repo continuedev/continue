@@ -7,8 +7,8 @@ class MessageTypes {
             "llm/streamChat",
             "command/run",
             "streamDiffLines"
-            )
-
+        )
+        
         val ideMessageTypes = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",

@@ -54,7 +54,7 @@ class DiffStreamHandler(
         key.let { editor.colorsScheme.setAttributes(it, attributes) }
         key
     }
-
+    
     private val unfinishedKey = run {
         val attributes = TextAttributes().apply {
             backgroundColor = JBColor(0x20888888.toInt(), 0x20888888.toInt())
