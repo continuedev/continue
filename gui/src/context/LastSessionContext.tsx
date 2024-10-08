@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState } from "react";
 
 export const LastSessionContext = createContext<{
   lastSessionId: string | undefined;
@@ -12,13 +12,6 @@ export const LastSessionProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const [lastSessionId, setLastSessionId] = useState<string | undefined>();
-
-  useEffect(() => {
-    const storedId = localStorage.getItem("lastSessionId");
-    if (storedId) {
-      setLastSessionId(storedId);
-    }
-  }, []);
 
   return (
     <LastSessionContext.Provider value={{ lastSessionId, setLastSessionId }}>
