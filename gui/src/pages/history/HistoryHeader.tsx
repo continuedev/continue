@@ -2,13 +2,17 @@ import { useNavigate } from "react-router-dom";
 import { lightGray, vscBackground } from "../../components";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { getFontSize } from "../../util";
 
 export const HistoryHeader = () => {
   useNavigationListener();
   const navigate = useNavigate();
 
   return (
-    <div className="sticky top-0" style={{ backgroundColor: vscBackground }}>
+    <div
+      className="sticky top-0"
+      style={{ backgroundColor: vscBackground, fontSize: getFontSize() }}
+    >
       <div
         className="items-center flex m-0 p-0"
         style={{

@@ -14,6 +14,7 @@ import {
 } from ".";
 import ButtonWithTooltip from "./ButtonWithTooltip";
 import useHistory from "../hooks/useHistory";
+import { getFontSize } from "../util";
 
 const SearchBarContainer = styled.div`
   display: flex;
@@ -281,7 +282,7 @@ export function History() {
   const earlier = new Date(0);
 
   return (
-    <div>
+    <div style={{ fontSize: getFontSize() }}>
       <SearchBarContainer className="space-x-2">
         <SearchBar
           className="flex-1 w-full"
