@@ -167,7 +167,7 @@
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context",
+        "title": "Add Highlighted Code to Context and Clear Chat",
         "group": "Continue"
       },
       {
