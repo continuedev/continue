@@ -115,7 +115,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
         return
     }
 
-    val manager = EditorComponentInlaysManager.from(editor)
+    val manager = EditorComponentInlaysManager.from(editor, true)
 
     // Get list of model titles
     val continuePluginService = project.service<ContinuePluginService>()
@@ -178,22 +178,23 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val comboBoxRef = Ref<JComboBox<String>>()
 
     fun onEnter() {
+        val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(" ▾")
         customPanelRef.get().enter()
-        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, comboBoxRef.get().selectedItem as String)
+        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret)
     }
 
-    val panel =
-        makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, { onEnter() }, {
-            diffStreamService.reject(editor)
-            selectionModel.setSelection(start, end)
-        }, {
-            diffStreamService.accept(editor)
-            inlayRef.get().dispose()
-        }, {
-            diffStreamService.reject(editor)
-            inlayRef.get().dispose()
-        })
-    val inlay = manager.insertAfter(lineNumber, panel)
+    val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
+        diffStreamService.reject(editor)
+        selectionModel.setSelection(start, end)
+    }, {
+        diffStreamService.accept(editor)
+        inlayRef.get().dispose()
+    }, {
+        diffStreamService.reject(editor)
+        inlayRef.get().dispose()
+    })
+    val inlay = manager.insert(startLineNum, panel, true)
+
     panel.revalidate()
     inlayRef.set(inlay)
     val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
@@ -201,28 +202,41 @@ fun openInlineEdit(project: Project?, editor: Editor) {
 
     // Add key listener to text area
     textArea.addKeyListener(object : KeyAdapter() {
-        override fun keyPressed(e: KeyEvent) {
-            if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                diffStreamService.reject(editor)
-
-                // Re-highlight the selected text
-                selectionModel.setSelection(start, end)
-            } else if (e.keyCode == KeyEvent.VK_ENTER) {
-                if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
-                    textArea.document.insertString(textArea.caretPosition, "\n", null)
-                } else if (e.modifiersEx == 0) {
-                    onEnter()
-                    e.consume()
-                }
-            }
-        }
-    })
-
-    // Listen for key typed events after diff streaming is finished
-    textArea.addKeyListener(object : KeyAdapter() {
         override fun keyTyped(e: KeyEvent) {
             if (customPanelRef.get().isFinished) {
                 customPanelRef.get().setup()
+            }
+        }
+
+
+        override fun keyPressed(e: KeyEvent) {
+            when (e.keyCode) {
+                KeyEvent.VK_ESCAPE -> {
+                    diffStreamService.reject(editor)
+                    selectionModel.setSelection(start, end)
+                }
+
+                KeyEvent.VK_ENTER -> {
+                    when (e.modifiersEx) {
+                        KeyEvent.SHIFT_DOWN_MASK -> {
+                            textArea.document.insertString(textArea.caretPosition, "\n", null)
+                        }
+
+                        0 -> {
+                            onEnter()
+                            e.consume()
+                        }
+                    }
+                }
+            }
+        }
+
+        // We need this because backspace/delete is not registering properly on keyPressed for an unknown reason
+        override fun keyReleased(e: KeyEvent) {
+            if (e.keyCode == KeyEvent.VK_BACK_SPACE || e.keyCode == KeyEvent.VK_DELETE) {
+                if (customPanelRef.get().isFinished) {
+                    customPanelRef.get().setup()
+                }
             }
         }
     })
@@ -304,20 +318,27 @@ class CustomPanel(
     }
 
     private fun createCloseButton(): JComponent {
-        return CustomButton("X") { onCancel() }.apply {
+        return JLabel("X").apply {
             foreground = Color(128, 128, 128, 128)
             background = Color(0, 0, 0, 0)
             font = UIUtil.getFontWithFallback("Arial", Font.BOLD, 10)
             border = EmptyBorder(2, 6, 2, 6)
             toolTipText = "`esc` to cancel"
+            isOpaque = false
 
             addMouseListener(object : MouseAdapter() {
                 override fun mouseEntered(e: MouseEvent) {
                     foreground = Color(128, 128, 128, 255)
+                    cursor = Cursor(Cursor.HAND_CURSOR)
                 }
 
                 override fun mouseExited(e: MouseEvent) {
                     foreground = Color(128, 128, 128, 128)
+                    cursor = Cursor.getDefaultCursor()
+                }
+
+                override fun mouseClicked(e: MouseEvent) {
+                    onCancel()
                 }
             })
         }
@@ -341,8 +362,10 @@ class CustomPanel(
                 horizontalAlignment = SwingConstants.LEFT
             }
             selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
-                val index = modelTitles.indexOf(it)
-                if (index != -1) index else 0
+                if (modelTitles.isEmpty()) -1 else {
+                    val index = modelTitles.indexOf(it)
+                    if (index != -1) index else 0
+                }
             } ?: 0
 
             addActionListener {
@@ -353,8 +376,8 @@ class CustomPanel(
         comboBoxRef.set(dropdown)
 
         val rightButton = CustomButton("⏎  Enter") { onEnter() }.apply {
-            background = JBColor(0x33999998.toInt(), 0x33999998.toInt())
-            foreground = Color.WHITE
+            background = JBColor(0x999998.toInt(), 0x999998.toInt())
+            foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
             border = EmptyBorder(2, 6, 2, 6)
         }
 
@@ -393,13 +416,15 @@ class CustomPanel(
         }
 
         val leftButton = CustomButton("Reject (${getAltKeyLabel()}⇧N)") { onReject() }.apply {
-            background = Color(239, 68, 68) // text-red-500
-            foreground = Color.WHITE
+            background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
+            foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
+
         }
 
         val rightButton = CustomButton("Accept (${getAltKeyLabel()}⇧Y)") { onAccept() }.apply {
-            background = Color(34, 197, 94)  // text-green-500
-            foreground = Color.WHITE
+            background = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
+            foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
+
         }
 
         val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -517,9 +542,8 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
             }
         })
 
-//        verticalAlignment = CENTER
         font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
-        border = EmptyBorder(2, 4, 2, 4)
+        border = EmptyBorder(2, 6, 2, 6)
     }
 
     override fun paintComponent(g: Graphics) {
@@ -537,7 +561,13 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
             cornerRadius.toFloat()
         )
         if (isHovered) {
-            g2.color = background.brighter()
+            val brightenFactor = 1.1f
+            val brighterColor = Color(
+                (background.red * brightenFactor).toInt(),
+                (background.green * brightenFactor).toInt(),
+                (background.blue * brightenFactor).toInt()
+            )
+            g2.color = brighterColor
         } else {
             g2.color = background
         }
@@ -599,23 +629,26 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
         val defaultBackground = globalScheme.defaultBackground
         comboBox.background = defaultBackground
 
-        // Custom renderer to add the down caret symbol
-        comboBox.renderer = object : DefaultListCellRenderer() {
-            override fun getListCellRendererComponent(
-                list: JList<*>?,
-                value: Any?,
-                index: Int,
-                isSelected: Boolean,
-                cellHasFocus: Boolean
-            ): Component {
-                val component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
-                if (component is JLabel && index == -1) {  // -1 indicates it's the selected item in the ComboBox
-                    text = "$text ▾"
-                }
-                foreground = Color(156, 163, 175) // text-gray-400
-                background = comboBox.background
-                isOpaque = false
-                return component
+        // Modify the ComboBoxModel to include the down symbol
+        val originalModel = comboBox.model
+        comboBox.model = object : ComboBoxModel<Any> {
+            override fun getSize(): Int = originalModel.size
+            override fun getElementAt(index: Int): Any? = originalModel.getElementAt(index)
+            override fun setSelectedItem(anItem: Any?) {
+                originalModel.selectedItem = anItem
+            }
+
+            override fun getSelectedItem(): Any? {
+                val item = originalModel.selectedItem
+                return "$item ▾"
+            }
+
+            override fun addListDataListener(l: ListDataListener?) {
+                originalModel.addListDataListener(l)
+            }
+
+            override fun removeListDataListener(l: ListDataListener?) {
+                originalModel.removeListDataListener(l)
             }
         }
     }

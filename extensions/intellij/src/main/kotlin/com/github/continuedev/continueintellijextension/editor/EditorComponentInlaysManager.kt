@@ -14,8 +14,10 @@ import com.intellij.util.concurrency.annotations.RequiresEdt
 import com.intellij.util.ui.JBUI
 import java.awt.Dimension
 import java.awt.Font
+import java.awt.Insets
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import javax.swing.BorderFactory
 import javax.swing.JComponent
 import javax.swing.ScrollPaneConstants
 import kotlin.math.ceil
@@ -26,7 +28,7 @@ import kotlin.math.min
  * Copied from com.intellij.util.ui.codereview.diff.EditorComponentInlaysManager
  * via https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/EditorComponentInlaysManager.kt
  */
-class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
+class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneInlay: Boolean) : Disposable {
 
     private val managedInlays = mutableMapOf<ComponentWrapper, Disposable>()
     private val editorWidthWatcher = EditorTextWidthWatcher()
@@ -41,26 +43,32 @@ class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
     }
 
     @RequiresEdt
-    fun insertAfter(lineIndex: Int, component: JComponent): Disposable? {
+    fun insert(lineIndex: Int, component: JComponent, showAbove: Boolean = false): Disposable? {
         if (Disposer.isDisposed(this)) return null
 
-        // Dispose all other inlays
-        managedInlays.values.forEach(Disposer::dispose)
+        if (onlyOneInlay) {
+            // Dispose all other inlays
+            managedInlays.values.forEach(Disposer::dispose)
+        }
 
         val wrappedComponent = ComponentWrapper(component)
         val offset = editor.document.getLineEndOffset(lineIndex)
 
         return EditorEmbeddedComponentManager.getInstance()
-                .addComponent(editor, wrappedComponent,
-                        EditorEmbeddedComponentManager.Properties(EditorEmbeddedComponentManager.ResizePolicy.none(),
-                                null,
-                                true,
-                                false,
-                                0,
-                                offset))?.also {
-                    managedInlays[wrappedComponent] = it
-                    Disposer.register(it, Disposable { managedInlays.remove(wrappedComponent) })
-                }
+            .addComponent(
+                editor, wrappedComponent,
+                EditorEmbeddedComponentManager.Properties(
+                    EditorEmbeddedComponentManager.ResizePolicy.none(),
+                    null,
+                    true,
+                    showAbove,
+                    0,
+                    offset
+                )
+            )?.also {
+                managedInlays[wrappedComponent] = it
+                Disposer.register(it, Disposable { managedInlays.remove(wrappedComponent) })
+            }
     }
 
     private inner class ComponentWrapper(private val component: JComponent) : JBScrollPane(component) {
@@ -77,12 +85,12 @@ class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
 
             component.addComponentListener(object : ComponentAdapter() {
                 override fun componentResized(e: ComponentEvent) =
-                        dispatchEvent(ComponentEvent(component, ComponentEvent.COMPONENT_RESIZED))
+                    dispatchEvent(ComponentEvent(component, ComponentEvent.COMPONENT_RESIZED))
             })
         }
 
         override fun getPreferredSize(): Dimension {
-            return Dimension(editorWidthWatcher.editorTextWidth, component.preferredSize.height)
+            return Dimension(editor.contentComponent.width, component.preferredSize.height)
         }
     }
 
@@ -105,7 +113,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
 
             val scrollbarFlip = editor.scrollPane.getClientProperty(JBScrollPane.Flip::class.java)
             verticalScrollbarFlipped =
-                    scrollbarFlip == JBScrollPane.Flip.HORIZONTAL || scrollbarFlip == JBScrollPane.Flip.BOTH
+                scrollbarFlip == JBScrollPane.Flip.HORIZONTAL || scrollbarFlip == JBScrollPane.Flip.BOTH
         }
 
         override fun componentResized(e: ComponentEvent) = updateWidthForAllInlays()
@@ -124,7 +132,8 @@ class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
         }
 
         private fun calcWidth(): Int {
-            val visibleEditorTextWidth = editor.scrollPane.viewport.width - getVerticalScrollbarWidth() - getGutterTextGap()
+            val visibleEditorTextWidth =
+                editor.scrollPane.viewport.width - getVerticalScrollbarWidth() - getGutterTextGap()
             return min(max(visibleEditorTextWidth, 0), maximumEditorTextWidth)
         }
 
@@ -144,11 +153,11 @@ class EditorComponentInlaysManager(val editor: EditorImpl) : Disposable {
     companion object {
         val INLAYS_KEY: Key<EditorComponentInlaysManager> = Key.create("EditorComponentInlaysManager")
 
-        fun from(editor: Editor): EditorComponentInlaysManager {
+        fun from(editor: Editor, onlyOneInlay: Boolean): EditorComponentInlaysManager {
             return synchronized(editor) {
                 val manager = editor.getUserData(INLAYS_KEY)
                 if (manager == null) {
-                    val newManager = EditorComponentInlaysManager(editor as EditorImpl)
+                    val newManager = EditorComponentInlaysManager(editor as EditorImpl, false)
                     editor.putUserData(INLAYS_KEY, newManager)
                     newManager
                 } else manager

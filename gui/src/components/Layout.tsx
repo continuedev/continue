@@ -116,6 +116,18 @@ const Layout = () => {
   );
 
   useWebviewListener(
+    "navigateTo",
+    async (data) => {
+      if (data.toggle && location.pathname === data.path) {
+        navigate("/");
+      } else {
+        navigate(data.path);
+      }
+    },
+    [location, navigate],
+  );
+
+  useWebviewListener(
     "incrementFtc",
     async () => {
       const u = getLocalStorage("ftc");

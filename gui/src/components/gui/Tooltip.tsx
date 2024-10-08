@@ -1,6 +1,7 @@
 import { Tooltip } from "react-tooltip";
 import { vscInputBackground, vscBadgeBackground, vscForeground } from "..";
 import { getFontSize } from "../../util";
+import ReactDOM from "react-dom";
 
 const TooltipStyles = {
   fontSize: `${getFontSize() - 2}px`,
@@ -20,5 +21,13 @@ export function ToolTip(props: any) {
     ...props.style,
   };
 
-  return <Tooltip {...props} style={combinedStyles} />;
+  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
+
+  return (
+    tooltipPortalDiv &&
+    ReactDOM.createPortal(
+      <Tooltip {...props} style={combinedStyles} />,
+      tooltipPortalDiv,
+    )
+  );
 }
