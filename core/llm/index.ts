@@ -137,10 +137,8 @@ export abstract class BaseLLM implements ILLM {
     this.model = options.model;
     // Use @continuedev/llm-info package to autodetect certain parameters
     const llmInfo = findLlmInfo(this.model);
-
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
-
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.systemMessage = options.systemMessage;
@@ -177,7 +175,7 @@ export abstract class BaseLLM implements ILLM {
       autodetectTemplateFunction(
         options.model,
         this.providerName,
-        options.template,
+        templateType || options.template,
       );
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
