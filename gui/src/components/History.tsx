@@ -209,7 +209,7 @@ export function History() {
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   const dispatch = useDispatch();
-  const { getHistory } = useHistory(dispatch);
+  const { getHistory, lastSessionId } = useHistory(dispatch);
 
   const [minisearch, setMinisearch] = useState<
     MiniSearch<{ title: string; sessionId: string }>
@@ -234,7 +234,7 @@ export function History() {
       );
     };
     fetchSessions();
-  }, []);
+  }, [lastSessionId]);
 
   useEffect(() => {
     // When searchTerm is empty only show sessions from the current workspace
