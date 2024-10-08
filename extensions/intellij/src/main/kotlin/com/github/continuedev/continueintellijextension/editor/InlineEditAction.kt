@@ -4,6 +4,7 @@ import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
+import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -130,7 +131,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
         Thread.sleep(20)
     }
-    
+
     // Get highlighted range
     val selectionModel = editor.selectionModel
     val startLineNumber = editor.document.getLineNumber(selectionModel.selectionStart)
@@ -416,16 +417,14 @@ class CustomPanel(
             border = EmptyBorder(0, 4, 0, 0)
         }
 
-        val leftButton = CustomButton("Reject (${getAltKeyLabel()}⇧N)") { onReject() }.apply {
+        val leftButton = CustomButton("Reject All (${getMetaKeyLabel()}⇧⌫)") { onReject() }.apply {
             background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
             foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
-
         }
 
-        val rightButton = CustomButton("Accept (${getAltKeyLabel()}⇧Y)") { onAccept() }.apply {
+        val rightButton = CustomButton("Accept All (${getMetaKeyLabel()}⇧⏎)") { onAccept() }.apply {
             background = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
             foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
-
         }
 
         val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {

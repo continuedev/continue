@@ -9,7 +9,6 @@ import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.colors.TextAttributesKey
-import com.intellij.openapi.editor.markup.EffectType
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
@@ -54,7 +53,7 @@ class DiffStreamHandler(
         key.let { editor.colorsScheme.setAttributes(it, attributes) }
         key
     }
-    
+
     private val unfinishedKey = run {
         val attributes = TextAttributes().apply {
             backgroundColor = JBColor(0x20888888.toInt(), 0x20888888.toInt())
