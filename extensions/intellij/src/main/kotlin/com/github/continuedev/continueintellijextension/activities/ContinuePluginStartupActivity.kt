@@ -112,7 +112,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             project,
             ContinuePluginService::class.java
         )
-        
+
         val defaultStrategy = DefaultTextSelectionStrategy()
 
         coroutineScope.launch {
@@ -143,7 +143,12 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                     continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
                     continuePluginService.sendToWebview(
                         "didChangeIdeSettings", mapOf(
-                            "settings" to settings
+                            "settings" to mapOf(
+                                "remoteConfigServerUrl" to settings.remoteConfigServerUrl,
+                                "remoteConfigSyncPeriod" to settings.remoteConfigSyncPeriod,
+                                "userToken" to settings.userToken,
+                                "enableControlServerBeta" to settings.enableContinueTeamsBeta
+                            )
                         )
                     )
                 }
