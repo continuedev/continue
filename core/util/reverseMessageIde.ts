@@ -182,7 +182,7 @@ export class ReverseMessageIde {
     });
 
     this.on("subprocess", (data) => {
-      return this.ide.subprocess(data.command);
+      return this.ide.subprocess(data.command, data.cwd);
     });
 
     this.on("getBranch", (data) => {

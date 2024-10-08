@@ -193,8 +193,8 @@ export class MessageIde implements IDE {
     return this.request("getProblems", { filepath });
   }
 
-  subprocess(command: string): Promise<[string, string]> {
-    return this.request("subprocess", { command });
+  subprocess(command: string, cwd?: string): Promise<[string, string]> {
+    return this.request("subprocess", { command, cwd });
   }
 
   async getBranch(dir: string): Promise<string> {

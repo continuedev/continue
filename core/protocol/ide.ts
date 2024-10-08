@@ -29,7 +29,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   openFile: [{ path: string }, void];
   runCommand: [{ command: string }, void];
   getSearchResults: [{ query: string }, string];
-  subprocess: [{ command: string }, [string, string]];
+  subprocess: [{ command: string; cwd?: string }, [string, string]];
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
