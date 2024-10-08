@@ -802,6 +802,7 @@ export interface ModelDescription {
 
 export type EmbeddingsProviderName =
   | "bedrock"
+  | "bedrock-cohere"
   | "huggingface-tei"
   | "transformers.js"
   | "ollama"

@@ -458,6 +458,7 @@ const exe = os === "win32" ? ".exe" : "";
     "esbuild",
     "@esbuild",
     "@lancedb",
+    "@apache-arrow",
     "@vscode/ripgrep",
     "workerpool",
   ];
