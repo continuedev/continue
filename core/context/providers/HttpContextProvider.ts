@@ -11,6 +11,7 @@ class HttpContextProvider extends BaseContextProvider {
     displayTitle: "HTTP",
     description: "Retrieve a context item from a custom server",
     type: "normal",
+    renderInlineAs: "",
   };
 
   override get description(): ContextProviderDescription {
@@ -47,7 +48,9 @@ class HttpContextProvider extends BaseContextProvider {
       name: item.name ?? this.options.title ?? "HTTP",
     });
 
-    return Array.isArray(json) ? json.map(createContextItem) : [createContextItem(json)];
+    return Array.isArray(json)
+      ? json.map(createContextItem)
+      : [createContextItem(json)];
   }
 }
 
