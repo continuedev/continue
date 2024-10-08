@@ -113,7 +113,6 @@ class FocusContinueInputAction : AnAction() {
 class NewContinueSessionAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val continuePluginService = getContinuePluginService(e.project) ?: return
-
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
         continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
     }
@@ -121,7 +120,7 @@ class NewContinueSessionAction : AnAction() {
 
 class ViewHistoryAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
-        val continuePluginService = getPluginService(e.project) ?: return
+        val continuePluginService = getContinuePluginService(e.project) ?: return
         continuePluginService.sendToWebview("viewHistory", null)
     }
 }
