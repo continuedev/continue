@@ -2576,7 +2576,9 @@
                       "model": {
                         "enum": [
                           "rerank-lite-1",
-                          "rerank-1"
+                          "rerank-1",
+                          "rerank-2",
+                          "rerank-2-lite"
                         ]
                       }
                     },
