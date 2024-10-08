@@ -300,11 +300,8 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
      */
     private fun shouldRenderOffScreen(): Boolean {
         val minBuildNumber = 233
-
         val applicationInfo = ApplicationInfo.getInstance()
         val currentBuildNumber = applicationInfo.build.baselineVersion
-
-        println("Current IntelliJ IDEA build number: $currentBuildNumber")
         return currentBuildNumber >= minBuildNumber
     }
 }
