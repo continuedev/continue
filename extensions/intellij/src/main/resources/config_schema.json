@@ -1855,6 +1855,11 @@
                   "url": {
                     "type": "string",
                     "description": "The HTTP endpoint of your context provider server."
+                  },
+                  "options": {
+                    "title": "Custom Options",
+                    "description": "Additional options to pass to your custom HTTP server.",
+                    "type": "object"
                   }
                 },
                 "required": ["url"]
