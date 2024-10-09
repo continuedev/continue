@@ -26,6 +26,13 @@ enum class DiffLineType {
     SAME, NEW, OLD
 }
 
+data class VerticalDiffBlock(
+    val start: Int,
+    val numRed: Int,
+    val numGreen: Int,
+    val buttons: VerticalDiffActionButtons
+)
+
 class DiffStreamHandler(
     private val project: Project,
     private val editor: Editor,
@@ -70,11 +77,13 @@ class DiffStreamHandler(
     private var currentLineHighlighter: RangeHighlighter? = null
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
     private var changeCount: Int = 0  // Kept track of so we can count steps to undo when cancelling
+    private var insertedInCurrentBlock: Int = 0;
     private var running: Boolean = false
-
     private var deletionBufferStartLine: Int = -1
     private val deletionsBuffer: MutableList<String> = mutableListOf()
     private val deletionInlays: MutableList<Disposable> = mutableListOf()
+    private val verticalDiffBlocks: MutableList<VerticalDiffBlock> = mutableListOf()
+
 
     private fun removeDeletionInlays() {
         deletionInlays.forEach {
@@ -102,8 +111,45 @@ class DiffStreamHandler(
     }
 
     private fun insertDeletionBuffer() {
+        if (deletionsBuffer.isNotEmpty() || insertedInCurrentBlock > 0) {
+            val start = currentLine - insertedInCurrentBlock
+            val numGreen = insertedInCurrentBlock
+            val numRed = deletionsBuffer.size
+            val buttons = VerticalDiffActionButtons(
+                editor,
+                start,
+                onClickAccept = {
+                    acceptRejectBlock(true, start, numGreen, numRed)
+                },
+                onClickReject = {
+                    acceptRejectBlock(false, start, numGreen, numRed)
+                }
+            )
+
+            verticalDiffBlocks.add(
+                VerticalDiffBlock(
+                    start = start,
+                    numRed = deletionsBuffer.size,
+                    numGreen = insertedInCurrentBlock,
+                    buttons = buttons
+                )
+            )
+
+            editor.contentComponent.add(buttons.acceptButton)
+            editor.contentComponent.add(buttons.rejectButton)
+            editor.contentComponent.revalidate()
+            editor.contentComponent.repaint()
+        }
+
+        if (deletionsBuffer.isEmpty()) {
+            insertedInCurrentBlock = 0;
+            return;
+        }
+
+        // TODO: Handle decoration updates according to insertedInCurrentBlock
+
         // Insert red highlighted code between the real lines in the editor
-        if (deletionBufferStartLine != -1 && deletionsBuffer.isNotEmpty()) {
+        if (deletionBufferStartLine != -1) {
             val component = JTextArea().apply {
                 text = deletionsBuffer.joinToString("\n")
                 isEditable = false
@@ -125,6 +171,8 @@ class DiffStreamHandler(
             deletionsBuffer.clear()
             deletionBufferStartLine = -1
         }
+
+        insertedInCurrentBlock = 0;
     }
 
     private fun handleDiffLine(type: DiffLineType, line: String) {
@@ -137,28 +185,25 @@ class DiffStreamHandler(
                 }
 
                 DiffLineType.NEW -> {
-                    // Insert new line
                     if (currentLine == editor.document.lineCount) {
                         editor.document.insertString(editor.document.textLength, "\n")
                     }
+
                     val offset = editor.document.getLineStartOffset(currentLine)
                     editor.document.insertString(offset, line + "\n")
-
-                    // Highlight the new line green
                     editor.markupModel.addLineHighlighter(greenKey, currentLine, HighlighterLayer.LAST)
 
                     insertDeletionBuffer()
 
                     currentLine++
                     changeCount++
+                    insertedInCurrentBlock++;
                 }
 
                 DiffLineType.OLD -> {
-                    // Remove old line
                     deleteLineAt(currentLine)
-
-                    // Add to deletions buffer
                     deletionsBuffer.add(line)
+
                     if (deletionBufferStartLine == -1) {
                         deletionBufferStartLine = currentLine
                     }
@@ -171,6 +216,7 @@ class DiffStreamHandler(
             if (currentLineHighlighter != null) {
                 editor.markupModel.removeHighlighter(currentLineHighlighter!!)
             }
+
             currentLineHighlighter = editor.markupModel.addLineHighlighter(
                 currentLineKey,
                 min(currentLine, editor.document.lineCount - 1),
@@ -186,6 +232,64 @@ class DiffStreamHandler(
         } catch (e: Exception) {
             println("Error handling diff line: $currentLine, $type, $line, $e.message")
         }
+    }
+
+    private fun acceptRejectBlock(
+        accept: Boolean,
+        startLine: Int,
+        numGreen: Int,
+        numRed: Int
+    ) {
+        // TODO: We use virtual lines for red so we should shouldnt be doing numRed addition
+        if (numGreen > 0) {
+            val highlightersToRemove = editor.markupModel.allHighlighters.filter { highlighter ->
+                val highlighterLine = editor.document.getLineNumber(highlighter.startOffset)
+                highlighterLine in startLine until (startLine + numRed)
+            }
+
+            if (highlightersToRemove.isNotEmpty()) {
+                editor.markupModel.removeHighlighter(highlightersToRemove.first())
+            }
+
+            if (!accept) {
+                // Delete the actual lines
+                WriteCommandAction.runWriteCommandAction(project) {
+                    for (i in 0 until numGreen) {
+                        deleteLineAt(startLine + numRed)
+                    }
+                }
+            }
+        }
+
+        if (numRed > 0 && accept) {
+            // Delete the actual lines
+            WriteCommandAction.runWriteCommandAction(project) {
+                for (i in 0 until numRed) {
+                    deleteLineAt(startLine)
+                }
+            }
+        }
+
+        // Shift everything below upward
+        val offset = -(if (accept) numRed else numGreen)
+
+        // Update the positions of the vertical diff blocks
+        verticalDiffBlocks.forEach { block ->
+            if (block.start > startLine) {
+                block.buttons.updatePosition(block.start + offset)
+            }
+        }
+
+        // Remove the processed block
+        verticalDiffBlocks.removeAll { it.start == startLine }
+
+        if (verticalDiffBlocks.isEmpty()) {
+            onClose()
+        }
+
+        // Refresh the editor
+        editor.contentComponent.revalidate()
+        editor.contentComponent.repaint()
     }
 
     private fun resetState() {
@@ -212,29 +316,36 @@ class DiffStreamHandler(
         }
     }
 
-    fun accept() {
+    private fun removeDiffBlock(block: VerticalDiffBlock) {
+        editor.contentComponent.remove(block.buttons.acceptButton)
+        editor.contentComponent.remove(block.buttons.rejectButton)
+
+        verticalDiffBlocks.remove(block)
+
+        editor.contentComponent.revalidate()
+        editor.contentComponent.repaint()
+    }
+
+    private fun removeAllDiffBlocks() {
+        verticalDiffBlocks.forEach(::removeDiffBlock)
+    }
+
+    fun acceptAll() {
         // Accept the changes
         editor.markupModel.removeAllHighlighters()
         removeDeletionInlays()
         onClose()
         running = false
+        removeAllDiffBlocks()
     }
 
-    fun reject() {
+    fun rejectAll() {
         // Reject the changes
         resetState()
         removeDeletionInlays()
         onClose()
         running = false
-    }
-
-    fun toggleFocus() {
-        if (textArea.hasFocus()) {
-            textArea.transferFocus()
-            editor.contentComponent.requestFocus()
-        } else {
-            textArea.requestFocus()
-        }
+        removeAllDiffBlocks()
     }
 
     fun run(input: String, prefix: String, highlighted: String, suffix: String, modelTitle: String) {

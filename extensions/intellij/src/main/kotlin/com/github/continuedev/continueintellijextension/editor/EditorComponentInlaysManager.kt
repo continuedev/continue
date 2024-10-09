@@ -14,10 +14,8 @@ import com.intellij.util.concurrency.annotations.RequiresEdt
 import com.intellij.util.ui.JBUI
 import java.awt.Dimension
 import java.awt.Font
-import java.awt.Insets
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
-import javax.swing.BorderFactory
 import javax.swing.JComponent
 import javax.swing.ScrollPaneConstants
 import kotlin.math.ceil
