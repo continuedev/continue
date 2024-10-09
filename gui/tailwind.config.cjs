@@ -18,7 +18,7 @@ module.exports = {
       xl: "720px",
       "2xl": "860px",
       "3xl": "1000px",
-      "4xl": "1140px",
+      "4xl": "1180px",
     },
     extend: {
       animation: {
