@@ -730,9 +730,7 @@ class IdeProtocolClient(
                         respond(File.separator)
                     }
 
-                    else -> {
-                        println("Unknown messageType: $messageType")
-                    }
+                    else -> {}
                 }
             } catch (error: Exception) {
                 showToast("error", "Error handling message of type $messageType: $error")
