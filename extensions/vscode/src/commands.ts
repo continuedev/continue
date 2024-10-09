@@ -729,10 +729,8 @@ const commandsMap: (
         ) {
           vscode.commands.executeCommand("continue.toggleNewWindow");
         } else if (selectedOption === "$(question) Open help center") {
-          vscode.commands.executeCommand("continue.toggleFullScreen");
-          vscode.commands.executeCommand("continue.toggleNewWindow");
-          // focusGUI();
-          // vscode.commands.executeCommand("continue.navigateTo", "/more");
+          focusGUI();
+          vscode.commands.executeCommand("continue.navigateTo", "/more");
         }
         quickPick.dispose();
       });
