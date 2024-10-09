@@ -249,7 +249,24 @@
         "region": {
           "title": "Region",
           "description": "The region where the model is hosted",
-          "type": "string"
+          "anyOf": [
+            {
+              "enum": [
+                "us-east-1",
+                "us-east-2",
+                "us-west-1",
+                "us-west-2",
+                "eu-west-1",
+                "eu-central-1",
+                "ap-southeast-1",
+                "ap-northeast-1",
+                "ap-south-1"
+              ]
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "profile": {
           "title": "Profile",
@@ -2396,7 +2413,8 @@
                 "gemini",
                 "voyage",
                 "nvidia",
-                "bedrock"
+                "bedrock",
+                "sagemaker"
               ]
             },
             "model": {
@@ -2430,7 +2448,24 @@
             "region": {
               "title": "Region",
               "description": "The region where the model is hosted",
-              "type": "string"
+              "anyOf": [
+                {
+                  "enum": [
+                    "us-east-1",
+                    "us-east-2",
+                    "us-west-1",
+                    "us-west-2",
+                    "eu-west-1",
+                    "eu-central-1",
+                    "ap-southeast-1",
+                    "ap-northeast-1",
+                    "ap-south-1"
+                  ]
+                },
+                {
+                  "type": "string"
+                }
+              ]
             },
             "profile": {
               "title": "Profile",
@@ -2461,6 +2496,30 @@
               "then": {
                 "required": [
                   "apiKey"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "sagemaker"
+                    ]
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "model": {
+                    "markdownDescription": "SageMaker endpoint name"
+                  }
+                },
+                "required": [
+                  "model"
                 ]
               }
             }
