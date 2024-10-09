@@ -483,7 +483,11 @@ const commandsMap: (
     "continue.applyCodeFromChat": () => {
       sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.toggleFullScreen": () => {
+    "continue.toggleFullScreen": ({
+      newWindow,
+    }: { newWindow?: boolean } = {}) => {
+      focusGUI();
+
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
@@ -532,6 +536,18 @@ const commandsMap: (
         null,
         extensionContext.subscriptions,
       );
+
+      if (newWindow) {
+        vscode.commands.executeCommand(
+          "workbench.action.copyEditorToNewWindow",
+        );
+      }
+    },
+    "continue.toggleNewWindow": () => {
+      focusGUI();
+      vscode.commands.executeCommand("continue.toggleFullScreen", {
+        newWindow: true,
+      });
     },
     "continue.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
@@ -655,6 +671,9 @@ const commandsMap: (
           label: "$(screen-full) Open full screen chat (Cmd+K Cmd+M)",
         },
         {
+          label: "$(link-external) Open chat in a new window",
+        },
+        {
           label: quickPickStatusText(targetStatus),
         },
         {
@@ -705,9 +724,15 @@ const commandsMap: (
           "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
         ) {
           vscode.commands.executeCommand("continue.toggleFullScreen");
+        } else if (
+          selectedOption === "$(link-external) Open chat in a new window"
+        ) {
+          vscode.commands.executeCommand("continue.toggleNewWindow");
         } else if (selectedOption === "$(question) Open help center") {
-          focusGUI();
-          vscode.commands.executeCommand("continue.navigateTo", "/more");
+          vscode.commands.executeCommand("continue.toggleFullScreen");
+          vscode.commands.executeCommand("continue.toggleNewWindow");
+          // focusGUI();
+          // vscode.commands.executeCommand("continue.navigateTo", "/more");
         }
         quickPick.dispose();
       });
