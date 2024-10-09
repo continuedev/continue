@@ -246,7 +246,7 @@
         "region": {
           "title": "Region",
           "description": "The region where the model is hosted",
-          "anyOf":[
+          "anyOf": [
             {
               "enum": [
                 "us-east-1",
@@ -259,7 +259,7 @@
                 "ap-northeast-1",
                 "ap-south-1"
               ],
-              "type" : "string"
+              "type": "string"
             },
             {
               "type": "string"
@@ -1407,7 +1407,6 @@
               "enum": [
                 "issue",
                 "share",
-                "so",
                 "cmd",
                 "edit",
                 "comment",
@@ -1419,7 +1418,6 @@
               "markdownEnumDescriptions": [
                 "Generate a link to a drafted GitHub issue",
                 "Export the current chat session to markdown",
-                "Reference StackOverflow to answer the question",
                 "Generate a terminal command and paste it into the terminal",
                 "Edit the highlighted code with given instructions",
                 "Add comments to the highlighted code",
