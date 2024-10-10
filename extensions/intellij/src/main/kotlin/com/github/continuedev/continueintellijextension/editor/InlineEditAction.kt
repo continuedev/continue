@@ -324,7 +324,7 @@ class CustomPanel(
             foreground = Color(128, 128, 128, 128)
             background = Color(0, 0, 0, 0)
             font = UIUtil.getFontWithFallback("Arial", Font.BOLD, 10)
-            border = EmptyBorder(2, 6, 2, 6)
+            border = EmptyBorder(2, 6, 2, 2)
             toolTipText = "`esc` to cancel"
             isOpaque = false
 
@@ -390,7 +390,7 @@ class CustomPanel(
             add(rightButton, "align right")
         }
 
-        border = EmptyBorder(0, 0, 20, 16)
+        border = EmptyBorder(0, 0, 16, 12)
 
         add(dropdown, "align left")
         add(rightPanel, "align right, split 2")
@@ -407,7 +407,7 @@ class CustomPanel(
         }
 
         add(progressBar, BorderLayout.CENTER)
-        border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
+        border = BorderFactory.createEmptyBorder(0, 0, 16, 12)
     }
 
     private val subPanelC: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -436,7 +436,7 @@ class CustomPanel(
 
         add(leftLabel, "align left")
         add(rightPanel, "align right")
-        border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
+        border = BorderFactory.createEmptyBorder(0, 0, 16, 12)
         isOpaque = false
     }
 
@@ -563,9 +563,9 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
         if (isHovered) {
             val brightenFactor = 1.1f
             val brighterColor = Color(
-                (background.red * brightenFactor).toInt(),
-                (background.green * brightenFactor).toInt(),
-                (background.blue * brightenFactor).toInt()
+                (background.red * brightenFactor).coerceIn(0f, 255f).toInt(),
+                (background.green * brightenFactor).coerceIn(0f, 255f).toInt(),
+                (background.blue * brightenFactor).coerceIn(0f, 255f).toInt()
             )
             g2.color = brighterColor
         } else {

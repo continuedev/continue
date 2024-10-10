@@ -9,16 +9,19 @@ import javax.swing.JButton
 
 class VerticalDiffActionButtons(
     private val editor: Editor,
-    private var lineNumber: Int,
-    private val onClickAccept: () -> Unit,
-    private val onClickReject: () -> Unit
+    var line: Int,
+    private val numRed: Int,
+    private val numGreen: Int,
+    private val onClick: (Boolean, Int, Int, Int) -> Unit
 ) {
     val acceptButton: JButton
     val rejectButton: JButton
 
-    private fun removeButtons() {
+    fun removeButtons() {
         editor.contentComponent.remove(acceptButton)
         editor.contentComponent.remove(rejectButton)
+        editor.contentComponent.revalidate()
+        editor.contentComponent.repaint()
     }
 
     init {
@@ -26,34 +29,37 @@ class VerticalDiffActionButtons(
         rejectButton = createButton("${getAltKeyLabel()}⇧N", JBColor(0x99FF0000.toInt(), 0x99FF0000.toInt()))
 
         acceptButton.addActionListener {
-            removeButtons()
-            onClickAccept()
+            onClick(true, line, numGreen, numRed)
         }
 
         rejectButton.addActionListener {
-            removeButtons()
-            onClickReject()
+            onClick(false, line, numGreen, numRed)
         }
 
-        // Position the buttons
-        val visibleArea = editor.scrollingModel.visibleArea
-        val lineStartPosition = editor.logicalPositionToXY(LogicalPosition(lineNumber, 0))
-        val xPosition =
-            visibleArea.x + visibleArea.width - acceptButton.preferredSize.width - rejectButton.preferredSize.width - 20
-        val yPosition = lineStartPosition.y
+        val (x, y) = getXYPosition()
 
-        acceptButton.setBounds(
-            xPosition,
-            yPosition,
-            acceptButton.preferredSize.width,
-            acceptButton.preferredSize.height
-        )
         rejectButton.setBounds(
-            xPosition + acceptButton.preferredSize.width + 5,
-            yPosition,
+            x,
+            y,
             rejectButton.preferredSize.width,
             rejectButton.preferredSize.height
         )
+
+        acceptButton.setBounds(
+            x + rejectButton.preferredSize.width + 5,
+            y,
+            acceptButton.preferredSize.width,
+            acceptButton.preferredSize.height
+        )
+    }
+
+    private fun getXYPosition(): Pair<Int, Int> {
+        val visibleArea = editor.scrollingModel.visibleArea
+        val lineStartPosition = editor.logicalPositionToXY(LogicalPosition(line, 0))
+        val xPosition =
+            visibleArea.x + visibleArea.width - acceptButton.preferredSize.width - rejectButton.preferredSize.width - 20
+        val yPosition = lineStartPosition.y
+        return Pair(xPosition, yPosition)
     }
 
     private fun createButton(text: String, backgroundColor: JBColor): JButton {
@@ -79,15 +85,12 @@ class VerticalDiffActionButtons(
     }
 
     fun updatePosition(newLineNumber: Int) {
-        this.lineNumber = newLineNumber
-        val visibleArea = editor.scrollingModel.visibleArea
-        val lineStartPosition = editor.logicalPositionToXY(LogicalPosition(lineNumber, 0))
-        val xPosition =
-            visibleArea.x + visibleArea.width - acceptButton.width - rejectButton.width - 40
-        val yPosition = lineStartPosition.y
+        line = newLineNumber
 
-        acceptButton.location = Point(xPosition, yPosition)
-        rejectButton.location = Point(xPosition + acceptButton.width + 5, yPosition)
+        val (x, y) = getXYPosition()
+
+        acceptButton.location = Point(x, y)
+        rejectButton.location = Point(x + acceptButton.width + 5, y)
 
         // Refresh the editor to reflect the changes
         editor.component.repaint()

@@ -16,6 +16,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBColor
 import javax.swing.BorderFactory
 import javax.swing.JTextArea
@@ -26,13 +27,6 @@ enum class DiffLineType {
     SAME, NEW, OLD
 }
 
-data class VerticalDiffBlock(
-    val start: Int,
-    val numRed: Int,
-    val numGreen: Int,
-    val buttons: VerticalDiffActionButtons
-)
-
 class DiffStreamHandler(
     private val project: Project,
     private val editor: Editor,
@@ -42,48 +36,31 @@ class DiffStreamHandler(
     private val onClose: () -> Unit,
     private val onFinish: () -> Unit
 ) {
-    // Text attributes keys
-    private val greenKey = run {
-        val attributes = TextAttributes().apply {
-            backgroundColor = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
-        }
-        val key = TextAttributesKey.createTextAttributesKey("CONTINUE_DIFF_NEW_LINE")
-        key.let { editor.colorsScheme.setAttributes(it, attributes) }
-        key
-    }
-
-    private val currentLineKey = run {
-        val attributes = TextAttributes().apply {
-            backgroundColor = JBColor(0x40888888.toInt(), 0x40888888.toInt())
-        }
-        val key = TextAttributesKey.createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE")
-        key.let { editor.colorsScheme.setAttributes(it, attributes) }
-        key
-    }
-
-    private val unfinishedKey = run {
-        val attributes = TextAttributes().apply {
-            backgroundColor = JBColor(0x20888888.toInt(), 0x20888888.toInt())
-        }
-        val key = TextAttributesKey.createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE")
-        key.let { editor.colorsScheme.setAttributes(it, attributes) }
-        key
-    }
 
     private val editorComponentInlaysManager = EditorComponentInlaysManager.from(editor, false)
-
-    // State variables
     private var currentLine = startLine
     private var currentLineHighlighter: RangeHighlighter? = null
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
-    private var changeCount: Int = 0  // Kept track of so we can count steps to undo when cancelling
+    private var changeCount: Int = 0
     private var insertedInCurrentBlock: Int = 0;
     private var running: Boolean = false
     private var deletionBufferStartLine: Int = -1
     private val deletionsBuffer: MutableList<String> = mutableListOf()
     private val deletionInlays: MutableList<Disposable> = mutableListOf()
-    private val verticalDiffBlocks: MutableList<VerticalDiffBlock> = mutableListOf()
+    private val actionButtons: MutableList<VerticalDiffActionButtons> = mutableListOf()
+    private val greenKey = createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00.toInt())
+    private val currentLineKey = createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE", 0x40888888.toInt())
+    private val unfinishedKey = createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE", 0x20888888.toInt())
 
+    private fun createTextAttributesKey(name: String, color: Int): TextAttributesKey {
+        val attributes = TextAttributes().apply {
+            backgroundColor = JBColor(color, color)
+        }
+
+        return TextAttributesKey.createTextAttributesKey(name).also {
+            editor.colorsScheme.setAttributes(it, attributes)
+        }
+    }
 
     private fun removeDeletionInlays() {
         deletionInlays.forEach {
@@ -118,21 +95,13 @@ class DiffStreamHandler(
             val buttons = VerticalDiffActionButtons(
                 editor,
                 start,
-                onClickAccept = {
-                    acceptRejectBlock(true, start, numGreen, numRed)
-                },
-                onClickReject = {
-                    acceptRejectBlock(false, start, numGreen, numRed)
-                }
+                numRed,
+                numGreen,
+                ::acceptRejectBlock
             )
 
-            verticalDiffBlocks.add(
-                VerticalDiffBlock(
-                    start = start,
-                    numRed = deletionsBuffer.size,
-                    numGreen = insertedInCurrentBlock,
-                    buttons = buttons
-                )
+            actionButtons.add(
+                buttons
             )
 
             editor.contentComponent.add(buttons.acceptButton)
@@ -146,28 +115,11 @@ class DiffStreamHandler(
             return;
         }
 
-        // TODO: Handle decoration updates according to insertedInCurrentBlock
-
-        // Insert red highlighted code between the real lines in the editor
         if (deletionBufferStartLine != -1) {
-            val component = JTextArea().apply {
-                text = deletionsBuffer.joinToString("\n")
-                isEditable = false
-                background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
-                foreground = JBColor.GRAY
-                border = BorderFactory.createEmptyBorder(0, 0, 0, 0)
-                lineWrap = false
-                wrapStyleWord = false
-                font = editor.colorsScheme.getFont(EditorFontType.PLAIN)
-            }
-
+            val component = createDeletionComponent()
             val disposable = editorComponentInlaysManager.insert(deletionBufferStartLine, component, true)
+            disposable?.let { deletionInlays.add(it) }
 
-            if (disposable != null) {
-                deletionInlays.add(disposable)
-            }
-
-            // Clear the buffer
             deletionsBuffer.clear()
             deletionBufferStartLine = -1
         }
@@ -175,242 +127,279 @@ class DiffStreamHandler(
         insertedInCurrentBlock = 0;
     }
 
+
+    private fun createDeletionComponent() = JTextArea().apply {
+        text = deletionsBuffer.joinToString("\n")
+        isEditable = false
+        background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
+        foreground = JBColor.GRAY
+        border = BorderFactory.createEmptyBorder()
+        lineWrap = false
+        wrapStyleWord = false
+        font = editor.colorsScheme.getFont(EditorFontType.PLAIN)
+    }
+
+
     private fun handleDiffLine(type: DiffLineType, line: String) {
-        println("DiffStreamHandler: handleDiffLine: $currentLine, $type, $line")
         try {
             when (type) {
-                DiffLineType.SAME -> {
-                    insertDeletionBuffer()
-                    currentLine++
-                }
-
-                DiffLineType.NEW -> {
-                    if (currentLine == editor.document.lineCount) {
-                        editor.document.insertString(editor.document.textLength, "\n")
-                    }
-
-                    val offset = editor.document.getLineStartOffset(currentLine)
-                    editor.document.insertString(offset, line + "\n")
-                    editor.markupModel.addLineHighlighter(greenKey, currentLine, HighlighterLayer.LAST)
-
-                    insertDeletionBuffer()
-
-                    currentLine++
-                    changeCount++
-                    insertedInCurrentBlock++;
-                }
-
-                DiffLineType.OLD -> {
-                    deleteLineAt(currentLine)
-                    deletionsBuffer.add(line)
-
-                    if (deletionBufferStartLine == -1) {
-                        deletionBufferStartLine = currentLine
-                    }
-
-                    changeCount++
-                }
+                DiffLineType.SAME -> handleSameLine()
+                DiffLineType.NEW -> handleNewLine(line)
+                DiffLineType.OLD -> handleOldLine(line)
             }
 
-            // Highlight the current line
-            if (currentLineHighlighter != null) {
-                editor.markupModel.removeHighlighter(currentLineHighlighter!!)
-            }
-
-            currentLineHighlighter = editor.markupModel.addLineHighlighter(
-                currentLineKey,
-                min(currentLine, editor.document.lineCount - 1),
-                HighlighterLayer.LAST
-            )
-
-            // Remove the unfinished highlighter top line
-            if (type != DiffLineType.OLD) {
-                if (unfinishedHighlighters.isNotEmpty()) {
-                    editor.markupModel.removeHighlighter(unfinishedHighlighters.removeAt(0))
-                }
-            }
+            updateCurrentLineHighlighter()
+            removeUnfinishedHighlighter(type)
         } catch (e: Exception) {
-            println("Error handling diff line: $currentLine, $type, $line, $e.message")
+            println("Error handling diff line: $currentLine, $type, $line, ${e.message}")
         }
     }
 
-    private fun acceptRejectBlock(
-        accept: Boolean,
-        startLine: Int,
-        numGreen: Int,
-        numRed: Int
-    ) {
-        // TODO: We use virtual lines for red so we should shouldnt be doing numRed addition
+    private fun handleSameLine() {
+        insertDeletionBuffer()
+        currentLine++
+    }
+
+    private fun handleNewLine(line: String) {
+        if (currentLine == editor.document.lineCount) {
+            editor.document.insertString(editor.document.textLength, "\n")
+        }
+
+        val offset = editor.document.getLineStartOffset(currentLine)
+        editor.document.insertString(offset, line + "\n")
+        editor.markupModel.addLineHighlighter(greenKey, currentLine, HighlighterLayer.LAST)
+
+        currentLine++
+        changeCount++
+        insertedInCurrentBlock++
+    }
+
+    private fun handleOldLine(line: String) {
+        deleteLineAt(currentLine)
+        deletionsBuffer.add(line)
+
+        if (deletionBufferStartLine == -1) {
+            deletionBufferStartLine = currentLine
+        }
+
+        changeCount++
+    }
+
+    private fun updateCurrentLineHighlighter() {
+        currentLineHighlighter?.let { editor.markupModel.removeHighlighter(it) }
+        currentLineHighlighter = editor.markupModel.addLineHighlighter(
+            currentLineKey,
+            min(currentLine, editor.document.lineCount - 1),
+            HighlighterLayer.LAST
+        )
+    }
+
+    private fun removeUnfinishedHighlighter(type: DiffLineType) {
+        if (type != DiffLineType.OLD && unfinishedHighlighters.isNotEmpty()) {
+            editor.markupModel.removeHighlighter(unfinishedHighlighters.removeAt(0))
+        }
+    }
+
+
+    private fun acceptRejectBlock(accept: Boolean, startLine: Int, numGreen: Int, numRed: Int) {
+        handleGreenLines(accept, startLine, numGreen, numRed)
+        handleRedLines(accept, startLine, numRed)
+        removeProcessedBlock(startLine)
+        updatePositions(accept, startLine, numGreen, numRed)
+
+        if (actionButtons.isEmpty()) {
+            onComplete()
+        }
+
+        refreshEditor()
+    }
+
+    private fun handleGreenLines(accept: Boolean, startLine: Int, numGreen: Int, numRed: Int) {
         if (numGreen > 0) {
-            val highlightersToRemove = editor.markupModel.allHighlighters.filter { highlighter ->
-                val highlighterLine = editor.document.getLineNumber(highlighter.startOffset)
-                highlighterLine in startLine until (startLine + numRed)
-            }
-
-            if (highlightersToRemove.isNotEmpty()) {
-                editor.markupModel.removeHighlighter(highlightersToRemove.first())
-            }
-
+            removeHighlighters(startLine, numRed)
             if (!accept) {
-                // Delete the actual lines
-                WriteCommandAction.runWriteCommandAction(project) {
-                    for (i in 0 until numGreen) {
-                        deleteLineAt(startLine + numRed)
-                    }
-                }
+                deleteLines(startLine + numRed, numGreen)
             }
         }
+    }
 
+    private fun handleRedLines(accept: Boolean, startLine: Int, numRed: Int) {
         if (numRed > 0 && accept) {
-            // Delete the actual lines
-            WriteCommandAction.runWriteCommandAction(project) {
-                for (i in 0 until numRed) {
-                    deleteLineAt(startLine)
-                }
-            }
+            deleteLines(startLine, numRed)
+        }
+    }
+
+    private fun removeHighlighters(startLine: Int, numRed: Int) {
+        val highlightersToRemove = editor.markupModel.allHighlighters.filter { highlighter ->
+            val highlighterLine = editor.document.getLineNumber(highlighter.startOffset)
+            if (numRed == 0) highlighterLine == startLine else highlighterLine in startLine until (startLine + numRed)
         }
 
-        // Shift everything below upward
+        if (highlightersToRemove.isNotEmpty()) {
+            editor.markupModel.removeHighlighter(highlightersToRemove.first())
+        }
+    }
+
+    private fun deleteLines(startLine: Int, numLines: Int) {
+        WriteCommandAction.runWriteCommandAction(project) {
+            for (i in 0 until numLines) {
+                deleteLineAt(startLine)
+            }
+        }
+    }
+
+    private fun removeProcessedBlock(startLine: Int) {
+        val curActionButtons = actionButtons.find { it.line == startLine }
+        curActionButtons?.removeButtons()
+        actionButtons.remove(curActionButtons)
+    }
+
+    private fun updatePositions(accept: Boolean, startLine: Int, numGreen: Int, numRed: Int) {
         val offset = -(if (accept) numRed else numGreen)
-
-        // Update the positions of the vertical diff blocks
-        verticalDiffBlocks.forEach { block ->
-            if (block.start > startLine) {
-                block.buttons.updatePosition(block.start + offset)
+        actionButtons.forEach { buttons ->
+            if (buttons.line > startLine) {
+                buttons.updatePosition(buttons.line + offset)
             }
         }
+    }
 
-        // Remove the processed block
-        verticalDiffBlocks.removeAll { it.start == startLine }
-
-        if (verticalDiffBlocks.isEmpty()) {
-            onClose()
-        }
-
-        // Refresh the editor
+    private fun refreshEditor() {
         editor.contentComponent.revalidate()
         editor.contentComponent.repaint()
     }
 
     private fun resetState() {
-        // Remove all highlighters
         editor.markupModel.removeAllHighlighters()
-
-        // Remove all of the deletion inlays
         removeDeletionInlays()
+        undoChanges()
+        resetStateVariables()
+    }
 
-        // Undo changes just by using builtin undo
+
+    private fun undoChanges() {
         WriteCommandAction.runWriteCommandAction(project) {
             val undoManager = UndoManager.getInstance(project)
-            val virtualFile = FileDocumentManager.getInstance().getFile(editor.document) ?: return@runWriteCommandAction
-            val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile) as TextEditor?
+            val fileEditor = getFileEditor() ?: return@runWriteCommandAction
+
             if (undoManager.isUndoAvailable(fileEditor)) {
-                for (i in 0 until changeCount) {
+                repeat(changeCount) {
                     undoManager.undo(fileEditor)
                 }
             }
-
-            // Reset state variables
-            currentLine = startLine
-            changeCount = 0
         }
     }
 
-    private fun removeDiffBlock(block: VerticalDiffBlock) {
-        editor.contentComponent.remove(block.buttons.acceptButton)
-        editor.contentComponent.remove(block.buttons.rejectButton)
-
-        verticalDiffBlocks.remove(block)
-
-        editor.contentComponent.revalidate()
-        editor.contentComponent.repaint()
+    private fun getFileEditor(): TextEditor? {
+        val virtualFile = FileDocumentManager.getInstance().getFile(editor.document) ?: return null
+        return FileEditorManager.getInstance(project).getSelectedEditor(virtualFile) as TextEditor?
     }
 
-    private fun removeAllDiffBlocks() {
-        verticalDiffBlocks.forEach(::removeDiffBlock)
+    private fun resetStateVariables() {
+        currentLine = startLine
+        changeCount = 0
+    }
+
+
+    private fun removeActionButtons() {
+        actionButtons.forEach { buttons -> buttons.removeButtons() }
+        actionButtons.clear()
+    }
+
+    private fun onComplete() {
+        removeDeletionInlays()
+        onClose()
+        running = false
+        removeActionButtons()
+        changeCount = 0
     }
 
     fun acceptAll() {
-        // Accept the changes
         editor.markupModel.removeAllHighlighters()
-        removeDeletionInlays()
-        onClose()
-        running = false
-        removeAllDiffBlocks()
+        onComplete()
     }
 
     fun rejectAll() {
-        // Reject the changes
         resetState()
-        removeDeletionInlays()
-        onClose()
-        running = false
-        removeAllDiffBlocks()
+        onComplete()
     }
 
     fun run(input: String, prefix: String, highlighted: String, suffix: String, modelTitle: String) {
-        // Undo changes
         resetState()
-
         running = true
-
-        // Highlight the range with unfinished color
         setup()
 
-        // Request diff stream from core
-        val continuePluginService = ServiceManager.getService(
-            this.project,
-            ContinuePluginService::class.java
-        )
+        val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+
         continuePluginService.coreMessenger?.request(
-            "streamDiffLines", mapOf(
-                "input" to input,
-                "prefix" to prefix,
-                "highlighted" to highlighted,
-                "suffix" to suffix,
-                "language" to virtualFile?.fileType?.name,
-                "modelTitle" to modelTitle
-            ), null
+            "streamDiffLines",
+            createRequestParams(input, prefix, highlighted, suffix, virtualFile, modelTitle),
+            null
         ) { response ->
-            if (!running) {
-                return@request
-            }
+            if (!running) return@request
 
             val parsed = response as Map<*, *>
-            val done = parsed["done"] as? Boolean
-            if (done == true) {
-                onFinish()
-
-                ApplicationManager.getApplication().invokeLater {
-                    // Clean up progress highlighters
-                    if (currentLineHighlighter != null) {
-                        editor.markupModel.removeHighlighter(currentLineHighlighter!!)
-                    }
-                    unfinishedHighlighters.forEach { editor.markupModel.removeHighlighter(it) }
-
-                    // Flush deletion buffer
-                    insertDeletionBuffer()
-
-                    // Add ", " to the text area
-                    textArea.document.insertString(textArea.caretPosition, ", ", null)
-                    textArea.requestFocus()
-                }
-
+            if (parsed["done"] as? Boolean == true) {
+                handleFinishedResponse()
                 return@request
             }
-            val data = parsed["content"] as Map<*, *>
-            val type = data["type"] as String
-            val diffLineType = when (type) {
-                "same" -> DiffLineType.SAME
-                "new" -> DiffLineType.NEW
-                "old" -> DiffLineType.OLD
-                else -> throw Exception("Unknown diff line type: $type")
-            }
 
-            WriteCommandAction.runWriteCommandAction(project) {
-                handleDiffLine(diffLineType, data["line"] as String)
-            }
+            handleDiffLineResponse(parsed)
+        }
+    }
+
+    private fun createRequestParams(
+        input: String,
+        prefix: String,
+        highlighted: String,
+        suffix: String,
+        virtualFile: VirtualFile?,
+        modelTitle: String
+    ): Map<String, Any?> {
+        return mapOf(
+            "input" to input,
+            "prefix" to prefix,
+            "highlighted" to highlighted,
+            "suffix" to suffix,
+            "language" to virtualFile?.fileType?.name,
+            "modelTitle" to modelTitle
+        )
+    }
+
+    private fun handleFinishedResponse() {
+        onFinish()
+        ApplicationManager.getApplication().invokeLater {
+            cleanupProgressHighlighters()
+            insertDeletionBuffer()
+            appendToTextArea()
+        }
+    }
+
+    private fun cleanupProgressHighlighters() {
+        currentLineHighlighter?.let { editor.markupModel.removeHighlighter(it) }
+        unfinishedHighlighters.forEach { editor.markupModel.removeHighlighter(it) }
+    }
+
+    private fun appendToTextArea() {
+        textArea.document.insertString(textArea.caretPosition, ", ", null)
+        textArea.requestFocus()
+    }
+
+    private fun handleDiffLineResponse(parsed: Map<*, *>) {
+        val data = parsed["content"] as Map<*, *>
+        val diffLineType = getDiffLineType(data["type"] as String)
+
+        WriteCommandAction.runWriteCommandAction(project) {
+            handleDiffLine(diffLineType, data["line"] as String)
+        }
+    }
+
+    private fun getDiffLineType(type: String): DiffLineType {
+        return when (type) {
+            "same" -> DiffLineType.SAME
+            "new" -> DiffLineType.NEW
+            "old" -> DiffLineType.OLD
+            else -> throw Exception("Unknown diff line type: $type")
         }
     }
 }

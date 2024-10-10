@@ -391,9 +391,14 @@ export class VerticalDiffHandler implements vscode.Disposable {
       }
     }
 
-    if (numRed > 0 && accept) {
-      // Delete the actual lines
-      await this.deleteLinesAt(startLine, numRed);
+    if (numRed > 0) {
+      const rangeToDelete =
+        this.redDecorationManager.deleteRangeStartingAt(startLine);
+
+      if (accept) {
+        // Delete the actual lines
+        await this.deleteLinesAt(startLine, numRed);
+      }
     }
 
     // Shift everything below upward
