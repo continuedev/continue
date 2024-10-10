@@ -595,4 +595,48 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     }),
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
+  "ask-sage": {
+    title: "Ask Sage",
+    provider: "ask-sage",
+    description:
+      "The Ask Sage API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
+    icon: "ask-sage.png",
+    longDescription: `To get access to the Ask Sage API, obtain your API key from the [Ask Sage platform](https://chat.asksage.ai/) for all other models.`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Azure OpenAI API key",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "engine",
+        label: "Engine",
+        placeholder: "Enter the engine name",
+        required: true,
+      },
+      { ...apiBaseInput, required: true },
+      {
+        inputType: "text",
+        key: "apiVersion",
+        label: "API Version",
+        placeholder: "Enter the API version",
+        required: false,
+        defaultValue: "2023-07-01-preview",
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.gpt35_gov,
+      models.gpt4_gov,
+      models.gpt4o_gov
+    ],
+    apiKeyUrl: "https://chat.asksage.ai/",
+  },
 };

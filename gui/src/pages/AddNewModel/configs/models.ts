@@ -790,6 +790,51 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["watsonx"],
     isOpenSource: false,
   },
+  gpt4_gov: {
+    title: "GPT-4 gov",
+    description:
+      "U.S. Government. Most capable model today - which is similar to GPT-4o but approved for use by the U.S. Government.",
+    params: {
+      model: "gpt-4o",
+      contextLength: 128_000,
+      title: "GPT-4o",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
+    },
+    providerOptions: ["ask-sage"], // what is the free-trial option?
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt35_gov: {
+    title: "GPT-3.5 gov",
+    description:
+      "U.S. Government. Inexpensive and good ROI.",
+    params: {
+      model: "gpt-4o",
+      contextLength: 128_000,
+      title: "GPT-4o",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
+    },
+    providerOptions: ["ask-sage"], // what is the free-trial option?
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt4o_gov: {
+    title: "GPT-4o gov",
+    description:
+      "U.S. Government. Most capable model today - which is similar to GPT-4o but approved for use by the U.S. Government.",
+    params: {
+      model: "gpt-4o",
+      contextLength: 128_000,
+      title: "GPT-4o",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
+    },
+    providerOptions: ["ask-sage"], // what is the free-trial option?
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   AUTODETECT: {
     title: "Autodetect",
     description:

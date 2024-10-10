@@ -644,7 +644,8 @@ type ModelProvider =
   | "sambanova"
   | "nvidia"
   | "vllm"
-  | "mock";
+  | "mock"
+  | "ask-sage";
 
 export type ModelName =
   | "AUTODETECT"
