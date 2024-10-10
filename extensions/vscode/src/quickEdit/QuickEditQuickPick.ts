@@ -8,6 +8,7 @@ import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
+import { window } from "vscode";
 
 // @ts-ignore - error finding typings
 import { ConfigHandler } from "core/config/ConfigHandler";
@@ -27,6 +28,12 @@ enum QuickEditInitialItemLabels {
   Submit = "Submit",
 }
 
+enum UserPromptLabels {
+  AcceptAll = "Accept all (Shift + Cmd + Enter)",
+  RejectAll = "Reject all (Shift + Cmd + Backspace)",
+  CloseDialog = "Close dialog",
+}
+
 export type QuickEditShowParams = {
   initialPrompt?: string;
   /**
@@ -38,19 +45,31 @@ export type QuickEditShowParams = {
 
 type FileMiniSearchResult = { filename: string };
 
+const FILE_SEARCH_CHAR = "@";
+
+/**
+ * The user has to select an item to submit the prompt,
+ * so we add a "Submit" item once the user has begun to
+ * type their prompt that is always displayed
+ */
+const SUBMIT_ITEM: vscode.QuickPickItem = {
+  label: "Submit",
+  alwaysShow: true,
+};
+
+const NO_RESULTS_ITEM: vscode.QuickPickItem = { label: "No results found" };
+
 /**
  * Quick Edit is a collection of Quick Picks that allow the user to
  * quickly edit a file.
  */
 export class QuickEdit {
-  private static fileSearchChar = "@";
-
   /**
    * Matches the search char followed by non-space chars, excluding matches ending with a space.
    * This is used to detect file search queries while allowing subsequent prompt text
    */
   private static hasFileSearchQueryRegex = new RegExp(
-    `${QuickEdit.fileSearchChar}[^${QuickEdit.fileSearchChar}\\s]+(?!\\s)$`,
+    `${FILE_SEARCH_CHAR}[^${FILE_SEARCH_CHAR}\\s]+(?!\\s)$`,
   );
 
   private static maxFileSearchResults = 20;
@@ -126,23 +145,24 @@ export class QuickEdit {
       this.initialPrompt = args.initialPrompt;
     }
 
-    if (!!args?.range) {
-      this.range = args.range;
-    }
+    this.range = !!args?.range ? args.range : this.editorWhenOpened.selection;
 
-    const selectedLabelOrInputVal = await this._getInitialQuickPickVal();
+    const { label: selectedLabel, value: selectedValue } =
+      await this._getInitialQuickPickVal();
 
-    if (!selectedLabelOrInputVal) {
+    if (!selectedValue && !selectedLabel) {
       return;
     }
 
     Telemetry.capture("quickEditSelection", {
-      selection: selectedLabelOrInputVal,
+      selection: {
+        label: selectedLabel,
+        value: selectedValue,
+      },
     });
 
-    let prompt: string | undefined = undefined;
-
-    switch (selectedLabelOrInputVal) {
+    let prompt: string | undefined;
+    switch (selectedLabel) {
       case QuickEditInitialItemLabels.History:
         const historyVal = await getHistoryQuickPickVal(this.context);
         prompt = historyVal ?? "";
@@ -181,18 +201,69 @@ export class QuickEdit {
 
         break;
 
-      default:
-        // If it wasn't a label we can assume it was user input
-        if (selectedLabelOrInputVal) {
-          prompt = selectedLabelOrInputVal;
-          appendToHistory(selectedLabelOrInputVal, this.context);
+      case QuickEditInitialItemLabels.Submit:
+        if (selectedValue) {
+          prompt = selectedValue;
+          appendToHistory(selectedValue, this.context);
         }
     }
 
     if (prompt) {
-      await this._streamEditWithInputAndContext(prompt);
+      await this.handleUserPrompt(prompt, editor.document.uri.fsPath);
     }
   }
+
+  private handleUserPrompt = async (
+    prompt: string,
+    path: string | undefined,
+  ) => {
+    const modelTitle = await this.getCurModelTitle();
+    await this._streamEditWithInputAndContext(prompt, modelTitle);
+
+    const quickPick = vscode.window.createQuickPick();
+    quickPick.placeholder = "Type your acceptance decision";
+    quickPick.items = [
+      {
+        label: UserPromptLabels.AcceptAll,
+      },
+      { label: UserPromptLabels.RejectAll },
+      {
+        label: UserPromptLabels.CloseDialog,
+      },
+    ];
+    quickPick.title = "Accept changes";
+    quickPick.placeholder =
+      "Accept or reject changes. Start typing to try again with a new prompt.";
+    quickPick.show();
+
+    quickPick.onDidChangeValue(() => {
+      quickPick.items = [SUBMIT_ITEM];
+    });
+
+    quickPick.onDidAccept(async () => {
+      const { label } = quickPick.selectedItems[0];
+      switch (label) {
+        case UserPromptLabels.AcceptAll:
+          vscode.commands.executeCommand("continue.acceptDiff", path);
+          break;
+        case UserPromptLabels.RejectAll:
+          vscode.commands.executeCommand("continue.rejectDiff", path);
+          break;
+        case QuickEditInitialItemLabels.Submit:
+          if (quickPick.value) {
+            await vscode.commands.executeCommand("continue.rejectDiff", path);
+            const newPrompt = quickPick.value;
+            appendToHistory(newPrompt, this.context);
+            this.handleUserPrompt(newPrompt, path);
+          }
+          break;
+        default:
+          break;
+      }
+
+      quickPick.dispose();
+    });
+  };
 
   private async initializeFileSearchState() {
     const workspaceDirs = await this.ide.getWorkspaceDirs();
@@ -253,9 +324,11 @@ export class QuickEdit {
 
     const fileName = vscode.workspace.asRelativePath(uri, true);
 
-    const { start, end } = !!this.range
-      ? this.range
-      : this.editorWhenOpened.selection;
+    if (!this.range) {
+      throw new Error("Range is undefined");
+    }
+
+    const { start, end } = this.range;
 
     const isSelectionEmpty = start.isEqual(end);
 
@@ -266,9 +339,10 @@ export class QuickEdit {
         }`;
   };
 
-  private async _streamEditWithInputAndContext(prompt: string) {
-    const modelTitle = await this.getCurModelTitle();
-
+  private async _streamEditWithInputAndContext(
+    prompt: string,
+    modelTitle: string,
+  ) {
     // Extracts all file references from the prompt string,
     // which are denoted by  an '@' symbol followed by
     // one or more non-whitespace characters.
@@ -302,17 +376,8 @@ export class QuickEdit {
     );
   }
 
-  async _getInitialQuickPickVal(): Promise<string | undefined> {
-    const modelTitle = await this.getCurModelTitle();
-
-    if (!modelTitle) {
-      this.ide.showToast("info", "Please configure a model to use Quick Edit");
-      return undefined;
-    }
-
-    const { uri } = this.editorWhenOpened.document;
-
-    const initialItems: vscode.QuickPickItem[] = [
+  private getInitialItems(modelTitle: string): vscode.QuickPickItem[] {
+    return [
       {
         label: QuickEditInitialItemLabels.History,
         detail: "$(history) Select previous prompts",
@@ -326,31 +391,22 @@ export class QuickEdit {
         detail: `$(chevron-down) ${modelTitle}`,
       },
     ];
+  }
 
-    /**
-     * The user has to select an item to submit the prompt,
-     * so we add a "Submit" item once the user has begun to
-     * type their prompt that is always displayed
-     */
-    const submitItem: vscode.QuickPickItem = {
-      label: "Submit",
-      alwaysShow: true,
-    };
+  async _getInitialQuickPickVal(): Promise<{
+    label: QuickEditInitialItemLabels | undefined;
+    value: string | undefined;
+  }> {
+    const modelTitle = await this.getCurModelTitle();
 
-    /**
-     * Used to show the current file in the Quick Pick,
-     * as soon as the user types the search character
-     */
-    const currentFileItem: vscode.QuickPickItem = {
-      label: vscode.workspace.asRelativePath(uri),
-      description: "Current file",
-      alwaysShow: true,
-    };
-
-    const noResultsItem: vscode.QuickPickItem = { label: "No results found" };
+    if (!modelTitle) {
+      this.ide.showToast("info", "Please configure a model to use Quick Edit");
+      return { label: undefined, value: undefined };
+    }
 
     const quickPick = vscode.window.createQuickPick();
 
+    const initialItems = this.getInitialItems(modelTitle);
     quickPick.items = initialItems;
     quickPick.placeholder =
       "Enter a prompt to edit your code (@ to search files, ⏎ to submit)";
@@ -360,106 +416,134 @@ export class QuickEdit {
 
     quickPick.show();
 
-    /**
-     * Programatically modify the Quick Pick items based on the input value.
-     *
-     * Shows the current file for a new file search, performs a file search,
-     * or shows the submit option.
-     *
-     * If the input is empty, shows the initial items.
-     */
-    quickPick.onDidChangeValue((value) => {
-      if (value !== "") {
-        switch (true) {
-          case value.endsWith(QuickEdit.fileSearchChar):
-            quickPick.items = [currentFileItem];
-            break;
-
-          case QuickEdit.hasFileSearchQueryRegex.test(value):
-            const lastAtIndex = value.lastIndexOf(QuickEdit.fileSearchChar);
-
-            // The search query is the last instance of the
-            // search character to the end of the string
-            const searchQuery = value.substring(lastAtIndex + 1);
-
-            const searchResults = this.miniSearch.search(
-              searchQuery,
-            ) as FileMiniSearchResult[];
-
-            if (searchResults.length > 0) {
-              quickPick.items = searchResults
-                .map(({ filename }) => ({
-                  label: filename,
-                  alwaysShow: true,
-                }))
-                .slice(0, QuickEdit.maxFileSearchResults);
-            } else {
-              quickPick.items = [noResultsItem];
-            }
-
-            break;
-
-          default:
-            // The user does not have a file search in progress,
-            // tso only show the submit option
-            quickPick.items = [submitItem];
-            break;
-        }
-      } else {
-        quickPick.items = initialItems;
-      }
-    });
+    quickPick.onDidChangeValue((value) =>
+      this.handleQuickPickChange({ value, quickPick, initialItems }),
+    );
 
     /**
      * Waits for the user to select an item from the quick pick.
      *
-     * If the selected item is a file, it replaces the file search query
-     * with the selected file path and allows further editing.
-     *
-     * If the selected item is an initial item, it closes the quick pick
-     * and returns the selected item label.
-     *
      * @returns {Promise<string | undefined>} The label of the selected item, or undefined if no item was selected.
      */
-    const selectedItemLabel = await new Promise<string | undefined>(
-      (resolve) => {
-        quickPick.onDidAccept(() => {
-          const { label } = quickPick.selectedItems[0];
-
-          // If not an initial item, it's a file selection. Allow continued prompt editing.
-          const isFileSelection = !Object.values(
-            QuickEditInitialItemLabels,
-          ).includes(label as QuickEditInitialItemLabels);
-
-          if (isFileSelection) {
-            // Replace the file search query with the selected file path
-            const curValue = quickPick.value;
-            const newValue =
-              curValue.substring(0, curValue.lastIndexOf("@") + 1) +
-              label +
-              " ";
-
-            quickPick.value = newValue;
-            quickPick.items = [submitItem];
-          } else {
-            // The user has selected one of the initial items, so we close the Quick Pick
-            resolve(label);
-            quickPick.dispose();
-          }
+    const selectedItemLabel = await new Promise<
+      QuickEditInitialItemLabels | undefined
+    >((resolve) =>
+      quickPick.onDidAccept(() => {
+        this.handleQuickPickAccept({
+          quickPick,
+          resolve,
         });
-      },
+      }),
     );
 
-    const shouldSubmitPrompt =
-      !selectedItemLabel ||
-      selectedItemLabel === QuickEditInitialItemLabels.Submit;
-
-    if (shouldSubmitPrompt) {
-      return quickPick.value;
-    }
-
-    return selectedItemLabel;
+    return {
+      label: selectedItemLabel,
+      value: quickPick.value,
+    };
   }
+
+  /**
+   * Programatically modify the Quick Pick items based on the input value.
+   *
+   * Shows the current file for a new file search, performs a file search,
+   * or shows the submit option.
+   *
+   * If the input is empty, shows the initial items.
+   */
+  private handleQuickPickChange = ({
+    value,
+    quickPick,
+    initialItems,
+  }: {
+    value: string;
+    quickPick: vscode.QuickPick<vscode.QuickPickItem>;
+    initialItems: vscode.QuickPickItem[];
+  }) => {
+    const { uri } = this.editorWhenOpened.document;
+
+    if (value !== "") {
+      switch (true) {
+        case value.endsWith(FILE_SEARCH_CHAR):
+          quickPick.items = [
+            {
+              label: vscode.workspace.asRelativePath(uri),
+              description: "Current file",
+              alwaysShow: true,
+            },
+          ];
+          break;
+
+        case QuickEdit.hasFileSearchQueryRegex.test(value):
+          const lastAtIndex = value.lastIndexOf(FILE_SEARCH_CHAR);
+
+          // The search query is the last instance of the
+          // search character to the end of the string
+          const searchQuery = value.substring(lastAtIndex + 1);
+
+          const searchResults = this.miniSearch.search(
+            searchQuery,
+          ) as FileMiniSearchResult[];
+
+          if (searchResults.length > 0) {
+            quickPick.items = searchResults
+              .map(({ filename }) => ({
+                label: filename,
+                alwaysShow: true,
+              }))
+              .slice(0, QuickEdit.maxFileSearchResults);
+          } else {
+            quickPick.items = [NO_RESULTS_ITEM];
+          }
+
+          break;
+
+        default:
+          // The user does not have a file search in progress,
+          // tso only show the submit option
+          quickPick.items = [SUBMIT_ITEM];
+          break;
+      }
+    } else {
+      quickPick.items = initialItems;
+    }
+  };
+
+  /**
+   * If the selected item is a file, it replaces the file search query
+   * with the selected file path and allows further editing.
+   *
+   * If the selected item is an initial item, it closes the quick pick
+   * and returns the selected item label.
+   */
+  private handleQuickPickAccept = ({
+    quickPick,
+    resolve,
+  }: {
+    quickPick: vscode.QuickPick<vscode.QuickPickItem>;
+    resolve: (value: QuickEditInitialItemLabels | undefined) => void;
+  }) => {
+    const { label } = quickPick.selectedItems[0];
+
+    // If not an initial item, it's a file selection. Allow continued prompt editing.
+    const isFileSelection = !Object.values(QuickEditInitialItemLabels).includes(
+      label as QuickEditInitialItemLabels,
+    );
+
+    if (isFileSelection) {
+      // Replace the file search query with the selected file path
+      const curValue = quickPick.value;
+      const newValue =
+        curValue.substring(0, curValue.lastIndexOf("@") + 1) + label + " ";
+
+      quickPick.value = newValue;
+      quickPick.items = [SUBMIT_ITEM];
+      resolve(undefined);
+    } else {
+      // The user has selected one of the initial items, so we close the Quick Pick
+      resolve(label as QuickEditInitialItemLabels);
+      quickPick.dispose();
+    }
+  };
 
   /**
    * Reset the state of the quick pick
