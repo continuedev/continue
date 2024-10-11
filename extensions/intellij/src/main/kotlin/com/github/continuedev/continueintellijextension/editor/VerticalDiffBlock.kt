@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
 import java.awt.*
 import javax.swing.BorderFactory
@@ -23,13 +24,12 @@ class VerticalDiffBlock(
 ) {
     val deletedLines: MutableList<String> = mutableListOf();
     val addedLines: MutableList<String> = mutableListOf();
-    private val deletionsBuffer: MutableList<String> = mutableListOf()
     private val acceptButton: JButton
     private val rejectButton: JButton
+    private var deletionInlay: Disposable? = null
+    private var textArea: JTextArea? = null // Used for calculation of the text area height when rendering buttons
     private val editorComponentInlaysManager = EditorComponentInlaysManager.from(editor, false)
-    private val deletionInlays: MutableList<Disposable> = mutableListOf()
-    private val greenKey =
-        DiffStreamHandler.createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00, editor)
+    private val greenKey = createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00, editor)
 
     init {
         val (acceptBtn, rejectBtn) = createButtons()
@@ -38,8 +38,9 @@ class VerticalDiffBlock(
         rejectButton = rejectBtn
     }
 
-    fun clear() {
-        removeAllDeletionInlays()
+    fun clearEditorUI() {
+        deletionInlay?.dispose()
+        removeGreenHighlighters()
         removeButtons()
     }
 
@@ -48,18 +49,17 @@ class VerticalDiffBlock(
 
         val (x, y) = getButtonsXYPositions()
 
-        acceptButton.location = Point(x, y)
-        rejectButton.location = Point(x + acceptButton.width + 5, y)
+        rejectButton.location = Point(x, y)
+        acceptButton.location = Point(x + rejectButton.preferredSize.width + 5, y)
 
         refreshEditor()
     }
 
-    fun deleteLineAt(index: Int) {
-        val startOffset = editor.document.getLineStartOffset(index)
-        val endOffset = editor.document.getLineEndOffset(index) + 1
-        val deletedText = editor.document.getText(com.intellij.openapi.util.TextRange(startOffset, endOffset))
+    fun deleteLineAt(line: Int) {
+        val startOffset = editor.document.getLineStartOffset(line)
+        val endOffset = editor.document.getLineEndOffset(line) + 1
+        val deletedText = editor.document.getText(TextRange(startOffset, endOffset))
 
-        // Add the deleted line to deletedLines
         deletedLines.add(deletedText.trimEnd())
 
         editor.document.deleteString(startOffset, min(endOffset, editor.document.textLength))
@@ -72,6 +72,7 @@ class VerticalDiffBlock(
         }
 
         val offset = editor.document.getLineStartOffset(line)
+
         editor.document.insertString(offset, text + "\n")
         editor.markupModel.addLineHighlighter(greenKey, line, HighlighterLayer.LAST)
 
@@ -79,23 +80,29 @@ class VerticalDiffBlock(
     }
 
     fun onLastDiffLine() {
-        if (deletionsBuffer.size > 0) {
+        if (deletedLines.size > 0) {
             renderDeletedLinesInlay()
         }
 
         renderButtons()
     }
 
-    // TODO: Validate we need this
+    fun handleReject() {
+        revertDiff()
+        clearEditorUI()
+    }
+
     private fun refreshEditor() {
         editor.contentComponent.revalidate()
         editor.contentComponent.repaint()
     }
 
     private fun renderDeletedLinesInlay() {
-        val textArea = createDeletionTextArea(deletionsBuffer.joinToString("\n"))
+        val textArea = createDeletionTextArea(deletedLines.joinToString("\n"))
+        this.textArea = textArea
+
         val disposable = editorComponentInlaysManager.insert(startLine, textArea, true)
-        deletionInlays.add(disposable!!)
+        deletionInlay = disposable
     }
 
     private fun renderButtons() {
@@ -117,6 +124,9 @@ class VerticalDiffBlock(
 
         editor.contentComponent.add(acceptButton)
         editor.contentComponent.add(rejectButton)
+
+        editor.contentComponent.setComponentZOrder(acceptButton, 0)
+        editor.contentComponent.setComponentZOrder(rejectButton, 0)
 
         refreshEditor()
     }
@@ -143,12 +153,6 @@ class VerticalDiffBlock(
         return Pair(acceptBtn, rejectBtn)
     }
 
-    private fun removeAllDeletionInlays() {
-        deletionInlays.forEach {
-            it.dispose()
-        }
-    }
-
     private fun removeButtons() {
         editor.contentComponent.remove(acceptButton)
         editor.contentComponent.remove(rejectButton)
@@ -157,37 +161,33 @@ class VerticalDiffBlock(
     }
 
     private fun handleAccept() {
-        deletionInlays.forEach { it.dispose() }
-        deletionInlays.clear()
-        removeGreenHighlighters(startLine, addedLines.size)
+        clearEditorUI()
     }
 
-    private fun handleReject() {
+    private fun revertDiff() {
         WriteCommandAction.runWriteCommandAction(project) {
             // Delete the added lines
             val startOffset = editor.document.getLineStartOffset(startLine)
-            val endOffset = editor.document.getLineEndOffset(startLine + addedLines.size - 1)
+            val endOffset = editor.document.getLineEndOffset(startLine + addedLines.size - 1) + 1
             editor.document.deleteString(startOffset, endOffset)
 
+            // Add the deleted lines back
             if (deletedLines.isNotEmpty()) {
-                editor.document.insertString(startOffset, deletedLines.joinToString("\n"))
+                editor.document.insertString(startOffset, deletedLines.joinToString("\n") + "\n")
             }
         }
-
-        removeGreenHighlighters(startLine, addedLines.size)
     }
 
-    private fun removeGreenHighlighters(startLine: Int, numLines: Int) {
+    private fun removeGreenHighlighters() {
         val highlightersToRemove = editor.markupModel.allHighlighters.filter { highlighter ->
             val highlighterLine = editor.document.getLineNumber(highlighter.startOffset)
-            highlighterLine in startLine until (startLine + numLines)
+            highlighterLine in startLine until (startLine + addedLines.size)
         }
 
         highlightersToRemove.forEach { editor.markupModel.removeHighlighter(it) }
     }
 
     private fun createDeletionTextArea(text: String) = JTextArea(text).apply {
-        // deletionsBuffer.joinToString("\n")
         isEditable = false
         background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
         foreground = JBColor.GRAY
@@ -199,10 +199,12 @@ class VerticalDiffBlock(
 
     private fun getButtonsXYPositions(): Pair<Int, Int> {
         val visibleArea = editor.scrollingModel.visibleArea
+        val textAreaHeight = this.textArea?.height ?: 0
         val lineStartPosition = editor.logicalPositionToXY(LogicalPosition(startLine, 0))
+
         val xPosition =
             visibleArea.x + visibleArea.width - acceptButton.preferredSize.width - rejectButton.preferredSize.width - 20
-        val yPosition = lineStartPosition.y
+        val yPosition = lineStartPosition.y - textAreaHeight
 
         return Pair(xPosition, yPosition)
     }

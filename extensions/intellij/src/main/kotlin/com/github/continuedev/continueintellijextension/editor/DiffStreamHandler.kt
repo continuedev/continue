@@ -6,16 +6,13 @@ import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.colors.TextAttributesKey
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.RangeHighlighter
-import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.ui.JBColor
 import kotlin.math.min
 
 
@@ -31,30 +28,23 @@ class DiffStreamHandler(
     private val onClose: () -> Unit,
     private val onFinish: () -> Unit
 ) {
+    private data class CurLineState(
+        var index: Int, var highlighter: RangeHighlighter? = null, var diffBlock: VerticalDiffBlock? = null
+    )
 
-    private var currentLine = startLine
-    private var currentLineHighlighter: RangeHighlighter? = null
-    private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
+    private var curLine = CurLineState(startLine)
+
     private var isRunning: Boolean = false
+    private var hasAcceptedOrRejectedBlock: Boolean = false
+
+    private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
     private val diffBlocks: MutableList<VerticalDiffBlock> = mutableListOf()
-    private var curDiffBlock: VerticalDiffBlock? = null
-    private val currentLineKey = createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE", 0x40888888, editor)
+
+    private val curLineKey = createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE", 0x40888888, editor)
     private val unfinishedKey = createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE", 0x20888888, editor)
 
     init {
         initUnfinishedRangeHighlights()
-    }
-
-    companion object {
-        fun createTextAttributesKey(name: String, color: Int, editor: Editor): TextAttributesKey {
-            val attributes = TextAttributes().apply {
-                backgroundColor = JBColor(color, color)
-            }
-
-            return TextAttributesKey.createTextAttributesKey(name).also {
-                editor.colorsScheme.setAttributes(it, attributes)
-            }
-        }
     }
 
     fun acceptAll() {
@@ -63,29 +53,28 @@ class DiffStreamHandler(
     }
 
     fun rejectAll() {
-        // TODO: Need to handle differently if we've accepted or rejected a block, althought we probably want to just remove this logic
-        undoChanges()
+        // The ideal action here is to undo all changes we made to return the user's edit buffer to the state prior
+        // to our changes. However, if the user has accepted or rejected one or more diff blocks, there isn't a simple
+        // way to undo our changes without also undoing the diff that the user accepted or rejected.
+        if (hasAcceptedOrRejectedBlock) {
+            diffBlocks.forEach { it.handleReject() }
+        } else {
+            undoChanges()
+        }
+
         resetState()
     }
 
     fun streamDiffLinesToEditor(
-        input: String,
-        prefix: String,
-        highlighted: String,
-        suffix: String,
-        modelTitle: String
+        input: String, prefix: String, highlighted: String, suffix: String, modelTitle: String
     ) {
-//        resetState()
-
         isRunning = true
 
         val continuePluginService = ServiceManager.getService(project, ContinuePluginService::class.java)
         val virtualFile = getVirtualFile()
 
         continuePluginService.coreMessenger?.request(
-            "streamDiffLines",
-            createRequestParams(input, prefix, highlighted, suffix, virtualFile, modelTitle),
-            null
+            "streamDiffLines", createRequestParams(input, prefix, highlighted, suffix, virtualFile, modelTitle), null
         ) { response ->
             if (!isRunning) return@request
 
@@ -111,33 +100,47 @@ class DiffStreamHandler(
         }
     }
 
-    private fun handleDiffLine(type: DiffLineType, line: String) {
+    private fun handleDiffLine(type: DiffLineType, text: String) {
+        // TODO: Remove
+        println("type: ${type} text: ${text}")
         try {
             when (type) {
                 DiffLineType.SAME -> handleSameLine()
-                DiffLineType.NEW -> handleNewLine(line)
+                DiffLineType.NEW -> handleNewLine(text)
                 DiffLineType.OLD -> handleOldLine()
             }
+
             updateProgressHighlighters(type)
+
+            // Since we only call onLastDiffLine() when we reach a "same" line, we need to handle the case where
+            // we reach EOF while in a diff block, since we won't encounter a "same" line.
+            if (curLine.index >= editor.document.lineCount - 1) {
+                curLine.diffBlock?.onLastDiffLine()
+            }
         } catch (e: Exception) {
-            println("Error handling diff line: $currentLine, $type, $line, ${e.message}")
+            println("Error handling diff line: $curLine, $type, $text, ${e.message}")
         }
     }
 
+    private fun handleDiffBlockAcceptOrReject(diffBlock: VerticalDiffBlock, didAccept: Boolean) {
+        hasAcceptedOrRejectedBlock = true
+
+        diffBlocks.remove(diffBlock)
+
+        if (!didAccept) {
+            updatePositionsOnReject(diffBlock.startLine, diffBlock.addedLines.size, diffBlock.deletedLines.size)
+        }
+
+        if (diffBlocks.isEmpty()) {
+            onClose()
+        }
+    }
+
+
     private fun createDiffBlock(): VerticalDiffBlock {
         val diffBlock = VerticalDiffBlock(
-            editor,
-            project,
-            currentLine
-        ) { block, didAccept ->
-            diffBlocks.remove(block)
-            block.clear()
-            updatePositions(didAccept, block.startLine, block.deletedLines.size, block.addedLines.size)
-
-            if (diffBlocks.isEmpty()) {
-                onClose()
-            }
-        }
+            editor, project, curLine.index, ::handleDiffBlockAcceptOrReject
+        )
 
         diffBlocks.add(diffBlock)
 
@@ -145,40 +148,38 @@ class DiffStreamHandler(
     }
 
     private fun handleSameLine() {
-        if (curDiffBlock != null) {
-            curDiffBlock!!.onLastDiffLine()
+        if (curLine.diffBlock != null) {
+            curLine.diffBlock!!.onLastDiffLine()
         }
 
-        curDiffBlock = null
+        curLine.diffBlock = null
 
-        currentLine++
+        curLine.index++
     }
 
     private fun handleNewLine(text: String) {
-        if (curDiffBlock == null) {
-            curDiffBlock = createDiffBlock()
+        if (curLine.diffBlock == null) {
+            curLine.diffBlock = createDiffBlock()
         }
 
-        curDiffBlock!!.addNewLine(text, currentLine)
+        curLine.diffBlock!!.addNewLine(text, curLine.index)
 
-        currentLine++
+        curLine.index++
     }
 
     private fun handleOldLine() {
-        if (curDiffBlock == null) {
-            curDiffBlock = createDiffBlock()
+        if (curLine.diffBlock == null) {
+            curLine.diffBlock = createDiffBlock()
         }
 
-        curDiffBlock!!.deleteLineAt(currentLine)
+        curLine.diffBlock!!.deleteLineAt(curLine.index)
     }
 
     private fun updateProgressHighlighters(type: DiffLineType) {
         // Update the highlighter to show the current line
-        currentLineHighlighter?.let { editor.markupModel.removeHighlighter(it) }
-        currentLineHighlighter = editor.markupModel.addLineHighlighter(
-            currentLineKey,
-            min(currentLine, editor.document.lineCount - 1),
-            HighlighterLayer.LAST
+        curLine.highlighter?.let { editor.markupModel.removeHighlighter(it) }
+        curLine.highlighter = editor.markupModel.addLineHighlighter(
+            curLineKey, min(curLine.index, editor.document.lineCount - 1), HighlighterLayer.LAST
         )
 
         // Remove the unfinished lines highlighter
@@ -188,12 +189,12 @@ class DiffStreamHandler(
     }
 
 
-    private fun updatePositions(didAccept: Boolean, startLine: Int, numAdditions: Int, numDeletions: Int) {
-        val offset = -(if (didAccept) numDeletions else numAdditions)
+    private fun updatePositionsOnReject(startLine: Int, numAdditions: Int, numDeletions: Int) {
+        val offset = -numAdditions + numDeletions
 
-        diffBlocks.forEach { buttons ->
-            if (buttons.startLine > startLine) {
-                buttons.updatePosition(buttons.startLine + offset)
+        diffBlocks.forEach { block ->
+            if (block.startLine > startLine) {
+                block.updatePosition(block.startLine + offset)
             }
         }
     }
@@ -201,11 +202,11 @@ class DiffStreamHandler(
     private fun resetState() {
         // Clear the editor of highlighting/inlays
         editor.markupModel.removeAllHighlighters()
-        diffBlocks.forEach { it.clear() }
+        diffBlocks.forEach { it.clearEditorUI() }
 
         // Clear state vars
         diffBlocks.clear()
-        currentLine = startLine
+        curLine = CurLineState(startLine)
         isRunning = false
 
         // Close the Edit input
@@ -216,9 +217,7 @@ class DiffStreamHandler(
     private fun undoChanges() {
         WriteCommandAction.runWriteCommandAction(project) {
             val undoManager = UndoManager.getInstance(project)
-
             val virtualFile = getVirtualFile() ?: return@runWriteCommandAction
-
             val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile) as TextEditor
 
             if (undoManager.isUndoAvailable(fileEditor)) {
@@ -258,14 +257,11 @@ class DiffStreamHandler(
 
         ApplicationManager.getApplication().invokeLater {
             cleanupProgressHighlighters()
-
-            // In case we don't hit a "same" line before ending
-            curDiffBlock!!.onLastDiffLine()
         }
     }
 
     private fun cleanupProgressHighlighters() {
-        currentLineHighlighter?.let { editor.markupModel.removeHighlighter(it) }
+        curLine.highlighter?.let { editor.markupModel.removeHighlighter(it) }
         unfinishedHighlighters.forEach { editor.markupModel.removeHighlighter(it) }
     }
 

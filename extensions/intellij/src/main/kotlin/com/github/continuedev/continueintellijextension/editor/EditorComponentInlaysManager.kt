@@ -40,6 +40,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
         EditorUtil.disposeWithEditor(editor, this)
     }
 
+
     @RequiresEdt
     fun insert(lineIndex: Int, component: JComponent, showAbove: Boolean = false): Disposable? {
         if (Disposer.isDisposed(this)) return null
