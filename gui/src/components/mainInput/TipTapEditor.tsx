@@ -167,8 +167,19 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
 
+    // Find the position of the last @ character
+    // We do this because editor.getText() isn't a correct representation including node views
+    let startPos = editor.state.selection.anchor;
+    while (
+      startPos > 0 &&
+      editor.state.doc.textBetween(startPos, startPos + 1) !== "@"
+    ) {
+      startPos--;
+    }
+    startPos++;
+
     editor.commands.deleteRange({
-      from: indexOfAt + 2,
+      from: startPos,
       to: editor.state.selection.anchor,
     });
     inSubmenuRef.current = providerId;
