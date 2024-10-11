@@ -101,8 +101,6 @@ class DiffStreamHandler(
     }
 
     private fun handleDiffLine(type: DiffLineType, text: String) {
-        // TODO: Remove
-        println("type: ${type} text: ${text}")
         try {
             when (type) {
                 DiffLineType.SAME -> handleSameLine()
@@ -118,7 +116,7 @@ class DiffStreamHandler(
                 curLine.diffBlock?.onLastDiffLine()
             }
         } catch (e: Exception) {
-            println("Error handling diff line: $curLine, $type, $text, ${e.message}")
+            println("Error handling diff line: ${curLine.index}, $type, $text, ${e.message}")
         }
     }
 
@@ -141,7 +139,7 @@ class DiffStreamHandler(
         val diffBlock = VerticalDiffBlock(
             editor, project, curLine.index, ::handleDiffBlockAcceptOrReject
         )
-
+        
         diffBlocks.add(diffBlock)
 
         return diffBlock
