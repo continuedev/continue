@@ -3,7 +3,6 @@ package com.github.continuedev.continueintellijextension.editor
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
@@ -134,17 +133,28 @@ fun openInlineEdit(project: Project?, editor: Editor) {
 
     // Get highlighted range
     val selectionModel = editor.selectionModel
-    val startLineNumber = editor.document.getLineNumber(selectionModel.selectionStart)
-    val endLineNumber = editor.document.getLineNumber(selectionModel.selectionEnd)
-    val start = editor.document.getLineStartOffset(startLineNumber)
-    val end = editor.document.getLineEndOffset(endLineNumber)
-    val prefix = editor.document.getText(TextRange(0, start))
-    val highlighted = editor.document.getText(TextRange(start, end))
-    val suffix = editor.document.getText(TextRange(end, editor.document.textLength))
+    val startOffset = selectionModel.selectionStart
+    val endOffset = selectionModel.selectionEnd
+    val startLineNumber = editor.document.getLineNumber(startOffset)
+    var endLineNumber = editor.document.getLineNumber(endOffset)
 
-    val startLineNum = editor.document.getLineNumber(start)
-    val endLineNum = editor.document.getLineNumber(end)
-    val lineNumber = max(0, startLineNum - 1)
+    // Doesn't seem to be any built-in methods to check for a line selection that contains trailing newlines.
+    // The only case this matters is when a user double-clicks to highlight a full line. Without this check.
+    // the highlighted range will continue to the following line.
+    val isSingleLineSelection = endLineNumber > startLineNumber &&
+            endLineNumber < editor.document.lineCount &&
+            editor.document.getLineStartOffset(endLineNumber) == endOffset
+
+
+    if (isSingleLineSelection) {
+        endLineNumber--
+    }
+
+    val prefix = editor.document.getText(TextRange(0, startOffset))
+    val highlighted = editor.document.getText(TextRange(startOffset, endOffset))
+    val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
+    val lineNumber = max(0, startLineNumber - 1)
+
 
     // Un-highlight the selected text
     selectionModel.removeSelection()
@@ -166,28 +176,35 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val textArea = makeTextArea()
 
     // Create diff stream handler
-    val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum, {
+    val diffStreamHandler = DiffStreamHandler(project, editor, startLineNumber, endLineNumber, {
         inlayRef.get().dispose()
     }, {
+        textArea.document.insertString(textArea.caretPosition, ", ", null)
+        textArea.requestFocus()
         customPanelRef.get().finish()
     })
+
     val diffStreamService = project.service<DiffStreamService>()
     diffStreamService.register(diffStreamHandler, editor)
-
-    diffStreamHandler.setup()
 
     val comboBoxRef = Ref<JComboBox<String>>()
 
     fun onEnter() {
         val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(" ▾")
         customPanelRef.get().enter()
-        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret)
+        diffStreamHandler.streamDiffLinesToEditor(
+            textArea.text,
+            prefix,
+            highlighted,
+            suffix,
+            selectedModelStrippedOfCaret
+        )
     }
 
     val panel =
         makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, { onEnter() }, {
             diffStreamService.reject(editor)
-            selectionModel.setSelection(start, end)
+            selectionModel.setSelection(startOffset, endOffset)
         }, {
             diffStreamService.accept(editor)
             inlayRef.get().dispose()
@@ -195,7 +212,8 @@ fun openInlineEdit(project: Project?, editor: Editor) {
             diffStreamService.reject(editor)
             inlayRef.get().dispose()
         })
-    val inlay = manager.insert(startLineNum, panel, true)
+
+    val inlay = manager.insert(startLineNumber, panel, true)
 
     panel.revalidate()
     inlayRef.set(inlay)
@@ -215,7 +233,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
             when (e.keyCode) {
                 KeyEvent.VK_ESCAPE -> {
                     diffStreamService.reject(editor)
-                    selectionModel.setSelection(start, end)
+                    selectionModel.setSelection(startOffset, endOffset)
                 }
 
                 KeyEvent.VK_ENTER -> {
@@ -312,11 +330,11 @@ class CustomPanel(
     private val closeButton: JComponent = createCloseButton()
     private val originalTextColor: Color = textArea.foreground
     private val greyTextColor: Color = Color(128, 128, 128, 200)
-    public var isFinished = false
+    var isFinished = false
 
     init {
         isOpaque = false
-        add(closeButton, "pos 100%-25 0 -3 3, w 20!, h 20!")
+        add(closeButton, "pos 100%-20 0 -3 3, w 20!, h 20!")
     }
 
     private fun createCloseButton(): JComponent {
@@ -324,7 +342,7 @@ class CustomPanel(
             foreground = Color(128, 128, 128, 128)
             background = Color(0, 0, 0, 0)
             font = UIUtil.getFontWithFallback("Arial", Font.BOLD, 10)
-            border = EmptyBorder(2, 6, 2, 2)
+            border = EmptyBorder(2, 6, 2, 0)
             toolTipText = "`esc` to cancel"
             isOpaque = false
 

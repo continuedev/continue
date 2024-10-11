@@ -24,8 +24,4 @@ class DiffStreamService {
         handlers[editor]?.acceptAll()
         handlers.remove(editor)
     }
-
-    fun getHandler(editor: Editor): DiffStreamHandler? {
-        return handlers[editor]
-    }
 }
