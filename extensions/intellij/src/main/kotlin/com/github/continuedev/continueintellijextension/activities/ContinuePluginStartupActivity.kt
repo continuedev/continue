@@ -169,8 +169,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
             val listener =
                 ContinuePluginSelectionListener(
-                    ideProtocolClient,
-                    coroutineScope
+                    coroutineScope,
                 )
 
             // Reload the WebView
