@@ -220,7 +220,7 @@ function ModelSelect() {
     (state: RootState) => state.state.config.models,
   );
   const ideMessenger = useContext(IdeMessengerContext);
-  const [$showabove, set$showabove] = useState(false);
+  const [showAbove, setshowAbove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -281,7 +281,7 @@ function ModelSelect() {
     const spaceAbove = rect.top;
     const dropdownHeight = MAX_HEIGHT_PX;
 
-    set$showabove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+    setshowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
   }
 
   function onClickAddModel(e) {
@@ -330,7 +330,7 @@ function ModelSelect() {
           </div>
         </StyledListboxButton>
         <StyledListboxOptions
-          $showabove={$showabove}
+          $showabove={showAbove}
           className="z-50 max-w-[90vw]"
         >
           <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
