@@ -61,7 +61,7 @@ const StyledListboxButton = styled(Listbox.Button)`
   }
 `;
 
-const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
+const StyledListboxOptions = styled(Listbox.Options)<{ $showabove: boolean }>`
   margin-top: 4px;
   position: absolute;
   list-style: none;
@@ -81,7 +81,7 @@ const StyledListboxOptions = styled(Listbox.Options)<{ showAbove: boolean }>`
 
   scrollbar-width: none;
 
-  ${(props) => (props.showAbove ? "bottom: 100%;" : "top: 100%;")}
+  ${(props) => (props.$showabove ? "bottom: 100%;" : "top: 100%;")}
 `;
 
 const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
@@ -220,7 +220,7 @@ function ModelSelect() {
     (state: RootState) => state.state.config.models,
   );
   const ideMessenger = useContext(IdeMessengerContext);
-  const [showAbove, setShowAbove] = useState(false);
+  const [$showabove, set$showabove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -281,7 +281,7 @@ function ModelSelect() {
     const spaceAbove = rect.top;
     const dropdownHeight = MAX_HEIGHT_PX;
 
-    setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+    set$showabove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
   }
 
   function onClickAddModel(e) {
@@ -330,7 +330,7 @@ function ModelSelect() {
           </div>
         </StyledListboxButton>
         <StyledListboxOptions
-          showAbove={showAbove}
+          $showabove={$showabove}
           className="z-50 max-w-[90vw]"
         >
           <div className={`max-h-[${MAX_HEIGHT_PX}px]`}>
