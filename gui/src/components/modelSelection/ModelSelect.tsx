@@ -220,7 +220,7 @@ function ModelSelect() {
     (state: RootState) => state.state.config.models,
   );
   const ideMessenger = useContext(IdeMessengerContext);
-  const [showAbove, setshowAbove] = useState(false);
+  const [showAbove, setShowAbove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
@@ -281,7 +281,7 @@ function ModelSelect() {
     const spaceAbove = rect.top;
     const dropdownHeight = MAX_HEIGHT_PX;
 
-    setshowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
+    setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
   }
 
   function onClickAddModel(e) {
