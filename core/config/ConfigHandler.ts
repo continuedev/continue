@@ -12,97 +12,27 @@ import {
 } from "../index.js";
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
-import { finalToBrowserConfig } from "./load.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
-import { IProfileLoader } from "./profile/IProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
+import { ValidationError } from "./validation.js";
 
-export interface ProfileDescription {
-  title: string;
-  id: string;
-}
+import {
+  ProfileDescription,
+  ProfileLifecycleManager,
+} from "./ProfileLifecycleManager.js";
+
+export type { ProfileDescription };
+
+type ConfigUpdateFunction = (payload: {
+  config: ContinueConfig | undefined;
+  error: ValidationError | undefined;
+}) => void;
 
 // Separately manages saving/reloading each profile
-class ProfileLifecycleManager {
-  private savedConfig: ContinueConfig | undefined;
-  private savedBrowserConfig?: BrowserSerializedContinueConfig;
-  private pendingConfigPromise?: Promise<ContinueConfig>;
-
-  constructor(private readonly profileLoader: IProfileLoader) {}
-
-  get profileId() {
-    return this.profileLoader.profileId;
-  }
-
-  get profileTitle() {
-    return this.profileLoader.profileTitle;
-  }
-
-  get profileDescription(): ProfileDescription {
-    return {
-      title: this.profileTitle,
-      id: this.profileId,
-    };
-  }
-
-  clearConfig() {
-    this.savedConfig = undefined;
-    this.savedBrowserConfig = undefined;
-    this.pendingConfigPromise = undefined;
-  }
-
-  // Clear saved config and reload
-  async reloadConfig(): Promise<ContinueConfig> {
-    this.savedConfig = undefined;
-    this.savedBrowserConfig = undefined;
-    this.pendingConfigPromise = undefined;
-
-    return await this.profileLoader.doLoadConfig();
-  }
-
-  async loadConfig(
-    additionalContextProviders: IContextProvider[],
-  ): Promise<ContinueConfig> {
-    // If we already have a config, return it
-    if (this.savedConfig) {
-      return this.savedConfig;
-    } else if (this.pendingConfigPromise) {
-      return this.pendingConfigPromise;
-    }
-
-    // Set pending config promise
-    this.pendingConfigPromise = new Promise(async (resolve, reject) => {
-      const newConfig = await this.profileLoader.doLoadConfig();
-
-      // Add registered context providers
-      newConfig.contextProviders = (newConfig.contextProviders ?? []).concat(
-        additionalContextProviders,
-      );
-
-      this.savedConfig = newConfig;
-      resolve(newConfig);
-    });
-
-    // Wait for the config promise to resolve
-    this.savedConfig = await this.pendingConfigPromise;
-    this.pendingConfigPromise = undefined;
-    return this.savedConfig;
-  }
-
-  async getSerializedConfig(
-    additionalContextProviders: IContextProvider[],
-  ): Promise<BrowserSerializedContinueConfig> {
-    if (!this.savedBrowserConfig) {
-      const continueConfig = await this.loadConfig(additionalContextProviders);
-      this.savedBrowserConfig = finalToBrowserConfig(continueConfig);
-    }
-    return this.savedBrowserConfig;
-  }
-}
 
 export class ConfigHandler {
   private readonly globalContext = new GlobalContext();
@@ -202,7 +132,7 @@ export class ConfigHandler {
   async setSelectedProfile(profileId: string) {
     this.selectedProfileId = profileId;
     const newConfig = await this.loadConfig();
-    this.notifyConfigListeners(newConfig);
+    this.notifyConfigListeners({ config: newConfig, error: undefined });
     const selectedProfiles =
       this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
     selectedProfiles[await this.getWorkspaceId()] = profileId;
@@ -248,24 +178,44 @@ export class ConfigHandler {
     }
   }
 
-  private notifyConfigListeners(newConfig: ContinueConfig) {
+  private notifyConfigListeners({
+    config,
+    error,
+  }: {
+    config: ContinueConfig | undefined;
+    error: ValidationError | undefined;
+  }) {
     // Notify listeners that config changed
     for (const listener of this.updateListeners) {
-      listener(newConfig);
+      listener({ config, error });
     }
   }
 
-  private updateListeners: ((newConfig: ContinueConfig) => void)[] = [];
-  onConfigUpdate(listener: (newConfig: ContinueConfig) => void) {
+  private updateListeners: ConfigUpdateFunction[] = [];
+
+  onConfigUpdate(listener: ConfigUpdateFunction) {
     this.updateListeners.push(listener);
   }
 
   async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
-    const newConfig = await this.currentProfile.reloadConfig();
-    this.inactiveProfiles.forEach((profile) => profile.clearConfig());
-    this.notifyConfigListeners(newConfig);
-    return newConfig;
+
+    let config: ContinueConfig | undefined;
+    let error: ValidationError | undefined;
+    try {
+      config = await this.currentProfile.reloadConfig();
+      this.inactiveProfiles.forEach((profile) => profile.clearConfig());
+    } catch (caughtError) {
+      console.log(caughtError);
+      if (caughtError instanceof ValidationError) {
+        error = caughtError;
+      } else {
+        throw caughtError;
+      }
+    } finally {
+      this.notifyConfigListeners({ config, error });
+      return { config, error };
+    }
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

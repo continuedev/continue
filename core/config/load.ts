@@ -62,6 +62,7 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
+import { validateConfig } from "./validation.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -107,6 +108,8 @@ function loadSerializedConfig(
       throw new Error(`Failed to parse config.json: ${e}`);
     }
   }
+
+  validateConfig(config);
 
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
