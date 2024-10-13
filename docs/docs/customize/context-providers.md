@@ -396,7 +396,7 @@ Reference the contents of the local variables in the debugger.
 {
   "contextProviders": [
     {
-      "name": "locals",
+      "name": "debugger",
       "params": {
         "stackDepth": 3
       }

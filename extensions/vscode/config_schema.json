@@ -1549,7 +1549,7 @@
               "enum": [
                 "diff",
                 "terminal",
-                "locals",
+                "debugger",
                 "open",
                 "google",
                 "search",

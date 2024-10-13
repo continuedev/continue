@@ -9,8 +9,8 @@ import { BaseContextProvider } from "../index.js";
 
 class LocalsProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "locals",
-    displayTitle: "Locals",
+    title: "debugger",
+    displayTitle: "Debugger",
     description: "Reference the contents of the local variables",
     type: "submenu",
     renderInlineAs: "",
@@ -42,7 +42,7 @@ class LocalsProvider extends BaseContextProvider {
           `This is a paused thread: ${thread?.name}\n` +
           `Current local variable contents: \n${localVariables}.\n` +
           `Current top level call stacks: ${callStackContents}`,
-        name: "Locals",
+        name: "Debugger",
       },
     ];
   }
