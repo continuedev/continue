@@ -27,8 +27,16 @@ export class VoyageReranker implements Reranker {
         model: this.params.model ?? "rerank-2",
       }),
     });
-    const data: any = await resp.json();
-    const results = data.data.sort((a: any, b: any) => a.index - b.index);
-    return results.map((result: any) => result.relevance_score);
+
+    if (resp.status !== 200) {
+      throw new Error(
+        `VoyageReranker API error ${resp.status}: ${await resp.text()}`,
+      );
+    }
+
+    const data: { data: Array<{ index: number; relevance_score: number }> } =
+      await resp.json();
+    const results = data.data.sort((a, b) => a.index - b.index);
+    return results.map((result) => result.relevance_score);
   }
 }
