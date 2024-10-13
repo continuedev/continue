@@ -2,13 +2,14 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 
 import { stripImages } from "core/llm/images";
-import { useContext } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { useLastSessionContext } from "../context/LastSessionContext";
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -21,6 +22,12 @@ function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const ideMessenger = useContext(IdeMessengerContext);
+  const { lastSessionId, setLastSessionId } = useLastSessionContext();
+
+  const updateLastSessionId = useCallback((sessionId: string) => {
+    setLastSessionId(sessionId);
+    setLocalStorage("lastSessionId", sessionId);
+  }, []);
 
   async function getHistory(
     offset?: number,
@@ -86,7 +93,7 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    setLocalStorage("lastSessionId", stateCopy.sessionId);
+    updateLastSessionId(stateCopy.sessionId);
     return await ideMessenger.request("history/save", sessionInfo);
   }
 
@@ -107,7 +114,7 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
-    setLocalStorage("lastSessionId", state.sessionId);
+    updateLastSessionId(state.sessionId);
     const result = await ideMessenger.request("history/load", { id });
     if (result.status === "error") {
       throw new Error(result.error);
@@ -137,6 +144,7 @@ function useHistory(dispatch: Dispatch) {
     getLastSessionId,
     updateSession,
     getSession,
+    lastSessionId,
   };
 }
 

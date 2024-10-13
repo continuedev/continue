@@ -142,17 +142,28 @@ function ProfileSwitcher() {
 
   useEffect(() => {
     ideMessenger.ide.getIdeSettings().then(({ enableControlServerBeta }) => {
+      setControlServerBetaEnabled(enableControlServerBeta);
+      dispatch(setLastControlServerBetaEnabledStatus(enableControlServerBeta));
+
       const shouldShowPopup =
         !lastControlServerBetaEnabledStatus && enableControlServerBeta;
-
       if (shouldShowPopup) {
         ideMessenger.ide.showToast("info", "Continue for Teams enabled");
       }
-
-      setControlServerBetaEnabled(enableControlServerBeta);
-      dispatch(setLastControlServerBetaEnabledStatus(enableControlServerBeta));
     });
   }, []);
+
+  useWebviewListener(
+    "didChangeIdeSettings",
+    async (msg) => {
+      const { settings } = msg;
+      setControlServerBetaEnabled(settings.enableControlServerBeta);
+      dispatch(
+        setLastControlServerBetaEnabledStatus(settings.enableControlServerBeta),
+      );
+    },
+    [],
+  );
 
   useEffect(() => {
     ideMessenger

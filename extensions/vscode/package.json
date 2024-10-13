@@ -77,7 +77,7 @@
         "continue.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "_(Requires window reload)_ Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -167,7 +167,7 @@
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context",
+        "title": "Add Highlighted Code to Context and Clear Chat",
         "group": "Continue"
       },
       {
@@ -188,6 +188,12 @@
         "title": "Toggle Full Screen",
         "icon": "$(fullscreen)",
         "group": "Continue"
+      },
+      {
+        "command": "continue.toggleNewWindow",
+        "category": "Continue",
+        "title": "Open New Window",
+        "icon": "$(link-external)"
       },
       {
         "command": "continue.openConfigJson",
@@ -219,6 +225,12 @@
         "category": "Continue",
         "title": "View History",
         "icon": "$(history)",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.navigateTo",
+        "category": "Continue",
+        "title": "Navigate to a path",
         "group": "Continue"
       },
       {
@@ -438,20 +450,30 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@1",
+          "command": "continue.viewHistory",
+          "group": "navigation@2",
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.viewHistory",
-          "group": "navigation@1",
+          "command": "continue.toggleFullScreen",
+          "group": "navigation@3",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.toggleNewWindow",
+          "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         }
       ],
       "editor/title": [
         {
-          "command": "continue.toggleFullScreen",
+          "command": "continue.newSession",
           "group": "navigation@1",
+          "when": "activeWebviewPanelId == continue.continueGUIView"
+        },
+        {
+          "command": "continue.viewHistory",
+          "group": "navigation@2",
           "when": "activeWebviewPanelId == continue.continueGUIView"
         }
       ],

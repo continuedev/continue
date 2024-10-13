@@ -3,7 +3,7 @@ package com.github.continuedev.continueintellijextension.`continue`
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.services.TelemetryService
-import com.github.continuedev.continueintellijextension.toolWindow.MessageTypes
+import com.github.continuedev.continueintellijextension.constants.MessageTypes
 import com.google.gson.Gson
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
@@ -98,7 +98,7 @@ class CoreMessenger(
             val continuePluginService = project.service<ContinuePluginService>()
             continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }
-
+        
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)

@@ -22,7 +22,7 @@ We recommend configuring **GPT-4o** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **Codestral** as your autocomplete model.
+We recommend configuring **Codestral** as your autocomplete model. There are not currently any other models in Azure that are capable of autocomplete.
 
 ```json title="config.json"
 "tabAutocompleteModel": [{

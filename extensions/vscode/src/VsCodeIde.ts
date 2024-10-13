@@ -512,9 +512,9 @@ class VsCodeIde implements IDE {
     });
   }
 
-  async subprocess(command: string): Promise<[string, string]> {
+  async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return new Promise((resolve, reject) => {
-      exec(command, (error, stdout, stderr) => {
+      exec(command, { cwd }, (error, stdout, stderr) => {
         if (error) {
           console.warn(error);
           reject(stderr);

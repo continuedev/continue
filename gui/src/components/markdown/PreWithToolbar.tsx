@@ -2,7 +2,7 @@ import { debounce } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius } from "..";
+import { defaultBorderRadius, vscEditorBackground } from "..";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import CodeBlockToolBar from "./CodeBlockToolbar";
@@ -12,6 +12,7 @@ const TopDiv = styled.div`
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px;
+  background-color: ${vscEditorBackground};
 `;
 
 function childToText(child: any) {

@@ -9,23 +9,19 @@ class DiffStreamService {
 
     fun register(handler: DiffStreamHandler, editor: Editor) {
         if (handlers.containsKey(editor)) {
-            handlers[editor]?.reject()
+            handlers[editor]?.rejectAll()
         }
         handlers[editor] = handler
         println("Registered handler for editor")
     }
 
     fun reject(editor: Editor) {
-        handlers[editor]?.reject()
+        handlers[editor]?.rejectAll()
         handlers.remove(editor)
     }
 
     fun accept(editor: Editor) {
-        handlers[editor]?.accept()
+        handlers[editor]?.acceptAll()
         handlers.remove(editor)
-    }
-
-    fun getHandler(editor: Editor): DiffStreamHandler? {
-        return handlers[editor]
     }
 }

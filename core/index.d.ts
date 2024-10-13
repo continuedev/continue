@@ -500,7 +500,7 @@ export interface IDE {
   getCurrentFile(): Promise<string | undefined>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
-  subprocess(command: string): Promise<[string, string]>;
+  subprocess(command: string, cwd?: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
@@ -644,7 +644,9 @@ type ModelProvider =
   | "sambanova"
   | "nvidia"
   | "vllm"
-  | "mock";
+  | "mock"
+  | "cerebras";
+
 
 export type ModelName =
   | "AUTODETECT"
@@ -683,6 +685,9 @@ export type ModelName =
   // Llama 3
   | "llama3-8b"
   | "llama3-70b"
+  // Llama 3.1
+  | "llama3.1-8b"
+  | "llama3.1-70b"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -801,6 +806,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "sagemaker"
   | "bedrock"
   | "huggingface-tei"
   | "transformers.js"

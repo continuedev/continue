@@ -180,12 +180,15 @@ If you'd like to write a context provider in a language other than TypeScript, y
     "url": "https://myserver.com/context-provider",
     "title": "http",
     "description": "Custom HTTP Context Provider",
-    "displayTitle": "My Custom Context"
+    "displayTitle": "My Custom Context",
+    "options": {}
   }
 }
 ```
 
-<!-- Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI. -->
+Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
+
+The `"options"` property can be used to send additional parameters to your endpoint, which will be included in the request body.
 
 ## Extension API for VSCode
 

@@ -10,10 +10,12 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
@@ -23,9 +25,9 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
+import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -555,42 +557,50 @@ class IdeProtocolClient(
                             return@launch
                         }
                         val project = editor!!.project ?: return@launch
-
-                        val document: Document = editor!!.document
-                        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@launch
-
-                        val problems = ArrayList<Map<String, Any?>>()
-                        respond(problems)
-
-                        // DaemonCodeAnalyzerImpl has been made internal, which means we cannot access this
-//                        val analyzer = DaemonCodeAnalyzer.getInstance(project) as DaemonCodeAnalyzerImpl
-//                        val highlightInfos = ReadAction.compute<MutableList<HighlightInfo>, Throwable> {
-//                            analyzer.getFileLevelHighlights(project, psiFile)
-//                        }
-//
-//                        for (highlightInfo in highlightInfos) {
-//                            if (highlightInfo.severity === HighlightSeverity.ERROR ||
-//                                    highlightInfo.severity === HighlightSeverity.WARNING) {
-//                                val startOffset = highlightInfo.getStartOffset()
-//                                val endOffset = highlightInfo.getEndOffset()
-//                                val description = highlightInfo.description
-//                                problems.add(mapOf(
-//                                        "filepath" to psiFile.virtualFile?.path,
-//                                        "range" to mapOf(
-//                                                "start" to mapOf(
-//                                                        "line" to document.getLineNumber(startOffset),
-//                                                        "character" to startOffset - document.getLineStartOffset(document.getLineNumber(startOffset))
-//                                                ),
-//                                                "end" to mapOf(
-//                                                        "line" to document.getLineNumber(endOffset),
-//                                                        "character" to endOffset - document.getLineStartOffset(document.getLineNumber(endOffset))
-//                                                )
-//                                        ),
-//                                        "message" to description
-//                                ))
-//                            }
-//                        }
-//                        respond(problems)
+                        ApplicationManager.getApplication().invokeLater {
+                            val document = editor!!.document
+                            val psiFile =
+                                PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@invokeLater
+                            val problems = ArrayList<Map<String, Any?>>()
+                            val highlightInfos =
+                                DocumentMarkupModel.forDocument(document, project, true).allHighlighters.mapNotNull(
+                                    HighlightInfo::fromRangeHighlighter
+                                )
+                            for (highlightInfo in highlightInfos) {
+                                if (highlightInfo.severity === HighlightSeverity.ERROR ||
+                                    highlightInfo.severity === HighlightSeverity.WARNING
+                                ) {
+                                    val startOffset = highlightInfo.getStartOffset()
+                                    val endOffset = highlightInfo.getEndOffset()
+                                    val description = highlightInfo.description
+                                    problems.add(
+                                        mapOf(
+                                            "filepath" to psiFile.virtualFile?.path,
+                                            "range" to mapOf(
+                                                "start" to mapOf(
+                                                    "line" to document.getLineNumber(startOffset),
+                                                    "character" to startOffset - document.getLineStartOffset(
+                                                        document.getLineNumber(
+                                                            startOffset
+                                                        )
+                                                    )
+                                                ),
+                                                "end" to mapOf(
+                                                    "line" to document.getLineNumber(endOffset),
+                                                    "character" to endOffset - document.getLineStartOffset(
+                                                        document.getLineNumber(
+                                                            endOffset
+                                                        )
+                                                    )
+                                                )
+                                            ),
+                                            "message" to description
+                                        )
+                                    )
+                                }
+                            }
+                            respond(problems)
+                        }
                     }
 
                     "getConfigJsUrl" -> {
@@ -720,9 +730,7 @@ class IdeProtocolClient(
                         respond(File.separator)
                     }
 
-                    else -> {
-                        println("Unknown messageType: $messageType")
-                    }
+                    else -> {}
                 }
             } catch (error: Exception) {
                 showToast("error", "Error handling message of type $messageType: $error")
