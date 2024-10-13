@@ -559,6 +559,21 @@ class VsCodeIde implements IDE {
   async sendToAider(auth: PearAuth) {
     await vscode.commands.executeCommand("pearai.sendToAider", auth);
   }
+
+  async getCurrentDirectory(): Promise<string> {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (workspaceFolders && workspaceFolders.length > 0) {
+      return workspaceFolders[0].uri.fsPath;
+    }
+
+    // If no workspace is open, return the directory of the active file
+    const activeEditor = vscode.window.activeTextEditor;
+    if (activeEditor) {
+      return path.dirname(activeEditor.document.uri.fsPath);
+    }
+
+    return "";
+  }
 }
 
 export { VsCodeIde };

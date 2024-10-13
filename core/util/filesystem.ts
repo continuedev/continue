@@ -19,6 +19,7 @@ import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
   constructor(private readonly workspaceDir: string) {}
+
   pathSep(): Promise<string> {
     return Promise.resolve(path.sep);
   }
@@ -236,6 +237,10 @@ class FileSystemIde implements IDE {
 
   authenticatePear(): Promise<void> {
     return Promise.resolve();
+  }
+
+  getCurrentDirectory(): Promise<string> {
+    return Promise.resolve("");
   }
 }
 

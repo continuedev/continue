@@ -108,6 +108,11 @@ export class ReverseMessageIde {
       return this.ide.getIdeSettings();
     });
 
+    this.on("getCurrentDirectory", () => {
+      return this.ide.getCurrentDirectory();
+    });
+
+
     this.on("getDiff", () => {
       return this.ide.getDiff();
     });

@@ -87,6 +87,8 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   updatePearCredentials: [PearAuth, void];
 
   authenticatePear: [undefined, void];
+  getCurrentDirectory: [undefined, string];
+
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {

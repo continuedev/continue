@@ -257,6 +257,9 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getIdeSettings", async (msg) => {
       return ide.getIdeSettings();
     });
+    this.onWebviewOrCore("getCurrentDirectory", async (msg) => {
+      return ide.getCurrentDirectory();
+    });
     this.onWebviewOrCore("getDiff", async (msg) => {
       return ide.getDiff();
     });

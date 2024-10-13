@@ -66,6 +66,7 @@ import {
   slashCommandFromPromptFile,
 } from "./promptFile.js";
 import PearAIServer from "../llm/llms/PearAIServer.js";
+import Aider from "../llm/llms/Aider.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -241,6 +242,7 @@ async function intermediateToFinalConfig(
         writeLog,
         config.completionOptions,
         config.systemMessage,
+        ide.getCurrentDirectory.bind(ide)
       );
       if (!llm) {
         continue;

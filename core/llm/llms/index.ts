@@ -143,6 +143,7 @@ export async function llmFromDescription(
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
+  getCurrentDirectory?: () => Promise<string>, // Add this parameter
 ): Promise<BaseLLM | undefined> {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
@@ -173,6 +174,7 @@ export async function llmFromDescription(
     systemMessage,
     writeLog,
     uniqueId,
+    getCurrentDirectory, // Add this line
   };
 
   if (desc.provider === "continue-proxy") {

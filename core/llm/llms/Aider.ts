@@ -19,6 +19,7 @@ export const AIDER_QUESTION_MARKER = "[Yes]\\:"
 export const AIDER_END_MARKER = '─────────────────────────────────────'
 
 class Aider extends BaseLLM {
+  getCurrentDirectory: (() => Promise<string>) | null = null;
   static providerName: ModelProvider = "aider";
   static defaultOptions: Partial<LLMOptions> = {
     model: "pearai_model",
@@ -29,15 +30,19 @@ class Aider extends BaseLLM {
     },
   };
 
+  private aiderProcess: cp.ChildProcess | null = null;
+  private aiderOutput: string = '';
+
   constructor(options: LLMOptions) {
     super(options);
-    Aider.startAiderChat(this.model, this.apiKey);
+    if (options.getCurrentDirectory) {
+      this.getCurrentDirectory = options.getCurrentDirectory;
+    }
+    console.log("Aider constructor called");
+    this.startAiderChat(this.model, this.apiKey);
   }
 
-  private static aiderProcess: cp.ChildProcess | null = null;
-  private static aiderOutput: string = '';
-
-  static captureAiderOutput(data: Buffer): void {
+  private captureAiderOutput(data: Buffer): void {
     const lines = data.toString().replace(/\r\n|\r/g, '').split('\n');
     console.log("Before lines:", lines)
     let startIndex = 0;
@@ -58,10 +63,19 @@ class Aider extends BaseLLM {
     this.aiderOutput += filteredOutput;
   }
 
-  static startAiderChat(model: string, apiKey: string | undefined): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const currentDir = process.cwd();
+  startAiderChat(model: string, apiKey: string | undefined): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+      let currentDir: string;
+      if (this.getCurrentDirectory) {
+        console.log("Current directory function isNOT  null");
+        currentDir = await this.getCurrentDirectory();
+        console.log("Current directory:", currentDir);
+      } else {
+        console.log("Current directory function is null");
+        currentDir = "/Users/nang/Documents/ebook-generator-site/"; // Todo: make this the dir that is currently open
+      }
       console.log("Current directory:", currentDir);
+
 
       let command: string;
       switch (model) {
@@ -110,7 +124,7 @@ class Aider extends BaseLLM {
     });
   }
 
-  static sendToAiderChat(message: string): void {
+  sendToAiderChat(message: string): void {
     if (this.aiderProcess && this.aiderProcess.stdin && !this.aiderProcess.killed) {
       this.aiderProcess.stdin.write(`${message}\n`);
     } else {
@@ -177,16 +191,16 @@ class Aider extends BaseLLM {
 
     const lastMessage = messages[messages.length - 1].content.toString();
     console.log(lastMessage);
-    Aider.sendToAiderChat(lastMessage);
+    this.sendToAiderChat(lastMessage);
 
     // Reset for new chat
-    Aider.aiderOutput = '';
+    this.aiderOutput = '';
 
     let partialResponse = '';
 
     while (true) {
       await new Promise(resolve => setTimeout(resolve, 100));
-      const newOutput = Aider.aiderOutput.slice(partialResponse.length);
+      const newOutput = this.aiderOutput.slice(partialResponse.length);
 
       if (newOutput) {
         partialResponse += newOutput;
@@ -198,18 +212,18 @@ class Aider extends BaseLLM {
         // Check if newOutput includes AIDER_QUESTION_MARKER and send "Y" if it does
         if (newOutput.match(/\[\s*Y\s*e\s*s\s*\]\s*\\:/i)) {
           await new Promise(resolve => setTimeout(resolve, 300));
-          Aider.sendToAiderChat("Y");
+          this.sendToAiderChat("Y");
           continue
         }
       }
 
-      if (Aider.aiderOutput.includes(AIDER_END_MARKER)) {
+      if (this.aiderOutput.includes(AIDER_END_MARKER)) {
         break;
       }
     }
 
     // Reset the output after capturing a complete response
-    Aider.aiderOutput = '';
+    this.aiderOutput = '';
   }
 
   async listModels(): Promise<string[]> {

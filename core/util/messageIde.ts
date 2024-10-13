@@ -120,6 +120,10 @@ export class MessageIde implements IDE {
   async getWorkspaceDirs(): Promise<string[]> {
     return await this.request("getWorkspaceDirs", undefined);
   }
+  async getCurrentDirectory(): Promise<string> {
+    return await this.request("getCurrentDirectory", undefined);
+  }
+
 
   async showLines(
     filepath: string,
