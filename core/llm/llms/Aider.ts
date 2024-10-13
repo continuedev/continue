@@ -13,6 +13,7 @@ import {
   countTokens,
 } from "../countTokens.js";
 import * as cp from 'child_process';
+import * as process from 'process';
 
 export const AIDER_QUESTION_MARKER = "[Yes]\\:"
 export const AIDER_END_MARKER = '─────────────────────────────────────'
@@ -59,7 +60,7 @@ class Aider extends BaseLLM {
 
   static startAiderChat(model: string, apiKey: string | undefined): Promise<void> {
     return new Promise((resolve, reject) => {
-      const currentDir = "/Users/nang/Documents/ebook-generator-site/"; // Todo: make this the dir that is currently open
+      const currentDir = process.cwd();
       console.log("Current directory:", currentDir);
 
       let command: string;
