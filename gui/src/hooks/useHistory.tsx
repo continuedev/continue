@@ -1,7 +1,6 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 
-import { llmCanGenerateInParallel } from "core/llm/autodetect";
 import { stripImages } from "core/llm/images";
 import { useCallback, useContext, useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -22,9 +21,6 @@ function truncateText(text: string, maxLength: number) {
 function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
-  const disableSessionTitles = useSelector(
-    (store: RootState) => store.state.config.disableSessionTitles,
-  );
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
 
@@ -44,6 +40,14 @@ function useHistory(dispatch: Dispatch) {
     return result.status === "success" ? result.content : [];
   }
 
+  async function getChatTitle(message?: string): Promise<string | undefined> {
+    const result = await ideMessenger.request(
+      "chatDescriber/describe",
+      message,
+    );
+    return result.status === "success" ? result.content : undefined;
+  }
+
   async function saveSession() {
     if (state.history.length === 0) return;
 
@@ -51,6 +55,25 @@ function useHistory(dispatch: Dispatch) {
     dispatch(newSession());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
+    if (
+      state.config?.experimental?.getChatTitles &&
+      stateCopy.title === "New Session"
+    ) {
+      try {
+        // Check if we have first assistant response
+        let assistantResponse = stateCopy.history
+          ?.filter((h) => h.message.role === "assistant")[0]
+          ?.message?.content?.toString();
+
+        if (assistantResponse) {
+          stateCopy.title = await getChatTitle(assistantResponse);
+        }
+      } catch (e) {
+        throw new Error("Unable to get chat title");
+      }
+    }
+
+    // Fallback if we get an error above or if the user has not set getChatTitles
     let title =
       stateCopy.title === "New Session"
         ? truncateText(
@@ -60,31 +83,9 @@ function useHistory(dispatch: Dispatch) {
               .slice(-1)[0] || "",
             50,
           )
+        : stateCopy.title?.length > 0
+        ? stateCopy.title
         : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
-
-    if (
-      false && // Causing maxTokens to be set to 20 for main requests sometimes, so disabling until resolved
-      !disableSessionTitles &&
-      llmCanGenerateInParallel(defaultModel.provider, defaultModel.model)
-    ) {
-      // let fullContent = "";
-      // for await (const { content } of llmStreamChat(
-      //   defaultModel.title,
-      //   undefined,
-      //   [
-      //     ...stateCopy.history.map((item) => item.message),
-      //     {
-      //       role: "user",
-      //       content:
-      //         "Give a maximum 40 character title to describe this conversation so far. The title should help me recall the conversation if I look for it later. DO NOT PUT QUOTES AROUND THE TITLE",
-      //     },
-      //   ],
-      //   { maxTokens: 20 }
-      // )) {
-      //   fullContent += content;
-      // }
-      // title = stripImages(fullContent);
-    }
 
     const sessionInfo: PersistedSessionInfo = {
       history: stateCopy.history,
