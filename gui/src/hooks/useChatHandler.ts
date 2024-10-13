@@ -32,6 +32,7 @@ import {
 import { RootState } from "../redux/store";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
+  console.log("HERE101000")
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
@@ -56,6 +57,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     const cancelToken = abortController.signal;
 
     try {
+      console.log("Hi within useChatHandler")
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,
         cancelToken,

@@ -114,6 +114,7 @@ class PearAIServer extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
+    console.log("HI inside PearAIServer")
 
     await this._countTokens(
       messages.map((m) => m.content).join("\n"),

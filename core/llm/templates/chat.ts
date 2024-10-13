@@ -143,6 +143,12 @@ const chatmlTemplateMessages = templateFactory(
   "<|im_end|>\n",
 );
 
+const aiderTemplateMessages = templateFactory(
+  (msg) => "",
+  "",
+  "",
+  "",
+);
 const templateAlpacaMessages = templateFactory(
   (msg) => `${msg.content}\n\n`,
   "### Instruction:\n",

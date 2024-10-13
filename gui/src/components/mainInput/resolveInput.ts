@@ -126,13 +126,13 @@ async function resolveEditorContent(
     selectedCode,
   });
 
-  if (previousDirectoryItems !== directoryItems[0].content) {
-    store.dispatch(setDirectoryItems(directoryItems[0].content));
-    contextItems.push(...directoryItems);
-    for (const codebaseItem of directoryItems) {
-      contextItemsText += codebaseItem.content + "\n\n";
-    }
-  }
+  // if (previousDirectoryItems !== directoryItems[0].content) {
+  //   store.dispatch(setDirectoryItems(directoryItems[0].content));
+  //   contextItems.push(...directoryItems);
+  //   for (const codebaseItem of directoryItems) {
+  //     contextItemsText += codebaseItem.content + "\n\n";
+  //   }
+  // }
 
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {

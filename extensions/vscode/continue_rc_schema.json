@@ -192,7 +192,8 @@
             "azure",
             "msty",
             "watsonx",
-            "pearai_server"
+            "pearai_server",
+            "aider"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://trypear.ai/reference/Model%20Providers/openai)",
@@ -1427,7 +1428,7 @@
                 "Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
                 "Generate a commit message for the current changes",
                 "Review code and give feedback",
-                "Generate a React component using v0"
+                "Generate a component using v0"
               ]
             },
             {

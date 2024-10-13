@@ -29,6 +29,8 @@ import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { getExtensionUri } from "./util/vscode";
+import * as cp from 'child_process';
+
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -161,6 +163,62 @@ async function addEntireFileToContext(
     rangeInFileWithContents,
   });
 }
+let aiderProcess: cp.ChildProcess | null = null;
+
+function startAiderChat(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // const currentDir = path.dirname(__filename);
+    const currentDir = "/Users/nang/Documents/pearai-master/pearai-submodule"
+    console.log(currentDir);
+
+    const command = '/opt/homebrew/bin/aider --open';
+
+    aiderProcess = cp.spawn('bash', ['-c', command], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: currentDir,
+      env: {
+        ...process.env,
+        OPENAI_API_KEY: 'pearai_key'
+      }
+    });
+
+    if (aiderProcess.stdout && aiderProcess.stderr) {
+      aiderProcess.stdout.on('data', (data: Buffer) => {
+        console.log(`Aider output: ${data.toString()}`);
+      });
+
+      aiderProcess.stderr.on('data', (data: Buffer) => {
+        console.error(`Aider error: ${data.toString()}`);
+      });
+
+      aiderProcess.on('close', (code: number | null) => {
+        console.log(`Aider process exited with code ${code}`);
+        aiderProcess = null;
+      });
+
+      aiderProcess.on('error', (error: Error) => {
+        console.error(`Error starting Aider: ${error.message}`);
+        reject(error);
+      });
+    }
+
+    resolve();
+  });
+}
+
+function sendToAiderChat(message: string): void {
+  if (aiderProcess && aiderProcess.stdin && !aiderProcess.killed) {
+    aiderProcess.stdin.write(`${message}\n`);
+  } else {
+    console.error('Aider process is not running');
+  }
+}
+
+export { startAiderChat, sendToAiderChat };
+
+function updateChatBox(text: string, webviewProtocol: VsCodeWebviewProtocol | undefined) {
+  // Update the chat box UI with the new text
+}
 
 // Copy everything over from extension.ts
 const commandsMap: (
@@ -226,6 +284,25 @@ const commandsMap: (
   }
 
   return {
+    "pearai.startAiderChat": async () => {
+    try {
+      await startAiderChat();
+      vscode.window.showInformationMessage('Aider chat started');
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to start Aider chat: ${error}`);
+    }
+  },
+
+  "pearai.sendToAiderChat": async () => {
+    const message = await vscode.window.showInputBox({
+      prompt: 'Enter your message for Aider',
+      placeHolder: 'Type your message here'
+    });
+
+    if (message) {
+      sendToAiderChat(message);
+    }
+  },
     "pearai.openPearAiWelcome": async () => {
       vscode.commands.executeCommand(
         "markdown.showPreview",
@@ -769,7 +846,7 @@ const commandsMap: (
         vscode.window.showWarningMessage("WSL is for Windows only.");
         return;
       }
-      
+
       const wslExtension = vscode.extensions.getExtension('ms-vscode-remote.remote-wsl');
 
       if (!wslExtension) {
@@ -796,7 +873,7 @@ const commandsMap: (
         );
         PEAR_COMMIT_ID = productJson.commit;
         VSC_COMMIT_ID = productJson.VSCodeCommit;
-        // testing commit ids - its for VSC version 1.89 most probably. 
+        // testing commit ids - its for VSC version 1.89 most probably.
         // VSC_COMMIT_ID = "4849ca9bdf9666755eb463db297b69e5385090e3";
         // PEAR_COMMIT_ID="58996b5e761a7fe74bdfb4ac468e4b91d4d27294";
         vscode.window.showInformationMessage(`VSC commit: ${VSC_COMMIT_ID}`);

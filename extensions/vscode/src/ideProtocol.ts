@@ -555,6 +555,10 @@ class VsCodeIde implements IDE {
   async authenticatePear(): Promise<void> {
     this.ideUtils.executePearLogin();
   }
+
+  async sendToAider(auth: PearAuth) {
+    await vscode.commands.executeCommand("pearai.sendToAider", auth);
+  }
 }
 
 export { VsCodeIde };

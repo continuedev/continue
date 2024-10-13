@@ -611,6 +611,7 @@ type ModelProvider =
   | "msty"
   | "watsonx"
   | "pearai_server"
+  | "aider"
   | "other";
 
 export type ModelName =
@@ -683,7 +684,8 @@ export type ModelName =
   | "starcoder-3b"
   | "starcoder2-3b"
   | "stable-code-3b"
-  | "pearai_model";
+  | "pearai_model"
+  | "aider";
 
 export interface RequestOptions {
   timeout?: number;

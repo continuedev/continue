@@ -213,4 +213,6 @@ export class MessageIde implements IDE {
   authenticatePear(): Promise<void> {
     return this.request("authenticatePear", undefined);
   }
+
+
 }

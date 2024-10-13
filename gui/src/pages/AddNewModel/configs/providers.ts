@@ -66,6 +66,16 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     tags: [ModelProviderTags.Recommended, ModelProviderTags.Hosted],
     packages: [models.pearai_model],
   },
+  aider: {
+    title: "Aider",
+    provider: "aider",
+    refPage: "aider",
+    description:
+      "Enjoy effortless integration and lower your costs with our reliable hosted services.",
+    icon: "aider.png",
+    tags: [ModelProviderTags.Recommended, ModelProviderTags.Hosted],
+    packages: [models.aider],
+  },
   other: {
     title: "Other",
     provider: "other",

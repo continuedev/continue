@@ -36,6 +36,8 @@ import Together from "./Together.js";
 import WatsonX from "./WatsonX.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
 import PearAIServer from "./PearAIServer.js";
+import Aider from "./Aider.js";
+
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -130,6 +132,7 @@ const LLMs = [
   Azure,
   WatsonX,
   PearAIServer,
+  Aider,
 ];
 
 export async function llmFromDescription(
