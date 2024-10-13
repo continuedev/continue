@@ -1745,7 +1745,7 @@
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
                 "Reference the last terminal command",
-                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
+                "Reference the contents of the local variables in the debugger with top n level (defaulting to 3) of call stack for that thread",
                 "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
