@@ -48,7 +48,6 @@
     <actions>
         <action class="com.github.continuedev.continueintellijextension.editor.InlineEditAction"
                 id="continue.inlineEdit"
-                icon="/tool-window-icon.svg"
                 description="Inline Edit"
                 text="Inline Edit">
             <keyboard-shortcut keymap="$default"
@@ -59,29 +58,46 @@
         </action>
 
         <action id="continue.acceptDiff"
-                icon="/tool-window-icon.svg"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Diff">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="alt shift Y"/>
+                               first-keystroke="shift ctrl ENTER"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="alt shift Y"/>
+                               first-keystroke="shift meta ENTER"/>
             <override-text place="GoToAction" text="Continue: Accept Diff"/>
         </action>
 
         <action id="continue.rejectDiff"
-                icon="/tool-window-icon.svg"
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Diff">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="shift ctrl DELETE"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="shift meta DELETE"/>
+            <override-text place="GoToAction" text="Continue: Reject Diff"/>
+        </action>
+
+        <action id="continue.acceptVerticalDiffBlock"
+                class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Vertical Diff Block">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt shift Y"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="alt shift Y"/>
+            <override-text place="GoToAction" text="Continue: Accept Vertical Diff Block"/>
+        </action>
+
+        <action id="continue.rejectVerticalDiffBlock"
+                class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Vertical Diff Block">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="alt shift N"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift N"/>
-            <override-text place="GoToAction" text="Continue: Reject Diff "/>
+            <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
         </action>
 
         <action id="continue.focusContinueInputWithoutClear"
-                icon="/tool-window-icon.svg"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"
                 description="Focus Continue Input With Edit">
@@ -93,7 +109,7 @@
         </action>
 
         <action id="continue.newContinueSession"
-                icon="/tool-window-icon.svg"
+                icon="AllIcons.General.Add"
                 class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
                 text="Start New Continue Session"
                 description="Start New Continue Session">
@@ -102,7 +118,7 @@
         </action>
 
         <action id="continue.viewHistory"
-                icon="/tool-window-icon.svg"
+                icon="AllIcons.Vcs.History"
                 class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
                 text="View History"
                 description="View History">
@@ -110,7 +126,6 @@
         </action>
 
         <action id="continue.focusContinueInput"
-                icon="/tool-window-icon.svg"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
                 text="Add selected code to context"
                 description="Focus Continue Input">

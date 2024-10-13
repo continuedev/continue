@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.215",
+  "version": "0.9.216",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -188,6 +188,12 @@
         "title": "Toggle Full Screen",
         "icon": "$(fullscreen)",
         "group": "Continue"
+      },
+      {
+        "command": "continue.toggleNewWindow",
+        "category": "Continue",
+        "title": "Open New Window",
+        "icon": "$(link-external)"
       },
       {
         "command": "continue.openConfigJson",
@@ -452,6 +458,11 @@
           "command": "continue.toggleFullScreen",
           "group": "navigation@3",
           "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.toggleNewWindow",
+          "group": "navigation@4",
+          "when": "view == continue.continueGUIView"
         }
       ],
       "editor/title": [
@@ -463,11 +474,6 @@
         {
           "command": "continue.viewHistory",
           "group": "navigation@2",
-          "when": "activeWebviewPanelId == continue.continueGUIView"
-        },
-        {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@3",
           "when": "activeWebviewPanelId == continue.continueGUIView"
         }
       ],
