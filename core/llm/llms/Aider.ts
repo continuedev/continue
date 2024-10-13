@@ -41,6 +41,7 @@ class Aider extends BaseLLM {
     console.log("Before lines:", lines)
     let startIndex = 0;
     for (let i = 0; i < lines.length; i++) {
+      // Look for [Yes] with any spaces in between due to terminal buffer edge bases
       if (lines[i].match(/\[\s*Y\s*e\s*s\s*\]\s*:\s*/i) && !lines[i].trim().endsWith(':')) {
         startIndex = i + 1;
         break;
