@@ -8,7 +8,6 @@ import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
-import { window } from "vscode";
 
 // @ts-ignore - error finding typings
 import { ConfigHandler } from "core/config/ConfigHandler";
@@ -482,7 +481,7 @@ export class QuickEdit {
 
           const searchResults = this.miniSearch.search(
             searchQuery,
-          ) as FileMiniSearchResult[];
+          ) as unknown as FileMiniSearchResult[];
 
           if (searchResults.length > 0) {
             quickPick.items = searchResults
