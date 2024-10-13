@@ -388,7 +388,7 @@ Available connection types:
 - `mysql`
 - `sqlite`
 
-### `@Locals`
+### `@Debugger`
 
 Reference the contents of the local variables in the debugger.
 
