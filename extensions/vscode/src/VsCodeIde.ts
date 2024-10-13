@@ -26,6 +26,7 @@ import * as vscode from "vscode";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
+import { EXTENSION_NAME } from "./util/constants";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import {
   getExtensionUri,
@@ -86,6 +87,7 @@ class VsCodeIde implements IDE {
     const session = await vscode.authentication.getSession("github", [], {
       silent: true,
     });
+
     if (session) {
       this.authToken = session.accessToken;
       return this.authToken;
@@ -294,7 +296,7 @@ class VsCodeIde implements IDE {
     const globalEnabled = vscode.env.isTelemetryEnabled;
     const continueEnabled: boolean =
       (await vscode.workspace
-        .getConfiguration("continue")
+        .getConfiguration(EXTENSION_NAME)
         .get("telemetryEnabled")) ?? true;
     return globalEnabled && continueEnabled;
   }
@@ -510,9 +512,9 @@ class VsCodeIde implements IDE {
     });
   }
 
-  async subprocess(command: string): Promise<[string, string]> {
+  async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return new Promise((resolve, reject) => {
-      exec(command, (error, stdout, stderr) => {
+      exec(command, { cwd }, (error, stdout, stderr) => {
         if (error) {
           console.warn(error);
           reject(stderr);
@@ -535,7 +537,7 @@ class VsCodeIde implements IDE {
   }
 
   getIdeSettingsSync(): IdeSettings {
-    const settings = vscode.workspace.getConfiguration("continue");
+    const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
     const remoteConfigServerUrl = settings.get<string | undefined>(
       "remoteConfigServerUrl",
       undefined,

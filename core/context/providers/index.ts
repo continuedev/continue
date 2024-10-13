@@ -23,6 +23,7 @@ import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";
 import DiscordContextProvider from "./DiscordContextProvider";
+import GreptileContextProvider from "./GreptileContextProvider";
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
@@ -55,6 +56,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   ContinueProxyContextProvider,
   RepoMapContextProvider,
   DiscordContextProvider,
+  GreptileContextProvider,
 ];
 
 export function contextProviderClassFromName(

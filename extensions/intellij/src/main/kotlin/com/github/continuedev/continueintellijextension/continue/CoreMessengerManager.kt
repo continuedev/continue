@@ -10,7 +10,11 @@ import com.intellij.openapi.project.Project
 import kotlinx.coroutines.*
 import java.nio.file.Paths
 
-class CoreMessengerManager(private val project: Project, private val ideProtocolClient: IdeProtocolClient, private val coroutineScope: CoroutineScope) {
+class CoreMessengerManager(
+    private val project: Project,
+    private val ideProtocolClient: IdeProtocolClient,
+    private val coroutineScope: CoroutineScope
+) {
 
     var coreMessenger: CoreMessenger? = null
     var lastBackoffInterval = 0.5
@@ -23,7 +27,8 @@ class CoreMessengerManager(private val project: Project, private val ideProtocol
             )
 
             val myPluginId = "com.github.continuedev.continueintellijextension"
-            val pluginDescriptor = PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
+            val pluginDescriptor =
+                PluginManager.getPlugin(PluginId.getId(myPluginId)) ?: throw Exception("Plugin not found")
 
             val pluginPath = pluginDescriptor.pluginPath
             val osName = System.getProperty("os.name").toLowerCase()
@@ -45,10 +50,11 @@ class CoreMessengerManager(private val project: Project, private val ideProtocol
 
             val corePath = Paths.get(pluginPath.toString(), "core").toString()
             val targetPath = Paths.get(corePath, target).toString()
-            val continueCorePath = Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
+            val continueCorePath =
+                Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
 
             // esbuild needs permissions
-            val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
+            val esbuildPath = Paths.get(targetPath, "esbuild" + (if (os == "win32") ".exe" else "")).toString()
 
             setupCoreMessenger(esbuildPath, continueCorePath)
         }

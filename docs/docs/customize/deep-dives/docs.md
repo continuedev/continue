@@ -51,7 +51,7 @@ Indexing will begin upon submission.
 
 To add multiple documentation sites, we recommend adding them in bulk to your `config.json` file. Indexing will kick off upon file save.
 
-The configuration schema is as follows:
+The [configuration schema for docs](https://github.com/continuedev/continue/blob/v0.9.212-vscode/extensions/vscode/config_schema.json#L1943-L1973) is as follows:
 
 ```json
 "docs": [

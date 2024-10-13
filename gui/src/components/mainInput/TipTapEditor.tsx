@@ -16,9 +16,10 @@ import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import { v4 } from "uuid";
 import {
   defaultBorderRadius,
   lightGray,
@@ -168,7 +169,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     editor.commands.deleteRange({
       from: indexOfAt + 2,
-      to: contents.length + 1,
+      to: editor.state.selection.anchor,
     });
     inSubmenuRef.current = providerId;
 
@@ -729,7 +730,11 @@ function TipTapEditor(props: TipTapEditorProps) {
           description: `${relativePath} ${rangeStr}`,
           id: {
             providerTitle: "code",
-            itemId: rif.filepath,
+            itemId: v4(),
+          },
+          uri: {
+            type: "file",
+            value: rif.filepath,
           },
         };
 
@@ -810,19 +815,29 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, []);
 
-  const [optionKeyHeld, setOptionKeyHeld] = useState(false);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  const insertCharacterWithWhitespace = useCallback(
+    (char: string) => {
+      const text = editor.getText();
+      if (!text.endsWith(char)) {
+        if (text.length > 0 && !text.endsWith(" ")) {
+          editor.commands.insertContent(` ${char}`);
+        } else {
+          editor.commands.insertContent(char);
+        }
+      }
+    },
+    [editor],
+  );
 
   return (
     <InputBoxDiv
       onKeyDown={(e) => {
-        if (e.key === "Alt") {
-          setOptionKeyHeld(true);
-        }
+        setActiveKey(e.key);
       }}
       onKeyUp={(e) => {
-        if (e.key === "Alt") {
-          setOptionKeyHeld(false);
-        }
+        setActiveKey(null);
       }}
       className="cursor-text"
       onClick={() => {
@@ -874,14 +889,10 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
       />
       <InputToolbar
-        showNoContext={optionKeyHeld}
+        activeKey={activeKey}
         hidden={shouldHideToolbar && !props.isMainInput}
-        onAddContextItem={() => {
-          if (editor.getText().endsWith("@")) {
-          } else {
-            editor.commands.insertContent("@");
-          }
-        }}
+        onAddContextItem={() => insertCharacterWithWhitespace("@")}
+        onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
         onEnter={onEnterRef.current}
         onImageFileSelected={(file) => {
           handleImageFile(file).then(([img, dataUrl]) => {
@@ -894,6 +905,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           });
         }}
       />
+
       {showDragOverMsg &&
         modelSupportsImages(
           defaultModel.provider,

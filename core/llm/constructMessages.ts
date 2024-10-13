@@ -5,9 +5,10 @@ const SYSTEM_MESSAGE = `When generating new code:
 1. Always produce a single code block.
 2. Never separate the code into multiple code blocks.
 3. Only include the code that is being added.
-4. Replace existing code with a "lazy" block like this: "// ... existing code ..."
-5. You must always provide 1-2 lines of context above and below a "lazy" block
-6. If the user submits a code block that contains a filename in the language specifier, always include the filename in any code block you generate based on that file. The filename should be on the same line as the language specifier in your code block.
+4. Replace existing code with a "lazy" comment like this: "// ... existing code ..."
+5. The "lazy" comment must always be a valid comment in the current context (e.g. "<!-- ... existing code ... -->" for HTML, "// ... existing code ..." for JavaScript, "{/* ... existing code */}" for TSX, etc.)
+6. You must always provide 1-2 lines of context above and below a "lazy" comment
+7. If the user submits a code block that contains a filename in the language specifier, always include the filename in any code block you generate based on that file. The filename should be on the same line as the language specifier in your code block.
 
 Example 1:
 Input:

@@ -22,20 +22,18 @@ import {
 } from "../util/parameters.js";
 import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
-import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
-import { BracketMatchingService } from "./brackets.js";
+
 import AutocompleteLruCache from "./cache.js";
-import {
-  noFirstCharNewline,
-  onlyWhitespaceAfterEndOfLine,
-  stopAtStopTokens,
-} from "./charStream.js";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt.js";
 import { isOnlyPunctuationAndWhitespace } from "./filter.js";
 import { AutocompleteLanguageInfo } from "./languages.js";
+import { postprocessCompletion } from "./postprocessing.js";
+import { AutocompleteSnippet } from "./ranking.js";
+import { RecentlyEditedRange } from "./recentlyEdited.js";
+import { RootPathContextService } from "./services/RootPathContextService.js";
 import {
   avoidPathLineAndEmptyComments,
   noTopLevelKeywordsMidline,
@@ -44,15 +42,19 @@ import {
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
-} from "./lineStream.js";
-import { postprocessCompletion } from "./postprocessing.js";
-import { AutocompleteSnippet } from "./ranking.js";
-import { RecentlyEditedRange } from "./recentlyEdited.js";
+} from "./streamTransforms/lineStream.js";
 import { getTemplateForModel } from "./templates.js";
 import { GeneratorReuseManager } from "./util.js";
 // @prettier-ignore
 import Handlebars from "handlebars";
 import { getConfigJsonPath } from "../util/paths.js";
+import { BracketMatchingService } from "./services/BracketMatchingService.js";
+import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+  stopAtStopTokens,
+} from "./streamTransforms/charStream.js";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -158,9 +160,14 @@ export class CompletionProvider {
       this.onError.bind(this),
     );
     this.importDefinitionsService = new ImportDefinitionsService(this.ide);
+    this.rootPathContextService = new RootPathContextService(
+      this.importDefinitionsService,
+      this.ide,
+    );
   }
 
   private importDefinitionsService: ImportDefinitionsService;
+  private rootPathContextService: RootPathContextService;
   private generatorReuseManager: GeneratorReuseManager;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
@@ -204,7 +211,7 @@ export class CompletionProvider {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       logDevData("autocomplete", outcome);
-      Telemetry.capture(
+      void Telemetry.capture(
         "autocomplete",
         {
           accepted: outcome.accepted,
@@ -378,7 +385,7 @@ export class CompletionProvider {
       outcome.accepted = false;
       logDevData("autocomplete", outcome);
       const { prompt, completion, ...restOfOutcome } = outcome;
-      Telemetry.capture(
+      void Telemetry.capture(
         "autocomplete",
         {
           ...restOfOutcome,
@@ -542,6 +549,7 @@ export class CompletionProvider {
         llm.model,
         extrasSnippets,
         this.importDefinitionsService,
+        this.rootPathContextService,
       );
 
     // If prefix is manually passed

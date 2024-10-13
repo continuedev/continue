@@ -13,14 +13,16 @@ import {
 } from "..";
 import { getFontSize } from "../../util";
 import "./katex.css";
-import LinkableCode from "./LinkableCode";
+import FilenameLink from "./FilenameLink";
 import "./markdown.css";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import { useSelector } from "react-redux";
+import { memoizedContextItemsSelector } from "../../redux/slices/stateSlice";
+import { ctxItemToRifWithContents } from "core/commands/util";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
-  showBorder?: boolean;
 }>`
   pre {
     background-color: ${vscEditorBackground};
@@ -30,8 +32,8 @@ const StyledMarkdown = styled.div<{
     overflow-x: scroll;
     overflow-y: hidden;
 
-    padding: ${(props) => (props.showBorder ? "8px 12px" : "0px 2px")};
-    margin: 0px;
+    margin: 10px 0;
+    padding: 6px 8px;
   }
 
   code {
@@ -65,6 +67,14 @@ const StyledMarkdown = styled.div<{
   ul {
     line-height: 1.5;
   }
+
+  > *:first-child {
+    margin-top: 8px;
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 interface StyledMarkdownPreviewProps {
@@ -76,7 +86,7 @@ interface StyledMarkdownPreviewProps {
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
 
-const getLanuageFromClassName = (className: any): string | null => {
+function getLanuageFromClassName(className: any): string | null {
   if (!className || typeof className !== "string") {
     return null;
   }
@@ -87,11 +97,27 @@ const getLanuageFromClassName = (className: any): string | null => {
     ?.split("-")[1];
 
   return language;
-};
+}
+
+function getCodeChildrenContent(children: any) {
+  if (typeof children === "string") {
+    return children;
+  } else if (
+    Array.isArray(children) &&
+    children.length > 0 &&
+    typeof children[0] === "string"
+  ) {
+    return children[0];
+  }
+
+  return undefined;
+}
 
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
+  const contextItems = useSelector(memoizedContextItemsSelector);
+
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
       remarkMath,
@@ -161,15 +187,18 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         code: ({ node, ...codeProps }) => {
-          if (
-            codeProps.className?.split(" ").includes("hljs") ||
-            codeProps.children?.length > 1
-          ) {
-            return <code {...codeProps}>{codeProps.children}</code>;
-          }
-          return (
-            <LinkableCode {...codeProps}>{codeProps.children}</LinkableCode>
+          const content = getCodeChildrenContent(codeProps.children);
+
+          const ctxItem = contextItems.find((ctxItem) =>
+            ctxItem.uri?.value.includes(content),
           );
+
+          if (ctxItem) {
+            const rif = ctxItemToRifWithContents(ctxItem);
+            return <FilenameLink rif={rif} />;
+          }
+
+          return <code {...codeProps}>{codeProps.children}</code>;
         },
       },
     },
@@ -180,9 +209,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.source]);
 
   return (
-    <StyledMarkdown fontSize={getFontSize()} showBorder={props.showCodeBorder}>
-      {reactContent}
-    </StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
   );
 });
 

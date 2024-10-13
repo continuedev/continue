@@ -22,7 +22,7 @@ We recommend configuring **GPT-4o** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **Codestral** as your autocomplete model.
+We recommend configuring **Codestral** as your autocomplete model. There are not currently any other models in Azure that are capable of autocomplete.
 
 ```json title="config.json"
 "tabAutocompleteModel": [{
@@ -42,7 +42,7 @@ We recommend configuring **Codestral** as your autocomplete model.
 We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 ```json title="config.json"
-"embeddingsProvider": [{
+"embeddingsProvider": {
     "provider": "azure",
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
@@ -50,7 +50,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     "apiVersion": "<YOUR_API_VERSION>",
     "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
-}]
+}
 ```
 
 ## Reranking model

@@ -57,8 +57,6 @@ export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
 export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #fff)`;
 export const vscSidebarBorder = `var(${VSC_SIDEBAR_BORDER_VAR}, transparent)`;
 
-// cececd
-
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
     if (isJetBrains()) {
@@ -407,4 +405,26 @@ export const CloseButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
+`;
+
+export const AnimatedEllipsis = styled.span`
+  &::after {
+    content: ".";
+    animation: ellipsis 2.5s infinite;
+    display: inline-block;
+    width: 12px;
+    text-align: left;
+  }
+
+  @keyframes ellipsis {
+    0% {
+      content: ".";
+    }
+    33% {
+      content: "..";
+    }
+    66% {
+      content: "...";
+    }
+  }
 `;

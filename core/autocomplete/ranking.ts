@@ -80,7 +80,7 @@ export function deduplicateSnippets(
 function mergeSnippetsByRange(
   snippets: Required<AutocompleteSnippet>[],
 ): Required<AutocompleteSnippet>[] {
-  if (snippets.length === 0) {
+  if (snippets.length <= 1) {
     return snippets;
   }
 

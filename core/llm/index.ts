@@ -1,6 +1,7 @@
 import { findLlmInfo } from "@continuedev/llm-info";
 import Handlebars from "handlebars";
 import {
+  CacheBehavior,
   ChatMessage,
   ChatMessageRole,
   CompletionOptions,
@@ -102,6 +103,7 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
 
   engine?: string;
@@ -119,8 +121,6 @@ export abstract class BaseLLM implements ILLM {
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
   watsonxFullUrl?: string;
-
-  cacheSystemMessage?: boolean;
 
   private _llmOptions: LLMOptions;
 
@@ -184,6 +184,7 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+    this.cacheBehavior = options.cacheBehavior;
 
     // for watsonx only
     this.watsonxUrl = options.watsonxUrl;
@@ -192,8 +193,6 @@ export abstract class BaseLLM implements ILLM {
     this.watsonxStopToken = options.watsonxStopToken;
     this.watsonxApiVersion = options.watsonxApiVersion;
     this.watsonxFullUrl = options.watsonxFullUrl;
-
-    this.cacheSystemMessage = options.cacheSystemMessage;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
@@ -262,16 +261,29 @@ export abstract class BaseLLM implements ILLM {
     prompt: string,
     completionOptions: CompletionOptions,
   ): string {
-    const dict = { contextLength: this.contextLength, ...completionOptions };
-    const settings = Object.entries(dict)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join("\n");
-    return `Settings:
-${settings}
+    const completionOptionsLog = JSON.stringify(
+      {
+        contextLength: this.contextLength,
+        ...completionOptions,
+      },
+      null,
+      2,
+    );
 
-############################################
+    let requestOptionsLog = "";
+    if (this.requestOptions) {
+      requestOptionsLog = JSON.stringify(this.requestOptions, null, 2);
+    }
 
-${prompt}`;
+    return (
+      "##### Completion options #####\n" +
+      completionOptionsLog +
+      (requestOptionsLog
+        ? "\n\n##### Request options #####\n" + requestOptionsLog
+        : "") +
+      "\n\n##### Prompt #####\n" +
+      prompt
+    );
   }
 
   private _logTokensGenerated(
@@ -417,7 +429,7 @@ ${prompt}`;
     return formatted;
   }
 
-  async *_streamFim(
+  protected async *_streamFim(
     prefix: string,
     suffix: string,
     options: CompletionOptions,
@@ -703,9 +715,6 @@ ${prompt}`;
         this.providerName,
         autodetectTemplateType(this.model),
       );
-      if (!templateMessages) {
-        return rendered;
-      }
       return templateMessages(rendered);
     }
     return rendered;

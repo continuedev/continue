@@ -42,7 +42,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
 
     class ContinuePluginWindow(toolWindow: ToolWindow, project: Project) {
-
+        
         init {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
             System.setProperty("ide.browser.jcef.contextMenu.devTools.enabled", "true")
@@ -55,8 +55,8 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
             val browser = ContinueBrowser(project, url)
             val continuePluginService = ServiceManager.getService(
-                    project,
-                    ContinuePluginService::class.java
+                project,
+                ContinuePluginService::class.java
             )
             continuePluginService.continuePluginWindow = this
             browser

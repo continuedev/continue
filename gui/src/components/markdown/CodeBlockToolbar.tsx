@@ -2,13 +2,15 @@ import {
   ArrowLeftEndOnRectangleIcon,
   CheckIcon,
   ClipboardIcon,
-  PlayIcon,
   CommandLineIcon,
+  PlayIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useContext, useState } from "react";
-import { useDispatch } from "react-redux";
+import { getBasename } from "core/util";
+import { useContext, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
+import { v4 as uuidv4 } from "uuid";
 import {
   defaultBorderRadius,
   lightGray,
@@ -17,15 +19,14 @@ import {
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { incrementNextCodeBlockToApplyIndex } from "../../redux/slices/uiStateSlice";
 import {
-  getAltKeyLabel,
-  getFontSize,
-  getMetaKeyLabel,
-  isJetBrains,
-} from "../../util";
-import FileIcon from "../FileIcon";
+  incrementNextCodeBlockToApplyIndex,
+  updateApplyState,
+} from "../../redux/slices/uiStateSlice";
+import { RootState } from "../../redux/store";
+import { getFontSize, getMetaKeyLabel, isJetBrains } from "../../util";
 import ButtonWithTooltip from "../ButtonWithTooltip";
+import FileIcon from "../FileIcon";
 import { CopyButton as CopyButtonHeader } from "./CopyButton";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
@@ -127,9 +128,20 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
   const isTerminal = isTerminalCodeBlock(props.language, props.text);
-  const [showAcceptReject, setShowAcceptReject] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+
+  const streamIdRef = useRef<string | null>(null);
+  if (streamIdRef.current === null) {
+    streamIdRef.current = uuidv4();
+  }
+
+  const applyState = useSelector(
+    (store: RootState) =>
+      store.uiState.applyStates.find(
+        (state) => state.streamId === streamIdRef.current,
+      )?.status ?? "closed",
+  );
 
   // Handle apply keyboard shortcut
   useWebviewListener(
@@ -137,6 +149,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     async () => {
       await ideMessenger.request("applyToCurrentFile", {
         text: props.text,
+        streamId: streamIdRef.current,
       });
       dispatch(incrementNextCodeBlockToApplyIndex({}));
     },
@@ -161,10 +174,16 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     if (isTerminal) {
       ideMessenger.ide.runCommand(getTerminalCommand(props.text));
     } else {
-      ideMessenger.post("applyToCurrentFile", { text: props.text });
-      setIsApplying(true);
-      setTimeout(() => setIsApplying(false), 2000);
-      setShowAcceptReject(true);
+      ideMessenger.post("applyToCurrentFile", {
+        text: props.text,
+        streamId: streamIdRef.current,
+      });
+      dispatch(
+        updateApplyState({
+          streamId: streamIdRef.current,
+          status: "streaming",
+        }),
+      );
     }
   }
 
@@ -177,12 +196,22 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
 
   function onClickAccept() {
     ideMessenger.post("acceptDiff", { filepath: props.filepath });
-    setShowAcceptReject(false);
+    dispatch(
+      updateApplyState({
+        streamId: streamIdRef.current,
+        status: "closed",
+      }),
+    );
   }
 
   function onClickReject() {
     ideMessenger.post("rejectDiff", { filepath: props.filepath });
-    setShowAcceptReject(false);
+    dispatch(
+      updateApplyState({
+        streamId: streamIdRef.current,
+        status: "closed",
+      }),
+    );
   }
 
   if (!props.filepath) {
@@ -217,11 +246,11 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   return (
     <ToolbarDiv>
       <div
-        className="flex items-center cursor-pointer py-0.5 px-0.5"
+        className="flex items-center gap-1 cursor-pointer max-w-[50%]"
         onClick={onClickHeader}
       >
-        <FileIcon filename={props.filepath} height="18px" width="18px" />
-        <span className="hover:brightness-125 ml-1">{props.filepath}</span>{" "}
+        <FileIcon height="20px" width="20px" filename={props.filepath} />
+        <span className="truncate">{getBasename(props.filepath)}</span>
       </div>
 
       <div className="flex items-center gap-1">
@@ -233,12 +262,12 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             {isCopied ? (
               <>
                 <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
-                <span>Copied</span>
+                <span className="hidden sm:inline">Copied</span>
               </>
             ) : (
               <>
                 <ClipboardIcon className="w-3 h-3 hover:brightness-125" />
-                <span>Copy</span>
+                <span className="hidden xs:inline">Copy</span>
               </>
             )}
           </div>
@@ -246,7 +275,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
 
         {!isJetBrains() && (
           <div className="flex">
-            {!showAcceptReject ? (
+            {applyState === "closed" ? (
               <ToolbarButton
                 onClick={onClickApply}
                 style={{ color: lightGray }}
@@ -256,10 +285,10 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                   style={{ color: lightGray }}
                 >
                   <PlayIcon className="w-3 h-3" />
-                  <span>Apply</span>
+                  <span className="hidden xs:inline">Apply</span>
                 </div>
               </ToolbarButton>
-            ) : (
+            ) : applyState === "done" ? (
               <>
                 <ToolbarButtonWithTooltip
                   onClick={onClickReject}
@@ -281,6 +310,29 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                   </div>
                 </ToolbarButtonWithTooltip>
               </>
+            ) : (
+              <div className="flex items-center mr-2">
+                <svg
+                  className="animate-spin h-4 w-4 text-gray-400"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
             )}
           </div>
         )}

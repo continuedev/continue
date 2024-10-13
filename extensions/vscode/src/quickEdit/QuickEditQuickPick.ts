@@ -3,7 +3,7 @@ import { IDE } from "core";
 import { walkDir } from "core/indexing/walkDir";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
+import { VerticalDiffManager } from "../diff/vertical/manager";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
@@ -12,8 +12,9 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 // @ts-ignore - error finding typings
 import { ConfigHandler } from "core/config/ConfigHandler";
 // @ts-ignore
-import MiniSearch from "minisearch";
 import { getModelByRole } from "core/config/util";
+// @ts-ignore
+import MiniSearch from "minisearch";
 
 /**
  * Used to track what action to take after a user interacts
@@ -86,7 +87,7 @@ export class QuickEdit {
   private _curModelTitle?: string;
 
   constructor(
-    private readonly verticalDiffManager: VerticalPerLineDiffManager,
+    private readonly verticalDiffManager: VerticalDiffManager,
     private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: IDE,
@@ -294,6 +295,7 @@ export class QuickEdit {
     await this.verticalDiffManager.streamEdit(
       prompt,
       modelTitle,
+      undefined,
       undefined,
       this.previousInput,
       this.range,

@@ -47,6 +47,7 @@ const qwenCoderFimTemplate: AutocompleteTemplate = {
     "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
   completionOptions: {
     stop: [
+      "<|endoftext|>",
       "<|fim_prefix|>",
       "<|fim_middle|>",
       "<|fim_suffix|>",

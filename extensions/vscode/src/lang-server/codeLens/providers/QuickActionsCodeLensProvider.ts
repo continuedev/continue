@@ -6,7 +6,11 @@ import {
   CONTINUE_WORKSPACE_KEY,
   getContinueWorkspaceConfig,
 } from "../../../util/workspaceConfig";
-import { isTutorialFile } from "./TutorialCodeLensProvider";
+
+const TUTORIAL_FILE_NAME = "continue_tutorial.py";
+function isTutorialFile(uri: vscode.Uri) {
+  return uri.fsPath.endsWith(TUTORIAL_FILE_NAME);
+}
 
 export const ENABLE_QUICK_ACTIONS_KEY = "enableQuickActions";
 

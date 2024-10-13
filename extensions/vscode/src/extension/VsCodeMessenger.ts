@@ -1,5 +1,5 @@
-import { ILLM } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
 import {
   FromCoreProtocol,
@@ -19,7 +19,7 @@ import { getConfigJsonPath } from "core/util/paths";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
+import { VerticalDiffManager } from "../diff/vertical/manager";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
@@ -27,7 +27,6 @@ import {
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { getModelByRole } from "core/config/util";
 
 /**
  * A shared messenger class between Core and Webview
@@ -76,7 +75,7 @@ export class VsCodeMessenger {
     >,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
-    private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
+    private readonly verticalDiffManagerPromise: Promise<VerticalDiffManager>,
     private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly workOsAuthProvider: WorkOsAuthProvider,
   ) {
@@ -84,9 +83,24 @@ export class VsCodeMessenger {
     this.onWebview("showFile", (msg) => {
       this.ide.openFile(msg.data.filepath);
     });
+
+    this.onWebview("vscode/openMoveRightMarkdown", (msg) => {
+      vscode.commands.executeCommand(
+        "markdown.showPreview",
+        vscode.Uri.file(
+          path.join(
+            getExtensionUri().fsPath,
+            "media",
+            "move-chat-panel-right.md",
+          ),
+        ),
+      );
+    });
+
     this.onWebview("openConfigJson", (msg) => {
       this.ide.openFile(getConfigJsonPath());
     });
+
     this.onWebview("readRangeInFile", async (msg) => {
       return await vscode.workspace
         .openTextDocument(msg.data.filepath)
@@ -177,10 +191,30 @@ export class VsCodeMessenger {
       );
       const verticalDiffManager = await this.verticalDiffManagerPromise;
       if (instant) {
-        verticalDiffManager.streamDiffLines(diffLines, instant);
+        verticalDiffManager.streamDiffLines(
+          diffLines,
+          instant,
+          msg.data.streamId,
+        );
       } else {
         const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
-        verticalDiffManager.streamEdit(prompt, llm.title);
+        const fullEditorRange = new vscode.Range(
+          0,
+          0,
+          editor.document.lineCount - 1,
+          editor.document.lineAt(editor.document.lineCount - 1).text.length,
+        );
+        const rangeToApplyTo = editor.selection.isEmpty
+          ? fullEditorRange
+          : editor.selection;
+        verticalDiffManager.streamEdit(
+          prompt,
+          llm.title,
+          msg.data.streamId,
+          undefined,
+          undefined,
+          rangeToApplyTo,
+        );
       }
     });
 
@@ -291,7 +325,7 @@ export class VsCodeMessenger {
       return ide.getSearchResults(msg.data.query);
     });
     this.onWebviewOrCore("subprocess", async (msg) => {
-      return ide.subprocess(msg.data.command);
+      return ide.subprocess(msg.data.command, msg.data.cwd);
     });
     this.onWebviewOrCore("getProblems", async (msg) => {
       return ide.getProblems(msg.data.filepath);

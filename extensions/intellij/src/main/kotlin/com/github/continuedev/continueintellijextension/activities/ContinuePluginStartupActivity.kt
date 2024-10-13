@@ -56,25 +56,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
-
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
-
-//        project.messageBus.connect().subscribe(
-//            ToolWindowManagerListener.TOPIC,
-//            object : ToolWindowManagerListener {
-//                override fun stateChanged(toolWindowManager: ToolWindowManager) {
-//                    if (toolWindowManager.activeToolWindowId == TerminalToolWindowFactory.TOOL_WINDOW_ID
-//                        || TerminalView.getInstance(project).isNotAvailable()
-//                    ) {
-//                        project.service<TerminalActivityTrackingService>().update(
-//                            TerminalView.getInstance(project).widgets
-//                        )
-//                    }
-//                }
-//            }
-//        )
-
         initializePlugin(project)
     }
 
@@ -95,15 +78,15 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         }
 
         for (actionId in actionIds) {
-             if (actionId.startsWith("continue")) {
-                 continue
-             }
-             val shortcuts = keymap.getShortcuts(actionId)
-             for (shortcut in shortcuts) {
-                 if (shortcut is KeyboardShortcut && shortcut.firstKeyStroke == keyStroke) {
-                     keymap.removeShortcut(actionId, shortcut)
-                 }
-             }
+            if (actionId.startsWith("continue")) {
+                continue
+            }
+            val shortcuts = keymap.getShortcuts(actionId)
+            for (shortcut in shortcuts) {
+                if (shortcut is KeyboardShortcut && shortcut.firstKeyStroke == keyStroke) {
+                    keymap.removeShortcut(actionId, shortcut)
+                }
+            }
         }
     }
 
@@ -117,7 +100,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
         coroutineScope.launch {
             val settings =
-                    ServiceManager.getService(ContinueExtensionSettings::class.java)
+                ServiceManager.getService(ContinueExtensionSettings::class.java)
             if (!settings.continueState.shownWelcomeDialog) {
                 settings.continueState.shownWelcomeDialog = true
                 // Open continue_tutorial.py
@@ -127,11 +110,11 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             settings.addRemoteSyncJob()
 
             val ideProtocolClient = IdeProtocolClient(
-                    continuePluginService,
-                    defaultStrategy,
-                    coroutineScope,
-                    project.basePath,
-                    project
+                continuePluginService,
+                defaultStrategy,
+                coroutineScope,
+                project.basePath,
+                project
             )
 
             continuePluginService.ideProtocolClient = ideProtocolClient
@@ -141,6 +124,16 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             connection.subscribe(SettingsListener.TOPIC, object : SettingsListener {
                 override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
                     continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
+                    continuePluginService.sendToWebview(
+                        "didChangeIdeSettings", mapOf(
+                            "settings" to mapOf(
+                                "remoteConfigServerUrl" to settings.remoteConfigServerUrl,
+                                "remoteConfigSyncPeriod" to settings.remoteConfigSyncPeriod,
+                                "userToken" to settings.userToken,
+                                "enableControlServerBeta" to settings.enableContinueTeamsBeta
+                            )
+                        )
+                    )
                 }
             })
 
@@ -150,7 +143,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
             if (initialSessionInfo != null) {
                 val data = mapOf(
-                        "sessionInfo" to initialSessionInfo
+                    "sessionInfo" to initialSessionInfo
                 )
                 continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
                 continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
@@ -163,18 +156,21 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
                 override fun handleUpdatedSessionInfo(sessionInfo: ControlPlaneSessionInfo?) {
                     val data = mapOf(
-                            "sessionInfo" to sessionInfo
+                        "sessionInfo" to sessionInfo
                     )
-                    continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
+                    continuePluginService.coreMessenger?.request(
+                        "didChangeControlPlaneSessionInfo",
+                        data,
+                        null
+                    ) { _ -> }
                     continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
                 }
             })
 
             val listener =
-                    ContinuePluginSelectionListener(
-                            ideProtocolClient,
-                            coroutineScope
-                    )
+                ContinuePluginSelectionListener(
+                    coroutineScope,
+                )
 
             // Reload the WebView
             continuePluginService?.let { pluginService ->
@@ -190,8 +186,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             }
 
             EditorFactory.getInstance().eventMulticaster.addSelectionListener(
-                    listener,
-                    this@ContinuePluginStartupActivity
+                listener,
+                this@ContinuePluginStartupActivity
             )
 
             val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)

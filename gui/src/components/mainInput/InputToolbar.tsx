@@ -1,11 +1,11 @@
 import {
-  PhotoIcon as OutlinePhotoIcon,
-  PlusIcon,
+  AtSymbolIcon,
+  PhotoIcon,
+  SlashIcon,
 } from "@heroicons/react/24/outline";
-import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -25,10 +25,10 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
+import { ToolTip } from "../gui/Tooltip";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
-  display: flex;
   justify-content: space-between;
   gap: 1px;
   background-color: ${vscInputBackground};
@@ -37,72 +37,54 @@ const StyledDiv = styled.div<{ isHidden: boolean }>`
   cursor: ${(props) => (props.isHidden ? "default" : "text")};
   opacity: ${(props) => (props.isHidden ? 0 : 1)};
   pointer-events: ${(props) => (props.isHidden ? "none" : "auto")};
-
   user-select: none;
 
   & > * {
     flex: 0 0 auto;
   }
-
-  /* Hide the "Use codebase" span first */
-  @media (max-width: 450px) {
-    & > span:last-child > span:nth-last-child(2) {
-      display: none;
-    }
-  }
 `;
 
-const SecondToDisappearContainer = styled.span`
-  display: flex;
-  align-items: center;
-
-  @media (max-width: 350px) {
-    display: none;
-  }
+const HoverItem = styled.span<{ isActive?: boolean }>`
+  padding: 0 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  cursor: pointer;
+  transition: color 200ms, background-color 200ms, box-shadow 200ms;
 `;
 
-const StyledSpan = styled.span`
-  font-size: ${() => `${getFontSize() - 2}px`};
-  color: ${lightGray};
-`;
-
-const EnterButton = styled.div<{ offFocus: boolean }>`
+const EnterButton = styled.div`
   padding: 2px 4px;
   display: flex;
   align-items: center;
-
-  background-color: ${(props) =>
-    props.offFocus ? undefined : lightGray + "33"};
+  background-color: ${lightGray}33;
   border-radius: ${defaultBorderRadius};
   color: ${vscForeground};
-
-  &:hover {
-    background-color: ${vscBadgeBackground};
-    color: ${vscBadgeForeground};
-  }
-
   cursor: pointer;
 `;
 
 interface InputToolbarProps {
   onEnter?: (modifiers: InputModifiers) => void;
-  usingCodebase?: boolean;
   onAddContextItem?: () => void;
-
+  onAddSlashCommand?: () => void;
   onClick?: () => void;
-
   onImageFileSelected?: (file: File) => void;
-
   hidden?: boolean;
-  showNoContext: boolean;
+  activeKey: string | null;
 }
 
 function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [fileSelectHovered, setFileSelectHovered] = useState(false);
-
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
+
+  const supportsImages =
+    defaultModel &&
+    modelSupportsImages(
+      defaultModel.provider,
+      defaultModel.model,
+      defaultModel.title,
+      defaultModel.capabilities,
+    );
 
   return (
     <>
@@ -110,105 +92,76 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
+        className="flex"
       >
-        <span className="flex gap-2 items-center whitespace-nowrap">
+        <div className="flex gap-2 items-center whitespace-nowrap justify-start">
           <ModelSelect />
-
-          <SecondToDisappearContainer>
-            <StyledSpan
-              onClick={(e) => {
-                props.onAddContextItem();
-              }}
-              className="hover:underline cursor-pointer"
-            >
-              Add Context{" "}
-              <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
-            </StyledSpan>
-            {defaultModel &&
-              modelSupportsImages(
-                defaultModel.provider,
-                defaultModel.model,
-                defaultModel.title,
-                defaultModel.capabilities,
-              ) && (
-                <span
-                  className="ml-1 -mb-0.5 cursor-pointer"
-                  onMouseLeave={() => setFileSelectHovered(false)}
-                  onMouseEnter={() => setFileSelectHovered(true)}
-                >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    style={{ display: "none" }}
-                    accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
-                    onChange={(e) => {
-                      for (const file of e.target.files) {
-                        props.onImageFileSelected(file);
-                      }
+          <div className="items-center hidden xs:flex gap-1 text-gray-400 transition-colors duration-200 -mb-1">
+            {supportsImages && (
+              <>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                  onChange={(e) => {
+                    for (const file of e.target.files) {
+                      props.onImageFileSelected(file);
+                    }
+                  }}
+                />
+                <HoverItem>
+                  <PhotoIcon
+                    className="h-4 w-4"
+                    onClick={(e) => {
+                      fileInputRef.current?.click();
                     }}
                   />
-                  {fileSelectHovered ? (
-                    <SolidPhotoIcon
-                      width="1.4em"
-                      height="1.4em"
-                      color={lightGray}
-                      onClick={(e) => {
-                        fileInputRef.current?.click();
-                      }}
-                    />
-                  ) : (
-                    <OutlinePhotoIcon
-                      width="1.4em"
-                      height="1.4em"
-                      color={lightGray}
-                      onClick={(e) => {
-                        fileInputRef.current?.click();
-                      }}
-                    />
-                  )}
-                </span>
-              )}
-          </SecondToDisappearContainer>
-        </span>
+                </HoverItem>
+              </>
+            )}
 
-        <span className="flex items-center gap-2 whitespace-nowrap">
-          {props.showNoContext ? (
-            <span
-              style={{
-                color: props.usingCodebase ? vscBadgeBackground : lightGray,
-                backgroundColor: props.usingCodebase
-                  ? lightGray + "33"
-                  : undefined,
-                borderRadius: defaultBorderRadius,
-                padding: "2px 4px",
-              }}
-            >
-              {getAltKeyLabel()} ⏎{" "}
-              {useActiveFile ? "No context" : "Use active file"}
-            </span>
-          ) : (
-            <StyledSpan
-              style={{
-                color: props.usingCodebase ? vscBadgeBackground : lightGray,
-                backgroundColor: props.usingCodebase
-                  ? lightGray + "33"
-                  : undefined,
-                borderRadius: defaultBorderRadius,
-                padding: "2px 4px",
-              }}
-              onClick={(e) => {
-                props.onEnter({
-                  useCodebase: true,
-                  noContext: !useActiveFile,
-                });
-              }}
-              className={"hover:underline cursor-pointer float-right"}
-            >
-              {getMetaKeyLabel()} ⏎ Use @codebase
-            </StyledSpan>
-          )}
+            <HoverItem onClick={props.onAddContextItem}>
+              <AtSymbolIcon
+                data-tooltip-id="add-context-item-tooltip"
+                className="h-4 w-4"
+              />
+
+              <ToolTip id="add-context-item-tooltip" place="top-start">
+                Add context (files, docs, urls, etc.)
+              </ToolTip>
+            </HoverItem>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400 ">
+          <div className="hidden sm:flex transition-colors duration-200 hover:underline">
+            {props.activeKey === "Alt" ? (
+              <HoverItem className="underline">
+                {`${getAltKeyLabel()}⏎ 
+                  ${useActiveFile ? "No active file" : "Active file"}`}
+              </HoverItem>
+            ) : (
+              <HoverItem
+                className={props.activeKey === "Meta" && "underline"}
+                onClick={(e) =>
+                  props.onEnter({
+                    useCodebase: true,
+                    noContext: !useActiveFile,
+                  })
+                }
+              >
+                <span data-tooltip-id="add-codebase-context-tooltip">
+                  {getMetaKeyLabel()}⏎ @codebase
+                </span>
+                <ToolTip id="add-codebase-context-tooltip" place="top-end">
+                  Submit with the codebase as context ({getMetaKeyLabel()}⏎)
+                </ToolTip>
+              </HoverItem>
+            )}
+          </div>
+
           <EnterButton
-            offFocus={props.usingCodebase}
             onClick={(e) => {
               props.onEnter({
                 useCodebase: isMetaEquivalentKeyPressed(e),
@@ -216,9 +169,10 @@ function InputToolbar(props: InputToolbarProps) {
               });
             }}
           >
-            ⏎ Enter
+            <span className="hidden md:inline">⏎ Enter</span>
+            <span className="md:hidden">⏎</span>
           </EnterButton>
-        </span>
+        </div>
       </StyledDiv>
     </>
   );

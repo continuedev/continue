@@ -17,10 +17,10 @@ function ProviderAlert() {
   }
 
   return (
-    <div>
+    <div className="w-full">
       <Alert type="info">
         <p className="font-semibold text-sm m-0">
-          Prefer to use an different provider like OpenAI?
+          Prefer to use a different provider like OpenAI?
         </p>
         <p className="m-0 mt-1">
           <a

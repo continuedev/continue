@@ -91,7 +91,7 @@ class DocsContextProvider extends BaseContextProvider {
       await docsService.isJetBrainsAndPreIndexedDocsProvider();
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
-      extras.ide.showToast(
+      await extras.ide.showToast(
         "error",
         `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
           "the embeddings provider, but it cannot be used with JetBrains. " +
@@ -105,7 +105,7 @@ class DocsContextProvider extends BaseContextProvider {
     const preIndexedDoc = preIndexedDocs[query];
 
     if (!!preIndexedDoc) {
-      Telemetry.capture("docs_pre_indexed_doc_used", {
+      void Telemetry.capture("docs_pre_indexed_doc_used", {
         doc: preIndexedDoc["title"],
       });
     }
@@ -147,6 +147,10 @@ class DocsContextProvider extends BaseContextProvider {
             : chunk.otherMetadata?.title || chunk.filepath,
           description: chunk.filepath,
           content: chunk.content,
+          uri: {
+            type: "url" as const,
+            value: chunk.filepath,
+          },
         }))
         .reverse(),
       {

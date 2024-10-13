@@ -6,7 +6,7 @@ keywords: [context, "@", provider, LLM]
 
 Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider.
 
-As an example, say you are working on solving a new GitHub Issue. You type '@Isse' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
+As an example, say you are working on solving a new GitHub Issue. You type '@Issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
 
 ![Context Items](/img/context-provider-example.png)
 
@@ -58,7 +58,7 @@ Reference all of the changes you've made to your current branch. This is useful 
 
 ### `@Terminal`
 
-Reference the contents of your IDE's terminal.
+Reference the last command you ran in your IDE's terminal and its output.
 
 ```json title="config.json"
 {
@@ -200,7 +200,7 @@ For example, type "@Google python tutorial" if you want to search and discuss wa
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
-### `@Isse`
+### `@Issue`
 
 Reference the conversation in a GitHub issue.
 
@@ -410,7 +410,13 @@ Reference table schemas from Sqlite, Postgres, and MySQL databases.
 }
 ```
 
-Each connection should include a unique name, the connection_type (e.g., postgres, sqlite), and the necessary connection parameters specific to each database type.
+Each connection should include a unique name, the `connection_type`, and the necessary connection parameters specific to each database type.
+
+Available connection types:
+
+- `postgres`
+- `mysql`
+- `sqlite`
 
 ### `@Locals`
 
@@ -462,6 +468,51 @@ Reference the architecture and platform of your current operating system.
       "name": "os"
     }
   ]
+}
+```
+
+### `@HTTP`
+
+The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "http",
+      "params": {
+        "url": "https://api.example.com/v1/users"
+      }
+    }
+  ]
+}
+```
+
+The receiving URL should expect to receive the following parameters:
+
+```json title="POST parameters"
+{
+  query: string,
+  fullInput: string
+}
+```
+
+The response 200 OK should be a JSON object with the following structure:
+
+```json title="Response"
+[
+  {
+    "name": "",
+    "description": "",
+    "content": ""
+  }
+]
+
+// OR
+{
+  "name": "",
+  "description": "",
+  "content": ""
 }
 ```
 

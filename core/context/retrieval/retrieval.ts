@@ -1,11 +1,13 @@
+import path from "path";
 import { BranchAndDir, ContextItem, ContextProviderExtras } from "../../";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
-import { getRelativePath } from "../../util/";
 import { INSTRUCTIONS_BASE_ITEM } from "../providers/utils";
 import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline";
 import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline";
 import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline";
+
+const DEFAULT_N_FINAL = 25;
 
 export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
@@ -42,7 +44,8 @@ export async function retrieveContextItemsFromEmbeddings(
   const contextLength = extras.llm.contextLength;
   const tokensPerSnippet = 512;
   const nFinal =
-    options?.nFinal ?? Math.min(50, contextLength / tokensPerSnippet / 2);
+    options?.nFinal ??
+    Math.min(DEFAULT_N_FINAL, contextLength / tokensPerSnippet / 2);
   const useReranking = !!extras.reranker;
   const nRetrieve = useReranking ? options?.nRetrieve || 2 * nFinal : nFinal;
 
@@ -94,21 +97,32 @@ export async function retrieveContextItemsFromEmbeddings(
   }
 
   return [
-    ...results.map((r) => {
-      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${
-        r.startLine
-      }-${r.endLine})`;
-      const description = `${r.filepath} (${r.startLine}-${r.endLine})`;
-      return {
-        name,
-        description,
-        content: `\`\`\`${name}\n${r.content}\n\`\`\``,
-      };
-    }),
     {
       ...INSTRUCTIONS_BASE_ITEM,
       content:
         "Use the above code to answer the following question. You should not reference any files outside of what is shown, unless they are commonly known files, like a .gitignore or package.json. Reference the filenames whenever possible. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
     },
+    ...results
+      .sort((a, b) => a.filepath.localeCompare(b.filepath))
+      .map((r) => {
+        const name = `${path.basename(r.filepath)} (${r.startLine}-${
+          r.endLine
+        })`;
+        const description = `${r.filepath}`;
+
+        if (r.filepath.includes("package.json")) {
+          console.log();
+        }
+
+        return {
+          name,
+          description,
+          content: `\`\`\`${name}\n${r.content}\n\`\`\``,
+          uri: {
+            type: "file" as const,
+            value: r.filepath,
+          },
+        };
+      }),
   ];
 }

@@ -47,6 +47,7 @@ declare global {
     llmRequestHook?: (model: string, prompt: string) => any;
     apiKey?: string;
     apiBase?: string;
+    cacheBehavior?: CacheBehavior;
 
     engine?: string;
     apiVersion?: string;
@@ -313,6 +314,7 @@ declare global {
     apiKey?: string;
     aiGatewaySlug?: string;
     apiBase?: string;
+    cacheBehavior?: CacheBehavior;
 
     useLegacyCompletionsEndpoint?: boolean;
 
@@ -341,8 +343,6 @@ declare global {
     watsonxProjectId?: string;
     watsonxStopToken?: string;
     watsonxApiVersion?: string;
-
-    cacheSystemMessage?: boolean;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,
@@ -547,7 +547,8 @@ declare global {
     | "docs"
     | "gitlab-mr"
     | "os"
-    | "currentFile";
+    | "currentFile"
+    | "greptile";
 
   type TemplateType =
     | "llama2"
@@ -687,6 +688,11 @@ declare global {
     clientCertificate?: ClientCertificateOptions;
   }
 
+  export interface CacheBehavior {
+    cacheSystemMessage?: boolean;
+    cacheConversation?: boolean;
+  }
+
   export interface ClientCertificateOptions {
     cert: string;
     key: string;
@@ -749,6 +755,7 @@ declare global {
     requestOptions?: RequestOptions;
     promptTemplates?: { [key: string]: string };
     capabilities?: ModelCapability;
+    cacheBehavior?: CacheBehavior;
   }
 
   export type EmbeddingsProviderName =
