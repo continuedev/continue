@@ -7,7 +7,7 @@ import {
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 
-class LocalsProvider extends BaseContextProvider {
+class DebugLocalsProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "debugger",
     displayTitle: "Debugger",
@@ -60,4 +60,4 @@ class LocalsProvider extends BaseContextProvider {
   }
 }
 
-export default LocalsProvider;
+export default DebugLocalsProvider;
