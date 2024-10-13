@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Added
-body: Further prompt caching with Anthropic
-time: 2024-09-29T09:56:27.946259-07:00

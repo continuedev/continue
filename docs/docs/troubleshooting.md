@@ -40,7 +40,9 @@ If you're getting a response from the LLM that doesn't seem to make sense, you c
 
 ### JetBrains
 
-Open `~/.continue/logs/core.log`. The most recent logs are found at the bottom of the file.
+Open `~/.continue/logs/core.log` to view the logs for the Continue plugin. The most recent logs are found at the bottom of the file.
+
+Some JetBrains-related logs may also be found by clicking "Help" > "Show Log in Explorer/Finder".
 
 ## Download the latest pre-release
 
