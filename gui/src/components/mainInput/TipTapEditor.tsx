@@ -16,7 +16,7 @@ import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { v4 } from "uuid";
@@ -167,8 +167,19 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
 
+    // Find the position of the last @ character
+    // We do this because editor.getText() isn't a correct representation including node views
+    let startPos = editor.state.selection.anchor;
+    while (
+      startPos > 0 &&
+      editor.state.doc.textBetween(startPos, startPos + 1) !== "@"
+    ) {
+      startPos--;
+    }
+    startPos++;
+
     editor.commands.deleteRange({
-      from: indexOfAt + 2,
+      from: startPos,
       to: editor.state.selection.anchor,
     });
     inSubmenuRef.current = providerId;
@@ -817,6 +828,20 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
+  const insertCharacterWithWhitespace = useCallback(
+    (char: string) => {
+      const text = editor.getText();
+      if (!text.endsWith(char)) {
+        if (text.length > 0 && !text.endsWith(" ")) {
+          editor.commands.insertContent(` ${char}`);
+        } else {
+          editor.commands.insertContent(char);
+        }
+      }
+    },
+    [editor],
+  );
+
   return (
     <InputBoxDiv
       onKeyDown={(e) => {
@@ -877,16 +902,8 @@ function TipTapEditor(props: TipTapEditorProps) {
       <InputToolbar
         activeKey={activeKey}
         hidden={shouldHideToolbar && !props.isMainInput}
-        onAddContextItem={() => {
-          if (!editor.getText().endsWith("@")) {
-            editor.commands.insertContent("@");
-          }
-        }}
-        onAddSlashCommand={() => {
-          if (!editor.getText().endsWith("/")) {
-            editor.commands.insertContent("/");
-          }
-        }}
+        onAddContextItem={() => insertCharacterWithWhitespace("@")}
+        onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
         onEnter={onEnterRef.current}
         onImageFileSelected={(file) => {
           handleImageFile(file).then(([img, dataUrl]) => {

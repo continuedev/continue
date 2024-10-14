@@ -1,6 +1,6 @@
-import { LlmInfo } from "../types.js";
+import { llms } from "../util.js";
 
-export const AnthropicLlms: LlmInfo[] = [
+export const AnthropicLlms = llms("anthropic", [
   {
     model: "claude-3-5-sonnet-20240620",
     displayName: "Claude 3.5 Sonnet",
@@ -9,6 +9,7 @@ export const AnthropicLlms: LlmInfo[] = [
     description:
       "Most intelligent model with the highest level of intelligence and capability.",
     regex: /claude-3\.5-sonnet/i,
+    recommendedFor: ["chat"],
   },
   {
     model: "claude-3-opus-20240229",
@@ -64,4 +65,4 @@ export const AnthropicLlms: LlmInfo[] = [
       "Our cheapest small and fast model, a predecessor of Claude Haiku.",
     regex: /claude-instant-1\.2/i,
   },
-];
+]);

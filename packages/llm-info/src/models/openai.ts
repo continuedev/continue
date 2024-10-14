@@ -1,6 +1,6 @@
-import { LlmInfo } from "../types.js";
+import { llms } from "../util.js";
 
-export const OpenAiLlms: LlmInfo[] = [
+export const OpenAiLlms = llms("openai", [
   {
     model: "gpt-3.5-turbo",
     displayName: "GPT-3.5 Turbo",
@@ -73,11 +73,13 @@ export const OpenAiLlms: LlmInfo[] = [
     model: "gpt-4o",
     displayName: "GPT-4o",
     contextLength: 128_000,
+    recommendedFor: ["chat"],
   },
   {
     model: "gpt-4o-mini",
     displayName: "GPT-4o Mini",
     contextLength: 128_000,
+    recommendedFor: ["chat"],
   },
   // o1
   {
@@ -85,11 +87,27 @@ export const OpenAiLlms: LlmInfo[] = [
     displayName: "o1 Preview",
     contextLength: 128_000,
     maxCompletionTokens: 32_768,
+    recommendedFor: ["chat"],
   },
   {
     model: "o1-mini",
     displayName: "o1 Mini",
     contextLength: 128_000,
     maxCompletionTokens: 65_536,
+    recommendedFor: ["chat"],
   },
-];
+  // embed
+  {
+    model: "text-embedding-3-large",
+    displayName: "Text Embedding 3-Large",
+    recommendedFor: ["embed"],
+  },
+  {
+    model: "text-embedding-3-small",
+    displayName: "Text Embedding 3-Small",
+  },
+  {
+    model: "text-embedding-ada-002",
+    displayName: "Text Embedding Ada-002",
+  },
+]);

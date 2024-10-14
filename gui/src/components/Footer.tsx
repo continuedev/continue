@@ -2,16 +2,16 @@ import {
   Cog6ToothIcon,
   EllipsisHorizontalCircleIcon,
 } from "@heroicons/react/24/outline";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
-import ProgressBar from "./loaders/ProgressBar";
-import ProfileSwitcher from "./ProfileSwitcher";
-import ButtonWithTooltip from "./ButtonWithTooltip";
-import { useSelector } from "react-redux";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { RootState } from "../redux/store";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
+import ButtonWithTooltip from "./ButtonWithTooltip";
+import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
+import ProfileSwitcher from "./ProfileSwitcher";
 
 function Footer() {
   const navigate = useNavigate();
@@ -42,14 +42,13 @@ function Footer() {
 
   return (
     <footer className="flex justify-between items-center overflow-hidden p-2 h-7 border-0 border-t border-solid border-t-zinc-700">
-      <div className="flex gap-2 max-w-[25vw]">
-        {defaultModel?.provider === "free-trial" ? (
-          <ProgressBar
+      <div className="flex gap-2 max-w-[40vw]">
+        <ProfileSwitcher />
+        {defaultModel?.provider === "free-trial" && (
+          <FreeTrialProgressBar
             completed={parseInt(localStorage.getItem("ftc") || "0")}
             total={FREE_TRIAL_LIMIT_REQUESTS}
           />
-        ) : (
-          <ProfileSwitcher />
         )}
       </div>
 

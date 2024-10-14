@@ -534,8 +534,12 @@ export default class DocsService {
     await table.delete(`title = '${mockRowTitle}'`);
   }
 
-  private removeInvalidLanceTableNameChars(tableName: string) {
-    return tableName.replace(/:/g, "");
+  /**
+   * From Lance: Table names can only contain alphanumeric characters,
+   * underscores, hyphens, and periods
+   */
+  private sanitizeLanceTableName(name: string) {
+    return name.replace(/[^a-zA-Z0-9_.-]/g, "_");
   }
 
   private async getLanceTableNameFromEmbeddingsProvider(
@@ -544,10 +548,10 @@ export default class DocsService {
     const embeddingsProvider = await this.getEmbeddingsProvider(
       isPreIndexedDoc,
     );
-    const embeddingsProviderId = this.removeInvalidLanceTableNameChars(
-      embeddingsProvider.id,
+
+    const tableName = this.sanitizeLanceTableName(
+      `${DocsService.lanceTableName}${embeddingsProvider.id}`,
     );
-    const tableName = `${DocsService.lanceTableName}${embeddingsProviderId}`;
 
     return tableName;
   }

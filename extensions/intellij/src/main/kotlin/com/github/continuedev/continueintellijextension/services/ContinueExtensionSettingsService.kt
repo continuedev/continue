@@ -21,13 +21,13 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import javax.swing.*
 
-class ContinueSettingsComponent: DumbAware {
+class ContinueSettingsComponent : DumbAware {
     val panel: JPanel = JPanel(GridBagLayout())
     val remoteConfigServerUrl: JTextField = JTextField()
     val remoteConfigSyncPeriod: JTextField = JTextField()
     val userToken: JTextField = JTextField()
     val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
-    val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable Continue for Teams Beta (requires restart)")
+    val enableContinueTeamsBeta: JCheckBox = JCheckBox("Enable Continue for Teams Beta")
     val displayEditorTooltip: JCheckBox = JCheckBox("Display Editor Tooltip")
 
     init {
@@ -192,12 +192,13 @@ class ContinueExtensionConfigurable : Configurable {
 
     override fun isModified(): Boolean {
         val settings = ContinueExtensionSettings.instance
-        val modified = mySettingsComponent?.remoteConfigServerUrl?.text != settings.continueState.remoteConfigServerUrl ||
-                mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
-                mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
-                mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
-                mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
-                mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip
+        val modified =
+            mySettingsComponent?.remoteConfigServerUrl?.text != settings.continueState.remoteConfigServerUrl ||
+                    mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
+                    mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
+                    mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete ||
+                    mySettingsComponent?.enableContinueTeamsBeta?.isSelected != settings.continueState.enableContinueTeamsBeta ||
+                    mySettingsComponent?.displayEditorTooltip?.isSelected != settings.continueState.displayEditorTooltip
         return modified
     }
 
@@ -207,10 +208,12 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.remoteConfigSyncPeriod = mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() ?: 60
         settings.continueState.userToken = mySettingsComponent?.userToken?.text
         settings.continueState.enableTabAutocomplete = mySettingsComponent?.enableTabAutocomplete?.isSelected ?: false
-        settings.continueState.enableContinueTeamsBeta = mySettingsComponent?.enableContinueTeamsBeta?.isSelected ?: false
+        settings.continueState.enableContinueTeamsBeta =
+            mySettingsComponent?.enableContinueTeamsBeta?.isSelected ?: false
         settings.continueState.displayEditorTooltip = mySettingsComponent?.displayEditorTooltip?.isSelected ?: true
 
-        ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC).settingsUpdated(settings.continueState)
+        ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC)
+            .settingsUpdated(settings.continueState)
         ContinueExtensionSettings.instance.addRemoteSyncJob()
     }
 

@@ -1,4 +1,4 @@
-package com.github.continuedev.continueintellijextension.toolWindow
+package com.github.continuedev.continueintellijextension.constants
 
 class MessageTypes {
     companion object {
@@ -7,8 +7,8 @@ class MessageTypes {
             "llm/streamChat",
             "command/run",
             "streamDiffLines"
-            )
-
+        )
+        
         val ideMessageTypes = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",
@@ -38,7 +38,6 @@ class MessageTypes {
             "getTags",
             "getIdeInfo",
             "getIdeSettings",
-            "errorPopup",
             "getRepoName",
             "listDir",
             "getGitRootPath",
@@ -50,7 +49,8 @@ class MessageTypes {
             "pathSep",
             "getControlPlaneSessionInfo",
             "logoutOfControlPlane",
-            "getTerminalContents"
+            "getTerminalContents",
+            "showToast",
         )
 
         val PASS_THROUGH_TO_WEBVIEW = listOf<String>(

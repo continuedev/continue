@@ -1,6 +1,6 @@
-import { LlmInfo } from "../types.js";
+import { llms } from "../util.js";
 
-export const MistralLlms: LlmInfo[] = [
+export const MistralLlms = llms("mistral", [
   {
     model: "mistral-large-latest",
     displayName: "Mistral Large",
@@ -8,6 +8,7 @@ export const MistralLlms: LlmInfo[] = [
     description:
       "Flagship model ideal for complex tasks requiring large reasoning capabilities or highly specialized tasks like synthetic text generation, code generation, RAG, or agents.",
     regex: /mistral-large/i,
+    recommendedFor: ["chat"],
   },
   {
     model: "mistral-medium-latest",
@@ -56,6 +57,7 @@ export const MistralLlms: LlmInfo[] = [
     description:
       "Model that converts text into numerical vectors of embeddings in 1024 dimensions. Enables retrieval and retrieval-augmented generation applications with a retrieval score of 55.26 on MTEB.",
     regex: /mistral-embed/i,
+    recommendedFor: ["embed"],
   },
   {
     model: "codestral-mamba-latest",
@@ -71,5 +73,12 @@ export const MistralLlms: LlmInfo[] = [
     description:
       "Cutting-edge generative model specifically designed and optimized for code generation tasks, including fill-in-the-middle and code completion.",
     regex: /codestral/i,
+    recommendedFor: ["autocomplete"],
   },
-];
+  // embed
+  {
+    model: "mistral-embed",
+    displayName: "Mistral Embed",
+    recommendedFor: ["embed"],
+  },
+]);

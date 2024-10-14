@@ -165,6 +165,17 @@ async function addEntireFileToContext(
   });
 }
 
+function focusGUI() {
+  const fullScreenTab = getFullScreenTab();
+  if (!fullScreenTab) {
+    // focus sidebar
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+  } else {
+    // focus fullscreen
+    fullScreenPanel?.reveal();
+  }
+}
+
 // Copy everything over from extension.ts
 const commandsMap: (
   ide: IDE,
@@ -315,14 +326,7 @@ const commandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
-      const fullScreenTab = getFullScreenTab();
-      if (!fullScreenTab) {
-        // focus sidebar
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      } else {
-        // focus fullscreen
-        fullScreenPanel?.reveal();
-      }
+      focusGUI();
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       await addHighlightedCodeToContext(sidebar.webviewProtocol);
     },
@@ -479,7 +483,11 @@ const commandsMap: (
     "continue.applyCodeFromChat": () => {
       sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.toggleFullScreen": () => {
+    "continue.toggleFullScreen": ({
+      newWindow,
+    }: { newWindow?: boolean } = {}) => {
+      focusGUI();
+
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
 
@@ -528,6 +536,18 @@ const commandsMap: (
         null,
         extensionContext.subscriptions,
       );
+
+      if (newWindow) {
+        vscode.commands.executeCommand(
+          "workbench.action.copyEditorToNewWindow",
+        );
+      }
+    },
+    "continue.toggleNewWindow": () => {
+      focusGUI();
+      vscode.commands.executeCommand("continue.toggleFullScreen", {
+        newWindow: true,
+      });
     },
     "continue.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
@@ -631,8 +651,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -641,6 +661,18 @@ const commandsMap: (
             : StatusBarStatus.Disabled;
       }
       quickPick.items = [
+        {
+          label: "$(question) Open help center",
+        },
+        {
+          label: "$(comment) Open chat (Cmd+L)",
+        },
+        {
+          label: "$(screen-full) Open full screen chat (Cmd+K Cmd+M)",
+        },
+        {
+          label: "$(link-external) Open chat in a new window",
+        },
         {
           label: quickPickStatusText(targetStatus),
         },
@@ -685,6 +717,20 @@ const commandsMap: (
           configHandler.reloadConfig();
         } else if (selectedOption === "$(feedback) Give feedback") {
           vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
+        } else if (selectedOption === "$(comment) Open chat (Cmd+L)") {
+          vscode.commands.executeCommand("continue.focusContinueInput");
+        } else if (
+          selectedOption ===
+          "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
+        ) {
+          vscode.commands.executeCommand("continue.toggleFullScreen");
+        } else if (
+          selectedOption === "$(link-external) Open chat in a new window"
+        ) {
+          vscode.commands.executeCommand("continue.toggleNewWindow");
+        } else if (selectedOption === "$(question) Open help center") {
+          focusGUI();
+          vscode.commands.executeCommand("continue.navigateTo", "/more");
         }
         quickPick.dispose();
       });
@@ -703,6 +749,10 @@ const commandsMap: (
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);
       }
+    },
+    "continue.navigateTo": (path: string) => {
+      sidebar.webviewProtocol?.request("navigateTo", { path });
+      focusGUI();
     },
   };
 };

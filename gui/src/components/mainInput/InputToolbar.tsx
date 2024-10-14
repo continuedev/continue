@@ -25,6 +25,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
+import { ToolTip } from "../gui/Tooltip";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
@@ -91,7 +92,7 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
-        className="hidden xs:flex "
+        className="flex"
       >
         <div className="flex gap-2 items-center whitespace-nowrap justify-start">
           <ModelSelect />
@@ -121,7 +122,14 @@ function InputToolbar(props: InputToolbarProps) {
             )}
 
             <HoverItem onClick={props.onAddContextItem}>
-              <AtSymbolIcon className="h-4 w-4" />
+              <AtSymbolIcon
+                data-tooltip-id="add-context-item-tooltip"
+                className="h-4 w-4"
+              />
+
+              <ToolTip id="add-context-item-tooltip" place="top-start">
+                Add context (files, docs, urls, etc.)
+              </ToolTip>
             </HoverItem>
           </div>
         </div>
@@ -143,11 +151,12 @@ function InputToolbar(props: InputToolbarProps) {
                   })
                 }
               >
-                <span className="hidden md:inline">
-                  {getMetaKeyLabel()}⏎ Use @codebase
+                <span data-tooltip-id="add-codebase-context-tooltip">
+                  {getMetaKeyLabel()}⏎ @codebase
                 </span>
-
-                <span className="md:hidden">@codebase</span>
+                <ToolTip id="add-codebase-context-tooltip" place="top-end">
+                  Submit with the codebase as context ({getMetaKeyLabel()}⏎)
+                </ToolTip>
               </HoverItem>
             )}
           </div>

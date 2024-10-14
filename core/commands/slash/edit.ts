@@ -1,3 +1,4 @@
+import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -5,9 +6,8 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream";
+} from "../../autocomplete/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
-import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import { stripImages } from "../../llm/images";
 import {
   dedentAndGetCommonWhitespace,
@@ -613,6 +613,7 @@ Please briefly explain the changes made to the code above. Give no more than 2-3
         yield update;
       }
     }
+    yield `Edited ${contextItemToEdit.name}`;
   },
 };
 

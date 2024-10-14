@@ -126,7 +126,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             </StyledHeaderButtonWithText>
           )}
           <ButtonWithTooltip
-            ext="Delete"
+            text="Delete"
             onClick={(e) => {
               e.stopPropagation();
               props.onDelete?.();
