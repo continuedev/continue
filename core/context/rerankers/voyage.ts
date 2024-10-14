@@ -8,14 +8,20 @@ export class VoyageReranker implements Reranker {
     private readonly params: {
       apiKey: string;
       model?: string;
+      apiBase?: string;
     },
   ) {}
+
+  private get apiBase() {
+    return this.params.apiBase ?? "https://api.voyageai.com/v1/";
+  }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
     if (!query || chunks.length === 0) {
       return [];
     }
-    const resp = await fetch("https://api.voyageai.com/v1/rerank", {
+    const url = new URL("rerank", this.apiBase);
+    const resp = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -34,8 +40,9 @@ export class VoyageReranker implements Reranker {
       );
     }
 
-    const data: { data: Array<{ index: number; relevance_score: number }> } =
-      await resp.json();
+    const data = (await resp.json()) as {
+      data: Array<{ index: number; relevance_score: number }>;
+    };
     const results = data.data.sort((a, b) => a.index - b.index);
     return results.map((result) => result.relevance_score);
   }
