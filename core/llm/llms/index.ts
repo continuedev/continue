@@ -6,6 +6,7 @@ import {
   ILLM,
   LLMOptions,
   ModelDescription,
+  PearAuth,
 } from "../../index.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
@@ -143,7 +144,9 @@ export async function llmFromDescription(
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
-  getCurrentDirectory?: () => Promise<string>, // Add this parameter
+  getCurrentDirectory?: () => Promise<string>,
+  getCredentials?: () => Promise<PearAuth | undefined>,
+  setCredentials?: (auth: PearAuth) => Promise<void>,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
@@ -174,7 +177,9 @@ export async function llmFromDescription(
     systemMessage,
     writeLog,
     uniqueId,
-    getCurrentDirectory, // Add this line
+    getCurrentDirectory,
+    getCredentials,
+    setCredentials,
   };
 
   if (desc.provider === "continue-proxy") {

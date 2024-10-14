@@ -357,6 +357,8 @@ export interface LLMOptions {
   watsonxPassword?: string;
   watsonxProjectId?: string;
   getCurrentDirectory?: (() => Promise<string>) | undefined | null;
+  getCredentials?: () => Promise<PearAuth | undefined>;
+  setCredentials?: (auth: PearAuth) => Promise<void>;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
