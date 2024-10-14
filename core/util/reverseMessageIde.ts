@@ -100,8 +100,8 @@ export class ReverseMessageIde {
       return this.ide.getIdeSettings();
     });
 
-    this.on("getDiff", () => {
-      return this.ide.getDiff();
+    this.on("getDiff", (data) => {
+      return this.ide.getDiff(data.includeUnstaged);
     });
 
     this.on("getTerminalContents", () => {
