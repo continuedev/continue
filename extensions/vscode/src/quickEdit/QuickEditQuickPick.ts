@@ -132,7 +132,7 @@ export class QuickEdit {
    * Displays a quick pick for "Model" to set the current model title.
    * Appends the entered prompt to the history and streams the edit with input and context.
    */
-  async show(args?: QuickEditShowParams) {
+  async show(params?: QuickEditShowParams) {
     // Clean up state from previous quick picks, e.g. if a user pressed `esc`
 
     const editor = vscode.window.activeTextEditor;
@@ -142,17 +142,22 @@ export class QuickEdit {
       return;
     }
 
-    const hasChanges = await this.verticalDiffManager.getHandlerForFile(
+    const hasChanges = !!this.verticalDiffManager.getHandlerForFile(
       editor.document.uri.fsPath,
     );
 
-    if (!hasChanges) {
-      this.clear();
-    } else {
+    if (hasChanges) {
       this.openAcceptRejectMenu("", editor.document.uri.fsPath);
-      return;
+    } else {
+      await this.initiateNewQuickPick(editor, params);
     }
+  }
 
+  private async initiateNewQuickPick(
+    editor: vscode.TextEditor,
+    params: QuickEditShowParams | undefined,
+  ) {
+    this.clear();
     // Set state that is unique to each quick pick instance
     this.setActiveEditorAndPrevInput(editor);
 
@@ -160,13 +165,13 @@ export class QuickEdit {
       return;
     }
 
-    const config = await this.configHandler.loadConfig();
-
-    if (!!args?.initialPrompt) {
-      this.initialPrompt = args.initialPrompt;
+    if (!!params?.initialPrompt) {
+      this.initialPrompt = params.initialPrompt;
     }
 
-    this.range = !!args?.range ? args.range : this.editorWhenOpened.selection;
+    this.range = !!params?.range
+      ? params.range
+      : this.editorWhenOpened.selection;
 
     const { label: selectedLabel, value: selectedValue } =
       await this._getInitialQuickPickVal();
@@ -182,52 +187,12 @@ export class QuickEdit {
       },
     });
 
-    let prompt: string | undefined;
-    switch (selectedLabel) {
-      case QuickEditInitialItemLabels.History:
-        const historyVal = await getHistoryQuickPickVal(this.context);
-        prompt = historyVal ?? "";
-        break;
-
-      case QuickEditInitialItemLabels.ContextProviders:
-        const contextProviderVal = await getContextProviderQuickPickVal(
-          config,
-          this.ide,
-        );
-        this.contextProviderStr = contextProviderVal ?? "";
-
-        // Recurse back to let the user write their prompt
-        this.show(args);
-
-        break;
-
-      case QuickEditInitialItemLabels.Model:
-        const curModelTitle = await this.getCurModelTitle();
-
-        if (!curModelTitle) {
-          break;
-        }
-
-        const selectedModelTitle = await getModelQuickPickVal(
-          curModelTitle,
-          config,
-        );
-
-        if (selectedModelTitle) {
-          this._curModelTitle = selectedModelTitle;
-        }
-
-        // Recurse back to let the user write their prompt
-        this.show(args);
-
-        break;
-
-      case QuickEditInitialItemLabels.Submit:
-        if (selectedValue) {
-          prompt = selectedValue;
-          appendToHistory(selectedValue, this.context);
-        }
-    }
+    const prompt = await this.handleSelect({
+      selectedLabel,
+      selectedValue,
+      editor,
+      params,
+    });
 
     if (prompt) {
       await this.handleUserPrompt(prompt, editor.document.uri.fsPath);
@@ -564,6 +529,69 @@ export class QuickEdit {
       quickPick.dispose();
     }
   };
+
+  private async handleSelect({
+    selectedLabel,
+    selectedValue,
+    editor,
+    params,
+  }: {
+    selectedLabel: QuickEditInitialItemLabels | undefined;
+    selectedValue: string | undefined;
+    editor: vscode.TextEditor;
+    params: QuickEditShowParams | undefined;
+  }) {
+    const config = await this.configHandler.loadConfig();
+
+    let prompt: string | undefined;
+    switch (selectedLabel) {
+      case QuickEditInitialItemLabels.History:
+        const historyVal = await getHistoryQuickPickVal(this.context);
+        prompt = historyVal ?? "";
+        break;
+
+      case QuickEditInitialItemLabels.ContextProviders:
+        const contextProviderVal = await getContextProviderQuickPickVal(
+          config,
+          this.ide,
+        );
+        this.contextProviderStr = contextProviderVal ?? "";
+
+        // Recurse back to let the user write their prompt
+        this.initiateNewQuickPick(editor, params);
+
+        break;
+
+      case QuickEditInitialItemLabels.Model:
+        const curModelTitle = await this.getCurModelTitle();
+
+        if (!curModelTitle) {
+          break;
+        }
+
+        const selectedModelTitle = await getModelQuickPickVal(
+          curModelTitle,
+          config,
+        );
+
+        if (selectedModelTitle) {
+          this._curModelTitle = selectedModelTitle;
+        }
+
+        // Recurse back to let the user write their prompt
+        this.initiateNewQuickPick(editor, params);
+
+        break;
+
+      case QuickEditInitialItemLabels.Submit:
+        if (selectedValue) {
+          prompt = selectedValue;
+          appendToHistory(selectedValue, this.context);
+        }
+    }
+
+    return prompt;
+  }
 
   /**
    * Reset the state of the quick pick
