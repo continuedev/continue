@@ -44,7 +44,6 @@ import { stripImages } from "./images.js";
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
   static defaultOptions: Partial<LLMOptions> | undefined = undefined;
-  protected async _sendTokensUsed?(kind: string, prompt: string, completion: string): Promise<void>;
 
   get providerName(): ModelProvider {
     return (this.constructor as typeof BaseLLM).providerName;
@@ -286,9 +285,6 @@ ${prompt}`;
       promptTokens: promptTokens,
       generatedTokens: generatedTokens,
     });
-    if (this._sendTokensUsed) {
-      this._sendTokensUsed(model, prompt, completion);
-    }
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {

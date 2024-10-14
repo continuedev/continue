@@ -260,28 +260,6 @@ class PearAIServer extends BaseLLM {
     }
     return true
   }
-
-  protected async _sendTokensUsed(
-    kind: string,
-    prompt: string,
-    completion: string,
-  ) {
-    let promptTokens = this.countTokens(prompt);
-    let generatedTokens = this.countTokens(completion);
-
-    const response = await this.fetch(`${SERVER_URL}/log_tokens`, {
-      method: "POST",
-      headers: {
-        ...(await this._getHeaders()),
-        Authorization: `Bearer ${this.pearAIAccessToken}`,
-      },
-      body: JSON.stringify({
-        kind,
-        promptTokens,
-        generatedTokens
-      }),
-    })
-  }
 }
 
 export default PearAIServer;
