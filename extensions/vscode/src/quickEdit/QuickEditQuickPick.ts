@@ -58,6 +58,18 @@ const SUBMIT_ITEM: vscode.QuickPickItem = {
 
 const NO_RESULTS_ITEM: vscode.QuickPickItem = { label: "No results found" };
 
+const REVIEW_CHANGES_ITEMS: vscode.QuickPickItem[] = [
+  {
+    label: UserPromptLabels.AcceptAll,
+    alwaysShow: true,
+  },
+  { label: UserPromptLabels.RejectAll, alwaysShow: true },
+  {
+    label: UserPromptLabels.CloseDialog,
+    alwaysShow: true,
+  },
+];
+
 /**
  * Quick Edit is a collection of Quick Picks that allow the user to
  * quickly edit a file.
@@ -221,22 +233,18 @@ export class QuickEdit {
 
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = "Type your acceptance decision";
-    quickPick.items = [
-      {
-        label: UserPromptLabels.AcceptAll,
-      },
-      { label: UserPromptLabels.RejectAll },
-      {
-        label: UserPromptLabels.CloseDialog,
-      },
-    ];
+
     quickPick.title = "Accept changes";
+    quickPick.value = prompt;
+    quickPick.items = REVIEW_CHANGES_ITEMS;
     quickPick.placeholder =
       "Accept or reject changes. Start typing to try again with a new prompt.";
     quickPick.show();
 
     quickPick.onDidChangeValue(() => {
-      quickPick.items = [SUBMIT_ITEM];
+      quickPick.items = [prompt, ""].includes(quickPick.value)
+        ? REVIEW_CHANGES_ITEMS
+        : [SUBMIT_ITEM];
     });
 
     quickPick.onDidAccept(async () => {
