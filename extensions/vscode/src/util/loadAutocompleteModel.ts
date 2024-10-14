@@ -3,11 +3,12 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import Ollama from "core/llm/llms/Ollama";
 import { GlobalContext } from "core/util/GlobalContext";
 import * as vscode from "vscode";
+import AICore from "../AICore/AICore";
 
 export class TabAutocompleteModel {
   private _llm: ILLM | undefined;
-  private defaultTag = "starcoder2:3b";
-  private defaultTagName = "Starcoder2 3b";
+  private defaultTag = "gpt-4o";
+  private defaultTagName = "gpt 4o";
   private globalContext: GlobalContext = new GlobalContext();
 
   private shownOllamaWarning = false;
@@ -24,7 +25,8 @@ export class TabAutocompleteModel {
   }
 
   async getDefaultTabAutocompleteModel() {
-    const llm = new Ollama({
+    // BAS Customization - use AICore as model provider
+    const llm = new AICore({
       model: this.defaultTag,
     });
 

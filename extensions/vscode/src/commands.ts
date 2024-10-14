@@ -570,13 +570,13 @@ const commandsMap: (
       captureCommandTelemetry("toggleTabAutocompleteEnabled");
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
-      const enabled = config.get("enableTabAutocomplete");
+      const enabled = config.get("tabToEnableAutocomplete");
       const pauseOnBattery = config.get<boolean>(
         "pauseTabAutocompleteOnBattery",
       );
       if (!pauseOnBattery || battery.isACConnected()) {
         config.update(
-          "enableTabAutocomplete",
+          "tabToEnableAutocomplete",
           !enabled,
           vscode.ConfigurationTarget.Global,
         );
@@ -587,7 +587,7 @@ const commandsMap: (
             setupStatusBar(StatusBarStatus.Enabled);
           } else {
             config.update(
-              "enableTabAutocomplete",
+              "tabToEnableAutocomplete",
               false,
               vscode.ConfigurationTarget.Global,
             );
@@ -595,7 +595,7 @@ const commandsMap: (
         } else {
           setupStatusBar(StatusBarStatus.Paused);
           config.update(
-            "enableTabAutocomplete",
+            "tabToEnableAutocomplete",
             true,
             vscode.ConfigurationTarget.Global,
           );
@@ -667,7 +667,7 @@ const commandsMap: (
         if (targetStatus !== undefined) {
           setupStatusBar(targetStatus);
           config.update(
-            "enableTabAutocomplete",
+            "tabToEnableAutocomplete",
             targetStatus === StatusBarStatus.Enabled,
             vscode.ConfigurationTarget.Global,
           );

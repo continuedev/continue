@@ -8,6 +8,7 @@ import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
+import { showConsentNotification } from "../../src/consent-notification";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
@@ -36,6 +37,9 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   const continuePublicApi = {
     registerCustomContextProvider: api.registerCustomContextProvider.bind(api),
   };
+
+  // BAS Customization - show consent popup
+  void showConsentNotification(context);
 
   // 'export' public api-surface
   // or entire extension for testing

@@ -5,13 +5,15 @@
 import { setupCa } from "core/util/ca";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
-import { getExtensionVersion } from "./util/util";
+import { getExtensionVersion, isLLMServiceAvailable } from "./util/util";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   const { activateExtension } = await import("./activation/activate");
   try {
-    return activateExtension(context);
-  } catch (e) {
+    // BAS Customization - check if LLM service is available
+    if (isLLMServiceAvailable()) {
+      return activateExtension(context);
+    }  } catch (e) {
     console.log("Error activating extension: ", e);
     vscode.window
       .showInformationMessage(

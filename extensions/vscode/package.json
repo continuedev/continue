@@ -1,8 +1,7 @@
 {
-  "name": "continue",
+  "name": "ai-code-assistant",
   "icon": "media/icon.png",
-  "author": "Continue Dev, Inc",
-  "version": "0.8.53",
+  "version": "1.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -18,468 +17,34 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Codestral, Claude, and more",
+  "displayName": "SAP AI Code Assistant",
   "pricing": "Free",
-  "description": "The leading open-source AI code assistant",
-  "publisher": "Continue",
+  "description": "SAP AI Code Assistant helps developers by providing real-time code completion, code understanding and refactoring. AI code assistant supports a variety of developer tools, making it easy to use while coding.",
+  "publisher": "SAPSE",
   "engines": {
-    "vscode": "^1.70.0",
-    "node": ">=20.11.0"
+    "vscode": "^1.83.0"
   },
   "engine-strict": true,
   "galleryBanner": {
     "color": "#1E1E1E",
     "theme": "dark"
   },
-  "categories": [
-    "AI",
-    "Chat",
-    "Programming Languages",
-    "Education",
-    "Machine Learning",
-    "Snippets"
-  ],
-  "keywords": [
-    "chatgpt",
-    "github",
-    "copilot",
-    "claude",
-    "sonnet",
-    "mistral",
-    "codestral",
-    "codegpt",
-    "ai",
-    "llama"
-  ],
   "activationEvents": [
-    "onStartupFinished",
-    "onView:continueGUIView"
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "languages": [
-      {
-        "filenames": [
-          "config.json",
-          ".continuerc.json"
-        ],
-        "id": "jsonc"
-      }
-    ],
     "configuration": {
-      "title": "Continue",
+      "type": "object",
+      "title": "SAP AI Code Assistant",
       "properties": {
-        "continue.telemetryEnabled": {
+        "AI Code Assistant.tabToEnableAutocomplete": {
           "type": "boolean",
+          "scope": "window",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
-        },
-        "continue.enableContinueForTeams": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "_(Requires window reload)_ Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
-        },
-        "continue.showInlineTip": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
-        },
-        "continue.enableQuickActions": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/features/quick-actions)"
-        },
-        "continue.enableTabAutocomplete": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
-        },
-        "continue.pauseTabAutocompleteOnBattery": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
-        },
-        "continue.pauseCodebaseIndexOnStart": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Pause Continue's codebase index on start."
-        },
-        "continue.enableDebugLogs": {
-          "type": "boolean",
-          "default": false,
-          "markdownDescription": "Enable Continue Debug Logs in the Output panel."
-        },
-        "continue.remoteConfigServerUrl": {
-          "type": "string",
-          "default": null,
-          "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
-        },
-        "continue.userToken": {
-          "type": "string",
-          "default": null,
-          "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
-        },
-        "continue.remoteConfigSyncPeriod": {
-          "type": "number",
-          "default": 60,
-          "description": "The period of time in minutes between automatic syncs."
+          "markdownDescription": "Inline code suggestions as you type."
         }
       }
-    },
-    "commands": [
-      {
-        "command": "continue.applyCodeFromChat",
-        "category": "Continue",
-        "title": "Apply code from chat",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.acceptDiff",
-        "category": "Continue",
-        "title": "Accept Diff",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.rejectDiff",
-        "category": "Continue",
-        "title": "Reject Diff",
-        "group": "Continue",
-        "icon": "$(stop)"
-      },
-      {
-        "command": "continue.acceptVerticalDiffBlock",
-        "category": "Continue",
-        "title": "Accept Vertical Diff Block",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.rejectVerticalDiffBlock",
-        "category": "Continue",
-        "title": "Reject Vertical Diff Block",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.quickEdit",
-        "category": "Continue",
-        "title": "Generate Code",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.focusContinueInput",
-        "category": "Continue",
-        "title": "Add Highlighted Code to Context",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.focusContinueInputWithoutClear",
-        "category": "Continue",
-        "title": "Add Highlighted Code to Context",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.debugTerminal",
-        "category": "Continue",
-        "title": "Debug Terminal",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.toggleFullScreen",
-        "category": "Continue",
-        "title": "Toggle Full Screen",
-        "icon": "$(fullscreen)",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.openConfigJson",
-        "category": "Continue",
-        "title": "Open config.json",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.toggleTabAutocompleteEnabled",
-        "category": "Continue",
-        "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.selectFilesAsContext",
-        "category": "Continue",
-        "title": "Select Files as Context",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.newSession",
-        "category": "Continue",
-        "title": "New Session",
-        "icon": "$(add)",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.viewHistory",
-        "category": "Continue",
-        "title": "View History",
-        "icon": "$(history)",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.writeCommentsForCode",
-        "category": "Continue",
-        "title": "Write Comments for this Code",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.writeDocstringForCode",
-        "category": "Continue",
-        "title": "Write a Docstring for this Code",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.fixCode",
-        "category": "Continue",
-        "title": "Fix this Code",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.optimizeCode",
-        "category": "Continue",
-        "title": "Optimize this Code",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.fixGrammar",
-        "category": "Continue",
-        "title": "Fix Grammar / Spelling",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.codebaseForceReIndex",
-        "category": "Continue",
-        "title": "Codebase Force Re-Index",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.rebuildCodebaseIndex",
-        "category": "Continue",
-        "title": "Rebuild codebase index",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.docsIndex",
-        "category": "Continue",
-        "title": "Docs Index",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.docsReIndex",
-        "category": "Continue",
-        "title": "Docs Force Re-Index",
-        "group": "Continue"
-      }
-    ],
-    "keybindings": [
-      {
-        "command": "continue.focusContinueInput",
-        "mac": "cmd+l",
-        "key": "ctrl+l"
-      },
-      {
-        "command": "continue.focusContinueInputWithoutClear",
-        "mac": "cmd+shift+l",
-        "key": "ctrl+shift+l"
-      },
-      {
-        "command": "continue.acceptDiff",
-        "mac": "shift+cmd+enter",
-        "key": "shift+ctrl+enter"
-      },
-      {
-        "command": "continue.rejectDiff",
-        "mac": "shift+cmd+backspace",
-        "key": "shift+ctrl+backspace"
-      },
-      {
-        "command": "continue.rejectDiff",
-        "mac": "cmd+z",
-        "key": "ctrl+z",
-        "when": "continue.diffVisible"
-      },
-      {
-        "command": "continue.quickEditHistoryUp",
-        "mac": "up",
-        "key": "up",
-        "when": "false && continue.quickEditHistoryFocused"
-      },
-      {
-        "command": "continue.quickEditHistoryDown",
-        "mac": "down",
-        "key": "down",
-        "when": "false && continue.quickEditHistoryFocused"
-      },
-      {
-        "command": "continue.acceptVerticalDiffBlock",
-        "mac": "alt+cmd+y",
-        "key": "alt+ctrl+y"
-      },
-      {
-        "command": "continue.rejectVerticalDiffBlock",
-        "mac": "alt+cmd+n",
-        "key": "alt+ctrl+n"
-      },
-      {
-        "command": "continue.quickEdit",
-        "mac": "cmd+i",
-        "key": "ctrl+i"
-      },
-      {
-        "command": "continue.debugTerminal",
-        "mac": "cmd+shift+r",
-        "key": "ctrl+shift+r"
-      },
-      {
-        "command": "continue.toggleFullScreen",
-        "mac": "cmd+k cmd+m",
-        "key": "ctrl+k ctrl+m",
-        "when": "!terminalFocus"
-      },
-      {
-        "command": "continue.toggleTabAutocompleteEnabled",
-        "mac": "cmd+k cmd+a",
-        "key": "ctrl+k ctrl+a",
-        "when": "!terminalFocus"
-      },
-      {
-        "command": "continue.applyCodeFromChat",
-        "mac": "alt+a",
-        "key": "alt+a"
-      }
-    ],
-    "submenus": [
-      {
-        "id": "continue.continueSubMenu",
-        "label": "Continue"
-      }
-    ],
-    "menus": {
-      "commandPalette": [
-        {
-          "command": "continue.quickEdit"
-        },
-        {
-          "command": "continue.focusContinueInput"
-        },
-        {
-          "command": "continue.focusContinueInputWithoutClear"
-        },
-        {
-          "command": "continue.debugTerminal"
-        },
-        {
-          "command": "continue.toggleFullScreen"
-        },
-        {
-          "command": "continue.newSession"
-        }
-      ],
-      "editor/context": [
-        {
-          "submenu": "continue.continueSubMenu",
-          "group": "0_acontinue"
-        }
-      ],
-      "editor/title/run": [
-        {
-          "command": "continue.rejectDiff",
-          "group": "Continue",
-          "when": "continue.streamingDiff"
-        }
-      ],
-      "continue.continueSubMenu": [
-        {
-          "command": "continue.focusContinueInputWithoutClear",
-          "group": "Continue",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "continue.writeCommentsForCode",
-          "group": "Continue",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "continue.writeDocstringForCode",
-          "group": "Continue",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "continue.fixCode",
-          "group": "Continue",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "continue.optimizeCode",
-          "group": "Continue",
-          "when": "editorHasSelection"
-        },
-        {
-          "command": "continue.fixGrammar",
-          "group": "Continue",
-          "when": "editorHasSelection && editorLangId == 'markdown'"
-        }
-      ],
-      "explorer/context": [
-        {
-          "command": "continue.selectFilesAsContext",
-          "group": "1_debug@1"
-        }
-      ],
-      "view/title": [
-        {
-          "command": "continue.newSession",
-          "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.viewHistory",
-          "group": "navigation@1",
-          "when": "view == continue.continueGUIView"
-        }
-      ],
-      "editor/title": [
-        {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@1",
-          "when": "activeWebviewPanelId == continue.continueGUIView"
-        }
-      ],
-      "terminal/context": [
-        {
-          "command": "continue.debugTerminal",
-          "group": "navigation@top"
-        }
-      ]
-    },
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "continue",
-          "title": "Continue",
-          "icon": "media/sidebar-icon.png"
-        }
-      ]
-    },
-    "views": {
-      "continue": [
-        {
-          "type": "webview",
-          "id": "continue.continueGUIView",
-          "name": "",
-          "visibility": "visible"
-        }
-      ]
     },
     "jsonValidation": [
       {
@@ -506,6 +71,7 @@
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
+    "package-to-linux-x64-platform": "node scripts/prepackage-cross-platform.js --target linux-x64 && npx vsce package --no-dependencies",
     "package-all": "node scripts/package-all.js",
     "package:pre-release": "node scripts/package.js --pre-release",
     "build:rust": "cargo-cp-artifact -ac sync sync.node -- cargo build --manifest-path ../../sync/Cargo.toml --message-format=json-render-diagnostics",
@@ -516,6 +82,7 @@
     "@biomejs/biome": "1.6.4",
     "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
+    "@sap-devx/app-studio-toolkit-types": "^1.18.3",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/follow-redirects": "^1.14.4",
@@ -543,10 +110,10 @@
   },
   "dependencies": {
     "@electron/rebuild": "^3.2.10",
+    "@sap/gai-core": "0.10.2",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/node-fetch": "^2.6.11",
     "@types/uuid": "^9.0.8",
-    "@vscode/ripgrep": "^1.15.9",
     "@vscode/test-electron": "^2.3.9",
     "axios": "^1.2.5",
     "core": "file:../../core",
@@ -588,5 +155,8 @@
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"
-  }
+  },
+  "extensionDependencies": [
+    "SAPOSS.app-studio-toolkit"
+  ]
 }

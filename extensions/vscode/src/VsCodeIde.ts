@@ -454,7 +454,6 @@ class VsCodeIde implements IDE {
         "out",
         "node_modules",
         "@vscode",
-        "ripgrep",
         "bin",
         "rg",
       ),
