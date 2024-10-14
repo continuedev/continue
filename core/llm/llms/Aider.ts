@@ -127,10 +127,10 @@ class Aider extends BaseLLM {
       let command: string;
       switch (model) {
         case "claude-3-5-sonnet-20240620":
-          command = `export ANTHROPIC_API_KEY=${apiKey}; /opt/homebrew/bin/aider`;
+          command = `export ANTHROPIC_API_KEY=${apiKey}; aider`;
           break;
         case "gpt-4o":
-          command = `export OPENAI_API_KEY=${apiKey}; /opt/homebrew/bin/aider`;
+          command = `export OPENAI_API_KEY=${apiKey}; aider`;
           break;
         case "pearai_model":
           default:
