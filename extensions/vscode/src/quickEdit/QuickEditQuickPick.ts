@@ -134,12 +134,22 @@ export class QuickEdit {
    */
   async show(args?: QuickEditShowParams) {
     // Clean up state from previous quick picks, e.g. if a user pressed `esc`
-    this.clear();
 
     const editor = vscode.window.activeTextEditor;
 
     // We only allow users to interact with a quick edit if there is an open editor
     if (!editor) {
+      return;
+    }
+
+    const hasChanges = await this.verticalDiffManager.getHandlerForFile(
+      editor.document.uri.fsPath,
+    );
+
+    if (!hasChanges) {
+      this.clear();
+    } else {
+      this.openAcceptRejectMenu("", editor.document.uri.fsPath);
       return;
     }
 
@@ -224,13 +234,7 @@ export class QuickEdit {
     }
   }
 
-  private handleUserPrompt = async (
-    prompt: string,
-    path: string | undefined,
-  ) => {
-    const modelTitle = await this.getCurModelTitle();
-    await this._streamEditWithInputAndContext(prompt, modelTitle);
-
+  private openAcceptRejectMenu(prompt: string, path: string | undefined) {
     const quickPick = vscode.window.createQuickPick();
     quickPick.placeholder = "Type your acceptance decision";
 
@@ -270,6 +274,15 @@ export class QuickEdit {
 
       quickPick.dispose();
     });
+  }
+
+  private handleUserPrompt = async (
+    prompt: string,
+    path: string | undefined,
+  ) => {
+    const modelTitle = await this.getCurModelTitle();
+    await this._streamEditWithInputAndContext(prompt, modelTitle);
+    this.openAcceptRejectMenu(prompt, path);
   };
 
   private async initializeFileSearchState() {
