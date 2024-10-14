@@ -152,7 +152,7 @@ function InputToolbar(props: InputToolbarProps) {
                 }
               >
                 <span data-tooltip-id="add-codebase-context-tooltip">
-                  @codebase
+                  {getMetaKeyLabel()}⏎ @codebase
                 </span>
                 <ToolTip id="add-codebase-context-tooltip" place="top-end">
                   Submit with the codebase as context ({getMetaKeyLabel()}⏎)

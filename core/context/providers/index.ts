@@ -22,6 +22,7 @@ import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";
+import DiscordContextProvider from "./DiscordContextProvider";
 import GreptileContextProvider from "./GreptileContextProvider";
 
 /**
@@ -54,6 +55,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   URLContextProvider,
   ContinueProxyContextProvider,
   RepoMapContextProvider,
+  DiscordContextProvider,
   GreptileContextProvider,
 ];
 

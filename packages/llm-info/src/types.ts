@@ -1,5 +1,19 @@
+export type UseCase = "chat" | "autocomplete" | "rerank" | "embed";
+
+export type ParameterType = "string" | "number" | "boolean";
+
+export interface Parameter {
+  key: string;
+  required: boolean;
+  valueType: ParameterType;
+  displayName?: string;
+  description?: string;
+  defaultValue?: any;
+}
+
 export interface LlmInfo {
   model: string;
+  provider: string;
   displayName?: string;
   description?: string;
   contextLength?: number;
@@ -8,7 +22,15 @@ export interface LlmInfo {
 
   /** If not set, assumes "text" only */
   mediaTypes?: MediaType[];
+  recommendedFor?: UseCase[];
+
+  /** Any additional parameters required to configure the model */
+  extraParameters?: Parameter[];
 }
+
+export type LlmInfoWithProvider = LlmInfo & {
+  provider: string;
+};
 
 export enum MediaType {
   Text = "text",

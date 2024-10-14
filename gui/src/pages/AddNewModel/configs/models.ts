@@ -68,6 +68,7 @@ export const models: { [key: string]: ModelPackage } = {
       "llama.cpp",
       "replicate",
       "sambanova",
+      "cerebras",
     ],
     isOpenSource: true,
   },

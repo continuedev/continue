@@ -56,25 +56,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
-
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
-
-//        project.messageBus.connect().subscribe(
-//            ToolWindowManagerListener.TOPIC,
-//            object : ToolWindowManagerListener {
-//                override fun stateChanged(toolWindowManager: ToolWindowManager) {
-//                    if (toolWindowManager.activeToolWindowId == TerminalToolWindowFactory.TOOL_WINDOW_ID
-//                        || TerminalView.getInstance(project).isNotAvailable()
-//                    ) {
-//                        project.service<TerminalActivityTrackingService>().update(
-//                            TerminalView.getInstance(project).widgets
-//                        )
-//                    }
-//                }
-//            }
-//        )
-
         initializePlugin(project)
     }
 
@@ -186,8 +169,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
             val listener =
                 ContinuePluginSelectionListener(
-                    ideProtocolClient,
-                    coroutineScope
+                    coroutineScope,
                 )
 
             // Reload the WebView
