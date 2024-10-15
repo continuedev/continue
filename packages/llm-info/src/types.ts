@@ -51,3 +51,18 @@ export interface ApiProviderInfo {
   supportsStreaming: boolean;
   handlesTemplating: boolean;
 }
+
+export type ModelProviderCapability = "stream" | "fim" | "image";
+
+export interface ModelProvider {
+  id: string;
+  displayName: string;
+  // capabilities: ModelProviderCapability[];
+  models: Omit<LlmInfo, "provider">[];
+
+  /** Any additional parameters required to configure the model
+   *
+   * (other than apiKey, apiBase, which are assumed always. And of course model and provider always required)
+   */
+  extraParameters?: Parameter[];
+}

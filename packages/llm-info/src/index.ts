@@ -1,27 +1,31 @@
-import { AnthropicLlms } from "./providers/anthropic.js";
-import { AzureLlms } from "./providers/azure.js";
-import { BedrockLlms } from "./providers/bedrock.js";
-import { CohereLlms } from "./providers/cohere.js";
-import { GeminiLlms } from "./providers/gemini.js";
-import { MistralLlms } from "./providers/mistral.js";
-import { OllamaLlms } from "./providers/ollama.js";
-import { OpenAiLlms } from "./providers/openai.js";
-import { vllmLlms } from "./providers/vllm.js";
-import { VoyageLlms } from "./providers/voyage.js";
-import { LlmInfo, UseCase } from "./types.js";
+import { Anthropic } from "./providers/anthropic.js";
+import { Azure } from "./providers/azure.js";
+import { Bedrock } from "./providers/bedrock.js";
+import { Cohere } from "./providers/cohere.js";
+import { Gemini } from "./providers/gemini.js";
+import { Mistral } from "./providers/mistral.js";
+import { Ollama } from "./providers/ollama.js";
+import { OpenAi } from "./providers/openai.js";
+import { Vllm } from "./providers/vllm.js";
+import { Voyage } from "./providers/voyage.js";
+import { LlmInfo, ModelProvider, UseCase } from "./types.js";
 
-export const allLlms: LlmInfo[] = [
-  ...OpenAiLlms,
-  ...GeminiLlms,
-  ...AnthropicLlms,
-  ...MistralLlms,
-  ...VoyageLlms,
-  ...AzureLlms,
-  ...OllamaLlms,
-  ...vllmLlms,
-  ...BedrockLlms,
-  ...CohereLlms,
+export const allModelProviders: ModelProvider[] = [
+  OpenAi,
+  Gemini,
+  Anthropic,
+  Mistral,
+  Voyage,
+  Azure,
+  Ollama,
+  Vllm,
+  Bedrock,
+  Cohere,
 ];
+
+export const allLlms: LlmInfo[] = allModelProviders.flatMap((provider) =>
+  provider.models.map((model) => ({ ...model, provider: provider.id })),
+);
 
 export function findLlmInfo(model: string): LlmInfo | undefined {
   return allLlms.find((llm) =>

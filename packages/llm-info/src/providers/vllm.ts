@@ -1,4 +1,8 @@
-import { llms } from "../util.js";
+import { ModelProvider } from "../types.js";
 import { OsLlms } from "./os.js";
 
-export const vllmLlms = llms("vllm", OsLlms);
+export const Vllm: ModelProvider = {
+  models: OsLlms,
+  id: "vllm",
+  displayName: "vLLM",
+};

@@ -1,4 +1,8 @@
-import { llms } from "../util.js";
+import { ModelProvider } from "../types.js";
 import { OsLlms } from "./os.js";
 
-export const OllamaLlms = llms("ollama", OsLlms);
+export const Ollama: ModelProvider = {
+  models: OsLlms,
+  id: "ollama",
+  displayName: "Ollama",
+};
