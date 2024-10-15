@@ -530,16 +530,14 @@ function escapeSpacesInPath(p: string): string {
 }
 
 async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
-  // TODO: Uncomment
-  // if (ideType !== "jetbrains") {
-  //   return;
-  // }
+  if (ideType !== "jetbrains") {
+    return;
+  }
 
-  // TODO: Uncomment
-  // const globalContext = new GlobalContext();
-  // if (globalContext.get("hasReceivedConfigTsNoticeJetBrains")) {
-  //   return;
-  // }
+  const globalContext = new GlobalContext();
+  if (globalContext.get("hasReceivedConfigTsNoticeJetBrains")) {
+    return;
+  }
 
   const esbuildPath = getEsbuildBinaryPath();
 
@@ -550,9 +548,7 @@ async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
   console.debug("No esbuild binary detected");
 
   const shouldInstall = await promptEsbuildInstallation(ide);
-  debugger;
 
-  // TODO: Debug toast
   if (shouldInstall || true) {
     await downloadAndInstallEsbuild(ide, esbuildPath);
   }
@@ -634,13 +630,6 @@ function readConfigJs(): string | undefined {
 }
 
 async function buildConfigTs(ide: IDE, ideType: IdeType) {
-  // TODO: Remove
-  await ide.showToast(
-    "info",
-    "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
-    "YES",
-  );
-
   const configTsPath = getConfigTsPath();
 
   if (!fs.existsSync(configTsPath)) {
