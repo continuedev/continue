@@ -34,6 +34,7 @@ function useSetup(dispatch: Dispatch<any>) {
       return;
     }
     const { config, profileId } = result.content;
+    dispatch(setConfigError(undefined));
     dispatch(setConfig(config));
     dispatch(setSelectedProfileId(profileId));
     setConfigLoaded(true);
@@ -108,8 +109,6 @@ function useSetup(dispatch: Dispatch<any>) {
 
   useWebviewListener("configUpdate", async () => {
     await loadConfig();
-
-    dispatch(setConfigError(undefined));
 
     if (!isJetBrains && !getLocalStorage("disableIndexing")) {
       debouncedIndexDocs();
