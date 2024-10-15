@@ -52,7 +52,7 @@ const HoverItem = styled.span<{ isActive?: boolean }>`
   transition: color 200ms, background-color 200ms, box-shadow 200ms;
 `;
 
-const EnterButton = styled.div`
+const EnterButton = styled.button`
   padding: 2px 4px;
   display: flex;
   align-items: center;
@@ -70,6 +70,7 @@ interface InputToolbarProps {
   onImageFileSelected?: (file: File) => void;
   hidden?: boolean;
   activeKey: string | null;
+  disabled?: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -168,6 +169,7 @@ function InputToolbar(props: InputToolbarProps) {
                 noContext: useActiveFile ? e.altKey : !e.altKey,
               });
             }}
+            disabled={props.disabled}
           >
             <span className="hidden md:inline">⏎ Enter</span>
             <span className="md:hidden">⏎</span>

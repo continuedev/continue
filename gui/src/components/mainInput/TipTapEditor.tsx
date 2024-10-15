@@ -915,6 +915,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             });
           });
         }}
+        disabled={active}
       />
 
       {showDragOverMsg &&
