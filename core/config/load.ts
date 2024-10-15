@@ -500,6 +500,8 @@ function escapeSpacesInPath(p: string): string {
 }
 
 async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
+  // JetBrains is currently the only IDE that we've reached the plugin size limit and
+  // therefore need to install esbuild manually to reduce the size
   if (ideType !== "jetbrains") {
     return;
   }
