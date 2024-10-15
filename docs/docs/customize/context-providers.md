@@ -105,6 +105,20 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
 }
 ```
 
+### `@Web`
+
+Reference relevant pages from across the web, automatically determined from your input.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "web"
+    }
+  ]
+}
+```
+
 ### `@Codebase`
 
 Reference the most relevant snippets from your codebase.
