@@ -496,35 +496,6 @@ function finalToBrowserConfig(
   };
 }
 
-function getTarget() {
-  const os =
-    {
-      aix: "linux",
-      darwin: "darwin",
-      freebsd: "linux",
-      linux: "linux",
-      openbsd: "linux",
-      sunos: "linux",
-      win32: "win32",
-    }[process.platform as string] ?? "linux";
-  const arch = {
-    arm: "arm64",
-    arm64: "arm64",
-    ia32: "x64",
-    loong64: "arm64",
-    mips: "arm64",
-    mipsel: "arm64",
-    ppc: "x64",
-    ppc64: "x64",
-    riscv64: "arm64",
-    s390: "x64",
-    s390x: "x64",
-    x64: "x64",
-  }[process.arch];
-
-  return `${os}-${arch}`;
-}
-
 function escapeSpacesInPath(p: string): string {
   return p.replace(/ /g, "\\ ");
 }
@@ -534,10 +505,11 @@ async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
     return;
   }
 
-  const globalContext = new GlobalContext();
-  if (globalContext.get("hasReceivedConfigTsNoticeJetBrains")) {
-    return;
-  }
+  // TODO: Uncomment
+  // const globalContext = new GlobalContext();
+  // if (globalContext.get("hasReceivedConfigTsNoticeJetBrains")) {
+  //   return;
+  // }
 
   const esbuildPath = getEsbuildBinaryPath();
 
@@ -556,11 +528,13 @@ async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
 
 async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
   const actionMsg = "Install esbuild";
+
   const res = await ide.showToast(
-    "info",
+    "warning",
     "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
     actionMsg,
   );
+
   return res === actionMsg;
 }
 
@@ -630,6 +604,8 @@ function readConfigJs(): string | undefined {
 }
 
 async function buildConfigTs(ide: IDE, ideType: IdeType) {
+  // TODO: Remove
+  await ide.showToast("info", "test toast");
   const configTsPath = getConfigTsPath();
 
   if (!fs.existsSync(configTsPath)) {

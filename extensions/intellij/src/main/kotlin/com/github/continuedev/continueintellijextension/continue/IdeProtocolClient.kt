@@ -35,15 +35,10 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.ui.popup.Balloon
-import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
-import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
-import com.intellij.ui.awt.RelativePoint
 import com.intellij.util.concurrency.annotations.RequiresEdt
 import kotlinx.coroutines.*
 import java.awt.Toolkit
@@ -54,81 +49,16 @@ import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.util.*
 
-
 fun uuid(): String {
     return UUID.randomUUID().toString()
 }
 
-val DEFAULT_IGNORE_FILETYPES = arrayOf(
-    ".DS_Store",
-    "-lock.json",
-    ".lock",
-    ".log",
-    ".ttf",
-    ".png",
-    ".jpg",
-    ".jpeg",
-    ".gif",
-    ".mp4",
-    ".svg",
-    ".ico",
-    ".pdf",
-    ".zip",
-    ".gz",
-    ".tar",
-    ".dmg",
-    ".tgz",
-    ".rar",
-    ".7z",
-    ".exe",
-    ".dll",
-    ".obj",
-    ".o",
-    ".o.d",
-    ".a",
-    ".lib",
-    ".so",
-    ".dylib",
-    ".ncb",
-    ".sdf",
-    ".woff",
-    ".woff2",
-    ".eot",
-    ".cur",
-    ".avi",
-    ".mpg",
-    ".mpeg",
-    ".mov",
-    ".mp3",
-    ".mp4",
-    ".mkv",
-    ".mkv",
-    ".webm",
-    ".jar",
-    ".onnx",
-    ".parquet",
-    ".pqt",
-    ".wav",
-    ".webp",
-    ".db",
-    ".sqlite",
-    ".wasm",
-    ".plist",
-    ".profraw",
-    ".gcda",
-    ".gcno",
-    "go.sum",
-)
-
-data class IdeMessage<T>(val type: String, val messageId: String, val message: T)
 data class Position(val line: Int, val character: Int)
 data class Range(val start: Position, val end: Position)
 data class RangeInFile(val filepath: String, val range: Range)
 data class RangeInFileWithContents(val filepath: String, val range: Range, val contents: String)
-data class HighlightedCodeUpdate(val highlightedCode: List<RangeInFileWithContents>, val edit: Boolean)
 data class AcceptRejectDiff(val accepted: Boolean, val stepIndex: Int)
 data class DeleteAtIndex(val index: Int)
-data class MainUserInput(val input: String)
 
 fun getMachineUniqueID(): String {
     val sb = StringBuilder()
@@ -167,13 +97,7 @@ private fun readConfigJson(): Map<String, Any> {
     return config
 }
 
-class AsyncFileSaveListener : AsyncFileListener {
-    private val ideProtocolClient: IdeProtocolClient
-
-    constructor(ideProtocolClient: IdeProtocolClient) {
-        this.ideProtocolClient = ideProtocolClient
-    }
-
+class AsyncFileSaveListener(private val ideProtocolClient: IdeProtocolClient) : AsyncFileListener {
     override fun prepareChange(events: MutableList<out VFileEvent>): AsyncFileListener.ChangeApplier? {
         for (event in events) {
             if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(
@@ -190,12 +114,10 @@ class AsyncFileSaveListener : AsyncFileListener {
         }
         return null
     }
-
 }
 
 class IdeProtocolClient(
     private val continuePluginService: ContinuePluginService,
-    private val textSelectionStrategy: TextSelectionStrategy,
     private val coroutineScope: CoroutineScope,
     private val workspacePath: String?,
     private val project: Project
@@ -747,25 +669,6 @@ class IdeProtocolClient(
         continuePluginService.coreMessenger?.request("config/reload", null, null) { _ -> }
     }
 
-    private fun editConfigJson(callback: (config: MutableMap<String, Any>) -> Map<String, Any>): Map<String, Any> {
-        val gson = GsonBuilder().setPrettyPrinting().create()
-        val configJsonPath = getConfigJsonPath()
-        val reader = FileReader(configJsonPath)
-        val config: MutableMap<String, Any> = gson.fromJson(
-            reader,
-            object : TypeToken<Map<String, Any>>() {}.type
-        )
-        reader.close()
-
-        val editedConfig = callback(config)
-
-        val writer = FileWriter(configJsonPath)
-        gson.toJson(editedConfig, writer)
-        writer.close()
-
-        return editedConfig
-    }
-
     private fun initIdeProtocol() {
         val applicationInfo = ApplicationInfo.getInstance()
         val ideName: String = applicationInfo.fullApplicationName
@@ -909,11 +812,6 @@ class IdeProtocolClient(
     fun sendHighlightedCode(edit: Boolean = false) {
         val rif = getHighlightedCode() ?: return
 
-//        send("highlightedCodePush", uuid(), HighlightedCodeUpdate(
-//                listOf(rif),
-//                edit
-//        ))
-
         continuePluginService.sendToWebview(
             "highlightedCode",
             mapOf(
@@ -923,9 +821,6 @@ class IdeProtocolClient(
         )
     }
 
-    fun sendMainUserInput(input: String) {
-        continuePluginService.sendToWebview("userInput", mapOf("input" to input))
-    }
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
         send("acceptRejectDiff", AcceptRejectDiff(accepted, stepIndex), uuid())
@@ -1069,101 +964,16 @@ class IdeProtocolClient(
 
 
     fun highlightCode(rangeInFile: RangeInFile, color: String?) {
-        val file =
-            LocalFileSystem.getInstance().findFileByPath(rangeInFile.filepath)
-
         setFileOpen(rangeInFile.filepath, true)
-
-        ApplicationManager.getApplication().invokeLater {
-            val editor = file?.let {
-                val fileEditor =
-                    FileEditorManager.getInstance(project).getSelectedEditor(it)
-                (fileEditor as? TextEditor)?.editor
-            }
-
-            val virtualFile = LocalFileSystem.getInstance()
-                .findFileByIoFile(File(rangeInFile.filepath))
-            val document =
-                FileDocumentManager.getInstance().getDocument(virtualFile!!)
-            val startIdx =
-                document!!.getLineStartOffset(rangeInFile.range.start.line) + rangeInFile.range.start.character
-            val endIdx =
-                document.getLineEndOffset(rangeInFile.range.end.line) + rangeInFile.range.end.character
-
-            val markupModel = editor!!.markupModel
-//            val textAttributes = TextAttributes(Color.decode(color.drop(1).toInt(color)), null, null, null, 0)
-
-//            markupModel.addRangeHighlighter(startIdx, endIdx, 0, textAttributes, HighlighterTargetArea.EXACT_RANGE)
-        }
     }
 
     private fun terminalContents(): String {
         return ""
-//        val contents = project.service<TerminalActivityTrackingService>().latest()?.run {
-//            TerminalUtils.getTextInTerminal(terminalPanel)
-//        } ?: ""
-//
-//        var lines = contents.split("\n").dropLastWhile { it.isEmpty() }
-//        val lastLine = lines.lastOrNull()?.trim()
-//        if (lastLine != null) {
-//            lines = lines.dropLast(1)
-//            var i = lines.size - 1
-//            while (i >= 0 && !lines[i].trim().startsWith(lastLine)) {
-//                i--
-//            }
-//            return lines.subList(maxOf(i, 0), lines.size).joinToString("\n")
-//        }
-//
-//        return contents
     }
 
     private fun search(query: String): String {
         val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--", query, ".")
         command.setWorkDirectory(project.basePath)
         return ExecUtil.execAndGetOutput(command).stdout ?: ""
-    }
-}
-
-interface TextSelectionStrategy {
-    fun handleTextSelection(
-        selectedText: String,
-        filepath: String,
-        startLine: Int,
-        startCharacter: Int,
-        endLine: Int,
-        endCharacter: Int
-    ): Map<String, Any>
-}
-
-class DefaultTextSelectionStrategy : TextSelectionStrategy {
-
-    override fun handleTextSelection(
-        selectedText: String,
-        filepath: String,
-        startLine: Int,
-        startCharacter: Int,
-        endLine: Int,
-        endCharacter: Int
-    ): Map<String, Any> {
-
-        return mapOf(
-            "edit" to false,
-            "highlightedCode" to arrayOf(
-                mapOf(
-                    "filepath" to filepath,
-                    "contents" to selectedText,
-                    "range" to mapOf(
-                        "start" to mapOf(
-                            "line" to startLine,
-                            "character" to startCharacter
-                        ),
-                        "end" to mapOf(
-                            "line" to endLine,
-                            "character" to endCharacter
-                        )
-                    )
-                )
-            )
-        )
     }
 }
