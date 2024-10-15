@@ -13,7 +13,8 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
     // BAS Customization - check if LLM service is available
     if (isLLMServiceAvailable()) {
       return activateExtension(context);
-    }  } catch (e) {
+    }  
+  } catch (e) {
     console.log("Error activating extension: ", e);
     vscode.window
       .showInformationMessage(

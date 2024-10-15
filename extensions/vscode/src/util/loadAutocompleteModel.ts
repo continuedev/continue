@@ -7,8 +7,8 @@ import AICore from "../AICore/AICore";
 
 export class TabAutocompleteModel {
   private _llm: ILLM | undefined;
-  private defaultTag = "gpt-4o";
-  private defaultTagName = "gpt 4o";
+  private defaultTag = "gpt-4o-mini";
+  private defaultTagName = "gpt 4o mini";
   private globalContext: GlobalContext = new GlobalContext();
 
   private shownOllamaWarning = false;

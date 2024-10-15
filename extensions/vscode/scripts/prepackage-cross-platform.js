@@ -12,7 +12,9 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 const {
+  copyConfigSchema,
   installNodeModules,
+  buildGui,
   copyOnnxRuntimeFromNodeModules,
   copyTreeSitterWasms,
   copyTreeSitterTagQryFiles,
@@ -30,6 +32,11 @@ rimrafSync(path.join(__dirname, "..", "out"));
 fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
   recursive: true,
 });
+
+const guiDist = path.join(__dirname, "..", "..", "..", "gui", "dist");
+if (!fs.existsSync(guiDist)) {
+  fs.mkdirSync(guiDist, { recursive: true });
+}
 
 // Get the target to package for
 let target = undefined;
@@ -77,6 +84,9 @@ function isWin() {
 
 async function package(target, os, arch, exe) {
   console.log("[info] Packaging extension for target ", target);
+
+  // Copy config_schema.json to config.json in docs and intellij
+  copyConfigSchema();
 
   // Install node_modules
   installNodeModules();

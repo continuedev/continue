@@ -8,26 +8,6 @@ import { BasToolkit } from "@sap-devx/app-studio-toolkit-types";
 
 const basAPI: BasToolkit = vscode.extensions.getExtension("SAPOSS.app-studio-toolkit")?.exports;
 
-interface ModelDetail {
-  name: string;
-  version?: string;
-}
-
-interface BackendDetails {
-  model: ModelDetail;
-}
-
-interface ResourceDetails {
-  resources: {
-    backend_details: BackendDetails;
-  };
-}
-
-interface Resource {
-  id: string;
-  details?: ResourceDetails;
-}
-
 class AICore extends BaseLLM {
   static providerName: ModelProvider = "aicore";
   static defaultOptions: Partial<LLMOptions> = {
@@ -45,7 +25,7 @@ class AICore extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
-    return ["gpt-4o", "gpt-35-turbo", "llama3"];
+    return ["gpt-4o-mini"];
   }
 
   protected async *_streamComplete(prompt: string, options: CompletionOptions): AsyncGenerator<string> {

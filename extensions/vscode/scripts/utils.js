@@ -10,6 +10,35 @@ const {
 
 const continueDir = path.join(__dirname, "..", "..", "..");
 
+function copyConfigSchema() {
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join("..", "..", "docs", "static", "schemas", "config.json"),
+  );
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join(
+      "..",
+      "intellij",
+      "src",
+      "main",
+      "resources",
+      "config_schema.json",
+    ),
+  );
+  // Modify and copy for .continuerc.json
+  const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
+  schema.definitions.SerializedContinueConfig.properties.mergeBehavior = {
+    type: "string",
+    enum: ["merge", "overwrite"],
+    default: "merge",
+    title: "Merge behavior",
+    markdownDescription:
+      "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
+  };
+  fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
+}
+
 function copyTokenizers() {
   fs.copyFileSync(
     path.join(__dirname, "../../../core/llm/llamaTokenizerWorkerPool.mjs"),
@@ -33,6 +62,90 @@ function installNodeModules() {
   // Install node_modules //
   execCmdSync("npm install");
   console.log("[info] npm install in extensions/vscode completed");
+
+  process.chdir(path.join(continueDir, "gui"));
+
+  execCmdSync("npm install");
+  console.log("[info] npm install in gui completed");
+}
+
+async function buildGui(isGhAction) {
+  // Make sure we are in the right directory
+  if (!process.cwd().endsWith("gui")) {
+    process.chdir(path.join(continueDir, "gui"));
+  }
+  if (isGhAction) {
+    execCmdSync("npm run build");
+  }
+
+  // Copy over the dist folder to the JetBrains extension //
+  const intellijExtensionWebviewPath = path.join(
+    "..",
+    "extensions",
+    "intellij",
+    "src",
+    "main",
+    "resources",
+    "webview",
+  );
+
+  const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
+  fs.copyFileSync(indexHtmlPath, "tmp_index.html");
+  rimrafSync(intellijExtensionWebviewPath);
+  fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
+
+  await new Promise((resolve, reject) => {
+    ncp("dist", intellijExtensionWebviewPath, (error) => {
+      if (error) {
+        console.warn(
+          "[error] Error copying React app build to JetBrains extension: ",
+          error,
+        );
+        reject(error);
+      }
+      resolve();
+    });
+  });
+
+  // Put back index.html
+  if (fs.existsSync(indexHtmlPath)) {
+    rimrafSync(indexHtmlPath);
+  }
+  fs.copyFileSync("tmp_index.html", indexHtmlPath);
+  fs.unlinkSync("tmp_index.html");
+
+  // Copy over other misc. files
+  fs.copyFileSync(
+    "../extensions/vscode/gui/onigasm.wasm",
+    path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
+  );
+
+  console.log("[info] Copied gui build to JetBrains extension");
+
+  // Then copy over the dist folder to the VSCode extension //
+  const vscodeGuiPath = path.join("../extensions/vscode/gui");
+  fs.mkdirSync(vscodeGuiPath, { recursive: true });
+  await new Promise((resolve, reject) => {
+    ncp("dist", vscodeGuiPath, (error) => {
+      if (error) {
+        console.log(
+          "Error copying React app build to VSCode extension: ",
+          error,
+        );
+        reject(error);
+      } else {
+        console.log("Copied gui build to VSCode extension");
+        resolve();
+      }
+    });
+  });
+
+  if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
+    throw new Error("gui build did not produce index.js");
+  }
+  if (!fs.existsSync(path.join("dist", "assets", "index.css"))) {
+    throw new Error("gui build did not produce index.css");
+  }
 }
 
 async function copyOnnxRuntimeFromNodeModules(target) {
@@ -346,7 +459,9 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 }
 
 module.exports = {
+  copyConfigSchema,
   installNodeModules,
+  buildGui,
   copyOnnxRuntimeFromNodeModules,
   copyTreeSitterWasms,
   copyTreeSitterTagQryFiles,
