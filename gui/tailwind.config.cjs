@@ -13,7 +13,7 @@ module.exports = {
       "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
   corePlugins: {
     preflight: false,
   },

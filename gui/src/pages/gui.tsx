@@ -545,6 +545,14 @@ function GUI() {
               >
                 New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
               </NewSessionButton>{" "}
+              <NewSessionButton
+                onClick={() => {
+                  navigate("/inventory");
+                }}
+                className="mr-auto"
+              >
+                Inventory
+              </NewSessionButton>{" "}
             </div>
           ) : (
             <>
