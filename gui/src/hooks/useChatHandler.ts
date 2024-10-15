@@ -54,6 +54,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   async function _streamNormalInput(messages: ChatMessage[]) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
+
     try {
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,

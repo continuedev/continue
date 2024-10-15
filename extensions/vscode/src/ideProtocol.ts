@@ -556,10 +556,6 @@ class VsCodeIde implements IDE {
     this.ideUtils.executePearLogin();
   }
 
-  async sendToAider(auth: PearAuth) {
-    await vscode.commands.executeCommand("pearai.sendToAider", auth);
-  }
-
   async getCurrentDirectory(): Promise<string> {
     const workspaceFolders = vscode.workspace.workspaceFolders;
     if (workspaceFolders && workspaceFolders.length > 0) {

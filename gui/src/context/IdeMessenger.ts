@@ -52,7 +52,6 @@ export class IdeMessenger implements IIdeMessenger {
   ide: IDE;
 
   constructor() {
-    console.log("IdeMessenger initialized");
     this.ide = new MessageIde(this.request.bind(this), () => {});
   }
 

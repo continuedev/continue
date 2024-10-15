@@ -294,8 +294,6 @@ function GUI() {
         }
       }
 
-      console.log("HERE1010")
-
       streamResponse(editorState, modifiers, ideMessenger);
 
       // Increment localstorage counter for popup

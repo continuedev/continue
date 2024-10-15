@@ -29,7 +29,6 @@ import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { getExtensionUri } from "./util/vscode";
-import * as cp from 'child_process';
 
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -162,10 +161,6 @@ async function addEntireFileToContext(
   webviewProtocol?.request("highlightedCode", {
     rangeInFileWithContents,
   });
-}
-
-function updateChatBox(text: string, webviewProtocol: VsCodeWebviewProtocol | undefined) {
-  // Update the chat box UI with the new text
 }
 
 // Copy everything over from extension.ts
