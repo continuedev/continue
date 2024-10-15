@@ -100,32 +100,14 @@ class Aider extends BaseLLM {
   }
 
   private captureAiderOutput(data: Buffer): void {
-    const lines = data
-      .toString()
-      .replace(/\r\n|\r/g, "")
-      .split("\n");
-    console.log("Before lines:", lines);
-    let startIndex = 0;
-    for (let i = 0; i < lines.length; i++) {
-      if (
-        lines[i].match(/\[\s*Y\s*e\s*s\s*\]\s*:\s*/i) &&
-        !lines[i].trim().endsWith(":")
-      ) {
-        startIndex = i + 1;
-        break;
-      }
-    }
-    const filteredLines = lines
-      .slice(startIndex)
-      .filter((line) => {
-        const trimmedLine = line.trim();
-        return !trimmedLine.startsWith(">");
-      })
-      .map((line) =>
-        line.trim().replace(/[\\$&+,:;=?@#|'<>.^*()%!-]/g, "\\$&"),
-      );
-    let filteredOutput = filteredLines.join("\n");
-    this.aiderOutput += filteredOutput;
+    const output = data.toString();
+    console.log("Raw Aider output:", output);
+
+    // Remove ANSI escape codes
+    const cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, '');
+
+    // Preserve line breaks
+    this.aiderOutput += cleanOutput;
   }
 
   async startAiderChat(
@@ -165,7 +147,7 @@ class Aider extends BaseLLM {
       }
 
       // disable pretty printing
-      // command.push("--no-pretty");
+      command.push("--no-pretty");
 
       const userPath = this.getUserPath();
       console.log("User PATH:", userPath);
@@ -330,10 +312,9 @@ class Aider extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
-    console.log("HI inside Aider");
+    console.log("Inside Aider _streamChat");
 
     const lastMessage = messages[messages.length - 1].content.toString();
-    console.log(lastMessage);
     this.sendToAiderChat(lastMessage);
 
     // Reset for new chat
@@ -347,13 +328,20 @@ class Aider extends BaseLLM {
 
       if (newOutput) {
         partialResponse += newOutput;
-        yield {
-          role: "assistant",
-          content: newOutput,
-        };
+        
+        // Split the new output into lines
+        const lines = newOutput.split('\n');
+        for (const line of lines) {
+          if (line.trim()) {
+            yield {
+              role: "assistant",
+              content: line + '\n',
+            };
+          }
+        }
 
         // Check if newOutput includes AIDER_QUESTION_MARKER and send "Y" if it does
-        if (newOutput.match(/\[\s*Y\s*e\s*s\s*\]\s*\\:/i)) {
+        if (newOutput.match(/\[\s*Y\s*e\s*s\s*\]\s*:/i)) {
           await new Promise((resolve) => setTimeout(resolve, 300));
           this.sendToAiderChat("Y");
           continue;
