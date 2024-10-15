@@ -1534,6 +1534,27 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["commit"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "markdownDescription": "If includeUnstaged is set to true, then unstaged changes are also included in the prompt, otherwise only staged changes are included. Default is false."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name", "description"]
@@ -1588,7 +1609,8 @@
                 "database",
                 "os",
                 "repo-map",
-                "greptile"
+                "greptile",
+                "web"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1613,7 +1635,8 @@
                 "Reference table schemas",
                 "Operating system and CPU Information",
                 "Map of files in the repository with important code highlights",
-                "Query your greptile index of the current repo"
+                "Query your greptile index of the current repo",
+                "Search the web for sources related to your question"
               ],
               "type": "string"
             },
@@ -1713,6 +1736,24 @@
                   }
                 },
                 "required": ["serperApiKey"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": { "properties": { "name": { "enum": ["web"] } } },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "n": {
+                    "title": "N",
+                    "description": "The number of results to return",
+                    "default": 6,
+                    "type": "integer"
+                  }
+                }
               }
             },
             "required": ["params"]

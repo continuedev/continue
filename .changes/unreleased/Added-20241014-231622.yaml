@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Cerebras inference provider
+time: 2024-10-14T23:16:22.754491-07:00

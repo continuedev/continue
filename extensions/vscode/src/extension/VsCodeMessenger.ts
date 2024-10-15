@@ -283,7 +283,7 @@ export class VsCodeMessenger {
       return ide.getIdeSettings();
     });
     this.onWebviewOrCore("getDiff", async (msg) => {
-      return ide.getDiff();
+      return ide.getDiff(msg.data.includeUnstaged);
     });
     this.onWebviewOrCore("getTerminalContents", async (msg) => {
       return ide.getTerminalContents();

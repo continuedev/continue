@@ -404,7 +404,6 @@ export class QuickEdit {
     quickPick.onDidChangeValue((value) =>
       this.handleQuickPickChange({ value, quickPick, initialItems }),
     );
-
     /**
      * Waits for the user to select an item from the quick pick.
      *
