@@ -19,6 +19,7 @@ import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
+import com.intellij.notification.NotificationAction
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
@@ -642,10 +643,14 @@ class IdeProtocolClient(
 
                     "showToast" -> {
                         val data = data as ArrayList<String>
-                        val toast_type = data[0]
+                        val toastType = data[0]
                         val message = data[1]
-                        showToast(toast_type, message)
-                        respond(null)
+                        val buttonText = if (data.size > 2) data[2] else null
+
+                        coroutineScope.launch {
+                            val result = showToast(toastType, message, buttonText)
+                            respond(result)
+                        }
                     }
 
                     "listFolders" -> {
@@ -1031,16 +1036,37 @@ class IdeProtocolClient(
         return virtualFile?.path
     }
 
-    fun showToast(type: String, content: String) {
-        val notificationType = when (type.uppercase()) {
-            "ERROR" -> NotificationType.ERROR
-            "WARNING" -> NotificationType.WARNING
-            else -> NotificationType.INFORMATION
+    suspend fun showToast(type: String, content: String, actionButtonText: String? = null): Boolean? =
+        withContext(Dispatchers.Main) {
+            val notificationType = when (type.uppercase()) {
+                "ERROR" -> NotificationType.ERROR
+                "WARNING" -> NotificationType.WARNING
+                else -> NotificationType.INFORMATION
+            }
+
+            val deferred = CompletableDeferred<Boolean?>()
+
+            val notification = CONTINUE_NOTIFICATION_GROUP.createNotification(content, notificationType)
+
+            if (actionButtonText != null) {
+                notification.addAction(NotificationAction.create(actionButtonText) { _, _ ->
+                    deferred.complete(true)
+                    notification.expire()
+                })
+                notification.whenExpired {
+                    if (!deferred.isCompleted) {
+                        deferred.complete(null)
+                    }
+                }
+            } else {
+                deferred.complete(null)
+            }
+
+            notification.notify(project)
+
+            deferred.await()
         }
 
-        CONTINUE_NOTIFICATION_GROUP.createNotification(content, notificationType)
-            .notify(project);
-    }
 
     fun highlightCode(rangeInFile: RangeInFile, color: String?) {
         val file =

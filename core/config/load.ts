@@ -43,6 +43,7 @@ import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
 import {
+  DEFAULT_CONFIG_TS_CONTENTS,
   getConfigJsPath,
   getConfigJsPathForRemote,
   getConfigJsonPath,
@@ -528,104 +529,135 @@ function escapeSpacesInPath(p: string): string {
   return p.replace(/ /g, "\\ ");
 }
 
+async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
+  // TODO: Uncomment
+  // if (ideType !== "jetbrains") {
+  //   return;
+  // }
+
+  // TODO: Uncomment
+  // const globalContext = new GlobalContext();
+  // if (globalContext.get("hasReceivedConfigTsNoticeJetBrains")) {
+  //   return;
+  // }
+
+  const esbuildPath = getEsbuildBinaryPath();
+
+  if (fs.existsSync(esbuildPath)) {
+    return;
+  }
+
+  console.debug("No esbuild binary detected");
+
+  const shouldInstall = await promptEsbuildInstallation(ide);
+  debugger;
+
+  // TODO: Debug toast
+  if (shouldInstall || true) {
+    await downloadAndInstallEsbuild(ide, esbuildPath);
+  }
+}
+
+async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
+  const actionMsg = "Install esbuild";
+  const res = await ide.showToast(
+    "info",
+    "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
+    actionMsg,
+  );
+  return res === actionMsg;
+}
+
+async function downloadAndInstallEsbuild(ide: IDE, esbuildPath: string) {
+  const url = "https://esbuild.github.io/dl/v0.19.11";
+
+  try {
+    const response = await fetch(url);
+    const binaryData = await response.arrayBuffer();
+
+    fs.writeFileSync(esbuildPath, new Uint8Array(binaryData as ArrayBuffer));
+    fs.chmodSync(esbuildPath, 0o755);
+
+    await ide.showToast(
+      "info",
+      `'esbuild' successfully installed to ${esbuildPath}`,
+    );
+  } catch (error) {
+    console.debug("Error downloading or saving esbuild binary:", error);
+  }
+}
+
+async function tryBuildConfigTs() {
+  try {
+    if (process.env.IS_BINARY === "true") {
+      await buildConfigTsWithBinary();
+    } else {
+      await buildConfigTsWithNodeModule();
+    }
+  } catch (e) {
+    console.log(
+      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
+    );
+  }
+}
+
+async function buildConfigTsWithBinary() {
+  execSync(
+    `${escapeSpacesInPath(getEsbuildBinaryPath())} ${escapeSpacesInPath(
+      getConfigTsPath(),
+    )} --bundle --outfile=${escapeSpacesInPath(
+      getConfigJsPath(),
+    )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
+  );
+}
+
+async function buildConfigTsWithNodeModule() {
+  const { build } = await import("esbuild");
+
+  await build({
+    entryPoints: [getConfigTsPath()],
+    bundle: true,
+    platform: "node",
+    format: "cjs",
+    outfile: getConfigJsPath(),
+    external: ["fetch", "fs", "path", "os", "child_process"],
+    sourcemap: true,
+  });
+}
+
+function readConfigJs(): string | undefined {
+  const configJsPath = getConfigJsPath();
+  if (!fs.existsSync(configJsPath)) {
+    return undefined;
+  }
+  return fs.readFileSync(configJsPath, "utf8");
+}
+
 async function buildConfigTs(ide: IDE, ideType: IdeType) {
+  // TODO: Remove
+  await ide.showToast(
+    "info",
+    "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
+    "YES",
+  );
+
   const configTsPath = getConfigTsPath();
 
   if (!fs.existsSync(configTsPath)) {
-    return undefined;
+    return;
   }
 
-  const defaultContent = `export function modifyConfig(config: Config): Config {
-  return config;
-}`;
-
-  // Read the current content of config.ts
   const currentContent = fs.readFileSync(configTsPath, "utf8");
 
-  // Check if the current content matches the default content
-  if (currentContent.trim() !== defaultContent.trim()) {
-    // Config.ts has been modified
-    const esbuildPath = getEsbuildBinaryPath();
-    const globalContext = new GlobalContext();
-
-    if (
-      ideType === "jetbrains" &&
-      !globalContext.get("hasReceivedConfigTsNoticeJetBrains")
-    ) {
-      try {
-        fs.accessSync(esbuildPath);
-      } catch (error) {
-        globalContext.update("hasReceivedConfigTsNoticeJetBrains", true);
-
-        const actionMsg = "Install esbuild";
-
-        const res = await ide.showToast(
-          "info",
-          "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
-          actionMsg,
-        );
-
-        if (res === actionMsg) {
-          const url = "https://esbuild.github.io/dl/v0.19.11";
-
-          try {
-            const response = await fetch(url);
-            const binaryData = await response.arrayBuffer();
-
-            fs.writeFileSync(
-              esbuildPath,
-              new Uint8Array(binaryData as ArrayBuffer),
-            );
-
-            fs.chmodSync(esbuildPath, 0o755);
-
-            await ide.showToast(
-              "info",
-              `'esbuild' successfully installed to ${esbuildPath}`,
-            );
-          } catch (error) {
-            console.debug("Error downloading or saving esbuild binary:", error);
-          }
-        }
-      }
-    }
-
-    try {
-      if (process.env.IS_BINARY === "true") {
-        execSync(
-          `${escapeSpacesInPath(getEsbuildBinaryPath())} ${escapeSpacesInPath(
-            getConfigTsPath(),
-          )} --bundle --outfile=${escapeSpacesInPath(
-            getConfigJsPath(),
-          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
-        );
-      } else {
-        // Dynamic import esbuild so potentially disastrous errors can be caught
-        const { build } = await import("esbuild");
-
-        await build({
-          entryPoints: [getConfigTsPath()],
-          bundle: true,
-          platform: "node",
-          format: "cjs",
-          outfile: getConfigJsPath(),
-          external: ["fetch", "fs", "path", "os", "child_process"],
-          sourcemap: true,
-        });
-      }
-    } catch (e) {
-      console.log(
-        `Build error. Please check your ~/.continue/config.ts file: ${e}`,
-      );
-      return undefined;
-    }
+  // If the user hasn't modified the default config.ts, don't bother building
+  if (currentContent.trim() === DEFAULT_CONFIG_TS_CONTENTS.trim()) {
+    return;
   }
 
-  if (!fs.existsSync(getConfigJsPath())) {
-    return undefined;
-  }
+  await handleEsbuildInstallation(ide, ideType);
+  await tryBuildConfigTs();
 
-  return fs.readFileSync(getConfigJsPath(), "utf8");
+  return readConfigJs();
 }
 
 async function loadFullConfigNode(

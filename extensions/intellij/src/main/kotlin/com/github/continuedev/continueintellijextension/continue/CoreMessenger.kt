@@ -28,7 +28,7 @@ class CoreMessenger(
     private val gson = Gson()
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
     private val ideProtocolClient = ideProtocolClient
-    private val useTcp: Boolean = false
+    private val useTcp: Boolean = true // TODO: Revert
 
     private fun write(message: String) {
         try {
@@ -98,7 +98,7 @@ class CoreMessenger(
             val continuePluginService = project.service<ContinuePluginService>()
             continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }
-        
+
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)
