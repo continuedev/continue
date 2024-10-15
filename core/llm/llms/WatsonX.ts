@@ -188,7 +188,7 @@ class WatsonX extends BaseLLM {
 
     const stopToken =
       this.watsonxStopToken ??
-      (options.model?.includes("granite") ? "<end of code>" : undefined);
+      (options.model?.includes("granite") ? "Question:" : undefined);
     const url = this.getWatsonxEndpoint();
     const headers = this._getHeaders();
 
@@ -196,7 +196,7 @@ class WatsonX extends BaseLLM {
       decoding_method: "greedy",
       max_new_tokens: options.maxTokens ?? 1024,
       min_new_tokens: 1,
-      stop_sequences: stopToken ? [stopToken] : [],
+      stop_sequences: stopToken ? stopToken.split(",") : [],
       include_stop_sequence: false,
       repetition_penalty: options.frequencyPenalty || 1,
     };

@@ -175,7 +175,7 @@ export abstract class BaseLLM implements ILLM {
       autodetectTemplateFunction(
         options.model,
         this.providerName,
-        templateType || options.template,
+        options.template,
       );
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;

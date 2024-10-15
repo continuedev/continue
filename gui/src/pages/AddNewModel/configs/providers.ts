@@ -511,7 +511,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         key: "watsonxApiVersion",
         label: "watsonx API version",
         placeholder: "Enter the API Version",
-        defaultValue: "2023-05-29",
+        defaultValue: "2024-03-14",
         required: true,
       },
       {
@@ -526,7 +526,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         inputType: "text",
         key: "watsonxStopToken",
         label: "Stop Token",
-        placeholder: "<end of code>",
+        placeholder: "Question:",
         required: false,
       },
 
