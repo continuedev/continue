@@ -8,15 +8,11 @@ if (args[0] === "--target") {
   target = args[1];
 }
 
-if (!fs.existsSync("build")) {
-  fs.mkdirSync("build");
-}
-
 const isPreRelease = args.includes("--pre-release");
 
 let command = isPreRelease
-  ? "npx vsce package --out ./build patch --pre-release --no-dependencies" // --yarn"
-  : "npx vsce package --out ./build patch --no-dependencies"; // --yarn";
+  ? "npx vsce package --pre-release --no-dependencies" // --yarn"
+  : "npx vsce package --no-dependencies"; // --yarn";
 
 if (target) {
   command += ` --target ${target}`;

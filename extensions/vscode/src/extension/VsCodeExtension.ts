@@ -166,7 +166,7 @@ export class VsCodeExtension {
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
-    const enabled = config.get<boolean>("enableTabAutocomplete");
+    const enabled = config.get<boolean>("tabToEnableAutocomplete");
 
     // Register inline completion provider
     setupStatusBar(

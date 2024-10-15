@@ -156,13 +156,6 @@ const exe = os === "win32" ? ".exe" : "";
     });
   });
 
-  if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
-    throw new Error("gui build did not produce index.js");
-  }
-  if (!fs.existsSync(path.join("dist", "assets", "index.css"))) {
-    throw new Error("gui build did not produce index.css");
-  }
-
   // Copy over native / wasm modules //
   process.chdir("../extensions/vscode");
 
@@ -458,7 +451,6 @@ const exe = os === "win32" ? ".exe" : "";
     "esbuild",
     "@esbuild",
     "@lancedb",
-    "@vscode/ripgrep",
     "workerpool",
   ];
 
@@ -514,10 +506,6 @@ const exe = os === "win32" ? ".exe" : "";
     }`,
     "builtin-themes/dark_modern.json",
 
-    // Code/styling for the sidebar
-    "gui/assets/index.js",
-    "gui/assets/index.css",
-
     // Tutorial
     "media/move-chat-panel-right.md",
     "continue_tutorial.py",
@@ -531,9 +519,6 @@ const exe = os === "win32" ? ".exe" : "";
     "models/all-MiniLM-L6-v2/vocab.txt",
     "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
 
-    // node_modules (it's a bit confusing why this is necessary)
-    `node_modules/@vscode/ripgrep/bin/rg${exe}`,
-
     // out directory (where the extension.js lives)
     // "out/extension.js", This is generated afterward by vsce
     // web-tree-sitter
@@ -544,7 +529,6 @@ const exe = os === "win32" ? ".exe" : "";
     "out/build/Release/node_sqlite3.node",
 
     // out/node_modules (to be accessed by extension.js)
-    `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
     `out/node_modules/@esbuild/${
       target === "win32-arm64"
         ? "esbuild.exe"

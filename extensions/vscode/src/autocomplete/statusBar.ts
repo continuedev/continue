@@ -96,7 +96,9 @@ export function setupStatusBar(
   statusBarItem.tooltip = statusBarItemTooltip(status ?? statusBarStatus);
   statusBarItem.command = "continue.openTabAutocompleteConfigMenu";
 
-  statusBarItem.show();
+
+  // BAS Customization - remove status bar for BAS
+  // statusBarItem.show();
   if (status !== undefined) {
     statusBarStatus = status;
   }
@@ -104,7 +106,7 @@ export function setupStatusBar(
   vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration(CONTINUE_WORKSPACE_KEY)) {
       const enabled = getContinueWorkspaceConfig().get<boolean>(
-        "enableTabAutocomplete",
+        "tabToEnableAutocomplete",
       );
       if (enabled && statusBarStatus === StatusBarStatus.Paused) {
         return;
@@ -123,7 +125,7 @@ export function getStatusBarStatus(): StatusBarStatus | undefined {
 export function monitorBatteryChanges(battery: Battery): vscode.Disposable {
   return battery.onChangeAC((acConnected: boolean) => {
     const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
-    const enabled = config.get<boolean>("enableTabAutocomplete");
+    const enabled = config.get<boolean>("tabToEnableAutocomplete");
     if (!!enabled) {
       const pauseOnBattery = config.get<boolean>(
         "pauseTabAutocompleteOnBattery",

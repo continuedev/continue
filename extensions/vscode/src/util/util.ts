@@ -1,6 +1,9 @@
 const os = require("node:os");
 import path from "node:path";
 import * as vscode from "vscode";
+import { isBASBuildCodeEnv } from "@sap/gai-core";
+
+const SERVICE_KEY_CONFIG_PROP = "joule.serviceKey";
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
   if (index === 0) {
@@ -119,7 +122,7 @@ export function getMetaKeyName() {
 }
 
 export function getExtensionVersion(): string {
-  const extension = vscode.extensions.getExtension("continue.continue");
+  const extension = vscode.extensions.getExtension("SAPSE.ai-code-assistant");
   return extension?.packageJSON.version || "0.1.0";
 }
 
@@ -135,3 +138,18 @@ export function getFullyQualifiedPath(filepath?: string) {
     }
   }
 }
+
+// BAS Customization
+/**
+ * Returns the service key setting from the configuration.
+ * @returns {string | null} The service key setting or null if it is not set.
+ */
+export function getServiceKeySetting() {
+  const config = vscode.workspace.getConfiguration();
+  return config.get(SERVICE_KEY_CONFIG_PROP, null);
+}
+
+export const isLLMServiceAvailable = (): boolean => {
+  const isBuildCode = isBASBuildCodeEnv();
+  return isBuildCode || !!getServiceKeySetting();
+};

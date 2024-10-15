@@ -1,0 +1,15 @@
+{
+  "name": "@sap-bas/ai-code-assistant",
+  "version": "0.11.14",
+  "description": "AI code assistant helps developers by providing real-time code completion, code understanding and refactoring. AI code assistant supports a variety of developer tools, making it easy to use while coding.",
+  "scripts": {
+    "ci": "sh scripts/install-dependencies.sh",
+    "install-core": "cd core && npm install && npm link && cd -",
+    "install-vscode": "cd extensions/vscode && npm install && npm link @continuedev/core && npm run package",
+    "install-and-package": "npm run install-core && npm run install-vscode",
+    "ci:artifacts_only": "npm run install-and-package",
+    "install-vsix-for-linux": "cd extensions/vscode && npm install && npm link @continuedev/core && npm run package-to-linux-x64-platform"
+  },
+  "license": "Apache-2.0",
+  "author": "SAP SE"
+}

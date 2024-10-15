@@ -20,7 +20,6 @@ const {
   copyTreeSitterTagQryFiles,
   copyNodeModules,
   downloadEsbuildBinary,
-  downloadRipgrepBinary,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
@@ -91,9 +90,6 @@ async function package(target, os, arch, exe) {
   // Install node_modules
   installNodeModules();
 
-  // Build gui and copy to extensions
-  await buildGui(ghAction());
-
   // Assets
   // Copy tree-sitter-wasm files
   await copyTreeSitterWasms();
@@ -132,8 +128,6 @@ async function package(target, os, arch, exe) {
   await downloadSqliteBinary(target);
   await copySqliteBinary();
 
-  await downloadRipgrepBinary(target);
-
   // copy node_modules to out/node_modules
   await copyNodeModules();
 
@@ -162,10 +156,6 @@ async function package(target, os, arch, exe) {
     }`,
     "builtin-themes/dark_modern.json",
 
-    // Code/styling for the sidebar
-    "gui/assets/index.js",
-    "gui/assets/index.css",
-
     // Tutorial
     "media/move-chat-panel-right.md",
     "continue_tutorial.py",
@@ -179,9 +169,6 @@ async function package(target, os, arch, exe) {
     "models/all-MiniLM-L6-v2/vocab.txt",
     "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
 
-    // node_modules (it's a bit confusing why this is necessary)
-    `node_modules/@vscode/ripgrep/bin/rg${exe}`,
-
     // out directory (where the extension.js lives)
     // "out/extension.js", This is generated afterward by vsce
     // web-tree-sitter
@@ -192,7 +179,6 @@ async function package(target, os, arch, exe) {
     "out/build/Release/node_sqlite3.node",
 
     // out/node_modules (to be accessed by extension.js)
-    `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
     `out/node_modules/@esbuild/${
       target === "win32-arm64"
         ? "esbuild.exe"
