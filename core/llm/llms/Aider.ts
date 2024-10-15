@@ -146,6 +146,7 @@ class Aider extends BaseLLM {
       } else {
         currentDir = "";
       }
+      console.log("THIS IS THE CURRENT DIR", currentDir)
 
       let command: string;
       switch (model) {

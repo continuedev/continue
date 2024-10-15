@@ -150,7 +150,6 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "pathSep",
         "getControlPlaneSessionInfo",
         "logoutOfControlPlane",
-        "getCurrentDirectory"
     )
 
     private val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
