@@ -39,6 +39,7 @@ export interface ProviderInfo {
   refPage?: string;
   apiKeyUrl?: string;
   downloadUrl?: string;
+  showInMenu?: boolean;
 }
 
 const completionParamsInputsConfigs = Object.values(completionParamsInputs);
@@ -65,6 +66,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     icon: "pearai.png",
     tags: [ModelProviderTags.Recommended, ModelProviderTags.Hosted],
     packages: [models.pearai_model],
+    showInMenu: false,
   },
   aider: {
     title: "Aider",
@@ -75,6 +77,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     icon: "aider.png",
     tags: [ModelProviderTags.Recommended, ModelProviderTags.Hosted],
     packages: [models.aider],
+    showInMenu: false,
   },
   other: {
     title: "Other",
@@ -84,6 +87,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
     ],
+    showInMenu: false,
   },
   openai: {
     title: "OpenAI",
