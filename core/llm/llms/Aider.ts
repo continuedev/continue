@@ -150,6 +150,8 @@ class Aider extends BaseLLM {
       command.push("--no-pretty");
 
       const userPath = this.getUserPath();
+      const userShell = this.getUserShell();
+
       console.log("User PATH:", userPath);
 
       const spawnAiderProcess = async () => {
@@ -196,17 +198,27 @@ class Aider extends BaseLLM {
             windowsHide: true,
           });
         } else {
-          // For non-Windows platforms, keep the existing implementation
-          return cp.spawn(command[0], command.slice(1), {
-            stdio: ["pipe", "pipe", "pipe"],
-            cwd: currentDir,
-            env: {
-              ...process.env,
-              PATH: userPath,
-              PYTHONIOENCODING: "utf-8",
-              AIDER_SIMPLE_OUTPUT: "1",
-            },
-          });
+        // For non-Windows platforms, keep the existing implementation
+        if (model === "claude-3-5-sonnet-20240620") {
+          command.unshift(`export ANTHROPIC_API_KEY=${apiKey};`);
+        } else if (model === "gpt-4o") {
+          command.unshift(`export OPENAI_API_KEY=${apiKey};`);
+        } else {
+          // For pearai_model, we're using the access token
+          const accessToken = this.credentials.getAccessToken();
+          command.unshift(`export OPENAI_API_KEY=${accessToken};`);
+        }
+        return cp.spawn(userShell, ["-c", command.join(" ")], {
+          stdio: ["pipe", "pipe", "pipe"],
+          cwd: currentDir,
+          env: {
+            ...process.env,
+            PATH: userPath,
+            PYTHONIOENCODING: "utf-8",
+            AIDER_SIMPLE_OUTPUT: "1",
+          },
+        });
+
         }
       };
 
@@ -328,7 +340,7 @@ class Aider extends BaseLLM {
 
       if (newOutput) {
         partialResponse += newOutput;
-        
+
         // Split the new output into lines
         const lines = newOutput.split('\n');
         for (const line of lines) {
