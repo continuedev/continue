@@ -1,13 +1,13 @@
-import { AnthropicLlms } from "./models/anthropic.js";
-import { AzureLlms } from "./models/azure.js";
-import { BedrockLlms } from "./models/bedrock.js";
-import { CohereLlms } from "./models/cohere.js";
-import { GeminiLlms } from "./models/gemini.js";
-import { MistralLlms } from "./models/mistral.js";
-import { OllamaLlms } from "./models/ollama.js";
-import { OpenAiLlms } from "./models/openai.js";
-import { vllmLlms } from "./models/vllm.js";
-import { VoyageLlms } from "./models/voyage.js";
+import { AnthropicLlms } from "./providers/anthropic.js";
+import { AzureLlms } from "./providers/azure.js";
+import { BedrockLlms } from "./providers/bedrock.js";
+import { CohereLlms } from "./providers/cohere.js";
+import { GeminiLlms } from "./providers/gemini.js";
+import { MistralLlms } from "./providers/mistral.js";
+import { OllamaLlms } from "./providers/ollama.js";
+import { OpenAiLlms } from "./providers/openai.js";
+import { vllmLlms } from "./providers/vllm.js";
+import { VoyageLlms } from "./providers/voyage.js";
 import { LlmInfo, UseCase } from "./types.js";
 
 export const allLlms: LlmInfo[] = [
