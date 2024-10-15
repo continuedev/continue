@@ -5,10 +5,10 @@ import {
   ContextProviderExtras,
 } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
-import { constants } from "../../deploy/constants";
+import { TRIAL_PROXY_URL } from "../../control-plane/client";
 
 export default class WebContextProvider extends BaseContextProvider {
-  private static ENDPOINT = new URL("web", constants.a);
+  private static ENDPOINT = new URL("web", TRIAL_PROXY_URL);
   private static DEFAULT_N = 6;
 
   static description: ContextProviderDescription = {

@@ -18,4 +18,9 @@ export const VoyageLlms = llms("voyage", [
     displayName: "Rerank 2 Lite",
     contextLength: 8096,
   },
+  {
+    model: "rerank-lite-1",
+    displayName: "Rerank Lite 1",
+    contextLength: 8096,
+  },
 ]);
