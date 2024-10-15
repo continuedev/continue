@@ -86,7 +86,6 @@ class Aider extends BaseLLM {
   }
 
 
-
   private async _getHeaders() {
     await this.credentials.checkAndUpdateCredentials();
     return {
@@ -97,7 +96,6 @@ class Aider extends BaseLLM {
 
   private captureAiderOutput(data: Buffer): void {
     const lines = data.toString().replace(/\r\n|\r/g, '').split('\n');
-    console.log("Before lines:", lines)
     let startIndex = 0;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].match(/\[\s*Y\s*e\s*s\s*\]\s*:\s*/i) && !lines[i].trim().endsWith(':')) {
@@ -200,6 +198,7 @@ class Aider extends BaseLLM {
 
         this.aiderProcess.stderr.on('data', (data: Buffer) => {
           console.error(`Aider error: ${data.toString()}`);
+          this.captureAiderOutput(data);
         });
 
         this.aiderProcess.on('close', (code: number | null) => {
@@ -280,7 +279,6 @@ class Aider extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
-    console.log("HI inside Aider");
 
     const lastMessage = messages[messages.length - 1].content.toString();
     console.log(lastMessage);
