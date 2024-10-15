@@ -16,10 +16,9 @@ import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.notification.NotificationDisplayType
-import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.notification.NotificationAction
+import com.intellij.notification.NotificationGroupManager
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
@@ -32,9 +31,9 @@ import com.intellij.openapi.editor.impl.DocumentMarkupModel
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.psi.PsiDocumentManager
@@ -123,7 +122,6 @@ class IdeProtocolClient(
     private val project: Project
 ) : DumbAware {
     val diffManager = DiffManager(project)
-    private val CONTINUE_NOTIFICATION_GROUP = NotificationGroup("Continue", NotificationDisplayType.BALLOON, true)
     private val ripgrep: String
 
     init {
@@ -216,7 +214,7 @@ class IdeProtocolClient(
                         val sshClient = System.getenv("SSH_CLIENT")
                         val sshTty = System.getenv("SSH_TTY")
 
-                        var remoteName: String = "local"
+                        var remoteName = "local"
                         if (sshClient != null || sshTty != null) {
                             remoteName = "ssh"
                         }
@@ -388,7 +386,6 @@ class IdeProtocolClient(
                     "setSuggestionsLocked" -> {}
                     "getSessionId" -> {}
 
-                    // INDEXING //
                     "getLastModified" -> {
                         // TODO
                         val data = data as Map<String, Any>
@@ -449,7 +446,6 @@ class IdeProtocolClient(
                         respond(output)
                     }
 
-                    // NEW //
                     "getDiff" -> {
                         val builder = ProcessBuilder("git", "diff")
                         builder.directory(File(workspacePath ?: "."))
@@ -554,6 +550,7 @@ class IdeProtocolClient(
                     }
 
                     "openFile" -> {
+
                         setFileOpen((data as Map<String, Any>)["path"] as String)
                         respond(null)
                     }
@@ -567,12 +564,10 @@ class IdeProtocolClient(
                         val data = data as ArrayList<String>
                         val toastType = data[0]
                         val message = data[1]
-                        val buttonText = if (data.size > 2) data[2] else null
+                        val buttons = data.drop(2).toTypedArray()
 
-                        coroutineScope.launch {
-                            val result = showToast(toastType, message, buttonText)
-                            respond(result)
-                        }
+                        val result = showToast(toastType, message, buttons)
+                        respond(result)
                     }
 
                     "listFolders" -> {
@@ -931,30 +926,41 @@ class IdeProtocolClient(
         return virtualFile?.path
     }
 
-    suspend fun showToast(type: String, content: String, actionButtonText: String? = null): Boolean? =
-        withContext(Dispatchers.Main) {
+    suspend fun showToast(type: String, content: String, buttonTexts: Array<String> = emptyArray()): String? =
+        withContext(Dispatchers.Default) {
             val notificationType = when (type.uppercase()) {
                 "ERROR" -> NotificationType.ERROR
                 "WARNING" -> NotificationType.WARNING
                 else -> NotificationType.INFORMATION
             }
 
-            val deferred = CompletableDeferred<Boolean?>()
+            val deferred = CompletableDeferred<String?>()
+            val icon = IconLoader.getIcon("/icons/continue.svg", javaClass)
 
-            val notification = CONTINUE_NOTIFICATION_GROUP.createNotification(content, notificationType)
+            val notification = NotificationGroupManager.getInstance().getNotificationGroup("Continue")
+                .createNotification(content, notificationType).setIcon(icon)
 
-            if (actionButtonText != null) {
-                notification.addAction(NotificationAction.create(actionButtonText) { _, _ ->
-                    deferred.complete(true)
+            buttonTexts.forEach { buttonText ->
+                notification.addAction(NotificationAction.create(buttonText) { _, _ ->
+                    deferred.complete(buttonText)
                     notification.expire()
                 })
-                notification.whenExpired {
-                    if (!deferred.isCompleted) {
-                        deferred.complete(null)
-                    }
+            }
+
+            // This timeout is to handle the case where a user closes out of the notification, which should trigger
+            // the `whenExpired` event but that doesn't seem to be occurring.
+            launch {
+                delay(15000)
+                if (!deferred.isCompleted) {
+                    deferred.complete(null)
+                    notification.expire()
                 }
-            } else {
-                deferred.complete(null)
+            }
+
+            notification.whenExpired {
+                if (!deferred.isCompleted) {
+                    deferred.complete(null)
+                }
             }
 
             notification.notify(project)

@@ -5,11 +5,11 @@ import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index.js";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
-import FileContextProvider from "../context/providers/FileContextProvider.js";
-import { contextProviderClassFromName } from "../context/providers/index.js";
-import { AllRerankers } from "../context/rerankers/index.js";
-import { LLMReranker } from "../context/rerankers/llm.js";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+import FileContextProvider from "../context/providers/FileContextProvider";
+import { contextProviderClassFromName } from "../context/providers/index";
+import { AllRerankers } from "../context/rerankers/index";
+import { LLMReranker } from "../context/rerankers/llm";
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -28,20 +28,20 @@ import {
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
-} from "../index.js";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { allEmbeddingsProviders } from "../indexing/embeddings/index.js";
-import { BaseLLM } from "../llm/index.js";
-import CustomLLMClass from "../llm/llms/CustomLLM.js";
-import FreeTrial from "../llm/llms/FreeTrial.js";
-import { llmFromDescription } from "../llm/llms/index.js";
+} from "..";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { allEmbeddingsProviders } from "../indexing/embeddings";
+import { BaseLLM } from "../llm";
+import CustomLLMClass from "../llm/llms/CustomLLM";
+import FreeTrial from "../llm/llms/FreeTrial";
+import { llmFromDescription } from "../llm/llms";
 
 import { execSync } from "child_process";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
-import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
-import { copyOf } from "../util/index.js";
-import mergeJson from "../util/merge.js";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
+import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
+import { copyOf } from "../util";
+import mergeJson from "../util/merge";
 import {
   DEFAULT_CONFIG_TS_CONTENTS,
   getConfigJsPath,
@@ -50,22 +50,21 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  getContinueUtilsPath,
   getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
-} from "../util/paths.js";
+} from "../util/paths";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
-} from "./default.js";
+} from "./default";
 import {
   DEFAULT_PROMPTS_FOLDER,
   getPromptFiles,
   slashCommandFromPromptFile,
-} from "./promptFile.js";
-import { GlobalContext } from "../util/GlobalContext.js";
+} from "./promptFile";
+import { GlobalContext } from "../util/GlobalContext";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -505,11 +504,10 @@ async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
     return;
   }
 
-  // TODO: Uncomment
-  // const globalContext = new GlobalContext();
-  // if (globalContext.get("hasReceivedConfigTsNoticeJetBrains")) {
-  //   return;
-  // }
+  const globalContext = new GlobalContext();
+  if (globalContext.get("hasDismissedConfigTsNoticeJetBrains")) {
+    return;
+  }
 
   const esbuildPath = getEsbuildBinaryPath();
 
@@ -521,32 +519,44 @@ async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
 
   const shouldInstall = await promptEsbuildInstallation(ide);
 
-  if (shouldInstall || true) {
-    await downloadAndInstallEsbuild(ide, esbuildPath);
+  if (shouldInstall) {
+    await downloadAndInstallEsbuild(ide);
   }
 }
 
 async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
-  const actionMsg = "Install esbuild";
+  const installMsg = "Install esbuild";
+  const dismissMsg = "Dismiss";
 
   const res = await ide.showToast(
     "warning",
     "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
-    actionMsg,
+    dismissMsg,
+    installMsg,
   );
 
-  return res === actionMsg;
+  if (res === dismissMsg) {
+    const globalContext = new GlobalContext();
+    globalContext.update("hasDismissedConfigTsNoticeJetBrains", true);
+    return false;
+  }
+
+  return res === installMsg;
 }
 
-async function downloadAndInstallEsbuild(ide: IDE, esbuildPath: string) {
+async function downloadAndInstallEsbuild(ide: IDE) {
   const url = "https://esbuild.github.io/dl/v0.19.11";
+  const esbuildPath = getEsbuildBinaryPath();
 
   try {
     const response = await fetch(url);
-    const binaryData = await response.arrayBuffer();
+    const script = await response.text();
 
-    fs.writeFileSync(esbuildPath, new Uint8Array(binaryData as ArrayBuffer));
-    fs.chmodSync(esbuildPath, 0o755);
+    execSync("sh", {
+      input: script,
+      stdio: ["pipe", "inherit", "inherit"],
+      cwd: path.dirname(esbuildPath),
+    });
 
     await ide.showToast(
       "info",
@@ -572,13 +582,22 @@ async function tryBuildConfigTs() {
 }
 
 async function buildConfigTsWithBinary() {
-  execSync(
-    `${escapeSpacesInPath(getEsbuildBinaryPath())} ${escapeSpacesInPath(
-      getConfigTsPath(),
-    )} --bundle --outfile=${escapeSpacesInPath(
-      getConfigJsPath(),
-    )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
-  );
+  const cmd = [
+    escapeSpacesInPath(getEsbuildBinaryPath()),
+    escapeSpacesInPath(getConfigTsPath()),
+    "--bundle",
+    `--outfile=${escapeSpacesInPath(getConfigJsPath())}`,
+    "--platform=node",
+    "--format=cjs",
+    "--sourcemap",
+    "--external:fetch",
+    "--external:fs",
+    "--external:path",
+    "--external:os",
+    "--external:child_process",
+  ].join(" ");
+
+  execSync(cmd);
 }
 
 async function buildConfigTsWithNodeModule() {
@@ -597,15 +616,15 @@ async function buildConfigTsWithNodeModule() {
 
 function readConfigJs(): string | undefined {
   const configJsPath = getConfigJsPath();
+
   if (!fs.existsSync(configJsPath)) {
     return undefined;
   }
+
   return fs.readFileSync(configJsPath, "utf8");
 }
 
 async function buildConfigTs(ide: IDE, ideType: IdeType) {
-  // TODO: Remove
-  await ide.showToast("info", "test toast");
   const configTsPath = getConfigTsPath();
 
   if (!fs.existsSync(configTsPath)) {

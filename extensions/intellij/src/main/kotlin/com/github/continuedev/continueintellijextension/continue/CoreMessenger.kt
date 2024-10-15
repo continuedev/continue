@@ -28,7 +28,7 @@ class CoreMessenger(
     private val gson = Gson()
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
     private val ideProtocolClient = ideProtocolClient
-    private val useTcp: Boolean = false // TODO: Set to `false`
+    private val useTcp: Boolean = false
     private fun write(message: String) {
         try {
             writer?.write(message + "\r\n")
