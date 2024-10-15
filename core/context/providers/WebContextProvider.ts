@@ -35,7 +35,8 @@ export default class WebContextProvider extends BaseContextProvider {
       }),
     });
     if (!resp.ok) {
-      throw new Error("Failed to fetch web context");
+      const text = await resp.text();
+      throw new Error(`Failed to fetch web context: ${text}`);
     }
     const json = await resp.json();
     return json;
