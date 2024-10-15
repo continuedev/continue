@@ -10,16 +10,20 @@ import { streamSse, streamJSON } from "../stream.js";
 import { checkTokens } from "../../db/token.js";
 import { stripImages } from "../images.js";
 import { countTokens } from "../countTokens.js";
-import * as cp from 'child_process';
-import * as process from 'process';
+import * as cp from "child_process";
+import * as process from "process";
 import { PearAICredentials } from "../../pearaiServer/PearAICredentials.js";
 import { getHeaders } from "../../pearaiServer/stubs/headers.js";
-import { execSync } from 'child_process';
-import * as os from 'os';
+import { execSync } from "child_process";
+import * as os from "os";
 
+const PLATFORM = process.platform;
+const IS_WINDOWS = PLATFORM === "win32";
+const IS_MAC = PLATFORM === "darwin";
+const IS_LINUX = PLATFORM === "linux";
 
-export const AIDER_QUESTION_MARKER = "[Yes]\\:"
-export const AIDER_END_MARKER = '─────────────────────────────────────'
+export const AIDER_QUESTION_MARKER = "[Yes]\\:";
+export const AIDER_END_MARKER = "─────────────────────────────────────";
 
 class Aider extends BaseLLM {
   getCurrentDirectory: (() => Promise<string>) | null = null;
@@ -34,7 +38,7 @@ class Aider extends BaseLLM {
   };
 
   private aiderProcess: cp.ChildProcess | null = null;
-  private aiderOutput: string = '';
+  private aiderOutput: string = "";
   private credentials: PearAICredentials;
 
   constructor(options: LLMOptions) {
@@ -44,10 +48,11 @@ class Aider extends BaseLLM {
     }
     this.credentials = new PearAICredentials(
       options.getCredentials,
-      options.setCredentials || (async () => {})
+      options.setCredentials || (async () => {}),
     );
     console.log("Aider constructor called");
-    this.startAiderChat(this.model, this.apiKey);
+    this.startAiderChat("claude-3-5-sonnet-20240620", this.apiKey);
+    // this.startAiderChat(this.model, this.apiKey);
   }
 
   public setPearAIAccessToken(value: string | undefined): void {
@@ -59,10 +64,10 @@ class Aider extends BaseLLM {
   }
 
   private getUserShell(): string {
-    if (os.platform() === 'win32') {
-      return process.env.COMSPEC || 'cmd.exe';
+    if (IS_WINDOWS) {
+      return process.env.COMSPEC || "cmd.exe";
     }
-    return process.env.SHELL || '/bin/sh';
+    return process.env.SHELL || "/bin/sh";
   }
 
   private getUserPath(): string {
@@ -70,21 +75,21 @@ class Aider extends BaseLLM {
       let command: string;
       const shell = this.getUserShell();
 
-      if (os.platform() === 'win32') {
+      if (os.platform() === "win32") {
         // For Windows, we'll use a PowerShell command
-        command = 'powershell -Command "[Environment]::GetEnvironmentVariable(\'Path\', \'User\') + \';\' + [Environment]::GetEnvironmentVariable(\'Path\', \'Machine\')"';
+        command =
+          "powershell -Command \"[Environment]::GetEnvironmentVariable('Path', 'User') + ';' + [Environment]::GetEnvironmentVariable('Path', 'Machine')\"";
       } else {
         // For Unix-like systems (macOS, Linux)
         command = `${shell} -ilc 'echo $PATH'`;
       }
 
-      return execSync(command, { encoding: 'utf8' }).trim();
+      return execSync(command, { encoding: "utf8" }).trim();
     } catch (error) {
-      console.error('Error getting user PATH:', error);
-      return process.env.PATH || '';
+      console.error("Error getting user PATH:", error);
+      return process.env.PATH || "";
     }
   }
-
 
   private async _getHeaders() {
     await this.credentials.checkAndUpdateCredentials();
@@ -95,25 +100,38 @@ class Aider extends BaseLLM {
   }
 
   private captureAiderOutput(data: Buffer): void {
-    const lines = data.toString().replace(/\r\n|\r/g, '').split('\n');
+    const lines = data
+      .toString()
+      .replace(/\r\n|\r/g, "")
+      .split("\n");
+    console.log("Before lines:", lines);
     let startIndex = 0;
     for (let i = 0; i < lines.length; i++) {
-      if (lines[i].match(/\[\s*Y\s*e\s*s\s*\]\s*:\s*/i) && !lines[i].trim().endsWith(':')) {
+      if (
+        lines[i].match(/\[\s*Y\s*e\s*s\s*\]\s*:\s*/i) &&
+        !lines[i].trim().endsWith(":")
+      ) {
         startIndex = i + 1;
         break;
       }
     }
-    const filteredLines = lines.slice(startIndex).filter(line => {
-      const trimmedLine = line.trim();
-      return !trimmedLine.startsWith('>');
-    }).map(line =>
-      line.trim().replace(/[\\$&+,:;=?@#|'<>.^*()%!-]/g, '\\$&')
-    );
-    let filteredOutput = filteredLines.join("\n")
+    const filteredLines = lines
+      .slice(startIndex)
+      .filter((line) => {
+        const trimmedLine = line.trim();
+        return !trimmedLine.startsWith(">");
+      })
+      .map((line) =>
+        line.trim().replace(/[\\$&+,:;=?@#|'<>.^*()%!-]/g, "\\$&"),
+      );
+    let filteredOutput = filteredLines.join("\n");
     this.aiderOutput += filteredOutput;
   }
 
-  async startAiderChat(model: string, apiKey: string | undefined): Promise<void> {
+  async startAiderChat(
+    model: string,
+    apiKey: string | undefined,
+  ): Promise<void> {
     return new Promise(async (resolve, reject) => {
       let currentDir: string;
       if (this.getCurrentDirectory) {
@@ -122,105 +140,138 @@ class Aider extends BaseLLM {
         currentDir = "";
       }
 
-      let command: string;
+      let command: string[];
+
       switch (model) {
         case "claude-3-5-sonnet-20240620":
-          command = `export ANTHROPIC_API_KEY=${apiKey}; aider`;
+          console.log("claude model chosen");
+          command = ["aider --model claude-3-5-sonnet-20240620"];
           break;
         case "gpt-4o":
-          command = `export OPENAI_API_KEY=${apiKey}; aider`;
+          command = ["aider --model gpt-4o"];
           break;
         case "pearai_model":
-          default:
-            await this.credentials.checkAndUpdateCredentials();
-            const accessToken = this.credentials.getAccessToken();
-            command = `aider --openai-api-key ${accessToken} --openai-api-base http://localhost:8000/integrations/aider`;
-            break;
+        default:
+          await this.credentials.checkAndUpdateCredentials();
+          const accessToken = this.credentials.getAccessToken() || "";
+          command = [
+            "aider",
+            "--openai-api-key",
+            accessToken,
+            "--openai-api-base",
+            "http://localhost:8000/integrations/aider",
+          ];
+          break;
       }
+
+      // disable pretty printing
+      // command.push("--no-pretty");
 
       const userPath = this.getUserPath();
-      const userShell = this.getUserShell();
-      console.log('User PATH:', userPath);
-      console.log('User shell:', userShell);
+      console.log("User PATH:", userPath);
 
-      let spawnArgs: string[];
-      if (os.platform() === 'win32') {
-        spawnArgs = ['/c', command];
-      } else {
-        spawnArgs = ['-c', command];
-      }
+      const spawnAiderProcess = async () => {
+        if (IS_WINDOWS) {
+          const envSetCommands = [
+            "setx PYTHONIOENCODING utf-8",
+            "setx AIDER_SIMPLE_OUTPUT 1",
+            "chcp 65001",
+          ];
 
-      this.aiderProcess = cp.spawn(userShell, spawnArgs, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: currentDir,
-        env: {
-          ...process.env,
-          PATH: userPath, // Use the user's PATH here
-        }
-      });
-        const spawnAiderProcess = () => {
-          return cp.spawn(userShell, spawnArgs, {
-                stdio: ['pipe', 'pipe', 'pipe'],
-                cwd: currentDir,
-                env: {
-                  ...process.env,
-                      PATH: userPath,
-                    }
-                  });
-        };
+          if (model === "claude-3-5-sonnet-20240620") {
+            envSetCommands.push(`setx ANTHROPIC_API_KEY ${apiKey}`);
+          } else if (model === "gpt-4o") {
+            envSetCommands.push(`setx OPENAI_API_KEY ${apiKey}`);
+          } else {
+            // For pearai_model, we're using the access token
+            const accessToken = this.credentials.getAccessToken();
+            envSetCommands.push(`setx OPENAI_API_KEY ${accessToken}`);
+          }
 
-        try {
-          this.aiderProcess = spawnAiderProcess();
-
-          if (!this.aiderProcess.pid) {
-            console.log('Aider not found. Attempting to install...');
-            execSync('python -m pip install -U --upgrade-strategy only-if-needed aider-chat', { stdio: 'inherit' });
-            console.log('Aider installed successfully. Retrying...');
-            this.aiderProcess = spawnAiderProcess();
+          // Execute setx commands in the background
+          for (const cmd of envSetCommands) {
+            await new Promise((resolve, reject) => {
+              cp.exec(cmd, { windowsHide: true }, (error, stdout, stderr) => {
+                if (error) {
+                  console.error(`Error executing ${cmd}: ${error}`);
+                  reject(error);
+                } else {
+                  console.log(`Executed: ${cmd}`);
+                  resolve(stdout);
                 }
+              });
+            });
+          }
 
-          if (!this.aiderProcess.pid) {
-            throw new Error('Failed to start Aider after installation');
-              }
-        } catch (error) {
-          console.error('Failed to start or install Aider:', error);
-          reject(error);
-          return;
+          // Now spawn Aider in the background
+          return cp.spawn("cmd.exe", ["/c", ...command], {
+            stdio: ["pipe", "pipe", "pipe"],
+            cwd: currentDir,
+            env: {
+              ...process.env,
+              PATH: userPath,
+            },
+            windowsHide: true,
+          });
+        } else {
+          // For non-Windows platforms, keep the existing implementation
+          return cp.spawn(command[0], command.slice(1), {
+            stdio: ["pipe", "pipe", "pipe"],
+            cwd: currentDir,
+            env: {
+              ...process.env,
+              PATH: userPath,
+              PYTHONIOENCODING: "utf-8",
+              AIDER_SIMPLE_OUTPUT: "1",
+            },
+          });
         }
+      };
 
-      console.log('Spawned Aider process with PATH:', userPath);
+      const tryStartAider = async () => {
+        console.log("Starting Aider...");
+        this.aiderProcess = await spawnAiderProcess();
 
-      if (this.aiderProcess.stdout && this.aiderProcess.stderr) {
-        this.aiderProcess.stdout.on('data', (data: Buffer) => {
-          console.log(`Aider output: ${data.toString()}`);
-          this.captureAiderOutput(data);
-        });
+        if (this.aiderProcess.stdout && this.aiderProcess.stderr) {
+          this.aiderProcess.stdout.on("data", (data: Buffer) => {
+            console.log(`Aider output: ${data.toString()}`);
+            this.captureAiderOutput(data);
+          });
 
-        this.aiderProcess.stderr.on('data', (data: Buffer) => {
-          console.error(`Aider error: ${data.toString()}`);
-          this.captureAiderOutput(data);
-        });
+          this.aiderProcess.stderr.on("data", (data: Buffer) => {
+            console.error(`Aider error: ${data.toString()}`);
+          });
 
-        this.aiderProcess.on('close', (code: number | null) => {
-          console.log(`Aider process exited with code ${code}`);
-          this.aiderProcess = null;
-        });
+          this.aiderProcess.on("close", (code: number | null) => {
+            console.log(`Aider process exited with code ${code}`);
+            if (code !== 0) {
+              reject(new Error(`Aider process exited with code ${code}`));
+            } else {
+              this.aiderProcess = null;
+              resolve();
+            }
+          });
 
-        this.aiderProcess.on('error', (error: Error) => {
-          console.error(`Error starting Aider: ${error.message}`);
-          reject(error);
-        });
-      }
+          this.aiderProcess.on("error", (error: Error) => {
+            console.error(`Error starting Aider: ${error.message}`);
+            reject(error);
+          });
+        }
+      };
 
-      resolve();
+      await tryStartAider();
     });
   }
 
   sendToAiderChat(message: string): void {
-    if (this.aiderProcess && this.aiderProcess.stdin && !this.aiderProcess.killed) {
+    if (
+      this.aiderProcess &&
+      this.aiderProcess.stdin &&
+      !this.aiderProcess.killed
+    ) {
       this.aiderProcess.stdin.write(`${message}\n`);
     } else {
-      console.error('Aider process is not running');
+      console.error("Aider process is not running");
     }
   }
 
@@ -279,18 +330,19 @@ class Aider extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
+    console.log("HI inside Aider");
 
     const lastMessage = messages[messages.length - 1].content.toString();
     console.log(lastMessage);
     this.sendToAiderChat(lastMessage);
 
     // Reset for new chat
-    this.aiderOutput = '';
+    this.aiderOutput = "";
 
-    let partialResponse = '';
+    let partialResponse = "";
 
     while (true) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const newOutput = this.aiderOutput.slice(partialResponse.length);
 
       if (newOutput) {
@@ -302,9 +354,9 @@ class Aider extends BaseLLM {
 
         // Check if newOutput includes AIDER_QUESTION_MARKER and send "Y" if it does
         if (newOutput.match(/\[\s*Y\s*e\s*s\s*\]\s*\\:/i)) {
-          await new Promise(resolve => setTimeout(resolve, 300));
+          await new Promise((resolve) => setTimeout(resolve, 300));
           this.sendToAiderChat("Y");
-          continue
+          continue;
         }
       }
 
@@ -314,13 +366,11 @@ class Aider extends BaseLLM {
     }
 
     // Reset the output after capturing a complete response
-    this.aiderOutput = '';
+    this.aiderOutput = "";
   }
 
   async listModels(): Promise<string[]> {
-    return [
-      "aider", "claude-3-5-sonnet-20240620", "pearai_model", "gpt-4o",
-    ];
+    return ["aider", "claude-3-5-sonnet-20240620", "pearai_model", "gpt-4o"];
   }
 
   supportsFim(): boolean {
