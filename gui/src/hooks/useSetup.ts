@@ -109,6 +109,8 @@ function useSetup(dispatch: Dispatch<any>) {
   useWebviewListener("configUpdate", async () => {
     await loadConfig();
 
+    dispatch(setConfigError(undefined));
+
     if (!isJetBrains && !getLocalStorage("disableIndexing")) {
       debouncedIndexDocs();
     }
