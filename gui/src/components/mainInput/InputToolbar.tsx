@@ -60,6 +60,9 @@ const EnterButton = styled.button`
   border-radius: ${defaultBorderRadius};
   color: ${vscForeground};
   cursor: pointer;
+  :disabled {
+    cursor: wait;
+  }
 `;
 
 interface InputToolbarProps {
