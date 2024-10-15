@@ -75,10 +75,4 @@ export const MistralLlms = llms("mistral", [
     regex: /codestral/i,
     recommendedFor: ["autocomplete"],
   },
-  // embed
-  {
-    model: "mistral-embed",
-    displayName: "Mistral Embed",
-    recommendedFor: ["embed"],
-  },
 ]);
