@@ -53,6 +53,7 @@ const HoverItem = styled.span<{ isActive?: boolean }>`
 `;
 
 const EnterButton = styled.button`
+  all: unset;
   padding: 2px 4px;
   display: flex;
   align-items: center;
