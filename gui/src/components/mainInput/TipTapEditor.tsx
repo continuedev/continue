@@ -502,6 +502,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         }
       }
     },
+    editable: !active,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
