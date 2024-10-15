@@ -384,7 +384,7 @@ export class QuickEdit {
 
             const searchResults = this.miniSearch.search(
               searchQuery,
-            ) as FileMiniSearchResult[];
+            ) as unknown as FileMiniSearchResult[];
 
             if (searchResults.length > 0) {
               quickPick.items = searchResults
