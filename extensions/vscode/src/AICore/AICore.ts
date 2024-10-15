@@ -11,7 +11,7 @@ const basAPI: BasToolkit = vscode.extensions.getExtension("SAPOSS.app-studio-too
 class AICore extends BaseLLM {
   static providerName: ModelProvider = "aicore";
   static defaultOptions: Partial<LLMOptions> = {
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
   };
 
   constructor(options: LLMOptions) {

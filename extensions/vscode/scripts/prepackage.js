@@ -14,6 +14,10 @@ rimrafSync(path.join(__dirname, "..", "out"));
 fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
   recursive: true,
 });
+const guiDist = path.join(__dirname, "..", "..", "..", "gui", "dist");
+if (!fs.existsSync(guiDist)) {
+  fs.mkdirSync(guiDist, { recursive: true });
+}
 
 // Get the target to package for
 let target = undefined;
@@ -44,25 +48,117 @@ const exe = os === "win32" ? ".exe" : "";
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
+  // Copy config_schema.json to config.json in docs and intellij
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join("..", "..", "docs", "static", "schemas", "config.json"),
+  );
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join(
+      "..",
+      "intellij",
+      "src",
+      "main",
+      "resources",
+      "config_schema.json",
+    ),
+  );
+  // Modify and copy for .continuerc.json
+  const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
+  schema.definitions.SerializedContinueConfig.properties.mergeBehavior = {
+    type: "string",
+    enum: ["merge", "overwrite"],
+    default: "merge",
+    title: "Merge behavior",
+    markdownDescription:
+      "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
+  };
+  fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
+
   if (!process.cwd().endsWith("vscode")) {
     // This is sometimes run from root dir instead (e.g. in VS Code tasks)
     process.chdir("extensions/vscode");
   }
 
   // Install node_modules //
-  execCmdSync("npm install --registry=https://int.repositories.cloud.sap/artifactory/api/npm/build-releases-npm");
+  execCmdSync("npm install");
   console.log("[info] npm install in extensions/vscode completed");
 
+  process.chdir("../../gui");
+
+  execCmdSync("npm install");
+  console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
     execCmdSync("npm run build");
   }
 
-  // Copy over native / wasm modules //
-  if (!process.cwd().endsWith("vscode")) {
-    // This is sometimes run from root dir instead (e.g. in VS Code tasks)
-    process.chdir("../extensions/vscode");
+  // Copy over the dist folder to the JetBrains extension //
+  const intellijExtensionWebviewPath = path.join(
+    "..",
+    "extensions",
+    "intellij",
+    "src",
+    "main",
+    "resources",
+    "webview",
+  );
+
+  const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
+  fs.copyFileSync(indexHtmlPath, "tmp_index.html");
+  rimrafSync(intellijExtensionWebviewPath);
+  fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
+
+  await new Promise((resolve, reject) => {
+    ncp("dist", intellijExtensionWebviewPath, (error) => {
+      if (error) {
+        console.warn(
+          "[error] Error copying React app build to JetBrains extension: ",
+          error,
+        );
+        reject(error);
+      }
+      resolve();
+    });
+  });
+
+  // Put back index.html
+  if (fs.existsSync(indexHtmlPath)) {
+    rimrafSync(indexHtmlPath);
   }
+  fs.copyFileSync("tmp_index.html", indexHtmlPath);
+  fs.unlinkSync("tmp_index.html");
+
+  // Copy over other misc. files
+  fs.copyFileSync(
+    "../extensions/vscode/gui/onigasm.wasm",
+    path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
+  );
+
+  console.log("[info] Copied gui build to JetBrains extension");
+
+  // Then copy over the dist folder to the VSCode extension //
+  const vscodeGuiPath = path.join("../extensions/vscode/gui");
+  fs.mkdirSync(vscodeGuiPath, { recursive: true });
+  await new Promise((resolve, reject) => {
+    ncp("dist", vscodeGuiPath, (error) => {
+      if (error) {
+        console.log(
+          "Error copying React app build to VSCode extension: ",
+          error,
+        );
+        reject(error);
+      } else {
+        console.log("Copied gui build to VSCode extension");
+        resolve();
+      }
+    });
+  });
+
+  // Copy over native / wasm modules //
+  process.chdir("../extensions/vscode");
+
   fs.mkdirSync("bin", { recursive: true });
 
   // onnxruntime-node
@@ -166,6 +262,22 @@ const exe = os === "win32" ? ".exe" : "";
   //   },
   // );
 
+  // textmate-syntaxes
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "../textmate-syntaxes"),
+      path.join(__dirname, "../gui/textmate-syntaxes"),
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying textmate-syntaxes", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+
   function ghAction() {
     return !!process.env.GITHUB_ACTIONS;
   }
@@ -205,7 +317,7 @@ const exe = os === "win32" ? ".exe" : "";
       process.chdir(tempDir);
 
       // Initialize a new package.json and install the package
-      execCmdSync(`npm init -y && npm i --registry=https://int.repositories.cloud.sap/artifactory/api/npm/build-releases-npm -f ${packageName} --no-save`);
+      execCmdSync(`npm init -y && npm i -f ${packageName} --no-save`);
 
       console.log(
         `Contents of: ${packageName}`,
@@ -216,24 +328,28 @@ const exe = os === "win32" ? ".exe" : "";
       // Ideally we validate file integrity in the validation at the end
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // Ensure the target directory exists
-      const targetDir = path.join(currentDir, "node_modules", toCopy);
-      fs.mkdirSync(path.dirname(targetDir), { recursive: true });
-
       // Copy the installed package back to the current directory
       await new Promise((resolve, reject) => {
-        ncp(path.join(tempDir, "node_modules", toCopy), targetDir, { dereference: true }, (error) => {
-          if (error) {
-            console.error(`[error] Error copying ${packageName} package`, error);
-            reject(error);
-          } else {
-            resolve();
-          }
-        });
+        ncp(
+          path.join(tempDir, "node_modules", toCopy),
+          path.join(currentDir, "node_modules", toCopy),
+          { dereference: true },
+          (error) => {
+            if (error) {
+              console.error(
+                `[error] Error copying ${packageName} package`,
+                error,
+              );
+              reject(error);
+            } else {
+              resolve();
+            }
+          },
+        );
       });
     } finally {
       // Clean up the temporary directory
-      rimrafSync(tempDir);
+      // rimrafSync(tempDir);
 
       // Return to the original directory
       process.chdir(currentDir);

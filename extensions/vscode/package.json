@@ -1,7 +1,7 @@
 {
   "name": "ai-code-assistant",
   "icon": "media/icon.png",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
