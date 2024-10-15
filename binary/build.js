@@ -276,6 +276,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       `node_modules/${targetToLanceDb[target]}/index.node`,
       `${targetDir}/index.node`,
     );
+  }
 
   const pathsToVerify = [];
   for (target of targets) {
