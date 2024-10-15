@@ -95,7 +95,25 @@ class Aider extends BaseLLM {
   }
 
   private captureAiderOutput(data: Buffer): void {
-    const lines = data.toString().replace(/\r\n|\r/g, '').split('\n');
+    let lines = data.toString().split('\n');
+    lines.forEach(line => {
+      console.log("Line before: ", JSON.stringify(line));
+    });
+
+    lines = lines.map(line => {
+      const segments = line.split('\r');
+      for (let i = segments.length - 1; i >= 0; i--) {
+        const trimmedSegment = segments[i].trim();
+        if (trimmedSegment !== '') {
+          return trimmedSegment;
+        }
+      }
+      return '';
+    });
+    lines.forEach(line => {
+      console.log("Line after: ", JSON.stringify(line));
+    });
+
     let startIndex = 0;
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].match(/\[\s*Y\s*e\s*s\s*\]\s*:\s*/i) && !lines[i].trim().endsWith(':')) {
@@ -105,13 +123,20 @@ class Aider extends BaseLLM {
     }
     const filteredLines = lines.slice(startIndex).filter(line => {
       const trimmedLine = line.trim();
-      return !trimmedLine.startsWith('>');
-    }).map(line =>
-      line.trim().replace(/[\\$&+,:;=?@#|'<>.^*()%!-]/g, '\\$&')
-    );
+      return !trimmedLine.startsWith('> ');
+    }).map(line => {
+      if (line.startsWith('<<<<<<< SEARCH')) {
+        return '```' + line;
+      } else if (line.endsWith('>>>>>>> REPLACE')) {
+        return line + '```';
+      }
+      line = line.trim().replace(/[\\$&+,:;=?@#|'<>.^*()%!-]/g, '\\$&')
+      return line;
+    });
     let filteredOutput = filteredLines.join("\n")
     this.aiderOutput += filteredOutput;
   }
+
 
   async startAiderChat(model: string, apiKey: string | undefined): Promise<void> {
     return new Promise(async (resolve, reject) => {
@@ -248,32 +273,6 @@ class Aider extends BaseLLM {
     }
   }
 
-  countTokens(text: string): number {
-    return countTokens(text, this.model);
-  }
-
-  protected _convertMessage(message: ChatMessage) {
-    if (typeof message.content === "string") {
-      return message;
-    }
-    return {
-      ...message,
-      content: message.content.map((part) => {
-        if (part.type === "text") {
-          return part;
-        }
-        return {
-          type: "image",
-          source: {
-            type: "base64",
-            media_type: "image/jpeg",
-            data: part.imageUrl?.url.split(",")[1],
-          },
-        };
-      }),
-    };
-  }
-
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -281,12 +280,10 @@ class Aider extends BaseLLM {
     const args = this._convertArgs(this.collectArgs(options));
 
     const lastMessage = messages[messages.length - 1].content.toString();
-    console.log(lastMessage);
     this.sendToAiderChat(lastMessage);
 
     // Reset for new chat
     this.aiderOutput = '';
-
     let partialResponse = '';
 
     while (true) {
@@ -294,6 +291,7 @@ class Aider extends BaseLLM {
       const newOutput = this.aiderOutput.slice(partialResponse.length);
 
       if (newOutput) {
+        console.log("newOutput: ", newOutput)
         partialResponse += newOutput;
         yield {
           role: "assistant",
