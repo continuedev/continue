@@ -446,4 +446,9 @@ export class VerticalDiffHandler implements vscode.Disposable {
     //update code lens
     this.shiftCodeLensObjects(startLine, lineDelta);
   }
+
+  public hasDiffForCurrentFile(): boolean {
+    const diffBlocks = this.editorToVerticalDiffCodeLens.get(this.filepath);
+    return diffBlocks !== undefined && diffBlocks.length > 0;
+  }
 }
