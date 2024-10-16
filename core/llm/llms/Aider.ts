@@ -148,6 +148,8 @@ class Aider extends BaseLLM {
 
       // disable pretty printing
       command.push("--no-pretty");
+      command.push("--yes-always");
+      command.push("--no-auto-commits");
 
       const userPath = this.getUserPath();
       const userShell = this.getUserShell();
@@ -319,48 +321,109 @@ class Aider extends BaseLLM {
     };
   }
 
+  // protected async *_streamChat(
+  //   messages: ChatMessage[],
+  //   options: CompletionOptions,
+  // ): AsyncGenerator<ChatMessage> {
+  //   console.log("Inside Aider _streamChat");
+
+  //   const lastMessage = messages[messages.length - 1].content.toString();
+  //   this.sendToAiderChat(lastMessage);
+
+  //   this.aiderOutput = "";
+  //   let lastProcessedIndex = 0;
+  //   let responseComplete = false;
+  //   let completionMarkerFound = false;
+  //   let lastOutputTime = Date.now();
+
+  //   const COMPLETION_MARKER =
+  //     /Tokens: [\d.]+ sent, [\d.]+ received\. Cost: \$[\d.]+ message, \$[\d.]+ session\./;
+
+  //   while (!responseComplete) {
+  //     await new Promise((resolve) => setTimeout(resolve, 100));
+
+  //     const newOutput = this.aiderOutput.slice(lastProcessedIndex);
+  //     if (newOutput) {
+  //       lastProcessedIndex = this.aiderOutput.length;
+
+  //       yield {
+  //         role: "assistant",
+  //         content: newOutput,
+  //       };
+
+  //       // Check for the completion marker
+  //       if (COMPLETION_MARKER.test(newOutput)) {
+  //         console.log("Completion marker found");
+  //         completionMarkerFound = true;
+  //         lastOutputTime = Date.now();
+  //       }
+  //     }
+
+  //     // If completion marker is found, wait for 2 seconds for any additional output
+  //     if (completionMarkerFound && Date.now() - lastOutputTime > 2000) {
+  //       console.log(
+  //         "Waited 2 seconds after completion marker, ending response",
+  //       );
+  //       responseComplete = true;
+  //     }
+
+  //     // Safety check
+  //     if (this.aiderProcess?.killed) {
+  //       console.log("Aider process killed, ending response");
+  //       responseComplete = true;
+  //     }
+  //   }
+
+  //   // Reset the output
+  //   this.aiderOutput = "";
+  // }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const args = this._convertArgs(this.collectArgs(options));
     console.log("Inside Aider _streamChat");
 
     const lastMessage = messages[messages.length - 1].content.toString();
     this.sendToAiderChat(lastMessage);
 
-    // Reset for new chat
     this.aiderOutput = "";
+    let lastProcessedIndex = 0;
+    let responseComplete = false;
 
-    let partialResponse = "";
+    const END_MARKER =
+      /Tokens:\s*([\d\.kM]+)\s*sent,\s*([\d\.kM]+)\s*received\.\s*Cost:\s*\$?([\d\.]+)\s*message,\s*\$?([\d\.]+)\s*session\./;
 
-    while (true) {
+    const escapeDollarSigns = (text: string | undefined) => {
+      if (!text) return "Aider response over";
+      return text.replace(/\$/g, "\\$");
+    };
+
+    while (!responseComplete) {
       await new Promise((resolve) => setTimeout(resolve, 100));
-      const newOutput = this.aiderOutput.slice(partialResponse.length);
 
+      const newOutput = this.aiderOutput.slice(lastProcessedIndex);
       if (newOutput) {
-        partialResponse += newOutput;
+        // newOutput = escapeDollarSigns(newOutput);
+        lastProcessedIndex = this.aiderOutput.length;
+        yield {
+          role: "assistant",
+          content: escapeDollarSigns(newOutput),
+        };
 
-        // Split the new output into lines
-        const lines = newOutput.split('\n');
-        for (const line of lines) {
-          if (line.trim()) {
-            yield {
-              role: "assistant",
-              content: line + '\n',
-            };
-          }
-        }
-
-        // Check if newOutput includes AIDER_QUESTION_MARKER and send "Y" if it does
-        if (newOutput.match(/\[\s*Y\s*e\s*s\s*\]\s*:/i)) {
-          await new Promise((resolve) => setTimeout(resolve, 300));
-          this.sendToAiderChat("Y");
-          continue;
+        if (END_MARKER.test(newOutput)) {
+          responseComplete = true;
+          // Yield the end marker as part of the last message
+          yield {
+            role: "assistant",
+            content: escapeDollarSigns(newOutput.match(END_MARKER)?.[0]),
+          };
+          break;
         }
       }
 
-      if (this.aiderOutput.includes(AIDER_END_MARKER)) {
+      // Safety check
+      if (this.aiderProcess?.killed) {
         break;
       }
     }
@@ -368,6 +431,42 @@ class Aider extends BaseLLM {
     // Reset the output after capturing a complete response
     this.aiderOutput = "";
   }
+
+  // protected async *_streamChat(
+  //   messages: ChatMessage[],
+  //   options: CompletionOptions,
+  // ): AsyncGenerator<ChatMessage> {
+  //   console.log("Inside Aider _streamChat");
+
+  //   const lastMessage = messages[messages.length - 1].content.toString();
+  //   this.sendToAiderChat(lastMessage);
+
+  //   // Reset the output buffer
+  //   this.aiderOutput = "";
+  //   let lastProcessedIndex = 0;
+  //   let responseComplete = false;
+
+  //   while (true) {
+  //     await new Promise((resolve) => setTimeout(resolve, 100)); // Short delay to avoid busy waiting
+
+  //     const newOutput = this.aiderOutput.slice(lastProcessedIndex);
+  //     if (newOutput) {
+  //       lastProcessedIndex = this.aiderOutput.length;
+  //       yield {
+  //         role: "assistant",
+  //         content: newOutput,
+  //       };
+  //     }
+
+  //     // Check if Aider has finished its output
+  //     if (this.aiderProcess?.killed || !this.aiderProcess?.stdin?.writable) {
+  //       break;
+  //     }
+  //   }
+
+  //   // Reset the output after capturing a complete response
+  //   this.aiderOutput = "";
+  // }
 
   async listModels(): Promise<string[]> {
     return ["aider", "claude-3-5-sonnet-20240620", "pearai_model", "gpt-4o"];
