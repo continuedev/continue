@@ -39,7 +39,7 @@ class EmbeddingsPipeline {
 
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "transformers.js";
-  static maxGroupSize: number = 4;
+  static maxGroupSize: number = 1;
   static model: string = "all-MiniLM-L6-v2";
   static mockVector: number[] = Array.from({ length: 384 }).fill(2) as number[];
 
@@ -79,6 +79,8 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
         pooling: "mean",
         normalize: true,
       });
+      // To avoid causing the extension host to go unresponsive
+      await new Promise((resolve) => setTimeout(resolve, 10));
       outputs.push(...output.tolist());
     }
     return outputs;

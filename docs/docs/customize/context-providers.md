@@ -105,6 +105,20 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
 }
 ```
 
+### `@Web`
+
+Reference relevant pages from across the web, automatically determined from your input.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "web"
+    }
+  ]
+}
+```
+
 ### `@Codebase`
 
 Reference the most relevant snippets from your codebase.
@@ -314,6 +328,36 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 ```
 
 You can override this query by setting the `issueQuery` parameter.
+
+### `@Discord`
+
+Reference the messages in a Discord channel.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "discord",
+      "params": {
+        "discordKey": "bot token",
+        "guildId": "1234567890",
+        "channels": [
+          {
+            "id": "123456",
+            "name": "example-channel"
+          },
+          {
+            "id": "678901",
+            "name": "example-channel-2"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+Make sure to include your own [Bot Token](https://discord.com/developers/applications), and join it to your related server . If you want more granular control over which channels are searched, you can specify a list of channel IDs to search in. If you don't want to specify any channels, just include the guild id(Server ID) and all channels will be included. The provider only reads text channels.
 
 ### `@Postgres`
 

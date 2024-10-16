@@ -1,7 +1,6 @@
 package com.github.continuedev.continueintellijextension.listeners
 
 import ToolTipComponent
-import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
 import com.github.continuedev.continueintellijextension.editor.EditorUtils
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.utils.Debouncer
@@ -18,19 +17,36 @@ import kotlinx.coroutines.CoroutineScope
 import com.intellij.openapi.editor.Document
 
 class ContinuePluginSelectionListener(
-    private val ideProtocolClient: IdeProtocolClient,
-    private val coroutineScope: CoroutineScope
+    coroutineScope: CoroutineScope,
 ) : SelectionListener, DumbAware {
     private val debouncer = Debouncer(100, coroutineScope)
     private var toolTipComponents: ArrayList<ToolTipComponent> = ArrayList()
-    
+    private var lastActiveEditor: Editor? = null
+
     override fun selectionChanged(e: SelectionEvent) {
         debouncer.debounce { handleSelection(e) }
     }
 
+    private fun removeAllTooltips() {
+        ApplicationManager.getApplication().invokeLater {
+            toolTipComponents.forEach { tooltip ->
+                tooltip.parent?.remove(tooltip)
+            }
+            toolTipComponents.clear()
+        }
+    }
+
+
     private fun handleSelection(e: SelectionEvent) {
         ApplicationManager.getApplication().runReadAction {
             val editor = e.editor
+
+            // Fixes a bug where the tooltip isn't being disposed of when opening new files
+            if (editor != lastActiveEditor) {
+                removeAllTooltips()
+                lastActiveEditor = editor
+            }
+
             val model: SelectionModel = editor.selectionModel
             val selectedText = model.selectedText
 
