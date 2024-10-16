@@ -126,7 +126,7 @@ This can be accomplished using the following command: `Continue: Rebuild codebas
 
 ### Android Studio - "Nothing to show" in Chat
 
-This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then selecting the latest version, and then restarting Android Studio. [See this thread](https://github.com/continuedev/continue/issues/2280#issuecomment-2365231567) for details.
+This can be fixed by selecting `Actions > Choose Boot runtime for the IDE` then selecting the latest version, and then restarting Android Studio. [See this thread](https://github.com/continuedev/continue/issues/596#issuecomment-1789327178) for details.
 
 ## Still having trouble?
 
