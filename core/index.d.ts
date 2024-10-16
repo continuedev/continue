@@ -645,12 +645,9 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
-<<<<<<< HEAD
-  | "notdiamond";
-=======
+  | "notdiamond"
   | "cerebras";
 
->>>>>>> @{-1}
 
 export type ModelName =
   | "AUTODETECT"

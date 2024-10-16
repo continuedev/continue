@@ -78,10 +78,10 @@ function AddModelForm({
 
     const model = {
       ...selectedProvider.params,
-      ...selectedModel?.params,
+      ...selectedModel.params,
       ...reqInputFields,
       provider: selectedProvider.provider,
-      title: selectedModel?.title,
+      title: selectedModel.title,
       ...(hasValidApiKey ? { apiKey } : {}),
       ...(selectedProvider.provider === "notdiamond"
         ? {
