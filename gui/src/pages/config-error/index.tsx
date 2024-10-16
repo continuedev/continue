@@ -2,11 +2,11 @@ import {
   ArrowLeftIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { vscBackground } from "../../components";
-import { ROUTES } from "../../util/navigation";
-import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
+import { ROUTES } from "../../util/navigation";
 
 export default function ConfigErrorPage() {
   const navigate = useNavigate();
@@ -27,16 +27,16 @@ export default function ConfigErrorPage() {
         <span className="text-sm font-bold m-2 inline-block">Chat</span>
       </div>
 
-      <div className="px-4 divide-y-2 divide-y divide-zinc-700 divide-solid divide-x-0 gap-2">
+      <div className="px-4 divide-y-2 divide-zinc-700 divide-solid divide-x-0 gap-2">
         <div className="py-5">
           <h3 className="text-xl mb-2 mt-0">Config Errors</h3>
           <p className="mb-4 text-md">
             Please resolve the following errors in your config.json file.
           </p>
           <div className="flex flex-col gap-5">
-            {configError && configError.errors.length > 0 ? (
+            {configError && configError.length > 0 ? (
               <ul className="list-none space-y-4 p-0 m-0">
-                {configError.errors.map((error, index) => (
+                {configError.map((error, index) => (
                   <li
                     key={index}
                     className="text-sm text-red-800 bg-red-100 rounded-md shadow-md flex items-start p-2"
