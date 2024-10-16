@@ -644,6 +644,7 @@ type ModelProvider =
   | "sambanova"
   | "nvidia"
   | "vllm"
+  | "cerebras"
   | "mock";
 
 export type ModelName =

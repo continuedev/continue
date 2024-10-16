@@ -277,6 +277,37 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },
+  cerebras: {
+    title: "Cerebras",
+    provider: "cerebras",
+    icon: "cerebras.png",
+    description:
+      "Cerebras is another fast LLM inference platform using special hardware to speed up inference.",
+    longDescription:
+      "To get started with Cerebras, obtain an API key from their website at https://cloud.cerebras.ai.",
+    tags: [ModelProviderTags.RequiresApiKey,],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cerebras API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.llama3170bChat,
+      models.llama318bChat,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Cerebras",
+        },
+      },
+    ],
+    apiKeyUrl: "https://cloud.cerebras.ai",
+  },
   deepseek: {
     title: "DeepSeek",
     provider: "deepseek",

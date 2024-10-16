@@ -298,7 +298,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "cerebras"],
     isOpenSource: false,
   },
   llama31405bChat: {
@@ -311,7 +311,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "cerebras"],
     isOpenSource: false,
   },
   llama270bChat: {
