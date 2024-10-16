@@ -41,6 +41,7 @@ import Together from "./Together";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
+import NotDiamond from "./NotDiamond";
 
 const LLMs = [
   Anthropic,
@@ -77,6 +78,7 @@ const LLMs = [
   Vllm,
   SambaNova,
   Mock,
+  NotDiamond,
 ];
 
 export async function llmFromDescription(

@@ -512,7 +512,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         label: "watsonx API version",
         placeholder: "Enter the API Version",
         defaultValue: "2023-05-29",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
@@ -594,5 +594,25 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       return p;
     }),
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
+  },
+  notdiamond: {
+    title: "Not Diamond",
+    provider: "notdiamond",
+    description:
+      "Not Diamond is an AI model router that determines which LLM is best-suited to respond.",
+    longDescription: `Not Diamond is an AI model router that automatically determines which LLM is best-suited to respond to any query, improving LLM output quality by combining multiple LLMs into a meta-model that learns when to call each LLM.`,
+    icon: "notdiamond.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your NotDiamond API key",
+        required: true,
+      },
+    ],
+    packages: [models.NotDiamond],
+    apiKeyUrl: "https://app.notdiamond.ai/keys",
   },
 };
