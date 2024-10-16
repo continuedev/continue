@@ -96,8 +96,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             ContinuePluginService::class.java
         )
 
-        val defaultStrategy = DefaultTextSelectionStrategy()
-
         coroutineScope.launch {
             val settings =
                 ServiceManager.getService(ContinueExtensionSettings::class.java)
@@ -111,7 +109,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
             val ideProtocolClient = IdeProtocolClient(
                 continuePluginService,
-                defaultStrategy,
                 coroutineScope,
                 project.basePath,
                 project

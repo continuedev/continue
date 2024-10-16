@@ -29,7 +29,6 @@ class CoreMessenger(
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
     private val ideProtocolClient = ideProtocolClient
     private val useTcp: Boolean = false
-
     private fun write(message: String) {
         try {
             writer?.write(message + "\r\n")
@@ -98,7 +97,7 @@ class CoreMessenger(
             val continuePluginService = project.service<ContinuePluginService>()
             continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }
-        
+
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)

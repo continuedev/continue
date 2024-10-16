@@ -8,7 +8,7 @@ class MessageTypes {
             "command/run",
             "streamDiffLines"
         )
-        
+
         val ideMessageTypes = listOf(
             "readRangeInFile",
             "isTelemetryEnabled",
@@ -53,7 +53,7 @@ class MessageTypes {
             "showToast",
         )
 
-        val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
+        val PASS_THROUGH_TO_WEBVIEW = listOf(
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress",
