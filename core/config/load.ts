@@ -556,27 +556,10 @@ async function downloadAndInstallEsbuild(ide: IDE) {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esbuild-"));
 
   try {
-    const platform = `${os.platform()} ${os.arch()}`;
+    const target = `${os.platform()}-${os.arch()}`;
     const version = "0.19.11";
+    const url = `https://registry.npmjs.org/@esbuild/${target}/-/${target}-${version}.tgz`;
     const tgzPath = path.join(tempDir, `esbuild-${version}.tgz`);
-
-    let url;
-    switch (platform) {
-      case "darwin arm64":
-        url = `https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-${version}.tgz`;
-        break;
-      case "darwin x64":
-        url = `https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-${version}.tgz`;
-        break;
-      case "linux arm64":
-        url = `https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-${version}.tgz`;
-        break;
-      case "linux x64":
-        url = `https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-${version}.tgz`;
-        break;
-      default:
-        throw new Error(`Unsupported platform: ${platform}`);
-    }
 
     console.debug(`Downloading esbuild from: ${url}`);
     execSync(`curl -fo "${tgzPath}" "${url}"`);
