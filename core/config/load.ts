@@ -1,6 +1,7 @@
 import * as JSONC from "comment-json";
 import * as fs from "fs";
 import path from "path";
+import * as tar from "tar";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
@@ -35,7 +36,7 @@ import { BaseLLM } from "../llm";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
 import { llmFromDescription } from "../llm/llms";
-
+import os from "os";
 import { execSync } from "child_process";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
@@ -65,6 +66,7 @@ import {
   slashCommandFromPromptFile,
 } from "./promptFile";
 import { GlobalContext } from "../util/GlobalContext";
+import { Readable } from "stream";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -546,26 +548,67 @@ async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
   return res === installMsg;
 }
 
-async function downloadAndInstallEsbuild(ide: IDE) {
-  const url = "https://esbuild.github.io/dl/v0.19.11";
+/**
+ * The download logic is adapted from here: https://esbuild.github.io/getting-started/#download-a-build
+ */
+async function downloadAndInstallEsbuild() {
   const esbuildPath = getEsbuildBinaryPath();
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esbuild-"));
 
   try {
-    const response = await fetch(url);
-    const script = await response.text();
+    const platform = `${os.platform()} ${os.arch()}`;
+    const version = "0.19.11";
+    const tgzPath = path.join(tempDir, `esbuild-${version}.tgz`);
 
-    execSync("sh", {
-      input: script,
-      stdio: ["pipe", "inherit", "inherit"],
-      cwd: path.dirname(esbuildPath),
+    let url;
+    switch (platform) {
+      case "darwin arm64":
+        url = `https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-${version}.tgz`;
+        break;
+      case "darwin x64":
+        url = `https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-${version}.tgz`;
+        break;
+      case "linux arm64":
+        url = `https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-${version}.tgz`;
+        break;
+      case "linux x64":
+        url = `https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-${version}.tgz`;
+        break;
+      default:
+        throw new Error(`Unsupported platform: ${platform}`);
+    }
+
+    console.debug(`Downloading esbuild from: ${url}`);
+    execSync(`curl -fo "${tgzPath}" "${url}"`);
+
+    console.debug(`Extracting tgz file to: ${tempDir}`);
+    await tar.x({
+      file: tgzPath,
+      cwd: tempDir,
+      strip: 2, // Remove the top two levels of directories
     });
 
-    await ide.showToast(
-      "info",
-      `'esbuild' successfully installed to ${esbuildPath}`,
-    );
+    // Ensure the destination directory exists
+    const destDir = path.dirname(esbuildPath);
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    // Move the file
+    const extractedBinaryPath = path.join(tempDir, "esbuild");
+    fs.renameSync(extractedBinaryPath, esbuildPath);
+
+    // Ensure the binary is executable (not needed on Windows)
+    if (os.platform() !== "win32") {
+      fs.chmodSync(esbuildPath, 0o755);
+    }
+
+    // Clean up
+    fs.unlinkSync(tgzPath);
+    fs.rmSync(tempDir, { recursive: true });
   } catch (error) {
-    console.debug("Error downloading or saving esbuild binary:", error);
+    console.error("Error downloading or saving esbuild binary:", error);
+    throw error;
   }
 }
 
