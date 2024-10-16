@@ -551,7 +551,7 @@ async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
 /**
  * The download logic is adapted from here: https://esbuild.github.io/getting-started/#download-a-build
  */
-async function downloadAndInstallEsbuild() {
+async function downloadAndInstallEsbuild(ide: IDE) {
   const esbuildPath = getEsbuildBinaryPath();
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esbuild-"));
 
@@ -606,6 +606,11 @@ async function downloadAndInstallEsbuild() {
     // Clean up
     fs.unlinkSync(tgzPath);
     fs.rmSync(tempDir, { recursive: true });
+
+    await ide.showToast(
+      "info",
+      `'esbuild' successfully installed to ${esbuildPath}`,
+    );
   } catch (error) {
     console.error("Error downloading or saving esbuild binary:", error);
     throw error;
