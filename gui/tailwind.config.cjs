@@ -27,6 +27,25 @@ module.exports = {
       colors: {
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
         "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
+        "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",
+        "vsc-quick-input-background":
+          "var(--vscode-quickInput-background, var(--vscode-input-background, rgb(45 45 45)))",
+        "vsc-background": "var(--vscode-sideBar-background, rgb(30 30 30))",
+        "vsc-foreground": "var(--vscode-editor-foreground, #fff)",
+        "vsc-button-background": "var(--vscode-button-background, #1bbe84)",
+        "vsc-button-foreground": "var(--vscode-button-foreground, #ffffff)",
+        "vsc-editor-background":
+          "var(--vscode-editor-background, var(--vscode-sideBar-background, rgb(30 30 30)))",
+        "vsc-list-active-background":
+          "var(--vscode-list-activeSelectionBackground, #1bbe84)",
+        "vsc-focus-border": "var(--vscode-focus-border, #1bbe84)",
+        "vsc-list-active-foreground":
+          "var(--vscode-quickInputList-focusForeground, var(--vscode-editor-foreground))",
+        "vsc-input-border": "var(--vscode-input-border, #999998)",
+        "vsc-input-border-focus": "var(--vscode-focusBorder, #999998)",
+        "vsc-badge-background": "var(--vscode-badge-background, #1bbe84)",
+        "vsc-badge-foreground": "var(--vscode-badge-foreground, #fff)",
+        "vsc-sidebar-border": "var(--vscode-sideBar-border, transparent)",
       },
     },
   },
