@@ -2,24 +2,10 @@ import { SerializedContinueConfig } from "../";
 
 export type ValidationErrorMessage = string;
 
-export class ValidationError extends Error {
-  public errors: ValidationErrorMessage[];
-
-  constructor(errors: ValidationErrorMessage[]) {
-    super("Validation failed");
-    this.errors = errors;
-
-    // Maintains proper stack trace for where our error was thrown (only available on V8 engines)
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, ValidationError);
-    }
-  }
-}
-
 /**
  * Validates a SerializedContinueConfig object to ensure all properties are correctly formed.
  * @param config The configuration object to validate.
- * @returns An array of error messages. If the array is empty, the config is valid.
+ * @returns An array of error messages if there are any. Otherwise, the config is valid.
  */
 export function validateConfig(config: SerializedContinueConfig) {
   const errors: ValidationErrorMessage[] = [];
@@ -106,7 +92,5 @@ export function validateConfig(config: SerializedContinueConfig) {
     }
   });
 
-  if (errors.length > 0) {
-    throw new ValidationError(errors);
-  }
+  return errors.length > 0 ? errors : undefined;
 }

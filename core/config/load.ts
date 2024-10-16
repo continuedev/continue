@@ -62,7 +62,7 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-import { validateConfig } from "./validation.js";
+import { validateConfig, ValidationErrorMessage } from "./validation.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -98,7 +98,10 @@ function loadSerializedConfig(
   ideSettings: IdeSettings,
   ideType: IdeType,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): SerializedContinueConfig {
+): {
+  config: SerializedContinueConfig | undefined;
+  errors: ValidationErrorMessage[] | undefined;
+} {
   const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
@@ -109,7 +112,14 @@ function loadSerializedConfig(
     }
   }
 
-  validateConfig(config);
+  const errors = validateConfig(config);
+
+  if (errors) {
+    return {
+      errors,
+      config: undefined,
+    };
+  }
 
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
@@ -145,7 +155,7 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  return config;
+  return { config, errors };
 }
 
 async function serializedToIntermediateConfig(
@@ -580,14 +590,21 @@ async function loadFullConfigNode(
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): Promise<ContinueConfig> {
+): Promise<{
+  config: ContinueConfig | undefined;
+  errors: ValidationErrorMessage[] | undefined;
+}> {
   // Serialized config
-  let serialized = loadSerializedConfig(
+  let { config: serialized, errors } = loadSerializedConfig(
     workspaceConfigs,
     ideSettings,
     ideType,
     overrideConfigJson,
   );
+
+  if (!serialized) {
+    return { errors, config: undefined };
+  }
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
@@ -656,7 +673,7 @@ async function loadFullConfigNode(
     writeLog,
     workOsAccessToken,
   );
-  return finalConfig;
+  return { config: finalConfig, errors };
 }
 
 export {

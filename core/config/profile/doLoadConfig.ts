@@ -38,7 +38,7 @@ export default async function doLoadConfig(
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
-  let newConfig = await loadFullConfigNode(
+  let { config: newConfig, errors } = await loadFullConfigNode(
     ide,
     workspaceConfigs,
     ideSettings,
@@ -48,6 +48,11 @@ export default async function doLoadConfig(
     workOsAccessToken,
     overrideConfigJson,
   );
+
+  if (!newConfig) {
+    return { errors, config: undefined };
+  }
+
   newConfig.allowAnonymousTelemetry =
     newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());
 
@@ -89,7 +94,7 @@ export default async function doLoadConfig(
     controlPlaneProxyInfo,
   );
 
-  return newConfig;
+  return { config: newConfig, errors };
 }
 
 // Pass ControlPlaneProxyInfo to objects that need it

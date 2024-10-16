@@ -18,18 +18,18 @@ import {
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
-import { ValidationError } from "./validation.js";
 
 import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
+import { ValidationErrorMessage } from "./validation.js";
 
 export type { ProfileDescription };
 
 type ConfigUpdateFunction = (payload: {
   config: ContinueConfig | undefined;
-  error: ValidationError | undefined;
+  errors: ValidationErrorMessage[] | undefined;
 }) => void;
 
 // Separately manages saving/reloading each profile
@@ -132,7 +132,7 @@ export class ConfigHandler {
   async setSelectedProfile(profileId: string) {
     this.selectedProfileId = profileId;
     const newConfig = await this.loadConfig();
-    this.notifyConfigListeners({ config: newConfig, error: undefined });
+    this.notifyConfigListeners({ config: newConfig, errors: undefined });
     const selectedProfiles =
       this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
     selectedProfiles[await this.getWorkspaceId()] = profileId;
@@ -180,14 +180,14 @@ export class ConfigHandler {
 
   private notifyConfigListeners({
     config,
-    error,
+    errors,
   }: {
     config: ContinueConfig | undefined;
-    error: ValidationError | undefined;
+    errors: ValidationErrorMessage[] | undefined;
   }) {
     // Notify listeners that config changed
     for (const listener of this.updateListeners) {
-      listener({ config, error });
+      listener({ config, errors });
     }
   }
 
@@ -200,22 +200,14 @@ export class ConfigHandler {
   async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
 
-    let config: ContinueConfig | undefined;
-    let error: ValidationError | undefined;
-    try {
-      config = await this.currentProfile.reloadConfig();
+    const { config, errors } = await this.currentProfile.reloadConfig();
+
+    if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
-    } catch (caughtError) {
-      console.log(caughtError);
-      if (caughtError instanceof ValidationError) {
-        error = caughtError;
-      } else {
-        throw caughtError;
-      }
-    } finally {
-      this.notifyConfigListeners({ config, error });
-      return { config, error };
     }
+
+    this.notifyConfigListeners({ config, errors });
+    return { config, errors };
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

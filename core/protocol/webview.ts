@@ -1,9 +1,9 @@
-import { ValidationError } from "../config/validation.js";
+import { ValidationErrorMessage } from "../config/validation.js";
 import type { ContextItemWithId, IndexingProgressUpdate } from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];
-  configError: [ValidationError, void];
+  configError: [ValidationErrorMessage[], void];
   getDefaultModelTitle: [undefined, string];
   indexProgress: [IndexingProgressUpdate, void];
   refreshSubmenuItems: [undefined, void];

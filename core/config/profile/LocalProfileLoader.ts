@@ -1,5 +1,6 @@
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { ContinueConfig, IDE, IdeSettings } from "../../index.js";
+import { ValidationErrorMessage } from "../validation.js";
 import doLoadConfig from "./doLoadConfig.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 
@@ -15,7 +16,10 @@ export default class LocalProfileLoader implements IProfileLoader {
     private writeLog: (message: string) => Promise<void>,
   ) {}
 
-  async doLoadConfig(): Promise<ContinueConfig> {
+  async doLoadConfig(): Promise<{
+    config: ContinueConfig | undefined;
+    errors: ValidationErrorMessage[] | undefined;
+  }> {
     return doLoadConfig(
       this.ide,
       this.ideSettingsPromise,

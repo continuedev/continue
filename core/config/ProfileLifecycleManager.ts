@@ -1,3 +1,4 @@
+import { config } from "dotenv";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -7,7 +8,6 @@ import {
 import { finalToBrowserConfig } from "./load.js";
 
 import { IProfileLoader } from "./profile/IProfileLoader.js";
-import { ValidationError } from "./validation.js";
 
 export interface ProfileDescription {
   title: string;
@@ -43,7 +43,7 @@ export class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  async reloadConfig(): Promise<ContinueConfig> {
+  async reloadConfig(): ReturnType<typeof this.profileLoader.doLoadConfig> {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.pendingConfigPromise = undefined;
@@ -63,9 +63,10 @@ export class ProfileLifecycleManager {
 
     // Set pending config promise
     this.pendingConfigPromise = new Promise(async (resolve, reject) => {
-      try {
-        const newConfig = await this.profileLoader.doLoadConfig();
+      const { config: newConfig, errors } =
+        await this.profileLoader.doLoadConfig();
 
+      if (newConfig) {
         // Add registered context providers
         newConfig.contextProviders = (newConfig.contextProviders ?? []).concat(
           additionalContextProviders,
@@ -73,12 +74,8 @@ export class ProfileLifecycleManager {
 
         this.savedConfig = newConfig;
         resolve(newConfig);
-      } catch (error) {
-        if (error instanceof ValidationError) {
-          reject(`Error in config.json: ${error.errors.join(" | ")}`);
-        } else {
-          reject(error);
-        }
+      } else if (errors) {
+        reject(`Error in config.json: ${errors.join(" | ")}`);
       }
     });
 

@@ -151,11 +151,11 @@ export class VsCodeExtension {
         verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
     });
 
-    this.configHandler.onConfigUpdate(({ config: newConfig, error }) => {
-      if (error) {
+    this.configHandler.onConfigUpdate(({ config: newConfig, errors }) => {
+      if (errors) {
         // Show error in status bar
         setupStatusBar(undefined, undefined, true);
-        this.sidebar.webviewProtocol?.request("configError", error);
+        this.sidebar.webviewProtocol?.request("configError", errors);
       } else if (newConfig) {
         setupStatusBar(undefined, undefined, false);
 
