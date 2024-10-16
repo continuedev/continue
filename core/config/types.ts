@@ -531,7 +531,7 @@ declare global {
     | "diff"
     | "github"
     | "terminal"
-    | "locals"
+    | "debugger"
     | "open"
     | "google"
     | "search"
