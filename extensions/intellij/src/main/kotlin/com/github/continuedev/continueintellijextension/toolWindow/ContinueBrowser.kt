@@ -295,8 +295,6 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
      *
      * We use the branchNumber (e.g., 233) instead of the full version number (e.g., 2023.3.4) because
      * it's a simple integer without dot notation, making it easier to compare.
-     *
-     * @return Boolean True if off-screen rendering should be used, false otherwise.
      */
     private fun shouldRenderOffScreen(): Boolean {
         val minBuildNumber = 233
