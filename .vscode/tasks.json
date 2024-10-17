@@ -21,6 +21,7 @@
     },
     {
       "label": "vscode-extension:esbuild",
+      "dependsOn": ["vscode-extension:continue-ui:build"],
       "type": "npm",
       "script": "esbuild-watch",
       "path": "extensions/vscode",
