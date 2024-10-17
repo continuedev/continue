@@ -16,7 +16,7 @@ import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueP
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
 import { Telemetry } from "../../util/posthog.js";
 import { TTS } from "../../util/tts.js";
-import { loadFullConfigNode } from "../load.js";
+import { ConfigResult, loadFullConfigNode } from "../load.js";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -25,7 +25,7 @@ export default async function doLoadConfig(
   writeLog: (message: string) => Promise<void>,
   overrideConfigJson: SerializedContinueConfig | undefined,
   workspaceId?: string,
-) {
+): Promise<ConfigResult<ContinueConfig>> {
   let workspaceConfigs: ContinueRcJson[] = [];
   try {
     workspaceConfigs = await ide.getWorkspaceConfigs();
@@ -38,7 +38,11 @@ export default async function doLoadConfig(
   const ideSettings = await ideSettingsPromise;
   const workOsAccessToken = await controlPlaneClient.getAccessToken();
 
-  let newConfig = await loadFullConfigNode(
+  let {
+    config: newConfig,
+    errors,
+    configLoadInterrupted,
+  } = await loadFullConfigNode(
     ide,
     workspaceConfigs,
     ideSettings,
@@ -48,6 +52,11 @@ export default async function doLoadConfig(
     workOsAccessToken,
     overrideConfigJson,
   );
+
+  if (configLoadInterrupted || !newConfig) {
+    return { errors, config: newConfig, configLoadInterrupted: true };
+  }
+
   newConfig.allowAnonymousTelemetry =
     newConfig.allowAnonymousTelemetry && (await ide.isTelemetryEnabled());
 
@@ -89,7 +98,7 @@ export default async function doLoadConfig(
     controlPlaneProxyInfo,
   );
 
-  return newConfig;
+  return { config: newConfig, errors, configLoadInterrupted: false };
 }
 
 // Pass ControlPlaneProxyInfo to objects that need it

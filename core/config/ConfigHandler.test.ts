@@ -28,6 +28,10 @@ describe.skip("Test the ConfigHandler and E2E config loading", () => {
     fs.writeFileSync(getConfigTsPath(), configTs);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const config = await testConfigHandler.reloadConfig();
+    /**
+     * @ts-ignore is applied because this test is skipped
+     */
+    // @ts-ignore
     expect(config.systemMessage).toBe("SYSTEM");
   });
 
@@ -37,6 +41,10 @@ describe.skip("Test the ConfigHandler and E2E config loading", () => {
       JSON.stringify({ systemMessage: "SYSTEM2" }),
     );
     const config = await testConfigHandler.reloadConfig();
+    /**
+     * @ts-ignore is applied because this test is skipped
+     */
+    // @ts-ignore
     expect(config.systemMessage).toBe("SYSTEM2");
   });
 });

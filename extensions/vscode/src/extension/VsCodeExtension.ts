@@ -151,18 +151,29 @@ export class VsCodeExtension {
         verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
     });
 
-    this.configHandler.onConfigUpdate((newConfig) => {
-      this.sidebar.webviewProtocol?.request("configUpdate", undefined);
+    this.configHandler.onConfigUpdate(
+      ({ config: newConfig, errors, configLoadInterrupted }) => {
+        if (configLoadInterrupted) {
+          // Show error in status bar
+          setupStatusBar(undefined, undefined, true);
+        } else if (newConfig) {
+          setupStatusBar(undefined, undefined, false);
 
-      this.tabAutocompleteModel.clearLlm();
+          this.sidebar.webviewProtocol?.request("configUpdate", undefined);
 
-      registerAllCodeLensProviders(
-        context,
-        this.diffManager,
-        this.verticalDiffManager.filepathToCodeLens,
-        newConfig,
-      );
-    });
+          this.tabAutocompleteModel.clearLlm();
+
+          registerAllCodeLensProviders(
+            context,
+            this.diffManager,
+            this.verticalDiffManager.filepathToCodeLens,
+            newConfig,
+          );
+        }
+
+        this.sidebar.webviewProtocol?.request("configError", errors);
+      },
+    );
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration(EXTENSION_NAME);

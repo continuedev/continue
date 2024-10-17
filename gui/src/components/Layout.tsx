@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -14,6 +14,8 @@ import { updateApplyState, setShowDialog } from "../redux/slices/uiStateSlice";
 import TextDialog from "./dialogs";
 import { useOnboardingCard, isNewUserOnboarding } from "./OnboardingCard";
 import { LastSessionProvider } from "../context/LastSessionContext";
+import { useConfigError } from "../redux/hooks";
+import { ROUTES } from "../util/navigation";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -61,6 +63,13 @@ const Layout = () => {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
+  const { pathname } = useLocation();
+
+  const configError = useConfigError();
+
+  const hasFatalErrors = useMemo(() => {
+    return configError?.some((error) => error.fatal);
+  }, [configError]);
 
   const dialogMessage = useSelector(
     (state: RootState) => state.uiState.dialogMessage,
@@ -176,6 +185,17 @@ const Layout = () => {
 
   return (
     <LastSessionProvider>
+      {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
+        <div
+          className="bg-red-600 text-white text-center p-4 z-50 cursor-pointer"
+          role="alert"
+          onClick={() => navigate(ROUTES.CONFIG_ERROR)}
+        >
+          <strong className="font-bold">Error!</strong>{" "}
+          <span className="block sm:inline">Could not load config.json</span>
+          <div className="mt-2 underline">Learn More</div>
+        </div>
+      )}
       <LayoutTopDiv>
         <div
           style={{

@@ -7,9 +7,10 @@ import { setVscMachineId } from "../redux/slices/configSlice";
 import {
   addContextItemsAtIndex,
   setConfig,
+  setConfigError,
   setInactive,
   setSelectedProfileId,
-  setTTSActive
+  setTTSActive,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -111,6 +112,10 @@ function useSetup(dispatch: Dispatch<any>) {
     if (!isJetBrains && !getLocalStorage("disableIndexing")) {
       debouncedIndexDocs();
     }
+  });
+
+  useWebviewListener("configError", async (error) => {
+    dispatch(setConfigError(error));
   });
 
   useWebviewListener("submitMessage", async (data) => {
