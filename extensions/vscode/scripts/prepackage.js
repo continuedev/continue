@@ -314,12 +314,7 @@ const exe = os === "win32" ? ".exe" : "";
     const currentDir = process.cwd();
 
     // Remove the dir we will be copying to
-    if (os === "win32" && !ghAction()) {
-      // In local development (Launch Extension task)
-      // we will have esbuild-watch going during this time
-      // and windows will throw an error when you try to remove
-      rimrafSync(`node_modules/${toCopy}`);
-    }
+    rimrafSync(`node_modules/${toCopy}`);
 
     // Ensure the temporary directory exists
     fs.mkdirSync(tempDir, { recursive: true });
@@ -514,8 +509,8 @@ const exe = os === "win32" ? ".exe" : "";
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-        ? "libonnxruntime.so.1.14.0"
-        : "onnxruntime.dll"
+          ? "libonnxruntime.so.1.14.0"
+          : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -554,8 +549,8 @@ const exe = os === "win32" ? ".exe" : "";
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-        ? "win32-x64/esbuild.exe"
-        : `${target}/bin/esbuild`
+          ? "win32-x64/esbuild.exe"
+          : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"
