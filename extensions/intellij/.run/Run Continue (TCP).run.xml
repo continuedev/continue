@@ -3,6 +3,7 @@
     <ExternalSystemSettings>
       <option name="env">
         <map>
+          <entry key="ORG_GRADLE_PROJECT_platformVersion" value="2024.1" />
           <entry key="USE_TCP" value="true" />
         </map>
       </option>
@@ -24,8 +25,6 @@
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
     <DebugAllEnabled>false</DebugAllEnabled>
     <RunAsTest>false</RunAsTest>
-    <method v="2">
-      <option name="RunConfigurationTask" enabled="true" run_configuration_name="Run Continue" run_configuration_type="GradleRunConfiguration" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

@@ -77,7 +77,6 @@ class ContinueBrowser(val project: Project, url: String) {
     val browser: JBCefBrowser
 
     init {
-        println("shouldRenderOffScreen: ${shouldRenderOffScreen()}")
         this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(shouldRenderOffScreen()).build()
 
 
