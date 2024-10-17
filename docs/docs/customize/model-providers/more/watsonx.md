@@ -10,7 +10,7 @@ Accessing watsonx models can be done either through watsonx SaaS on IBM Cloud or
 
 To get started with watsonx SaaS, visit the [registration page](https://dataplatform.cloud.ibm.com/registration/stepone?context=wx). If you do not have an existing IBM Cloud account, you can sign up for a free trial.
 
-To authenticate to watsonx.ai SaaS with Continue, you will need to create a project and [setup an API key](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key). Then, in continue:
+To authenticate to watsonx.ai SaaS with Continue, you will need to create a project and [set up an API key](https://www.ibm.com/docs/en/mas-cd/continuous-delivery?topic=cli-creating-your-cloud-api-key). Then, in continue:
 
 - Set **apiBase** to your watsonx SaaS endpoint, e.g. `https://us-south.ml.cloud.ibm.com` for US South region.
 - Set **projectId** to your watsonx project ID.
@@ -56,11 +56,10 @@ Add the following configuration to your `config.json` file to use the watsonx pr
 }
 ```
 
-`watsonxAPIVersion` is optional and defaults to the latest version.
+`apiVersion` is optional and defaults to the latest version.
 
-### Configuration Options
 
-Add the deployment ID to `deploymentID` if you are using a custom deployment endpoint.
+If you are using a custom deployment endpoint, set `deploymentID` to the model's deployment ID. You can find it in the watsonx.ai Prompt Lab UI by selecting the corresponding model and opening the `</>` tab on the right, which will display the endpoint's URL containing the deployment ID.
 
 ```json title="~/.continue/config.json"
 {
@@ -77,7 +76,10 @@ Add the deployment ID to `deploymentID` if you are using a custom deployment end
   ]
 }
 ```
-Make sure to specify a template name, such as "granite" or "llama3".
+
+### Configuration Options
+
+Make sure to specify a template name, such as `granite` or `llama3`, and to set the `contextLength` to the model's context window size.
 You can also configure generation parameters, such as temperature, topP, topK, frequency penalty, and stop sequences:
 
 ```json title="~/.continue/config.json"

@@ -733,7 +733,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Granite Chat 13b",
     },
     providerOptions: ["watsonx"],
-    icon: "watsonx.png",
+    icon: "WatsonX.png",
     isOpenSource: false,
   },
   graniteCode3b: {
@@ -746,7 +746,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Granite Code 3b",
     },
     providerOptions: ["watsonx"],
-    icon: "watsonx.png",
+    icon: "WatsonX.png",
     isOpenSource: false,
   },
   graniteCode8b: {
@@ -759,7 +759,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Granite Code 8b",
     },
     providerOptions: ["watsonx"],
-    icon: "watsonx.png",
+    icon: "WatsonX.png",
     isOpenSource: false,
   },
   graniteCode20b: {
@@ -772,7 +772,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Granite Code 20b",
     },
     providerOptions: ["watsonx"],
-    icon: "watsonx.png",
+    icon: "WatsonX.png",
     isOpenSource: false,
   },
   graniteCode34b: {
@@ -785,7 +785,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Granite Code 34b",
     },
     providerOptions: ["watsonx"],
-    icon: "watsonx.png",
+    icon: "WatsonX.png",
     isOpenSource: false,
   },
   MistralLarge: {

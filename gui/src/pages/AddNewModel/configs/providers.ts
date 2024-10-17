@@ -524,7 +524,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ...completionParamsInputsConfigs,
     ],
     apiKeyUrl: "https://dataplatform.cloud.ibm.com/registration/stepone?context=wx",
-    icon: "watsonx.png",
+    icon: "WatsonX.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.graniteCode3b,
