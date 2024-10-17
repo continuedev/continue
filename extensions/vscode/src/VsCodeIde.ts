@@ -305,8 +305,8 @@ class VsCodeIde implements IDE {
     return Promise.resolve(vscode.env.machineId);
   }
 
-  async getDiff(): Promise<string> {
-    return await this.ideUtils.getDiff();
+  async getDiff(includeUnstaged: boolean): Promise<string> {
+    return await this.ideUtils.getDiff(includeUnstaged);
   }
 
   async getTerminalContents(): Promise<string> {

@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Changed
+body: Easier way to accept/reject/re-prompt after cmd/ctrl+I
+time: 2024-10-14T23:17:38.086964-07:00

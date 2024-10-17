@@ -1,4 +1,4 @@
-import { constants } from "../../deploy/constants.js";
+import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
 import { ChatMessageRole, FetchFunction, SlashCommand } from "../../index.js";
 import { pruneStringFromBottom } from "../../llm/countTokens.js";
 import { stripImages } from "../../llm/images.js";
@@ -15,7 +15,7 @@ async function getResults(q: string, fetch: FetchFunction): Promise<any> {
     q: `${q} site:stackoverflow.com`,
   });
 
-  const resp = await fetch(new URL("/search", constants.a), {
+  const resp = await fetch(new URL("/search", TRIAL_PROXY_URL), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

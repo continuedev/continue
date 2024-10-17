@@ -105,6 +105,20 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
 }
 ```
 
+### `@Web`
+
+Reference relevant pages from across the web, automatically determined from your input.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "web"
+    }
+  ]
+}
+```
+
 ### `@Codebase`
 
 Reference the most relevant snippets from your codebase.
@@ -418,7 +432,7 @@ Available connection types:
 - `mysql`
 - `sqlite`
 
-### `@Locals`
+### `@Debugger`
 
 Reference the contents of the local variables in the debugger.
 
@@ -426,7 +440,7 @@ Reference the contents of the local variables in the debugger.
 {
   "contextProviders": [
     {
-      "name": "locals",
+      "name": "debugger",
       "params": {
         "stackDepth": 3
       }

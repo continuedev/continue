@@ -29,6 +29,8 @@
         <statusBarWidgetFactory
                 implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteSpinnerWidgetFactory"
                 id="AutocompleteSpinnerWidget"/>
+        <notificationGroup id="Continue"
+                           displayType="BALLOON"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -163,6 +165,4 @@
             <keyboard-shortcut first-keystroke="alt meta RIGHT" keymap="Mac OS X"/>
         </action>
     </actions>
-
-
 </idea-plugin>

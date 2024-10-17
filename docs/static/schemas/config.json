@@ -1534,6 +1534,27 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["commit"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "markdownDescription": "If includeUnstaged is set to true, then unstaged changes are also included in the prompt, otherwise only staged changes are included. Default is false."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name", "description"]
@@ -1568,7 +1589,7 @@
               "enum": [
                 "diff",
                 "terminal",
-                "locals",
+                "debugger",
                 "open",
                 "google",
                 "search",
@@ -1588,12 +1609,13 @@
                 "database",
                 "os",
                 "repo-map",
-                "greptile"
+                "greptile",
+                "web"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
                 "Reference the last terminal command",
-                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
+                "Reference the contents of the local variables in the debugger with top n level (defaulting to 3) of call stack for that thread",
                 "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
@@ -1613,7 +1635,8 @@
                 "Reference table schemas",
                 "Operating system and CPU Information",
                 "Map of files in the repository with important code highlights",
-                "Query your greptile index of the current repo"
+                "Query your greptile index of the current repo",
+                "Search the web for sources related to your question"
               ],
               "type": "string"
             },
@@ -1713,6 +1736,24 @@
                   }
                 },
                 "required": ["serperApiKey"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": { "properties": { "name": { "enum": ["web"] } } },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "n": {
+                    "title": "N",
+                    "description": "The number of results to return",
+                    "default": 6,
+                    "type": "integer"
+                  }
+                }
               }
             },
             "required": ["params"]
