@@ -27,7 +27,7 @@ const tabs = [
 export default function Inventory() {
   return (
     <div className="h-full">
-      <Tabs defaultValue="inventory" className="">
+      <Tabs defaultValue="inventory">
         <div className="flex justify-center mt-1">
           <TabsList className="bg-input text-center">
             {tabs.map((tab) => (

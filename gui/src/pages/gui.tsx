@@ -413,6 +413,7 @@ function GUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
+        <Button onClick={() => navigate("/inventory")}>Test</Button>
         <div className="mx-2">
           <StepsDiv>
             {state.history.map((item, index: number) => {
@@ -498,8 +499,7 @@ function GUI() {
                                 {
                                   messageType: "userInput",
                                   data: {
-                                    input:
-                                      "Keep going.",
+                                    input: "Keep going.",
                                   },
                                 },
                                 "*",
@@ -578,7 +578,6 @@ function GUI() {
             </>
           )}
         </div>
-
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
           isAtBottom={isAtBottom}

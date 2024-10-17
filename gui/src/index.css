@@ -69,3 +69,58 @@ a:focus {
       scrollbar-width: none;  /* Firefox */
   }
 }
+
+@layer base {
+  :root {
+        /* Changes from inventory */
+        --background: var(--vscode-editor-background, #002B36);
+        --foreground: var(--vscode-editor-foreground, #839496);
+        --button-background: var(--vscode-button-background, #2AA19899);
+        --button-foreground: var(--vscode-button-foreground, #839496);
+        --button-hover-background: var(--vscode-button-hoverBackground, #2AA198CC);
+        --input-background: var(--vscode-input-background, #003847);
+        --input-foreground: var(--vscode-input-foreground, #93A1A1);
+        --input-border: var(--vscode-input-border, #2AA19899);
+        --dropdown-background: var(--vscode-dropdown-background, #00212B);
+        --dropdown-foreground: var(--vscode-dropdown-foreground, #839496);
+        --list-active-selection-background: var(--vscode-list-activeSelectionBackground, #005A6F);
+        --list-active-selection-foreground: var(--vscode-list-activeSelectionForeground, #d6dbdb);
+        --list-hover-background: var(--vscode-list-hoverBackground, #004454AA);
+        --sidebar-background: var(--vscode-sideBar-background, #00212B);
+        --statusbar-background: var(--vscode-statusBar-background, #00212B);
+        --statusbar-foreground: var(--vscode-statusBar-foreground, #93A1A1);
+        --tab-active-background: var(--vscode-tab-activeBackground, #002B37);
+        --tab-active-foreground: var(--vscode-tab-activeForeground, #d6dbdb);
+
+        /* Additional variables, from default taildwind adapted to VSCode PearAI Theme */
+        --card: var(--vscode-editor-background, #002B36);
+        --card-foreground: var(--vscode-editor-foreground, #839496);
+        --popover: var(--vscode-editor-background, #002B36);
+        --popover-foreground: var(--vscode-editor-foreground, #839496);
+        --primary: var(--vscode-button-background, #2AA19899);
+        --primary-foreground: var(--vscode-button-foreground, #839496);
+        --secondary: var(--vscode-list-hoverBackground, #004454AA);
+        --secondary-foreground: var(--vscode-editor-foreground, #839496);
+        --muted: var(--vscode-list-hoverBackground, #004454AA);
+        --muted-foreground: var(--vscode-descriptionForeground, #586E75);
+        --accent: var(--vscode-list-hoverBackground, #004454AA);
+        --accent-foreground: var(--vscode-editor-foreground, #839496);
+        --destructive: #DC322F;
+        --destructive-foreground: #EEE8D5;
+        --border: var(--vscode-input-border, #2AA19899);
+        --ring: var(--vscode-focusBorder, #2AA19899);
+        --radius: 0.5rem;
+  }
+}
+
+  @layer base {
+    * {
+      /* default tailwindcss configs */
+      /* @apply border-border; */
+      @apply border-input;
+      }
+    body {
+      @apply bg-background text-foreground;
+      }
+  }
+  

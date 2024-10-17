@@ -89,8 +89,8 @@ const router = createMemoryRouter([
       },
       {
         path: "/inventory",
-        element: <Inventory/>
-      }
+        element: <Inventory />,
+      },
     ],
   },
 ]);
