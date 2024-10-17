@@ -148,13 +148,6 @@ codeql
 **/**/build
 
 **/.idea/**/*
-!**/.idea/.name
-!**/.idea/compiler.xml
-!**/.idea/gradle.xml
-!**/.idea/kotlinc.xml
-!**/.idea/misc.xml
-!**/.idea/vcs.xml
-!**/.idea/jarRepositories.xml
 core/.idea
 
 continue_server.build
@@ -171,4 +164,4 @@ Icon?
 
 notes.md
 
-manual-testing-sandbox/Continue/.idea/vcs.xml
+manual-testing-sandbox/Continue/.idea/**
