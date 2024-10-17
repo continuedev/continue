@@ -15,7 +15,7 @@ import GoogleContextProvider from "./GoogleContextProvider";
 import GreptileContextProvider from "./GreptileContextProvider";
 import HttpContextProvider from "./HttpContextProvider";
 import JiraIssuesContextProvider from "./JiraIssuesContextProvider/";
-import LocalsProvider from "./LocalsProvider";
+import DebugLocalsProvider from "./DebugLocalsProvider";
 import OSContextProvider from "./OSContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import PostgresContextProvider from "./PostgresContextProvider";
@@ -39,7 +39,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   GitHubIssuesContextProvider,
   GoogleContextProvider,
   TerminalContextProvider,
-  LocalsProvider,
+  DebugLocalsProvider,
   OpenFilesContextProvider,
   HttpContextProvider,
   SearchContextProvider,

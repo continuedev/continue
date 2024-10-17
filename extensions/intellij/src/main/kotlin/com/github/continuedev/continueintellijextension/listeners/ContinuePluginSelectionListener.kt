@@ -97,9 +97,10 @@ class ContinuePluginSelectionListener(
         val endOffset = model.selectionEnd
         val startLine = document.getLineNumber(startOffset)
         val endLine = document.getLineNumber(endOffset)
-
         val isFullLineSelection = startOffset == document.getLineStartOffset(startLine) &&
-                (endOffset == document.getLineEndOffset(endLine - 1) || endOffset == document.getLineStartOffset(endLine))
+                ((endLine > 0 && endOffset == document.getLineEndOffset(endLine - 1)) || endOffset == document.getLineStartOffset(
+                    endLine
+                ))
 
         val adjustedEndLine = if (isFullLineSelection && endLine > startLine) endLine - 1 else endLine
 

@@ -14,7 +14,7 @@ export const HistoryHeader = () => {
       style={{ backgroundColor: vscBackground, fontSize: getFontSize() }}
     >
       <div
-        className="items-center flex m-0 p-0"
+        className="m-0 flex items-center p-0"
         style={{
           borderBottom: `0.5px solid ${lightGray}`,
         }}
@@ -23,9 +23,9 @@ export const HistoryHeader = () => {
           width="1.2em"
           height="1.2em"
           onClick={() => navigate("/")}
-          className="inline-block ml-4 cursor-pointer"
+          className="ml-4 inline-block cursor-pointer"
         />
-        <h3 className="text-lg font-bold m-2 inline-block">History</h3>
+        <h3 className="m-2 inline-block text-lg font-bold">History</h3>
       </div>
       {/* {workspacePaths && workspacePaths.length > 0 && (
       <CheckDiv

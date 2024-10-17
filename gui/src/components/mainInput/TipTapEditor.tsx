@@ -502,6 +502,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         }
       }
     },
+    editable: !active,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
@@ -606,6 +607,10 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
+      if (active) {
+        return;
+      }
+
       const json = editor.getJSON();
 
       // Don't do anything if input box is empty
@@ -915,6 +920,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             });
           });
         }}
+        disabled={active}
       />
 
       {showDragOverMsg &&
