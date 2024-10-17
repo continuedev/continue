@@ -391,8 +391,11 @@ class Aider extends BaseLLM {
     let lastProcessedIndex = 0;
     let responseComplete = false;
 
-    const END_MARKER =
-      /Tokens:\s*([\d\.kM]+)\s*sent,\s*([\d\.kM]+)\s*received\.\s*Cost:\s*\$?([\d\.]+)\s*message,\s*\$?([\d\.]+)\s*session\./;
+    // const END_MARKER =
+    //   /Tokens:\s*([\d\.kM]+)\s*sent,\s*([\d\.kM]+)\s*received\.\s*Cost:\s*\$?([\d\.]+)\s*message,\s*\$?([\d\.]+)\s*session\./;
+    // const END_MARKER = /(\r?\n)> /;
+    const END_MARKER = IS_WINDOWS ? '\r\n> ' : '\n> ';
+
 
     const escapeDollarSigns = (text: string | undefined) => {
       if (!text) return "Aider response over";
@@ -411,13 +414,8 @@ class Aider extends BaseLLM {
           content: escapeDollarSigns(newOutput),
         };
 
-        if (END_MARKER.test(newOutput)) {
+        if (newOutput.endsWith(END_MARKER)) {
           responseComplete = true;
-          // Yield the end marker as part of the last message
-          yield {
-            role: "assistant",
-            content: escapeDollarSigns(newOutput.match(END_MARKER)?.[0]),
-          };
           break;
         }
       }
