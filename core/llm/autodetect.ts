@@ -146,7 +146,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return undefined;
   }
 
-  if (lower.includes("llama3")) {
+  if (lower.includes("llama3") || lower.includes("llama-3")) {
     return "llama3";
   }
 

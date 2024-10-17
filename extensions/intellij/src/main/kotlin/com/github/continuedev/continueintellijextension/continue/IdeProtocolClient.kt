@@ -640,7 +640,6 @@ class IdeProtocolClient(
 
                     "listFolders" -> {
                         val workspacePath = workspacePath ?: return@launch
-                        val workspaceDir = File(workspacePath)
                         val folders = mutableListOf<String>()
                         fun findNestedFolders(dirPath: String) {
                             val dir = File(dirPath)

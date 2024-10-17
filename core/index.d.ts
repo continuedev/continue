@@ -366,13 +366,8 @@ export interface LLMOptions {
   projectId?: string;
   capabilities?: ModelCapability;
 
-  // IBM watsonx options
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxStopToken?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // IBM watsonx deployment ID
+ deploymentId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -833,12 +828,9 @@ export interface EmbedOptions {
   // AWS and GCP Options
   region?: string;
 
-  // Watsonx Options
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // Watsonx options
+  deploymentId?: string;
+  projectId?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {

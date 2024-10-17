@@ -239,7 +239,6 @@ function AddModelForm({
                   </div>
                 ))}
           </div>
-
           <div className="mt-4 w-full">
             <Button type="submit" className="w-full" disabled={isDisabled()}>
               Connect
