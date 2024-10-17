@@ -185,7 +185,6 @@ class WatsonX extends BaseLLM {
     if (watsonxToken.token === undefined) {
       throw new Error("Something went wrong. Check your credentials, please.");
     }
-    console.log("stop sequences: "+JSON.stringify(options.stop))
     const stopSequences =
       options.stop ?? (options.model?.includes("granite") ? ["Question:"] : []);
     const url = this.getWatsonxEndpoint();
