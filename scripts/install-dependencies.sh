@@ -5,6 +5,9 @@
 # - Debug -> Extension
 set -e
 
+echo "Installing root-level dependencies..."
+npm install
+
 echo "Installing Core extension dependencies..."
 pushd core
 ## This flag is set because we pull down Chromium at runtime
@@ -43,3 +46,5 @@ popd
 echo "Installing docs dependencies..."
 pushd docs
 npm install
+
+popd

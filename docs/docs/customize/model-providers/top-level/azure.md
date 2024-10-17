@@ -22,20 +22,13 @@ We recommend configuring **GPT-4o** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **Codestral** as your autocomplete model. There are not currently any other models in Azure that are capable of autocomplete.
+Azure OpenAI currently does not offer any autocomplete models.
 
-```json title="config.json"
-"tabAutocompleteModel": [{
-    "title": "Codestral",
-    "provider": "azure",
-    "model": "codestral-latest",
-    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
-}]
-```
+[Click here](../../model-types/autocomplete.md) to see a list of autocomplete models.
+
+:::info
+**Codestral** will be available on Azure in the near future.
+:::
 
 ## Embeddings model
 
