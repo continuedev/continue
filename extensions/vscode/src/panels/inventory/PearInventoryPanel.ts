@@ -35,10 +35,12 @@ export class PearInventoryPanel implements WebviewViewProvider {
     private _extensionUri: Uri,
     private readonly _extensionContext: ExtensionContext,
   ) {
-    const uriToFix = this._extensionUri.toString().split("/");
-    uriToFix[-1] = "pearai-submodule/gui";
-    const uriWithoutPearAiRef = uriToFix.join("/");
-    this._extensionUri = Uri.parse(uriWithoutPearAiRef);
+    this._extensionUri = Uri.joinPath(
+      _extensionUri,
+      "..",
+      "pearai-submodule",
+      "gui",
+    );
     console.log(this._extensionUri);
   }
 
@@ -46,18 +48,18 @@ export class PearInventoryPanel implements WebviewViewProvider {
     console.log("Resolving WebviewView for ChatView3: ", this._extensionUri);
     this._view = webviewView;
 
-    console.log("=========================== Hard coded: ", this.hardCoded);
+    // console.log("=========================== Hard coded: ", this.hardCoded);
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [
-        Uri.joinPath(this._extensionUri, "extensions/vscode/out"),
-        Uri.joinPath(this.hardCoded, "gui/build"),
+        Uri.joinPath(this._extensionUri, "build"),
+        Uri.joinPath(this._extensionUri, "dist"),
       ],
     };
 
     webviewView.webview.html = this._getWebviewContent(
       webviewView.webview,
-      this.hardCoded,
+      this._extensionUri,
     );
 
     this._setWebviewMessageListener(webviewView.webview);
@@ -77,16 +79,14 @@ export class PearInventoryPanel implements WebviewViewProvider {
    */
   private _getWebviewContent(webview: Webview, extensionUri: Uri) {
     // The CSS file from the React build output
-    const stylesUri = getUri(webview, this.hardCoded, [
-      "gui",
+    const stylesUri = getUri(webview, this._extensionUri, [
       "build",
       "assets",
       "index.css",
     ]);
     console.log("STYLES ===================:", stylesUri);
     // The JS file from the React build output
-    const scriptUri = getUri(webview, this.hardCoded, [
-      "gui",
+    const scriptUri = getUri(webview, this._extensionUri, [
       "build",
       "assets",
       "index.js",
