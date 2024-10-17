@@ -122,7 +122,6 @@ Granite models are recommended for tab auto complete. The configuration is simil
       "projectId": "PROJECT_ID",
       "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
       "apiVersion": "2024-03-14",
-      "template": "granite",
       "contextLength": 4000
     }
 }
