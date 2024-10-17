@@ -1,19 +1,12 @@
 import { SessionInfo } from "core";
 import MiniSearch from "minisearch";
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
-import {
-  vscBadgeBackground,
-  vscButtonBackground,
-  vscButtonForeground,
-  vscEditorBackground,
-  vscForeground,
-  vscInputBackground,
-  vscInputBorder,
-} from "..";
+
 import useHistory from "../../hooks/useHistory";
 import { getFontSize } from "../../util";
 import { HistoryTableRow } from "./HistoryTableRow";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 
 const parseDate = (date: string): Date => {
   let dateObj = new Date(date);
@@ -28,11 +21,6 @@ const HEADER_CLASS =
 
 export function History() {
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
-    SessionInfo[]
-  >([]);
-  const apiUrl = window.serverUrl;
-  const workspacePaths = window.workspacePaths || [];
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>
@@ -45,15 +33,14 @@ export function History() {
   const dispatch = useDispatch();
   const { getHistory, lastSessionId } = useHistory(dispatch);
 
-  const [minisearch, setMinisearch] = useState<
-    MiniSearch<{ title: string; sessionId: string }>
-  >(
-    new MiniSearch({
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const minisearch = useMemo(() => {
+    return new MiniSearch({
       fields: ["title"],
       storeFields: ["title", "sessionId", "id"],
-    }),
-  );
-  const [searchTerm, setSearchTerm] = useState("");
+    });
+  }, []);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -70,43 +57,22 @@ export function History() {
     fetchSessions();
   }, [lastSessionId]);
 
-  useEffect(() => {
-    // When searchTerm is empty only show sessions from the current workspace
-    let filteringByWorkspace = searchTerm === "";
-
-    // When the searchTerm is wildcard (asterisk) then show ALL sessions, otherwise use minisearch to search for user input
+  const filteredAndSortedSessions: SessionInfo[] = useMemo(() => {
     const sessionIds = minisearch
-      .search(searchTerm === "*" ? "" : searchTerm, {
+      .search(searchTerm, {
         fuzzy: 0.1,
       })
       .map((result) => result.id);
 
-    setFilteredAndSortedSessions(
-      sessions
-        .filter((session) => {
-          if (
-            !filteringByWorkspace ||
-            typeof workspacePaths === "undefined" ||
-            typeof session.workspaceDirectory === "undefined"
-          ) {
-            return true;
-          }
-          return workspacePaths.includes(session.workspaceDirectory);
-        })
-        // Filter by search term
-        .filter((session) => {
-          return (
-            searchTerm === "*" ||
-            filteringByWorkspace ||
-            sessionIds.includes(session.sessionId)
-          );
-        })
-        .sort(
-          (a, b) =>
-            parseDate(b.dateCreated).getTime() -
-            parseDate(a.dateCreated).getTime(),
-        ),
-    );
+    return sessions
+      .filter((session) => {
+        return searchTerm === "" || sessionIds.includes(session.sessionId);
+      })
+      .sort(
+        (a, b) =>
+          parseDate(b.dateCreated).getTime() -
+          parseDate(a.dateCreated).getTime(),
+      );
   }, [sessions, searchTerm, minisearch]);
 
   const yesterday = new Date(Date.now() - 1000 * 60 * 60 * 24);
@@ -116,38 +82,36 @@ export function History() {
 
   return (
     <div style={{ fontSize: getFontSize() }}>
-      <div className="flex px-2 pb-2 pt-3 mx-auto items-stretch justify-center space-x-2">
+      <div className="relative mx-auto mb-2 mt-3 flex items-stretch justify-center space-x-2 px-2">
         <input
-          className="text-base flex-1 w-full px-2 py-1 border-none rounded-md border bg-vsc-input-background text-vsc-foreground outline-none focus:outline-none"
+          className="bg-vsc-input-background text-vsc-foreground w-full flex-1 rounded-md border border-none py-1 pl-2 pr-8 text-base outline-none focus:outline-none"
           ref={searchInputRef}
           placeholder="Search past sessions"
           type="text"
+          value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <span
-          className="text-xs bg-vsc-input-background h-full block border-none text-center px-2 py-2 rounded-md w-12 select-none cursor-pointer whitespace-nowrap hover:filter hover:brightness-90"
-          onClick={() => {
-            if (searchInputRef.current.value === "") {
-              searchInputRef.current.value = "*";
-              setSearchTerm("*");
-            } else {
-              searchInputRef.current.value = "";
+        {searchTerm && (
+          <XMarkIcon
+            className="text-vsc-foreground hover:bg-vsc-background duration-50 absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform cursor-pointer rounded-full p-0.5 transition-colors"
+            onClick={() => {
               setSearchTerm("");
-            }
-          }}
-        >
-          {searchTerm === "" ? "Show All" : "Clear"}
-        </span>
+              if (searchInputRef.current) {
+                searchInputRef.current.focus();
+              }
+            }}
+          />
+        )}
       </div>
 
       {filteredAndSortedSessions.length === 0 && (
-        <div className="text-center m-4">
+        <div className="m-4 text-center">
           No past sessions found. To start a new session, either click the "+"
           button or use the keyboard shortcut: <b>Option + Command + N</b>
         </div>
       )}
 
-      <table className="w-full border-spacing-0 border-collapse">
+      <table className="w-full border-collapse border-spacing-0">
         <tbody>
           {filteredAndSortedSessions.map((session, index) => {
             const prevDate =
@@ -184,7 +148,7 @@ export function History() {
         </tbody>
       </table>
       <br />
-      <i className="text-sm ml-4">
+      <i className="ml-4 text-sm">
         All session data is saved in ~/.continue/sessions
       </i>
     </div>
