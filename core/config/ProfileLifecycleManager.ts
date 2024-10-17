@@ -5,7 +5,7 @@ import {
   IContextProvider,
 } from "../index.js";
 
-import { finalToBrowserConfig } from "./load.js";
+import { ConfigResult, finalToBrowserConfig } from "./load.js";
 
 import { IProfileLoader } from "./profile/IProfileLoader.js";
 
@@ -43,7 +43,7 @@ export class ProfileLifecycleManager {
   }
 
   // Clear saved config and reload
-  async reloadConfig(): ReturnType<typeof this.profileLoader.doLoadConfig> {
+  async reloadConfig(): Promise<ConfigResult<ContinueConfig>> {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.pendingConfigPromise = undefined;
@@ -75,7 +75,9 @@ export class ProfileLifecycleManager {
         this.savedConfig = newConfig;
         resolve(newConfig);
       } else if (errors) {
-        reject(`Error in config.json: ${errors.join(" | ")}`);
+        reject(
+          `Error in config.json: ${errors.map((item) => item.message).join(" | ")}`,
+        );
       }
     });
 

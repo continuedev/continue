@@ -62,7 +62,13 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-import { validateConfig, ValidationErrorMessage } from "./validation.js";
+import { validateConfig, ConfigValidationError } from "./validation.js";
+
+export interface ConfigResult<T> {
+  config: T | undefined;
+  errors: ConfigValidationError[] | undefined;
+  configLoadInterrupted: boolean;
+}
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -98,10 +104,7 @@ function loadSerializedConfig(
   ideSettings: IdeSettings,
   ideType: IdeType,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): {
-  config: SerializedContinueConfig | undefined;
-  errors: ValidationErrorMessage[] | undefined;
-} {
+): ConfigResult<SerializedContinueConfig> {
   const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
@@ -114,10 +117,11 @@ function loadSerializedConfig(
 
   const errors = validateConfig(config);
 
-  if (errors) {
+  if (errors?.some((error) => error.fatal)) {
     return {
       errors,
       config: undefined,
+      configLoadInterrupted: true,
     };
   }
 
@@ -155,7 +159,7 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  return { config, errors };
+  return { config, errors, configLoadInterrupted: false };
 }
 
 async function serializedToIntermediateConfig(
@@ -590,20 +594,21 @@ async function loadFullConfigNode(
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): Promise<{
-  config: ContinueConfig | undefined;
-  errors: ValidationErrorMessage[] | undefined;
-}> {
+): Promise<ConfigResult<ContinueConfig>> {
   // Serialized config
-  let { config: serialized, errors } = loadSerializedConfig(
+  let {
+    config: serialized,
+    errors,
+    configLoadInterrupted,
+  } = loadSerializedConfig(
     workspaceConfigs,
     ideSettings,
     ideType,
     overrideConfigJson,
   );
 
-  if (!serialized) {
-    return { errors, config: undefined };
+  if (!serialized || configLoadInterrupted) {
+    return { errors, config: undefined, configLoadInterrupted: true };
   }
 
   // Convert serialized to intermediate config
@@ -673,7 +678,7 @@ async function loadFullConfigNode(
     writeLog,
     workOsAccessToken,
   );
-  return { config: finalConfig, errors };
+  return { config: finalConfig, errors, configLoadInterrupted: false };
 }
 
 export {

@@ -12,6 +12,7 @@ import {
 } from "../index.js";
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
+import { ConfigResult } from "./load.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
   ONBOARDING_LOCAL_MODEL_TITLE,
@@ -23,14 +24,10 @@ import {
   ProfileDescription,
   ProfileLifecycleManager,
 } from "./ProfileLifecycleManager.js";
-import { ValidationErrorMessage } from "./validation.js";
 
 export type { ProfileDescription };
 
-type ConfigUpdateFunction = (payload: {
-  config: ContinueConfig | undefined;
-  errors: ValidationErrorMessage[] | undefined;
-}) => void;
+type ConfigUpdateFunction = (payload: ConfigResult<ContinueConfig>) => void;
 
 // Separately manages saving/reloading each profile
 
@@ -132,7 +129,11 @@ export class ConfigHandler {
   async setSelectedProfile(profileId: string) {
     this.selectedProfileId = profileId;
     const newConfig = await this.loadConfig();
-    this.notifyConfigListeners({ config: newConfig, errors: undefined });
+    this.notifyConfigListeners({
+      config: newConfig,
+      errors: undefined,
+      configLoadInterrupted: false,
+    });
     const selectedProfiles =
       this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
     selectedProfiles[await this.getWorkspaceId()] = profileId;
@@ -178,16 +179,10 @@ export class ConfigHandler {
     }
   }
 
-  private notifyConfigListeners({
-    config,
-    errors,
-  }: {
-    config: ContinueConfig | undefined;
-    errors: ValidationErrorMessage[] | undefined;
-  }) {
+  private notifyConfigListeners(result: ConfigResult<ContinueConfig>) {
     // Notify listeners that config changed
     for (const listener of this.updateListeners) {
-      listener({ config, errors });
+      listener(result);
     }
   }
 
@@ -200,13 +195,14 @@ export class ConfigHandler {
   async reloadConfig() {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
 
-    const { config, errors } = await this.currentProfile.reloadConfig();
+    const { config, errors, configLoadInterrupted } =
+      await this.currentProfile.reloadConfig();
 
     if (config) {
       this.inactiveProfiles.forEach((profile) => profile.clearConfig());
     }
 
-    this.notifyConfigListeners({ config, errors });
+    this.notifyConfigListeners({ config, errors, configLoadInterrupted });
     return { config, errors };
   }
 

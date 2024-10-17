@@ -34,7 +34,6 @@ function useSetup(dispatch: Dispatch<any>) {
       return;
     }
     const { config, profileId } = result.content;
-    dispatch(setConfigError(undefined));
     dispatch(setConfig(config));
     dispatch(setSelectedProfileId(profileId));
     setConfigLoaded(true);

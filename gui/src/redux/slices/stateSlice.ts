@@ -15,7 +15,7 @@ import { createSelector } from "reselect";
 import { v4 } from "uuid";
 import { RootState } from "../store";
 import { v4 as uuidv4 } from "uuid";
-import { ValidationErrorMessage } from "core/config/validation";
+import { ConfigValidationError } from "core/config/validation";
 
 export const memoizedContextItemsSelector = createSelector(
   [(state: RootState) => state.state.history],
@@ -45,7 +45,7 @@ type State = {
   defaultModelTitle: string;
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
-  configError: ValidationErrorMessage[] | undefined;
+  configError: ConfigValidationError[] | undefined;
 };
 
 const initialState: State = {
@@ -101,7 +101,7 @@ export const stateSlice = createSlice({
     },
     setConfigError: (
       state,
-      { payload: error }: PayloadAction<ValidationErrorMessage[]>,
+      { payload: error }: PayloadAction<ConfigValidationError[] | undefined>,
     ) => {
       state.configError = error;
     },

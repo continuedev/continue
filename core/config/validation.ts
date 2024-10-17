@@ -1,6 +1,9 @@
 import { SerializedContinueConfig } from "../";
 
-export type ValidationErrorMessage = string;
+export interface ConfigValidationError {
+  fatal: boolean;
+  message: string;
+}
 
 /**
  * Validates a SerializedContinueConfig object to ensure all properties are correctly formed.
@@ -8,20 +11,27 @@ export type ValidationErrorMessage = string;
  * @returns An array of error messages if there are any. Otherwise, the config is valid.
  */
 export function validateConfig(config: SerializedContinueConfig) {
-  const errors: ValidationErrorMessage[] = [];
+  const errors: ConfigValidationError[] = [];
 
   // Validate models
   if (!Array.isArray(config.models) || config.models.length === 0) {
-    errors.push("The 'models' field should be a non-empty array.");
+    errors.push({
+      fatal: true,
+      message: "The 'models' field should be a non-empty array.",
+    });
   } else {
     config.models.forEach((model, index) => {
       if (typeof model.title !== "string" || model.title.trim() === "") {
-        errors.push(
-          `Model at index ${index} has an invalid or missing 'title'.`,
-        );
+        errors.push({
+          fatal: true,
+          message: `Model at index ${index} has an invalid or missing 'title'.`,
+        });
       }
       if (typeof model.provider !== "string") {
-        errors.push(`Model at index ${index} has an invalid 'provider'.`);
+        errors.push({
+          fatal: true,
+          message: `Model at index ${index} has an invalid 'provider'.`,
+        });
       }
     });
   }
@@ -29,18 +39,23 @@ export function validateConfig(config: SerializedContinueConfig) {
   // Validate slashCommands
   if (config.slashCommands) {
     if (!Array.isArray(config.slashCommands)) {
-      errors.push("The 'slashCommands' field should be an array if defined.");
+      errors.push({
+        fatal: true,
+        message: "The 'slashCommands' field should be an array if defined.",
+      });
     } else {
       config.slashCommands.forEach((command, index) => {
         if (typeof command.name !== "string" || command.name.trim() === "") {
-          errors.push(
-            `Slash command at index ${index} has an invalid or missing 'name'.`,
-          );
+          errors.push({
+            fatal: true,
+            message: `Slash command at index ${index} has an invalid or missing 'name'.`,
+          });
         }
         if (typeof command.description !== "string") {
-          errors.push(
-            `Slash command at index ${index} has an invalid or missing 'description'.`,
-          );
+          errors.push({
+            fatal: true,
+            message: `Slash command at index ${index} has an invalid or missing 'description'.`,
+          });
         }
       });
     }
@@ -49,15 +64,17 @@ export function validateConfig(config: SerializedContinueConfig) {
   // Validate contextProviders
   if (config.contextProviders) {
     if (!Array.isArray(config.contextProviders)) {
-      errors.push(
-        "The 'contextProviders' field should be an array if defined.",
-      );
+      errors.push({
+        fatal: true,
+        message: "The 'contextProviders' field should be an array if defined.",
+      });
     } else {
       config.contextProviders.forEach((provider, index) => {
         if (typeof provider.name !== "string" || provider.name.trim() === "") {
-          errors.push(
-            `Context provider at index ${index} has an invalid or missing 'name'.`,
-          );
+          errors.push({
+            fatal: true,
+            message: `Context provider at index ${index} has an invalid or missing 'name'.`,
+          });
         }
       });
     }
@@ -68,14 +85,18 @@ export function validateConfig(config: SerializedContinueConfig) {
     config.embeddingsProvider &&
     typeof config.embeddingsProvider !== "object"
   ) {
-    errors.push(
-      "The 'embeddingsProvider' field should be an object if defined.",
-    );
+    errors.push({
+      fatal: true,
+      message: "The 'embeddingsProvider' field should be an object if defined.",
+    });
   }
 
   // Validate reranker
   if (config.reranker && typeof config.reranker !== "object") {
-    errors.push("The 'reranker' field should be an object if defined.");
+    errors.push({
+      fatal: true,
+      message: "The 'reranker' field should be an object if defined.",
+    });
   }
 
   // Validate other boolean flags
@@ -88,7 +109,10 @@ export function validateConfig(config: SerializedContinueConfig) {
 
   booleanFlags.forEach((flag) => {
     if (config[flag] !== undefined && typeof config[flag] !== "boolean") {
-      errors.push(`The '${flag}' field should be a boolean if defined.`);
+      errors.push({
+        fatal: true,
+        message: `The '${flag}' field should be a boolean if defined.`,
+      });
     }
   });
 

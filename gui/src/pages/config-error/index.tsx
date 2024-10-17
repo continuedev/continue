@@ -1,18 +1,20 @@
 import {
   ArrowLeftIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { vscBackground } from "../../components";
-import { RootState } from "../../redux/store";
 import { ROUTES } from "../../util/navigation";
+import { useConfigError } from "../../redux/hooks";
 
 export default function ConfigErrorPage() {
   const navigate = useNavigate();
-  const configError = useSelector(
-    (store: RootState) => store.state.configError,
-  );
+  const configError = useConfigError();
+
+  const sortedErrors = configError
+    ? [...configError].sort((a, b) => (b.fatal ? 1 : 0) - (a.fatal ? 1 : 0))
+    : [];
 
   return (
     <div className="overflow-y-scroll">
@@ -34,16 +36,27 @@ export default function ConfigErrorPage() {
             Please resolve the following errors in your config.json file.
           </p>
           <div className="flex flex-col gap-5">
-            {configError && configError.length > 0 ? (
+            {sortedErrors.length > 0 ? (
               <ul className="list-none space-y-4 p-0 m-0">
-                {configError.map((error, index) => (
+                {sortedErrors.map((error, index) => (
                   <li
                     key={index}
-                    className="text-sm text-red-800 bg-red-100 rounded-md shadow-md flex items-start p-2"
+                    className={`text-sm p-2 rounded-md shadow-md flex items-start ${
+                      error.fatal
+                        ? "text-red-800 bg-red-100"
+                        : "text-yellow-800 bg-yellow-100"
+                    }`}
                   >
-                    <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+                    {error.fatal ? (
+                      <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+                    ) : (
+                      <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                    )}
                     <p className="m-0">
-                      <strong>Error:</strong> {error}
+                      <strong>
+                        {error.fatal ? "Fatal Error:" : "Warning:"}
+                      </strong>{" "}
+                      {error.message}
                     </p>
                   </li>
                 ))}
