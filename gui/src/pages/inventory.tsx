@@ -26,9 +26,9 @@ const tabs = [
 
 export default function Inventory() {
   return (
-    <div className="h-full">
+    <div className="h-full bg-background">
       <Tabs defaultValue="inventory">
-        <div className="flex justify-center mt-1">
+        <div className="flex justify-center mt-1 h-full">
           <TabsList className="bg-input text-center">
             {tabs.map((tab) => (
               <TabsTrigger

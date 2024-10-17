@@ -172,7 +172,7 @@ function QuickActionSlot({
           </div>
           <button
             onClick={onRemove}
-            className="absolute top-1 right-1 hover:text-foreground"
+            className="absolute top-1 right-1 p-1 text-foreground/50 cursor-pointer hover:text-input bg-button border-none outline-none focus:outline-none transition-colors duration-50 ease-in-out"
             aria-label={`Remove ${tool.name} from quick action slot`}
           >
             <X size={14} />
@@ -233,7 +233,12 @@ export default function AIToolInventory() {
         <header className="mb-6">
           <div className="flex items-center gap-2">
             <h1 className="text-3xl font-bold mb-2">PearAI Inventory</h1>{" "}
-            <Button onClick={() => navigate("/")}>Temporary Back Button</Button>
+            <Button
+              onClick={() => navigate("/")}
+              className="mt-3 bg-input text-foreground cursor-pointer"
+            >
+              Temporary Back Button
+            </Button>
           </div>
           <div className="relative">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
@@ -264,7 +269,7 @@ export default function AIToolInventory() {
             </div>
           </div>
 
-          <div className="w-1/2 overflow-auto pl-4 border-l border-input">
+          <div className="w-1/2 overflow-auto pl-4 border-l border-input text-base">
             {focusedTool ? (
               <div>
                 <h2 className="text-2xl font-bold mb-4">
@@ -274,13 +279,13 @@ export default function AIToolInventory() {
                 <h3 className="font-bold mb-2">When to use:</h3>
                 <p className="mb-4">{focusedTool.whenToUse}</p>
                 <h3 className="font-bold mb-2">Strengths:</h3>
-                <ul className="list-disc list-inside mb-4">
+                <ul className="list-disc mb-4">
                   {focusedTool.strengths.map((strength, index) => (
                     <li key={index}>{strength}</li>
                   ))}
                 </ul>
                 <h3 className="font-bold mb-2">Weaknesses:</h3>
-                <ul className="list-disc list-inside mb-4">
+                <ul className="list-discmb-4">
                   {focusedTool.weaknesses.map((weakness, index) => (
                     <li key={index}>{weakness}</li>
                   ))}
@@ -288,7 +293,7 @@ export default function AIToolInventory() {
                 {!focusedTool.comingSoon && (
                   <div className="mt-4">
                     <Button
-                      className="border button-foreground"
+                      className="border bg-input text-foreground cursor-pointer"
                       onClick={() => handleEquipToQuickSlot(focusedTool)}
                     >
                       Equip to quick action slots
@@ -321,7 +326,7 @@ export default function AIToolInventory() {
             ))}
           </div>
           <div className="flex items-center">
-            <Star className="text-accent-foreground mr-2" />
+            <Star className="text-accent-foreground mr-1" />
             <span className="font-bold">Suggested Build:</span>
             <div className="flex ml-2">
               {suggestedBuild.map((id) => {
