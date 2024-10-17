@@ -1,22 +1,22 @@
-class test {
+class Test {
     private var result: Double = 0.0
 
-    fun add(number: Double): test {
+    fun add(number: Double): Test {
         result += number
         return this
     }
 
-    fun subtract(number: Double): test {
+    fun subtract(number: Double): Test {
         result -= number
         return this
     }
 
-    fun multiply(number: Double): test {
+    fun multiply(number: Double): Test {
         result *= number
         return this
     }
 
-    fun divide(number: Double): test {
+    fun divide(number: Double): Test {
         if (number == 0.0) {
             throw IllegalArgumentException("Cannot divide by zero")
         }
@@ -28,7 +28,7 @@ class test {
         return result
     }
 
-    fun reset(): test {
+    fun reset(): Test {
         result = 0.0
         return this
     }
