@@ -2,7 +2,7 @@ name: Issue assignment
 
 on:
   issues:
-    types: [ opened ]
+    types: [opened]
 
 jobs:
   auto-assign:

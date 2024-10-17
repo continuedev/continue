@@ -1,4 +1,5 @@
 package com.github.continuedev.continueintellijextension.auth
+
 import com.intellij.util.messages.Topic
 
 interface AuthListener {

@@ -10,7 +10,7 @@ class Debouncer(
     private val coroutineScope: CoroutineScope
 ) {
     private var debounceJob: Job? = null
-
+    
     fun debounce(action: suspend () -> Unit) {
         debounceJob?.cancel()
         debounceJob = coroutineScope.launch {

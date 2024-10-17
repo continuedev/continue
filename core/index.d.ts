@@ -459,7 +459,7 @@ export interface IdeSettings {
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
-  getDiff(): Promise<string>;
+  getDiff(includeUnstaged: boolean): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
@@ -495,7 +495,7 @@ export interface IDE {
   getCurrentFile(): Promise<string | undefined>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
-  subprocess(command: string): Promise<[string, string]>;
+  subprocess(command: string, cwd?: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
@@ -558,7 +558,7 @@ type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
-  | "locals"
+  | "debugger"
   | "open"
   | "google"
   | "search"
@@ -640,7 +640,9 @@ type ModelProvider =
   | "sambanova"
   | "nvidia"
   | "vllm"
-  | "mock";
+  | "mock"
+  | "cerebras";
+
 
 export type ModelName =
   | "AUTODETECT"
@@ -679,6 +681,9 @@ export type ModelName =
   // Llama 3
   | "llama3-8b"
   | "llama3-70b"
+  // Llama 3.1
+  | "llama3.1-8b"
+  | "llama3.1-70b"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -797,6 +802,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "sagemaker"
   | "bedrock"
   | "huggingface-tei"
   | "transformers.js"
@@ -952,6 +958,11 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
+
+  /**
+   * Prompt the user's LLM for a title given the current chat content
+   */
+  getChatTitles?: boolean;
 
   /**
    * If set to true, we will attempt to pull down and install an instance of Chromium

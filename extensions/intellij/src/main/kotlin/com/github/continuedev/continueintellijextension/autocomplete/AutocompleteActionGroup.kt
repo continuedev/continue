@@ -18,11 +18,11 @@ class AutocompleteActionGroup : DefaultActionGroup() {
         val continueSettingsService = service<ContinueExtensionSettings>()
         if (continueSettingsService.continueState.enableTabAutocomplete) {
             addAll(
-                    DisableTabAutocompleteAction(),
+                DisableTabAutocompleteAction(),
             )
         } else {
             addAll(
-                    EnableTabAutocompleteAction(),
+                EnableTabAutocompleteAction(),
             )
         }
     }

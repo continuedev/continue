@@ -1,8 +1,8 @@
 # AWS SageMaker
 
-SageMaker provider support SageMaker endpoint deployed with [LMI](https://docs.djl.ai/docs/serving/serving/docs/lmi/index.html)
+SageMaker can be used for both chat and embedding models. Chat models are supported for endpoints deployed with [LMI](https://docs.djl.ai/docs/serving/serving/docs/lmi/index.html), and embedding models are supported for endpoints deployed with [HuggingFace TEI](https://huggingface.co/blog/sagemaker-huggingface-embedding)
 
-To setup SageMaker, add the following to your `config.json` file:
+To setup SageMaker as a chat model provider, add the following to your `config.json` file:
 
 ```json title="config.json"
 {
@@ -13,7 +13,11 @@ To setup SageMaker, add the following to your `config.json` file:
       "model": "lmi-model-deepseek-coder-xxxxxxx",
       "region": "us-west-2"
     }
-  ]
+  ],
+  "embeddingsProvider": {
+    "provider": "sagemaker",
+    "model": "mxbai-embed-large-v1-endpoint"
+  },
 }
 ```
 

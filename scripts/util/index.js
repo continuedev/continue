@@ -1,5 +1,4 @@
 const fs = require("fs");
-const os = require("os");
 const { execSync } = require("child_process");
 
 function execCmdSync(cmd) {
@@ -91,7 +90,9 @@ function validateFilesPresent(pathsToVerify) {
 
   if (missingFiles.length > 0 || emptyFiles.length > 0) {
     throw new Error(
-      `The following files were missing:\n- ${missingFiles.join("\n- ")}\n\nThe following files were empty:\n- ${emptyFiles.join("\n- ")}`,
+      `The following files were missing:\n- ${missingFiles.join(
+        "\n- ",
+      )}\n\nThe following files were empty:\n- ${emptyFiles.join("\n- ")}`,
     );
   } else {
     console.log("All paths exist");

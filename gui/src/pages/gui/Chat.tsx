@@ -24,43 +24,43 @@ import {
   lightGray,
   vscBackground,
   vscForeground,
-} from "../components";
-import { ChatScrollAnchor } from "../components/ChatScrollAnchor";
-import StepContainer from "../components/gui/StepContainer";
-import TimelineItem from "../components/gui/TimelineItem";
-import ContinueInputBox from "../components/mainInput/ContinueInputBox";
-import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
-import { TutorialCard } from "../components/mainInput/TutorialCard";
+} from "../../components";
+import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
+import StepContainer from "../../components/gui/StepContainer";
+import TimelineItem from "../../components/gui/TimelineItem";
+import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
+import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
+import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import {
   OnboardingCard,
   useOnboardingCard,
-} from "../components/OnboardingCard";
-import { IdeMessengerContext } from "../context/IdeMessenger";
-import useChatHandler from "../hooks/useChatHandler";
-import useHistory from "../hooks/useHistory";
-import { useTutorialCard } from "../hooks/useTutorialCard";
-import { useWebviewListener } from "../hooks/useWebviewListener";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
+} from "../../components/OnboardingCard";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import useChatHandler from "../../hooks/useChatHandler";
+import useHistory from "../../hooks/useHistory";
+import { useTutorialCard } from "../../hooks/useTutorialCard";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   clearLastResponse,
   deleteMessage,
   newSession,
   setInactive,
-} from "../redux/slices/stateSlice";
+} from "../../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
   setShowDialog,
-} from "../redux/slices/uiStateSlice";
-import { RootState } from "../redux/store";
+} from "../../redux/slices/uiStateSlice";
+import { RootState } from "../../redux/store";
 import {
   getFontSize,
   getMetaKeyLabel,
   isJetBrains,
   isMetaEquivalentKeyPressed,
-} from "../util";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+} from "../../util";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
+import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -144,7 +144,7 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
   );
 }
 
-function GUI() {
+export function Chat() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -528,5 +528,3 @@ function GUI() {
     </>
   );
 }
-
-export default GUI;

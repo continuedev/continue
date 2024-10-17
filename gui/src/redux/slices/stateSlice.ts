@@ -459,7 +459,7 @@ export const {
   consumeMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
-  setIsGatheringContext,
+  setIsGatheringContext
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

@@ -145,7 +145,7 @@ export function getAutocompleteStatusBarDescription(
     return undefined;
   }
 
-  let description = "Currently selected";
+  let description = "Current autocomplete model";
 
   // Only set for Mistral since our default config includes Codestral without
   // an API key

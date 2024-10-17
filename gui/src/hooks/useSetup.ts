@@ -9,7 +9,7 @@ import {
   setConfig,
   setInactive,
   setSelectedProfileId,
-  setTTSActive,
+  setTTSActive
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 

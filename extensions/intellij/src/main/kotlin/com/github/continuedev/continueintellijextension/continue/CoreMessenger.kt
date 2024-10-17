@@ -29,7 +29,6 @@ class CoreMessenger(
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
     private val ideProtocolClient = ideProtocolClient
     private val useTcp: Boolean = false
-
     private fun write(message: String) {
         try {
             writer?.write(message + "\r\n")

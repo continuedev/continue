@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 @Service(Service.Level.PROJECT)
 class AutocompleteLookupListener(project: Project) : LookupManagerListener {
     private val isLookupShown = AtomicBoolean(true)
-
+    
     fun isLookupEmpty(): Boolean {
         return isLookupShown.get()
     }

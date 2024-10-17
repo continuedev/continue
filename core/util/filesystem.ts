@@ -124,7 +124,7 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  getDiff(): Promise<string> {
+  getDiff(includeUnstaged: boolean): Promise<string> {
     return Promise.resolve("");
   }
 
@@ -237,7 +237,7 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  async subprocess(command: string): Promise<[string, string]> {
+  async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return ["", ""];
   }
 }

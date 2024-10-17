@@ -13,6 +13,7 @@ import Footer from "./Footer";
 import { updateApplyState, setShowDialog } from "../redux/slices/uiStateSlice";
 import TextDialog from "./dialogs";
 import { useOnboardingCard, isNewUserOnboarding } from "./OnboardingCard";
+import { LastSessionProvider } from "../context/LastSessionContext";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -174,39 +175,42 @@ const Layout = () => {
   }, [location]);
 
   return (
-    <LayoutTopDiv>
-      <div
-        style={{
-          scrollbarGutter: "stable both-edges",
-          minHeight: "100%",
-          display: "grid",
-          gridTemplateRows: "1fr auto",
-        }}
-      >
-        <TextDialog
-          showDialog={showDialog}
-          onEnter={() => {
-            dispatch(setShowDialog(false));
+    <LastSessionProvider>
+      <LayoutTopDiv>
+        <div
+          style={{
+            scrollbarGutter: "stable both-edges",
+            minHeight: "100%",
+            display: "grid",
+            gridTemplateRows: "1fr auto",
           }}
-          onClose={() => {
-            dispatch(setShowDialog(false));
-          }}
-          message={dialogMessage}
-        />
+        >
+          <TextDialog
+            showDialog={showDialog}
+            onEnter={() => {
+              dispatch(setShowDialog(false));
+            }}
+            onClose={() => {
+              dispatch(setShowDialog(false));
+            }}
+            message={dialogMessage}
+          />
 
-        <GridDiv>
-          <PostHogPageView />
-          <Outlet />
-          <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
-          <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
-          <Footer />
-        </GridDiv>
-      </div>
-      <div
-        style={{ fontSize: `${getFontSize() - 4}px` }}
-        id="tooltip-portal-div"
-      />
-    </LayoutTopDiv>
+          <GridDiv>
+            <PostHogPageView />
+            <Outlet />
+
+            <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
+            <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
+            <Footer />
+          </GridDiv>
+        </div>
+        <div
+          style={{ fontSize: `${getFontSize() - 4}px` }}
+          id="tooltip-portal-div"
+        />
+      </LayoutTopDiv>
+    </LastSessionProvider>
   );
 };
 

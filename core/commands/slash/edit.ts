@@ -613,6 +613,7 @@ Please briefly explain the changes made to the code above. Give no more than 2-3
         yield update;
       }
     }
+    yield `Edited ${contextItemToEdit.name}`;
   },
 };
 
