@@ -9,8 +9,6 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.ide.plugins.PluginManager
-import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -20,16 +18,13 @@ import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.extensions.PluginId
 
-class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false) {
+class ContinueBrowser(val project: Project, url: String) {
     private val coroutineScope = CoroutineScope(
         SupervisorJob() + Dispatchers.Default
     )
+
     private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
-    fun onHeightChange(listener: (Int) -> Unit) {
-        heightChangeListeners.add(listener)
-    }
 
     private val PASS_THROUGH_TO_CORE = listOf(
         "update/modelChange",
@@ -82,6 +77,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
     val browser: JBCefBrowser
 
     init {
+        println("shouldRenderOffScreen: ${shouldRenderOffScreen()}")
         this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(shouldRenderOffScreen()).build()
 
 
@@ -290,7 +286,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
      * References:
      * 1. https://youtrack.jetbrains.com/issue/IDEA-347828/JCEF-white-flash-when-tool-window-show#focus=Comments-27-9334070.0-0
      *    This issue mentions that white screen flash problems were resolved in platformVersion 2023.3.4.
-     * 2. https://plugins.jetbrains.com/docs/intellij/build-number-ranges.html#earlier-versions
+     * 2. https://www.jetbrains.com/idea/download/other.html
      *    This documentation shows mappings from platformVersion to branchNumber.
      *
      * We use the branchNumber (e.g., 233) instead of the full version number (e.g., 2023.3.4) because
