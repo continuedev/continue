@@ -7,11 +7,11 @@ import {
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 
-class LocalsProvider extends BaseContextProvider {
+class DebugLocalsProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "locals",
-    displayTitle: "Locals",
-    description: "Reference the contents of the local variables",
+    title: "debugger",
+    displayTitle: "Debugger",
+    description: "Reference the contents of the local variables in the debugger",
     type: "submenu",
     renderInlineAs: "",
   };
@@ -42,7 +42,7 @@ class LocalsProvider extends BaseContextProvider {
           `This is a paused thread: ${thread?.name}\n` +
           `Current local variable contents: \n${localVariables}.\n` +
           `Current top level call stacks: ${callStackContents}`,
-        name: "Locals",
+        name: "Debugger",
       },
     ];
   }
@@ -60,4 +60,4 @@ class LocalsProvider extends BaseContextProvider {
   }
 }
 
-export default LocalsProvider;
+export default DebugLocalsProvider;

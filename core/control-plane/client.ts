@@ -18,6 +18,9 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
+export const TRIAL_PROXY_URL =
+  "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
+
 export const DEFAULT_CONTROL_PLANE_PROXY_URL =
   process.env.CONTROL_PLANE_ENV === "local"
     ? "http://localhost:3001/"

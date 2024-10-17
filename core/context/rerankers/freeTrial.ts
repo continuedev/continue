@@ -1,6 +1,6 @@
 import fetch from "node-fetch";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
-import { constants } from "../../deploy/constants.js";
+import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
 import { Chunk, Reranker } from "../../index.js";
 
 export class FreeTrialReranker implements Reranker {
@@ -10,7 +10,7 @@ export class FreeTrialReranker implements Reranker {
     if (chunks.length === 0) {
       return [];
     }
-    const resp = await fetch(new URL("rerank", constants.a), {
+    const resp = await fetch(new URL("rerank", TRIAL_PROXY_URL), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

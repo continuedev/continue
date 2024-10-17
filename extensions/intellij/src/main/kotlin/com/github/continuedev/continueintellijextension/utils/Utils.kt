@@ -18,8 +18,8 @@ fun getOs(): Os {
 fun getMetaKeyLabel(): String {
     return when (getOs()) {
         Os.MAC -> "⌘"
-        Os.WINDOWS -> "Ctrl"
-        Os.LINUX -> "Ctrl"
+        Os.WINDOWS -> "^"
+        Os.LINUX -> "^"
     }
 }
 

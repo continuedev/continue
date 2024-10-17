@@ -4,7 +4,7 @@ import com.intellij.codeInsight.codeVision.*
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.TextRange
 
-class InputBoxCodeVision: CodeVisionProvider<Unit> {
+class InputBoxCodeVision : CodeVisionProvider<Unit> {
     companion object {
         const val id: String = "continue.code.vision"
     }

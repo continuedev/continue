@@ -314,7 +314,12 @@ const exe = os === "win32" ? ".exe" : "";
     const currentDir = process.cwd();
 
     // Remove the dir we will be copying to
-    rimrafSync(`node_modules/${toCopy}`);
+    if (os === "win32" && !ghAction()) {
+      // In local development (Launch Extension task)
+      // we will have esbuild-watch going during this time
+      // and windows will throw an error when you try to remove
+      rimrafSync(`node_modules/${toCopy}`);
+    }
 
     // Ensure the temporary directory exists
     fs.mkdirSync(tempDir, { recursive: true });

@@ -1,6 +1,6 @@
 import { Response } from "node-fetch";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
-import { constants } from "../../deploy/constants.js";
+import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
 import {
   EmbeddingsProviderName,
   EmbedOptions,
@@ -33,7 +33,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
           }
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(async () =>
-              this.fetch(new URL("embeddings", constants.a), {
+              this.fetch(new URL("embeddings", TRIAL_PROXY_URL), {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,

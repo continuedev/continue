@@ -15,9 +15,9 @@ import java.awt.Rectangle
 import kotlin.math.ceil
 import kotlin.math.max
 
-class ContinueMultilineCustomElementRenderer (
-        val editor: Editor,
-        val text: String,
+class ContinueMultilineCustomElementRenderer(
+    val editor: Editor,
+    val text: String,
 ) : EditorCustomElementRenderer {
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         val lines = text.lines()
@@ -43,9 +43,9 @@ class ContinueMultilineCustomElementRenderer (
 
     private fun offsetY(): Int {
         val metrics =
-                FontInfo.getFontMetrics(font, FontInfo.getFontRenderContext(editor.contentComponent))
+            FontInfo.getFontMetrics(font, FontInfo.getFontRenderContext(editor.contentComponent))
         val fontHeight =
-                font.createGlyphVector(metrics.fontRenderContext, text).visualBounds.height
+            font.createGlyphVector(metrics.fontRenderContext, text).visualBounds.height
         val height = (editor.lineHeight + fontHeight) / 2
         return ceil(height).toInt()
     }
@@ -54,9 +54,9 @@ class ContinueMultilineCustomElementRenderer (
         val currentLine = editor.caretModel.primaryCaret.logicalPosition.line
         val currentColumn = editor.caretModel.primaryCaret.logicalPosition.column
         val metrics =
-                FontInfo.getFontMetrics(font, FontInfo.getFontRenderContext(editor.contentComponent))
+            FontInfo.getFontMetrics(font, FontInfo.getFontRenderContext(editor.contentComponent))
         val fontWidth =
-                font.createGlyphVector(metrics.fontRenderContext, text).visualBounds.width
+            font.createGlyphVector(metrics.fontRenderContext, text).visualBounds.width
         val widthBeforeCaret = (editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(
             text.substring(0, minOf(currentColumn, text.length))
         )
@@ -69,7 +69,11 @@ class ContinueMultilineCustomElementRenderer (
         var additionalYOffset = -editor.lineHeight;
         var isFirstLine = true
         for (line in text.lines()) {
-            g.drawString(line, if (isFirstLine) targetRegion.x + offsetX() else targetRegion.x, targetRegion.y + inlay.editor.ascent + additionalYOffset)
+            g.drawString(
+                line,
+                if (isFirstLine) targetRegion.x + offsetX() else targetRegion.x,
+                targetRegion.y + inlay.editor.ascent + additionalYOffset
+            )
             additionalYOffset += editor.lineHeight
             isFirstLine = false
         }

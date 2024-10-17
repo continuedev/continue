@@ -151,7 +151,7 @@ async function renderPrompt(prompt: string, context: any, userInput: string) {
   const helpers = getContextProviderHelpers(context);
 
   // A few context providers that don't need to be in config.json to work in .prompt files
-  const diff = await context.ide.getDiff();
+  const diff = await context.ide.getDiff(false);
   const currentFilePath = await context.ide.getCurrentFile();
   const currentFile = currentFilePath
     ? await context.ide.readFile(currentFilePath)

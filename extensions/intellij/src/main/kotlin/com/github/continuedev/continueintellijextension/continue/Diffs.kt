@@ -36,6 +36,7 @@ fun getDiffDirectory(): File {
     }
     return diffDir
 }
+
 fun escapeFilepath(filepath: String): String {
     return filepath.replace("/", "_f_").replace("\\", "_b_").replace(":", "_c_")
 }
@@ -48,7 +49,7 @@ interface DiffInfo {
     var dialog: DialogWrapper?
 }
 
-class DiffManager(private val project: Project): DumbAware {
+class DiffManager(private val project: Project) : DumbAware {
 
     private val diffContentFactory = DiffContentFactory.getInstance()
 
@@ -92,8 +93,8 @@ class DiffManager(private val project: Project): DumbAware {
 
         // Notify server of acceptance
         val continuePluginService = ServiceManager.getService(
-                project,
-                ContinuePluginService::class.java
+            project,
+            ContinuePluginService::class.java
         )
         continuePluginService.ideProtocolClient?.sendAcceptRejectDiff(true, diffInfo.stepIndex)
 
@@ -105,8 +106,8 @@ class DiffManager(private val project: Project): DumbAware {
         val file = (file2 ?: lastFile2) ?: return
         val diffInfo = diffInfoMap[file] ?: return
         val continuePluginService = ServiceManager.getService(
-                project,
-                ContinuePluginService::class.java
+            project,
+            ContinuePluginService::class.java
         )
         continuePluginService.ideProtocolClient?.deleteAtIndex(diffInfo.stepIndex)
         continuePluginService.ideProtocolClient?.sendAcceptRejectDiff(false, diffInfo.stepIndex)
@@ -127,7 +128,7 @@ class DiffManager(private val project: Project): DumbAware {
 
         // Create a SimpleDiffRequest and populate it with the DiffContents and titles
         val diffRequest = SimpleDiffRequest("Continue Diff", content1, content2, "Old", "New")
-
+        
         // Get a DiffRequestPanel from the DiffManager and set the DiffRequest to it
         val diffInfo = diffInfoMap[file2]
 
@@ -144,7 +145,8 @@ class DiffManager(private val project: Project): DumbAware {
         }
 
         ApplicationManager.getApplication().invokeLater {
-            val diffPanel: DiffRequestPanel = diffInfo?.diffRequestPanel ?: DiffManager.getInstance().createRequestPanel(project, Disposer.newDisposable(), null)
+            val diffPanel: DiffRequestPanel = diffInfo?.diffRequestPanel ?: DiffManager.getInstance()
+                .createRequestPanel(project, Disposer.newDisposable(), null)
             diffPanel.setRequest(diffRequest)
 
             diffPanel.component.revalidate()
@@ -153,36 +155,36 @@ class DiffManager(private val project: Project): DumbAware {
             if (shouldShowDialog) {
                 // Create a dialog and add the DiffRequestPanel to it
                 val dialog: DialogWrapper = diffInfo?.dialog
-                        ?: object : DialogWrapper(project, true, IdeModalityType.MODELESS) {
-                            init {
-                                init()
-                                title = "Continue Diff"
-                            }
-
-                            override fun createCenterPanel(): JComponent? {
-                                return diffPanel.component
-                            }
-
-                            override fun doOKAction() {
-                                super.doOKAction()
-                                acceptDiff(file2)
-                            }
-
-                            override fun doCancelAction() {
-                                super.doCancelAction()
-                                rejectDiff(file2)
-                            }
-
-                            override fun createActions(): Array<Action> {
-                                val okAction = getOKAction()
-                                okAction.putValue(Action.NAME, "Accept (${getAltKeyLabel()} ⇧ Y)")
-
-                                val cancelAction = getCancelAction()
-                                cancelAction.putValue(Action.NAME, "Reject (${getAltKeyLabel()} ⇧ N)")
-
-                                return arrayOf(okAction, cancelAction)
-                            }
+                    ?: object : DialogWrapper(project, true, IdeModalityType.MODELESS) {
+                        init {
+                            init()
+                            title = "Continue Diff"
                         }
+
+                        override fun createCenterPanel(): JComponent? {
+                            return diffPanel.component
+                        }
+
+                        override fun doOKAction() {
+                            super.doOKAction()
+                            acceptDiff(file2)
+                        }
+
+                        override fun doCancelAction() {
+                            super.doCancelAction()
+                            rejectDiff(file2)
+                        }
+
+                        override fun createActions(): Array<Action> {
+                            val okAction = getOKAction()
+                            okAction.putValue(Action.NAME, "Accept (${getAltKeyLabel()} ⇧ Y)")
+
+                            val cancelAction = getCancelAction()
+                            cancelAction.putValue(Action.NAME, "Reject (${getAltKeyLabel()} ⇧ N)")
+
+                            return arrayOf(okAction, cancelAction)
+                        }
+                    }
 
                 dialog.rootPane.isDoubleBuffered = true
                 val screenSize = Toolkit.getDefaultToolkit().screenSize

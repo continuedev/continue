@@ -146,4 +146,4 @@ If you wish to return 10 total results for each query for example, then you woul
 2. Send all of these 50 results to the reranker API along with the query in order to get relevancy scores for each
 3. Sort the results by relevancy score and return the top 10
 
-We recommend using the `rerank-1` model from Voyage AI, which has examples of usage [here](https://docs.voyageai.com/docs/reranker).
+We recommend using the `rerank-2` model from Voyage AI, which has examples of usage [here](https://docs.voyageai.com/docs/reranker).

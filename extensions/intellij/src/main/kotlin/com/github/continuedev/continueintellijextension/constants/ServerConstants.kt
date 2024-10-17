@@ -123,7 +123,7 @@ fun getSessionsDir(): String {
 }
 
 fun getSessionsListPath(): String {
-    val path = Paths.get(getSessionsDir(),  "sessions.json")
+    val path = Paths.get(getSessionsDir(), "sessions.json")
     if (Files.notExists(path)) {
         Files.createFile(path)
         Files.writeString(path, "[]");
@@ -132,7 +132,7 @@ fun getSessionsListPath(): String {
 }
 
 fun getSessionFilePath(sessionId: String): String {
-    val path = Paths.get(getSessionsDir(),  "$sessionId.json")
+    val path = Paths.get(getSessionsDir(), "$sessionId.json")
     if (Files.notExists(path)) {
         Files.createFile(path)
         Files.writeString(path, "{}");

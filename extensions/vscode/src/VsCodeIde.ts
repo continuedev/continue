@@ -305,8 +305,8 @@ class VsCodeIde implements IDE {
     return Promise.resolve(vscode.env.machineId);
   }
 
-  async getDiff(): Promise<string> {
-    return await this.ideUtils.getDiff();
+  async getDiff(includeUnstaged: boolean): Promise<string> {
+    return await this.ideUtils.getDiff(includeUnstaged);
   }
 
   async getTerminalContents(): Promise<string> {
@@ -512,9 +512,9 @@ class VsCodeIde implements IDE {
     });
   }
 
-  async subprocess(command: string): Promise<[string, string]> {
+  async subprocess(command: string, cwd?: string): Promise<[string, string]> {
     return new Promise((resolve, reject) => {
-      exec(command, (error, stdout, stderr) => {
+      exec(command, { cwd }, (error, stdout, stderr) => {
         if (error) {
           console.warn(error);
           reject(stderr);

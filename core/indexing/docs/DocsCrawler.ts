@@ -261,7 +261,9 @@ class CheerioCrawler {
       console.error(error);
       return { html: "", links: [] };
     }
-
+    if (!response.ok) {
+      return { html: "", links: [] };
+    }
     const html = await response.text();
     let links: string[] = [];
 
@@ -277,7 +279,7 @@ class CheerioCrawler {
         return;
       }
 
-      const parsedUrl = new URL(href, url);
+      const parsedUrl = new URL(href, location);
       if (parsedUrl.hostname === baseUrl.hostname) {
         links.push(parsedUrl.pathname);
       }
@@ -289,14 +291,11 @@ class CheerioCrawler {
         !this.IGNORE_PATHS_ENDING_IN.some((ending) => link.endsWith(ending))
       );
     });
-
     return { html, links };
   }
 
   private splitUrl(url: URL) {
-    const baseUrl = `${url.protocol}//${url.hostname}${
-      url.port ? ":" + url.port : ""
-    }`;
+    const baseUrl = new URL('/', url).href;
     const basePath = url.pathname;
     return { baseUrl, basePath };
   }

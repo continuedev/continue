@@ -28,6 +28,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
+import { ChatDescriber } from "./util/chatDescriber";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -401,7 +402,6 @@ export class Core {
       if (config.experimental?.readResponseTTS && "completion" in next.value) {
         void TTS.read(next.value?.completion);
       }
-
       return { done: true, content: next.value };
     }
 
@@ -476,11 +476,17 @@ export class Core {
       }
     });
 
-    // Provide messenger to TTS so it can set GUI active / inactive state
+    // Provide messenger to utils so they can interact with GUI + state
     TTS.messenger = this.messenger;
+    ChatDescriber.messenger = this.messenger;
 
     on("tts/kill", async () => {
       void TTS.kill();
+    });
+    
+    on("chatDescriber/describe", async (msg) => {
+      const currentModel = await this.getSelectedModel();
+      return await ChatDescriber.describe(currentModel, {}, msg.data);
     });
 
     async function* runNodeJsSlashCommand(

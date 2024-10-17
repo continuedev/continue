@@ -11,6 +11,7 @@ import Anthropic from "./Anthropic";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
+import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
@@ -77,6 +78,7 @@ const LLMs = [
   Vllm,
   SambaNova,
   Mock,
+  Cerebras,
 ];
 
 export async function llmFromDescription(

@@ -30,15 +30,16 @@ class ConfigJsonSchemaFileProvider : JsonSchemaFileProvider {
     }
 
     override fun getSchemaFile(): VirtualFile? {
-        ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("config_schema.json").use { `is` ->
-            if (`is` == null) {
-                throw IOException("Resource not found: config_schema.json")
+        ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("config_schema.json")
+            .use { `is` ->
+                if (`is` == null) {
+                    throw IOException("Resource not found: config_schema.json")
+                }
+                val content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
+                val filepath = Paths.get(getContinueGlobalPath(), "config_schema.json").toString()
+                File(filepath).writeText(content)
+                return LocalFileSystem.getInstance().findFileByPath(filepath)
             }
-            val content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
-            val filepath = Paths.get(getContinueGlobalPath(), "config_schema.json").toString()
-            File(filepath).writeText(content)
-            return LocalFileSystem.getInstance().findFileByPath(filepath)
-        }
     }
 
     override fun getSchemaType(): SchemaType {

@@ -60,6 +60,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   docs: BookOpenIcon,
   issue: ExclamationCircleIcon,
   trash: TrashIcon,
+  web: GlobeAltIcon,
   "repo-map": FolderIcon,
   "/edit": PencilIcon,
   "/clear": TrashIcon,
@@ -114,7 +115,9 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
 
 const ItemsDiv = styled.div`
   border-radius: ${defaultBorderRadius};
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;
