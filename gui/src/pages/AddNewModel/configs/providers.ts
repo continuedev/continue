@@ -75,7 +75,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     description:
       "Enjoy effortless integration and lower your costs with our reliable hosted services.",
     icon: "aider.png",
-    tags: [ModelProviderTags.Recommended, ModelProviderTags.Hosted],
+    tags: [],
     packages: [models.aider],
     showInMenu: false,
   },

@@ -196,7 +196,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   const defaultModel = useSelector(defaultModelSelector);
-  const isAiderMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]); 
+  const isBareChatMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]);
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(

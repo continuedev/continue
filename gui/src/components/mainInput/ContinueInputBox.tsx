@@ -70,7 +70,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     (store: RootState) => store.state.config.contextProviders,
   );
   const defaultModel = useSelector(defaultModelSelector);
-  const isAiderMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]); 
+  const isBareChatMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]);
 
 
   useWebviewListener(
@@ -108,8 +108,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           editorState={props.editorState}
           onEnter={props.onEnter}
           isMainInput={props.isMainInput}
-          availableContextProviders={isAiderMode ? undefined : availableContextProviders}
-          availableSlashCommands={isAiderMode ? undefined : availableSlashCommands}
+          availableContextProviders={isBareChatMode ? undefined : availableContextProviders}
+          availableSlashCommands={isBareChatMode ? undefined : availableSlashCommands}
         ></TipTapEditor>
       </GradientBorder>
       <ContextItemsPeek contextItems={props.contextItems}></ContextItemsPeek>

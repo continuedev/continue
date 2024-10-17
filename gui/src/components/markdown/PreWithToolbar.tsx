@@ -42,7 +42,7 @@ function PreWithToolbar(props: {
   const [checkedForCreateFile, setCheckedForCreateFile] = useState(false);
 
   const defaultModel = useSelector(defaultModelSelector);
-  const isAiderMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]); 
+  const isBareChatMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]);
 
   useEffect(() => {
     const debouncedEffect = debounce(() => {
@@ -83,7 +83,7 @@ function PreWithToolbar(props: {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {!toolbarBottom && hovering && !isAiderMode && (
+      {!toolbarBottom && hovering && !isBareChatMode && (
         <CodeBlockToolBar
           text={rawCodeBlock}
           bottom={toolbarBottom}

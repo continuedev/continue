@@ -178,17 +178,14 @@ function ModelSelect() {
   );
 
   useEffect(() => {
-    console.dir("model options --- ");
-    // console.dir(options);
+
     if (location.pathname === "/aidermode") {
       const aider = options.find(
         (option) => option.title.toLowerCase() === "aider",
       );
       dispatch(setDefaultModel({ title: aider?.title }));
     }
-  }, [location]);
 
-  useEffect(() => {
     setOptions(
       allModels
         .filter((model) => model.title.toLowerCase() !== "aider")
@@ -200,7 +197,7 @@ function ModelSelect() {
           };
         }),
     );
-  }, [allModels]);
+  }, [location, allModels]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

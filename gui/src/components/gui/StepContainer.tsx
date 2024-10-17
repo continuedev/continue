@@ -8,7 +8,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/images";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -25,6 +25,7 @@ import { getFontSize } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -54,6 +55,12 @@ function StepContainer(props: StepContainerProps) {
   const isUserInput = props.item.message.role === "user";
   const active = useSelector((store: RootState) => store.state.active);
   const ideMessenger = useContext(IdeMessengerContext);
+
+  const defaultModel = useSelector(defaultModelSelector);
+  const isBareChatMode = useMemo(
+    () => defaultModel?.title?.toLowerCase() === "aider",
+    [defaultModel],
+  );
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -145,7 +152,7 @@ function StepContainer(props: StepContainerProps) {
                 />
               </div>
             )}
-            {truncatedEarly && (
+            {truncatedEarly && !isBareChatMode && (
               <HeaderButtonWithText
                 text="Continue generation"
                 onClick={(e) => {
@@ -164,18 +171,20 @@ function StepContainer(props: StepContainerProps) {
               text={stripImages(props.item.message.content)}
               color={lightGray}
             />
-            <HeaderButtonWithText
-              text="Regenerate"
-              onClick={(e) => {
-                props.onRetry();
-              }}
-            >
+            {!isBareChatMode && (
+              <HeaderButtonWithText
+                text="Regenerate"
+                onClick={(e) => {
+                  props.onRetry();
+                }}
+              >
               <ArrowUturnLeftIcon
                 color={lightGray}
                 width="1.2em"
                 height="1.2em"
               />
-            </HeaderButtonWithText>
+              </HeaderButtonWithText>
+            )}
             <HeaderButtonWithText text="Delete Message">
               <TrashIcon
                 color={lightGray}
