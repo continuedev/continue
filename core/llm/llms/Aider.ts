@@ -101,7 +101,7 @@ class Aider extends BaseLLM {
 
   private captureAiderOutput(data: Buffer): void {
     const output = data.toString();
-    console.log("Raw Aider output:", output);
+    // console.log("Raw Aider output:");
 
     // Remove ANSI escape codes
     const cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, '');
@@ -230,7 +230,6 @@ class Aider extends BaseLLM {
 
         if (this.aiderProcess.stdout && this.aiderProcess.stderr) {
           this.aiderProcess.stdout.on("data", (data: Buffer) => {
-            console.log(`Aider output: ${data.toString()}`);
             this.captureAiderOutput(data);
           });
 

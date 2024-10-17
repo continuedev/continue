@@ -523,6 +523,8 @@ const commandsMap: (
         "/aidermode",
       );
 
+      vscode.commands.executeCommand("pearai.focusContinueInput");
+
       //When panel closes, reset the webview and focus
       panel.onDidDispose(
         () => {
