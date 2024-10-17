@@ -1,8 +1,10 @@
 import { debounce } from "lodash";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useUIConfig from "../../hooks/useUIConfig";
 import CodeBlockToolBar from "./CodeBlockToolbar";
 import FileCreateChip from "./FileCreateChip";
+import { useSelector } from "react-redux";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 
 function childToText(child: any): string {
   if (typeof child === "string") {
@@ -38,6 +40,9 @@ function PreWithToolbar(props: {
   const [rawCodeBlock, setRawCodeBlock] = useState("");
   const [isCreateFile, setIsCreateFile] = useState(false);
   const [checkedForCreateFile, setCheckedForCreateFile] = useState(false);
+
+  const defaultModel = useSelector(defaultModelSelector);
+  const isAiderMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]); 
 
   useEffect(() => {
     const debouncedEffect = debounce(() => {
@@ -78,7 +83,7 @@ function PreWithToolbar(props: {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {!toolbarBottom && hovering && (
+      {!toolbarBottom && hovering && !isAiderMode && (
         <CodeBlockToolBar
           text={rawCodeBlock}
           bottom={toolbarBottom}

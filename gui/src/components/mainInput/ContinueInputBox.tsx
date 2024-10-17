@@ -9,6 +9,8 @@ import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
+import { useMemo } from "react";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 
 const gradient = keyframes`
   0% {
@@ -67,6 +69,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
   );
+  const defaultModel = useSelector(defaultModelSelector);
+  const isAiderMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]); 
+
 
   useWebviewListener(
     "newSessionWithPrompt",
@@ -103,8 +108,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           editorState={props.editorState}
           onEnter={props.onEnter}
           isMainInput={props.isMainInput}
-          availableContextProviders={availableContextProviders}
-          availableSlashCommands={availableSlashCommands}
+          availableContextProviders={isAiderMode ? undefined : availableContextProviders}
+          availableSlashCommands={isAiderMode ? undefined : availableSlashCommands}
         ></TipTapEditor>
       </GradientBorder>
       <ContextItemsPeek contextItems={props.contextItems}></ContextItemsPeek>

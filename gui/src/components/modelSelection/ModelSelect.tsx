@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -168,6 +168,7 @@ function ModelSelect() {
     (state: RootState) => state.state.config.models,
   );
 
+  const location = useLocation();
   const navigate = useNavigate();
 
   const [options, setOptions] = useState<Option[]>([]);
@@ -177,14 +178,27 @@ function ModelSelect() {
   );
 
   useEffect(() => {
+    console.dir("model options --- ");
+    // console.dir(options);
+    if (location.pathname === "/aidermode") {
+      const aider = options.find(
+        (option) => option.title.toLowerCase() === "aider",
+      );
+      dispatch(setDefaultModel({ title: aider?.title }));
+    }
+  }, [location]);
+
+  useEffect(() => {
     setOptions(
-      allModels.map((model) => {
-        return {
-          value: model.title,
-          title: modelSelectTitle(model),
-          isDefault: model?.isDefault,
-        };
-      }),
+      allModels
+        .filter((model) => model.title.toLowerCase() !== "aider")
+        .map((model) => {
+          return {
+            value: model.title,
+            title: modelSelectTitle(model),
+            isDefault: model?.isDefault,
+          };
+        }),
     );
   }, [allModels]);
 

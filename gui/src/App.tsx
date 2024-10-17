@@ -19,76 +19,92 @@ import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import Onboarding from "./pages/onboarding/Onboarding";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
+import Aidermode from "./pages/aidermode";
 
-const router = createMemoryRouter([
+declare global {
+  interface Window {
+    initialRoute?: string;
+  }
+}
+
+const router = createMemoryRouter(
+  [
+    {
+      path: "/",
+      element: <Layout />,
+      errorElement: <ErrorPage />,
+      children: [
+        {
+          path: "/index.html",
+          element: <GUI />,
+        },
+        {
+          path: "/",
+          element: <GUI />,
+        },
+        {
+          path: "/aidermode",
+          element: <GUI />,
+        },
+        {
+          path: "/history",
+          element: <History />,
+        },
+        {
+          path: "/stats",
+          element: <Stats />,
+        },
+        {
+          path: "/help",
+          element: <Help />,
+        },
+        {
+          path: "/settings",
+          element: <SettingsPage />,
+        },
+        {
+          path: "/addModel",
+          element: <AddNewModel />,
+        },
+        {
+          path: "/addModel/provider/:providerName",
+          element: <ConfigureProvider />,
+        },
+        {
+          path: "/help",
+          element: <HelpPage />,
+        },
+        {
+          path: "/monaco",
+          element: <MonacoPage />,
+        },
+        {
+          path: "/onboarding",
+          element: <Onboarding />,
+        },
+        {
+          path: "/localOnboarding",
+          element: <LocalOnboarding />,
+        },
+        {
+          path: "/migration",
+          element: <MigrationPage />,
+        },
+        {
+          path: "/apiKeysOnboarding",
+          element: <ApiKeysOnboarding />,
+        },
+        {
+          path: "/apiKeyAutocompleteOnboarding",
+          element: <ApiKeyAutocompleteOnboarding />,
+        },
+      ],
+    },
+  ],
   {
-    path: "/",
-    element: <Layout />,
-    errorElement: <ErrorPage />,
-    children: [
-      {
-        path: "/index.html",
-        element: <GUI />,
-      },
-      {
-        path: "/",
-        element: <GUI />,
-      },
-      {
-        path: "/history",
-        element: <History />,
-      },
-      {
-        path: "/stats",
-        element: <Stats />,
-      },
-      {
-        path: "/help",
-        element: <Help />,
-      },
-      {
-        path: "/settings",
-        element: <SettingsPage />,
-      },
-      {
-        path: "/addModel",
-        element: <AddNewModel />,
-      },
-      {
-        path: "/addModel/provider/:providerName",
-        element: <ConfigureProvider />,
-      },
-      {
-        path: "/help",
-        element: <HelpPage />,
-      },
-      {
-        path: "/monaco",
-        element: <MonacoPage />,
-      },
-      {
-        path: "/onboarding",
-        element: <Onboarding />,
-      },
-      {
-        path: "/localOnboarding",
-        element: <LocalOnboarding />,
-      },
-      {
-        path: "/migration",
-        element: <MigrationPage />,
-      },
-      {
-        path: "/apiKeysOnboarding",
-        element: <ApiKeysOnboarding />,
-      },
-      {
-        path: "/apiKeyAutocompleteOnboarding",
-        element: <ApiKeyAutocompleteOnboarding />,
-      },
-    ],
+    initialEntries: [window.initialRoute],
   },
-]);
+);
 
 function App() {
   const dispatch = useDispatch();

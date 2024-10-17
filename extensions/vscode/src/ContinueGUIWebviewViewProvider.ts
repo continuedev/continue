@@ -120,6 +120,7 @@ export class ContinueGUIWebviewViewProvider
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
     isFullScreen = false,
+    initialRoute: string = "/"
   ): string {
     const extensionUri = getExtensionUri();
     let scriptUri: string;
@@ -227,6 +228,7 @@ export class ContinueGUIWebviewViewProvider
           ) || [],
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
+        <script>window.initialRoute = "${initialRoute}"</script>
 
         ${
           edits

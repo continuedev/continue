@@ -5,7 +5,7 @@ import {
 import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -92,6 +92,11 @@ function InputToolbar(props: InputToolbarProps) {
   const [fileSelectHovered, setFileSelectHovered] = useState(false);
 
   const defaultModel = useSelector(defaultModelSelector);
+  const isAiderMode = useMemo(
+    () => defaultModel?.title?.toLowerCase() === "aider",
+    [defaultModel],
+  );
+
   const useActiveFile = useSelector(selectUseActiveFile);
 
   return (
@@ -102,15 +107,20 @@ function InputToolbar(props: InputToolbarProps) {
         id="input-toolbar"
       >
         <span className="flex gap-2 items-center whitespace-nowrap">
-          <ModelSelect />
-          <StyledSpan
-            onClick={(e) => {
-              props.onAddContextItem();
-            }}
-            className="hover:underline cursor-pointer"
-          >
-            Add Context <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
-          </StyledSpan>
+          {!isAiderMode && (
+            <>
+              <ModelSelect />
+              <StyledSpan
+                onClick={(e) => {
+                  props.onAddContextItem();
+                }}
+                className="hover:underline cursor-pointer"
+              >
+                Add Context{" "}
+                <PlusIcon className="h-2.5 w-2.5" aria-hidden="true" />
+              </StyledSpan>
+            </>
+          )}
           {defaultModel &&
             modelSupportsImages(
               defaultModel.provider,
@@ -172,7 +182,7 @@ function InputToolbar(props: InputToolbarProps) {
               {getAltKeyLabel()} ⏎{" "}
               {useActiveFile ? "No context" : "Use active file"}
             </span>
-          ) : (
+          ) : !isAiderMode ? (
             <StyledSpan
               style={{
                 color: props.usingCodebase ? vscBadgeBackground : lightGray,
@@ -192,7 +202,7 @@ function InputToolbar(props: InputToolbarProps) {
             >
               {getMetaKeyLabel()} ⏎ Use codebase
             </StyledSpan>
-          )}
+          ) : null}
           <EnterButton
             offFocus={props.usingCodebase}
             onClick={(e) => {
