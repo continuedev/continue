@@ -321,63 +321,6 @@ class Aider extends BaseLLM {
     };
   }
 
-  // protected async *_streamChat(
-  //   messages: ChatMessage[],
-  //   options: CompletionOptions,
-  // ): AsyncGenerator<ChatMessage> {
-  //   console.log("Inside Aider _streamChat");
-
-  //   const lastMessage = messages[messages.length - 1].content.toString();
-  //   this.sendToAiderChat(lastMessage);
-
-  //   this.aiderOutput = "";
-  //   let lastProcessedIndex = 0;
-  //   let responseComplete = false;
-  //   let completionMarkerFound = false;
-  //   let lastOutputTime = Date.now();
-
-  //   const COMPLETION_MARKER =
-  //     /Tokens: [\d.]+ sent, [\d.]+ received\. Cost: \$[\d.]+ message, \$[\d.]+ session\./;
-
-  //   while (!responseComplete) {
-  //     await new Promise((resolve) => setTimeout(resolve, 100));
-
-  //     const newOutput = this.aiderOutput.slice(lastProcessedIndex);
-  //     if (newOutput) {
-  //       lastProcessedIndex = this.aiderOutput.length;
-
-  //       yield {
-  //         role: "assistant",
-  //         content: newOutput,
-  //       };
-
-  //       // Check for the completion marker
-  //       if (COMPLETION_MARKER.test(newOutput)) {
-  //         console.log("Completion marker found");
-  //         completionMarkerFound = true;
-  //         lastOutputTime = Date.now();
-  //       }
-  //     }
-
-  //     // If completion marker is found, wait for 2 seconds for any additional output
-  //     if (completionMarkerFound && Date.now() - lastOutputTime > 2000) {
-  //       console.log(
-  //         "Waited 2 seconds after completion marker, ending response",
-  //       );
-  //       responseComplete = true;
-  //     }
-
-  //     // Safety check
-  //     if (this.aiderProcess?.killed) {
-  //       console.log("Aider process killed, ending response");
-  //       responseComplete = true;
-  //     }
-  //   }
-
-  //   // Reset the output
-  //   this.aiderOutput = "";
-  // }
-
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -391,9 +334,6 @@ class Aider extends BaseLLM {
     let lastProcessedIndex = 0;
     let responseComplete = false;
 
-    // const END_MARKER =
-    //   /Tokens:\s*([\d\.kM]+)\s*sent,\s*([\d\.kM]+)\s*received\.\s*Cost:\s*\$?([\d\.]+)\s*message,\s*\$?([\d\.]+)\s*session\./;
-    // const END_MARKER = /(\r?\n)> /;
     const END_MARKER = IS_WINDOWS ? '\r\n> ' : '\n> ';
 
 
@@ -404,7 +344,6 @@ class Aider extends BaseLLM {
 
     while (!responseComplete) {
       await new Promise((resolve) => setTimeout(resolve, 100));
-
       const newOutput = this.aiderOutput.slice(lastProcessedIndex);
       if (newOutput) {
         // newOutput = escapeDollarSigns(newOutput);
@@ -429,42 +368,6 @@ class Aider extends BaseLLM {
     // Reset the output after capturing a complete response
     this.aiderOutput = "";
   }
-
-  // protected async *_streamChat(
-  //   messages: ChatMessage[],
-  //   options: CompletionOptions,
-  // ): AsyncGenerator<ChatMessage> {
-  //   console.log("Inside Aider _streamChat");
-
-  //   const lastMessage = messages[messages.length - 1].content.toString();
-  //   this.sendToAiderChat(lastMessage);
-
-  //   // Reset the output buffer
-  //   this.aiderOutput = "";
-  //   let lastProcessedIndex = 0;
-  //   let responseComplete = false;
-
-  //   while (true) {
-  //     await new Promise((resolve) => setTimeout(resolve, 100)); // Short delay to avoid busy waiting
-
-  //     const newOutput = this.aiderOutput.slice(lastProcessedIndex);
-  //     if (newOutput) {
-  //       lastProcessedIndex = this.aiderOutput.length;
-  //       yield {
-  //         role: "assistant",
-  //         content: newOutput,
-  //       };
-  //     }
-
-  //     // Check if Aider has finished its output
-  //     if (this.aiderProcess?.killed || !this.aiderProcess?.stdin?.writable) {
-  //       break;
-  //     }
-  //   }
-
-  //   // Reset the output after capturing a complete response
-  //   this.aiderOutput = "";
-  // }
 
   async listModels(): Promise<string[]> {
     return ["aider", "claude-3-5-sonnet-20240620", "pearai_model", "gpt-4o"];
