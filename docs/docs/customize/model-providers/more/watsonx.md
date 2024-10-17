@@ -77,7 +77,7 @@ Add the deployment ID to `deploymentID` if you are using a custom deployment end
   ]
 }
 ```
-
+Make sure to specify a template name, such as "granite" or "llama3".
 You can also configure generation parameters, such as temperature, topP, topK, frequency penalty, and stop sequences:
 
 ```json title="~/.continue/config.json"
@@ -86,11 +86,12 @@ You can also configure generation parameters, such as temperature, topP, topK, f
     {
       "model": "ibm/granite-20b-code-instruct",
       "title": "Granite Code 20b",
+      "provider": "watsonx",
       "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
       "projectId": "PROJECT_ID",
       "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
       "apiVersion": "2024-03-14",
-      "provider": "watsonx",
+      "template": "granite",
       "contextLength": 8000,
       "completionOptions": {
         "temperature": 0.1,
@@ -116,11 +117,12 @@ Granite models are recommended for tab auto complete. The configuration is simil
     "tabAutocompleteModel": {
       "model": "ibm/granite-8b-code-instruct",
       "title": "Granite Code 8b",
+      "provider": "watsonx",
       "apiBase": "watsonx endpoint e.g. https://us-south.ml.cloud.ibm.com",
       "projectId": "PROJECT_ID",
       "apiKey": "API_KEY/ZENAPI_KEY/USERNAME:PASSWORD",
       "apiVersion": "2024-03-14",
-      "provider": "watsonx",
+      "template": "granite",
       "contextLength": 4000
     }
 }
