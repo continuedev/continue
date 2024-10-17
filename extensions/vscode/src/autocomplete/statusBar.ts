@@ -46,7 +46,7 @@ const statusBarItemText = (
   error?: boolean,
 ) => {
   if (error) {
-    return "$(alert) Continue (error)";
+    return "$(alert) Continue (FATAL ERROR)";
   }
 
   switch (status) {
