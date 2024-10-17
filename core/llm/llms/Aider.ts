@@ -90,20 +90,14 @@ class Aider extends BaseLLM {
     }
   }
 
-  private async _getHeaders() {
-    await this.credentials.checkAndUpdateCredentials();
-    return {
-      "Content-Type": "application/json",
-      ...(await getHeaders()),
-    };
-  }
-
   private captureAiderOutput(data: Buffer): void {
     const output = data.toString();
-    console.log("Raw Aider output:", output);
+    console.log("Raw Aider output:", JSON.stringify(output));
 
     // Remove ANSI escape codes
-    const cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, '');
+    let cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, '');
+    // cleanOutput = output.replace('\n', '\n\n');
+    console.log("Cleaned Aider output:", JSON.stringify(output));
 
     // Preserve line breaks
     this.aiderOutput += cleanOutput;
@@ -189,8 +183,6 @@ class Aider extends BaseLLM {
               });
             });
           }
-
-          console.log("COMMAND: ", command);
 
           // Now spawn Aider in the background
           return cp.spawn("cmd.exe", ["/c", ...command], {
@@ -337,8 +329,9 @@ class Aider extends BaseLLM {
     let lastProcessedIndex = 0;
     let responseComplete = false;
 
-    const END_MARKER =
-      /Tokens:\s*([\d\.kM]+)\s*sent,\s*([\d\.kM]+)\s*received\.\s*Cost:\s*\$?([\d\.]+)\s*message,\s*\$?([\d\.]+)\s*session\./;
+    // const END_MARKER =
+    //   /Tokens:\s*([\d\.kM]+)\s*sent,\s*([\d\.kM]+)\s*received\.\s*Cost:\s*\$?([\d\.]+)\s*message,\s*\$?([\d\.]+)\s*session\./;
+    const END_MARKER = '\n> ';
 
     const escapeDollarSigns = (text: string | undefined) => {
       if (!text) return "Aider response over";
@@ -357,13 +350,8 @@ class Aider extends BaseLLM {
           content: escapeDollarSigns(newOutput),
         };
 
-        if (END_MARKER.test(newOutput)) {
+        if (newOutput.endsWith(END_MARKER)) {
           responseComplete = true;
-          // Yield the end marker as part of the last message
-          yield {
-            role: "assistant",
-            content: escapeDollarSigns(newOutput.match(END_MARKER)?.[0]),
-          };
           break;
         }
       }
