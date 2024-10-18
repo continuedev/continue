@@ -11,6 +11,7 @@ import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 import { useMemo } from "react";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { isBareChatMode } from '../../util/bareChatMode';
 
 const gradient = keyframes`
   0% {
@@ -69,8 +70,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
   );
-  const defaultModel = useSelector(defaultModelSelector);
-  const isBareChatMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]);
+  const bareChatMode = isBareChatMode();
 
 
   useWebviewListener(
@@ -108,8 +108,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           editorState={props.editorState}
           onEnter={props.onEnter}
           isMainInput={props.isMainInput}
-          availableContextProviders={isBareChatMode ? undefined : availableContextProviders}
-          availableSlashCommands={isBareChatMode ? undefined : availableSlashCommands}
+          availableContextProviders={bareChatMode ? undefined : availableContextProviders}
+          availableSlashCommands={bareChatMode ? undefined : availableSlashCommands}
         ></TipTapEditor>
       </GradientBorder>
       <ContextItemsPeek contextItems={props.contextItems}></ContextItemsPeek>

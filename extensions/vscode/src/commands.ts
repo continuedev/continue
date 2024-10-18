@@ -505,7 +505,7 @@ const commandsMap: (
       //create the full screen panel
       let panel = vscode.window.createWebviewPanel(
         "pearai.aiderGUIView",
-        "Aider Mode",
+        "PearAI Creator (Powered by Aider)",
         vscode.ViewColumn.One,
         {
           retainContextWhenHidden: true,
@@ -528,8 +528,9 @@ const commandsMap: (
       //When panel closes, reset the webview and focus
       panel.onDidDispose(
         () => {
-          sidebar.resetWebviewProtocolWebview();
+          // The following order is important as it does not reset the history in chat when closing creator
           vscode.commands.executeCommand("pearai.focusContinueInput");
+          sidebar.resetWebviewProtocolWebview();
         },
         null,
         extensionContext.subscriptions,

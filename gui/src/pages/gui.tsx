@@ -551,7 +551,7 @@ function GUI() {
                 }}
                 className="mr-auto"
               >
-                aider mode
+                dev: pearai creator (aider)
               </NewSessionButton>{" "}
             </div>
           ) : (

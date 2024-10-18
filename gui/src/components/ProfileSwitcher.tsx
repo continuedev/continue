@@ -256,7 +256,7 @@ function ProfileSwitcher(props: {}) {
           text={
             session?.account
               ? `Logged in as ${session.account.label}`
-              : "Click to login to Continue"
+              : "Click to login to PearAI"
           }
           onClick={() => {
             if (session?.account) {

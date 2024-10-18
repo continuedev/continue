@@ -25,7 +25,7 @@ import { getFontSize } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { isBareChatMode } from '../../util/bareChatMode';
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -55,12 +55,7 @@ function StepContainer(props: StepContainerProps) {
   const isUserInput = props.item.message.role === "user";
   const active = useSelector((store: RootState) => store.state.active);
   const ideMessenger = useContext(IdeMessengerContext);
-
-  const defaultModel = useSelector(defaultModelSelector);
-  const isBareChatMode = useMemo(
-    () => defaultModel?.title?.toLowerCase() === "aider",
-    [defaultModel],
-  );
+  const bareChatMode = isBareChatMode();
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -152,7 +147,7 @@ function StepContainer(props: StepContainerProps) {
                 />
               </div>
             )}
-            {truncatedEarly && !isBareChatMode && (
+            {truncatedEarly && !bareChatMode && (
               <HeaderButtonWithText
                 text="Continue generation"
                 onClick={(e) => {
@@ -171,7 +166,7 @@ function StepContainer(props: StepContainerProps) {
               text={stripImages(props.item.message.content)}
               color={lightGray}
             />
-            {!isBareChatMode && (
+            {!bareChatMode && (
               <HeaderButtonWithText
                 text="Regenerate"
                 onClick={(e) => {

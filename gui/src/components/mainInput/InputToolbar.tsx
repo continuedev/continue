@@ -25,6 +25,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
+import { isBareChatMode } from '../../util/bareChatMode';
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
@@ -90,12 +91,8 @@ interface InputToolbarProps {
 function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [fileSelectHovered, setFileSelectHovered] = useState(false);
-
   const defaultModel = useSelector(defaultModelSelector);
-  const isBareChatMode = useMemo(
-    () => defaultModel?.title?.toLowerCase() === "aider",
-    [defaultModel],
-  );
+  const bareChatMode = isBareChatMode();
 
   const useActiveFile = useSelector(selectUseActiveFile);
 
@@ -107,7 +104,7 @@ function InputToolbar(props: InputToolbarProps) {
         id="input-toolbar"
       >
         <span className="flex gap-2 items-center whitespace-nowrap">
-          {!isBareChatMode && (
+          {!bareChatMode && (
             <>
               <ModelSelect />
               <StyledSpan
@@ -182,7 +179,7 @@ function InputToolbar(props: InputToolbarProps) {
               {getAltKeyLabel()} ⏎{" "}
               {useActiveFile ? "No context" : "Use active file"}
             </span>
-          ) : !isBareChatMode ? (
+          ) : !bareChatMode ? (
             <StyledSpan
               style={{
                 color: props.usingCodebase ? vscBadgeBackground : lightGray,
