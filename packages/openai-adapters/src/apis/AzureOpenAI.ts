@@ -31,10 +31,8 @@ const MS_TOKEN = 30;
 
 export class AzureOpenAIApi implements BaseLlmApi {
   private client: OpenAIClient;
-  private config: LlmApiConfig;
 
-  constructor(config: LlmApiConfig) {
-    this.config = config;
+  constructor(private config: LlmApiConfig) {
     let proxyOptions;
     const PROXY = HTTPS_PROXY ?? HTTP_PROXY;
     if (PROXY) {
