@@ -41,6 +41,7 @@ export class VsCodeExtension {
   private ide: VsCodeIde;
   private tabAutocompleteModel: TabAutocompleteModel;
   private sidebar: ContinueGUIWebviewViewProvider;
+  private sidebar2: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
@@ -83,20 +84,26 @@ export class VsCodeExtension {
       this.extensionContext,
     );
 
+    this.sidebar2 = new ContinueGUIWebviewViewProvider(
+      configHandlerPromise,
+      this.windowId,
+      this.extensionContext,
+    );
+
     // COMMENTING OUT SIDEBAR WILL MAKE OVERLAY WORK,
     // COMMENTING OUT OVERLAY WILL MAKE SIDEBAR WORK.
     // KEEPING BOTH WILL MAKE BOTH APPEAR ON UI. BUT ONLY SIDEBAR WILL HAVE FUNCTIONALITY.
 
     // Sidebar
-    // context.subscriptions.push(
-    //   vscode.window.registerWebviewViewProvider(
-    //     "pearai.continueGUIView",
-    //     this.sidebar,
-    //     {
-    //       webviewOptions: { retainContextWhenHidden: true },
-    //     },
-    //   ),
-    // );
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        "pearai.continueGUIView",
+        this.sidebar2,
+        {
+          webviewOptions: { retainContextWhenHidden: true },
+        },
+      ),
+    );
 
     // Register PearAI overlay
     context.subscriptions.push(
@@ -109,6 +116,7 @@ export class VsCodeExtension {
       ),
     );
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
+    resolveWebviewProtocol(this.sidebar2.webviewProtocol);
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel("PearAI");

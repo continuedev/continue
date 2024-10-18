@@ -531,6 +531,14 @@
           "name": "",
           "visibility": "visible"
         }
+      ],
+      "PearAIOverlay": [
+        {
+          "type": "webview",
+          "id": "pearai.overlayWebview3",
+          "name": "",
+          "visibility": "visible"
+        }
       ]
     },
     "jsonValidation": [
