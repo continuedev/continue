@@ -3,6 +3,8 @@ title: Ollama
 slug: ../ollama
 ---
 
+Ollama is an open-source tool that allows users to run large language models (LLMs) locally on their own computers. To use Ollama providers, you need to install Ollama [here](https://ollama.ai/download) and download the model you want to run by `ollama pull` command.
+
 ## Chat model
 
 We recommend configuring **Llama3.1 8B** as your chat model.
