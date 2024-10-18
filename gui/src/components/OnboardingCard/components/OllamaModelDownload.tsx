@@ -21,19 +21,19 @@ function OllamaModelDownload({
   const id = `info-hover-${encodeURIComponent(command)}`;
 
   function onClick() {
-    ideMessenger.ide.runCommand(command);
+    void ideMessenger.ide.runCommand(command);
     ideMessenger.post("copyText", { text: command });
   }
 
   return (
     <div className="flex flex-col">
-      <p className="text-lg font-bold leading-tight mb-2">{title}</p>
+      <p className="mb-2 text-lg font-bold leading-tight">{title}</p>
       {hasDownloaded ? (
         <OllamaCompletedStep text={command} />
       ) : (
         <>
           <StyledActionButton data-tooltip-id={id} onClick={onClick}>
-            <p className="font-mono truncate">{command}</p>
+            <p className="truncate font-mono text-sm">{command}</p>
             <CommandLineIcon width={24} height={24} />
           </StyledActionButton>
 
