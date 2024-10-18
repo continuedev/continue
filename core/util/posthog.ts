@@ -7,6 +7,7 @@ export class Telemetry {
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
   static extensionVersion: string | undefined = undefined;
+  static allow: boolean = true;
 
   static async capture(
     event: string,
@@ -40,23 +41,25 @@ export class Telemetry {
     Telemetry.uniqueId = uniqueId;
     Telemetry.os = os.platform();
     Telemetry.extensionVersion = extensionVersion;
+    Telemetry.allow = allow;
 
     if (!allow) {
       Telemetry.client = undefined;
-    } else {
-      try {
-        if (!Telemetry.client) {
-          const { PostHog } = await import("posthog-node");
-          Telemetry.client = new PostHog(
-            "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
-            {
-              host: "https://app.posthog.com",
-            },
-          );
-        }
-      } catch (e) {
-        console.error(`Failed to setup telemetry: ${e}`);
-      }
     }
+    // else {
+    //   try {
+    //     if (!Telemetry.client) {
+    //       const { PostHog } = await import("posthog-node");
+    //       Telemetry.client = new PostHog(
+    //         "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
+    //         {
+    //           host: "https://app.posthog.com",
+    //         },
+    //       );
+    //     }
+    //   } catch (e) {
+    //     console.error(`Failed to setup telemetry: ${e}`);
+    //   }
+    // }
   }
 }
