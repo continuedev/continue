@@ -559,7 +559,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       );
 
       if (isJetBrains()) {
-        // debugger;
         if (code === "KeyJ") {
           setIgnoreHighlightedCode(true);
           setTimeout(() => {
@@ -567,49 +566,51 @@ function TipTapEditor(props: TipTapEditorProps) {
           }, 100);
         }
 
-        handleMetaKeyPressJetBrains(e, text, editor.commands.setContent);
-        return;
-      }
+        if (isMetaEquivalentKeyPressed(e)) {
+          handleMetaKeyPressJetBrains(e, text, editor.commands.setContent);
+        }
+      } else {
+        if (code === "KeyL") {
+          debugger;
+          setIgnoreHighlightedCode(true);
+          setTimeout(() => {
+            setIgnoreHighlightedCode(false);
+          }, 100);
+          return;
+        }
 
-      if (code === "KeyL") {
-        setIgnoreHighlightedCode(true);
-        setTimeout(() => {
-          setIgnoreHighlightedCode(false);
-        }, 100);
-        return;
-      }
-
-      switch (key) {
-        case "x":
-          if (isWebEnv) {
-            await navigator.clipboard.writeText(text);
-            editor.commands.deleteSelection();
-          } else {
-            document.execCommand("cut");
-          }
-          break;
-        case "c":
-          if (isWebEnv) {
-            await navigator.clipboard.writeText(text);
-          } else {
-            document.execCommand("copy");
-          }
-          break;
-        case "v":
-          if (isWebEnv) {
-            const clipboardText = await navigator.clipboard.readText();
-            editor.commands.insertContent(clipboardText);
-          } else {
-            document.execCommand("paste");
-          }
-          break;
+        switch (key) {
+          case "x":
+            if (isWebEnv) {
+              await navigator.clipboard.writeText(text);
+              editor.commands.deleteSelection();
+            } else {
+              document.execCommand("cut");
+            }
+            break;
+          case "c":
+            if (isWebEnv) {
+              await navigator.clipboard.writeText(text);
+            } else {
+              document.execCommand("copy");
+            }
+            break;
+          case "v":
+            if (isWebEnv) {
+              const clipboardText = await navigator.clipboard.readText();
+              editor.commands.insertContent(clipboardText);
+            } else {
+              document.execCommand("paste");
+            }
+            break;
+        }
       }
     } else if (e.key === "Escape") {
       ideMessenger.post("focusEditor", undefined);
     }
   };
 
-  const handleKeyUp = (event: React.KeyboardEvent<HTMLDivElement>) => {
+  const handleKeyUp = () => {
     setActiveKey(null);
   };
 

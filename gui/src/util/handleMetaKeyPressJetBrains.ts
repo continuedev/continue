@@ -12,8 +12,12 @@ export const handleMetaKeyPressJetBrains = (
     handleMetaBackspace(e, text, setText, selectionStart, selectionEnd);
   }
 
-  if (getPlatform() === "mac" && ["ArrowLeft", "ArrowRight"].includes(e.key)) {
-    handleMacArrowKeys(e, text, selectionStart, selectionEnd);
+  if (getPlatform() === "mac") {
+    if (e.key === "ArrowLeft") {
+      handleMacArrowLeftKey(e);
+    } else if (e.key === "ArrowRight") {
+      handleMacArrowRightKey(e);
+    }
   }
 };
 
@@ -40,81 +44,34 @@ const handleMetaBackspace = (
   target.setSelectionRange(newStart, newStart);
 };
 
-// const handleMacArrowKeys = (
-//   e: KeyboardEvent,
-//   text: string,
-//   start: number,
-//   end: number,
-// ) => {
-//   debugger;
-//   const target = e.target as HTMLDivElement;
-//   const selection = window.getSelection();
-//   const range = document.createRange();
-
-//   let newStart = start,
-//     newEnd = end;
-
-//   if (e.key === "ArrowLeft") {
-//     newStart = text.lastIndexOf("\n", start - 1) + 1;
-//     newEnd = e.shiftKey ? end : newStart;
-//   } else if (e.key === "ArrowRight") {
-//     const nextNewline = text.indexOf("\n", end);
-//     newEnd = nextNewline === -1 ? text.length : nextNewline;
-//     newStart = e.shiftKey ? start : newEnd;
-//   }
-
-//   range.setStart(target.firstChild!, newStart);
-//   range.setEnd(target.firstChild!, newEnd);
-
-//   selection?.removeAllRanges();
-//   selection?.addRange(range);
-// };
-
-const handleMacArrowKeys = (
-  e: KeyboardEvent,
-  text: string,
-  start: number,
-  end: number,
-) => {
+const handleMacArrowLeftKey = (e: KeyboardEvent) => {
   const target = e.target as HTMLDivElement;
-  const paragraph = target.firstChild as HTMLParagraphElement;
   const selection = window.getSelection();
+
   const range = document.createRange();
 
-  if (!selection) return;
-
-  let newPosition: number;
-
-  if (e.key === "ArrowLeft") {
-    newPosition = 0; // Beginning of the paragraph
-  } else if (e.key === "ArrowRight") {
-    newPosition = paragraph.textContent?.length - 1 || 0; // End of the paragraph
-
-    const range = document.createRange(); //Create a range (a range is a like the selection but invisible)
-    range.selectNodeContents(target); //Select the entire contents of the element with the range
-    range.collapse(false); //collapse the range to the end point. false means collapse to end rather than the start
-    selection.removeAllRanges(); //remove any selections already made
-    selection.addRange(range); //make the range you have just created the visible selection
-    return;
+  if (e.shiftKey) {
+    selection.modify("extend", "backward", "character");
   } else {
-    return;
+    range.setStart(target.firstChild, 0);
+    range.setEnd(target.firstChild, 0);
+
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
+};
+
+const handleMacArrowRightKey = (e: KeyboardEvent) => {
+  const selection = window.getSelection();
+  const range = document.createRange();
+  const target = e.target as HTMLDivElement;
 
   if (e.shiftKey) {
-    // If Shift key is pressed, extend the selection
-    if (selection.anchorNode === paragraph) {
-      range.setStart(paragraph, selection.anchorOffset);
-    } else {
-      range.setStart(paragraph, 0);
-    }
-    range.setEnd(paragraph, newPosition);
+    selection.modify("extend", "forward", "character");
   } else {
-    // If Shift key is not pressed, just move the cursor
-    range.setStart(paragraph, newPosition);
-    range.collapse(true);
+    range.selectNodeContents(target);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
-
-  // Apply the new selection
-  selection.removeAllRanges();
-  selection.addRange(range);
 };
