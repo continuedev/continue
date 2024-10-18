@@ -147,9 +147,6 @@ codeql
 **/**/.qodana
 **/**/build
 
-**/.idea/**/*
-core/.idea
-
 continue_server.build
 continue_server.dist
 
@@ -158,10 +155,14 @@ Icon?
 
 .continue
 .continuerc.json
-
 .prompts/
 .aider*
 
 notes.md
 
-manual-testing-sandbox/Continue/.idea/**
+manual-testing-sandbox/.idea/**
+extensions/intellij/.idea/**
+
+**/.idea/workspace.xml
+**/.idea/usage.statistics.xml
+**/.idea/shelf/

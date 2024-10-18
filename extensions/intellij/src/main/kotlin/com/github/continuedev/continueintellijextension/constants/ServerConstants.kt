@@ -1,51 +1,31 @@
+/**
+ * Note: This file is out of sync with the contents of core/util/paths.ts, which we use in VS Code.
+ * This is potentially causing JetBrains specific bugs.
+ */
 package com.github.continuedev.continueintellijextension.constants
 
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
-const val DEFAULT_CONFIG = """
+// Uncertain if this is being used anywhere since we also attempt to write a default config in
+// core/util/paths.ts
+const val DEFAULT_CONFIG =
+    """
 {
   "models": [
     {
-      "title": "GPT-4",
-      "provider": "free-trial",
-      "model": "gpt-4"
-    },
-    {
-      "title": "GPT-3.5-Turbo",
-      "provider": "free-trial",
-      "model": "gpt-3.5-turbo"
-    },
-    {
-      "title": "Phind CodeLlama",
-      "provider": "free-trial",
-      "model": "phind-codellama-34b"
-    },
-    {
-      "title": "Gemini Pro",
-      "provider": "free-trial",
-      "model": "gemini-pro"
+      "model": "claude-3-5-sonnet-20240620",
+      "provider": "anthropic",
+      "apiKey": "",
+      "title": "Claude 3.5 Sonnet"
     }
   ],
-  "slashCommands": [
-    {
-      "name": "edit",
-      "description": "Edit highlighted code"
-    },
-    {
-      "name": "comment",
-      "description": "Write comments for the highlighted code"
-    },
-    {
-      "name": "share",
-      "description": "Export the current chat session to markdown"
-    },
-    {
-      "name": "cmd",
-      "description": "Generate a shell command"
-    }
-  ],
+  "tabAutocompleteModel": {
+    "title": "Codestral",
+    "provider": "mistral",
+    "model": "codestral-latest",
+    "apiKey": "" 
+  },
   "customCommands": [
     {
       "name": "test",
@@ -54,17 +34,43 @@ const val DEFAULT_CONFIG = """
     }
   ],
   "contextProviders": [
-    { "name": "diff", "params": {} },
     {
-      "name": "open",
+      "name": "diff",
       "params": {}
     },
-    { "name": "terminal", "params": {} }
-  ]
+    {
+      "name": "folder",
+      "params": {}
+    },
+    {
+      "name": "codebase",
+      "params": {}
+    }
+  ],
+  "slashCommands": [
+    {
+      "name": "edit",
+      "description": "Edit selected code"
+    },
+    {
+      "name": "comment",
+      "description": "Write comments for the selected code"
+    },
+    {
+      "name": "share",
+      "description": "Export the current chat session to markdown"
+    },
+    {
+      "name": "commit",
+      "description": "Generate a git commit message"
+    }
+  ],
+  "docs": []
 }
 """
 
-const val DEFAULT_CONFIG_JS = """
+const val DEFAULT_CONFIG_JS =
+    """
 function modifyConfig(config) {
   return config;
 }
@@ -74,102 +80,69 @@ export {
 """
 
 fun getContinueGlobalPath(): String {
-    val continuePath = Paths.get(System.getProperty("user.home"), ".continue")
-    if (Files.notExists(continuePath)) {
-        Files.createDirectories(continuePath)
-    }
-    return continuePath.toString()
+  val continuePath = Paths.get(System.getProperty("user.home"), ".continue")
+  if (Files.notExists(continuePath)) {
+    Files.createDirectories(continuePath)
+  }
+  return continuePath.toString()
 }
 
 fun getContinueRemoteConfigPath(remoteHostname: String): String {
-    val path = Paths.get(getContinueGlobalPath(), ".configs")
-    if (Files.notExists(path)) {
-        Files.createDirectories(path)
-    }
-    return Paths.get(path.toString(), remoteHostname).toString()
+  val path = Paths.get(getContinueGlobalPath(), ".configs")
+  if (Files.notExists(path)) {
+    Files.createDirectories(path)
+  }
+  return Paths.get(path.toString(), remoteHostname).toString()
 }
 
-
 fun getConfigJsonPath(remoteHostname: String? = null): String {
-    val path = Paths.get(
-        if (remoteHostname != null) getContinueRemoteConfigPath(remoteHostname) else getContinueGlobalPath(),
-        "config.json"
-    )
-    if (Files.notExists(path)) {
-        Files.createFile(path)
-        Files.writeString(path, if (remoteHostname == null) DEFAULT_CONFIG else "{}")
-    }
-    return path.toString()
+  val path =
+      Paths.get(
+          if (remoteHostname != null) getContinueRemoteConfigPath(remoteHostname)
+          else getContinueGlobalPath(),
+          "config.json")
+  if (Files.notExists(path)) {
+    Files.createFile(path)
+    Files.writeString(path, if (remoteHostname == null) DEFAULT_CONFIG else "{}")
+  }
+  return path.toString()
 }
 
 fun getConfigJsPath(remoteHostname: String? = null): String {
-    val path = Paths.get(
-        if (remoteHostname != null) getContinueRemoteConfigPath(remoteHostname) else getContinueGlobalPath(),
-        "config.js"
-    )
-    if (Files.notExists(path)) {
-        Files.createFile(path)
-        Files.writeString(path, DEFAULT_CONFIG_JS);
-    }
-    return path.toString()
+  val path =
+      Paths.get(
+          if (remoteHostname != null) getContinueRemoteConfigPath(remoteHostname)
+          else getContinueGlobalPath(),
+          "config.js")
+  if (Files.notExists(path)) {
+    Files.createFile(path)
+    Files.writeString(path, DEFAULT_CONFIG_JS)
+  }
+  return path.toString()
 }
 
 fun getSessionsDir(): String {
-    val path = Paths.get(getContinueGlobalPath(), "sessions")
-    if (Files.notExists(path)) {
-        Files.createDirectories(path)
-    }
-    return path.toString()
+  val path = Paths.get(getContinueGlobalPath(), "sessions")
+  if (Files.notExists(path)) {
+    Files.createDirectories(path)
+  }
+  return path.toString()
 }
 
 fun getSessionsListPath(): String {
-    val path = Paths.get(getSessionsDir(), "sessions.json")
-    if (Files.notExists(path)) {
-        Files.createFile(path)
-        Files.writeString(path, "[]");
-    }
-    return path.toString()
+  val path = Paths.get(getSessionsDir(), "sessions.json")
+  if (Files.notExists(path)) {
+    Files.createFile(path)
+    Files.writeString(path, "[]")
+  }
+  return path.toString()
 }
 
 fun getSessionFilePath(sessionId: String): String {
-    val path = Paths.get(getSessionsDir(), "$sessionId.json")
-    if (Files.notExists(path)) {
-        Files.createFile(path)
-        Files.writeString(path, "{}");
-    }
-    return path.toString()
-}
-
-fun devDataPath(): String {
-    val path = Paths.get(getContinueGlobalPath(), "dev_data")
-    if (Files.notExists(path)) {
-        Files.createDirectories(path)
-    }
-    return path.toString()
-}
-
-fun getDevDataFilepath(filename: String): String {
-    val path = Paths.get(devDataPath(), filename)
-    if (Files.notExists(path)) {
-        Files.createFile(path)
-    }
-    return path.toString()
-}
-
-fun getMigrationsFolderPath(): String {
-    val path = Paths.get(getContinueGlobalPath(), ".migrations")
-    if (Files.notExists(path)) {
-        Files.createDirectories(path)
-    }
-    return path.toString()
-}
-
-fun migrate(id: String, callback: () -> Unit) {
-    val migrationsPath = getMigrationsFolderPath()
-    val migrationPath = Paths.get(migrationsPath, id).toString()
-    val migrationFile = File(migrationPath)
-    if (!migrationFile.exists()) {
-        migrationFile.writeText("")
-        callback()
-    }
+  val path = Paths.get(getSessionsDir(), "$sessionId.json")
+  if (Files.notExists(path)) {
+    Files.createFile(path)
+    Files.writeString(path, "{}")
+  }
+  return path.toString()
 }
