@@ -4,18 +4,18 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius, vscInputBackground } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useConfigError } from "../redux/hooks";
+import { setShowDialog, updateApplyState } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import PostHogPageView from "./PosthogPageView";
-import Footer from "./Footer";
-import { updateApplyState, setShowDialog } from "../redux/slices/uiStateSlice";
-import TextDialog from "./dialogs";
-import { useOnboardingCard, isNewUserOnboarding } from "./OnboardingCard";
-import { LastSessionProvider } from "../context/LastSessionContext";
-import { useConfigError } from "../redux/hooks";
 import { ROUTES } from "../util/navigation";
+import TextDialog from "./dialogs";
+import Footer from "./Footer";
+import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
+import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -185,17 +185,6 @@ const Layout = () => {
 
   return (
     <LastSessionProvider>
-      {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-        <div
-          className="bg-red-600 text-white text-center p-4 z-50 cursor-pointer"
-          role="alert"
-          onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-        >
-          <strong className="font-bold">Error!</strong>{" "}
-          <span className="block sm:inline">Could not load config.json</span>
-          <div className="mt-2 underline">Learn More</div>
-        </div>
-      )}
       <LayoutTopDiv>
         <div
           style={{
@@ -219,6 +208,20 @@ const Layout = () => {
           <GridDiv>
             <PostHogPageView />
             <Outlet />
+
+            {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
+              <div
+                className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+                role="alert"
+                onClick={() => navigate(ROUTES.CONFIG_ERROR)}
+              >
+                <strong className="font-bold">Error!</strong>{" "}
+                <span className="block sm:inline">
+                  Could not load config.json
+                </span>
+                <div className="mt-2 underline">Learn More</div>
+              </div>
+            )}
 
             <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
             <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
