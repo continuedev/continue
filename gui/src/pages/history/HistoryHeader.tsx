@@ -1,7 +1,7 @@
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { lightGray, vscBackground } from "../../components";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { getFontSize } from "../../util";
 
 export const HistoryHeader = () => {
@@ -10,7 +10,7 @@ export const HistoryHeader = () => {
 
   return (
     <div
-      className="sticky top-0"
+      className="sticky top-0 z-10"
       style={{ backgroundColor: vscBackground, fontSize: getFontSize() }}
     >
       <div
