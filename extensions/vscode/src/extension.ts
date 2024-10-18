@@ -8,7 +8,7 @@ import { setupCa } from "core/util/ca";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import { getExtensionVersion } from "./util/util";
-import { PearInventoryExtension } from "./panels/inventory/PearInventoryExtension";
+// import { PearInventoryExtension } from "./panels/inventory/PearInventoryExtension";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   const { activateExtension } = await import("./activation/activate");
@@ -34,18 +34,18 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 let outputChannel: vscode.OutputChannel;
-let extension: PearInventoryExtension;
+// let extension: PearInventoryExtension;
 
 export function activate(context: vscode.ExtensionContext) {
   setupCa();
   dynamicImportAndActivate(context);
-  console.log("Activating Pear extension!!!!!");
-  outputChannel = vscode.window.createOutputChannel("Pear");
-  outputChannel.appendLine("Activating Pear extension!!");
+  // console.log("Activating Pear extension!!!!!");
+  // outputChannel = vscode.window.createOutputChannel("Pear");
+  // outputChannel.appendLine("Activating Pear extension!!");
 
-  extension = new PearInventoryExtension(context, outputChannel);
-  extension.activate();
-  console.log("Activating!");
+  // extension = new PearInventoryExtension(context, outputChannel);
+  // extension.activate();
+  // console.log("Activating!");
 }
 
 export function deactivate() {

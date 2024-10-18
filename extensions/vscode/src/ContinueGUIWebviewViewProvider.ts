@@ -41,11 +41,11 @@ export class ContinueGUIWebviewViewProvider
   if (message.messageType === "log") {
     const settings = vscode.workspace.getConfiguration("pearai");
     const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
-
+    console.log("=================== HANDLE WEBVIEW MESSAGE1");
     if (message.level === "debug" && !enableDebugLogs) {
       return; // Skip debug logs if enableDebugLogs is false
     }
-
+    console.log("=================== HANDLE WEBVIEW MESSAGE2");
     const timestamp = new Date().toISOString().split(".")[0];
     const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${message.text}`;
     this.outputChannel.appendLine(logMessage);
@@ -58,9 +58,20 @@ export class ContinueGUIWebviewViewProvider
     _token: vscode.CancellationToken,
   ): void | Thenable<void> {
     this._webview = webviewView.webview;
-    this._webview.onDidReceiveMessage((message) =>
-      this.handleWebviewMessage(message),
-    );
+    const extensionUri = getExtensionUri();
+    console.log("=================== RESOLVING WEBVIEW IN CONTINUE PROVIDER2");
+
+    // this._webview.options = {
+    //   enableScripts: true,
+    //   localResourceRoots: [
+    //     vscode.Uri.joinPath(extensionUri, "out"),
+    //     vscode.Uri.joinPath(extensionUri, "gui"),
+    //   ],
+    // };
+
+    this._webview.onDidReceiveMessage((message) => {
+      return this.handleWebviewMessage(message);
+    });
     webviewView.webview.html = this.getSidebarContent(
       this.extensionContext,
       webviewView,
@@ -109,6 +120,8 @@ export class ContinueGUIWebviewViewProvider
     this.webviewProtocol = new VsCodeWebviewProtocol(
       (async () => {
         const configHandler = await this.configHandlerPromise;
+        console.log("Config handler: ");
+        console.log(configHandler);
         return configHandler.reloadConfig();
       }).bind(this),
     );
@@ -121,6 +134,8 @@ export class ContinueGUIWebviewViewProvider
     edits: FileEdit[] | undefined = undefined,
     isFullScreen = false,
   ): string {
+    const isOverlay = panel.viewType === "pearai.overlayWebview3";
+    console.log("===== Panel view type: ", panel.viewType);
     const extensionUri = getExtensionUri();
     let scriptUri: string;
     let styleMainUri: string;
@@ -164,7 +179,9 @@ export class ContinueGUIWebviewViewProvider
       if (e.affectsConfiguration("workbench.colorTheme")) {
         // Send new theme to GUI to update embedded Monaco themes
         this.webviewProtocol?.request("setTheme", { theme: getTheme() });
-        this.webviewProtocol?.request("setThemeType", { themeType: getThemeType() });
+        this.webviewProtocol?.request("setThemeType", {
+          themeType: getThemeType(),
+        });
       }
     });
 
@@ -175,7 +192,10 @@ export class ContinueGUIWebviewViewProvider
       <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script>const vscode = acquireVsCodeApi();</script>
+        <script>
+          const vscode = acquireVsCodeApi();
+          window.isOverlayPearAI = ${isOverlay};
+        </script>
         <link href="${styleMainUri}" rel="stylesheet">
 
         <title>Continue</title>

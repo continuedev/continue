@@ -57,6 +57,8 @@ type OnboardingMode =
   ToCoreFromIdeOrWebviewProtocol["completeOnboarding"][0]["mode"];
 
 function Onboarding() {
+  console.log("IN ONBOARDING COMPONENT=====================");
+  console.log("Is overlay? ", (window as any).isOverlayPearAI);
   const [hovered, setHovered] = useState(-1);
   const navigate = useNavigate();
   const dispatch = useDispatch();

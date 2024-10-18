@@ -35,13 +35,8 @@ export class PearInventoryPanel implements WebviewViewProvider {
     private _extensionUri: Uri,
     private readonly _extensionContext: ExtensionContext,
   ) {
-    this._extensionUri = Uri.joinPath(
-      _extensionUri,
-      "..",
-      "pearai-submodule",
-      "gui",
-    );
-    console.log(this._extensionUri);
+    this._extensionUri = Uri.joinPath(_extensionUri, "..", "pearai-submodule");
+    console.log("Extension Uri: ", this._extensionUri);
   }
 
   public resolveWebviewView(webviewView: WebviewView) {
@@ -52,8 +47,8 @@ export class PearInventoryPanel implements WebviewViewProvider {
     webviewView.webview.options = {
       enableScripts: true,
       localResourceRoots: [
-        Uri.joinPath(this._extensionUri, "build"),
-        Uri.joinPath(this._extensionUri, "dist"),
+        Uri.joinPath(this._extensionUri, "build", "vscode", "out"),
+        Uri.joinPath(this._extensionUri, "gui", "build"),
       ],
     };
 
@@ -80,6 +75,7 @@ export class PearInventoryPanel implements WebviewViewProvider {
   private _getWebviewContent(webview: Webview, extensionUri: Uri) {
     // The CSS file from the React build output
     const stylesUri = getUri(webview, this._extensionUri, [
+      "gui",
       "build",
       "assets",
       "index.css",
@@ -87,6 +83,7 @@ export class PearInventoryPanel implements WebviewViewProvider {
     console.log("STYLES ===================:", stylesUri);
     // The JS file from the React build output
     const scriptUri = getUri(webview, this._extensionUri, [
+      "gui",
       "build",
       "assets",
       "index.js",
@@ -102,7 +99,7 @@ export class PearInventoryPanel implements WebviewViewProvider {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
+          <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} https:;">
           <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>PearAI Inventory</title>
         </head>

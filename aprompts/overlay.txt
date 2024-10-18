@@ -1,0 +1,11 @@
+
+
+Context
+
+I'm building within a VSCode fork codebase called PearAI. Within this codebase I also have an extension integrated called pearai-submodule, and this is a fork of another codebase called Continue.
+
+
+
+Now I want to integrate an inventory feature, and an overlay modal that popups in the vscode codebase that covers most of the screen. I already have this overlay modal done, and it connects with the extension using:
+
+So then in @VsCodeExtension and @ContinueGUIWebviewViewProvider I resolve the pearai.overlayWebview3 name and set the html content.
