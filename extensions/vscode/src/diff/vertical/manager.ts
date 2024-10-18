@@ -1,7 +1,6 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
-
 import { DiffLine } from "core";
 import { streamDiffLines } from "core/edit/streamDiffLines";
 import * as vscode from "vscode";

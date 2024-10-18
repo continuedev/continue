@@ -48,6 +48,9 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       throw new Error("No reranker provided");
     }
 
+    // remove empty chunks -- some APIs fail on that
+    chunks = chunks.filter((chunk) => chunk.content);
+
     let scores: number[] = await this.options.config.reranker.rerank(
       input,
       chunks,
@@ -62,8 +65,11 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     //   (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
     // );
 
+    const chunkIndexMap = new Map<Chunk, number>();
+    chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
+
     results.sort(
-      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
+      (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
     );
     results = results.slice(-this.options.nFinal);
     return results;

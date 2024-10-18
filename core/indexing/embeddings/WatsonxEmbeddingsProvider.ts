@@ -8,12 +8,11 @@ import BaseEmbeddingsProvider, {
   IBaseEmbeddingsProvider,
 } from "./BaseEmbeddingsProvider.js";
 
-const watsonxConfig = {
-  accessToken: {
+let accessToken = {
     expiration: 0,
     token: "",
-  },
 };
+
 
 class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "watsonx";
@@ -24,13 +23,12 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
 
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
     if (
-      this.options.watsonxFullUrl?.includes("cloud.ibm.com") ||
-      this.options.watsonxUrl?.includes("cloud.ibm.com")
+      this.options.apiBase?.includes("cloud.ibm.com")
     ) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
-          `https://iam.cloud.ibm.com/identity/token?apikey=${this.options.watsonxCreds}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
+          `https://iam.cloud.ibm.com/identity/token?apikey=${this.options.apiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
           {
             method: "POST",
             headers: {
@@ -46,17 +44,17 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
       };
     } else {
       // watsonx Software
-      if (!this.options.watsonxCreds?.includes(":")) {
+      if (!this.options.apiKey?.includes(":")) {
         // Using ZenApiKey auth
         return {
-          token: this.options.watsonxCreds ?? "",
+          token: this.options.apiKey ?? "",
           expiration: -1,
         };
       } else {
         // Using username/password auth
-        const userPass = this.options.watsonxCreds?.split(":");
+        const userPass = this.options.apiKey?.split(":");
         const wxToken = await (
-          await fetch(`${this.options.watsonxUrl}/icp4d-api/v1/authorize`, {
+          await fetch(`${this.options.apiBase}/icp4d-api/v1/authorize`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -70,7 +68,7 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
         ).json();
         const wxTokenExpiry = await (
           await fetch(
-            `${this.options.watsonxUrl}/usermgmt/v1/user/tokenExpiry`,
+            `${this.options.apiBase}/usermgmt/v1/user/tokenExpiry`,
             {
               method: "GET",
               headers: {
@@ -90,14 +88,14 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
   async getSingleBatchEmbedding(batch: string[]) {
     var now = new Date().getTime() / 1000;
     if (
-      watsonxConfig.accessToken === undefined ||
-      now > watsonxConfig.accessToken.expiration ||
-      watsonxConfig.accessToken.token === undefined
+      accessToken === undefined ||
+      now > accessToken.expiration ||
+      accessToken.token === undefined
     ) {
-      watsonxConfig.accessToken = await this.getBearerToken();
+      accessToken = await this.getBearerToken();
     } else {
       console.log(
-        `Reusing token (expires in ${(watsonxConfig.accessToken.expiration - now) / 60
+        `Reusing token (expires in ${(accessToken.expiration - now) / 60
         } mins)`,
       );
     }
@@ -109,16 +107,16 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
           return_options: { input_text: false },
         },
         model_id: this.options.model,
-        project_id: this.options.watsonxProjectId,
+        project_id: this.options.projectId,
       };
       const headers = {
         "Content-Type": "application/json",
-        Authorization: `${watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-          } ${watsonxConfig.accessToken.token}`,
+        Authorization: `${accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+          } ${accessToken.token}`,
       };
       const resp = await this.fetch(
         new URL(
-          `${this.options.watsonxUrl}/ml/v1/text/embeddings?version=${this.options.watsonxApiVersion}`,
+          `${this.options.apiBase}/ml/v1/text/embeddings?version=${this.options.apiVersion}`,
         ),
         {
           method: "POST",

@@ -1,5 +1,6 @@
 import { EmbeddingsProviderName } from "../../index.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+import SageMakerEmbeddingsProvider from "./SageMakerEmbeddingsProvider.js";
 import BedrockEmbeddingsProvider from "./BedrockEmbeddingsProvider.js";
 import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider.js";
 import ContinueProxyEmbeddingsProvider from "./ContinueProxyEmbeddingsProvider.js";
@@ -23,6 +24,7 @@ export const allEmbeddingsProviders: Record<
   EmbeddingsProviderName,
   EmbeddingsProviderConstructor
 > = {
+  sagemaker: SageMakerEmbeddingsProvider,
   bedrock: BedrockEmbeddingsProvider,
   ollama: OllamaEmbeddingsProvider,
   "transformers.js": TransformersJsEmbeddingsProvider,

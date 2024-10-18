@@ -19,16 +19,15 @@ class CoreMessenger(
     private val project: Project,
     esbuildPath: String,
     continueCorePath: String,
-    ideProtocolClient: IdeProtocolClient,
-    private val coroutineScope: CoroutineScope
+    private val ideProtocolClient: IdeProtocolClient,
+    coroutineScope: CoroutineScope
 ) {
     private var writer: Writer? = null
     private var reader: BufferedReader? = null
     private var process: Process? = null
     private val gson = Gson()
     private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
-    private val ideProtocolClient = ideProtocolClient
-    private val useTcp: Boolean = false
+    private val useTcp: Boolean = System.getenv("USE_TCP")?.toBoolean() ?: false
 
     private fun write(message: String) {
         try {
@@ -37,13 +36,6 @@ class CoreMessenger(
         } catch (e: Exception) {
             println("Error writing to Continue core: $e")
         }
-    }
-
-    private fun close() {
-        writer?.close()
-        reader?.close()
-        val exitCode = process?.waitFor()
-        println("Subprocess exited with code: $exitCode")
     }
 
     fun request(messageType: String, data: Any?, messageId: String?, onResponse: (Any?) -> Unit) {

@@ -3,7 +3,7 @@ package com.github.continuedev.continueintellijextension.editor
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
+import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
@@ -133,17 +133,28 @@ fun openInlineEdit(project: Project?, editor: Editor) {
 
     // Get highlighted range
     val selectionModel = editor.selectionModel
-    val startLineNumber = editor.document.getLineNumber(selectionModel.selectionStart)
-    val endLineNumber = editor.document.getLineNumber(selectionModel.selectionEnd)
-    val start = editor.document.getLineStartOffset(startLineNumber)
-    val end = editor.document.getLineEndOffset(endLineNumber)
-    val prefix = editor.document.getText(TextRange(0, start))
-    val highlighted = editor.document.getText(TextRange(start, end))
-    val suffix = editor.document.getText(TextRange(end, editor.document.textLength))
+    val startOffset = selectionModel.selectionStart
+    val endOffset = selectionModel.selectionEnd
+    val startLineNumber = editor.document.getLineNumber(startOffset)
+    var endLineNumber = editor.document.getLineNumber(endOffset)
 
-    val startLineNum = editor.document.getLineNumber(start)
-    val endLineNum = editor.document.getLineNumber(end)
-    val lineNumber = max(0, startLineNum - 1)
+    // Doesn't seem to be any built-in methods to check for a line selection that contains trailing newlines.
+    // The only case this matters is when a user double-clicks to highlight a full line. Without this check.
+    // the highlighted range will continue to the following line.
+    val isSingleLineSelection = endLineNumber > startLineNumber &&
+            endLineNumber < editor.document.lineCount &&
+            editor.document.getLineStartOffset(endLineNumber) == endOffset
+
+
+    if (isSingleLineSelection) {
+        endLineNumber--
+    }
+
+    val prefix = editor.document.getText(TextRange(0, startOffset))
+    val highlighted = editor.document.getText(TextRange(startOffset, endOffset))
+    val suffix = editor.document.getText(TextRange(endOffset, editor.document.textLength))
+    val lineNumber = max(0, startLineNumber - 1)
+
 
     // Un-highlight the selected text
     selectionModel.removeSelection()
@@ -165,40 +176,52 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val textArea = makeTextArea()
 
     // Create diff stream handler
-    val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum, {
+    val diffStreamHandler = DiffStreamHandler(project, editor, startLineNumber, endLineNumber, {
         inlayRef.get().dispose()
     }, {
+        textArea.document.insertString(textArea.caretPosition, ", ", null)
+        textArea.requestFocus()
         customPanelRef.get().finish()
     })
+
     val diffStreamService = project.service<DiffStreamService>()
     diffStreamService.register(diffStreamHandler, editor)
-
-    diffStreamHandler.setup()
 
     val comboBoxRef = Ref<JComboBox<String>>()
 
     fun onEnter() {
         val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(" ▾")
         customPanelRef.get().enter()
-        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret)
+        diffStreamHandler.streamDiffLinesToEditor(
+            textArea.text,
+            prefix,
+            highlighted,
+            suffix,
+            selectedModelStrippedOfCaret
+        )
     }
 
-    val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
-        diffStreamService.reject(editor)
-        selectionModel.setSelection(start, end)
-    }, {
-        diffStreamService.accept(editor)
-        inlayRef.get().dispose()
-    }, {
-        diffStreamService.reject(editor)
-        inlayRef.get().dispose()
-    })
-    val inlay = manager.insert(startLineNum, panel, true)
+    val panel =
+        makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, { onEnter() }, {
+            diffStreamService.reject(editor)
+            selectionModel.setSelection(startOffset, endOffset)
+        }, {
+            diffStreamService.accept(editor)
+            inlayRef.get().dispose()
+        }, {
+            diffStreamService.reject(editor)
+            inlayRef.get().dispose()
+        })
+
+    val inlay = manager.insert(startLineNumber, panel, true)
 
     panel.revalidate()
     inlayRef.set(inlay)
     val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
     viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
+
+    // Scroll to the top of the startLine plus the height of the panel
+    editor.scrollingModel.scrollVertically(editor.visualLineToY(startLineNumber) - panel.height)
 
     // Add key listener to text area
     textArea.addKeyListener(object : KeyAdapter() {
@@ -213,7 +236,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
             when (e.keyCode) {
                 KeyEvent.VK_ESCAPE -> {
                     diffStreamService.reject(editor)
-                    selectionModel.setSelection(start, end)
+                    selectionModel.setSelection(startOffset, endOffset)
                 }
 
                 KeyEvent.VK_ENTER -> {
@@ -310,11 +333,11 @@ class CustomPanel(
     private val closeButton: JComponent = createCloseButton()
     private val originalTextColor: Color = textArea.foreground
     private val greyTextColor: Color = Color(128, 128, 128, 200)
-    public var isFinished = false
+    var isFinished = false
 
     init {
         isOpaque = false
-        add(closeButton, "pos 100%-25 0 -3 3, w 20!, h 20!")
+        add(closeButton, "pos 100%-20 0 -3 3, w 20!, h 20!")
     }
 
     private fun createCloseButton(): JComponent {
@@ -322,7 +345,7 @@ class CustomPanel(
             foreground = Color(128, 128, 128, 128)
             background = Color(0, 0, 0, 0)
             font = UIUtil.getFontWithFallback("Arial", Font.BOLD, 10)
-            border = EmptyBorder(2, 6, 2, 6)
+            border = EmptyBorder(2, 6, 2, 0)
             toolTipText = "`esc` to cancel"
             isOpaque = false
 
@@ -388,7 +411,7 @@ class CustomPanel(
             add(rightButton, "align right")
         }
 
-        border = EmptyBorder(0, 0, 20, 16)
+        border = EmptyBorder(0, 0, 16, 12)
 
         add(dropdown, "align left")
         add(rightPanel, "align right, split 2")
@@ -405,7 +428,7 @@ class CustomPanel(
         }
 
         add(progressBar, BorderLayout.CENTER)
-        border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
+        border = BorderFactory.createEmptyBorder(0, 0, 16, 12)
     }
 
     private val subPanelC: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -415,16 +438,14 @@ class CustomPanel(
             border = EmptyBorder(0, 4, 0, 0)
         }
 
-        val leftButton = CustomButton("Reject (${getAltKeyLabel()}⇧N)") { onReject() }.apply {
+        val leftButton = CustomButton("Reject All (${getMetaKeyLabel()}⇧⌫)") { onReject() }.apply {
             background = JBColor(0x30FF0000.toInt(), 0x30FF0000.toInt())
             foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
-
         }
 
-        val rightButton = CustomButton("Accept (${getAltKeyLabel()}⇧Y)") { onAccept() }.apply {
+        val rightButton = CustomButton("Accept All (${getMetaKeyLabel()}⇧⏎)") { onAccept() }.apply {
             background = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
             foreground = JBColor(0xF5F5F5.toInt(), 0xF5F5F5.toInt())
-
         }
 
         val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -436,7 +457,7 @@ class CustomPanel(
 
         add(leftLabel, "align left")
         add(rightPanel, "align right")
-        border = BorderFactory.createEmptyBorder(0, 0, 20, 16)
+        border = BorderFactory.createEmptyBorder(0, 0, 16, 12)
         isOpaque = false
     }
 
@@ -563,9 +584,9 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
         if (isHovered) {
             val brightenFactor = 1.1f
             val brighterColor = Color(
-                (background.red * brightenFactor).toInt(),
-                (background.green * brightenFactor).toInt(),
-                (background.blue * brightenFactor).toInt()
+                (background.red * brightenFactor).coerceIn(0f, 255f).toInt(),
+                (background.green * brightenFactor).coerceIn(0f, 255f).toInt(),
+                (background.blue * brightenFactor).coerceIn(0f, 255f).toInt()
             )
             g2.color = brighterColor
         } else {

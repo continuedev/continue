@@ -51,7 +51,7 @@ class CustomResourceHandler : CefResourceHandler, DumbAware {
         responseLength: IntRef,
         redirectUrl: StringRef
     ) {
-        if (currentUrl !== null){
+        if (currentUrl !== null) {
             when {
                 currentUrl!!.contains("css") -> cefResponse.mimeType = "text/css"
                 currentUrl!!.contains("js") -> cefResponse.mimeType = "text/javascript"
@@ -99,7 +99,7 @@ sealed class ResourceHandlerState {
 
 class OpenedConnection(private val connection: URLConnection?) :
     ResourceHandlerState() {
-        
+
     private val inputStream: InputStream? by lazy {
         connection?.inputStream
     }
@@ -140,7 +140,7 @@ class OpenedConnection(private val connection: URLConnection?) :
         bytesRead: IntRef,
         callback: CefCallback
     ): Boolean {
-        return inputStream?.let {inputStream ->
+        return inputStream?.let { inputStream ->
             val availableSize = inputStream.available()
             return if (availableSize > 0) {
                 val maxBytesToRead = minOf(availableSize, bytesToRead)

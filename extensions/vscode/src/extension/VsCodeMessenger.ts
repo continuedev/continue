@@ -283,7 +283,7 @@ export class VsCodeMessenger {
       return ide.getIdeSettings();
     });
     this.onWebviewOrCore("getDiff", async (msg) => {
-      return ide.getDiff();
+      return ide.getDiff(msg.data.includeUnstaged);
     });
     this.onWebviewOrCore("getTerminalContents", async (msg) => {
       return ide.getTerminalContents();
@@ -325,7 +325,7 @@ export class VsCodeMessenger {
       return ide.getSearchResults(msg.data.query);
     });
     this.onWebviewOrCore("subprocess", async (msg) => {
-      return ide.subprocess(msg.data.command);
+      return ide.subprocess(msg.data.command, msg.data.cwd);
     });
     this.onWebviewOrCore("getProblems", async (msg) => {
       return ide.getProblems(msg.data.filepath);

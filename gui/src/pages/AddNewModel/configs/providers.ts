@@ -487,52 +487,44 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     collectInputFor: [
       {
         inputType: "text",
-        key: "watsonxUrl",
+        key: "apiBase",
         label: "watsonx URL",
         placeholder: "e.g. http://us-south.dataplatform.cloud.ibm.com",
         required: true,
       },
       {
         inputType: "text",
-        key: "watsonxProjectId",
-        label: "watsonx Project ID",
+        key: "projectId",
+        label: "Project ID",
         placeholder: "Enter your project ID",
         required: true,
       },
       {
         inputType: "text",
-        key: "watsonxCreds",
-        label: "watsonx API key",
+        key: "apiKey",
+        label: "API key",
         placeholder: "Enter your API key (SaaS) or ZenApiKey (Software)",
         required: true,
       },
       {
         inputType: "text",
-        key: "watsonxApiVersion",
-        label: "watsonx API version",
+        key: "apiVersion",
+        label: "API version",
         placeholder: "Enter the API Version",
-        defaultValue: "2023-05-29",
+        defaultValue: "2024-03-14",
         required: true,
       },
-      {
-        inputType: "text",
-        key: "watsonxFullUrl",
-        label: "Full watsonx URL",
-        placeholder:
-          "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
-        required: false,
-      },
-      {
-        inputType: "text",
-        key: "watsonxStopToken",
-        label: "Stop Token",
-        placeholder: "<end of code>",
-        required: false,
-      },
-
-      ...completionParamsInputsConfigs,
+        {
+          inputType: "text",
+          key: "deploymentId",
+          label: "Deployment ID",
+          placeholder: "Enter model deployment ID",
+          required: false,
+        },
+    ...completionParamsInputsConfigs,
     ],
-    icon: "watsonx.png",
+    apiKeyUrl: "https://dataplatform.cloud.ibm.com/registration/stepone?context=wx",
+    icon: "WatsonX.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.graniteCode3b,
@@ -598,5 +590,36 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       return p;
     }),
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
+  },
+  cerebras: {
+    title: "Cerebras",
+    provider: "cerebras",
+    icon: "cerebras.png",
+    description:
+      "Cerebras Inference is a custom silicon for fast inference of LLM models.",
+    longDescription:
+      "Get your API key [here](https://cloud.cerebras.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cerebras API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.llama3170bChat,
+      models.llama318bChat,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Cerebras",
+        },
+      },
+    ],
+    apiKeyUrl: "https://cloud.cerebras.ai/",
   },
 };

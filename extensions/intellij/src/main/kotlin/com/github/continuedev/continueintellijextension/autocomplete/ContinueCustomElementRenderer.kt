@@ -14,9 +14,9 @@ import java.awt.Graphics
 import java.awt.Rectangle
 import kotlin.math.ceil
 
-class ContinueCustomElementRenderer (
-        val editor: Editor,
-        val text: String,
+class ContinueCustomElementRenderer(
+    val editor: Editor,
+    val text: String,
 ) : EditorCustomElementRenderer {
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         val width = (inlay.editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(this.text)
@@ -30,9 +30,9 @@ class ContinueCustomElementRenderer (
 
     private fun offsetY(editor: Editor): Int {
         val metrics =
-                FontInfo.getFontMetrics(font(editor), FontInfo.getFontRenderContext(editor.contentComponent))
+            FontInfo.getFontMetrics(font(editor), FontInfo.getFontRenderContext(editor.contentComponent))
         val fontHeight =
-                font(editor).createGlyphVector(metrics.fontRenderContext, text).visualBounds.height
+            font(editor).createGlyphVector(metrics.fontRenderContext, text).visualBounds.height
         val height = (editor.lineHeight + fontHeight) / 2
         return ceil(height).toInt()
     }

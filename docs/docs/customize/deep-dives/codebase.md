@@ -73,4 +73,4 @@ If you need to force a refresh of the index, reload the VS Code window with `cmd
 
 ## Repository map
 
-Models in the Claude 3, Llama 3.1, Gemini 1.5, and GPT-4o families will automatically use a [repository map](../context-providers.md#repository-map) during codebsae retrieval, which allows the model to understand the structure of your codebase and use it to answer questions. Currently, the repository map only contains the filepaths in the codebase.
+Models in the Claude 3, Llama 3.1, Gemini 1.5, and GPT-4o families will automatically use a [repository map](../context-providers.md#repository-map) during codebase retrieval, which allows the model to understand the structure of your codebase and use it to answer questions. Currently, the repository map only contains the filepaths in the codebase.

@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.214",
+  "version": "0.9.218",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -167,7 +167,7 @@
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context",
+        "title": "Add Highlighted Code to Context and Clear Chat",
         "group": "Continue"
       },
       {
@@ -188,6 +188,12 @@
         "title": "Toggle Full Screen",
         "icon": "$(fullscreen)",
         "group": "Continue"
+      },
+      {
+        "command": "continue.toggleNewWindow",
+        "category": "Continue",
+        "title": "Open New Window",
+        "icon": "$(link-external)"
       },
       {
         "command": "continue.openConfigJson",
@@ -444,20 +450,30 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@1",
+          "command": "continue.viewHistory",
+          "group": "navigation@2",
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.viewHistory",
-          "group": "navigation@1",
+          "command": "continue.toggleFullScreen",
+          "group": "navigation@3",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.toggleNewWindow",
+          "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         }
       ],
       "editor/title": [
         {
-          "command": "continue.toggleFullScreen",
+          "command": "continue.newSession",
           "group": "navigation@1",
+          "when": "activeWebviewPanelId == continue.continueGUIView"
+        },
+        {
+          "command": "continue.viewHistory",
+          "group": "navigation@2",
           "when": "activeWebviewPanelId == continue.continueGUIView"
         }
       ],
