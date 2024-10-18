@@ -97,8 +97,8 @@ export class VsCodeMessenger {
           return contents;
         });
     });
-    this.onWebview("aidermode", (msg) => {
-      vscode.commands.executeCommand("pearai.aidermode");
+    this.onWebview("aiderMode", (msg) => {
+      vscode.commands.executeCommand("pearai.aiderMode");
     });
     this.onWebview("toggleDevTools", (msg) => {
       vscode.commands.executeCommand("workbench.action.toggleDevTools");

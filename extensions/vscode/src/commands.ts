@@ -483,7 +483,7 @@ const commandsMap: (
     "pearai.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined);
     },
-    "pearai.aidermode": () => {
+    "pearai.aiderMode": () => {
       // Check if aider is already open by checking open tabs
       const aiderTab = getAiderTab();
       console.log("Aider tab found:", aiderTab);
@@ -520,7 +520,7 @@ const commandsMap: (
         undefined,
         undefined,
         true,
-        "/aidermode",
+        "/aiderMode",
       );
 
       vscode.commands.executeCommand("pearai.focusContinueInput");

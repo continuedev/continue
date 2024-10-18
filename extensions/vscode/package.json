@@ -310,6 +310,12 @@
         "category": "Shell",
         "title": "Patch WSL",
         "group": "Shell"
+      },
+      {
+        "command": "pearai.aiderMode",
+        "category": "PearAI",
+        "title": "Open PearAI Creator",
+        "group": "PearAI"
       }
     ],
     "keybindings": [

@@ -547,7 +547,7 @@ function GUI() {
               </NewSessionButton>{" "}
               <NewSessionButton
                 onClick={() => {
-                  ideMessenger.post("aidermode", undefined);
+                  ideMessenger.post("aiderMode", undefined);
                 }}
                 className="mr-auto"
               >

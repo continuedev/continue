@@ -19,7 +19,7 @@ import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import Onboarding from "./pages/onboarding/Onboarding";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
-import Aidermode from "./pages/aidermode";
+import Aidermode from "./pages/aiderMode";
 
 declare global {
   interface Window {
@@ -43,7 +43,7 @@ const router = createMemoryRouter(
           element: <GUI />,
         },
         {
-          path: "/aidermode",
+          path: "/aiderMode",
           element: <GUI />,
         },
         {
