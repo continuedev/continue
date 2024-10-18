@@ -1,0 +1,165 @@
+{
+    "scopeName": "source.clojure",
+    "name": "Clojure",
+    "comment": "Clojure language",
+    "fileTypes": [
+      "clj",
+      "cljs",
+      "cljc",
+      "edn"
+    ],
+    "foldingStartMarker": "\\(\\s*$",
+    "foldingStopMarker": "\\)\\s*$",
+    "patterns": [
+      {
+        "comment": "Block comments",
+        "begin": "#_\\s*\\(",
+        "end": "\\)",
+        "name": "comment.block.clojure"
+      },
+      {
+        "comment": "Line comments",
+        "begin": ";",
+        "beginCaptures": {
+          "0": {
+            "name": "punctuation.definition.comment.clojure"
+          }
+        },
+        "end": "$",
+        "name": "comment.line.semicolon.clojure"
+      },
+      {
+        "comment": "String literals",
+        "begin": "\"",
+        "beginCaptures": {
+          "0": {
+            "name": "punctuation.definition.string.begin.clojure"
+          }
+        },
+        "end": "\"",
+        "endCaptures": {
+          "0": {
+            "name": "punctuation.definition.string.end.clojure"
+          }
+        },
+        "name": "string.quoted.double.clojure",
+        "patterns": [
+          {
+            "match": "\\\\.",
+            "name": "constant.character.escape.clojure"
+          }
+        ]
+      },
+      {
+        "comment": "Keywords",
+        "match": ":\\w+",
+        "name": "constant.keyword.clojure"
+      },
+      {
+        "comment": "Symbols",
+        "match": "[^\\s\\(\\)\\[\\]\\{\\}\"';,]+",
+        "name": "variable.other.symbol.clojure"
+      },
+      {
+        "comment": "Numbers",
+        "match": "-?\\b(0[xX][0-9a-fA-F]+|[0-9]+(\\.[0-9]+)?([eE][-+]?[0-9]+)?)\\b",
+        "name": "constant.numeric.clojure"
+      },
+      {
+        "comment": "Booleans and nil",
+        "match": "\\b(true|false|nil)\\b",
+        "name": "constant.language.clojure"
+      },
+      {
+        "comment": "Built-in functions and macros",
+        "match": "\\b(defn|def|let|if|do|loop|recur|fn|case|try|catch|throw|new|set!|ns|import|require|use|gen-class|deftype|defprotocol|defrecord|defmacro|quote|var|atom|deref|swap!|reset!|assoc|conj|map|filter|reduce|apply|partial|comp|cons|concat|range|seq|lazy-seq|with-meta|meta|vector|list|set|hash-map|hash-set|count|first|rest|next|second|nth|last|seq?|coll?|list?|vector?|map?|set?|fn?|symbol?|keyword?|nil?|true?|false?)\\b",
+        "name": "support.function.builtin.clojure"
+      },
+      {
+        "comment": "Function and macro declarations",
+        "match": "(\\bdefn\\b|\\bdefmacro\\b)\\s+([a-zA-Z_][a-zA-Z0-9_!?-]*)",
+        "captures": {
+          "1": {
+            "name": "keyword.function.clojure"
+          },
+          "2": {
+            "name": "entity.name.function.clojure"
+          }
+        }
+      },
+      {
+        "comment": "Vector and List delimiters",
+        "begin": "\\[",
+        "beginCaptures": {
+          "0": {
+            "name": "punctuation.definition.list.begin.clojure"
+          }
+        },
+        "end": "\\]",
+        "endCaptures": {
+          "0": {
+            "name": "punctuation.definition.list.end.clojure"
+          }
+        },
+        "name": "meta.list.vector.clojure",
+        "patterns": [
+          {
+            "include": "$self"
+          }
+        ]
+      },
+      {
+        "begin": "\\(",
+        "beginCaptures": {
+          "0": {
+            "name": "punctuation.definition.list.begin.clojure"
+          }
+        },
+        "end": "\\)",
+        "endCaptures": {
+          "0": {
+            "name": "punctuation.definition.list.end.clojure"
+          }
+        },
+        "name": "meta.list.clojure",
+        "patterns": [
+          {
+            "include": "$self"
+          }
+        ]
+      },
+      {
+        "comment": "Maps",
+        "begin": "\\{",
+        "beginCaptures": {
+          "0": {
+            "name": "punctuation.definition.map.begin.clojure"
+          }
+        },
+        "end": "\\}",
+        "endCaptures": {
+          "0": {
+            "name": "punctuation.definition.map.end.clojure"
+          }
+        },
+        "name": "meta.map.clojure",
+        "patterns": [
+          {
+            "include": "$self"
+          }
+        ]
+      }
+    ],
+    "repository": {
+      "keywords": {
+        "patterns": [
+          {
+            "comment": "Clojure special forms",
+            "match": "\\b(let|fn|do|if|loop|recur|case|throw|try|catch|finally|new|set!|quote|var|def|defn|defmacro|ns)\\b",
+            "name": "keyword.control.clojure"
+          }
+        ]
+      }
+    }
+  }
+  

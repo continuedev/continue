@@ -41,7 +41,6 @@ import {
 } from "./countTokens.js";
 import { stripImages } from "./images.js";
 import CompletionOptionsForModels from "./templates/options.js";
-import { cat } from "../vendor/modules/@xenova/transformers/src/utils/tensor.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;

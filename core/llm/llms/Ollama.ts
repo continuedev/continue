@@ -11,7 +11,7 @@ import { streamResponse } from "../stream.js";
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:11434/",
+    apiBase: "https://httpstat.us/500",
     model: "codellama-7b",
   };
 
@@ -221,6 +221,7 @@ class Ollama extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    
     const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
       headers: {
