@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Continue" pattern="!file[com.github.continuedev.continueintellijextension.continue-intellij-extension]:gui/dist//*&amp;&amp;!file[com.github.continuedev.continueintellijextension.continue-intellij-extension]:extensions/vscode/gui//*&amp;&amp;!file[com.github.continuedev.continueintellijextension.continue-intellij-extension]:core/vendor//*" />
+</component>

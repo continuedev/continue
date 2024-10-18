@@ -17,9 +17,6 @@ class Test {
     }
 
     fun divide(number: Double): Test {
-        if (number == 0.0) {
-            throw IllegalArgumentException("Cannot divide by zero")
-        }
         result /= number
         return this
     }
