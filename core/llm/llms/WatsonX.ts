@@ -84,7 +84,7 @@ class WatsonX extends BaseLLM {
   getWatsonxEndpoint(): string {
     return (
       this.deploymentId ?
-      `${this.apiBase}ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`:
+      `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`:
       `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`
     );
   }
