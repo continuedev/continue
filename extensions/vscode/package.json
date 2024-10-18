@@ -190,12 +190,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.toggleNewWindow",
-        "category": "Continue",
-        "title": "Open New Window",
-        "icon": "$(link-external)"
-      },
-      {
         "command": "continue.openConfigJson",
         "category": "Continue",
         "title": "Open config.json",
@@ -457,11 +451,6 @@
         {
           "command": "continue.toggleFullScreen",
           "group": "navigation@3",
-          "when": "view == continue.continueGUIView"
-        },
-        {
-          "command": "continue.toggleNewWindow",
-          "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         }
       ],
