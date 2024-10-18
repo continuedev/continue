@@ -112,7 +112,7 @@ class Bedrock extends BaseLLM {
         temperature: options.temperature,
         topP: options.topP,
         // TODO: The current approach selects the first 4 items from the list to comply with Bedrock's requirement
-        // of having at least 4 stop sequences, as per the AWS documentation:
+        // of having at most 4 stop sequences, as per the AWS documentation:
         // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_InferenceConfiguration.html
         // However, it might be better to implement a strategy that dynamically selects the most appropriate stop sequences
         // based on the context.
