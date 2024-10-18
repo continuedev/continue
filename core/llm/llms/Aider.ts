@@ -51,8 +51,8 @@ class Aider extends BaseLLM {
       options.setCredentials || (async () => {}),
     );
     console.log("Aider constructor called");
-    this.startAiderChat("claude-3-5-sonnet-20240620", this.apiKey);
-    // this.startAiderChat(this.model, this.apiKey);
+    //this.startAiderChat("claude-3-5-sonnet-20240620", this.apiKey);
+    this.startAiderChat(this.model, this.apiKey);
   }
 
   public setPearAIAccessToken(value: string | undefined): void {
