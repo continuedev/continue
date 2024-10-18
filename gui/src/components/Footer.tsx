@@ -1,10 +1,11 @@
 import {
   Cog6ToothIcon,
   EllipsisHorizontalCircleIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useResolvedPath } from "react-router-dom";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { RootState } from "../redux/store";
@@ -12,21 +13,26 @@ import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import ButtonWithTooltip from "./ButtonWithTooltip";
 import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
 import ProfileSwitcher from "./ProfileSwitcher";
+import { ROUTES } from "../util/navigation";
 
 function Footer() {
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const defaultModel = useSelector(defaultModelSelector);
   const ideMessenger = useContext(IdeMessengerContext);
   const selectedProfileId = useSelector(
     (store: RootState) => store.state.selectedProfileId,
   );
+  const configError = useSelector(
+    (store: RootState) => store.state.configError,
+  );
 
   function onClickMore() {
-    if (location.pathname === "/more") {
-      navigate("/");
-    } else {
-      navigate("/more");
-    }
+    navigate(pathname === ROUTES.MORE ? "/" : ROUTES.MORE);
+  }
+
+  function onClickError() {
+    navigate(pathname === ROUTES.CONFIG_ERROR ? "/" : ROUTES.CONFIG_ERROR);
   }
 
   function onClickSettings() {
@@ -53,6 +59,16 @@ function Footer() {
       </div>
 
       <div className="flex gap-1">
+        {configError && (
+          <ButtonWithTooltip
+            tooltipPlacement="top-end"
+            text="Config error"
+            onClick={onClickError}
+          >
+            <ExclamationTriangleIcon className="w-4 h-4" />
+          </ButtonWithTooltip>
+        )}
+
         <ButtonWithTooltip
           tooltipPlacement="top-end"
           text="More"

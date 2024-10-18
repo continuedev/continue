@@ -153,6 +153,8 @@ continue_server.dist
 Icon
 Icon?
 
+.continue
+.continuerc.json
 .prompts/
 .aider*
 

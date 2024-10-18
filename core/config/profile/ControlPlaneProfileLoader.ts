@@ -8,6 +8,7 @@ import {
 } from "../../index.js";
 import { IProfileLoader } from "./IProfileLoader.js";
 import doLoadConfig from "./doLoadConfig.js";
+import { ConfigResult } from "../load.js";
 
 export default class ControlPlaneProfileLoader implements IProfileLoader {
   private static RELOAD_INTERVAL = 1000 * 60 * 15; // every 15 minutes
@@ -36,7 +37,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     }, ControlPlaneProfileLoader.RELOAD_INTERVAL);
   }
 
-  async doLoadConfig(): Promise<ContinueConfig> {
+  async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {
     const settings =
       this.workspaceSettings ??
       ((await this.controlPlaneClient.getSettingsForWorkspace(
