@@ -1330,22 +1330,19 @@
           },
           "then": {
             "properties": {
-              "watsonxUrl": {
+              "apiBase": {
                 "type": "string"
               },
-              "watsonxApiKey": {
+              "apiKey": {
                 "type": "string"
               },
-              "watsonxApiVersion": {
+              "apiVersion": {
                 "type": "string"
               },
-              "watsonxProjectId": {
+              "projectId": {
                 "type": "string"
               },
-              "watsonxStopToken": {
-                "type": "string"
-              },
-              "watsonxFullUrl": {
+              "deploymentId": {
                 "type": "string"
               },
               "model": {
@@ -1358,7 +1355,7 @@
                 ]
               }
             },
-            "required": ["watsonxUrl", "watsonxProjectId"]
+            "required": ["apiBase", "apiKey", "apiVersion"]
           }
         },
         {

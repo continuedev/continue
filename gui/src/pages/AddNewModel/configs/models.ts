@@ -724,50 +724,89 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   graniteChat: {
-    title: "watsonx - Granite Chat",
+    title: "Granite Chat 13b",
     description:
       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
       model: "ibm/granite-13b-chat-v2",
-      contextLength: 20_000,
-      title: "Granite Chat",
+      contextLength: 8_000,
+      title: "Granite Chat 13b",
     },
     providerOptions: ["watsonx"],
-    icon: "",
+    icon: "WatsonX.png",
     isOpenSource: false,
   },
-  graniteCode: {
-    title: "watsonx - Granite Code 20b",
+  graniteCode3b: {
+    title: "Granite Code 3b",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3b-code-instruct",
+      contextLength: 2_000,
+      title: "Granite Code 3b",
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
+  graniteCode8b: {
+    title: "Granite Code 8b",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-8b-code-instruct",
+      contextLength: 4_000,
+      title: "Granite Code 8b",
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
+  graniteCode20b: {
+    title: "Granite Code 20b",
     description:
       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
       model: "ibm/granite-20b-code-instruct",
-      contextLength: 20_000,
-      title: "watsonx - Granite Code 20b",
+      contextLength: 8_000,
+      title: "Granite Code 20b",
     },
     providerOptions: ["watsonx"],
-    icon: "watsonx.png",
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
+  graniteCode34b: {
+    title: "Granite Code 34b",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-34b-code-instruct",
+      contextLength: 8_000,
+      title: "Granite Code 34b",
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
     isOpenSource: false,
   },
   MistralLarge: {
-    title: "watsonx - Mistral Large",
+    title: "Mistral Large",
     description:
       "Mistral Large, the most advanced Large Language Model (LLM) developed by Mistral Al, is an exceptionally powerful model.",
     params: {
       model: "mistralai/mistral-large",
       contextLength: 20_000,
-      title: "watsonx - Mistral Large",
+      title: "Mistral Large",
     },
     providerOptions: ["watsonx"],
     icon: "mistral.png",
     isOpenSource: false,
   },
   MetaLlama3: {
-    title: "watsonx - Llama 3.1",
+    title: "Llama 3.1",
     description:
       "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
     params: {
-      title: "watsonx - Llama 3.1 8b",
+      title: "Llama 3.1 8b",
       model: "meta-llama/llama-3-1-8b-instruct",
       contextLength: 20_000,
     },
@@ -779,11 +818,11 @@ export const models: { [key: string]: ModelPackage } = {
         options: {
           "8b": {
             model: "meta-llama/llama-3-1-8b-instruct",
-            title: "watsonx - Llama 3.1 8b",
+            title: "Llama 3.1 8b",
           },
           "70b": {
             model: "meta-llama/llama-3-1-70b-instruct",
-            title: "watsonx - Llama 3.1 70b",
+            title: "Llama 3.1 70b",
           },
         },
       },
