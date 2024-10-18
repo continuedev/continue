@@ -4,8 +4,8 @@ import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
-import ButtonWithTooltip from "../ButtonWithTooltip";
 import useHistory from "../../hooks/useHistory";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -56,7 +56,7 @@ export function HistoryTableRow({
         onMouseLeave={() => setHovered(false)}
       >
         <div
-          className="flex max-w-full box-border p-3 relative hover:bg-vsc-editor-background rounded-lg overflow-hidden"
+          className="hover:bg-vsc-editor-background relative box-border flex max-w-full overflow-hidden rounded-lg p-3"
           onClick={async () => {
             // Save current session
             saveSession();
@@ -64,7 +64,7 @@ export function HistoryTableRow({
             navigate("/");
           }}
         >
-          <div className="cursor-pointer flex-1 space-y-1">
+          <div className="flex-1 cursor-pointer space-y-1">
             {editing ? (
               <div className="text-md">
                 <Input
@@ -78,7 +78,7 @@ export function HistoryTableRow({
                 />
               </div>
             ) : (
-              <span className="truncate max-w-80 block text-md font-semibold text-base">
+              <span className="text-md block max-w-80 truncate text-base font-semibold">
                 {JSON.stringify(session.title).slice(1, -1)}
               </span>
             )}
@@ -100,7 +100,7 @@ export function HistoryTableRow({
           </div>
 
           {hovered && !editing && (
-            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 ml-auto pl-4 pr-4 gap-x-2 flex items-center py-1 rounded-full shadow-md bg-vsc-background">
+            <div className="bg-vsc-background absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-2 rounded-full py-1.5 pl-4 pr-4 shadow-md">
               <ButtonWithTooltip
                 text="Edit"
                 onClick={async (e) => {
