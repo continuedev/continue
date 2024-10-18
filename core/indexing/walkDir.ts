@@ -38,15 +38,13 @@ type IgnoreContext = {
 };
 
 class DFSWalker {
-  private readonly path: string;
-  private readonly ide: IDE;
-  private readonly options: WalkerOptions;
   private readonly ignoreFileNames: Set<string>;
 
-  constructor(path: string, ide: IDE, options: WalkerOptions) {
-    this.path = path;
-    this.ide = ide;
-    this.options = options;
+  constructor(
+    private readonly path: string,
+    private readonly ide: IDE,
+    private readonly options: WalkerOptions,
+  ) {
     this.ignoreFileNames = new Set<string>(options.ignoreFiles);
   }
 
@@ -128,10 +126,7 @@ class DFSWalker {
       ignore: ignore().add(patterns),
       dirname: curDir.walkableEntry.relPath,
     };
-    return [
-      ...curDir.ignoreContexts,
-      newIgnoreContext
-    ];
+    return [...curDir.ignoreContexts, newIgnoreContext];
   }
 
   private async loadIgnoreFiles(entries: WalkableEntry[]): Promise<string[]> {
@@ -147,7 +142,10 @@ class DFSWalker {
     return this.ignoreFileNames.has(p);
   }
 
-  private shouldInclude(walkableEntry: WalkableEntry, ignoreContexts: IgnoreContext[]) {
+  private shouldInclude(
+    walkableEntry: WalkableEntry,
+    ignoreContexts: IgnoreContext[],
+  ) {
     if (this.entryIsSymlink(walkableEntry.entry)) {
       // If called from the root, a symlink either links to a real file in this repository,
       // and therefore will be walked OR it linksto something outside of the repository and

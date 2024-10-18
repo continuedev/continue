@@ -13,11 +13,7 @@ export class TabAutocompleteModel {
   private shownOllamaWarning = false;
   private shownDeepseekWarning = false;
 
-  private configHandler: ConfigHandler;
-
-  constructor(configHandler: ConfigHandler) {
-    this.configHandler = configHandler;
-  }
+  constructor(private configHandler: ConfigHandler) {}
 
   clearLlm() {
     this._llm = undefined;
