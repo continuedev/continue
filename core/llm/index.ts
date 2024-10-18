@@ -624,6 +624,7 @@ export abstract class BaseLLM implements ILLM {
         if (error.message.includes("HTTP 500 Internal Server Error")) {
           yield { role: "system", content: `Something went wrong with the provider's server, and we were unable to retrieve the result (${error.message}).`};
         }
+        throw error;
       }
     }
 
