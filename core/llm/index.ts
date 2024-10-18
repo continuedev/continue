@@ -596,8 +596,9 @@ export abstract class BaseLLM implements ILLM {
 
     let completion = "";
 
-    try {
-      if (this.templateMessages) {
+   
+    if (this.templateMessages) {
+      try {
         for await (const chunk of this._streamComplete(
           prompt,
           completionOptions,
@@ -605,7 +606,12 @@ export abstract class BaseLLM implements ILLM {
           completion += chunk;
           yield { role: "assistant", content: chunk };
         }
-      } else {
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+    } else {
+      try {
         for await (const chunk of this._streamChat(
           messages,
           completionOptions,
@@ -613,10 +619,12 @@ export abstract class BaseLLM implements ILLM {
           completion += chunk.content;
           yield chunk;
         }
+      } catch (error: any) {
+        console.log(error);
+        if (error.message.includes("HTTP 500 Internal Server Error")) {
+          yield { role: "system", content: `Something went wrong with the provider's server, and we were unable to retrieve the result (${error.message}).`};
+        }
       }
-    } catch (error) {
-      console.log(error);
-      throw error;
     }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
