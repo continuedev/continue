@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "tailwindcss";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -15,5 +15,10 @@ export default defineConfig({
         assetFileNames: `assets/[name].[ext]`,
       },
     },
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/util/test/setupTests.ts",
   },
 });

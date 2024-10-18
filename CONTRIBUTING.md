@@ -19,7 +19,7 @@
       - [VS Code](#vs-code)
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
-        - [Debugging](#debugging-1)
+    - [Our Git Workflow](#our-git-workflow)
     - [Formatting](#formatting)
     - [Writing Slash Commands](#writing-slash-commands)
     - [Writing Context Providers](#writing-context-providers)
@@ -68,7 +68,7 @@ You can run the documentation server locally using either of the following metho
 
 #### Method 1: NPM Script
 
-1. Open your terminal and navigate to the `docs` subdirectory of the project.  The `docusaurus.config.js` file you'll see there is a sign you're in the right place.
+1. Open your terminal and navigate to the `docs` subdirectory of the project. The `docusaurus.config.js` file you'll see there is a sign you're in the right place.
 
 2. Run the following command to install the necessary dependencies for the documentation server:
 
@@ -141,33 +141,7 @@ Similarly, any changes to `core` or `extensions/vscode` will be automatically in
 
 #### JetBrains
 
-Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 17, as specified in `extensions/intellij/build.gradle.kts`. You should also ensure that you have the Gradle plugin installed.
-
-1. Clone the repository
-2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows. This will install and build all of the necessary dependencies.
-3. To test the plugin, select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button as shown in this screenshot:
-   ![img](./media/IntelliJRunPluginScreenshot.png)
-4. To package the extension, run `./gradlew build` (or `./gradlew.bat build` on Windows) from the `extensions/intellij` directory. This will generate a .zip file in `extensions/intellij/build/distributions` with the version defined in `extensions/intellij/gradle.properties`.
-5. If you make changes, you may need to re-build before running the "Build Plugin" configuration
-
-   a. If you change code from the `core` or `binary` directories, make sure to run `npm run build` from the `binary` directory to create a new binary.
-
-   b. If you change code from the `gui` directory, make sure to run `npm run build` from the `gui` directory to create a new bundle.
-
-   c. Any changes to the Kotlin coded in the `extensions/intellij` directory will be automatically included when you run "Build Plugin"
-
-##### Debugging
-
-Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `binary` directory. The JetBrains extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
-
-For the sake of rapid development, it is also possible to configure this communication to happen over local TCP sockets:
-
-1. In [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt), change the `useTcp` variable to `true`.
-2. Open a VS Code window (we recommend this for a preconfigured Typescript debugging experience) with the `continue` repository. Select the "Core Binary" debug configuration and press play.
-3. Run the "Run Plugin" Gradle configuration.
-4. You can now set breakpoints in any of the TypeScript files in VS Code. If you make changes to the code, restart the "Core Binary" debug configuration and reload the _Host IntelliJ_ window.
-
-If you make changes to Kotlin code, they can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes".
+See the [`CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBrains extension.
 
 ### Our Git Workflow
 
