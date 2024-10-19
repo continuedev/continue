@@ -62,7 +62,7 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     vscode.SymbolKind.Constructor,
   ];
 
-  constructor(public customQuickActionsConfigs?: QuickActionConfig[]) {}
+  constructor(private customQuickActionsConfigs?: QuickActionConfig[]) {}
 
   getCustomCommands(
     range: vscode.Range,

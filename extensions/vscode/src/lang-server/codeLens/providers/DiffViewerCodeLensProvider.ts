@@ -4,7 +4,7 @@ import { DiffManager, DIFF_DIRECTORY } from "../../../diff/horizontal";
 import { getMetaKeyLabel } from "../../../util/util";
 
 export class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
-  constructor(public diffManager: DiffManager) {}
+  constructor(private diffManager: DiffManager) {}
 
   public provideCodeLenses(
     document: vscode.TextDocument,

@@ -8,7 +8,7 @@ export class AutocompleteLruCache {
   private static capacity = 1000;
   private mutex = new Mutex();
 
-  constructor(public db: DatabaseConnection) {}
+  constructor(private db: DatabaseConnection) {}
 
   static async get(): Promise<AutocompleteLruCache> {
     const db = await open({

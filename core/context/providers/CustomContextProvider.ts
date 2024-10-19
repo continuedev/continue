@@ -8,7 +8,7 @@ import type {
 } from "../../";
 
 class CustomContextProviderClass implements IContextProvider {
-  constructor(public custom: CustomContextProvider) {}
+  constructor(private custom: CustomContextProvider) {}
 
   get description(): ContextProviderDescription {
     return {
