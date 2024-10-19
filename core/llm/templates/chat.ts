@@ -107,9 +107,8 @@ function anthropicTemplateMessages(messages: ChatMessage[]): string {
     prompt += `${HUMAN_PROMPT} Hello.`;
   }
   for (const msg of messages) {
-    prompt += `${
-      msg.role === "user" || msg.role === "system" ? HUMAN_PROMPT : AI_PROMPT
-    } ${msg.content} `;
+    prompt += `${msg.role === "user" || msg.role === "system" ? HUMAN_PROMPT : AI_PROMPT
+      } ${msg.content} `;
   }
 
   prompt += AI_PROMPT;
@@ -274,12 +273,22 @@ const gemmaTemplateMessage = templateFactory(
   "<end_of_turn>\n",
 );
 
+const graniteTemplateMessages = templateFactory(
+  (msg) => (!!msg ? `\n\nSystem:\n ${msg.content}\n\n` : ""),
+  "Question:\n",
+  "Answer:\n",
+  "\n\n",
+  "",
+  "",
+);
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
+  graniteTemplateMessages,
   llama2TemplateMessages,
   llama3TemplateMessages,
   llavaTemplateMessages,

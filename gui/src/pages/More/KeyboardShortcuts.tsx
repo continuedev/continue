@@ -141,11 +141,6 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     windows: "⌃ '",
     description: "Toggle Selected Model",
   },
-  {
-    mac: "⌘ K ⌘ A",
-    windows: "⌃ K ⌃ A",
-    description: "Toggle Autocomplete Enabled",
-  },
 ];
 
 const jetbrainsShortcuts: KeyboardShortcutProps[] = [

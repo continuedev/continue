@@ -14,7 +14,7 @@ import {
   PromptLog,
   PromptTemplate,
   RequestOptions,
-  TemplateType,
+  TemplateType
 } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
@@ -114,13 +114,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
 
-  // For IBM watsonx only.
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxStopToken?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // For IBM watsonx deployment ID
+   deploymentId?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -137,10 +132,8 @@ export abstract class BaseLLM implements ILLM {
     this.model = options.model;
     // Use @continuedev/llm-info package to autodetect certain parameters
     const llmInfo = findLlmInfo(this.model);
-
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
-
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
     this.systemMessage = options.systemMessage;
@@ -186,13 +179,8 @@ export abstract class BaseLLM implements ILLM {
     this.apiBase = options.apiBase;
     this.cacheBehavior = options.cacheBehavior;
 
-    // for watsonx only
-    this.watsonxUrl = options.watsonxUrl;
-    this.watsonxCreds = options.watsonxCreds;
-    this.watsonxProjectId = options.watsonxProjectId;
-    this.watsonxStopToken = options.watsonxStopToken;
-    this.watsonxApiVersion = options.watsonxApiVersion;
-    this.watsonxFullUrl = options.watsonxFullUrl;
+    // For watsonx deployment ID
+    this.deploymentId = options.deploymentId;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

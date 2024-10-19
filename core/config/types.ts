@@ -338,11 +338,7 @@ declare global {
     capabilities?: ModelCapability;
 
     // IBM watsonx options
-    watsonxUrl?: string;
-    watsonxCreds?: string;
-    watsonxProjectId?: string;
-    watsonxStopToken?: string;
-    watsonxApiVersion?: string;
+    deploymentId?: string;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,

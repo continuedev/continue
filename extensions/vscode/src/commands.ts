@@ -483,11 +483,20 @@ const commandsMap: (
     "continue.applyCodeFromChat": () => {
       sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
-    "continue.toggleFullScreen": () => {
+    "continue.toggleFullScreen": ({
+      newWindow,
+    }: { newWindow?: boolean } = {}) => {
       focusGUI();
 
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
+
+      // Check if the active editor is the Continue GUI View
+      if (fullScreenTab && fullScreenTab.isActive) {
+        //Full screen open and focused - close it
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor"); //this will trigger the onDidDispose listener below
+        return;
+      }
 
       if (fullScreenTab && fullScreenPanel) {
         //Full screen open, but not focused - focus it
@@ -528,7 +537,17 @@ const commandsMap: (
         extensionContext.subscriptions,
       );
 
-      vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
+      if (newWindow) {
+        vscode.commands.executeCommand(
+          "workbench.action.copyEditorToNewWindow",
+        );
+      }
+    },
+    "continue.toggleNewWindow": () => {
+      focusGUI();
+      vscode.commands.executeCommand("continue.toggleFullScreen", {
+        newWindow: true,
+      });
     },
     "continue.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
@@ -632,8 +651,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -650,6 +669,9 @@ const commandsMap: (
         },
         {
           label: "$(screen-full) Open full screen chat (Cmd+K Cmd+M)",
+        },
+        {
+          label: "$(link-external) Open chat in a new window",
         },
         {
           label: quickPickStatusText(targetStatus),
@@ -702,6 +724,10 @@ const commandsMap: (
           "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
         ) {
           vscode.commands.executeCommand("continue.toggleFullScreen");
+        } else if (
+          selectedOption === "$(link-external) Open chat in a new window"
+        ) {
+          vscode.commands.executeCommand("continue.toggleNewWindow");
         } else if (selectedOption === "$(question) Open help center") {
           focusGUI();
           vscode.commands.executeCommand("continue.navigateTo", "/more");

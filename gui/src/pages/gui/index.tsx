@@ -1,14 +1,20 @@
 import { Chat } from "./Chat";
 import { History } from "../../components/History";
+import styled from "styled-components";
+import { vscSidebarBorder } from "../../components";
+
+export const Aside = styled.aside`
+  border-right: 1px solid ${vscSidebarBorder};
+`;
 
 export default function GUI() {
   return (
     <div className="flex overflow-scroll">
-      <aside className="4xl:block border-vsc-input-border hidden w-96 overflow-y-auto border-0 border-r border-solid">
+      <Aside className="overflow-y-auto w-96 hidden 4xl:block">
         <History />
-      </aside>
+      </Aside>
 
-      <main className="flex flex-1 flex-col overflow-y-auto">
+      <main className="overflow-y-auto flex-1 flex flex-col">
         <Chat />
       </main>
     </div>

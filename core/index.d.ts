@@ -366,13 +366,8 @@ export interface LLMOptions {
   projectId?: string;
   capabilities?: ModelCapability;
 
-  // IBM watsonx options
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxStopToken?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // IBM watsonx deployment ID
+ deploymentId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -606,13 +601,13 @@ type TemplateType =
   | "codellama-70b"
   | "llava"
   | "gemma"
-  | "llama3";
+  | "llama3"
+  | "granite";
 
 type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
-  | "anthropic-vertexai"
   | "cohere"
   | "together"
   | "ollama"
@@ -625,9 +620,7 @@ type ModelProvider =
   | "lmstudio"
   | "llamafile"
   | "gemini"
-  | "gemini-vertexai"
   | "mistral"
-  | "mistral-vertexai"
   | "bedrock"
   | "bedrockimport"
   | "sagemaker"
@@ -822,7 +815,8 @@ export type EmbeddingsProviderName =
   | "deepinfra"
   | "nvidia"
   | "voyage"
-  | "mistral";
+  | "mistral"
+  | "watsonx";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -839,6 +833,10 @@ export interface EmbedOptions {
 
   // AWS and GCP Options
   region?: string;
+
+  // Watsonx options
+  deploymentId?: string;
+  projectId?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {

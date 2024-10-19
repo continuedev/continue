@@ -15,8 +15,6 @@ import MonacoPage from "./pages/monaco";
 import MorePage from "./pages/More";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
-import { ROUTES } from "./util/navigation";
-import ConfigErrorPage from "./pages/config-error";
 
 const router = createMemoryRouter([
   {
@@ -55,10 +53,6 @@ const router = createMemoryRouter([
       {
         path: "/more",
         element: <MorePage />,
-      },
-      {
-        path: ROUTES.CONFIG_ERROR,
-        element: <ConfigErrorPage />,
       },
       {
         path: "/monaco",

@@ -19,12 +19,12 @@ function ProviderAlert() {
   return (
     <div className="w-full">
       <Alert type="info">
-        <p className="m-0 text-sm font-semibold">
+        <p className="font-semibold text-sm m-0">
           Prefer to use a different provider like OpenAI?
         </p>
-        <p className="m-0 mt-1 text-xs">
+        <p className="m-0 mt-1">
           <a
-            className="cursor-pointer text-inherit underline hover:text-inherit"
+            className="text-inherit underline cursor-pointer hover:text-inherit"
             onClick={onClick}
           >
             Click here

@@ -15,7 +15,6 @@ import { createSelector } from "reselect";
 import { v4 } from "uuid";
 import { RootState } from "../store";
 import { v4 as uuidv4 } from "uuid";
-import { ConfigValidationError } from "core/config/validation";
 
 export const memoizedContextItemsSelector = createSelector(
   [(state: RootState) => state.state.history],
@@ -45,7 +44,6 @@ type State = {
   defaultModelTitle: string;
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
-  configError: ConfigValidationError[] | undefined;
 };
 
 const initialState: State = {
@@ -54,7 +52,6 @@ const initialState: State = {
   ttsActive: false,
   active: false,
   isGatheringContext: false,
-  configError: undefined,
   config: {
     slashCommands: [
       {
@@ -98,12 +95,6 @@ export const stateSlice = createSlice({
         "";
       state.config = config;
       state.defaultModelTitle = defaultModelTitle;
-    },
-    setConfigError: (
-      state,
-      { payload: error }: PayloadAction<ConfigValidationError[] | undefined>,
-    ) => {
-      state.configError = error;
     },
     addPromptCompletionPair: (
       state,
@@ -458,7 +449,6 @@ export const {
   setEditingAtIds,
   setDefaultModel,
   setConfig,
-  setConfigError,
   addPromptCompletionPair,
   setTTSActive,
   setActive,
@@ -469,7 +459,7 @@ export const {
   consumeMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
-  setIsGatheringContext,
+  setIsGatheringContext
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

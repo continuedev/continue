@@ -63,7 +63,7 @@ function QuickstartSubmitButton() {
     <div className="mt-4 w-full">
       <Button
         onClick={onClick}
-        className="grid w-full grid-flow-col items-center gap-2"
+        className="grid grid-flow-col items-center gap-2 w-full"
       >
         Get started using our API keys
       </Button>
