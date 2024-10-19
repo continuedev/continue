@@ -174,7 +174,8 @@ export default class DocsService {
       }
     }
 
-    const docs = await this.list();
+    // Get docs from both database and config file
+    const docs = await this.getCombinedDocsList();
 
     for (const doc of docs) {
       const generator = this.indexAndAdd(doc, reIndex);
@@ -191,6 +192,24 @@ export default class DocsService {
     );
 
     return docs;
+  }
+
+  private async getCombinedDocsList(): Promise<SiteIndexingConfig[]> {
+    const dbDocs = await this.list();
+    const configDocs = this.config.docs || [];
+
+    const combinedDocs = [
+      ...dbDocs.map(doc => ({
+        startUrl: doc.startUrl,
+        title: doc.title,
+        faviconUrl: doc.favicon,
+      })),
+      ...configDocs.filter(
+        (configDoc) => !dbDocs.some((dbDoc) => dbDoc.startUrl === configDoc.startUrl)
+      )
+    ];
+
+    return combinedDocs;
   }
 
   async *indexAndAdd(
