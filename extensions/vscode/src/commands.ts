@@ -486,6 +486,7 @@ const commandsMap: (
     "pearai.aiderMode": () => {
       // Check if aider is already open by checking open tabs
       const aiderTab = getAiderTab();
+      core.invoke("llm/startAiderProcess", undefined);
       console.log("Aider tab found:", aiderTab);
       console.log("Aider tab active:", aiderTab?.isActive);
       console.log("Aider panel exists:", !!aiderPanel);
@@ -528,6 +529,9 @@ const commandsMap: (
       //When panel closes, reset the webview and focus
       panel.onDidDispose(
         () => {
+          // Kill background process
+          core.invoke("llm/killAiderProcess", undefined);
+
           // The following order is important as it does not reset the history in chat when closing creator
           vscode.commands.executeCommand("pearai.focusContinueInput");
           sidebar.resetWebviewProtocolWebview();

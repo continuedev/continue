@@ -52,7 +52,15 @@ class Aider extends BaseLLM {
     );
     console.log("Aider constructor called");
     //this.startAiderChat("claude-3-5-sonnet-20240620", this.apiKey);
-    this.startAiderChat(this.model, this.apiKey);
+    // this.startAiderChat(this.model, this.apiKey);
+  }
+
+  public killAiderProcess(): void {
+    if (this.aiderProcess && !this.aiderProcess.killed) {
+      console.log("Killing Aider process...");
+      this.aiderProcess.kill();
+      this.aiderProcess = null;
+    }
   }
 
   public setPearAIAccessToken(value: string | undefined): void {
@@ -91,14 +99,6 @@ class Aider extends BaseLLM {
     }
   }
 
-  private async _getHeaders() {
-    await this.credentials.checkAndUpdateCredentials();
-    return {
-      "Content-Type": "application/json",
-      ...(await getHeaders()),
-    };
-  }
-
   private captureAiderOutput(data: Buffer): void {
     const output = data.toString();
     // console.log("Raw Aider output:");
@@ -110,10 +110,15 @@ class Aider extends BaseLLM {
     this.aiderOutput += cleanOutput;
   }
 
-  async startAiderChat(
+  public async startAiderChat(
     model: string,
     apiKey: string | undefined,
   ): Promise<void> {
+    if (this.aiderProcess && !this.aiderProcess.killed) {
+      console.log("Aider process already running");
+      return;
+    }
+
     return new Promise(async (resolve, reject) => {
       let currentDir: string;
       if (this.getCurrentDirectory) {
