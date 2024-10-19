@@ -165,4 +165,65 @@ describe.skip("DocsService Integration Tests", () => {
 
     expect(await docsService.has(mockSiteConfig.startUrl)).toBe(false);
   });
+
+  test("getCombinedDocsList returns combined list from database and config", async () => {
+    // Setup: Add a doc to the database
+    const dbDoc = {
+      startUrl: "https://db.com",
+      title: "DB Doc",
+      faviconUrl: "https://db.com/favicon.ico",
+    };
+    await docsService.indexAndAdd(dbDoc);
+
+    // Setup: Add a different doc to the config
+    const configDoc = {
+      startUrl: "https://config.com",
+      title: "Config Doc",
+      faviconUrl: "https://config.com/favicon.ico",
+    };
+    editConfigJson((config) => ({
+      ...config,
+      docs: [configDoc],
+    }));
+
+    await getReloadedConfig();
+
+    // Act: Get the combined list
+    const combinedDocs = await (docsService as any).getCombinedDocsList();
+
+    // Assert
+    expect(combinedDocs).toContainEqual(dbDoc);
+    expect(combinedDocs).toContainEqual(configDoc);
+    expect(combinedDocs.length).toBe(2);
+  });
+
+  test("getCombinedDocsList handles duplicate entries", async () => {
+    // Setup: Add a doc to the database
+    const doc = {
+      startUrl: "https://example.com",
+      title: "DB Version",
+      faviconUrl: "https://example.com/favicon.ico",
+    };
+    await docsService.indexAndAdd(doc);
+
+    // Setup: Add the same doc to the config with a different title
+    const configDoc = {
+      ...doc,
+      title: "Config Version",
+    };
+    editConfigJson((config) => ({
+      ...config,
+      docs: [configDoc],
+    }));
+
+    await getReloadedConfig();
+
+    // Act: Get the combined list
+    const combinedDocs = await (docsService as any).getCombinedDocsList();
+
+    // Assert
+    expect(combinedDocs).toContainEqual(doc);
+    expect(combinedDocs).not.toContainEqual(configDoc);
+    expect(combinedDocs.length).toBe(1);
+  });
 });
