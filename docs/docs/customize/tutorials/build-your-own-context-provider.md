@@ -104,11 +104,20 @@ const ReadMeContextProvider: CustomContextProvider = {
   loadSubmenuItems: async (
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> => {
+    const { ide } = args;
+
     // Filter all workspace files for READMEs
-    const allFiles = await args.ide.listWorkspaceContents();
-    const readmes = allFiles.filter((filepath) =>
-      filepath.endsWith("README.md"),
+    const workspaceDirs = await ide.getWorkspaceDirs()
+
+    const allFiles = await Promise.all(
+      workspaceDirs.map(dir => ide.subprocess(`find ${dir} -name "README.md"`)),
     );
+
+    // 'readmes' now contains an array of file paths for each README.md file found in the workspace,
+    // excluding those in 'node_modules'
+    const readmes = allFiles
+      .flatMap(mds => mds[0].split("\n"))
+      .filter(file => file.trim() !== '' && !file.includes("/node_modules/"))
 
     // Return the items that will be shown in the dropdown
     return readmes.map((filepath) => {
