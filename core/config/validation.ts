@@ -1,4 +1,5 @@
 import { SerializedContinueConfig } from "../";
+import { Telemetry } from "../util/posthog";
 
 export interface ConfigValidationError {
   fatal: boolean;
@@ -116,5 +117,17 @@ export function validateConfig(config: SerializedContinueConfig) {
     }
   });
 
-  return errors.length > 0 ? errors : undefined;
+  if (errors.length > 0) {
+    void Telemetry.capture(
+      "configValidationError",
+      {
+        errors,
+      },
+      true,
+    );
+
+    return errors;
+  }
+
+  return undefined;
 }

@@ -1,6 +1,7 @@
 # Contributing to Continue (JetBrains extension) <!-- omit in toc -->
 
-This file is for contribution guidelines specific to the JetBrains extension. See the root [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
+This file is for contribution guidelines specific to the JetBrains extension. See the root [
+`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -13,11 +14,10 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
   - [Misc](#misc)
 - [Development Workflow](#development-workflow)
   - [Running the extension](#running-the-extension)
-  - [Available Gradle tasks](#available-gradle-tasks)
-- [Debugging](#debugging)
   - [Reloading changes](#reloading-changes)
   - [Setting breakpoints](#setting-breakpoints)
-- [Packaging](#packaging)
+  - [Available Gradle tasks](#available-gradle-tasks)
+  - [Packaging](#packaging)
 
 ## Architecture Overview
 
@@ -57,13 +57,31 @@ This project requires Node.js version 20.11.0 (LTS) or higher. You have two opti
 
 ## Development Workflow
 
+Because the `gui` and `core` are written in TypeScript, our development workflow is built around the assumption that you have VS Code installed.
+
 ### Running the extension
 
-- Select the "Run Continue" Gradle configuration in the top-right corner of the IDE
-- Click the "Run" or "Debug" button
-  - The first time running this will install the IDE version specified by the `platformVersion` property in [`./run/Run Continue.run.xml`](./.run/Run%20Continue.run.xml). This will take a moment as the installation size can be close to 1GB.
+- Open the project in VS Code and star the `Core binary` task
+- Switch back to Intellij and select the "Run Continue" configuration in the top-right corner of the IDE
+- Click the "Debug" button
+  - The first time running this will install the IDE version specified by the `platformVersion` property in [`./run/Run Extension.run.xml`](./.run/Run%20Extension.run.xml). This will take a moment as the installation size can be close to 1GB.
 
-![run-extension-screenshot](../../media/run-intellij-extension.png)
+![run-extension-screenshot](../../media/run-intellij-extension.png)\
+
+This should open a new instance on IntelliJ with the extension installed and connected via TCP to the server started through the `Core binary` task.
+
+### Reloading changes
+
+- `extensions/intellij`: Attempt to reload changed classes by selecting `Run | Debugging Actions | Reload Changed Classes`
+  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
+- `gui`: Changes will be reloaded automatically
+- `core`: Run `npm run build` from the `binary` directory and restart the `Core binary` task in VS Code
+
+### Setting breakpoints
+
+- `extensions/intellij`: Breakpoints can be set in Intellij
+- `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
+- `core`: Breakpoints can be set in VS Code
 
 ### Available Gradle tasks
 
@@ -83,30 +101,10 @@ runIde - Runs the IDE instance with the developed plugin installed.
 verifyPluginConfiguration - Checks if Java and Kotlin compilers configuration meet IntelliJ SDK requirements
 ```
 
-## Debugging
-
-### Reloading changes
-
-- `extensions/intellij`: Attempt to reload changed classes by selecting
-  `Run | Debugging Actions | Reload Changed Classes`
-  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
-- `gui`: Run `npm run build` from the `gui` directory
-- `core`: Run `npm run build` from the `binary` directory
-
-### Setting breakpoints
-
-- `extensions/intellij`: Run the extension in debug mode
-- `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
-- `core`: To set breakpoints in `core`, we need to start `binary` in a debug configuration
-  - Select the "Run Continue (TCP)" task in the top right corner
-  - Open the project in a VS Code window (we recommend this for a preconfigured Typescript debugging experience)
-  - Select the "Core Binary" task from the Run and Debug panel
-  - You can now set breakpoints in `core`. Note that if you make changes, you'll need to restart the "Core Binary"
-    task and reload changes classes in Intellij.
-
-## Packaging
+### Packaging
 
 - Unix: `./gradlew build`
 - Windows: `./gradlew.bat build`
 
-This will generate a .zip file in `./build/distributions` with the version defined in [`./gradle.properties`](./gradle.properties)
+This will generate a .zip file in `./build/distributions` with the version defined in [
+`./gradle.properties`](./gradle.properties)

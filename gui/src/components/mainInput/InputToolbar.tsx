@@ -49,7 +49,10 @@ const HoverItem = styled.span<{ isActive?: boolean }>`
   padding-top: 2px;
   padding-bottom: 2px;
   cursor: pointer;
-  transition: color 200ms, background-color 200ms, box-shadow 200ms;
+  transition:
+    color 200ms,
+    background-color 200ms,
+    box-shadow 200ms;
 `;
 
 const EnterButton = styled.button`
@@ -99,9 +102,9 @@ function InputToolbar(props: InputToolbarProps) {
         id="input-toolbar"
         className="flex"
       >
-        <div className="flex gap-2 items-center whitespace-nowrap justify-start">
+        <div className="flex items-center justify-start gap-2 whitespace-nowrap">
           <ModelSelect />
-          <div className="items-center hidden xs:flex gap-1 text-gray-400 transition-colors duration-200 -mb-1">
+          <div className="xs:flex -mb-1 hidden items-center gap-1 text-gray-400 transition-colors duration-200">
             {supportsImages && (
               <>
                 <input
@@ -139,8 +142,8 @@ function InputToolbar(props: InputToolbarProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400 ">
-          <div className="hidden sm:flex transition-colors duration-200 hover:underline">
+        <div className="flex items-center gap-2 whitespace-nowrap text-gray-400">
+          <div className="hidden transition-colors duration-200 hover:underline sm:flex">
             {props.activeKey === "Alt" ? (
               <HoverItem className="underline">
                 {`${getAltKeyLabel()}⏎ 
@@ -169,7 +172,7 @@ function InputToolbar(props: InputToolbarProps) {
           <EnterButton
             onClick={(e) => {
               props.onEnter({
-                useCodebase: isMetaEquivalentKeyPressed(e),
+                useCodebase: isMetaEquivalentKeyPressed(e as any),
                 noContext: useActiveFile ? e.altKey : !e.altKey,
               });
             }}
