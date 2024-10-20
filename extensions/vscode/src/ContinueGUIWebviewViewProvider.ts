@@ -171,7 +171,6 @@ export class ContinueGUIWebviewViewProvider
       }
     });
 
-    console.log("IMHERE88: ", panel.viewType)
     this.webviewProtocol.addWebview(panel.viewType, panel.webview);
 
     return `<!DOCTYPE html>

@@ -37,7 +37,6 @@ export class VsCodeWebviewProtocol
 
   send(messageType: string, data: any, messageId?: string, specificWebviews?: string[],
   ): string {
-    console.log("MESSAGETYPE: ", messageType, specificWebviews)
     const id = messageId ?? uuidv4();
     if (specificWebviews) {
       specificWebviews.forEach(name => {
@@ -91,7 +90,6 @@ export class VsCodeWebviewProtocol
   }
 
   addWebview(viewType: string, webView: vscode.Webview) {
-    console.log(`Adding webview for ${viewType}`);
     this._webviews.set(viewType, webView);
     const listener = webView.onDidReceiveMessage(async (msg) => {
       if (!msg.messageType || !msg.messageId) {
