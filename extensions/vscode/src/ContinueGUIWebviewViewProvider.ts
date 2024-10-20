@@ -9,7 +9,7 @@ import { VsCodeWebviewProtocol } from "./webviewProtocol";
 export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
-  public static readonly viewType = "pearai.continueGUIView";
+  public static readonly viewType = "pearai.pearAIChatView";
   public webviewProtocol: VsCodeWebviewProtocol;
   private _webview?: vscode.Webview;
   private _webviewView?: vscode.WebviewView;
@@ -84,7 +84,7 @@ export class ContinueGUIWebviewViewProvider
   public resetWebviewProtocolWebview(): void {
     if (this._webview) {
       this.webviewProtocol.resetWebviews()
-      this.webviewProtocol.addWebview(this._webview);
+      // this.webviewProtocol.addWebview(this._webview);
     } else {
       console.warn("no webview found during reset");
     }
@@ -171,7 +171,8 @@ export class ContinueGUIWebviewViewProvider
       }
     });
 
-    this.webviewProtocol.addWebview(panel.webview);
+    console.log("IMHERE88: ", panel.viewType)
+    this.webviewProtocol.addWebview(panel.viewType, panel.webview);
 
     return `<!DOCTYPE html>
     <html lang="en">
