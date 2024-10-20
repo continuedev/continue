@@ -1,9 +1,0 @@
-Context
-I'm building within a VSCode fork codebase called PearAI. Within this codebase I also have an extension integrated called pearai-submodule, and this is a fork of another codebase called Continue.
-Now I want to integrate an overlay modal that popups in the vscode codebase that covers most of the screen. I already have this overlay modal done, and it connects with the extension by resolving with this code:
-```await this._webviewViewService.resolve(
-			"pearai.overlayWebview3",
-			this.webviewView!,
-			source.token,
-		);```
-So then in @VsCodeExtension and @ContinueGUIWebviewViewProvider I resolve the pearai.overlayWebview3 name and set the html content.
