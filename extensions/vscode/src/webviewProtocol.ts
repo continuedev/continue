@@ -37,10 +37,13 @@ export class VsCodeWebviewProtocol
 
   send(messageType: string, data: any, messageId?: string): string {
     const id = messageId ?? uuidv4();
-    this.webview?.postMessage({
-      messageType,
-      data,
-      messageId: id,
+    this.webviews.forEach(webview => {
+      console.log("SENDING: ", id, data)
+      webview.postMessage({
+        messageType,
+        data,
+        messageId: id,
+      });
     });
     return id;
   }
@@ -57,18 +60,21 @@ export class VsCodeWebviewProtocol
     this.listeners.get(messageType)?.push(handler);
   }
 
-  _webview?: vscode.Webview;
-  _webviewListener?: vscode.Disposable;
+  _webviews: vscode.Webview[] = [];
+  _webviewListeners: vscode.Disposable[] = [];
 
-  get webview(): vscode.Webview | undefined {
-    return this._webview;
+  get webviews(): vscode.Webview[] {
+    return this._webviews;
+  }
+  resetWebviews() {
+    this._webviews = [];
+    this._webviewListeners.forEach(listener => listener.dispose());
+    this._webviewListeners = [];
   }
 
-  set webview(webView: vscode.Webview) {
-    this._webview = webView;
-    this._webviewListener?.dispose();
-
-    this._webviewListener = this._webview.onDidReceiveMessage(async (msg) => {
+  addWebview(webView: vscode.Webview) {
+    this._webviews.push(webView);
+    const listener = webView.onDidReceiveMessage(async (msg) => {
       if (!msg.messageType || !msg.messageId) {
         throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
       }
@@ -224,9 +230,20 @@ export class VsCodeWebviewProtocol
         }
       }
     });
+    this._webviewListeners.push(listener);
+  }
+
+  removeWebview(webView: vscode.Webview) {
+    const index = this._webviews.indexOf(webView);
+    if (index !== -1) {
+      this._webviews.splice(index, 1);
+      this._webviewListeners[index].dispose();
+      this._webviewListeners.splice(index, 1);
+    }
   }
 
   constructor(private readonly reloadConfig: () => void) {}
+
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
@@ -246,7 +263,7 @@ export class VsCodeWebviewProtocol
     const messageId = uuidv4();
     return new Promise(async (resolve) => {
       let i = 0;
-      while (!this.webview) {
+      while (this.webviews.length === 0) {
         if (i >= 10) {
           resolve(undefined);
           return;
@@ -257,13 +274,15 @@ export class VsCodeWebviewProtocol
       }
 
       this.send(messageType, data, messageId);
-      const disposable = this.webview.onDidReceiveMessage(
-        (msg: Message<ToWebviewProtocol[T][1]>) => {
-          if (msg.messageId === messageId) {
-            resolve(msg.data);
-            disposable?.dispose();
-          }
-        },
+      const disposables = this.webviews.map(webview =>
+        webview.onDidReceiveMessage(
+          (msg: Message<ToWebviewProtocol[T][1]>) => {
+            if (msg.messageId === messageId) {
+              resolve(msg.data);
+              disposables.forEach(d => d.dispose());
+            }
+          },
+        )
       );
     });
   }
