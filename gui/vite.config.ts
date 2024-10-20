@@ -6,7 +6,6 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: "build",
     // Change the output .js filename to not include a hash
     rollupOptions: {
       // external: ["vscode-webview"],

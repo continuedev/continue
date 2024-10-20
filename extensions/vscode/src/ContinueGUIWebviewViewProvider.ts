@@ -5,11 +5,13 @@ import * as vscode from "vscode";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { PEARAI_VIEW_ID } from "./extension/VsCodeExtension";
+
 
 export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
-  public static readonly viewType = "pearai.pearAIChatView";
+  public static readonly viewType = PEARAI_VIEW_ID;
   public webviewProtocol: VsCodeWebviewProtocol;
   private _webview?: vscode.Webview;
   private _webviewView?: vscode.WebviewView;
@@ -62,17 +64,6 @@ export class ContinueGUIWebviewViewProvider
     _token: vscode.CancellationToken,
   ): void | Thenable<void> {
     this._webview = webviewView.webview;
-    const extensionUri = getExtensionUri();
-    console.log("=================== RESOLVING WEBVIEW IN CONTINUE PROVIDER2");
-    console.log("===== Webview view type: ", webviewView.viewType);
-
-    // this._webview.options = {
-    //   enableScripts: true,
-    //   localResourceRoots: [
-    //     vscode.Uri.joinPath(extensionUri, "out"),
-    //     vscode.Uri.joinPath(extensionUri, "gui"),
-    //   ],
-    // };
 
     this._webview.onDidReceiveMessage((message) => {
       return this.handleWebviewMessage(message);
@@ -82,8 +73,6 @@ export class ContinueGUIWebviewViewProvider
       webviewView,
     );
   }
-
-
 
   get isVisible() {
     return this._webviewView?.visible;
@@ -114,7 +103,7 @@ export class ContinueGUIWebviewViewProvider
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
   ) {
-    this.outputChannel = vscode.window.createOutputChannel("Continue");
+    this.outputChannel = vscode.window.createOutputChannel("PearAI");
     this.enableDebugLogs = false;
     this.updateDebugLogsStatus();
     this.setupDebugLogsListener();
@@ -122,8 +111,6 @@ export class ContinueGUIWebviewViewProvider
     this.webviewProtocol = new VsCodeWebviewProtocol(
       (async () => {
         const configHandler = await this.configHandlerPromise;
-        console.log("Config handler: ");
-        console.log(configHandler);
         return configHandler.reloadConfig();
       }).bind(this),
     );
@@ -136,8 +123,7 @@ export class ContinueGUIWebviewViewProvider
     edits: FileEdit[] | undefined = undefined,
     isFullScreen = false,
   ): string {
-    const isOverlay = panel.viewType === "pearai.overlayWebview3";
-    console.log("===== Panel view type: ", panel.viewType);
+    const isOverlay = panel?.title === "PearAIOverlay"; // defined in pearai-app PearOverlayPart.ts
     const extensionUri = getExtensionUri();
     let scriptUri: string;
     let styleMainUri: string;
@@ -196,11 +182,10 @@ export class ContinueGUIWebviewViewProvider
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script>
           const vscode = acquireVsCodeApi();
-          window.isOverlayPearAI = ${isOverlay};
         </script>
         <link href="${styleMainUri}" rel="stylesheet">
 
-        <title>Continue</title>
+        <title>PearAI</title>
       </head>
       <body>
         <div id="root"></div>
@@ -249,6 +234,7 @@ export class ContinueGUIWebviewViewProvider
           ) || [],
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
+        <script>window.isOverlayPearAI = ${isOverlay}</script>
 
         ${
           edits

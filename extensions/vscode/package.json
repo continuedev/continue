@@ -533,15 +533,8 @@
           "type": "webview",
           "id": "pearai.pearAIChatView",
           "name": "",
-          "visibility": "visible"
-        }
-      ],
-      "PearAIOverlay": [
-        {
-          "type": "webview",
-          "id": "pearai.continueGUIView2",
-          "name": "PearAIOverlay",
-          "visibility": "visible"
+          "visibility": "visible",
+          "title": "PearAISidebar"
         }
       ]
     },

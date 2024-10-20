@@ -529,10 +529,6 @@ const commandsMap: (
     "pearai.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
     },
-    "pearai.switchWebview": () => {
-      console.log("switch webview 2");
-      vscode.commands.executeCommand("pearai.internal.switchWebview");
-    },
     "pearai.selectFilesAsContext": (
       firstUri: vscode.Uri,
       uris: vscode.Uri[],

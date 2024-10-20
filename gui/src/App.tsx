@@ -97,7 +97,6 @@ const router = createMemoryRouter([
 
 function App() {
   const dispatch = useDispatch();
-  console.log("STARTING REACTJ SAPP =====================");
   console.log("Is overlay? ", (window as any).isOverlayPearAI);
   useSetup(dispatch);
 

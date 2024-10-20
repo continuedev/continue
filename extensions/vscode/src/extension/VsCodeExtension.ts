@@ -33,6 +33,8 @@ import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+export const PEARAI_VIEW_ID = "pearai.pearAIChatView"
+
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
@@ -48,9 +50,6 @@ export class VsCodeExtension {
   private core: Core;
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
-
-  private overlay: ContinueGUIWebviewViewProvider;
-  private activeWebview: "sidebar" | "overlay" = "sidebar";
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -87,10 +86,10 @@ export class VsCodeExtension {
       this.extensionContext,
     );
 
-    // Sidebar
+    // Sidebar + Overlay
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
-        "pearai.pearAIChatView",
+        PEARAI_VIEW_ID,
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
@@ -98,32 +97,6 @@ export class VsCodeExtension {
       ),
     );
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
-
-    // Register PearAI overlay
-    this.overlay = new ContinueGUIWebviewViewProvider(
-      configHandlerPromise,
-      this.windowId + "_2",
-      this.extensionContext,
-    );
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "pearai.continueGUIView2",
-        this.overlay,
-        {
-          webviewOptions: { retainContextWhenHidden: true },
-        },
-      ),
-    );
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand(
-        "pearai.internal.switchWebview",
-        (context: SwitchWebviewContext) => {
-          console.log("switch webview: ", context.state);
-          this.switchWebview(context);
-        },
-      ),
-    );
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel("PearAI");
@@ -402,31 +375,6 @@ export class VsCodeExtension {
 
   static continueVirtualDocumentScheme = "pearai";
 
-  public switchWebview(context: SwitchWebviewContext) {
-    if (context.state === "closed" && this.activeWebview === "sidebar") {
-      return;
-    }
-    let activeProvider: ContinueGUIWebviewViewProvider;
-    if (context.state === "open") {
-      this.activeWebview = "overlay";
-      activeProvider = this.overlay;
-    } else {
-      this.activeWebview = "sidebar";
-      activeProvider = this.sidebar;
-    }
-
-    this.webviewProtocolPromise.then((protocol) => {
-      if (activeProvider.webview) {
-        protocol.webview = activeProvider.webview;
-      }
-    });
-
-    if (activeProvider.webviewProtocol) {
-      activeProvider.webviewProtocol.request("didChangeAvailableProfiles", {
-        profiles: [],
-      });
-    }
-  }
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
 
@@ -438,7 +386,3 @@ export class VsCodeExtension {
     this.configHandler.registerCustomContextProvider(contextProvider);
   }
 }
-
-type SwitchWebviewContext = {
-  state: "closed" | "open";
-};
