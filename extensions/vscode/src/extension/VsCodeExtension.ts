@@ -403,7 +403,9 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "pearai";
 
   public switchWebview(context: SwitchWebviewContext) {
-    console.log("switch webview 3");
+    if (context.state === "closed" && this.activeWebview === "sidebar") {
+      return;
+    }
     let activeProvider: ContinueGUIWebviewViewProvider;
     if (context.state === "open") {
       this.activeWebview = "overlay";
@@ -412,26 +414,19 @@ export class VsCodeExtension {
       this.activeWebview = "sidebar";
       activeProvider = this.sidebar;
     }
-    // this.activeWebview =
-    //   this.activeWebview === "sidebar" ? "overlay" : "sidebar";
-    // const activeProvider =
-    //   this.activeWebview === "sidebar" ? this.sidebar : this.overlay;
 
     this.webviewProtocolPromise.then((protocol) => {
       if (activeProvider.webview) {
         protocol.webview = activeProvider.webview;
       }
     });
-    // Refresh the webview content
-    activeProvider.webviewProtocol?.request("didChangeAvailableProfiles", {
-      profiles: [],
-    });
 
-    vscode.commands.executeCommand(
-      `pearai.continueGUIView${this.activeWebview === "sidebar" ? "" : "2"}.focus`,
-    );
+    if (activeProvider.webviewProtocol) {
+      activeProvider.webviewProtocol.request("didChangeAvailableProfiles", {
+        profiles: [],
+      });
+    }
   }
-
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
 
