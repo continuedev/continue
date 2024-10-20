@@ -66,6 +66,11 @@ export class VsCodeWebviewProtocol
   get webviews(): vscode.Webview[] {
     return this._webviews;
   }
+  resetWebviews() {
+    this._webviews = [];
+    this._webviewListeners.forEach(listener => listener.dispose());
+    this._webviewListeners = [];
+  }
 
   addWebview(webView: vscode.Webview) {
     this._webviews.push(webView);

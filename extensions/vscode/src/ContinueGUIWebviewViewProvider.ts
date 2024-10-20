@@ -82,11 +82,12 @@ export class ContinueGUIWebviewViewProvider
   }
 
   public resetWebviewProtocolWebview(): void {
-    // if (this._webview) {
-    //   this.webviewProtocol.webview = this._webview;
-    // } else {
-    //   console.warn("no webview found during reset");
-    // }
+    if (this._webview) {
+      this.webviewProtocol.resetWebviews()
+      this.webviewProtocol.addWebview(this._webview);
+    } else {
+      console.warn("no webview found during reset");
+    }
   }
 
   sendMainUserInput(input: string) {
