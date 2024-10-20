@@ -41,7 +41,6 @@ export class VsCodeExtension {
   private ide: VsCodeIde;
   private tabAutocompleteModel: TabAutocompleteModel;
   private sidebar: ContinueGUIWebviewViewProvider;
-  private sidebar2: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
@@ -49,6 +48,9 @@ export class VsCodeExtension {
   private core: Core;
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
+
+  private overlay: ContinueGUIWebviewViewProvider;
+  private activeWebview: "sidebar" | "overlay" = "sidebar";
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -78,37 +80,17 @@ export class VsCodeExtension {
     const configHandlerPromise = new Promise<ConfigHandler>((resolve) => {
       resolveConfigHandler = resolve;
     });
+
     this.sidebar = new ContinueGUIWebviewViewProvider(
       configHandlerPromise,
       this.windowId,
       this.extensionContext,
     );
 
-    this.sidebar2 = new ContinueGUIWebviewViewProvider(
-      configHandlerPromise,
-      this.windowId,
-      this.extensionContext,
-    );
-
-    // COMMENTING OUT SIDEBAR WILL MAKE OVERLAY WORK,
-    // COMMENTING OUT OVERLAY WILL MAKE SIDEBAR WORK.
-    // KEEPING BOTH WILL MAKE BOTH APPEAR ON UI. BUT ONLY SIDEBAR WILL HAVE FUNCTIONALITY.
-
     // Sidebar
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
         "pearai.continueGUIView",
-        this.sidebar2,
-        {
-          webviewOptions: { retainContextWhenHidden: true },
-        },
-      ),
-    );
-
-    // Register PearAI overlay
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "pearai.overlayWebview3",
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
@@ -116,7 +98,32 @@ export class VsCodeExtension {
       ),
     );
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
-    resolveWebviewProtocol(this.sidebar2.webviewProtocol);
+
+    // Register PearAI overlay
+    this.overlay = new ContinueGUIWebviewViewProvider(
+      configHandlerPromise,
+      this.windowId + "_2",
+      this.extensionContext,
+    );
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        "pearai.continueGUIView2",
+        this.overlay,
+        {
+          webviewOptions: { retainContextWhenHidden: true },
+        },
+      ),
+    );
+
+    context.subscriptions.push(
+      vscode.commands.registerCommand(
+        "pearai.internal.switchWebview",
+        (context: SwitchWebviewContext) => {
+          console.log("switch webview: ", context.state);
+          this.switchWebview(context);
+        },
+      ),
+    );
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel("PearAI");
@@ -395,6 +402,36 @@ export class VsCodeExtension {
 
   static continueVirtualDocumentScheme = "pearai";
 
+  public switchWebview(context: SwitchWebviewContext) {
+    console.log("switch webview 3");
+    let activeProvider: ContinueGUIWebviewViewProvider;
+    if (context.state === "open") {
+      this.activeWebview = "overlay";
+      activeProvider = this.overlay;
+    } else {
+      this.activeWebview = "sidebar";
+      activeProvider = this.sidebar;
+    }
+    // this.activeWebview =
+    //   this.activeWebview === "sidebar" ? "overlay" : "sidebar";
+    // const activeProvider =
+    //   this.activeWebview === "sidebar" ? this.sidebar : this.overlay;
+
+    this.webviewProtocolPromise.then((protocol) => {
+      if (activeProvider.webview) {
+        protocol.webview = activeProvider.webview;
+      }
+    });
+    // Refresh the webview content
+    activeProvider.webviewProtocol?.request("didChangeAvailableProfiles", {
+      profiles: [],
+    });
+
+    vscode.commands.executeCommand(
+      `pearai.continueGUIView${this.activeWebview === "sidebar" ? "" : "2"}.focus`,
+    );
+  }
+
   // eslint-disable-next-line @typescript-eslint/naming-convention
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
 
@@ -406,3 +443,7 @@ export class VsCodeExtension {
     this.configHandler.registerCustomContextProvider(contextProvider);
   }
 }
+
+type SwitchWebviewContext = {
+  state: "closed" | "open";
+};

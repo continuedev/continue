@@ -25,7 +25,7 @@ export class ContinueGUIWebviewViewProvider
   // Show or hide the output channel on enableDebugLogs
   private setupDebugLogsListener() {
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration('pearai.enableDebugLogs')) {
+      if (event.affectsConfiguration("pearai.enableDebugLogs")) {
         const settings = vscode.workspace.getConfiguration("pearai");
         const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
         if (enableDebugLogs) {
@@ -38,19 +38,19 @@ export class ContinueGUIWebviewViewProvider
   }
 
   private async handleWebviewMessage(message: any) {
-  if (message.messageType === "log") {
-    const settings = vscode.workspace.getConfiguration("pearai");
-    const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
-    console.log("=================== HANDLE WEBVIEW MESSAGE1");
-    if (message.level === "debug" && !enableDebugLogs) {
-      return; // Skip debug logs if enableDebugLogs is false
+    if (message.messageType === "log") {
+      const settings = vscode.workspace.getConfiguration("pearai");
+      const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
+
+      if (message.level === "debug" && !enableDebugLogs) {
+        return; // Skip debug logs if enableDebugLogs is false
+      }
+
+      const timestamp = new Date().toISOString().split(".")[0];
+      const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${message.text}`;
+      this.outputChannel.appendLine(logMessage);
     }
-    console.log("=================== HANDLE WEBVIEW MESSAGE2");
-    const timestamp = new Date().toISOString().split(".")[0];
-    const logMessage = `[${timestamp}] [${message.level.toUpperCase()}] ${message.text}`;
-    this.outputChannel.appendLine(logMessage);
   }
-}
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -60,6 +60,7 @@ export class ContinueGUIWebviewViewProvider
     this._webview = webviewView.webview;
     const extensionUri = getExtensionUri();
     console.log("=================== RESOLVING WEBVIEW IN CONTINUE PROVIDER2");
+    console.log("===== Webview view type: ", webviewView.viewType);
 
     // this._webview.options = {
     //   enableScripts: true,
@@ -105,7 +106,6 @@ export class ContinueGUIWebviewViewProvider
       input,
     });
   }
-
 
   constructor(
     private readonly configHandlerPromise: Promise<ConfigHandler>,

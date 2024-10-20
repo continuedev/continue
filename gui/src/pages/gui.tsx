@@ -413,7 +413,6 @@ function GUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
-        <Button onClick={() => navigate("/inventory")}>Test</Button>
         <div className="mx-2">
           <StepsDiv>
             {state.history.map((item, index: number) => {
@@ -600,6 +599,7 @@ function GUI() {
           {getMetaKeyLabel()} ⌫ Cancel
         </StopButton>
       )}
+      <Button onClick={() => navigate("/inventory")}>Inventory</Button>
     </>
   );
 }

@@ -128,6 +128,10 @@
     },
     "commands": [
       {
+        "command": "pearai.switchWebview",
+        "title": "PearAI: Switch Chat View"
+      },
+      {
         "command": "pearai.acceptDiff",
         "category": "PearAI",
         "title": "Accept Diff",
@@ -528,14 +532,6 @@
         {
           "type": "webview",
           "id": "pearai.continueGUIView",
-          "name": "",
-          "visibility": "visible"
-        }
-      ],
-      "PearAIOverlay": [
-        {
-          "type": "webview",
-          "id": "pearai.overlayWebview3",
           "name": "",
           "visibility": "visible"
         }
