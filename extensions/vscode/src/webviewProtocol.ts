@@ -37,15 +37,13 @@ export class VsCodeWebviewProtocol
 
   send(messageType: string, data: any, messageId?: string, specificWebviews?: string[],
   ): string {
+    console.log("MESSAGETYPE: ", messageType, specificWebviews)
     const id = messageId ?? uuidv4();
     if (specificWebviews) {
-      console.log("SPECIFIC WEBVIEWS", specificWebviews)
       specificWebviews.forEach(name => {
-        console.log("NAME", name)
         try {
           const webview = this.webviews.get(name);
           if (webview) {
-            console.log("WEBVIEW", webview)
             webview.postMessage({
               messageType,
               data,
