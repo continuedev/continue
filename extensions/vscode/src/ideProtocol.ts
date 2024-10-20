@@ -105,7 +105,7 @@ class VsCodeIde implements IDE {
   //         .then(async (selection) => {
   //           if (selection === "Use API key / local model") {
   //             await vscode.commands.executeCommand(
-  //               "continue.continueGUIView.focus",
+  //               "continue.pearAIChatView.focus",
   //             );
   //             (await this.vscodeWebviewProtocolPromise).request(
   //               "openOnboarding",
