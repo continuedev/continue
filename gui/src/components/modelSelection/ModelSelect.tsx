@@ -180,8 +180,8 @@ function ModelSelect() {
   useEffect(() => {
 
     if (location.pathname === "/aiderMode") {
-      const aider = options.find(
-        (option) => option.title.toLowerCase() === "aider",
+      const aider = allModels.find(
+        (model) => model.title.toLowerCase() === "aider",
       );
       dispatch(setDefaultModel({ title: aider?.title }));
     }
