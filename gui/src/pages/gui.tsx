@@ -57,6 +57,8 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { isBareChatMode } from '../util/bareChatMode';
+
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -168,6 +170,8 @@ const ThreadUserName = styled.div`
   color: ${lightGray};
 `;
 
+
+
 function fallbackRender({ error, resetErrorBoundary }) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
@@ -212,11 +216,33 @@ function GUI() {
     getLocalStorage("showTutorialCard"),
   );
 
+
+
+  const [showAiderHint, setShowAiderHint] = useState<boolean>(
+    true
+  );
+
+  const bareChatMode = isBareChatMode();
+
   const onCloseTutorialCard = () => {
     posthog.capture("closedTutorialCard");
     setLocalStorage("showTutorialCard", false);
     setShowTutorialCard(false);
   };
+
+  const AiderBetaButton: React.FC = () => (
+    <NewSessionButton
+      onClick={() =>
+      {
+        ideMessenger.post("aiderMode", undefined)
+        setShowAiderHint(false);
+      }
+    }
+    className="mr-auto py-2" // Added padding top and bottom
+    >
+      Hint: Try out PearAI Creator, powered by Aider (Beta)!
+    </NewSessionButton>
+  );
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -536,7 +562,6 @@ function GUI() {
             isMainInput={true}
             hidden={active}
           ></ContinueInputBox>
-
           {active ? (
             <>
               <br />
@@ -551,14 +576,6 @@ function GUI() {
                 className="mr-auto"
               >
                 New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
-              </NewSessionButton>{" "}
-              <NewSessionButton
-                onClick={() => {
-                  ideMessenger.post("aiderMode", undefined);
-                }}
-                className="mr-auto"
-              >
-                dev: pearai creator (aider)
               </NewSessionButton>{" "}
             </div>
           ) : (
@@ -584,6 +601,7 @@ function GUI() {
               )}
             </>
           )}
+          {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
         </div>
 
         <ChatScrollAnchor
