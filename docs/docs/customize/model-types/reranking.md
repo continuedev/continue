@@ -22,7 +22,7 @@ Voyage AI offers the best reranking model for code with their `rerank-2` model. 
   "reranker": {
     "name": "voyage",
     "params": {
-      "model": "rerank-1",
+      "model": "rerank-2",
       "apiKey": "<VOYAGE_API_KEY>"
     }
   }

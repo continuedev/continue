@@ -90,6 +90,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   private async insertDeletionBuffer() {
     // Don't remove trailing whitespace line
     const totalDeletedContent = this.deletionBuffer.join("\n");
+
     if (
       totalDeletedContent === "" &&
       this.currentLineIndex >= this.endLine + this.newLinesAdded &&
@@ -100,11 +101,13 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     if (this.deletionBuffer.length || this.insertedInCurrentBlock > 0) {
       const blocks = this.editorToVerticalDiffCodeLens.get(this.filepath) || [];
+
       blocks.push({
         start: this.currentLineIndex - this.insertedInCurrentBlock,
         numRed: this.deletionBuffer.length,
         numGreen: this.insertedInCurrentBlock,
       });
+
       this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
     }
 
@@ -118,10 +121,12 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.currentLineIndex - this.insertedInCurrentBlock,
       totalDeletedContent,
     );
+
     this.redDecorationManager.addLines(
       this.currentLineIndex - this.insertedInCurrentBlock,
       this.deletionBuffer.length,
     );
+
     // Shift green decorations downward
     this.greenDecorationManager.shiftDownAfterLine(
       this.currentLineIndex - this.insertedInCurrentBlock,
@@ -132,9 +137,9 @@ export class VerticalDiffHandler implements vscode.Disposable {
     for (let i = 0; i < this.deletionBuffer.length; i++) {
       this.incrementCurrentLineIndex();
     }
+
     this.deletionBuffer = [];
     this.insertedInCurrentBlock = 0;
-
     this.refreshCodeLens();
   }
 
@@ -398,6 +403,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     // Shift everything below upward
     const offset = -(accept ? numRed : numGreen);
+
     this.redDecorationManager.shiftDownAfterLine(startLine, offset);
     this.greenDecorationManager.shiftDownAfterLine(startLine, offset);
 
@@ -439,5 +445,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     //update code lens
     this.shiftCodeLensObjects(startLine, lineDelta);
+  }
+
+  public hasDiffForCurrentFile(): boolean {
+    const diffBlocks = this.editorToVerticalDiffCodeLens.get(this.filepath);
+    return diffBlocks !== undefined && diffBlocks.length > 0;
   }
 }

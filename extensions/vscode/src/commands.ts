@@ -165,6 +165,17 @@ async function addEntireFileToContext(
   });
 }
 
+function focusGUI() {
+  const fullScreenTab = getFullScreenTab();
+  if (!fullScreenTab) {
+    // focus sidebar
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+  } else {
+    // focus fullscreen
+    fullScreenPanel?.reveal();
+  }
+}
+
 // Copy everything over from extension.ts
 const commandsMap: (
   ide: IDE,
@@ -315,14 +326,7 @@ const commandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
-      const fullScreenTab = getFullScreenTab();
-      if (!fullScreenTab) {
-        // focus sidebar
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      } else {
-        // focus fullscreen
-        fullScreenPanel?.reveal();
-      }
+      focusGUI();
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       await addHighlightedCodeToContext(sidebar.webviewProtocol);
     },
@@ -480,15 +484,10 @@ const commandsMap: (
       sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
     "continue.toggleFullScreen": () => {
+      focusGUI();
+
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
-
-      // Check if the active editor is the Continue GUI View
-      if (fullScreenTab && fullScreenTab.isActive) {
-        //Full screen open and focused - close it
-        vscode.commands.executeCommand("workbench.action.closeActiveEditor"); //this will trigger the onDidDispose listener below
-        return;
-      }
 
       if (fullScreenTab && fullScreenPanel) {
         //Full screen open, but not focused - focus it
@@ -528,6 +527,8 @@ const commandsMap: (
         null,
         extensionContext.subscriptions,
       );
+
+      vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
     },
     "continue.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
@@ -642,6 +643,9 @@ const commandsMap: (
       }
       quickPick.items = [
         {
+          label: "$(question) Open help center",
+        },
+        {
           label: "$(comment) Open chat (Cmd+L)",
         },
         {
@@ -698,6 +702,9 @@ const commandsMap: (
           "$(screen-full) Open full screen chat (Cmd+K Cmd+M)"
         ) {
           vscode.commands.executeCommand("continue.toggleFullScreen");
+        } else if (selectedOption === "$(question) Open help center") {
+          focusGUI();
+          vscode.commands.executeCommand("continue.navigateTo", "/more");
         }
         quickPick.dispose();
       });
@@ -716,6 +723,10 @@ const commandsMap: (
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);
       }
+    },
+    "continue.navigateTo": (path: string) => {
+      sidebar.webviewProtocol?.request("navigateTo", { path });
+      focusGUI();
     },
   };
 };

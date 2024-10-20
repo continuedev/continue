@@ -34,7 +34,7 @@ function JetBrainsFetchGitHubTokenDialog({
   }
 
   return (
-    <div className="p-8 flex flex-col gap-3">
+    <div className="flex flex-col gap-3 p-8">
       <div className="text-center">
         <h1 className="my-0">Sign in with GitHub</h1>
         <p>
@@ -66,7 +66,7 @@ function JetBrainsFetchGitHubTokenDialog({
           <Button
             onClick={submitJetBrainsToken}
             disabled={!jbGhAuthToken}
-            className="grid grid-flow-col items-center gap-2 w-full mt-2"
+            className="mt-2 grid w-full grid-flow-col items-center gap-2"
           >
             Get started using our API keys
           </Button>

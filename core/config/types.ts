@@ -434,7 +434,7 @@ declare global {
   export interface IDE {
     getIdeInfo(): Promise<IdeInfo>;
     getIdeSettings(): Promise<IdeSettings>;
-    getDiff(): Promise<string>;
+    getDiff(includeUnstaged: boolean): Promise<string>;
     isTelemetryEnabled(): Promise<boolean>;
     getUniqueId(): Promise<string>;
     getTerminalContents(): Promise<string>;
@@ -531,7 +531,7 @@ declare global {
     | "diff"
     | "github"
     | "terminal"
-    | "locals"
+    | "debugger"
     | "open"
     | "google"
     | "search"
@@ -548,7 +548,7 @@ declare global {
     | "gitlab-mr"
     | "os"
     | "currentFile"
-    | "greptile;
+    | "greptile";
 
   type TemplateType =
     | "llama2"

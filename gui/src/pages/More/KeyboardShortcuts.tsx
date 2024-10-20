@@ -1,4 +1,3 @@
-import ReactDOM from "react-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -42,20 +41,15 @@ const keyToName: { [key: string]: string } = {
 };
 
 function KeyDiv({ text }: { text: string }) {
-  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
-
   return (
     <>
       <StyledKeyDiv data-tooltip-id={`header_button_${text}`}>
         {text}
       </StyledKeyDiv>
-      {tooltipPortalDiv &&
-        ReactDOM.createPortal(
-          <ToolTip id={`header_button_${text}`} place="bottom">
-            {keyToName[text]}
-          </ToolTip>,
-          tooltipPortalDiv,
-        )}
+
+      <ToolTip id={`header_button_${text}`} place="bottom">
+        {keyToName[text]}
+      </ToolTip>
     </>
   );
 }
@@ -146,6 +140,11 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     mac: "⌘ '",
     windows: "⌃ '",
     description: "Toggle Selected Model",
+  },
+  {
+    mac: "⌘ K ⌘ A",
+    windows: "⌃ K ⌃ A",
+    description: "Toggle Autocomplete Enabled",
   },
 ];
 

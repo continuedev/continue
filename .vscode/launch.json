@@ -20,7 +20,7 @@
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
-        // "CONTROL_PLANE_ENV": "local"
+        "CONTROL_PLANE_ENV": "local"
       }
     },
     {
@@ -29,7 +29,6 @@
       "name": "Core Binary",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/binary/out/index.js",
-      // "preLaunchTask": "binary:esbuild",
       "outFiles": ["${workspaceFolder}/binary/out/**/*.js"],
       "sourceMaps": true,
       "smartStep": true,

@@ -3,14 +3,18 @@ import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { defaultConfig, defaultConfigJetBrains } from "../config/default.js";
-import Types from "../config/types.js";
-import { IdeType, SerializedContinueConfig } from "../index.js";
+import { defaultConfig, defaultConfigJetBrains } from "../config/default";
+import Types from "../config/types";
+import { IdeType, SerializedContinueConfig } from "../";
 
 dotenv.config();
 
 const CONTINUE_GLOBAL_DIR =
   process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
+
+export const DEFAULT_CONFIG_TS_CONTENTS = `export function modifyConfig(config: Config): Config {
+  return config;
+}`;
 
 export function getChromiumPath(): string {
   return path.join(getContinueUtilsPath(), ".chromium-browser-snapshots");
@@ -80,12 +84,7 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
 export function getConfigTsPath(): string {
   const p = path.join(getContinueGlobalPath(), "config.ts");
   if (!fs.existsSync(p)) {
-    fs.writeFileSync(
-      p,
-      `export function modifyConfig(config: Config): Config {
-  return config;
-}`,
-    );
+    fs.writeFileSync(p, DEFAULT_CONFIG_TS_CONTENTS);
   }
 
   const typesPath = path.join(getContinueGlobalPath(), "types");
@@ -344,4 +343,8 @@ export function readAllGlobalPromptFiles(
 
 export function getRepoMapFilePath(): string {
   return path.join(getContinueUtilsPath(), "repo_map.txt");
+}
+
+export function getEsbuildBinaryPath(): string {
+  return path.join(getContinueUtilsPath(), "esbuild");
 }
