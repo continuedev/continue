@@ -31,7 +31,7 @@ const config = {
   // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: ["en", "zh-CN"],
   },
 
   themes: [["docusaurus-json-schema-plugin", {}]],
@@ -102,6 +102,10 @@ const config = {
             label: "Discord",
             position: "right",
             className: "discord-navbar",
+          },
+          {
+            type: "localeDropdown",
+            position: "right",
           },
         ],
       },

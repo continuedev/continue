@@ -1,0 +1,184 @@
+---
+title: 模型设置
+description: 如何设置一个聊天模型
+keywords: [模型]
+sidebar_position: 2
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
+:::info
+这个页面推荐聊天的模型和提供者。在 [这里](../customize/config.mdx) 了解更多关于如何设置你的 `config.json` 。
+:::
+
+## 最好的总体体验
+
+为了最好的总体聊天体验，你将想要使用一个 400B+ 参数模型或领先的模型之一。
+
+### 来自 Anthropic 的 Claude Sonnet 3.5
+
+我们现在最推荐的是来自 [Anthropic](../customize/model-providers/top-level/anthropic.md) 的 Claude Sonnet 3.5 。
+
+```json title="config.json"
+ "models": [
+   {
+     "title": "Claude 3.5 Sonnet",
+     "provider": "anthropic",
+     "model": "claude-3-5-sonnet-20240620",
+     "apiKey": "[ANTHROPIC_API_KEY]"
+   }
+ ]
+```
+
+### 来自 Meta 的 Llama 3.1 405B
+
+如果你倾向于使用开放权重模型，那么来自 Meta 的 Llama 3.1 405B 是你当前的最好选择。你需要决定，通过 SaaS 模型提供者使用它（比如 [Together](../customize/model-providers/more/together.md) 或 [Groq](../customize/model-providers/more/groq.md)）或者自托管使用它（比如使用 [vLLM](../customize/model-providers//more/vllm.md) 或 [Ollama](../customize/model-providers/top-level/ollama.md)） 。
+
+<Tabs groupId="providers">
+    <TabItem value="Together">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 405B",
+                    "provider": "together",
+                    "model": "llama3.1-405b",
+                    "apiKey": "[TOGETHER_API_KEY]"
+                }
+            ]
+        ```
+    </TabItem>
+    <TabItem value="Groq">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 405B",
+                    "provider": "groq",
+                    "model": "llama3.1-405b",
+                    "apiKey": "[GROQ_API_KEY]"
+                }
+            ]
+        ```
+    </TabItem>
+    <TabItem value="vLLM">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 405B",
+                    "provider": "vllm",
+                    "model": "llama3.1-405b"
+                }
+            ]
+        ```
+    </TabItem>
+    <TabItem value="Ollama">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 405B",
+                    "provider": "ollama",
+                    "model": "llama3.1-405b"
+                }
+            ]
+        ```
+    </TabItem>
+</Tabs>
+
+### 来自 OpenAI 的 GPT-4o
+
+如果你倾向于使用来自 [OpenAI](../customize/model-providers/top-level/openai.md) 的模型，那么我们推荐 GPT-4o 。
+
+```json title="config.json"
+ "models": [
+   {
+     "title": "GPT-4o",
+     "provider": "openai",
+     "model": "",
+     "apiKey": "[OPENAI_API_KEY]"
+   }
+ ]
+```
+
+### 来自 Google 的 Gemini 1.5 Pro
+
+如果你倾向于使用来自 [Google](../customize/model-providers/top-level/gemini.md) 的模型，那么我们推荐 Gemini 1.5 Pro 。
+
+```json title="config.json"
+  "models": [
+    {
+      "title": "Gemini 1.5 Pro",
+      "provider": "gemini",
+      "model": "gemini-1.5-pro-latest",
+      "apiKey": "[GEMINI_API_KEY]"
+    }
+  ]
+```
+
+## 本地的，离线的体验
+
+为了最好的本地的，离线的聊天体验，你想要你的机器上使用一个大的但是足够快的模型。
+
+### Llama 3.1 8B
+
+如果你的本地机器可以运行一个 8B 参数的模型，那么我们推荐在你的机器上运行 Llama 3.1 8B （比如使用 [Ollama](../customize/model-providers/top-level/ollama.md) 或 [LM Studio](../customize/model-providers/more/lmstudio.md)）。
+
+<Tabs groupId="providers">
+    <TabItem value="Ollama">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 8B",
+                    "provider": "ollama",
+                    "model": "llama3.1-8b"
+                }
+            ]
+        ```
+    </TabItem>
+    <TabItem value="LM Studio">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 8B",
+                    "provider": "lmstudio",
+                    "model": "llama3.1-8b"
+                }
+            ]
+        ```
+    </TabItem>
+</Tabs>
+
+### DeepSeek Coder 2 16B
+
+如果你的机器可以运行一个 16B 参数的模型，那么我们推荐运行 DeepSeek Coder 2 16B （比如使用 [Ollama](../customize/model-providers/top-level/ollama.md) 或 [LM Studio](../customize/model-providers/more/lmstudio.md)）。
+
+<Tabs groupId="providers">
+    <TabItem value="Ollama">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "DeepSeek Coder 2 16B",
+                    "provider": "ollama",
+                    "model": "deepseek-coder-v2:16b"
+                }
+            ]
+        ```
+
+    </TabItem>
+    <TabItem value="LM Studio">
+
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "DeepSeek Coder 2 16B",
+                    "provider": "lmstudio",
+                    "model": "deepseek-coder-v2:16b"
+                }
+            ]
+        ```
+    </TabItem>
+
+</Tabs>
+
+## 其他体验
+
+除了以上提到的这些，还有更多的模型和提供者，你可以使用来聊天。在 [这里](../customize/model-types/chat.md) 了解更多。
