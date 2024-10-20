@@ -35,13 +35,33 @@ export class VsCodeWebviewProtocol
     ((message: Message) => any)[]
   >();
 
-  send(messageType: string, data: any, messageId?: string): string {
+  send(messageType: string, data: any, messageId?: string, specificWebviews?: string[],
+  ): string {
     const id = messageId ?? uuidv4();
-    this.webview?.postMessage({
-      messageType,
-      data,
-      messageId: id,
-    });
+    if (specificWebviews) {
+      specificWebviews.forEach(name => {
+        try {
+          const webview = this.webviews.get(name);
+          if (webview) {
+            webview.postMessage({
+              messageType,
+              data,
+              messageId: id,
+            });
+          }
+        } catch (error) {
+          console.error(`Failed to post message to webview ${name}:`, error);
+        }
+      });
+    } else {
+      this.webviews.forEach(webview => {
+        webview.postMessage({
+          messageType,
+          data,
+          messageId: id,
+        });
+      });
+    }
     return id;
   }
 
@@ -57,18 +77,21 @@ export class VsCodeWebviewProtocol
     this.listeners.get(messageType)?.push(handler);
   }
 
-  _webview?: vscode.Webview;
-  _webviewListener?: vscode.Disposable;
+  _webviews: Map<string, vscode.Webview> = new Map();
+  _webviewListeners: Map<string, vscode.Disposable> = new Map();
 
-  get webview(): vscode.Webview | undefined {
-    return this._webview;
+  get webviews(): Map<string, vscode.Webview> {
+    return this._webviews;
+  }
+  resetWebviews() {
+    this._webviews.clear();
+    this._webviewListeners.forEach(listener => listener.dispose());
+    this._webviewListeners.clear();
   }
 
-  set webview(webView: vscode.Webview) {
-    this._webview = webView;
-    this._webviewListener?.dispose();
-
-    this._webviewListener = this._webview.onDidReceiveMessage(async (msg) => {
+  addWebview(viewType: string, webView: vscode.Webview) {
+    this._webviews.set(viewType, webView);
+    const listener = webView.onDidReceiveMessage(async (msg) => {
       if (!msg.messageType || !msg.messageId) {
         throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
       }
@@ -224,9 +247,20 @@ export class VsCodeWebviewProtocol
         }
       }
     });
+    this._webviewListeners.set(viewType, listener);
+  }
+
+  removeWebview(name: string) {
+    const webView = this._webviews.get(name);
+    if (webView) {
+      this._webviews.delete(name);
+      this._webviewListeners.get(name)?.dispose();
+      this._webviewListeners.delete(name);
+    }
   }
 
   constructor(private readonly reloadConfig: () => void) {}
+
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
@@ -242,11 +276,12 @@ export class VsCodeWebviewProtocol
   public request<T extends keyof ToWebviewProtocol>(
     messageType: T,
     data: ToWebviewProtocol[T][0],
+    specificWebviews?: string[]
   ): Promise<ToWebviewProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise(async (resolve) => {
       let i = 0;
-      while (!this.webview) {
+      while (this.webviews.size === 0) {
         if (i >= 10) {
           resolve(undefined);
           return;
@@ -256,15 +291,19 @@ export class VsCodeWebviewProtocol
         }
       }
 
-      this.send(messageType, data, messageId);
-      const disposable = this.webview.onDidReceiveMessage(
-        (msg: Message<ToWebviewProtocol[T][1]>) => {
-          if (msg.messageId === messageId) {
-            resolve(msg.data);
-            disposable?.dispose();
+      this.send(messageType, data, messageId, specificWebviews);
+      const disposables: vscode.Disposable[] = [];
+      this.webviews.forEach((webview, name) => {
+        const disposable = webview.onDidReceiveMessage(
+          (msg: Message<ToWebviewProtocol[T][1]>) => {
+            if (msg.messageId === messageId) {
+              resolve(msg.data);
+              disposables.forEach(d => d.dispose());
+            }
           }
-        },
-      );
+        );
+        disposables.push(disposable);
+      });
     });
   }
 }

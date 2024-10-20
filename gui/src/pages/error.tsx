@@ -16,7 +16,7 @@ export default function ErrorPage() {
       className="text-center"
       style={{ backgroundColor: vscBackground }}
     >
-      <h1>Error in Continue React App</h1>
+      <h1>Error in PearAI React App</h1>
       <p>
         <i>{error.statusText || error.message}</i>
       </p>

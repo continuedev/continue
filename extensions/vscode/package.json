@@ -52,7 +52,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:continueGUIView"
+    "onView:pearAIChatView"
   ],
   "main": "./out/extension.js",
   "browser": "./out/extension.js",
@@ -490,24 +490,24 @@
         {
           "command": "pearai.newSession",
           "group": "navigation@1",
-          "when": "view == pearai.continueGUIView"
+          "when": "view == pearai.pearAIChatView"
         },
         {
           "command": "pearai.toggleFullScreen",
           "group": "navigation@1",
-          "when": "view == pearai.continueGUIView"
+          "when": "view == pearai.pearAIChatView"
         },
         {
           "command": "pearai.viewHistory",
           "group": "navigation@1",
-          "when": "view == pearai.continueGUIView"
+          "when": "view == pearai.pearAIChatView"
         }
       ],
       "editor/title": [
         {
           "command": "pearai.toggleFullScreen",
           "group": "navigation@1",
-          "when": "activeWebviewPanelId == pearai.continueGUIView"
+          "when": "activeWebviewPanelId == pearai.pearAIChatView"
         }
       ],
       "terminal/context": [
@@ -531,7 +531,7 @@
       "PearAI": [
         {
           "type": "webview",
-          "id": "pearai.continueGUIView",
+          "id": "pearai.pearAIChatView",
           "name": "",
           "visibility": "visible"
         }
