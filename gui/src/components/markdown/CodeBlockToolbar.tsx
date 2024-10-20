@@ -245,7 +245,10 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
 
   return (
     <ToolbarDiv>
-      <div className="flex items-center gap-1 cursor-pointer max-w-[50%]">
+      <div
+        className="flex items-center gap-1 cursor-pointer max-w-[50%]"
+        onClick={onClickHeader}
+      >
         <FileIcon height="20px" width="20px" filename={props.filepath} />
         <span className="truncate">{getBasename(props.filepath)}</span>
       </div>

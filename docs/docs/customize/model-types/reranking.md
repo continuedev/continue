@@ -11,11 +11,11 @@ In Continue, reranking is used by [@Codebase](../deep-dives/codebase.md) in orde
 
 ## Recommended reranking models
 
-If you have the ability to use any model, we recommend `rerank-1` by Voyage AI, which is listed below along with the rest of the options for rerankers.
+If you have the ability to use any model, we recommend `rerank-2` by Voyage AI, which is listed below along with the rest of the options for rerankers.
 
 ### Voyage AI
 
-Voyage AI offers the best reranking model for code with their `rerank-1` model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
+Voyage AI offers the best reranking model for code with their `rerank-2` model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
 
 ```json title="config.json"
 {
