@@ -674,7 +674,7 @@ function readConfigJs(): string | undefined {
   return fs.readFileSync(configJsPath, "utf8");
 }
 
-async function buildConfigTs(ide: IDE, ideType: IdeType) {
+async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   const configTsPath = getConfigTsPath();
 
   if (!fs.existsSync(configTsPath)) {
@@ -724,7 +724,7 @@ async function loadFullConfigNode(
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
 
   // Apply config.ts to modify intermediate config
-  const configJsContents = await buildConfigTs(ide, ideType);
+  const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
   if (configJsContents) {
     try {
       // Try config.ts first
