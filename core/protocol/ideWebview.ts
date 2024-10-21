@@ -20,6 +20,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
+  perplexityMode: [undefined, void];
   aiderMode: [undefined, void];
   aiderCtrlC: [undefined, void];
   aiderResetSession: [undefined, void];

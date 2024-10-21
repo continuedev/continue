@@ -6,7 +6,7 @@ export function isBareChatMode() {
   const defaultModel = useSelector(defaultModelSelector);
 
   return useMemo(
-    () => defaultModel?.title?.toLowerCase() === "aider",
+    () => defaultModel?.title?.toLowerCase() === "aider" || defaultModel?.title?.toLowerCase() === "perplexity",
     [defaultModel]
   );
 }

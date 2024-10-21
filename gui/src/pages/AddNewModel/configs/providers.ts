@@ -79,6 +79,17 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     packages: [models.aider],
     showInMenu: false,
   },
+  perplexity: {
+    title: "Perplexity",
+    provider: "perplexity",
+    refPage: "perplexity",
+    description:
+      "Enjoy effortless integration and lower your costs with our reliable hosted services.",
+    icon: "pearai.png",
+    tags: [],
+    packages: [models.perplexity],
+    showInMenu: false,
+  },
   other: {
     title: "Other",
     provider: "other",

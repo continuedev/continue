@@ -97,6 +97,9 @@ export class VsCodeMessenger {
           return contents;
         });
     });
+    this.onWebview("perplexityMode", (msg) => {
+      vscode.commands.executeCommand("pearai.perplexityMode");
+    });
     this.onWebview("aiderMode", (msg) => {
       vscode.commands.executeCommand("pearai.aiderMode");
     });

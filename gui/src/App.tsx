@@ -46,6 +46,10 @@ const router = createMemoryRouter(
           element: <GUI />,
         },
         {
+          path: "/perplexityMode",
+          element: <GUI />,
+        },
+        {
           path: "/history",
           element: <History />,
         },

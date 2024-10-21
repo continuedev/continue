@@ -603,7 +603,15 @@ function GUI() {
                   <TutorialCard onClose={onCloseTutorialCard} />
                 </div>
               )}
-              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
+              {!bareChatMode && !!(defaultModel?.provider?.toLowerCase() === "perplexity") && !!showAiderHint && <AiderBetaButton />}
+              <NewSessionButton
+                    onClick={async () => {
+                      ideMessenger.post("perplexityMode", undefined);
+                    }}
+                    className="mr-auto"
+                  >
+                    dev: pearai search (perplexity)                    
+              </NewSessionButton>
             </>
           )}
         </div>
