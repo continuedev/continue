@@ -28,7 +28,7 @@ import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt.js";
-import { isOnlyPunctuationAndWhitespace } from "./filter.js";
+import { isOnlyWhitespace } from "./filter.js";
 import { AutocompleteLanguageInfo } from "./languages.js";
 import { postprocessCompletion } from "./postprocessing.js";
 import { AutocompleteSnippet } from "./ranking.js";
@@ -355,8 +355,12 @@ export class CompletionProvider {
         return undefined;
       }
 
-      // Filter out unwanted results
-      if (isOnlyPunctuationAndWhitespace(outcome.completion)) {
+      /**
+       * This check is most likely not needed because we do trim the LLM output
+       * elsewhere in the code. That said, I'm not yet confident enough to
+       * remove this.
+       */
+      if (isOnlyWhitespace(outcome.completion)) {
         return undefined;
       }
 

@@ -1,4 +1,4 @@
-export function isOnlyPunctuationAndWhitespace(completion: string): boolean {
-  const punctuationAndWhitespaceRegex = /^[^\w\d\}\)\]]+$/;
-  return punctuationAndWhitespaceRegex.test(completion);
+export function isOnlyWhitespace(completion: string): boolean {
+  const whitespaceRegex = /^[\s]+$/;
+  return whitespaceRegex.test(completion);
 }
