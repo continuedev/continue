@@ -204,7 +204,6 @@ class OpenAI extends BaseLLM {
       headers: this._getHeaders(),
       body: JSON.stringify({
         ...args,
-        stream: true,
       }),
     });
 
