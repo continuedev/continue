@@ -240,7 +240,7 @@ function GUI() {
     }
     className="mr-auto py-2" // Added padding top and bottom
     >
-      Hint: Try out PearAI Creator (Beta), powered by aider!
+      Hint: Try out PearAI Creator (Beta), powered by aider (Beta)!
     </NewSessionButton>
   );
 
@@ -443,7 +443,7 @@ function GUI() {
           {defaultModel?.title?.toLowerCase() === "aider" && (
             <div className="pl-2 mt-8 border-b border-gray-700">
               <h1 className="text-2xl font-bold mb-2">PearAI Creator (Powered by <a href="https://aider.chat/2024/06/02/main-swe-bench.html" target="_blank" rel="noopener noreferrer">Aider</a>)</h1>
-              <p className="text-sm text-gray-400">Ask for a feature, describe a bug, or ask for a change to your project and PearAI will take care of everything for you!</p>
+              <p className="text-sm text-gray-400">Ask for a feature, describe a bug, or ask for a change to your project. We'll take care of everything for you!</p>
             </div>
           )}
           <StepsDiv>

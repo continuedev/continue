@@ -84,7 +84,6 @@ export class ContinueGUIWebviewViewProvider
   public resetWebviewProtocolWebview(): void {
     if (this._webview) {
       this.webviewProtocol.resetWebviewToDefault()
-      // this.webviewProtocol.addWebview(this._webview);
     } else {
       console.warn("no webview found during reset");
     }

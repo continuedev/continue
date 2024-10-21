@@ -359,7 +359,6 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
-      console.log("HERE in llm")
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
         msg.data.messages,

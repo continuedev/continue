@@ -31,6 +31,7 @@ import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 import ShortcutContainer from "./ShortcutContainer";
+import { isBareChatMode } from '../util/bareChatMode';
 
 // check mac or window
 const platform = navigator.userAgent.toLowerCase();
@@ -118,6 +119,7 @@ const HIDE_FOOTER_ON_PAGES = [
   "/onboarding",
   "/localOnboarding",
   "/apiKeyOnboarding",
+  "/aiderMode"
 ];
 
 const SHOW_SHORTCUTS_ON_PAGES = ["/"];
