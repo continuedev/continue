@@ -577,6 +577,7 @@ function GUI() {
               >
                 New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
               </NewSessionButton>{" "}
+              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
             </div>
           ) : (
             <>
@@ -599,9 +600,9 @@ function GUI() {
                   <TutorialCard onClose={onCloseTutorialCard} />
                 </div>
               )}
+              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
             </>
           )}
-          {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
         </div>
 
         <ChatScrollAnchor
@@ -620,6 +621,9 @@ function GUI() {
                 .length === 0
             ) {
               dispatch(clearLastResponse());
+            }
+            if (defaultModel?.provider?.toLowerCase() === "aider") {
+              ideMessenger.post("aiderCtrlC", undefined)
             }
           }}
         >

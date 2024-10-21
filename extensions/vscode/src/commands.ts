@@ -478,6 +478,9 @@ const commandsMap: (
     "pearai.aiderMode": () => {
       handleAiderMode(core, sidebar, extensionContext);
     },
+    "pearai.aiderCtrlC": () => {
+      core.invoke("llm/aiderCtrlC", undefined);
+    },
     "pearai.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
     },

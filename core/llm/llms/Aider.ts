@@ -37,7 +37,7 @@ class Aider extends BaseLLM {
     },
   };
 
-  private aiderProcess: cp.ChildProcess | null = null;
+  public aiderProcess: cp.ChildProcess | null = null;
   private aiderOutput: string = "";
   private credentials: PearAICredentials;
 
@@ -60,6 +60,15 @@ class Aider extends BaseLLM {
       console.log("Killing Aider process...");
       this.aiderProcess.kill();
       this.aiderProcess = null;
+    }
+  }
+
+  public aiderCtrlC(): void {
+    if (this.aiderProcess && !this.aiderProcess.killed) {
+      console.log("Sending Ctrl+C signal to Aider process...");
+      this.sendToAiderChat("\x03"); // Send Ctrl+C to the Aider process
+    } else {
+      console.log("No active Aider process to send Ctrl+C to.");
     }
   }
 
