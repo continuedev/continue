@@ -240,7 +240,7 @@ function GUI() {
     }
     className="mr-auto py-2" // Added padding top and bottom
     >
-      Hint: Try out PearAI Creator, powered by Aider (Beta)!
+      Hint: Try out PearAI Creator (Beta), powered by aider!
     </NewSessionButton>
   );
 
@@ -572,6 +572,9 @@ function GUI() {
               <NewSessionButton
                 onClick={() => {
                   saveSession();
+                  if (defaultModel?.provider?.toLowerCase() === "aider") {
+                    ideMessenger.post("aiderResetSession", undefined)
+                  }
                 }}
                 className="mr-auto"
               >

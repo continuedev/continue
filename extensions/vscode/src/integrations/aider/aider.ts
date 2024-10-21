@@ -41,7 +41,7 @@ export function handleAiderMode(
   //create the full screen panel
   let panel = vscode.window.createWebviewPanel(
     "pearai.aiderGUIView",
-    "PearAI Creator (Powered by Aider)",
+    "PearAI Creator (Powered by aider)",
     vscode.ViewColumn.One,
     {
       retainContextWhenHidden: true,

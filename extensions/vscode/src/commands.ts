@@ -481,6 +481,9 @@ const commandsMap: (
     "pearai.aiderCtrlC": () => {
       core.invoke("llm/aiderCtrlC", undefined);
     },
+    "pearai.aiderResetSession": () => {
+      core.invoke("llm/aiderResetSession", undefined);
+    },
     "pearai.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
     },

@@ -128,7 +128,7 @@ export const defaultConfig: SerializedContinueConfig = {
     {
       "model": "pearai_model",
       "contextLength": 300000,
-      "title": "PearAI Creator (Powered by Aider)",
+      "title": "PearAI Creator (Powered by aider)",
       "provider": "aider",
       "isDefault": true,
     },

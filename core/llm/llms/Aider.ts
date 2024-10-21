@@ -51,9 +51,27 @@ class Aider extends BaseLLM {
       options.setCredentials || (async () => {}),
     );
     console.log("Aider constructor called");
-    //this.startAiderChat("claude-3-5-sonnet-20240620", this.apiKey);
-    // this.startAiderChat(this.model, this.apiKey);
   }
+
+public async aiderResetSession(model: string, apiKey: string | undefined): Promise<void> {
+  console.log("Resetting Aider process...");
+
+  // Kill the current process if it exists
+  this.killAiderProcess();
+
+  // Reset the output
+  this.aiderOutput = "";
+
+  // Restart the Aider chat with the provided model and API key
+  try {
+    await this.startAiderChat(model, apiKey);
+    console.log("Aider process reset successfully.");
+  } catch (error) {
+    console.error("Error resetting Aider process:", error);
+    throw error;
+  }
+}
+
 
   public killAiderProcess(): void {
     if (this.aiderProcess && !this.aiderProcess.killed) {

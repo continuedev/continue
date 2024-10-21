@@ -503,6 +503,25 @@ export class Core {
         return undefined;
       }
     });
+    on("llm/aiderResetSession", async () => {
+      const config = await this.configHandler.loadConfig();
+      const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+      console.log(config.models)
+      console.log(aiderModels)
+      try {
+        if (aiderModels.length > 0) {
+          aiderModels.forEach(model => {
+            if (model.aiderProcess) {
+              model.aiderResetSession(model.model, model.apiKey);
+            }
+          });
+        }
+        return undefined;
+      } catch (e) {
+        console.warn(`Error killing Aider process: ${e}`);
+        return undefined;
+      }
+    });
     on("llm/listModels", async (msg) => {
       const config = await this.configHandler.loadConfig();
       const model =
