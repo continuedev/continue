@@ -15,6 +15,7 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 // @ts-ignore
 import MiniSearch from "minisearch";
+import { logDevData } from "core/util/devdata";
 
 /**
  * Used to track what action to take after a user interacts
@@ -236,7 +237,8 @@ export class QuickEdit {
         default:
           break;
       }
-
+      let model = await this.getCurModelTitle();
+      logDevData('quickEdit', {prompt, path, label, diffs: this.verticalDiffManager.logDiffs, model});
       quickPick.dispose();
     });
   }
