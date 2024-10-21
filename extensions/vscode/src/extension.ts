@@ -32,11 +32,9 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   }
 }
 
-
-
 export function activate(context: vscode.ExtensionContext) {
   setupCa();
-  return dynamicImportAndActivate(context);
+  dynamicImportAndActivate(context);
 }
 
 export function deactivate() {

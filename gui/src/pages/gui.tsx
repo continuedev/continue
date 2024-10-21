@@ -498,8 +498,7 @@ function GUI() {
                                 {
                                   messageType: "userInput",
                                   data: {
-                                    input:
-                                      "Keep going.",
+                                    input: "Keep going.",
                                   },
                                 },
                                 "*",
@@ -545,6 +544,14 @@ function GUI() {
               >
                 New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
               </NewSessionButton>{" "}
+              <NewSessionButton
+                onClick={() => {
+                  navigate("/inventory");
+                }}
+                className="mr-auto"
+              >
+                Inventory
+              </NewSessionButton>{" "}
             </div>
           ) : (
             <>
@@ -561,6 +568,14 @@ function GUI() {
                   </NewSessionButton>
                 </div>
               ) : null}
+              <NewSessionButton
+                onClick={() => {
+                  navigate("/inventory");
+                }}
+                className="mr-auto"
+              >
+                PearAI Inventory
+              </NewSessionButton>{" "}
 
               {!!showTutorialCard && (
                 <div className="flex justify-center w-full">
@@ -570,7 +585,6 @@ function GUI() {
             </>
           )}
         </div>
-
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
           isAtBottom={isAtBottom}

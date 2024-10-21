@@ -15,7 +15,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "noEmitOnError": false
+    "noEmitOnError": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["vscode-webview"]
   },
   "include": ["src", "../src/util/messenger.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]

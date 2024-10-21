@@ -33,6 +33,8 @@ import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+export const PEARAI_CHAT_VIEW_ID = "pearai.pearAIChatView"
+
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
@@ -77,16 +79,17 @@ export class VsCodeExtension {
     const configHandlerPromise = new Promise<ConfigHandler>((resolve) => {
       resolveConfigHandler = resolve;
     });
+
     this.sidebar = new ContinueGUIWebviewViewProvider(
       configHandlerPromise,
       this.windowId,
       this.extensionContext,
     );
 
-    // Sidebar
+    // Sidebar + Overlay
     context.subscriptions.push(
       vscode.window.registerWebviewViewProvider(
-        "pearai.pearAIChatView",
+        PEARAI_CHAT_VIEW_ID,
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
@@ -96,9 +99,7 @@ export class VsCodeExtension {
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
 
     // Config Handler with output channel
-    const outputChannel = vscode.window.createOutputChannel(
-      "PearAI",
-    );
+    const outputChannel = vscode.window.createOutputChannel("PearAI");
     const inProcessMessenger = new InProcessMessenger<
       ToCoreProtocol,
       FromCoreProtocol
@@ -249,15 +250,20 @@ export class VsCodeExtension {
     });
 
     // Create a file system watcher
-    const watcher = vscode.workspace.createFileSystemWatcher('**/*', false, false, false);
+    const watcher = vscode.workspace.createFileSystemWatcher(
+      "**/*",
+      false,
+      false,
+      false,
+    );
 
     // Handle file creation
-    watcher.onDidCreate(uri => {
+    watcher.onDidCreate((uri) => {
       this.refreshContextProviders();
     });
 
     // Handle file deletion
-    watcher.onDidDelete(uri => {
+    watcher.onDidDelete((uri) => {
       this.refreshContextProviders();
     });
 
@@ -285,10 +291,7 @@ export class VsCodeExtension {
         }
       }
 
-      if (
-        filepath.endsWith(".pearairc.json") ||
-        filepath.endsWith(".prompt")
-      ) {
+      if (filepath.endsWith(".pearairc.json") || filepath.endsWith(".prompt")) {
         this.configHandler.reloadConfig();
       } else if (
         filepath.endsWith(".continueignore") ||

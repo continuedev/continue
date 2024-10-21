@@ -19,6 +19,7 @@ import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import Onboarding from "./pages/onboarding/Onboarding";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
+import Inventory from "./pages/inventory";
 
 const router = createMemoryRouter([
   {
@@ -86,13 +87,17 @@ const router = createMemoryRouter([
         path: "/apiKeyAutocompleteOnboarding",
         element: <ApiKeyAutocompleteOnboarding />,
       },
+      {
+        path: "/inventory",
+        element: <Inventory />,
+      },
     ],
   },
 ]);
 
 function App() {
   const dispatch = useDispatch();
-
+  console.log("Is overlay? ", (window as any).isOverlayPearAI);
   useSetup(dispatch);
 
   const vscTheme = useVscTheme();
