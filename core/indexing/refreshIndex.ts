@@ -416,11 +416,9 @@ export async function getComputeDeleteAddRemove(
 
 export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
-  private db: DatabaseConnection;
 
-  constructor(db: DatabaseConnection) {
-    this.db = db;
-  }
+  constructor(private db: DatabaseConnection) {}
+
   artifactId = "globalCache";
 
   static async create(): Promise<GlobalCacheCodeBaseIndex> {
