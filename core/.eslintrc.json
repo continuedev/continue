@@ -1,21 +1,12 @@
 {
   "root": true,
-  "parser": "@typescript-eslint/parser",
+  "extends": ["../.eslintrc.shared.json"],
   "parserOptions": {
-    "ecmaVersion": 6,
-    "sourceType": "module",
     "project": "./tsconfig.json"
   },
-  "plugins": ["@typescript-eslint", "import"],
   "rules": {
     "quotes": ["warn", "double", {}],
     "@typescript-eslint/naming-convention": "off",
-    "@typescript-eslint/semi": "warn",
-    "curly": "warn",
-    "eqeqeq": "warn",
-    "no-throw-literal": "warn",
-    "semi": "off",
     "@typescript-eslint/no-floating-promises": "warn"
-  },
-  "ignorePatterns": ["out", "dist", "**/*.d.ts"]
+  }
 }
