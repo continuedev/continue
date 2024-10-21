@@ -469,7 +469,9 @@ const commandsMap: (
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
     "pearai.viewHistory": () => {
-      sidebar.webviewProtocol?.request("viewHistory", undefined, ["pearai.pearAIChatView"]);
+      sidebar.webviewProtocol?.request("viewHistory", undefined, [
+        "pearai.pearAIChatView",
+      ]);
     },
     "pearai.toggleFullScreen": () => {
       // Check if full screen is already open by checking open tabs
