@@ -480,6 +480,14 @@ const commandsMap: (
     "continue.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined);
     },
+    "continue.focusContinueSessionId": async (sessionId: string | undefined) => {
+      if (!sessionId) {
+        sessionId = await vscode.window.showInputBox({
+          prompt: "Enter the Session ID"
+        });
+      }
+      sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
+    },
     "continue.applyCodeFromChat": () => {
       sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
