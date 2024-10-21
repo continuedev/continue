@@ -15,7 +15,7 @@ import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/images";
 import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
@@ -35,6 +35,7 @@ import {
 } from "../redux/slices/stateSlice";
 import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
+import useHistory from "./useHistory";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -55,6 +56,14 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const history = useSelector((store: RootState) => store.state.history);
   const active = useSelector((store: RootState) => store.state.active);
   const activeRef = useRef(active);
+
+  const {saveSession} = useHistory(dispatch);
+  const [save, triggerSave] = useState(false);
+
+  useEffect(() => {
+    saveSession(false);
+  }, [save]);
+  
 
   useEffect(() => {
     activeRef.current = active;
@@ -309,6 +318,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       ]);
     } finally {
       dispatch(setInactive());
+      triggerSave(!save);
     }
   }
 
