@@ -72,8 +72,9 @@ export default async function doLoadConfig(
 
   // Set up control plane proxy if configured
   let controlPlaneProxyUrl: string =
-    (newConfig as any).controlPlane?.proxyUrl ??
-    DEFAULT_CONTROL_PLANE_PROXY_URL;
+    (newConfig as any).controlPlane?.useContinueForTeamsProxy === false
+      ? (newConfig as any).controlPlane?.proxyUrl
+      : DEFAULT_CONTROL_PLANE_PROXY_URL;
   if (!controlPlaneProxyUrl.endsWith("/")) {
     controlPlaneProxyUrl += "/";
   }
