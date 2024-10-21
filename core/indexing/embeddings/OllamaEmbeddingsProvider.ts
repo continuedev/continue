@@ -8,12 +8,12 @@ import BaseEmbeddingsProvider, {
   IBaseEmbeddingsProvider,
 } from "./BaseEmbeddingsProvider.js";
 
-async function embedOne(
-  chunk: string,
+async function embedOneBatch(
+  chunks: string[],
   options: EmbedOptions,
   customFetch: FetchFunction,
 ) {
-  const embedding = await withExponentialBackoff<number[]>(async () => {
+  const embedding = await withExponentialBackoff<number[][]>(async () => {
     let apiBase = options.apiBase!;
 
     if (!apiBase.endsWith("/")) {
@@ -24,7 +24,7 @@ async function embedOne(
       method: "POST",
       body: JSON.stringify({
         model: options.model,
-        input: chunk,
+        input: chunks,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -37,7 +37,7 @@ async function embedOne(
     }
 
     const data = await resp.json();
-    const embedding = data.embeddings[0];
+    const embedding: number[][] = data.embeddings;
 
     if (!embedding || embedding.length === 0) {
       throw new Error("Ollama generated empty embedding");
@@ -53,12 +53,15 @@ class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: IBaseEmbeddingsProvider["defaultOptions"] = {
     apiBase: "http://localhost:11434/",
     model: "nomic-embed-text",
+    maxBatchSize: 64,
   };
 
   async embed(chunks: string[]) {
-    const results: any = [];
-    for (const chunk of chunks) {
-      results.push(await embedOne(chunk, this.options, this.fetch));
+    const batchedChunks = this.getBatchedChunks(chunks);
+    var results: number[][] = [];
+
+    for (const batch of batchedChunks) {
+      results.push(...await embedOneBatch(batch, this.options, this.fetch));
     }
     return results;
   }
