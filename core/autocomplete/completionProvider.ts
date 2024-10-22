@@ -702,13 +702,6 @@ export class CompletionProvider {
         fullStop,
       );
       charGenerator = stopAtStopTokens(charGenerator, stop);
-      charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
-        charGenerator,
-        prefix,
-        suffix,
-        filepath,
-        multiline,
-      );
 
       let lineGenerator = streamLines(charGenerator);
       lineGenerator = stopAtLines(lineGenerator, fullStop);

@@ -4,7 +4,7 @@ import { AutocompleteFileringTestInput } from "./util";
 export const testCases: AutocompleteFileringTestInput[] = [
   {
     description:
-      "should pass unless maybe I messed up the whitespace at the start or something idk",
+      "Should preserve closing brackets when the opening bracket is not a part of the completion.",
     filename: "test.js",
     input: dedent`
       class Calculator {
@@ -40,15 +40,13 @@ export const testCases: AutocompleteFileringTestInput[] = [
         }
       }
     `,
-    completion: dedent`
-        if (number === 0) {
+    completion: dedent`if (number === 0) {
             throw new Error("Cannot divide by zero");
         }
         this.result /= number;
         return this;
     }`,
-    expectToDisplay: dedent`
-        if (number === 0) {
+    expectToDisplay: dedent`if (number === 0) {
             throw new Error("Cannot divide by zero");
         }
         this.result /= number;
