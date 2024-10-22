@@ -241,9 +241,6 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
     viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
 
-    // Scroll to the top of the startLine plus the height of the panel
-    editor.scrollingModel.scrollVertically(editor.visualLineToY(startLineNumber) - panel.height)
-
     // Add key listener to text area
     textArea.addKeyListener(
         object : KeyAdapter() {
