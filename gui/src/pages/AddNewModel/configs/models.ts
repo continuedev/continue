@@ -46,6 +46,21 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "pearai.png",
     isOpenSource: false,
   },
+  aider: {
+    title: "Aider",
+    description:
+      "An AI-powered coding assistant that helps developers write, edit, and understand code more efficiently.",
+    params: {
+      model: "aider",
+      contextLength: 300_000,
+      title: "Aider",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    providerOptions: ["aider"],
+    icon: "pearai.png",
+    isOpenSource: false,
+  },
   llama31Chat: {
     title: "Llama3.1 Chat",
     description: "The latest model from Meta, fine-tuned for chat",

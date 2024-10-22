@@ -33,7 +33,7 @@ import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
-export const PEARAI_CHAT_VIEW_ID = "pearai.pearAIChatView"
+export const PEARAI_CHAT_VIEW_ID = "pearai.pearAIChatView";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)

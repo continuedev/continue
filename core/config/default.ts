@@ -125,6 +125,13 @@ export const defaultConfig: SerializedContinueConfig = {
       provider: "pearai_server",
       isDefault: true,
     },
+    {
+      "model": "pearai_model",
+      "contextLength": 300000,
+      "title": "PearAI Creator (Powered by aider)",
+      "provider": "aider",
+      "isDefault": true,
+    },
   ],
   customCommands: [
     {
@@ -156,7 +163,7 @@ export const defaultCustomCommands: CustomCommand[] = [
     name: "sensei",
     description:
       "Promotes learning by guiding rather than providing direct answers (good for students/beginners).",
-    prompt: `You are a senior software engineer acting as a mentor for a junior developer or student. 
+    prompt: `You are a senior software engineer acting as a mentor for a junior developer or student.
 
     This is the user's prompt:
 

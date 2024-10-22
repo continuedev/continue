@@ -1,3 +1,5 @@
+// core/llm/llms/PearAIServer.ts
+
 import { getHeaders } from "../../pearaiServer/stubs/headers.js";
 import {
   ChatMessage,
@@ -10,41 +12,37 @@ import { SERVER_URL } from "../../util/parameters.js";
 import { Telemetry } from "../../util/posthog.js";
 import { BaseLLM } from "../index.js";
 import { streamSse, streamResponse, streamJSON } from "../stream.js";
-import { checkTokens } from "../../db/token.js";
 import { stripImages } from "../images.js";
 import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
 } from "./../countTokens.js";
-
+import { PearAICredentials } from "../../pearaiServer/PearAICredentials.js";
 
 class PearAIServer extends BaseLLM {
-  getCredentials: (() => Promise<PearAuth | undefined>) | undefined = undefined;
-  setCredentials: (auth: PearAuth) => Promise<void> = async () => {};
-  pearAIAccessToken: string | undefined = undefined;
-  pearAIRefreshToken: string | undefined = undefined;
-
+  private credentials: PearAICredentials;
 
   static providerName: ModelProvider = "pearai_server";
+
   constructor(options: LLMOptions) {
     super(options);
-    this.pearAIAccessToken = undefined;
-    this.pearAIRefreshToken = undefined;
+    this.credentials = new PearAICredentials(
+      options.getCredentials,
+      options.setCredentials || (async () => {})
+    );
   }
 
-  // Public setter for pearAIAccessToken
   public setPearAIAccessToken(value: string | undefined): void {
-    this.pearAIAccessToken = value;
+    this.credentials.setAccessToken(value);
   }
 
-  // Public setter for pearAIRefreshToken
   public setPearAIRefreshToken(value: string | undefined): void {
-    this.pearAIRefreshToken = value;
+    this.credentials.setRefreshToken(value);
   }
 
   private async _getHeaders() {
-    await this._checkAndUpdateCredentials();
+    await this.credentials.checkAndUpdateCredentials();
     return {
       "Content-Type": "application/json",
       ...(await getHeaders()),
@@ -86,7 +84,6 @@ class PearAIServer extends BaseLLM {
     return countTokens(text, this.model);
   }
 
-
   protected _convertMessage(message: ChatMessage) {
     if (typeof message.content === "string") {
       return message;
@@ -121,18 +118,18 @@ class PearAIServer extends BaseLLM {
       true,
     );
 
-    await this._checkAndUpdateCredentials();
+    await this.credentials.checkAndUpdateCredentials();
 
     const body = JSON.stringify({
-            messages: messages.map(this._convertMessage),
-            ...args,
-        });
+      messages: messages.map(this._convertMessage),
+      ...args,
+    });
 
     const response = await this.fetch(`${SERVER_URL}/server_chat`, {
       method: "POST",
       headers: {
         ...(await this._getHeaders()),
-        Authorization: `Bearer ${this.pearAIAccessToken}`,
+        Authorization: `Bearer ${this.credentials.getAccessToken()}`,
       },
       body: body,
     });
@@ -140,9 +137,7 @@ class PearAIServer extends BaseLLM {
     let completion = "";
 
     for await (const value of streamJSON(response)) {
-      // Handle initial metadata if necessary
       if (value.metadata && Object.keys(value.metadata).length > 0) {
-        // Do something with metadata if needed, currently just logging
         console.log("Metadata received:", value.metadata);
       }
 
@@ -164,18 +159,18 @@ class PearAIServer extends BaseLLM {
   ): AsyncGenerator<string> {
     options.stream = true;
 
-    let user_logged_in = await this._checkAndUpdateCredentials();
+    let user_logged_in = await this.credentials.checkAndUpdateCredentials();
     if (!user_logged_in) {
       return null
     }
 
     const endpoint = `${SERVER_URL}/server_fim`;
     const resp = await this.fetch(endpoint, {
-        method: "POST",
-        body: JSON.stringify({
+      method: "POST",
+      body: JSON.stringify({
         model: options.model,
-          prefix,
-          suffix,
+        prefix,
+        suffix,
         max_tokens: options.maxTokens,
         temperature: options.temperature,
         top_p: options.topP,
@@ -183,12 +178,12 @@ class PearAIServer extends BaseLLM {
         presence_penalty: options.presencePenalty,
         stop: options.stop,
         stream: true,
-        }),
+      }),
       headers: {
         ...(await this._getHeaders()),
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${this.pearAIAccessToken}`,
+        Authorization: `Bearer ${this.credentials.getAccessToken()}`,
       },
     });
     let completion = "";
@@ -197,68 +192,14 @@ class PearAIServer extends BaseLLM {
     }
   }
 
-
   async listModels(): Promise<string[]> {
     return [
       "pearai_model",
     ];
   }
+
   supportsFim(): boolean {
-    // Todo: Change to true when server is ready
     return false;
-  }
-
-  private async _checkAndUpdateCredentials(): Promise<boolean> {
-    try {
-      let creds = undefined;
-
-
-      if (this.getCredentials && this.pearAIAccessToken === undefined) {
-        console.log("Attempting to get credentials...");
-        creds = await this.getCredentials();
-
-        if (creds && creds.accessToken && creds.refreshToken) {
-          this.pearAIAccessToken = creds.accessToken;
-          this.pearAIRefreshToken = creds.refreshToken;
-        }
-        else {
-          return false;
-        }
-      }
-
-      const tokens = await checkTokens(this.pearAIAccessToken, this.pearAIRefreshToken);
-
-      if (tokens.accessToken !== this.pearAIAccessToken || tokens.refreshToken !== this.pearAIRefreshToken) {
-        if (tokens.accessToken !== this.pearAIAccessToken) {
-          this.pearAIAccessToken = tokens.accessToken;
-          console.log(
-            "PearAI access token changed from:",
-            this.pearAIAccessToken,
-            "to:",
-            tokens.accessToken,
-          );
-        }
-
-        if (tokens.refreshToken !== this.pearAIRefreshToken) {
-          this.pearAIRefreshToken = tokens.refreshToken;
-          console.log(
-            "PearAI refresh token changed from:",
-            this.pearAIRefreshToken,
-            "to:",
-            tokens.refreshToken,
-          );
-        }
-        if (creds) {
-          creds.accessToken = tokens.accessToken
-          creds.refreshToken = tokens.refreshToken
-          this.setCredentials(creds)
-        }
-      }
-    } catch (error) {
-      console.error("Error checking token expiration:", error);
-      // Handle the error (e.g., redirect to login page)
-    }
-    return true
   }
 
   protected async _sendTokensUsed(
@@ -273,7 +214,7 @@ class PearAIServer extends BaseLLM {
       method: "POST",
       headers: {
         ...(await this._getHeaders()),
-        Authorization: `Bearer ${this.pearAIAccessToken}`,
+        Authorization: `Bearer ${this.credentials.getAccessToken()}`,
       },
       body: JSON.stringify({
         kind,

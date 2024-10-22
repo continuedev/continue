@@ -87,8 +87,7 @@ export class ContinueGUIWebviewViewProvider
 
   public resetWebviewProtocolWebview(): void {
     if (this._webview) {
-      this.webviewProtocol.resetWebviews()
-      // this.webviewProtocol.addWebview(this._webview);
+      this.webviewProtocol.resetWebviewToDefault()
     } else {
       console.warn("no webview found during reset");
     }
@@ -125,6 +124,7 @@ export class ContinueGUIWebviewViewProvider
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
     isFullScreen = false,
+    initialRoute: string = "/"
   ): string {
     const isOverlay = panel?.title === PEAR_OVERLAY_TITLE; // defined in pearai-app PearOverlayPart.ts
     const extensionUri = getExtensionUri();
@@ -238,6 +238,7 @@ export class ContinueGUIWebviewViewProvider
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
         <script>window.isOverlayPearAI = ${isOverlay}</script>
+        <script>window.initialRoute = "${initialRoute}"</script>
 
         ${
           edits

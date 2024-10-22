@@ -29,8 +29,12 @@ import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { getExtensionUri } from "./util/vscode";
+import { handleAiderMode } from './integrations/aider/aider';
+
+
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
+let aiderPanel: vscode.WebviewPanel | undefined;
 
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
@@ -473,6 +477,15 @@ const commandsMap: (
         "pearai.pearAIChatView",
       ]);
     },
+    "pearai.aiderMode": async () => {
+      await handleAiderMode(core, sidebar, extensionContext);
+    },
+    "pearai.aiderCtrlC": () => {
+      core.invoke("llm/aiderCtrlC", undefined);
+    },
+    "pearai.aiderResetSession": () => {
+      core.invoke("llm/aiderResetSession", undefined);
+    },
     "pearai.toggleFullScreen": () => {
       // Check if full screen is already open by checking open tabs
       const fullScreenTab = getFullScreenTab();
@@ -745,7 +758,7 @@ const commandsMap: (
       extensionContext.secrets.store("pearai-token", data.accessToken);
       extensionContext.secrets.store("pearai-refresh", data.refreshToken);
       core.invoke("llm/resetPearAICredentials", undefined);
-      sidebar.webviewProtocol?.request("addPearAIModel", undefined);
+      sidebar.webviewProtocol?.request("addPearAIModel", undefined, ["pearai.pearAIChatView"]);
       vscode.window.showInformationMessage("PearAI: Successfully logged in!");
     },
     "pearai.closeChat": () => {

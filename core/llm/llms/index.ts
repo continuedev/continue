@@ -6,6 +6,7 @@ import {
   ILLM,
   LLMOptions,
   ModelDescription,
+  PearAuth,
 } from "../../index.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
@@ -36,6 +37,8 @@ import Together from "./Together.js";
 import WatsonX from "./WatsonX.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
 import PearAIServer from "./PearAIServer.js";
+import Aider from "./Aider.js";
+
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -130,6 +133,7 @@ const LLMs = [
   Azure,
   WatsonX,
   PearAIServer,
+  Aider,
 ];
 
 export async function llmFromDescription(
@@ -140,6 +144,9 @@ export async function llmFromDescription(
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
+  getCurrentDirectory?: () => Promise<string>,
+  getCredentials?: () => Promise<PearAuth | undefined>,
+  setCredentials?: (auth: PearAuth) => Promise<void>,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
@@ -170,6 +177,9 @@ export async function llmFromDescription(
     systemMessage,
     writeLog,
     uniqueId,
+    getCurrentDirectory,
+    getCredentials,
+    setCredentials,
   };
 
   if (desc.provider === "continue-proxy") {

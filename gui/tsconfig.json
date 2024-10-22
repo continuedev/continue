@@ -18,9 +18,14 @@
     "noEmitOnError": false,
     "baseUrl": ".",
     "paths": {
+      "vscode": ["../extensions/vscode/node_modules/vscode"],
       "@/*": ["./src/*"]
     },
-    "types": ["vscode-webview"]
+    "typeRoots": [
+      "./node_modules/@types",
+      "../extensions/vscode/node_modules/@types"
+    ],
+    "types": ["vscode", "vscode-webview"]
   },
   "include": ["src", "../src/util/messenger.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]

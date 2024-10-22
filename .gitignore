@@ -168,3 +168,4 @@ Icon?
 extensions/vscode/manual-testing-sandbox/example.ts
 
 .prompts/
+.aider*

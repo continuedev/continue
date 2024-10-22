@@ -97,6 +97,15 @@ export class VsCodeMessenger {
           return contents;
         });
     });
+    this.onWebview("aiderMode", (msg) => {
+      vscode.commands.executeCommand("pearai.aiderMode");
+    });
+    this.onWebview("aiderCtrlC", (msg) => {
+      vscode.commands.executeCommand("pearai.aiderCtrlC");
+    });
+    this.onWebview("aiderResetSession", (msg) => {
+      vscode.commands.executeCommand("pearai.aiderResetSession");
+    });
     this.onWebview("toggleDevTools", (msg) => {
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
       vscode.commands.executeCommand("pearai.viewLogs");

@@ -57,6 +57,10 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { isBareChatMode } from '../util/bareChatMode';
+import { Badge } from "../components/ui/badge";
+
+
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -168,6 +172,8 @@ const ThreadUserName = styled.div`
   color: ${lightGray};
 `;
 
+
+
 function fallbackRender({ error, resetErrorBoundary }) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
@@ -212,11 +218,34 @@ function GUI() {
     getLocalStorage("showTutorialCard"),
   );
 
+
+
+  // AIDER HINT BUTTON HIDDEN IN V1.4.0
+  const [showAiderHint, setShowAiderHint] = useState<boolean>(
+    false
+  );
+
+  const bareChatMode = isBareChatMode();
+
   const onCloseTutorialCard = () => {
     posthog.capture("closedTutorialCard");
     setLocalStorage("showTutorialCard", false);
     setShowTutorialCard(false);
   };
+
+  const AiderBetaButton: React.FC = () => (
+    <NewSessionButton
+      onClick={() =>
+      {
+        ideMessenger.post("aiderMode", undefined)
+        setShowAiderHint(false);
+      }
+    }
+    className="mr-auto py-2" // Added padding top and bottom
+    >
+      Hint: Try out PearAI Creator (Beta), powered by aider (Beta)!
+    </NewSessionButton>
+  );
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -413,8 +442,30 @@ function GUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
-        <div className="mx-2">
+          <div className="mx-2">
+            {defaultModel?.title?.toLowerCase().includes("aider") && (
+              <div className="pl-2 mt-8 border-b border-gray-700">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold mb-2">PearAI Creator- Beta</h1>{" "}
+                  <Badge variant="outline" className="pl-0">
+                    (Powered by{" "}
+                    <a
+                      href="https://aider.chat/2024/06/02/main-swe-bench.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline px-1"
+                    >
+                      aider)
+                    </a>
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-400 mt-0">
+                  Ask for a feature, describe a bug, or ask for a change to your project. We'll take care of everything for you!
+                </p>
+              </div>
+            )}
           <StepsDiv>
+
             {state.history.map((item, index: number) => {
               return (
                 <Fragment key={index}>
@@ -528,7 +579,6 @@ function GUI() {
             isMainInput={true}
             hidden={active}
           ></ContinueInputBox>
-
           {active ? (
             <>
               <br />
@@ -539,19 +589,24 @@ function GUI() {
               <NewSessionButton
                 onClick={() => {
                   saveSession();
+                  if (defaultModel?.title?.toLowerCase().includes("aider")) {
+                    ideMessenger.post("aiderResetSession", undefined)
+                  }
                 }}
                 className="mr-auto"
               >
-                New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+                New Session
+                {!bareChatMode && ` (${getMetaKeyLabel()} ${isJetBrains() ? "J" : "L"})`}
               </NewSessionButton>{" "}
-              <NewSessionButton
+              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
+              {/* <NewSessionButton
                 onClick={() => {
                   navigate("/inventory");
                 }}
                 className="mr-auto"
               >
                 Inventory
-              </NewSessionButton>{" "}
+              </NewSessionButton>{" "} */}
             </div>
           ) : (
             <>
@@ -568,20 +623,21 @@ function GUI() {
                   </NewSessionButton>
                 </div>
               ) : null}
-              <NewSessionButton
+              {/* <NewSessionButton
                 onClick={() => {
                   navigate("/inventory");
                 }}
                 className="mr-auto"
               >
                 PearAI Inventory
-              </NewSessionButton>{" "}
+              </NewSessionButton>{" "} */}
 
               {!!showTutorialCard && (
                 <div className="flex justify-center w-full">
                   <TutorialCard onClose={onCloseTutorialCard} />
                 </div>
               )}
+              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
             </>
           )}
         </div>
@@ -601,6 +657,9 @@ function GUI() {
                 .length === 0
             ) {
               dispatch(clearLastResponse());
+            }
+            if (defaultModel?.title?.toLowerCase().includes("aider")) {
+              ideMessenger.post("aiderCtrlC", undefined)
             }
           }}
         >

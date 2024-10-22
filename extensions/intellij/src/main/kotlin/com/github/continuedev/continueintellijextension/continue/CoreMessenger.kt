@@ -149,7 +149,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "setGitHubAuthToken",
         "pathSep",
         "getControlPlaneSessionInfo",
-        "logoutOfControlPlane"
+        "logoutOfControlPlane",
     )
 
     private val PASS_THROUGH_TO_WEBVIEW = listOf<String>(

@@ -89,6 +89,25 @@ export class VsCodeWebviewProtocol
     this._webviewListeners.clear();
   }
 
+  resetWebviewToDefault() {
+    const defaultViewKey = "pearai.pearAIChatView";
+
+    // Remove all entries except for the chat view
+    this._webviews.forEach((value, key) => {
+      if (key !== defaultViewKey) {
+        this._webviews.delete(key);
+      }
+    });
+
+    // Dispose and remove all listeners except for the chat view
+    this._webviewListeners.forEach((listener, key) => {
+      if (key !== defaultViewKey) {
+        listener.dispose();
+        this._webviewListeners.delete(key);
+      }
+    });
+  }
+
   addWebview(viewType: string, webView: vscode.Webview) {
     this._webviews.set(viewType, webView);
     const listener = webView.onDidReceiveMessage(async (msg) => {

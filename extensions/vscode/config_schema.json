@@ -189,7 +189,8 @@
             "azure",
             "msty",
             "watsonx",
-            "pearai_server"
+            "pearai_server",
+            "aider"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://trypear.ai/reference/Model%20Providers/openai)",

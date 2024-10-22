@@ -66,6 +66,7 @@ import {
   slashCommandFromPromptFile,
 } from "./promptFile.js";
 import PearAIServer from "../llm/llms/PearAIServer.js";
+import Aider from "../llm/llms/Aider.js";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -241,22 +242,12 @@ async function intermediateToFinalConfig(
         writeLog,
         config.completionOptions,
         config.systemMessage,
+        ide.getCurrentDirectory.bind(ide),
+        async () => await ide.getPearAuth(),
+        async (auth: PearAuth) => await ide.updatePearCredentials(auth),
       );
       if (!llm) {
         continue;
-      }
-
-      // TODO: There is most definately a better way to do this
-      //       windows is bad so its hard to set this up locally - Ender
-      // inject callbacks to backend
-      if (llm instanceof PearAIServer) {
-        llm.getCredentials = async () => {
-          return await ide.getPearAuth();
-        };
-
-        llm.setCredentials = async (auth: PearAuth) => {
-          await ide.updatePearCredentials(auth);
-        };
       }
 
       if (llm.model === "AUTODETECT") {
@@ -361,16 +352,6 @@ async function intermediateToFinalConfig(
               config.completionOptions,
               config.systemMessage,
             );
-
-            if (llm instanceof PearAIServer) {
-              llm.getCredentials = async () => {
-                return await ide.getPearAuth();
-              };
-
-              llm.setCredentials = async (auth: PearAuth) => {
-                await ide.updatePearCredentials(auth);
-              };
-            }
 
             // if (llm?.providerName === "free-trial") {
             //   if (!allowFreeTrial) {

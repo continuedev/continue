@@ -105,14 +105,14 @@ function Models() {
           </>
         ) : (
           <>
-            {Object.entries(providers).map(([providerName, modelInfo], i) => (
-              providerName !== "pearai_server" && providerName !== "other" && (
+            {Object.entries(providers).map(([providerName, providerInfo], i) => (
+              providerInfo.showInMenu !== false && (
                 <ModelCard
                   key={`${providerName}-${i}`}
-                  title={modelInfo.title}
-                  description={modelInfo.description}
-                  tags={modelInfo.tags}
-                  icon={modelInfo.icon}
+                  title={providerInfo.title}
+                  description={providerInfo.description}
+                  tags={providerInfo.tags}
+                  icon={providerInfo.icon}
                   onClick={(e) => {
                     console.log(`/addModel/provider/${providerName}`);
                     navigate(`/addModel/provider/${providerName}`);
