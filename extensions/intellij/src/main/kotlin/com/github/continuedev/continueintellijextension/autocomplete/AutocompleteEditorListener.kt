@@ -21,7 +21,7 @@ class AutocompleteCaretListener: CaretListener {
             return
         }
 
-        val pending = autocompleteService.pendingCompletion;
+        val pending = autocompleteService.pendingCompletion
         if (pending != null && pending.editor == editor && pending.offset == offset) {
             return
         }

@@ -16,7 +16,7 @@ class PartialAcceptAutocompleteAction: EditorAction(object : EditorActionHandler
     }
 
     override fun isEnabledForCaret(editor: Editor, caret: Caret, dataContext: DataContext?): Boolean {
-        val autocompleteService = editor.project?.service<AutocompleteService>();
+        val autocompleteService = editor.project?.service<AutocompleteService>()
         val enabled = editor == autocompleteService?.pendingCompletion?.editor
                 && caret.offset == autocompleteService.pendingCompletion?.offset
                 && autocompleteService.pendingCompletion?.text != null
