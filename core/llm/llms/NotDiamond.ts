@@ -3,6 +3,7 @@ import { BaseLLM } from "../index.js";
 import { NotDiamond as NotDiamondClient } from "notdiamond-continue";
 
 interface NotDiamondOptions extends LLMOptions {
+  tradeoff?: "cost" | "latency";
   notDiamondProviders?: {
     openai?: {
       apiKey: string;
@@ -68,6 +69,7 @@ class NotDiamond extends BaseLLM {
     const result = await notdiamond.stream({
       messages: [{ content: prompt, role: "user" }],
       llmProviders: llmProviders as any,
+      ...(this.options.tradeoff ? { tradeoff: this.options.tradeoff } : {}),
     });
 
     let responseContent = '';

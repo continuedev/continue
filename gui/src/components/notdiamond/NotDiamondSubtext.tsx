@@ -10,18 +10,6 @@ export const NotDiamondSubtext = () => {
       <Alert>
         <p className="font-bold text-sm m-0">Using Not Diamond in Continue</p>
         <p className="m-0 mt-1">
-          {/* Add at least one API key. Then check the list of supported models{" "}
-          <a href="https://docs.notdiamond.ai/docs/llm-models" target="_blank">
-            here
-          </a>{" "}
-          and add them via Continue
-          <span
-            className="underline cursor-pointer"
-            onClick={() => ideMessenger.post("openConfigJson", undefined)}
-          >
-            {" "}
-            config file
-          </span> */}
           Adding a provider API key will include all supported models in Not
           Diamond's routing requests. You can change this behavior in the{" "}
           <span
