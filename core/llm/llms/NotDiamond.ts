@@ -81,7 +81,7 @@ class NotDiamond extends BaseLLM {
     }
 
     if (result?.provider.model) {
-      yield `\n\n*Routing target*: ${result.provider.provider}/${result.provider.model}`;
+      yield `\n\n*Recommended Model*: ${result.provider.provider}/${result.provider.model}`;
     }
   }
 }
