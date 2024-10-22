@@ -244,6 +244,11 @@ function GUI() {
     </NewSessionButton>
   );
 
+  const perplexityMode = (): boolean => {
+    return defaultModel?.model?.toLowerCase() === "perplexity";
+  };
+
+
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
     const OFFSET_HERUISTIC = 300;
@@ -580,7 +585,15 @@ function GUI() {
               >
                 New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
               </NewSessionButton>{" "}
-              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
+              {!perplexityMode() && !bareChatMode && !!showAiderHint && <AiderBetaButton />}
+              {!perplexityMode() && <NewSessionButton
+                    onClick={async () => {
+                      ideMessenger.post("perplexityMode", undefined);
+                    }}
+                    className="mr-auto"
+                  >
+                    {perplexityMode() ? "Exit Perplexity" : "false"  }                     
+              </NewSessionButton>}
             </div>
           ) : (
             <>
@@ -603,15 +616,15 @@ function GUI() {
                   <TutorialCard onClose={onCloseTutorialCard} />
                 </div>
               )}
-              {!bareChatMode && !!(defaultModel?.provider?.toLowerCase() === "perplexity") && !!showAiderHint && <AiderBetaButton />}
-              <NewSessionButton
+              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
+              {!perplexityMode() && <NewSessionButton
                     onClick={async () => {
                       ideMessenger.post("perplexityMode", undefined);
                     }}
                     className="mr-auto"
                   >
-                    dev: pearai search (perplexity)                    
-              </NewSessionButton>
+                    {perplexityMode() ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                  
+              </NewSessionButton>}
             </>
           )}
         </div>

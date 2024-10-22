@@ -193,7 +193,7 @@ function ModelSelect() {
 
     setOptions(
       allModels
-        .filter((model) => model.title.toLowerCase() !== "aider" && model.title.toLowerCase() !== "perplexity")
+        .filter((model) => model.title.toLowerCase() !== "aider")
         .map((model) => {
           return {
             value: model.title,

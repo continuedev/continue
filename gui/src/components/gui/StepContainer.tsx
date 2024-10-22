@@ -1,4 +1,5 @@
 import {
+  ArrowLeftEndOnRectangleIcon,
   ArrowUturnLeftIcon,
   BarsArrowDownIcon,
   CubeIcon,
@@ -16,6 +17,7 @@ import {
   lightGray,
   vscBackground,
   vscButtonBackground,
+  vscEditorBackground,
   vscInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -25,7 +27,7 @@ import { getFontSize } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { isBareChatMode } from '../../util/bareChatMode';
+import { isBareChatMode, isPerplexityMode } from '../../util/bareChatMode';
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -56,6 +58,7 @@ function StepContainer(props: StepContainerProps) {
   const active = useSelector((store: RootState) => store.state.active);
   const ideMessenger = useContext(IdeMessengerContext);
   const bareChatMode = isBareChatMode();
+  const isPerplexity = isPerplexityMode();
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -161,7 +164,14 @@ function StepContainer(props: StepContainerProps) {
                 />
               </HeaderButtonWithText>
             )}
-
+            {isPerplexity && <HeaderButtonWithText
+          text="Add to PearAI chat context"
+          onClick={() => {
+            ideMessenger.post("addPerplexityContext", { text: stripImages(props.item.message.content) });
+          }}
+        >
+          <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+        </HeaderButtonWithText>}
             <CopyButton
               text={stripImages(props.item.message.content)}
               color={lightGray}

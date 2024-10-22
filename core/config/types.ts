@@ -513,7 +513,8 @@ declare global {
     | "custom"
     | "msty"
     | "pearai_server"
-    | "aider";
+    | "aider"
+    | "perplexity";
 
   export type ModelName =
     | "AUTODETECT"
@@ -579,7 +580,8 @@ declare global {
     | "starcoder2-3b"
     | "stable-code-3b"
     | "pearai_model"
-    | "aider";
+    | "aider"
+    | "perplexity";
 
   export interface RequestOptions {
     timeout?: number;

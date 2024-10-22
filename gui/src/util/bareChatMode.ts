@@ -6,7 +6,15 @@ export function isBareChatMode() {
   const defaultModel = useSelector(defaultModelSelector);
 
   return useMemo(
-    () => defaultModel?.title?.toLowerCase() === "aider" || defaultModel?.title?.toLowerCase() === "perplexity",
+    () => defaultModel?.title?.toLowerCase() === "aider",
     [defaultModel]
   );
 }
+
+export function isPerplexityMode() {
+  const defaultModel = useSelector(defaultModelSelector);
+
+  return useMemo(
+    () => defaultModel?.model?.toLowerCase() === "perplexity",
+    [defaultModel]
+  );}

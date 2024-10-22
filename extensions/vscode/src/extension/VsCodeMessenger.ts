@@ -100,6 +100,10 @@ export class VsCodeMessenger {
     this.onWebview("perplexityMode", (msg) => {
       vscode.commands.executeCommand("pearai.perplexityMode");
     });
+    this.onWebview("addPerplexityContext", (msg) => {
+      console.log("got message from perplexity, executing command")
+      vscode.commands.executeCommand("pearai.addPerplexityContext", msg)
+    })
     this.onWebview("aiderMode", (msg) => {
       vscode.commands.executeCommand("pearai.aiderMode");
     });
@@ -172,6 +176,13 @@ export class VsCodeMessenger {
         msg.data.stepIndex,
       );
     });
+
+    // this.onWebview("addPerplexityContext", async (msg) => {
+    //   // send context to default pearAI chat
+    //   // display context as a delete-able pill in the chat
+    //   console.log("message received in vscode: ", msg, this.side)
+
+    // })
 
     this.onWebview("applyToCurrentFile", async (msg) => {
       // Select the entire current file

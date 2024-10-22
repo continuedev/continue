@@ -123,7 +123,6 @@ const getPlaceholder = (defaultModel, historyLength: number) => {
       ? "Ask me to create, change, or fix anything..."
       : "Send a follow-up";
   }
-
   return historyLength === 0
     ? "Ask anything, '/' for slash commands, '@' to add context"
     : "Ask a follow-up";
@@ -624,6 +623,20 @@ function TipTapEditor(props: TipTapEditorProps) {
       }
       editor?.commands.insertContent(data.input);
       onEnterRef.current({ useCodebase: false, noContext: true });
+    },
+    [editor, onEnterRef.current, props.isMainInput],
+  );
+
+  useWebviewListener(
+    "addPerplexityContextinChat",
+    async (data) => {
+      console.log("got message from vscode perplexity")
+      console.log(data)
+      // if (!props.isMainInput) {
+      //   return;
+      // }
+      // editor?.commands.insertContent(data.input);
+      // onEnterRef.current({ useCodebase: false, noContext: true });
     },
     [editor, onEnterRef.current, props.isMainInput],
   );
