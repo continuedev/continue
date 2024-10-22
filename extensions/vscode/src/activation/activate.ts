@@ -69,11 +69,13 @@ const setupPearAPPLayout = () => {
   // * always * move pearai extension to auxiliary bar (secondary side bar)
   vscode.commands.executeCommand("workbench.action.movePearExtensionToAuxBar");
 
+  // set activity bar position to top
+  vscode.commands.executeCommand("workbench.action.activityBarLocation.top");
+
   // Apply the remaining layout settings only on the first launch
   if (isFirstLaunch) {
     return;
   }
 
-  // set activity bar position to top
-  vscode.commands.executeCommand("workbench.action.activityBarLocation.top");
+  // first launch layout settings here.
 };
