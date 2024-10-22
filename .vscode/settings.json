@@ -14,8 +14,6 @@
     }
   },
   "search.exclude": {
-    "**/binary": true,
-    "binary/": false,
     "**/core/vendor/**": true,
     "**/gui/dist": true,
     "**/extensions/vscode/gui/**": true,
