@@ -126,14 +126,15 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           visit(tree, "code", (node: any) => {
             if (!node.lang) {
               node.lang === "javascript";
-            } else if (node.lang.includes(".")) {
-              node.lang = node.lang.split(".").slice(-1)[0];
             }
 
             if (node.meta) {
               node.data = node.data || {};
               node.data.hProperties = node.data.hProperties || {};
-              node.data.hProperties.filepath = node.meta;
+
+              let meta = node.meta.split(" ");
+              node.data.hProperties.filepath = meta[0];
+              node.data.hProperties.range = meta[1];
             }
           });
         };
@@ -172,13 +173,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const { className, filepath } = preProps?.children?.[0]?.props;
+          const { className, filepath, range } = preProps?.children?.[0]?.props;
 
           return props.showCodeBorder ? (
             <PreWithToolbar
               codeBlockIndex={preProps.codeBlockIndex}
               language={getLanuageFromClassName(className)}
               filepath={filepath}
+              range={range}
             >
               <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
             </PreWithToolbar>
