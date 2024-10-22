@@ -48,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+  ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -822,7 +822,8 @@ export type EmbeddingsProviderName =
   | "deepinfra"
   | "nvidia"
   | "voyage"
-  | "mistral";
+  | "mistral"
+  | "vertex";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -839,6 +840,9 @@ export interface EmbedOptions {
 
   // AWS and GCP Options
   region?: string;
+
+  // GCP Options
+  projectId?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -1041,9 +1045,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
