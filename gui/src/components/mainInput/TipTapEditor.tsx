@@ -660,7 +660,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       let index = 0;
       for (const el of editor.getJSON().content) {
-        console.dir(el)
         if (el.type === "codeBlock") {
           index += 2;
         } else {
@@ -736,7 +735,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "highlightedCode",
     async (data) => {
-      console.log(data)
       if (!props.isMainInput || !editor) {
         return;
       }
@@ -764,7 +762,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
         let index = 0;
         for (const el of editor.getJSON().content) {
-          console.dir(el)
           if (el.type === "codeBlock") {
             index += 2;
           } else {
