@@ -86,7 +86,7 @@ through the `Core binary` task.
 
 - `extensions/intellij`: Breakpoints can be set in Intellij
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
-- `core`: Breakpoints can be set in VS Code
+- `core`: Breakpoints can be set in VS Code (requires restarting the _Core Binary_ task)
 
 ### Available Gradle tasks
 

@@ -1,22 +1,22 @@
-import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker.js";
-import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
+import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker";
+import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider";
 import {
   ControlPlaneClient,
   DEFAULT_CONTROL_PLANE_PROXY_URL,
-} from "../../control-plane/client.js";
-import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
+} from "../../control-plane/client";
+import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
 import {
   ContinueConfig,
   ContinueRcJson,
   IDE,
   IdeSettings,
   SerializedContinueConfig,
-} from "../../index.js";
-import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider.js";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
-import { Telemetry } from "../../util/posthog.js";
-import { TTS } from "../../util/tts.js";
-import { ConfigResult, loadFullConfigNode } from "../load.js";
+} from "../../";
+import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider";
+import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
+import { Telemetry } from "../../util/posthog";
+import { TTS } from "../../util/tts";
+import { ConfigResult, loadFullConfigNode } from "../load";
 
 export default async function doLoadConfig(
   ide: IDE,
@@ -26,13 +26,7 @@ export default async function doLoadConfig(
   overrideConfigJson: SerializedContinueConfig | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {
-  let workspaceConfigs: ContinueRcJson[] = [];
-  try {
-    workspaceConfigs = await ide.getWorkspaceConfigs();
-  } catch (e) {
-    console.warn("Failed to load workspace configs");
-  }
-
+  const workspaceConfigs = await getWorkspaceConfigs(ide);
   const ideInfo = await ide.getIdeInfo();
   const uniqueId = await ide.getUniqueId();
   const ideSettings = await ideSettingsPromise;
@@ -126,4 +120,22 @@ async function injectControlPlaneProxyInfo(
   }
 
   return config;
+}
+
+async function getWorkspaceConfigs(ide: IDE): Promise<ContinueRcJson[]> {
+  const ideInfo = await ide.getIdeInfo();
+  let workspaceConfigs: ContinueRcJson[] = [];
+
+  try {
+    workspaceConfigs = await ide.getWorkspaceConfigs();
+
+    // Config is sent over the wire from JB so we need to parse it
+    if (ideInfo.ideType === "jetbrains") {
+      workspaceConfigs = (workspaceConfigs as any).map(JSON.parse);
+    }
+  } catch (e) {
+    console.debug("Failed to load workspace configs: ", e);
+  }
+
+  return workspaceConfigs;
 }
