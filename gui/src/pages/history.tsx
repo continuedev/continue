@@ -268,8 +268,8 @@ function History() {
       const rows = tableRef.current.querySelectorAll('tr');
       if (rows[index]) {
         rows[index].scrollIntoView({
-          behavior: 'instant',
-          block: 'center',
+          behavior: "smooth",
+          block: "center",
         });
       }
     }
