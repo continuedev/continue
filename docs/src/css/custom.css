@@ -15,6 +15,14 @@
   --ifm-color-primary-lightest: rgb(67, 31, 242);
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  --ifm-list-item-margin: 0.70rem;
+  /* These vars control the colors of the kbd tag 3d keycap */
+  --kbd-keycap-bg-color: #ffffffce;
+  --kbd-keycap-border-color: #ccc;
+  --kbd-text-color: #ca3a18;
+  --kbd-shadow-color: #b4b4b4;
+  --kbd-shadow-color-outer: #9c9c9c;
+  --kbd-shadow-tint: rgba(0, 0, 0, .4);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
@@ -26,5 +34,33 @@
   --ifm-color-primary-light: #59bc89ff;
   --ifm-color-primary-lighter: #59bc89ff;
   --ifm-color-primary-lightest: #59bc89ff;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.4);
+  /* These vars control the colors of the kbd tag 3d keycap */
+  --kbd-keycap-bg-color: #414859;
+  --kbd-keycap-border-color: #495265;
+  --kbd-text-color: #9ad7fa;
+  --kbd-shadow-color: #2e3341;
+  --kbd-shadow-color-outer: #373e4b;
+  --kbd-shadow-tint: rgba(173, 212, 247, 0.4);
+}
+
+kbd {
+  display: inline-block;
+  padding: 0.3em 0.4em;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: .8rem;
+  font-weight: 500;
+  line-height: .8;
+  color: var(--kbd-text-color);
+  text-align: center;
+  white-space: nowrap;
+  background-color: var(--kbd-keycap-bg-color);
+  border: 1px solid var(--kbd-keycap-border-color);
+  border-radius: 0.3em;
+  box-shadow: 
+    0 2px 0 1px var(--kbd-shadow-color),
+    0 3px 0 2px var(--kbd-shadow-color-outer),
+    0 4px 6px var(--kbd-shadow-tint);
+  position: relative;
+  top: 0;
 }
