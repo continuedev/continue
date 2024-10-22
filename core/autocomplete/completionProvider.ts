@@ -111,6 +111,14 @@ const ERRORS_TO_IGNORE = [
   "unexpected server status",
 ];
 
+const LOCAL_PROVIDERS: ModelProvider[] = [
+  "ollama",
+  "lmstudio",
+  "llama.cpp",
+  "llamafile",
+  "text-gen-webui",
+];
+
 function formatExternalSnippet(
   filepath: string,
   snippet: string,
@@ -335,13 +343,7 @@ export class CompletionProvider {
       }
 
       // Set model-specific options
-      const LOCAL_PROVIDERS: ModelProvider[] = [
-        "ollama",
-        "lmstudio",
-        "llama.cpp",
-        "llamafile",
-        "text-gen-webui",
-      ];
+
       if (
         !config.tabAutocompleteOptions?.maxPromptTokens &&
         LOCAL_PROVIDERS.includes(llm.providerName)

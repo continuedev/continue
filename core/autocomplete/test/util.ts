@@ -11,7 +11,7 @@ function parseFimExample(text: string): { prefix: string; suffix: string } {
   return { prefix, suffix };
 }
 
-interface AutocompleteFileringTestInput {
+export interface AutocompleteFileringTestInput {
   description: string;
   filename: string;
   input: string;
