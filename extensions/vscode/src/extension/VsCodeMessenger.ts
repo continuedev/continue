@@ -101,7 +101,6 @@ export class VsCodeMessenger {
       vscode.commands.executeCommand("pearai.perplexityMode");
     });
     this.onWebview("addPerplexityContext", (msg) => {
-      console.log("got message from perplexity, executing command")
       vscode.commands.executeCommand("pearai.addPerplexityContext", msg)
     })
     this.onWebview("aiderMode", (msg) => {

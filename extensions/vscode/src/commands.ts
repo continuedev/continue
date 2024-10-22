@@ -454,9 +454,8 @@ const commandsMap: (
         input: text,
       });
     },
-    "pearai.addPerplexityContext": (text: string) => {
-      console.log("in perplexity command execution")
-      sidebar.webviewProtocol?.request("addPerplexityContextinChat", {text: text}, ["pearai.pearAIChatView"]);
+    "pearai.addPerplexityContext": (msg) => {
+      sidebar.webviewProtocol?.request("addPerplexityContextinChat", msg.data, ["pearai.pearAIChatView"]);
     },
     "pearai.selectRange": (startLine: number, endLine: number) => {
       if (!vscode.window.activeTextEditor) {

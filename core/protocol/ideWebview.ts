@@ -21,8 +21,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
   perplexityMode: [undefined, void];
-  addPerplexityContext: [{ text: string }, void];
-  addPerplexityContextinChat: [{ text: string }, void];
+  addPerplexityContext: [{text: string, language: string}, void]
+  addPerplexityContextinChat: [{ text: string, language: string }, void];
   aiderMode: [undefined, void];
   aiderCtrlC: [undefined, void];
   aiderResetSession: [undefined, void];
@@ -75,6 +75,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setupLocalModel: [undefined, void];
   incrementFtc: [undefined, void];
   openOnboarding: [undefined, void];
-  addPerplexityContext: [{text: string}, void]
-  addPerplexityContextinChat: [{ text: string }, void];
+  addPerplexityContext: [{text: string, language: string}, void]
+  addPerplexityContextinChat: [{ text: string, language: string }, void];
 };

@@ -284,6 +284,7 @@ export interface ContextItemWithId {
   editing?: boolean;
   editable?: boolean;
   icon?: string;
+  language?: string;
 }
 
 export interface InputModifiers {

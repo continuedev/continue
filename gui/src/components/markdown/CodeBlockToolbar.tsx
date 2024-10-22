@@ -84,7 +84,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           text="Add to PearAI chat context"
           style={{ backgroundColor: vscEditorBackground }}
           onClick={() => {
-            ideMessenger.post("addPerplexityContext", { text: props.text });
+            ideMessenger.post("addPerplexityContext", { text: props.text, language: props.language });
           }}
         >
           <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />

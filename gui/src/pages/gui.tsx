@@ -592,7 +592,7 @@ function GUI() {
                     }}
                     className="mr-auto"
                   >
-                    {perplexityMode() ? "Exit Perplexity" : "false"  }                     
+                    {perplexityMode() ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                     
               </NewSessionButton>}
             </div>
           ) : (

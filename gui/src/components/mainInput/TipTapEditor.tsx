@@ -630,13 +630,41 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "addPerplexityContextinChat",
     async (data) => {
-      console.log("got message from vscode perplexity")
-      console.log(data)
-      // if (!props.isMainInput) {
-      //   return;
-      // }
-      // editor?.commands.insertContent(data.input);
-      // onEnterRef.current({ useCodebase: false, noContext: true });
+      const item: ContextItemWithId = {
+        content: data.text,
+        name: "Context from PearAI Search",
+        // Description is passed on to the LLM to give more context on file path
+        description: "Context from result of Perplexity AI",
+        id: {
+          providerTitle: "code",
+          itemId: data.text,
+        },
+        language: data.language,
+      };
+
+      let index = 0;
+      for (const el of editor.getJSON().content) {
+        console.dir(el)
+        if (el.type === "codeBlock") {
+          index += 2;
+        } else {
+          break;
+        }
+      }
+      editor
+        .chain()
+        .insertContentAt(index, {
+          type: "codeBlock",
+          attrs: {
+            item,
+          },
+        })
+        .run();
+
+      setTimeout(() => {
+          editor.commands.blur();
+          editor.commands.focus("end");
+      }, 20);
     },
     [editor, onEnterRef.current, props.isMainInput],
   );
@@ -692,6 +720,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "highlightedCode",
     async (data) => {
+      console.log(data)
       if (!props.isMainInput || !editor) {
         return;
       }
@@ -719,6 +748,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
         let index = 0;
         for (const el of editor.getJSON().content) {
+          console.dir(el)
           if (el.type === "codeBlock") {
             index += 2;
           } else {
