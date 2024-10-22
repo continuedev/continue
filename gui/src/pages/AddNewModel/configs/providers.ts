@@ -74,7 +74,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     refPage: "aider",
     description:
       "Enjoy effortless integration and lower your costs with our reliable hosted services.",
-    icon: "aider.png",
+    icon: "",
     tags: [],
     packages: [models.aider],
     showInMenu: false,
@@ -85,7 +85,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     refPage: "perplexity",
     description:
       "Enjoy effortless integration and lower your costs with our reliable hosted services.",
-    icon: "pearai.png",
+    icon: "",
     tags: [],
     packages: [models.perplexity],
     showInMenu: false,

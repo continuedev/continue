@@ -181,7 +181,7 @@ function ModelSelect() {
 
     if (location.pathname === "/aiderMode") {
       const aider = allModels.find(
-        (model) => model.title.toLowerCase() === "aider",
+        (model) => model.title.toLowerCase().includes("aider"),
       );
       dispatch(setDefaultModel({ title: aider?.title }));
     } else if (location.pathname === "/perplexityMode") {
