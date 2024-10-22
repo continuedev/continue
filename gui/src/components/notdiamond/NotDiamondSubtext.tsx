@@ -8,11 +8,9 @@ export const NotDiamondSubtext = () => {
   return (
     <div className="mt-2">
       <Alert>
-        <p className="font-bold text-sm m-0">
-          How to use Not Diamond in Continue
-        </p>
+        <p className="font-bold text-sm m-0">Using Not Diamond in Continue</p>
         <p className="m-0 mt-1">
-          Add at least one API key. Then check the list of supported models{" "}
+          {/* Add at least one API key. Then check the list of supported models{" "}
           <a href="https://docs.notdiamond.ai/docs/llm-models" target="_blank">
             here
           </a>{" "}
@@ -21,8 +19,27 @@ export const NotDiamondSubtext = () => {
             className="underline cursor-pointer"
             onClick={() => ideMessenger.post("openConfigJson", undefined)}
           >
-            {" "} config file
+            {" "}
+            config file
+          </span> */}
+          Adding a provider API key will include all supported models in Not
+          Diamond's routing requests. You can change this behavior in the{" "}
+          <span
+            className="underline cursor-pointer"
+            onClick={() => ideMessenger.post("openConfigJson", undefined)}
+          >
+            Continue config file
           </span>
+        </p>
+        <p>
+          See an example{" "}
+          <a
+            href="https://docs.notdiamond.ai/docs/openai-integration"
+            target="_blank"
+          >
+            here
+          </a>
+          .
         </p>
       </Alert>
     </div>
