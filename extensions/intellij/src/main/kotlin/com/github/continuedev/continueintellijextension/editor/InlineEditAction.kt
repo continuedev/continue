@@ -191,7 +191,9 @@ fun openInlineEdit(project: Project?, editor: Editor) {
             editor,
             startLineNumber,
             endLineNumber,
-            { inlayRef.get().dispose() },
+            {
+                inlayRef.get()?.dispose()
+            },
             {
                 textArea.document.insertString(textArea.caretPosition, ", ", null)
                 textArea.requestFocus()
