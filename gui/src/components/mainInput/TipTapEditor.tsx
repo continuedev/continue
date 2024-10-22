@@ -633,7 +633,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       const item: ContextItemWithId = {
         content: data.text,
         name: "Context from PearAI Search",
-        // Description is passed on to the LLM to give more context on file path
         description: "Context from result of Perplexity AI",
         id: {
           providerTitle: "code",
