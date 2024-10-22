@@ -166,7 +166,6 @@ function StepContainer(props: StepContainerProps) {
             )}
             {isPerplexity && <HeaderButtonWithText
           text="Add to PearAI chat context"
-          style={{ backgroundColor: vscEditorBackground }}
           onClick={() => {
             ideMessenger.post("addPerplexityContext", { text: stripImages(props.item.message.content), language: "" });
           }}

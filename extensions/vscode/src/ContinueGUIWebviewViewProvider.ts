@@ -26,13 +26,6 @@ export class ContinueGUIWebviewViewProvider
     }
   }
 
-  public sendMessageToWebview(message: any) {
-    console.log(this.webview)
-    if (this.webview) {
-      this.webview.postMessage(message);
-    }
-  }
-
   // Show or hide the output channel on enableDebugLogs
   private setupDebugLogsListener() {
     vscode.workspace.onDidChangeConfiguration((event) => {
