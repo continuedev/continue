@@ -1,0 +1,8 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Continue" type="CompoundRunConfigurationType">
+    <toRun name="Run Extension" type="GradleRunConfiguration" />
+    <toRun name="GUI: Start Dev Server" type="js.build_tools.npm" />
+    <toRun name="Tail Dev Logs" type="ShConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>

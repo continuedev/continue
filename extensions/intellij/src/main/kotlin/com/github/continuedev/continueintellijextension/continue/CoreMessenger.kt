@@ -17,7 +17,6 @@ import kotlinx.coroutines.*
 
 class CoreMessenger(
     private val project: Project,
-    esbuildPath: String,
     continueCorePath: String,
     private val ideProtocolClient: IdeProtocolClient,
     coroutineScope: CoroutineScope
@@ -162,10 +161,7 @@ class CoreMessenger(
       }
     } else {
       // Set proper permissions
-      coroutineScope.launch(Dispatchers.IO) {
-        setPermissions(continueCorePath)
-        setPermissions(esbuildPath)
-      }
+      coroutineScope.launch(Dispatchers.IO) { setPermissions(continueCorePath) }
 
       // Start the subprocess
       val processBuilder =

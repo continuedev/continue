@@ -6,13 +6,11 @@ import EditSlashCommand from "./edit";
 import HttpSlashCommand from "./http";
 import ReviewMessageCommand from "./review";
 import ShareSlashCommand from "./share";
-import StackOverflowSlashCommand from "./stackOverflow";
 import OnboardSlashCommand from "./onboard";
 
 export default [
   DraftIssueCommand,
   ShareSlashCommand,
-  StackOverflowSlashCommand,
   GenerateTerminalCommand,
   EditSlashCommand,
   CommentSlashCommand,

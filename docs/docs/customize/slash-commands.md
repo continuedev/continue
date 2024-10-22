@@ -122,21 +122,6 @@ Describe the issue you'd like to generate, and Continue will turn into a well-fo
 }
 ```
 
-### `/So`
-
-The StackOverflow slash command will automatically pull results from StackOverflow to answer your question, quoting links along with its answer.
-
-```json title="config.json"
-{
-  "slashCommands": [
-    {
-      "name": "so",
-      "description": "Reference StackOverflow to answer the question"
-    }
-  ]
-}
-```
-
 ### `/Onboard`
 
 The Onboard slash command helps to familiarize yourself with a new project by analyzing the project structure, READMEs, and dependency files. It identifies key folders, explains their purpose, and highlights popular packages used. Additionally, it offers insights into the project's architecture.
