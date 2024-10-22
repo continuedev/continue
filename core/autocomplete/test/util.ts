@@ -15,8 +15,8 @@ export interface AutocompleteFileringTestInput {
   description: string;
   filename: string;
   input: string;
-  completion: string;
-  expectToDisplay: string | null;
+  llmOutput: string;
+  expectedCompletion: string | null;
 }
 
 export async function testAutocompleteFiltering(
@@ -28,7 +28,7 @@ export async function testAutocompleteFiltering(
   const llm = new Mock({
     model: "mock",
   });
-  llm.completion = test.completion;
+  llm.completion = test.llmOutput;
   const ide = testIde;
   const configHandler = testConfigHandler;
 
@@ -67,5 +67,5 @@ export async function testAutocompleteFiltering(
   );
 
   // Ensure that we return the text that is wanted to be displayed
-  expect(result?.completion).toEqual(test.expectToDisplay);
+  expect(result?.completion).toEqual(test.expectedCompletion);
 }

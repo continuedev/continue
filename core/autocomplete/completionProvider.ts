@@ -432,6 +432,33 @@ export class CompletionProvider {
     };
   }
 
+  private isMultiline({
+    language,
+    prefix,
+    suffix,
+    selectedCompletionInfo,
+    multilineCompletions,
+    completeMultiline,
+  }: {
+    language: AutocompleteLanguageInfo;
+    prefix: string;
+    suffix: string;
+    selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"];
+    multilineCompletions: TabAutocompleteOptions["multilineCompletions"];
+    completeMultiline: boolean;
+  }) {
+    let langMultilineDecision = language.useMultiline?.({ prefix, suffix });
+    if (langMultilineDecision) {
+      return langMultilineDecision;
+    } else {
+      return (
+        !selectedCompletionInfo && // Only ever single-line if using intellisense selected value
+        multilineCompletions !== "never" &&
+        (multilineCompletions === "always" || completeMultiline)
+      );
+    }
+  }
+
   async getTabCompletion(
     token: AbortSignal,
     options: TabAutocompleteOptions,
@@ -651,16 +678,14 @@ export class CompletionProvider {
         ...lang.topLevelKeywords.map((word) => `\n${word}`),
       ];
 
-      let langMultilineDecision = lang.useMultiline?.({ prefix, suffix });
-      let multiline: boolean = false;
-      if (langMultilineDecision) {
-        multiline = langMultilineDecision;
-      } else {
-        multiline =
-          !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
-          options.multilineCompletions !== "never" &&
-          (options.multilineCompletions === "always" || completeMultiline);
-      }
+      const multiline = this.isMultiline({
+        multilineCompletions: options.multilineCompletions,
+        language: lang,
+        selectedCompletionInfo: input.selectedCompletionInfo,
+        prefix,
+        suffix,
+        completeMultiline,
+      });
 
       // Try to reuse pending requests if what the user typed matches start of completion
       const generator = this.generatorReuseManager.getGenerator(
