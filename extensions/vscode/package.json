@@ -499,18 +499,15 @@
           "command": "pearai.newSession",
           "group": "navigation@1",
           "when": "view == pearai.pearAIChatView"
-          "when": "view == pearai.pearAIChatView"
         },
         {
           "command": "pearai.toggleFullScreen",
           "group": "navigation@1",
           "when": "view == pearai.pearAIChatView"
-          "when": "view == pearai.pearAIChatView"
         },
         {
           "command": "pearai.viewHistory",
           "group": "navigation@1",
-          "when": "view == pearai.pearAIChatView"
           "when": "view == pearai.pearAIChatView"
         }
       ],
@@ -518,7 +515,6 @@
         {
           "command": "pearai.toggleFullScreen",
           "group": "navigation@1",
-          "when": "activeWebviewPanelId == pearai.pearAIChatView"
           "when": "activeWebviewPanelId == pearai.pearAIChatView"
         }
       ],
