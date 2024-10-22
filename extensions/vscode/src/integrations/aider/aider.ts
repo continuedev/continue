@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import * as cp from "child_process";
 import { Core } from "core/core";
 import { ContinueGUIWebviewViewProvider } from "../../ContinueGUIWebviewViewProvider";
+import { getIntegrationTab } from "../../util/integrationUtils";
 
 const PLATFORM = process.platform;
 const IS_WINDOWS = PLATFORM === "win32";
@@ -10,16 +11,6 @@ const IS_LINUX = PLATFORM === "linux";
 
 let aiderPanel: vscode.WebviewPanel | undefined;
 
-export function getAiderTab() {
-  const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
-  console.log("All tabs:", tabs);
-  return tabs.find((tab) => {
-    const viewType = (tab.input as any)?.viewType;
-    console.log("Tab view type:", viewType);
-    return viewType?.endsWith("pearai.aiderGUIView");
-  });
-}
-
 export async function handleAiderMode(
   core: Core,
   sidebar: ContinueGUIWebviewViewProvider,
@@ -27,7 +18,7 @@ export async function handleAiderMode(
 ) {
   await installPythonAider();
   // Check if aider is already open by checking open tabs
-  const aiderTab = getAiderTab();
+  const aiderTab = getIntegrationTab("pearai.aiderGUIView");
   core.invoke("llm/startAiderProcess", undefined);
   console.log("Aider tab found:", aiderTab);
   console.log("Aider tab active:", aiderTab?.isActive);
