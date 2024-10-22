@@ -319,9 +319,8 @@ export class QuickEdit {
 
     return isSelectionEmpty
       ? `Edit ${fileName}`
-      : `Edit ${fileName}:${start.line}${
-          end.line > start.line ? `-${end.line}` : ""
-        }`;
+      : `Edit ${fileName}:${start.line}${end.line > start.line ? `-${end.line}` : ""
+      }`;
   };
 
   private async _streamEditWithInputAndContext(
@@ -385,7 +384,7 @@ export class QuickEdit {
     const modelTitle = await this.getCurModelTitle();
 
     if (!modelTitle) {
-      this.ide.showToast("info", "Please configure a model to use Quick Edit");
+      this.ide.showToast("error", "Please configure a model to use Quick Edit");
       return { label: undefined, value: undefined };
     }
 
