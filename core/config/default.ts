@@ -126,11 +126,20 @@ export const defaultConfig: SerializedContinueConfig = {
       isDefault: true,
     },
     {
-      "model": "pearai_model",
-      "contextLength": 300000,
-      "title": "PearAI Creator (Powered by aider)",
-      "provider": "aider",
-      "isDefault": true,
+      model: "gemini-1.5-pro",
+      contextLength: 3000000,
+      title: "Gemini 1.5 Pro (PearAI)",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+      provider: "pearai_server",
+      isDefault: true,
+    },
+    {
+      model: "pearai_model",
+      contextLength: 300000,
+      title: "PearAI Creator (Powered by aider)",
+      provider: "aider",
+      isDefault: true,
     },
   ],
   customCommands: [
