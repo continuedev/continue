@@ -299,6 +299,30 @@ const preIndexedDocs: Record<
     rootUrl: "https://docs.godotengine.org/en/latest/",
     faviconUrl: "https://godotengine.org/favicon.ico",
   },
+  "https://docs.amplify.aws/react/": {
+    title: "AWS Amplify (Gen 2)",
+    startUrl: "https://docs.amplify.aws/react/start/",
+    rootUrl: "https://docs.amplify.aws/react/",
+    faviconUrl: "https://docs.amplify.aws/favicon.ico"
+  },
+  "https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/": {
+    title: "AWS SDK for JavaScript v3",
+    startUrl: "https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/",
+    rootUrl: "https://docs.aws.amazon.com/AWSJavaScriptSDK/v3/latest/",
+    faviconUrl: "https://docs.aws.amazon.com/favicon.ico"
+  },
+  "https://docs.aws.amazon.com/cdk/api/v2/docs/aws-construct-library.html": {
+    title: "AWS CDK v2",
+    startUrl: "https://docs.aws.amazon.com/cdk/api/v2/docs/aws-construct-library.html",
+    rootUrl: "https://docs.aws.amazon.com/cdk/api/v2/docs/",
+    faviconUrl: "https://docs.aws.amazon.com/cdk/api/v2/img/favicon-32x32.png"
+  },
+  "https://awscli.amazonaws.com/v2/documentation/api/latest/index.html": {
+    title: "AWS CLI commands",
+    startUrl: "https://awscli.amazonaws.com/v2/documentation/api/latest/index.html",
+    rootUrl: "https://awscli.amazonaws.com/v2/documentation/api/latest/",
+    faviconUrl: "https://docs.aws.amazon.com/favicon.ico"
+  }
 };
 
 export default preIndexedDocs;
