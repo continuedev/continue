@@ -274,12 +274,22 @@ const gemmaTemplateMessage = templateFactory(
   "<end_of_turn>\n",
 );
 
+const graniteTemplateMessages = templateFactory(
+  (msg) => (!!msg ? `\n\nSystem:\n ${msg.content}\n\n` : ""),
+  "Question:\n",
+  "Answer:\n",
+  "\n\n",
+  "",
+  "",
+);
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
+  graniteTemplateMessages,
   llama2TemplateMessages,
   llama3TemplateMessages,
   llavaTemplateMessages,

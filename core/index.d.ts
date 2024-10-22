@@ -823,7 +823,8 @@ export type EmbeddingsProviderName =
   | "nvidia"
   | "voyage"
   | "mistral"
-  | "vertex";
+  | "vertex"
+  | "watsonx";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -841,7 +842,7 @@ export interface EmbedOptions {
   // AWS and GCP Options
   region?: string;
 
-  // GCP Options
+  // GCP ans Watsonx Options
   projectId?: string;
 }
 
