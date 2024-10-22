@@ -57,7 +57,7 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { isBareChatMode } from '../util/bareChatMode';
+import { isBareChatMode, isPerplexityMode } from '../util/bareChatMode';
 import { Badge } from "../components/ui/badge";
 
 
@@ -226,6 +226,7 @@ function GUI() {
   );
 
   const bareChatMode = isBareChatMode();
+  const perplexityMode = isPerplexityMode();
 
   const onCloseTutorialCard = () => {
     posthog.capture("closedTutorialCard");
@@ -246,10 +247,6 @@ function GUI() {
       Hint: Try out PearAI Creator (Beta), powered by aider (Beta)!
     </NewSessionButton>
   );
-
-  const perplexityMode = (): boolean => {
-    return defaultModel?.model?.toLowerCase() === "perplexity";
-  };
 
 
   const handleScroll = () => {
@@ -469,6 +466,19 @@ function GUI() {
                 </p>
               </div>
             )}
+            {perplexityMode && (
+              <div className="pl-2 mt-8 border-b border-gray-700">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold mb-2">PearAI Search - Beta</h1>{" "}
+                  <Badge variant="outline" className="pl-0">
+                    (Powered by Perplexity)
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-400 mt-0">
+                  Ask for anything. We'll retrieve the most up to date information in real-time and summarize it for you. 
+                </p>
+              </div>
+            )}
           <StepsDiv>
 
             {state.history.map((item, index: number) => {
@@ -603,14 +613,14 @@ function GUI() {
                 New Session
                 {!bareChatMode && ` (${getMetaKeyLabel()} ${isJetBrains() ? "J" : "L"})`}
               </NewSessionButton>{" "}
-              {!perplexityMode() && !bareChatMode && !!showAiderHint && <AiderBetaButton />}
-              {!perplexityMode() && <NewSessionButton
+              {!perplexityMode && !bareChatMode && !!showAiderHint && <AiderBetaButton />}
+              {!perplexityMode && <NewSessionButton
                     onClick={async () => {
                       ideMessenger.post("perplexityMode", undefined);
                     }}
                     className="mr-auto"
                   >
-                    {perplexityMode() ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                     
+                    {perplexityMode ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                     
               </NewSessionButton>}
             </div>
           ) : (
@@ -643,13 +653,13 @@ function GUI() {
                 </div>
               )}
               {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
-              {!perplexityMode() && <NewSessionButton
+              {!perplexityMode && <NewSessionButton
                     onClick={async () => {
                       ideMessenger.post("perplexityMode", undefined);
                     }}
                     className="mr-auto"
                   >
-                    {perplexityMode() ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                  
+                    {perplexityMode ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                  
               </NewSessionButton>}
             </>
           )}

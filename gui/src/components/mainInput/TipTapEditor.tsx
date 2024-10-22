@@ -124,6 +124,10 @@ const getPlaceholder = (defaultModel, historyLength: number) => {
       : "Send a follow-up";
   }
 
+  if (defaultModel?.model?.toLowerCase().includes("perplexity")) {
+    return historyLength === 0 ? "Ask for any information" : "Ask a follow-up";
+  }
+
   return historyLength === 0
     ? "Ask anything, '/' for slash commands, '@' to add context"
     : "Ask a follow-up";

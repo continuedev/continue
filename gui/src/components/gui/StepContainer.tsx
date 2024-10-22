@@ -128,6 +128,13 @@ function StepContainer(props: StepContainerProps) {
             />
           )}
         </ContentDiv>
+        {!active && isPerplexity && <HeaderButtonWithText
+          onClick={() => {
+            ideMessenger.post("addPerplexityContext", { text: stripImages(props.item.message.content), language: "" });
+          }}>
+          <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+          Add to PearAI chat context
+        </HeaderButtonWithText>}
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div
             className="flex gap-1 absolute -bottom-2 right-0"
@@ -164,14 +171,7 @@ function StepContainer(props: StepContainerProps) {
                 />
               </HeaderButtonWithText>
             )}
-            {isPerplexity && <HeaderButtonWithText
-          text="Add to PearAI chat context"
-          onClick={() => {
-            ideMessenger.post("addPerplexityContext", { text: stripImages(props.item.message.content), language: "" });
-          }}
-        >
-          <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
-        </HeaderButtonWithText>}
+            
             <CopyButton
               text={stripImages(props.item.message.content)}
               color={lightGray}

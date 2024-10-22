@@ -500,15 +500,6 @@ const commandsMap: (
     "pearai.aiderResetSession": () => {
       core.invoke("llm/aiderResetSession", undefined);
     },
-    "pearai.aiderMode": () => {
-      handleAiderMode(core, sidebar, extensionContext);
-    },
-    "pearai.aiderCtrlC": () => {
-      core.invoke("llm/aiderCtrlC", undefined);
-    },
-    "pearai.aiderResetSession": () => {
-      core.invoke("llm/aiderResetSession", undefined);
-    },
     "pearai.perplexityMode": () => {
       // Check if perplexity is already open by checking open tabs
       const webviewName = "pearai.perplexityGUIView"
