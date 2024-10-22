@@ -1,5 +1,6 @@
 import _ from "lodash";
 import { getLocalStorage } from "./localStorage";
+import { KeyboardEvent } from "react";
 
 type Platform = "mac" | "linux" | "windows" | "unknown";
 
@@ -16,19 +17,19 @@ export function getPlatform(): Platform {
   }
 }
 
-export function isMetaEquivalentKeyPressed(event: {
-  metaKey: boolean;
-  ctrlKey: boolean;
-}): boolean {
+export function isMetaEquivalentKeyPressed({
+  metaKey,
+  ctrlKey,
+}: KeyboardEvent): boolean {
   const platform = getPlatform();
   switch (platform) {
     case "mac":
-      return event.metaKey;
+      return metaKey;
     case "linux":
     case "windows":
-      return event.ctrlKey;
+      return ctrlKey;
     default:
-      return event.metaKey;
+      return metaKey;
   }
 }
 

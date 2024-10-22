@@ -1,7 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Plugin" type="GradleRunConfiguration" factoryName="Gradle">
-    <log_file alias="idea.log" path="$PROJECT_DIR$/extensions/intellij/build/idea-sandbox/system/log/idea.log" />
+  <configuration default="false" name="Run Extension" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
+      <option name="env">
+        <map>
+          <entry key="GUI_URL" value="http://localhost:5173/jetbrains_index.html" />
+          <entry key="ORG_GRADLE_PROJECT_platformVersion" value="2024.1" />
+          <entry key="USE_TCP" value="true" />
+        </map>
+      </option>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$/extensions/intellij" />
       <option name="externalSystemIdString" value="GRADLE" />
@@ -14,11 +20,12 @@
           <option value="runIde" />
         </list>
       </option>
-      <option name="vmOptions" value="" />
+      <option name="vmOptions" />
     </ExternalSystemSettings>
     <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
     <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
     <DebugAllEnabled>false</DebugAllEnabled>
+    <RunAsTest>false</RunAsTest>
     <method v="2" />
   </configuration>
 </component>

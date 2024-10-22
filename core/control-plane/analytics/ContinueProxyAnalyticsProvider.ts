@@ -22,7 +22,7 @@ export default class ContinueProxyAnalyticsProvider
       `proxy/analytics/${this.controlPlaneProxyInfo?.workspaceId}/capture`,
       this.controlPlaneProxyInfo?.controlPlaneProxyUrl,
     ).toString();
-    fetch(url, {
+    void fetch(url, {
       method: "POST",
       body: JSON.stringify({
         event,

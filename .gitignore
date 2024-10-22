@@ -147,16 +147,6 @@ codeql
 **/**/.qodana
 **/**/build
 
-**/.idea/**/*
-!**/.idea/.name
-!**/.idea/compiler.xml
-!**/.idea/gradle.xml
-!**/.idea/kotlinc.xml
-!**/.idea/misc.xml
-!**/.idea/vcs.xml
-!**/.idea/jarRepositories.xml
-core/.idea
-
 continue_server.build
 continue_server.dist
 
@@ -164,11 +154,15 @@ Icon
 Icon?
 
 .continue
-
-
+.continuerc.json
 .prompts/
 .aider*
 
 notes.md
 
-manual-testing-sandbox/Continue/.idea/vcs.xml
+manual-testing-sandbox/.idea/**
+extensions/intellij/.idea/**
+
+**/.idea/workspace.xml
+**/.idea/usage.statistics.xml
+**/.idea/shelf/

@@ -64,9 +64,16 @@ import {
   DEFAULT_PROMPTS_FOLDER,
   getPromptFiles,
   slashCommandFromPromptFile,
-} from "./promptFile";
+} from "./promptFile.js";
+import { validateConfig, ConfigValidationError } from "./validation.js";
+
 import { GlobalContext } from "../util/GlobalContext";
-import { Readable } from "stream";
+
+export interface ConfigResult<T> {
+  config: T | undefined;
+  errors: ConfigValidationError[] | undefined;
+  configLoadInterrupted: boolean;
+}
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -102,7 +109,7 @@ function loadSerializedConfig(
   ideSettings: IdeSettings,
   ideType: IdeType,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): SerializedContinueConfig {
+): ConfigResult<SerializedContinueConfig> {
   const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
@@ -111,6 +118,16 @@ function loadSerializedConfig(
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
+  }
+
+  const errors = validateConfig(config);
+
+  if (errors?.some((error) => error.fatal)) {
+    return {
+      errors,
+      config: undefined,
+      configLoadInterrupted: true,
+    };
   }
 
   if (config.allowAnonymousTelemetry === undefined) {
@@ -147,7 +164,7 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  return config;
+  return { config, errors, configLoadInterrupted: false };
 }
 
 async function serializedToIntermediateConfig(
@@ -657,7 +674,7 @@ function readConfigJs(): string | undefined {
   return fs.readFileSync(configJsPath, "utf8");
 }
 
-async function buildConfigTs(ide: IDE, ideType: IdeType) {
+async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
   const configTsPath = getConfigTsPath();
 
   if (!fs.existsSync(configTsPath)) {
@@ -686,20 +703,28 @@ async function loadFullConfigNode(
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): Promise<ContinueConfig> {
+): Promise<ConfigResult<ContinueConfig>> {
   // Serialized config
-  let serialized = loadSerializedConfig(
+  let {
+    config: serialized,
+    errors,
+    configLoadInterrupted,
+  } = loadSerializedConfig(
     workspaceConfigs,
     ideSettings,
     ideType,
     overrideConfigJson,
   );
 
+  if (!serialized || configLoadInterrupted) {
+    return { errors, config: undefined, configLoadInterrupted: true };
+  }
+
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
 
   // Apply config.ts to modify intermediate config
-  const configJsContents = await buildConfigTs(ide, ideType);
+  const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
   if (configJsContents) {
     try {
       // Try config.ts first
@@ -762,7 +787,7 @@ async function loadFullConfigNode(
     writeLog,
     workOsAccessToken,
   );
-  return finalConfig;
+  return { config: finalConfig, errors, configLoadInterrupted: false };
 }
 
 export {

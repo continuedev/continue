@@ -320,7 +320,6 @@ jobs:
           chmod +x continue-binary
           chmod +x build/Release/node_sqlite3.node
           chmod +x index.node
-          chmod +x esbuild
         if: ${{ matrix.platform }} != 'win32'
 
       # Run tests for binary
