@@ -159,6 +159,29 @@ export const Mention = Node.create<MentionOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
+    if (node.attrs.itemType === "file") {
+      return [
+        "button",
+        mergeAttributes(
+          { 
+            "data-type": this.name,
+            "data-file-id": node.attrs.id,
+            class: "file-mention-button",
+            style: "cursor: pointer; border: none",
+            onclick: `(function() {
+              const event = new CustomEvent('showFile', { 
+                detail: { filepath: "${node.attrs.id}" },
+                bubbles: true
+              });
+              this.dispatchEvent(event);
+            })();`
+          },
+          this.options.HTMLAttributes,
+          HTMLAttributes
+        ),
+        `@${node.attrs.label}` || node.attrs.id
+      ];
+    }
     const html = this.options.renderHTML({
       options: this.options,
       node,

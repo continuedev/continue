@@ -58,6 +58,8 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { isBareChatMode } from '../util/bareChatMode';
+import { Badge } from "../components/ui/badge";
+
 
 
 const TopGuiDiv = styled.div`
@@ -218,8 +220,9 @@ function GUI() {
 
 
 
+  // AIDER HINT BUTTON HIDDEN IN V1.4.0
   const [showAiderHint, setShowAiderHint] = useState<boolean>(
-    true
+    false
   );
 
   const bareChatMode = isBareChatMode();
@@ -444,13 +447,28 @@ function GUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
-        <div className="mx-2">
-          {defaultModel?.title?.toLowerCase() === "aider" && (
-            <div className="pl-2 mt-8 border-b border-gray-700">
-              <h1 className="text-2xl font-bold mb-2">PearAI Creator (Powered by <a href="https://aider.chat/2024/06/02/main-swe-bench.html" target="_blank" rel="noopener noreferrer">Aider</a>)</h1>
-              <p className="text-sm text-gray-400">Ask for a feature, describe a bug, or ask for a change to your project. We'll take care of everything for you!</p>
-            </div>
-          )}
+          <div className="mx-2">
+            {defaultModel?.title?.toLowerCase().includes("aider") && (
+              <div className="pl-2 mt-8 border-b border-gray-700">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold mb-2">PearAI Creator- Beta</h1>{" "}
+                  <Badge variant="outline" className="pl-0">
+                    (Powered by{" "}
+                    <a
+                      href="https://aider.chat/2024/06/02/main-swe-bench.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline px-1"
+                    >
+                      aider)
+                    </a>
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-400 mt-0">
+                  Ask for a feature, describe a bug, or ask for a change to your project. We'll take care of everything for you!
+                </p>
+              </div>
+            )}
           <StepsDiv>
 
             {state.history.map((item, index: number) => {
@@ -536,8 +554,7 @@ function GUI() {
                                 {
                                   messageType: "userInput",
                                   data: {
-                                    input:
-                                      "Keep going.",
+                                    input: "Keep going.",
                                   },
                                 },
                                 "*",
@@ -577,13 +594,14 @@ function GUI() {
               <NewSessionButton
                 onClick={() => {
                   saveSession();
-                  if (defaultModel?.provider?.toLowerCase() === "aider") {
+                  if (defaultModel?.title?.toLowerCase().includes("aider")) {
                     ideMessenger.post("aiderResetSession", undefined)
                   }
                 }}
                 className="mr-auto"
               >
-                New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+                New Session
+                {!bareChatMode && ` (${getMetaKeyLabel()} ${isJetBrains() ? "J" : "L"})`}
               </NewSessionButton>{" "}
               {!perplexityMode() && !bareChatMode && !!showAiderHint && <AiderBetaButton />}
               {!perplexityMode() && <NewSessionButton
@@ -610,6 +628,14 @@ function GUI() {
                   </NewSessionButton>
                 </div>
               ) : null}
+              {/* <NewSessionButton
+                onClick={() => {
+                  navigate("/inventory");
+                }}
+                className="mr-auto"
+              >
+                PearAI Inventory
+              </NewSessionButton>{" "} */}
 
               {!!showTutorialCard && (
                 <div className="flex justify-center w-full">
@@ -628,7 +654,6 @@ function GUI() {
             </>
           )}
         </div>
-
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
           isAtBottom={isAtBottom}
@@ -646,7 +671,7 @@ function GUI() {
             ) {
               dispatch(clearLastResponse());
             }
-            if (defaultModel?.provider?.toLowerCase() === "aider") {
+            if (defaultModel?.title?.toLowerCase().includes("aider")) {
               ideMessenger.post("aiderCtrlC", undefined)
             }
           }}

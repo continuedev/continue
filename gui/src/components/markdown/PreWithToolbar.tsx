@@ -5,6 +5,7 @@ import CodeBlockToolBar from "./CodeBlockToolbar";
 import FileCreateChip from "./FileCreateChip";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { isBareChatMode } from "../../util/bareChatMode";
 
 function childToText(child: any): string {
   if (typeof child === "string") {
@@ -42,7 +43,7 @@ function PreWithToolbar(props: {
   const [checkedForCreateFile, setCheckedForCreateFile] = useState(false);
 
   const defaultModel = useSelector(defaultModelSelector);
-  const isBareChatMode = useMemo(() => defaultModel?.title?.toLowerCase() === "aider", [defaultModel]);
+  const bareChatMode = isBareChatMode()
 
   useEffect(() => {
     const debouncedEffect = debounce(() => {
@@ -83,7 +84,7 @@ function PreWithToolbar(props: {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {!toolbarBottom && hovering && !isBareChatMode && (
+      {!toolbarBottom && hovering && !bareChatMode && (
         <CodeBlockToolBar
           text={rawCodeBlock}
           bottom={toolbarBottom}

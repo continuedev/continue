@@ -118,11 +118,12 @@ const HoverTextDiv = styled.div`
 `;
 
 const getPlaceholder = (defaultModel, historyLength: number) => {
-  if (defaultModel?.provider?.toLowerCase() === "aider") {
+  if (defaultModel?.title?.toLowerCase().includes("aider")) {
     return historyLength === 0
       ? "Ask me to create, change, or fix anything..."
       : "Send a follow-up";
   }
+
   return historyLength === 0
     ? "Ask anything, '/' for slash commands, '@' to add context"
     : "Ask a follow-up";
@@ -484,7 +485,19 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
+  
+  useEffect(() => {
+    const handleShowFile = (event: CustomEvent) => {
+      const filepath = event.detail.filepath;
+      ideMessenger.post("showFile", { filepath });
+    };
 
+    window.addEventListener('showFile', handleShowFile as EventListener);
+    return () => {
+      window.removeEventListener('showFile', handleShowFile as EventListener);
+    };
+  }, [ideMessenger]);
+  
   useEffect(() => {
     if (isJetBrains()) {
       // This is only for VS Code .ipynb files

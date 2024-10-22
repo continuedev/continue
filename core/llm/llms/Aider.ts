@@ -16,6 +16,8 @@ import { PearAICredentials } from "../../pearaiServer/PearAICredentials.js";
 import { getHeaders } from "../../pearaiServer/stubs/headers.js";
 import { execSync } from "child_process";
 import * as os from "os";
+import * as vscode from "vscode";
+
 
 const PLATFORM = process.platform;
 const IS_WINDOWS = PLATFORM === "win32";
@@ -167,13 +169,37 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
         case "pearai_model":
         default:
           await this.credentials.checkAndUpdateCredentials();
-          const accessToken = this.credentials.getAccessToken() || "";
+          const accessToken = this.credentials.getAccessToken();
+          if (!accessToken) {
+            let message = "PearAI token invalid. Please try logging in or contact PearAI support."
+            vscode.window
+            .showErrorMessage(
+              message,
+              'Login To PearAI',
+              'Show Logs',
+            )
+            .then((selection: any) => {
+              if (selection === 'Login To PearAI') {
+                // Redirect to auth login URL
+                vscode.env.openExternal(
+                  vscode.Uri.parse(
+                    'https://trypear.ai/signin?callback=pearai://pearai.pearai/auth',
+                  ),
+                );
+              } else if (selection === 'Show Logs') {
+                vscode.commands.executeCommand(
+                  'workbench.action.toggleDevTools',
+                );
+              }
+            });
+            throw new Error("User not logged in to PearAI.");
+          }
           command = [
             "aider",
             "--openai-api-key",
             accessToken,
             "--openai-api-base",
-            "http://localhost:8000/integrations/aider",
+            `${SERVER_URL}/integrations/aider`,
           ];
           break;
       }
@@ -282,6 +308,27 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
           this.aiderProcess.on("error", (error: Error) => {
             console.error(`Error starting Aider: ${error.message}`);
             reject(error);
+              let message = "PearAI Creator (Powered by aider) failed to start. Please contact PearAI support on Discord."
+              vscode.window
+              .showErrorMessage(
+                message,
+                'PearAI Support (Discord)',
+                'Show Logs',
+              )
+              .then((selection: any) => {
+                if (selection === 'PearAI Support (Discord)') {
+                  // Redirect to auth login URL
+                  vscode.env.openExternal(
+                    vscode.Uri.parse(
+                      'https://discord.com/invite/7QMraJUsQt',
+                    ),
+                  );
+                } else if (selection === 'Show Logs') {
+                  vscode.commands.executeCommand(
+                    'workbench.action.toggleDevTools',
+                  );
+                }
+              });
           });
         }
       };
@@ -370,7 +417,7 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
 
     const escapeDollarSigns = (text: string | undefined) => {
       if (!text) return "Aider response over";
-      return text.replace(/\$/g, "\\$");
+      return text.replace(/([\\$])/g, "\\$1");
     };
 
     while (!responseComplete) {

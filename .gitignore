@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -169,3 +168,4 @@ Icon?
 extensions/vscode/manual-testing-sandbox/example.ts
 
 .prompts/
+.aider*

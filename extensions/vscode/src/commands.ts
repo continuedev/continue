@@ -487,7 +487,18 @@ const commandsMap: (
       sidebar.webviewProtocol?.request("newSession", undefined);
     },
     "pearai.viewHistory": () => {
-      sidebar.webviewProtocol?.request("viewHistory", undefined, ["pearai.pearAIChatView"]);
+      sidebar.webviewProtocol?.request("viewHistory", undefined, [
+        "pearai.pearAIChatView",
+      ]);
+    },
+    "pearai.aiderMode": async () => {
+      await handleAiderMode(core, sidebar, extensionContext);
+    },
+    "pearai.aiderCtrlC": () => {
+      core.invoke("llm/aiderCtrlC", undefined);
+    },
+    "pearai.aiderResetSession": () => {
+      core.invoke("llm/aiderResetSession", undefined);
     },
     "pearai.aiderMode": () => {
       handleAiderMode(core, sidebar, extensionContext);
