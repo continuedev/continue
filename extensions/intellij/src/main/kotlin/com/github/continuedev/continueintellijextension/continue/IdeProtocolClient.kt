@@ -300,7 +300,7 @@ class IdeProtocolClient(
                     "getWorkspaceConfigs" -> {
                         val workspaceDirs = workspaceDirectories()
 
-                        val configs: List<String> = listOf()
+                        val configs = mutableListOf<String>()
                         for (workspaceDir in workspaceDirs) {
                             val workspacePath = File(workspaceDir)
                             val dir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
@@ -312,7 +312,7 @@ class IdeProtocolClient(
                                     if (file.endsWith(".continuerc.json")) {
                                         val filePath = workspacePath.resolve(file)
                                         val fileContent = File(filePath.toString()).readText()
-                                        configs.plus(fileContent)
+                                        configs.add(fileContent)
                                     }
                                 }
                             }
