@@ -86,10 +86,12 @@ function TableRow({
   session,
   date,
   onDelete,
+  isSelected,
 }: {
   session: SessionInfo;
   date: Date;
   onDelete: (sessionId: string) => void;
+  isSelected: boolean;
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -123,6 +125,7 @@ function TableRow({
     <td
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      style={isSelected ? { backgroundColor: vscInputBackground } : {}}
     >
       <div className="flex justify-between items-center w-full">
         <TdDiv
@@ -219,7 +222,7 @@ function History() {
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const dispatch = useDispatch();
-  const { getHistory } = useHistory(dispatch);
+  const { getHistory, loadSession, saveSession } = useHistory(dispatch);
 
   const [minisearch, setMinisearch] = useState<
     MiniSearch<{ title: string; sessionId: string }>
@@ -230,6 +233,47 @@ function History() {
     }),
   );
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const tableRef = React.useRef<HTMLDivElement>(null);
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const newIndex = Math.min(selectedIndex + 1, filteredAndSortedSessions.length - 1);
+      setSelectedIndex(newIndex);
+      scrollSelectedIntoView(newIndex);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const newIndex = Math.max(selectedIndex - 1, 0);
+      setSelectedIndex(newIndex);
+      scrollSelectedIntoView(newIndex);
+    } else if (e.key === "Enter" && selectedIndex !== -1) {
+      e.preventDefault();
+      const selectedSession = filteredAndSortedSessions[selectedIndex];
+      saveSession();
+      loadSession(selectedSession.sessionId);
+      navigate("/");
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedIndex, filteredAndSortedSessions]);
+
+  const scrollSelectedIntoView = (index: number) => {
+    if (tableRef.current) {
+      const rows = tableRef.current.querySelectorAll('tr');
+      if (rows[index]) {
+        rows[index].scrollIntoView({
+          behavior: 'instant',
+          block: 'center',
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -287,7 +331,12 @@ function History() {
   const earlier = new Date(0);
 
   return (
-    <div className="overflow-y-scroll" style={{ fontSize: getFontSize() }}>
+    <div
+      className="overflow-y-scroll"
+      style={{ fontSize: getFontSize() }}
+      tabIndex={0}
+      ref={tableRef}
+    >
       <div
         ref={stickyHistoryHeaderRef}
         className="sticky top-0"
@@ -332,7 +381,8 @@ function History() {
           </div>
         )}
 
-        <table className="w-full border-spacing-0 border-collapse">
+        <table className="w-full border-spacing-0 border-collapse"
+        >
           <tbody>
             {filteredAndSortedSessions.map((session, index) => {
               const prevDate =
@@ -362,11 +412,14 @@ function History() {
                       </SectionHeader>
                     )}
 
-                  <Tr key={index}>
+                  <Tr
+                    key={index}
+                  >
                     <TableRow
                       session={session}
                       date={date}
                       onDelete={() => deleteSessionInUI(session.sessionId)}
+                      isSelected={index === selectedIndex}
                     ></TableRow>
                   </Tr>
                 </Fragment>
