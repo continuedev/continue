@@ -366,13 +366,8 @@ export interface LLMOptions {
   projectId?: string;
   capabilities?: ModelCapability;
 
-  // IBM watsonx options
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxStopToken?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // IBM watsonx deployment ID
+  deploymentId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -606,6 +601,7 @@ type TemplateType =
   | "codellama-70b"
   | "llava"
   | "gemma"
+  | "granite"
   | "llama3";
 
 type ModelProvider =
@@ -842,7 +838,10 @@ export interface EmbedOptions {
   // AWS and GCP Options
   region?: string;
 
-  // GCP ans Watsonx Options
+  // GCP and Watsonx options
+  deploymentId?: string;
+
+  // Watsonx option
   projectId?: string;
 }
 
