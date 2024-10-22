@@ -249,6 +249,13 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     };
   }
 
+  private _formatProfileLabel(
+    firstName: string | null,
+    lastName: string | null,
+  ) {
+    return ((firstName ?? "") + " " + (lastName ?? "")).trim();
+  }
+
   /**
    * Create a new auth session
    * @param scopes
@@ -275,7 +282,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         expiresInMs: this.getExpirationTimeMs(access_token),
         loginNeeded: false,
         account: {
-          label: user.first_name + " " + user.last_name,
+          label: this._formatProfileLabel(user.first_name, user.last_name),
           id: user.email,
         },
         scopes: [],
