@@ -644,6 +644,8 @@ function GUI() {
                     {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
                   </>
                 )}
+                {!perplexityMode && showPerplexityHint && <PerplexityBetaButton />}
+
   </div>
 ) : (
   <>
@@ -668,6 +670,7 @@ function GUI() {
     {!bareChatMode && !aiderMode && !!showAiderHint && <AiderBetaButton />}
   </>
 )}
+      {!perplexityMode && showPerplexityHint && <PerplexityBetaButton />}
         </div>
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
