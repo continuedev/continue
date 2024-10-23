@@ -7,7 +7,7 @@ keywords: [edit, cmd l, works]
 
 Using the highlighted code, the contents of the file containing your highlight, and your input instructions, we prompt the model to edit the code according to your instructions. No other additional context is provided to the model.
 
-The model response is then streamed directly back to the highlighted range in your code, where we apply a diff formatting to show the proposed changes.
+The model response is then streamed directly back to the highlighted range in your code, where we apply a different formatting to show the proposed changes.
 
 If you accept the diff, we remove the previously highlighted lines, and if you reject the diff, we remove the proposed changes.
 
