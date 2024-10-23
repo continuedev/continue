@@ -15,6 +15,7 @@ import type {
   Thread,
 } from "core";
 import { Range } from "core";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import { walkDir } from "core/indexing/walkDir";
 import { GetGhTokenArgs } from "core/protocol/ide";
 import {
@@ -26,7 +27,6 @@ import * as vscode from "vscode";
 import { executeGotoProvider } from "./autocomplete/lsp";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
-import { EXTENSION_NAME } from "./util/constants";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import {
   getExtensionUri,

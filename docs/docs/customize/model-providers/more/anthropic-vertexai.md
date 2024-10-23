@@ -35,9 +35,18 @@ Anthropic Vertex AI currently does not offer any autocomplete models.
 
 ## Embeddings model
 
-Anthropic Vertex AI currently does not offer any embeddings models.
+We recommend configuring **text-embedding-004** as your embeddings model.
 
-[Click here](../../model-types/embeddings.md) to see a list of embeddings model providers.
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "vertex",
+    "model": "text-embedding-004",
+    "projectId": "[PROJECT_ID]",
+    "region": "us-central1"
+  }
+}
+```
 
 ## Reranking model
 

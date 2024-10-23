@@ -42,8 +42,6 @@ const CHAT_ONLY_MODELS = [
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
 
-  maxStopWords: number | undefined = undefined;
-
   constructor(options: LLMOptions) {
     super(options);
     this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
