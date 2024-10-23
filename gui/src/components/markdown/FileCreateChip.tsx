@@ -45,7 +45,6 @@ const FileCreateChip = ({ rawCodeBlock }) => {
   //   try {
   //     // this does not work, dont waste your time - promise never resolves
   //     const response = await ideMessenger.ide.fileExists(filePath);
-  //     console.dir("aldsfjkalsdfjk")
   //     setFileExists(response);
   //   } catch (error) {
   //     console.error(`Error checking file existence: ${error}`);

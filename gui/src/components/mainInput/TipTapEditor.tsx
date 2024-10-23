@@ -57,6 +57,7 @@ import {
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
 import { isBareChatMode } from '../../util/bareChatMode';
+import { useLocation } from "react-router-dom";
 
 
 const InputBoxDiv = styled.div`
@@ -117,14 +118,14 @@ const HoverTextDiv = styled.div`
   justify-content: center;
 `;
 
-const getPlaceholder = (defaultModel, historyLength: number) => {
-  if (defaultModel?.title?.toLowerCase().includes("aider")) {
+
+const getPlaceholder = (historyLength: number, location: Location | null) => {
+  if (location?.pathname === "/aiderMode") {
     return historyLength === 0
       ? "Ask me to create, change, or fix anything..."
       : "Send a follow-up";
   }
-
-  if (defaultModel?.model?.toLowerCase().includes("perplexity")) {
+  else if (location?.pathname === "/perplexityMode") {
     return historyLength === 0 ? "Ask for any information" : "Ask a follow-up";
   }
 
@@ -314,7 +315,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Placeholder.configure({
-        placeholder: () => getPlaceholder(defaultModel, historyLengthRef.current),
+        placeholder: () => getPlaceholder(historyLengthRef.current, location),
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {
@@ -487,7 +488,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
-  
+
   useEffect(() => {
     const handleShowFile = (event: CustomEvent) => {
       const filepath = event.detail.filepath;
@@ -499,7 +500,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       window.removeEventListener('showFile', handleShowFile as EventListener);
     };
   }, [ideMessenger]);
-  
+
   useEffect(() => {
     if (isJetBrains()) {
       // This is only for VS Code .ipynb files
