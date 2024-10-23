@@ -127,7 +127,6 @@ export const defaultConfig: SerializedContinueConfig = {
     },
     {
       model: "perplexity",
-      contextLength: 3000000,
       title: "PearAI Search (Powered by Perplexity)",
       systemMessage: "You are an expert software developer. You give helpful and concise responses based on the latest software engineering practices and documentation.",
       provider: "pearai_server",

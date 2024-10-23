@@ -10,9 +10,6 @@ export async function handlePerplexityMode(
   extensionContext: vscode.ExtensionContext,
 ) {
   const perplexityTab = getIntegrationTab(webviewName);
-  console.log("Perplexity tab found:", perplexityTab);
-  console.log("Perplexity tab active:", perplexityTab?.isActive);
-  console.log("Perplexity panel exists:", !!perplexityPanel);
 
   // Check if the active editor is the Continue GUI View
   if (perplexityTab && perplexityTab.isActive) {
