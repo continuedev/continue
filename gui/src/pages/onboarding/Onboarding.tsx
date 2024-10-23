@@ -5,7 +5,7 @@ import {
   GiftIcon,
 } from "@heroicons/react/24/outline";
 import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { defaultBorderRadius, lightGray } from "../../components";
@@ -24,6 +24,7 @@ import { providers } from "../AddNewModel/configs/providers";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import _ from "lodash";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { setLocalStorage } from "@/util/localStorage";
 
 export const CustomModelButton = styled.div<{ disabled: boolean }>`
   border: 1px solid ${lightGray};
@@ -58,6 +59,7 @@ type OnboardingMode =
 
 function Onboarding() {
   const [hovered, setHovered] = useState(-1);
+  const [session, setSession] = useState(false)
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -68,6 +70,19 @@ function Onboarding() {
   >(undefined);
 
   const { completeOnboarding } = useOnboarding();
+
+  useEffect(() => {
+    if (!session) {
+        ideMessenger.request("getPearAuth", undefined).then((res) => {
+          const newSession = res.accessToken ? true : false;
+          setSession(newSession)
+          if (newSession) {
+            setLocalStorage("onboardingStatus", "Completed");
+            completeOnboarding()
+          }
+      });
+    }
+  }, [])
 
   function onSubmit() {
     ideMessenger.post("completeOnboarding", {
