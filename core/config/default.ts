@@ -119,11 +119,17 @@ export const defaultConfig: SerializedContinueConfig = {
       isDefault: true,
     },
     {
-      model: "claude-3-5-sonnet-20240620",
+      model: "claude-3-5-sonnet",
       contextLength: 3000000,
       title: "Claude 3.5 Sonnet (PearAI)",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
+      provider: "pearai_server",
+      isDefault: true,
+    },
+    {
+      model: "claude-3-haiku",
+      title: "Claude 3 Haiku (PearAI)",
       provider: "pearai_server",
       isDefault: true,
     },
