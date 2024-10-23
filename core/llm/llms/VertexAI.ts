@@ -1,6 +1,7 @@
 import { GoogleAuth } from "google-auth-library";
 import { LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
+import { CompletionOptions } from "@continuedev/config-types";
 
 abstract class VertexAI extends BaseLLM {
   declare apiBase: string;
@@ -41,6 +42,42 @@ abstract class VertexAI extends BaseLLM {
       },
     });
   }
+  
+  supportsFim(): boolean {
+    return true;
+  }
+
+  protected async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string> {
+    const endpoint = new URL("publishers/google/models/code-gecko:predict", this.apiBase);
+    const resp = await this.fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        instances: [
+          {prefix: prefix,
+            suffix: suffix
+          }
+        ],
+        parameters: {
+          temperature: options.temperature,
+          maxOutputTokens: Math.min(options.maxTokens ?? 64,64),
+          stopSequences: options.stop?.splice(0,5),
+          frequencyPenalty: options.frequencyPenalty,
+          presencePenalty: options.frequencyPenalty,
+        }
+
+      }),
+    });
+    // Streaming is not supported by code-gecko
+    // TODO: convert to non-streaming fim method when one exist in continue.
+    yield (await resp.json()).predictions[0].content;
+  }
 }
+
+
+
 
 export default VertexAI;
