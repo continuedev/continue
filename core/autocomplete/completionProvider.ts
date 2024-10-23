@@ -342,8 +342,6 @@ export class CompletionProvider {
         llm.completionOptions.temperature = 0.01;
       }
 
-      // Set model-specific options
-
       if (
         !config.tabAutocompleteOptions?.maxPromptTokens &&
         LOCAL_PROVIDERS.includes(llm.providerName)
