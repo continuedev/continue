@@ -225,9 +225,20 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               style={{ backgroundColor: vscEditorBackground }}
               onClick={onClickApply}
             >
-              <CommandLineIcon className="w-4 h-4" />
+              <CommandLineIcon className="h-4 w-4 text-gray-400" />
             </ButtonWithTooltip>
           )}
+          <ButtonWithTooltip
+            text={isApplying ? "Applying..." : "Apply"}
+            style={{ backgroundColor: vscEditorBackground }}
+            onClick={onClickApply}
+          >
+            {isApplying ? (
+              <CheckIcon className="h-4 w-4 text-green-400" />
+            ) : (
+              <PlayIcon className="h-4 w-4 text-gray-400" />
+            )}
+          </ButtonWithTooltip>
           <ButtonWithTooltip
             text="Insert at cursor"
             style={{ backgroundColor: vscEditorBackground }}
@@ -235,7 +246,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               ideMessenger.post("insertAtCursor", { text: props.text })
             }
           >
-            <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+            <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
           </ButtonWithTooltip>
           <CopyButtonHeader text={props.text} />
         </InnerHoverDiv>
@@ -246,7 +257,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   return (
     <ToolbarDiv>
       <div
-        className="flex items-center gap-1 cursor-pointer max-w-[50%]"
+        className="flex max-w-[50%] cursor-pointer items-center gap-1"
         onClick={onClickHeader}
       >
         <FileIcon height="20px" width="20px" filename={props.filepath} />
@@ -256,18 +267,18 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
       <div className="flex items-center gap-1">
         <ToolbarButton onClick={onClickCopy}>
           <div
-            className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
+            className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
             style={{ color: lightGray }}
           >
             {isCopied ? (
               <>
-                <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
+                <CheckIcon className="h-3 w-3 text-green-500 hover:brightness-125" />
                 <span className="hidden sm:inline">Copied</span>
               </>
             ) : (
               <>
-                <ClipboardIcon className="w-3 h-3 hover:brightness-125" />
-                <span className="hidden xs:inline">Copy</span>
+                <ClipboardIcon className="h-3 w-3 hover:brightness-125" />
+                <span className="xs:inline hidden">Copy</span>
               </>
             )}
           </div>
@@ -281,11 +292,11 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                 style={{ color: lightGray }}
               >
                 <div
-                  className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
+                  className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
                   style={{ color: lightGray }}
                 >
-                  <PlayIcon className="w-3 h-3" />
-                  <span className="hidden xs:inline">Apply</span>
+                  <PlayIcon className="h-3 w-3" />
+                  <span className="xs:inline hidden">Apply</span>
                 </div>
               </ToolbarButton>
             ) : applyState === "done" ? (
@@ -294,8 +305,8 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                   onClick={onClickReject}
                   tooltipContent={`${getMetaKeyLabel()}⇧⌫`}
                 >
-                  <XMarkIcon className="w-4 h-4 text-red-500 hover:brightness-125 mr-1" />
-                  <div className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200 ">
+                  <XMarkIcon className="mr-1 h-4 w-4 text-red-500 hover:brightness-125" />
+                  <div className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125">
                     <span>Reject</span>
                   </div>
                 </ToolbarButtonWithTooltip>
@@ -304,16 +315,16 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                   onClick={onClickAccept}
                   tooltipContent={`${getMetaKeyLabel()}⇧⏎`}
                 >
-                  <CheckIcon className="w-4 h-4 text-green-500 hover:brightness-125 mr-1" />
-                  <div className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200">
+                  <CheckIcon className="mr-1 h-4 w-4 text-green-500 hover:brightness-125" />
+                  <div className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125">
                     <span>Accept</span>
                   </div>
                 </ToolbarButtonWithTooltip>
               </>
             ) : (
-              <div className="flex items-center mr-2">
+              <div className="mr-2 flex items-center">
                 <svg
-                  className="animate-spin h-4 w-4 text-gray-400"
+                  className="h-4 w-4 animate-spin text-gray-400"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
