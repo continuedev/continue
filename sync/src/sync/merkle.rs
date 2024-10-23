@@ -446,7 +446,7 @@ pub fn build_walk(dir: &Path) -> Walk {
     let path = create_global_ignore_file();
     // Make sure it sorts alphabetically by default
     let mut binding = WalkBuilder::new(dir);
-    let builder = binding.add_custom_ignore_filename(".continueignore");
+    let builder = binding.add_custom_ignore_filename(".globalcontinueignore");
 
     builder.add_ignore(path);
     builder.build()

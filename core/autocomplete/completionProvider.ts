@@ -9,6 +9,7 @@ import { streamLines } from "../diff/util.js";
 import {
   IDE,
   ILLM,
+  ModelDescription,
   ModelProvider,
   Position,
   Range,
@@ -128,13 +129,20 @@ function formatExternalSnippet(
   return lines.join("\n");
 }
 
-let shownGptClaudeWarning = false;
-export const nonAutocompleteModels = [
+const nonAutocompleteModels = [
   // "gpt",
   // "claude",
   "mistral",
   "instruct",
 ];
+export function isModelTrainedForTabAutocomplete(model: string) {
+  return !(
+    nonAutocompleteModels.some((m) => model.includes(m)) &&
+    !model.toLowerCase().includes("deepseek") &&
+    !model.toLowerCase().includes("codestral")
+  );
+}
+let shownGptClaudeWarning = false;
 
 export type GetLspDefinitionsFunction = (
   filepath: string,
@@ -473,12 +481,7 @@ export class CompletionProvider {
       llm.model = TRIAL_FIM_MODEL;
     }
 
-    if (
-      !shownGptClaudeWarning &&
-      nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-      !llm.model.toLowerCase().includes("deepseek") &&
-      !llm.model.toLowerCase().includes("codestral")
-    ) {
+    if (!isModelTrainedForTabAutocomplete(llm.model)) {
       shownGptClaudeWarning = true;
       await this.ide.showToast("warning", `${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`);
       return; // will not attempt autocomplete first time warning message shown
