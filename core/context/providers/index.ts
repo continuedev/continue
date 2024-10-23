@@ -22,6 +22,9 @@ import ProblemsContextProvider from "./ProblemsContextProvider.js";
 import SearchContextProvider from "./SearchContextProvider.js";
 import TerminalContextProvider from "./TerminalContextProvider.js";
 import URLContextProvider from "./URLContextProvider.js";
+import RelativeFileContextProvider from "./RelativeFileContextProvider.js";
+import FileContextProvider from "./FileContextProvider.js";
+
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
@@ -31,6 +34,7 @@ import URLContextProvider from "./URLContextProvider.js";
  * See this issue for details: https://github.com/continuedev/continue/issues/1365
  */
 const Providers: (typeof BaseContextProvider)[] = [
+  FileContextProvider,
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,
@@ -52,6 +56,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   CurrentFileContextProvider,
   URLContextProvider,
   ContinueProxyContextProvider,
+  RelativeFileContextProvider
 ];
 
 export function contextProviderClassFromName(

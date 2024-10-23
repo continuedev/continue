@@ -372,9 +372,9 @@ async function intermediateToFinalConfig(
 
   // These context providers are always included, regardless of what, if anything,
   // the user has configured in config.json
-  const DEFAULT_CONTEXT_PROVIDERS = [
-    new FileContextProvider({}),
-    new CodebaseContextProvider({}),
+  const DEFAULT_CONTEXT_PROVIDERS : any[] = [
+    // new FileContextProvider({}),
+    // new CodebaseContextProvider({}),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(

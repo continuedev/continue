@@ -116,23 +116,27 @@ async function resolveEditorContent(
     }
   }
 
-  const previousDirectoryItems = (store.getState() as any).state.directoryItems;
+  const defaultModelTitle = (store.getState() as any).state.defaultModelTitle;
+  const isBareChatMode = defaultModelTitle?.toLowerCase().includes("aider");
 
-  // use directory structure
-  const directoryItems = await ideMessenger.request("context/getContextItems", {
-    name: "directory",
-    query: "",
-    fullInput: stripImages(parts),
-    selectedCode,
-  });
+  if (!isBareChatMode) {
+    const previousDirectoryItems = (store.getState() as any).state.directoryItems;
+    // use directory structure
+    const directoryItems = await ideMessenger.request("context/getContextItems", {
+      name: "directory",
+      query: "",
+      fullInput: stripImages(parts),
+      selectedCode,
+    });
 
-  // if (previousDirectoryItems !== directoryItems[0].content) {
-  //   store.dispatch(setDirectoryItems(directoryItems[0].content));
-  //   contextItems.push(...directoryItems);
-  //   for (const codebaseItem of directoryItems) {
-  //     contextItemsText += codebaseItem.content + "\n\n";
-  //   }
-  // }
+    if (previousDirectoryItems !== directoryItems[0].content) {
+      store.dispatch(setDirectoryItems(directoryItems[0].content));
+      contextItems.push(...directoryItems);
+      for (const codebaseItem of directoryItems) {
+        contextItemsText += codebaseItem.content + "\n\n";
+      }
+    }
+  }
 
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {
@@ -165,6 +169,7 @@ async function resolveEditorContent(
     }
   }
 
+
   return [contextItems, selectedCode, parts];
 }
 
@@ -181,6 +186,8 @@ function findLastIndex<T>(
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
+  const defaultModelTitle = (store.getState() as any).state.defaultModelTitle;
+  const isBareChatMode = defaultModelTitle?.toLowerCase().includes("aider");
   let text = "";
   const contextItems = [];
   let slashCommand = undefined;
@@ -188,10 +195,14 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
     if (child.type === "text") {
       text += text === "" ? child.text.trimStart() : child.text;
     } else if (child.type === "mention") {
-      text +=
-        typeof child.attrs.renderInlineAs === "string"
-          ? child.attrs.renderInlineAs
-          : child.attrs.label;
+      // console.dir("MENTION")
+      // console.dir(child)
+      if (!isBareChatMode) {
+        text +=
+          typeof child.attrs.renderInlineAs === "string"
+            ? child.attrs.renderInlineAs
+            : child.attrs.label;
+      }
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {

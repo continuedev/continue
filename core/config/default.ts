@@ -34,6 +34,7 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
 ];
 
 export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
+  { name: "file", params: {} },
   { name: "directory", params: {} },
   { name: "code", params: {} },
   { name: "docs", params: {} },
@@ -42,6 +43,7 @@ export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
   { name: "problems", params: {} },
   { name: "folder", params: {} },
   { name: "codebase", params: {} },
+  { name: "relativefilecontext", params: {} },
 ];
 
 export const defaultContextProvidersJetBrains: ContextProviderWithParams[] = [

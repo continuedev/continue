@@ -17,7 +17,7 @@ import {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Button,
@@ -197,6 +197,7 @@ function GUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location =  useLocation();
   const ideMessenger = useContext(IdeMessengerContext);
 
   const sessionState = useSelector((state: RootState) => state.state);
@@ -226,6 +227,7 @@ function GUI() {
   );
 
   const bareChatMode = isBareChatMode();
+  const aiderMode = location?.pathname === "/aiderMode"
 
   const onCloseTutorialCard = () => {
     posthog.capture("closedTutorialCard");
@@ -443,7 +445,7 @@ function GUI() {
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
           <div className="mx-2">
-            {defaultModel?.title?.toLowerCase().includes("aider") && (
+            {aiderMode && (
               <div className="pl-2 mt-8 border-b border-gray-700">
                 <div className="flex items-center gap-2">
                   <h1 className="text-2xl font-bold mb-2">PearAI Creator- Beta</h1>{" "}
@@ -579,67 +581,61 @@ function GUI() {
             isMainInput={true}
             hidden={active}
           ></ContinueInputBox>
-          {active ? (
-            <>
-              <br />
-              <br />
-            </>
-          ) : state.history.length > 0 ? (
-            <div className="mt-2">
-              <NewSessionButton
-                onClick={() => {
-                  saveSession();
-                  if (defaultModel?.title?.toLowerCase().includes("aider")) {
-                    ideMessenger.post("aiderResetSession", undefined)
-                  }
-                }}
-                className="mr-auto"
-              >
-                New Session
-                {!bareChatMode && ` (${getMetaKeyLabel()} ${isJetBrains() ? "J" : "L"})`}
-              </NewSessionButton>{" "}
-              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
-              {/* <NewSessionButton
-                onClick={() => {
-                  navigate("/inventory");
-                }}
-                className="mr-auto"
-              >
-                Inventory
-              </NewSessionButton>{" "} */}
-            </div>
-          ) : (
-            <>
-              {getLastSessionId() ? (
-                <div className="mt-2">
+            {active ? (
+              <>
+                <br />
+                <br />
+              </>
+            ) : state.history.length > 0 ? (
+              <div className="mt-2">
+                {aiderMode ? (
                   <NewSessionButton
-                    onClick={async () => {
-                      loadLastSession();
+                    onClick={() => {
+                      saveSession();
+                      ideMessenger.post("aiderResetSession", undefined)
                     }}
-                    className="mr-auto flex items-center gap-2"
+                    className="mr-auto"
                   >
-                    <ArrowLeftIcon width="11px" height="11px" />
-                    Last Session
+                    Restart Session
                   </NewSessionButton>
-                </div>
-              ) : null}
-              {/* <NewSessionButton
-                onClick={() => {
-                  navigate("/inventory");
-                }}
-                className="mr-auto"
-              >
-                PearAI Inventory
-              </NewSessionButton>{" "} */}
-
-              {!!showTutorialCard && (
-                <div className="flex justify-center w-full">
-                  <TutorialCard onClose={onCloseTutorialCard} />
-                </div>
-              )}
-              {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
-            </>
-          )}
+                ) : (
+                  <>
+                    <NewSessionButton
+                      onClick={() => {
+                        saveSession();
+                      }}
+                      className="mr-auto"
+                    >
+                      New Session
+                      {!bareChatMode && ` (${getMetaKeyLabel()} ${isJetBrains() ? "J" : "L"})`}
+                    </NewSessionButton>
+                    {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
+                  </>
+                )}
+  </div>
+) : (
+  <>
+    {!aiderMode && getLastSessionId() ? (
+      <div className="mt-2">
+        <NewSessionButton
+          onClick={async () => {
+            loadLastSession();
+          }}
+          className="mr-auto flex items-center gap-2"
+        >
+          <ArrowLeftIcon width="11px" height="11px" />
+          Last Session
+        </NewSessionButton>
+      </div>
+    ) : null}
+    {!!showTutorialCard && (
+      <div className="flex justify-center w-full">
+        <TutorialCard onClose={onCloseTutorialCard} />
+      </div>
+    )}
+    {!bareChatMode && !aiderMode && !!showAiderHint && <AiderBetaButton />}
+  </>
+)}
         </div>
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
@@ -658,7 +654,7 @@ function GUI() {
             ) {
               dispatch(clearLastResponse());
             }
-            if (defaultModel?.title?.toLowerCase().includes("aider")) {
+            if (aiderMode) {
               ideMessenger.post("aiderCtrlC", undefined)
             }
           }}

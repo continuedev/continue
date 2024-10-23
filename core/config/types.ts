@@ -453,6 +453,7 @@ declare global {
     | "DraftIssueStep";
 
   type ContextProviderName =
+    | "file"
     | "diff"
     | "github"
     | "terminal"
@@ -471,7 +472,8 @@ declare global {
     | "code"
     | "docs"
     | "gitlab-mr"
-    | "os";
+    | "os"
+    | "relativefilecontext";
 
   type TemplateType =
     | "llama2"
