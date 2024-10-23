@@ -1,3 +1,4 @@
+import { BaseContextProvider } from "../";
 import {
   ContextItem,
   ContextProviderDescription,
@@ -11,7 +12,6 @@ import {
   getUniqueFilePath,
   groupByLastNPathParts,
 } from "../../util/";
-import { BaseContextProvider } from "../";
 
 const MAX_SUBMENU_ITEMS = 10_000;
 
@@ -21,7 +21,6 @@ class FileContextProvider extends BaseContextProvider {
     displayTitle: "Files",
     description: "Type to search",
     type: "submenu",
-    dependsOnIndexing: true,
   };
 
   async getContextItems(
