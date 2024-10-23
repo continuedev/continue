@@ -17,15 +17,8 @@ import {
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
 const AUTH_NAME = "Continue";
-const CLIENT_ID =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "client_01J0FW6XCPMJMQ3CG51RB4HBZQ"
-    : "client_01J0FW6XN8N2XJAECF7NE0Y65J";
-const APP_URL =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3000"
-    : "https://app.continue.dev";
-const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`;
+
+const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
 
 class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   public handleUri(uri: Uri) {
@@ -33,12 +26,9 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   }
 }
 
-import {
-  CONTROL_PLANE_URL,
-  ControlPlaneSessionInfo,
-} from "core/control-plane/client";
+import { ControlPlaneSessionInfo } from "core/control-plane/client";
+import { controlPlaneEnv } from "core/control-plane/env";
 import crypto from "crypto";
-import { AUTH_TYPE } from "../util/constants";
 import { SecretStorage } from "./SecretStorage";
 
 // Function to generate a random string of specified length
@@ -93,7 +83,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
       authentication.registerAuthenticationProvider(
-        AUTH_TYPE,
+        controlPlaneEnv.AUTH_TYPE,
         AUTH_NAME,
         this,
         { supportsMultipleAccounts: false },
@@ -162,7 +152,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   get redirectUri() {
     if (env.uriScheme === "vscode-insiders" || env.uriScheme === "vscode") {
       // We redirect to a page that says "you can close this page", and that page finishes the redirect
-      const url = new URL(APP_URL);
+      const url = new URL(controlPlaneEnv.APP_URL);
       url.pathname = `/auth/${env.uriScheme}-redirect`;
       return url.toString();
     }
@@ -228,15 +218,18 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     refreshToken: string;
     expiresInMs: number;
   }> {
-    const response = await fetch(new URL("/auth/refresh", CONTROL_PLANE_URL), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      new URL("/auth/refresh", controlPlaneEnv.CONTROL_PLANE_URL),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refreshToken,
+        }),
       },
-      body: JSON.stringify({
-        refreshToken,
-      }),
-    });
+    );
     if (!response.ok) {
       const text = await response.text();
       throw new Error("Error refreshing token: " + text);
@@ -356,7 +349,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         const url = new URL("https://api.workos.com/user_management/authorize");
         const params = {
           response_type: "code",
-          client_id: CLIENT_ID,
+          client_id: controlPlaneEnv.WORKOS_CLIENT_ID,
           redirect_uri: this.redirectUri,
           state: stateId,
           code_challenge: codeChallenge,
@@ -453,7 +446,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          client_id: CLIENT_ID,
+          client_id: controlPlaneEnv.WORKOS_CLIENT_ID,
           code_verifier: codeVerifier,
           grant_type: "authorization_code",
           code: token,
@@ -470,7 +463,7 @@ export async function getControlPlaneSessionInfo(
   silent: boolean,
 ): Promise<ControlPlaneSessionInfo | undefined> {
   const session = await authentication.getSession(
-    AUTH_TYPE,
+    controlPlaneEnv.AUTH_TYPE,
     [],
     silent ? { silent: true } : { createIfNone: true },
   );

@@ -1,9 +1,7 @@
 import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker.js";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
-import {
-  ControlPlaneClient,
-  DEFAULT_CONTROL_PLANE_PROXY_URL,
-} from "../../control-plane/client.js";
+import { ControlPlaneClient } from "../../control-plane/client.js";
+import { controlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import {
   ContinueConfig,
@@ -71,10 +69,13 @@ export default async function doLoadConfig(
   await TTS.setup();
 
   // Set up control plane proxy if configured
-  let controlPlaneProxyUrl: string =
-    (newConfig as any).controlPlane?.useContinueForTeamsProxy === false
-      ? (newConfig as any).controlPlane?.proxyUrl
-      : DEFAULT_CONTROL_PLANE_PROXY_URL;
+  const controlPlane = (newConfig as any).controlPlane;
+  const useOnPremProxy =
+    controlPlane?.useContinueForTeamsProxy === false && controlPlane?.proxyUrl;
+  let controlPlaneProxyUrl: string = useOnPremProxy
+    ? controlPlane?.proxyUrl
+    : controlPlaneEnv.DEFAULT_CONTROL_PLANE_PROXY_URL;
+
   if (!controlPlaneProxyUrl.endsWith("/")) {
     controlPlaneProxyUrl += "/";
   }
