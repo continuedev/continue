@@ -7,18 +7,18 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
 
 - [Architecture Overview](#architecture-overview)
 - [Environment Setup](#environment-setup)
-    - [IDE Installation](#ide-installation)
-    - [IDE configuration](#ide-configuration)
-    - [Node.js Requirements](#nodejs-requirements)
-    - [Install all dependencies](#install-all-dependencies)
-    - [Misc](#misc)
+  - [IDE Installation](#ide-installation)
+  - [IDE configuration](#ide-configuration)
+  - [Node.js Requirements](#nodejs-requirements)
+  - [Install all dependencies](#install-all-dependencies)
+  - [Misc](#misc)
 - [Development Workflow](#development-workflow)
-    - [Running the extension](#running-the-extension)
-    - [Reloading changes](#reloading-changes)
-    - [Setting breakpoints](#setting-breakpoints)
-    - [Available Gradle tasks](#available-gradle-tasks)
-    - [Packaging](#packaging)
-        - [Testing the packaged extension](#testing-the-packaged-extension)
+  - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
+  - [Reloading changes](#reloading-changes)
+  - [Setting breakpoints](#setting-breakpoints)
+  - [Available Gradle tasks](#available-gradle-tasks)
+  - [Packaging](#packaging)
+    - [Testing the packaged extension](#testing-the-packaged-extension)
 
 ## Architecture Overview
 
@@ -70,7 +70,7 @@ This should open a new instance on IntelliJ with the extension installed.
 
 - `extensions/intellij`: Attempt to reload changed classes by selecting
   _Run | Debugging Actions | Reload Changed Classes`_
-    - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
+  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
 - `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Dev Server (core)` task)
 
