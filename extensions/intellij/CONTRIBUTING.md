@@ -7,13 +7,14 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
 
 - [Architecture Overview](#architecture-overview)
 - [Environment Setup](#environment-setup)
-    - [IDE Installation](#ide-installation)
-    - [IDE configuration](#ide-configuration)
-    - [Node.js Requirements](#nodejs-requirements)
-    - [Install all dependencies](#install-all-dependencies)
-    - [Misc](#misc)
+  - [IDE Installation](#ide-installation)
+  - [IDE configuration](#ide-configuration)
+  - [Node.js Requirements](#nodejs-requirements)
+  - [Install all dependencies](#install-all-dependencies)
+  - [Misc](#misc)
 - [Development Workflow](#development-workflow)
   - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
+  - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
   - [Reloading changes](#reloading-changes)
   - [Setting breakpoints](#setting-breakpoints)
   - [Available Gradle tasks](#available-gradle-tasks)
@@ -60,7 +61,7 @@ This project requires Node.js version 20.11.0 (LTS) or higher. You have two opti
 
 ### Running the extension in debug mode
 
-Select the "Run Continue" task in the top right corner of the IDE and then select the "Debug" option.
+Select the `Run Continue` task in the top right corner of the IDE and then select the "Debug" option.
 
 ![run-extension-screenshot](../../media/run-continue-intellij.png)
 
@@ -75,7 +76,7 @@ allow for changes to your `config.json` and other files during development, with
 
 - `extensions/intellij`: Attempt to reload changed classes by selecting
   _Run | Debugging Actions | Reload Changed Classes`_
-    - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
+  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
 - `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Dev Server (core)` task)
 
