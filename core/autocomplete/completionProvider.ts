@@ -388,7 +388,7 @@ export class CompletionProvider {
       // Wait 10 seconds, then assume it wasn't accepted
       outcome.accepted = false;
       logDevData("autocomplete", outcome);
-      const { prompt, completion, ...restOfOutcome } = outcome;
+      const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
       void Telemetry.capture(
         "autocomplete",
         {
