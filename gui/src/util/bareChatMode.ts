@@ -13,10 +13,6 @@ export function isBareChatMode() {
 
 
 export function isPerplexityMode() {
-  const defaultModel = useSelector(defaultModelSelector);
-
-  return useMemo(
-    () => defaultModel?.model?.toLowerCase().includes("perplexity"),
-    [defaultModel]
-  );
+  const location = useLocation();
+  return location?.pathname.includes('perplexity')
 }
