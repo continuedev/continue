@@ -392,7 +392,19 @@ export class CompletionProvider {
       void Telemetry.capture(
         "autocomplete",
         {
-          ...restOfOutcome,
+          accepted: restOfOutcome.accepted,
+          cacheHit: restOfOutcome.cacheHit,
+          completionId: restOfOutcome.completionId,
+          completionOptions: restOfOutcome.completionOptions,
+          debounceDelay: restOfOutcome.debounceDelay,
+          fileExtension: restOfOutcome.filepath.split(".")?.slice(-1)[0],
+          maxPromptTokens: restOfOutcome.maxPromptTokens,
+          modelName: restOfOutcome.modelName,
+          modelProvider: restOfOutcome.modelProvider,
+          multilineCompletions: restOfOutcome.multilineCompletions,
+          time: restOfOutcome.time,
+          useRecentlyEdited: restOfOutcome.useRecentlyEdited,
+          useRootPathContext: restOfOutcome.useRootPathContext,
         },
         true,
       );
