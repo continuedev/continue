@@ -1,23 +1,25 @@
 # Contributing to Continue (JetBrains extension) <!-- omit in toc -->
 
-This file is for contribution guidelines specific to the JetBrains extension. See the root [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
+This file is for contribution guidelines specific to the JetBrains extension. See the root [
+`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
 
 ## Table of Contents <!-- omit in toc -->
 
 - [Architecture Overview](#architecture-overview)
 - [Environment Setup](#environment-setup)
-  - [IDE Installation](#ide-installation)
-  - [IDE configuration](#ide-configuration)
-  - [Node.js Requirements](#nodejs-requirements)
-  - [Install all dependencies](#install-all-dependencies)
-  - [Misc](#misc)
+    - [IDE Installation](#ide-installation)
+    - [IDE configuration](#ide-configuration)
+    - [Node.js Requirements](#nodejs-requirements)
+    - [Install all dependencies](#install-all-dependencies)
+    - [Misc](#misc)
 - [Development Workflow](#development-workflow)
-  - [Running the extension](#running-the-extension)
-  - [Reloading changes](#reloading-changes)
-  - [Setting breakpoints](#setting-breakpoints)
-  - [Available Gradle tasks](#available-gradle-tasks)
-  - [Packaging](#packaging)
-    - [Testing the packaged extension](#testing-the-packaged-extension)
+    - [Running the extension](#running-the-extension)
+    - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
+    - [Reloading changes](#reloading-changes)
+    - [Setting breakpoints](#setting-breakpoints)
+    - [Available Gradle tasks](#available-gradle-tasks)
+    - [Packaging](#packaging)
+        - [Testing the packaged extension](#testing-the-packaged-extension)
 
 ## Architecture Overview
 
@@ -65,20 +67,25 @@ have VS Code installed.
 - Open the project in VS Code and star the `Core binary` task
 - Switch back to Intellij and select the "Run Continue" configuration in the top-right corner of the IDE
 - Click the "Debug" button
-  - The first time running this will install the IDE version specified by the `platformVersion` property in [
-    `./run/Run Extension.run.xml`](./.run/Run%20Extension.run.xml). This will take a moment as the installation size
-    can be close to 1GB.
+    - The first time running this will install the IDE version specified by the `platformVersion` property in [
+      `./run/Run Extension.run.xml`](./.run/Run%20Extension.run.xml). This will take a moment as the installation size
+      can be close to 1GB.
 
 ![run-extension-screenshot](../../media/run-intellij-extension.png)\
 
 This should open a new instance on IntelliJ with the extension installed and connected via TCP to the server started
 through the `Core binary` task.
 
+### Accessing files in the `.continue` directory
+
+When running the `Core Binary` task, we set the location of your Continue directory to `./binary/.continue`. This is to
+allow for changes to your `config.json` and other files during development, without affecting your actual configuration.
+
 ### Reloading changes
 
 - `extensions/intellij`: Attempt to reload changed classes by selecting
   _Run | Debugging Actions | Reload Changed Classes`_
-  - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
+    - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
 - `core`: Run `npm run build` from the `binary` directory and restart the `Core binary` task in VS Code
 
@@ -111,7 +118,8 @@ verifyPluginConfiguration - Checks if Java and Kotlin compilers configuration me
 - Unix: `./gradlew buildPlugin`
 - Windows: `./gradlew.bat buildPlugin`
 
-This will generate a .zip file in `./build/distributions` with the version defined in [`./gradle.properties`](./gradle.properties)
+This will generate a .zip file in `./build/distributions` with the version defined in [
+`./gradle.properties`](./gradle.properties)
 
 #### Testing the packaged extension
 
