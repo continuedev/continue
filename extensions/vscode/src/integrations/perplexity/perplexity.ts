@@ -40,10 +40,10 @@ export async function handlePerplexityMode(
     undefined,
     undefined,
     true,
-    "/aiderMode",
+    "/perplexityMode",
   );
 
-  sidebar.webviewProtocol?.request("focusContinueInputWithNewSession", undefined, ["pearai.aiderGUIView"]);
+  sidebar.webviewProtocol?.request("focusContinueInputWithNewSession", undefined, [webviewName]);
 
   //When panel closes, reset the webview and focus
   panel.onDidDispose(
