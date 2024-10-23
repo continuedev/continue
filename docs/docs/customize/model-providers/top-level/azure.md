@@ -3,7 +3,7 @@ title: Azure OpenAI
 slug: ../azure
 ---
 
-Azure OpenAI is a cloud-based service that provides access to OpenAI's large language models including GPT series, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, you have to create an Azure OpenAI resource in [Azure portal](https://portal.azure.com).
+Azure OpenAI is a cloud-based service that provides access to OpenAI's models, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure OpenAI resource in the [Azure portal](https://portal.azure.com).
 
 :::info
 

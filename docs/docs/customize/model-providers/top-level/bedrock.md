@@ -3,7 +3,7 @@ title: Amazon Bedrock
 slug: ../bedrock
 ---
 
-Amazon Bedrock is a fully managed service that provides access to various foundation models from various AI companies through a single API, offering capabilities for building secure and responsible generative AI applications.
+Amazon Bedrock is a fully managed service on AWS that provides access to foundation models from various AI companies through a single API.
 
 ## Chat model
 

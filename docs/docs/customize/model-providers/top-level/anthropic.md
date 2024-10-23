@@ -3,8 +3,6 @@ title: Anthropic
 slug: ../anthropic
 ---
 
-Anthropic provider offers access to the Claude series of large language models, developed by Anthropic.
-
 :::info
 
 You can get an API key from the [Anthropic console](https://console.anthropic.com/account/keys).
