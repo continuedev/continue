@@ -15,6 +15,6 @@ export function isPerplexityMode() {
   const defaultModel = useSelector(defaultModelSelector);
 
   return useMemo(
-    () => defaultModel?.model?.toLowerCase() === "perplexity",
+    () => defaultModel?.model?.toLowerCase().includes("perplexity"),
     [defaultModel]
   );}

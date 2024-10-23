@@ -225,6 +225,11 @@ function GUI() {
     false
   );
 
+  // Perplexity hint button hidden
+  const [showPerplexityHint, setShowPerplexityHint] = useState<boolean>(
+    false
+  );
+
   const bareChatMode = isBareChatMode();
   const perplexityMode = isPerplexityMode();
 
@@ -247,6 +252,18 @@ function GUI() {
       Hint: Try out PearAI Creator (Beta), powered by aider (Beta)!
     </NewSessionButton>
   );
+
+  const PerplexityBetaButton: React.FC = () => (
+    <NewSessionButton
+      onClick={async () => {
+        ideMessenger.post("perplexityMode", undefined);
+        setShowPerplexityHint(false);
+        }}
+        className="mr-auto"
+      >
+        {perplexityMode ? "Exit Perplexity" : "Hint: Try out PearAI Search (Beta), powered by Perplexity."  }                  
+    </NewSessionButton>
+  )
 
 
   const handleScroll = () => {
@@ -614,14 +631,7 @@ function GUI() {
                 {!bareChatMode && ` (${getMetaKeyLabel()} ${isJetBrains() ? "J" : "L"})`}
               </NewSessionButton>{" "}
               {!perplexityMode && !bareChatMode && !!showAiderHint && <AiderBetaButton />}
-              {!perplexityMode && <NewSessionButton
-                    onClick={async () => {
-                      ideMessenger.post("perplexityMode", undefined);
-                    }}
-                    className="mr-auto"
-                  >
-                    {perplexityMode ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                     
-              </NewSessionButton>}
+              {!perplexityMode && showPerplexityHint && <PerplexityBetaButton />}
             </div>
           ) : (
             <>
@@ -653,14 +663,7 @@ function GUI() {
                 </div>
               )}
               {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
-              {!perplexityMode && <NewSessionButton
-                    onClick={async () => {
-                      ideMessenger.post("perplexityMode", undefined);
-                    }}
-                    className="mr-auto"
-                  >
-                    {perplexityMode ? "Exit Perplexity" : "dev: pearai search (perplexity)"  }                  
-              </NewSessionButton>}
+              {!perplexityMode && showPerplexityHint && <PerplexityBetaButton />}
             </>
           )}
         </div>
