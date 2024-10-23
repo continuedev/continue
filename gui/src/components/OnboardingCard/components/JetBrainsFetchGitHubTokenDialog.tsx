@@ -36,7 +36,7 @@ function JetBrainsFetchGitHubTokenDialog({
   return (
     <div className="flex flex-col gap-3 p-8">
       <div className="text-center">
-        <h1 className="my-0 text-md">Sign in with GitHub</h1>
+        <h1 className="my-0 text-xl">Sign in with GitHub</h1>
         <p className="text-sm">
           Continue will request read access to your GitHub email so that we can
           prevent abuse of the free trial. If you prefer not to sign in, you can
