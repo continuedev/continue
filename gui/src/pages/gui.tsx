@@ -57,7 +57,7 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { isBareChatMode } from '../util/bareChatMode';
+import { isBareChatMode, isPerplexityMode } from '../util/bareChatMode';
 import { Badge } from "../components/ui/badge";
 
 
@@ -226,8 +226,14 @@ function GUI() {
     false
   );
 
+  // Perplexity hint button hidden
+  const [showPerplexityHint, setShowPerplexityHint] = useState<boolean>(
+    false
+  );
+
   const bareChatMode = isBareChatMode();
   const aiderMode = location?.pathname === "/aiderMode"
+  const perplexityMode = isPerplexityMode();
 
   const onCloseTutorialCard = () => {
     posthog.capture("closedTutorialCard");
@@ -248,6 +254,19 @@ function GUI() {
       Hint: Try out PearAI Creator (Beta), powered by aider (Beta)!
     </NewSessionButton>
   );
+
+  const PerplexityBetaButton: React.FC = () => (
+    <NewSessionButton
+      onClick={async () => {
+        ideMessenger.post("perplexityMode", undefined);
+        setShowPerplexityHint(false);
+        }}
+        className="mr-auto"
+      >
+        {perplexityMode ? "Exit Perplexity" : "Hint: Try out PearAI Search (Beta), powered by Perplexity."  }                  
+    </NewSessionButton>
+  )
+
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -466,6 +485,19 @@ function GUI() {
                 </p>
               </div>
             )}
+            {perplexityMode && (
+              <div className="pl-2 mt-8 border-b border-gray-700">
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold mb-2">PearAI Search - Beta</h1>{" "}
+                  <Badge variant="outline" className="pl-0">
+                    (Powered by Perplexity)
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-400 mt-0">
+                  Ask for anything. We'll retrieve the most up to date information in real-time and summarize it for you. 
+                </p>
+              </div>
+            )}
           <StepsDiv>
 
             {state.history.map((item, index: number) => {
@@ -612,6 +644,8 @@ function GUI() {
                     {!bareChatMode && !!showAiderHint && <AiderBetaButton />}
                   </>
                 )}
+                {!perplexityMode && showPerplexityHint && <PerplexityBetaButton />}
+
   </div>
 ) : (
   <>
@@ -636,6 +670,7 @@ function GUI() {
     {!bareChatMode && !aiderMode && !!showAiderHint && <AiderBetaButton />}
   </>
 )}
+      {!perplexityMode && showPerplexityHint && <PerplexityBetaButton />}
         </div>
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}

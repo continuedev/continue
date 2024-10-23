@@ -284,6 +284,7 @@ export interface ContextItemWithId {
   editing?: boolean;
   editable?: boolean;
   icon?: string;
+  language?: string;
 }
 
 export interface InputModifiers {
@@ -622,6 +623,7 @@ type ModelProvider =
   | "watsonx"
   | "pearai_server"
   | "aider"
+  | "perplexity"
   | "other";
 
 export type ModelName =
@@ -695,7 +697,8 @@ export type ModelName =
   | "starcoder2-3b"
   | "stable-code-3b"
   | "pearai_model"
-  | "aider";
+  | "aider"
+  | "perplexity";
 
 export interface RequestOptions {
   timeout?: number;

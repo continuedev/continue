@@ -128,6 +128,13 @@ export const defaultConfig: SerializedContinueConfig = {
       isDefault: true,
     },
     {
+      model: "perplexity",
+      title: "PearAI Search (Powered by Perplexity)",
+      systemMessage: "You are an expert software developer. You give helpful and concise responses based on the latest software engineering practices and documentation.",
+      provider: "pearai_server",
+      isDefault: true,
+    },
+    {
       model: "claude-3-haiku",
       title: "Claude 3 Haiku (PearAI)",
       provider: "pearai_server",

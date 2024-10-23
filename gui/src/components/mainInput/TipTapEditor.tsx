@@ -124,6 +124,10 @@ const getPlaceholder = (defaultModel, historyLength: number) => {
       : "Send a follow-up";
   }
 
+  if (defaultModel?.model?.toLowerCase().includes("perplexity")) {
+    return historyLength === 0 ? "Ask for any information" : "Ask a follow-up";
+  }
+
   return historyLength === 0
     ? "Ask anything, '/' for slash commands, '@' to add context"
     : "Ask a follow-up";
@@ -634,6 +638,46 @@ function TipTapEditor(props: TipTapEditorProps) {
       }
       editor?.commands.insertContent(data.input);
       onEnterRef.current({ useCodebase: false, noContext: true });
+    },
+    [editor, onEnterRef.current, props.isMainInput],
+  );
+
+  useWebviewListener(
+    "addPerplexityContextinChat",
+    async (data) => {
+      const item: ContextItemWithId = {
+        content: data.text,
+        name: "Context from PearAI Search",
+        description: "Context from result of Perplexity AI",
+        id: {
+          providerTitle: "code",
+          itemId: data.text,
+        },
+        language: data.language,
+      };
+
+      let index = 0;
+      for (const el of editor.getJSON().content) {
+        if (el.type === "codeBlock") {
+          index += 2;
+        } else {
+          break;
+        }
+      }
+      editor
+        .chain()
+        .insertContentAt(index, {
+          type: "codeBlock",
+          attrs: {
+            item,
+          },
+        })
+        .run();
+
+      setTimeout(() => {
+          editor.commands.blur();
+          editor.commands.focus("end");
+      }, 20);
     },
     [editor, onEnterRef.current, props.isMainInput],
   );

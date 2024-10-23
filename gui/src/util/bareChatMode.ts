@@ -11,3 +11,12 @@ export function isBareChatMode() {
   return BARE_CHAT_PATHS.includes(location?.pathname);
 }
 
+
+export function isPerplexityMode() {
+  const defaultModel = useSelector(defaultModelSelector);
+
+  return useMemo(
+    () => defaultModel?.model?.toLowerCase().includes("perplexity"),
+    [defaultModel]
+  );
+}

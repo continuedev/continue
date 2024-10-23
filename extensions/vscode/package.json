@@ -316,6 +316,12 @@
         "category": "PearAI",
         "title": "Open PearAI Creator",
         "group": "PearAI"
+      },
+      {
+        "command": "pearai.perplexityMode",
+        "category": "PearAI",
+        "title": "Open PearAI Search",
+        "group": "PearAI"
       }
     ],
     "keybindings": [

@@ -73,10 +73,21 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     provider: "aider",
     refPage: "aider",
     description:
-      "Leading AI Assistant for Code Generation: https://aider.chat/",
+      "Enjoy effortless integration and lower your costs with our reliable hosted services.",
     icon: "",
     tags: [],
     packages: [models.aider],
+    showInMenu: false,
+  },
+  perplexity: {
+    title: "Perplexity",
+    provider: "perplexity",
+    refPage: "perplexity",
+    description:
+      "Enjoy effortless integration and lower your costs with our reliable hosted services.",
+    icon: "",
+    tags: [],
+    packages: [models.perplexity],
     showInMenu: false,
   },
   other: {

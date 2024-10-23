@@ -6,7 +6,7 @@ import { type PlacesType } from "react-tooltip";
 import { v4 as uuidv4 } from "uuid";
 
 interface HeaderButtonWithTextProps {
-  text: string | undefined;
+  text?: string | undefined;
   onClick?: (e: any) => void;
   children: React.ReactNode;
   disabled?: boolean;

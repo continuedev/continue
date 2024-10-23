@@ -25,7 +25,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
-import { isBareChatMode } from '../../util/bareChatMode';
+import { isBareChatMode, isPerplexityMode } from '../../util/bareChatMode';
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
@@ -93,6 +93,7 @@ function InputToolbar(props: InputToolbarProps) {
   const [fileSelectHovered, setFileSelectHovered] = useState(false);
   const defaultModel = useSelector(defaultModelSelector);
   const bareChatMode = isBareChatMode();
+  const perplexityMode = isPerplexityMode();
 
   const useActiveFile = useSelector(selectUseActiveFile);
 
@@ -106,7 +107,7 @@ function InputToolbar(props: InputToolbarProps) {
         <span className="flex gap-2 items-center whitespace-nowrap">
           {!bareChatMode && (
             <>
-              <ModelSelect />
+              {!perplexityMode && <ModelSelect />}
               <StyledSpan
                 onClick={(e) => {
                   props.onAddContextItem();

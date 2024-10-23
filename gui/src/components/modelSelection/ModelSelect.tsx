@@ -184,6 +184,11 @@ function ModelSelect() {
         (model) => model?.title?.toLowerCase().includes("aider"),
       );
       dispatch(setDefaultModel({ title: aider?.title }));
+    } else if (location.pathname === "/perplexityMode") {
+      const perplexity = allModels.find(
+        (model) => model?.title?.toLowerCase() === "perplexity",
+      );
+      dispatch(setDefaultModel({ title: perplexity?.title }));
     }
 
     setOptions(
