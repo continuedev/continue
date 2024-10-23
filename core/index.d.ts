@@ -1015,6 +1015,7 @@ export interface ContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  isBetaAccess?: boolean;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1033,6 +1034,7 @@ export interface BrowserSerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  isBetaAccess?: boolean;
 }
 
 export interface PearAuth {

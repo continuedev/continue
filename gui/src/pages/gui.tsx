@@ -199,6 +199,7 @@ function GUI() {
   const navigate = useNavigate();
   const location =  useLocation();
   const ideMessenger = useContext(IdeMessengerContext);
+  const isBetaAccess = useSelector((state: RootState) => state.state.config.isBetaAccess);
 
   const sessionState = useSelector((state: RootState) => state.state);
 
@@ -467,7 +468,7 @@ function GUI() {
             {aiderMode && (
               <div className="pl-2 mt-8 border-b border-gray-700">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-bold mb-2">PearAI Creator- Beta</h1>{" "}
+                  <h1 className="text-2xl font-bold mb-2">PearAI Creator - Beta</h1>{" "}
                   <Badge variant="outline" className="pl-0">
                     (Powered by{" "}
                     <a
@@ -697,6 +698,9 @@ function GUI() {
           {getMetaKeyLabel()} ⌫ Cancel
         </StopButton>
       )}
+            {isBetaAccess &&
+        <NewSessionButton onClick={() => navigate("/inventory")} style={{marginLeft: "0.8rem", marginBottom: "0rem"}} >Inventory</NewSessionButton>
+      }
     </>
   );
 }

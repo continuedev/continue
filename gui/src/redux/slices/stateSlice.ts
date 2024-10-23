@@ -133,6 +133,7 @@ const initialState: State = {
     ],
     contextProviders: [],
     models: [],
+    isBetaAccess: false,
   },
   title: "New Session",
   sessionId: v4(),
