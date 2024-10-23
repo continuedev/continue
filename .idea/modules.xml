@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.github.continuedev.continueintellijextension.continue-intellij-extension.iml" filepath="$PROJECT_DIR$/.idea/modules/com.github.continuedev.continueintellijextension.continue-intellij-extension.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.github.continuedev.continueintellijextension.continue-intellij-extension.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.github.continuedev.continueintellijextension.continue-intellij-extension.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.github.continuedev.continueintellijextension.continue-intellij-extension.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.github.continuedev.continueintellijextension.continue-intellij-extension.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/continue-intellij-extension.iml" filepath="$PROJECT_DIR$/.idea/modules/continue-intellij-extension.iml" />
     </modules>
   </component>
 </project>
