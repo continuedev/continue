@@ -158,56 +158,74 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
 
       let command: string[];
 
-      switch (model) {
-        case "claude-3-5-sonnet-20240620":
-          console.log("claude model chosen");
-          command = ["aider --model claude-3-5-sonnet-20240620"];
-          break;
-        case "gpt-4o":
-          command = ["aider --model gpt-4o"];
-          break;
-        case "pearai_model":
-        default:
-          await this.credentials.checkAndUpdateCredentials();
-          const accessToken = this.credentials.getAccessToken();
-          if (!accessToken) {
-            let message = "PearAI token invalid. Please try logging in or contact PearAI support."
-            vscode.window
-            .showErrorMessage(
-              message,
-              'Login To PearAI',
-              'Show Logs',
-            )
-            .then((selection: any) => {
-              if (selection === 'Login To PearAI') {
-                // Redirect to auth login URL
-                vscode.env.openExternal(
-                  vscode.Uri.parse(
-                    'https://trypear.ai/signin?callback=pearai://pearai.pearai/auth',
-                  ),
-                );
-              } else if (selection === 'Show Logs') {
-                vscode.commands.executeCommand(
-                  'workbench.action.toggleDevTools',
-                );
+      const aiderFlags = "--no-pretty --yes-always --no-auto-commits";
+      const aiderCommands = [
+        `python -m aider ${aiderFlags}`,
+        `python3 -m aider ${aiderFlags}`,
+        `aider ${aiderFlags}`
+      ];
+      let commandFound = false;
+
+      for (const aiderCommand of aiderCommands) {
+        try {
+          await execSync(`${aiderCommand} --version`, { stdio: 'ignore' });
+          commandFound = true;
+
+          switch (model) {
+            case model.includes("claude") && model:
+              command = [`${aiderCommand} --model ${model}`];
+              break;
+            case "gpt-4o":
+              command = [`${aiderCommand} --model gpt-4o`];
+              break;
+            case "pearai_model":
+            default:
+              await this.credentials.checkAndUpdateCredentials();
+              const accessToken = this.credentials.getAccessToken();
+              if (!accessToken) {
+                let message = "PearAI token invalid. Please try logging in or contact PearAI support."
+                vscode.window
+                .showErrorMessage(
+                  message,
+                  'Login To PearAI',
+                  'Show Logs',
+                )
+                .then((selection: any) => {
+                  if (selection === 'Login To PearAI') {
+                    // Redirect to auth login URL
+                    vscode.env.openExternal(
+                      vscode.Uri.parse(
+                        'https://trypear.ai/signin?callback=pearai://pearai.pearai/auth',
+                      ),
+                    );
+                  } else if (selection === 'Show Logs') {
+                    vscode.commands.executeCommand(
+                      'workbench.action.toggleDevTools',
+                    );
+                  }
+                });
+                throw new Error("User not logged in to PearAI.");
               }
-            });
-            throw new Error("User not logged in to PearAI.");
+              command = [
+                aiderCommand,
+                "--openai-api-key",
+                accessToken,
+                "--openai-api-base",
+                `${SERVER_URL}/integrations/aider`,
+              ];
+              break;
           }
-          command = [
-            "aider",
-            "--openai-api-key",
-            accessToken,
-            "--openai-api-base",
-            `${SERVER_URL}/integrations/aider`,
-          ];
-          break;
+          break;  // Exit the loop if a working command is found
+        } catch (error) {
+          console.log(`Command ${aiderCommand} not found or errored. Trying next...`);
+        }
       }
 
-      // disable pretty printing
-      command.push("--no-pretty");
-      command.push("--yes-always");
-      command.push("--no-auto-commits");
+      if (!commandFound) {
+        throw new Error("Aider command not found. Please ensure it's installed correctly.");
+      }
+
+
 
       const userPath = this.getUserPath();
       const userShell = this.getUserShell();
@@ -254,6 +272,8 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
             env: {
               ...process.env,
               PATH: userPath,
+              PYTHONIOENCODING: "utf-8",
+              AIDER_SIMPLE_OUTPUT: "1",
             },
             windowsHide: true,
           });
@@ -343,7 +363,8 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
       this.aiderProcess.stdin &&
       !this.aiderProcess.killed
     ) {
-      this.aiderProcess.stdin.write(`${message}\n`);
+      const formattedMessage = message.replace(/\n+/g, " ");
+      this.aiderProcess.stdin.write(`${formattedMessage}\n`);
     } else {
       console.error("Aider process is not running");
     }
@@ -404,7 +425,6 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     console.log("Inside Aider _streamChat");
-
     const lastMessage = messages[messages.length - 1].content.toString();
     this.sendToAiderChat(lastMessage);
 

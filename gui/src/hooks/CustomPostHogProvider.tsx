@@ -13,8 +13,8 @@ const CustomPostHogProvider = ({ children }: PropsWithChildren) => {
 
   useEffect(() => {
     if (allowAnonymousTelemetry) {
-      posthog.init("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
-        api_host: "https://app.posthog.com",
+      posthog.init("phc_EixCfQZYA5It6ZjtZG2C8THsUQzPzXZsdCsvR8AYhfh", {
+        api_host: "https://us.i.posthog.com",
         disable_session_recording: true,
         // // We need to manually track pageviews since we're a SPA
         capture_pageview: false,

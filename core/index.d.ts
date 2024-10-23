@@ -551,6 +551,7 @@ type StepName =
   | "DraftIssueStep";
 
 type ContextProviderName =
+  | "file"
   | "diff"
   | "github"
   | "terminal"
@@ -570,7 +571,8 @@ type ContextProviderName =
   | "docs"
   | "gitlab-mr"
   | "os"
-  | "currentFile";
+  | "currentFile"
+  | "relativefilecontext";
 
 type TemplateType =
   | "llama2"
