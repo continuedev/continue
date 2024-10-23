@@ -623,14 +623,14 @@ function GUI() {
                   </NewSessionButton>
                 </div>
               ) : null}
-              {/* <NewSessionButton
+              <NewSessionButton
                 onClick={() => {
                   navigate("/inventory");
                 }}
                 className="mr-auto"
               >
                 PearAI Inventory
-              </NewSessionButton>{" "} */}
+              </NewSessionButton>{" "}
 
               {!!showTutorialCard && (
                 <div className="flex justify-center w-full">

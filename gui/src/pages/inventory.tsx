@@ -26,7 +26,7 @@ const tabs = [
 
 export default function Inventory() {
   return (
-    <div className="h-full bg-background p-4 pt-0">
+    <div className="h-full bg-background p-3 pt-0">
       <Tabs defaultValue="inventory">
         <div className="flex justify-center mt-1 h-full">
           <TabsList className="bg-input text-center">
@@ -42,7 +42,7 @@ export default function Inventory() {
           </TabsList>
         </div>
         {tabs.map((tab) => (
-          <TabsContent key={tab.id} value={tab.id} className="">
+          <TabsContent key={tab.id} value={tab.id} className="border-input-border border-2">
             {tab.component}
           </TabsContent>
         ))}
