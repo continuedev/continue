@@ -56,7 +56,8 @@ const Providers: (typeof BaseContextProvider)[] = [
   CurrentFileContextProvider,
   URLContextProvider,
   ContinueProxyContextProvider,
-  RelativeFileContextProvider
+  RelativeFileContextProvider,
+  CodebaseContextProvider
 ];
 
 export function contextProviderClassFromName(

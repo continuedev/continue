@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "ES2020",
+    "target": "ES2022",
     "outDir": "out/tsc/src",
-    "lib": ["ES2021", "dom", "es6", "es5", "dom.iterable", "scripthost"],
+    "lib": ["ES2022", "dom", "es6", "es5", "dom.iterable", "scripthost"],
     "sourceMap": true,
     "rootDir": "../../",
     "typeRoots": ["./node_modules/@types"],
@@ -21,5 +21,9 @@
   },
   "include": ["src/**/*", "../../core/**/*.ts", "../../core/**/*.d.ts"],
   // core/test uses @types/jest, which conflicts with @types/mocha
-  "exclude": ["../../core/dist/**/*", "../../core/test/**/*"]
+  "exclude": [
+    "../../core/dist/**/*",
+    "../../core/**/*.test.ts",
+    "../../core/**/*.skip.ts"
+  ]
 }

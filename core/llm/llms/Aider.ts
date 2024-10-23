@@ -158,7 +158,7 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
 
       let command: string[];
 
-      const aiderFlags = "--no-pretty --yes-always --no-auto-commits";
+      const aiderFlags = "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands";
       const aiderCommands = [
         `python -m aider ${aiderFlags}`,
         `python3 -m aider ${aiderFlags}`,

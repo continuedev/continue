@@ -59,12 +59,15 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.gcda",
   "*.gcno",
   "go.sum",
-  ".env",
-  ".gitignore",
-  ".gitkeep",
-  ".continueignore",
+  "*.env",
+  "*.gitignore",
+  "*.gitkeep",
+  "*.continueignore",
   "config.json",
-  ".csv",
+  "*.csv",
+  "*.uasset",
+  "*.pdb",
+  "*.bin",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
 
@@ -82,6 +85,7 @@ export const DEFAULT_IGNORE_DIRS = [
   "node_modules/",
   "dist/",
   "build/",
+  "Build/",
   "target/",
   "out/",
   "bin/",
@@ -100,3 +104,10 @@ export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
 
 export const DEFAULT_IGNORE =
   DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");
+
+export function gitIgArrayFromFile(file: string) {
+  return file
+    .split(/\r?\n/) // Split on new line
+    .map((l) => l.trim()) // Remove whitespace
+    .filter((l) => !/^#|^$/.test(l)); // Remove empty lines
+}

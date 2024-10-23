@@ -138,18 +138,18 @@ export class Core {
       );
 
       // Index on initialization
-      this.ide.getWorkspaceDirs().then(async (dirs) => {
+      void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
           await this.messenger.request("indexProgress", {
-            progress: 100,
+            progress: 1,
             desc: "Initial Indexing Skipped",
             status: "paused",
           });
           return;
         }
 
-        this.refreshCodebaseIndex(dirs);
+        void this.refreshCodebaseIndex(dirs);
       });
     });
 
@@ -724,8 +724,12 @@ export class Core {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
     });
-    on("index/forceReIndex", async (msg) => {
-      const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
+    on("index/forceReIndex", async ({ data }) => {
+      // if (data?.shouldClearIndexes) {
+      //   const codebaseIndexer = await this.codebaseIndexerPromise;
+      //   await codebaseIndexer.clearIndexes();
+      // }
+      const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
@@ -759,6 +763,22 @@ export class Core {
 
   private indexingCancellationController: AbortController | undefined;
 
+  // private async refreshCodebaseIndex(dirs: string[]) {
+  //   if (this.indexingCancellationController) {
+  //     this.indexingCancellationController.abort();
+  //   }
+  //   this.indexingCancellationController = new AbortController();
+  //   for await (const update of (await this.codebaseIndexerPromise).refresh(
+  //     dirs,
+  //     this.indexingCancellationController.signal,
+  //   )) {
+  //     this.messenger.request("indexProgress", update);
+  //     this.indexingState = update;
+  //   }
+
+  //   this.messenger.send("refreshSubmenuItems", undefined);
+  // }
+
   private async refreshCodebaseIndex(dirs: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
@@ -768,10 +788,32 @@ export class Core {
       dirs,
       this.indexingCancellationController.signal,
     )) {
-      this.messenger.request("indexProgress", update);
-      this.indexingState = update;
-    }
+      let updateToSend = { ...update };
+      if (update.status === "failed") {
+        updateToSend.status = "done";
+        updateToSend.desc = "Indexing complete";
+        updateToSend.progress = 1.0;
+      }
 
+      void this.messenger.request("indexProgress", updateToSend);
+      this.indexingState = updateToSend;
+
+      if (update.status === "failed") {
+        console.debug(
+          "Indexing failed with error: ",
+          update.desc,
+          // update.debugInfo,
+        );
+        void Telemetry.capture(
+          "indexing_error",
+          {
+            error: update.desc,
+            // stack: update.debugInfo,
+          },
+          false,
+        );
+      }
+    }
     this.messenger.send("refreshSubmenuItems", undefined);
   }
 }
