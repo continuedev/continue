@@ -279,9 +279,9 @@ const Layout = () => {
         />
 
         <GridDiv
-          showHeader={SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname)}
+          showHeader={!window.isPearOverlay && SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname)}
         >
-          {SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname) && (
+          {SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname) && !window.isPearOverlay && (
             <Header>
               <ShortcutContainer />
             </Header>

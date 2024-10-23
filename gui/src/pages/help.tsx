@@ -132,6 +132,7 @@ function HelpPage() {
   useNavigationListener();
   const navigate = useNavigate();
   const themeType = useThemeType();
+  const buttonBorders = "border-foreground-muted border-1 border-solid"
   const ideMessenger = useContext(IdeMessengerContext);
   const [session, setSession] = useState(false); // this state specifically serves to manage "Login to PearAI" text conditionally on auth status
 
@@ -175,7 +176,7 @@ function HelpPage() {
       <div className="flex flex-col items-center justify-center w-full">
         <ButtonContainer>
           <StyledButton
-            className="inline-flex flex-shrink-0"
+            className={`inline-flex flex-shrink-0 ${buttonBorders}`}
             themeType={themeType}
             onClick={() => {
               ideMessenger.post("pearaiLogin", undefined);
@@ -188,12 +189,13 @@ function HelpPage() {
             href="https://trypear.ai/"
             target="_blank"
             themeType={themeType}
+            className={`${buttonBorders}`}
           >
             PearAI Website
           </StyledLink>
 
           <StyledButton
-            className="inline-flex flex-shrink-0"
+            className={`inline-flex flex-shrink-0 ${buttonBorders}`}
             themeType={themeType}
             onClick={() => {
               navigate("/stats");
@@ -202,14 +204,14 @@ function HelpPage() {
             View Usage
           </StyledButton>
           <StyledButton
-            className="inline-flex flex-shrink-0"
+            className={`inline-flex flex-shrink-0 ${buttonBorders}`}
             themeType={themeType}
             onClick={handleOpenTutorial}
           >
             Open Tutorial
           </StyledButton>
           <StyledLink
-            className="flex items-center justify-center gap-2"
+            className={`flex items-center justify-center gap-2 ${buttonBorders}`}
             href="https://github.com/trypear/pearai-app/"
             target="_blank"
             themeType={themeType}
@@ -220,7 +222,7 @@ function HelpPage() {
             Github
           </StyledLink>
           <StyledLink
-            className="flex items-center justify-center gap-2"
+            className={`flex items-center justify-center gap-2 ${buttonBorders}`}
             href="https://discord.gg/Uw9mVvFUk3"
             target="_blank"
             themeType={themeType}
