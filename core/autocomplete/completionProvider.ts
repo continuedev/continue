@@ -268,7 +268,10 @@ export class CompletionProvider {
         const workspaceDirs = await this.ide.getWorkspaceDirs();
         let filepath = input.filepath;
         for (const workspaceDir of workspaceDirs) {
-          if (filepath.startsWith(workspaceDir)) {
+          const relativePath = path.relative(workspaceDir, filepath);
+          const relativePathBase = relativePath.split(path.sep).at(0);
+          const isInWorkspace = !path.isAbsolute(relativePath) && relativePathBase !== "..";
+          if (isInWorkspace) {
             filepath = path.relative(workspaceDir, filepath);
             break;
           }
