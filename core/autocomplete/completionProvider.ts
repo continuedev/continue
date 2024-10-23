@@ -129,7 +129,7 @@ function formatExternalSnippet(
 }
 
 let shownGptClaudeWarning = false;
-const nonAutocompleteModels = [
+export const nonAutocompleteModels = [
   // "gpt",
   // "claude",
   "mistral",
