@@ -41,28 +41,26 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "together",
   "msty",
   "anthropic",
-  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "continue-proxy",
   "mistral",
-  "mistral-vertexai",
   "sambanova",
+  "vertexai"
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "openai",
   "ollama",
   "gemini",
-  "gemini-vertexai",
   "free-trial",
   "msty",
   "anthropic",
-  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "continue-proxy",
   "openrouter",
+  "vertexai"
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -107,20 +105,18 @@ function modelSupportsImages(
 }
 const PARALLEL_PROVIDERS: ModelProvider[] = [
   "anthropic",
-  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "deepinfra",
   "gemini",
-  "gemini-vertexai",
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
-  "mistral-vertexai",
   "free-trial",
   "replicate",
   "together",
   "sambanova",
+  "vertexai"
 ];
 
 function llmCanGenerateInParallel(
