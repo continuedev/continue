@@ -176,13 +176,6 @@ export class VsCodeMessenger {
       );
     });
 
-    // this.onWebview("addPerplexityContext", async (msg) => {
-    //   // send context to default pearAI chat
-    //   // display context as a delete-able pill in the chat
-    //   console.log("message received in vscode: ", msg, this.side)
-
-    // })
-
     this.onWebview("applyToCurrentFile", async (msg) => {
       // Select the entire current file
       const editor = vscode.window.activeTextEditor;
