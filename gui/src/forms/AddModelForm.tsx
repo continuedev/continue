@@ -14,6 +14,10 @@ import {
 import { setDefaultModel } from "../redux/slices/stateSlice";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../util/freeTrial";
 import { completionParamsInputs } from "../pages/AddNewModel/configs/completionParamsInputs";
+import { NotDiamondSubtext } from "../components/notdiamond/NotDiamondSubtext";
+import { ProviderModelMap } from "../constants/notdiamond-providers";
+import { BaseApiKey } from "../components/notdiamond/BaseApiKey";
+import { ApiKeysInputs } from "../components/notdiamond/ApiKeysInputs";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -79,6 +83,42 @@ function AddModelForm({
       provider: selectedProvider.provider,
       title: selectedModel.title,
       ...(hasValidApiKey ? { apiKey } : {}),
+      ...(selectedProvider.provider === "notdiamond"
+        ? {
+            notDiamondProviders: {
+              ...(formMethods.watch("providerApiKeys.openai") && {
+                openai: {
+                  apiKey: formMethods.watch("providerApiKeys.openai"),
+                  models: ProviderModelMap['openai'] || []
+                }
+              }),
+              ...(formMethods.watch("providerApiKeys.anthropic") && {
+                anthropic: {
+                  apiKey: formMethods.watch("providerApiKeys.anthropic"),
+                  models: ProviderModelMap['anthropic'] || []
+                }
+              }),
+              ...(formMethods.watch("providerApiKeys.google") && {
+                google: {
+                  apiKey: formMethods.watch("providerApiKeys.google"),
+                  models: ProviderModelMap['google'] || []
+                }
+              }),
+              ...(formMethods.watch("providerApiKeys.mistral") && {
+                mistral: {
+                  apiKey: formMethods.watch("providerApiKeys.mistral"),
+                  models: ProviderModelMap['mistral'] || []
+                }
+              }),
+              ...(formMethods.watch("providerApiKeys.perplexity") && {
+                perplexity: {
+                  apiKey: formMethods.watch("providerApiKeys.perplexity"),
+                  models: ProviderModelMap['perplexity'] || []
+                }
+              }),
+            },
+          }
+        : {}),
     };
 
     ideMessenger.post("config/addModel", { model });
@@ -160,21 +200,26 @@ function AddModelForm({
                 </StyledActionButton>
               </div>
             )}
+            {selectedProvider.provider !== "notdiamond" && selectedModel && (
+              <div>
+                <label className="block text-sm font-medium">Model</label>
+                <ModelSelectionListbox
+                  selectedProvider={selectedModel}
+                  setSelectedProvider={setSelectedModel}
+                  options={
+                    Object.entries(providers).find(
+                      ([, provider]) =>
+                        provider.title === selectedProvider.title,
+                    )?.[1].packages
+                  }
+                ></ModelSelectionListbox>
+              </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium">Model</label>
-              <ModelSelectionListbox
-                selectedProvider={selectedModel}
-                setSelectedProvider={setSelectedModel}
-                options={
-                  Object.entries(providers).find(
-                    ([, provider]) => provider.title === selectedProvider.title,
-                  )?.[1].packages
-                }
-              ></ModelSelectionListbox>
-            </div>
-
-            {selectedModel.params.model.startsWith("codestral") && (
+            {selectedProvider.provider === "notdiamond" && (
+              <NotDiamondSubtext />
+            )}
+            {selectedModel?.params.model.startsWith("codestral") && (
               <div className="my-2">
                 <Alert>
                   <p className="font-bold text-sm m-0">Codestral API key</p>
@@ -211,7 +256,9 @@ function AddModelForm({
                 </>
               </div>
             )}
-            
+
+            {selectedProvider.provider === "notdiamond" && <ApiKeysInputs />}
+
             {selectedProvider.collectInputFor &&
               selectedProvider.collectInputFor
                 .filter(

@@ -648,6 +648,7 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
+  | "notdiamond"
   | "cerebras";
 
 

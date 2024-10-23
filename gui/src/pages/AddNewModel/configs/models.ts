@@ -762,6 +762,20 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mistral.png",
     isOpenSource: false,
   },
+  NotDiamond: {
+    title: "Not Diamond",
+    description:
+      "Not Diamond is an AI model router that determines which LLM is best-suited to respond.",
+    params: {
+      title: "Not Diamond",
+      model: "notdiamond/notdiamond",
+      contextLength: 200_000,
+    },
+    icon: "notdiamond.png",
+    dimensions: [],
+    providerOptions: ["notdiamond"],
+    isOpenSource: true,
+  },
   MetaLlama3: {
     title: "watsonx - Llama 3.1",
     description:
