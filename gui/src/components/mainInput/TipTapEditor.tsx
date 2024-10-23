@@ -119,7 +119,7 @@ const HoverTextDiv = styled.div`
 `;
 
 
-const getPlaceholder = (historyLength: number, location: Location | null) => {
+const getPlaceholder = (historyLength: number, location: any) => {
   if (location?.pathname === "/aiderMode") {
     return historyLength === 0
       ? "Ask me to create, change, or fix anything..."
@@ -214,7 +214,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootState) => store.state.contextItems,
   );
   const defaultModel = useSelector(defaultModelSelector);
-  const bareChatMode = isBareChatMode();
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(props.availableContextProviders)
 
@@ -272,6 +271,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   const { prevRef, nextRef, addRef } = useInputHistory();
+  const location = useLocation();
 
   const editor: Editor = useEditor({
     extensions: [

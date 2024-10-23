@@ -172,28 +172,14 @@ function ModelSelect() {
   const navigate = useNavigate();
 
   const [options, setOptions] = useState<Option[]>([]);
-
   const selectedProfileId = useSelector(
     (store: RootState) => store.state.selectedProfileId,
   );
 
   useEffect(() => {
-
-    if (location.pathname === "/aiderMode") {
-      const aider = allModels.find(
-        (model) => model?.title?.toLowerCase().includes("aider"),
-      );
-      dispatch(setDefaultModel({ title: aider?.title }));
-    } else if (location.pathname === "/perplexityMode") {
-      const perplexity = allModels.find(
-        (model) => model?.title?.toLowerCase().includes("perplexity"),
-      );
-      dispatch(setDefaultModel({ title: perplexity?.title }));
-    }
-
     setOptions(
       allModels
-        .filter((model) => !model?.title?.toLowerCase().includes("aider"))
+        .filter((model) => !model?.title?.toLowerCase().includes("aider") && !model?.title?.toLowerCase().includes("perplexity"))
         .map((model) => {
           return {
             value: model.title,
@@ -202,7 +188,7 @@ function ModelSelect() {
           };
         }),
     );
-  }, [location, allModels]);
+  }, [allModels]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

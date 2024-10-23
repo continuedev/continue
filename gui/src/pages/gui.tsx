@@ -263,7 +263,7 @@ function GUI() {
         }}
         className="mr-auto"
       >
-        {perplexityMode ? "Exit Perplexity" : "Hint: Try out PearAI Search (Beta), powered by Perplexity."  }                  
+        {perplexityMode ? "Exit Perplexity" : "Hint: Try out PearAI Search (Beta), powered by Perplexity."  }
     </NewSessionButton>
   )
 
@@ -494,7 +494,7 @@ function GUI() {
                   </Badge>
                 </div>
                 <p className="text-sm text-gray-400 mt-0">
-                  Ask for anything. We'll retrieve the most up to date information in real-time and summarize it for you. 
+                  Ask for anything. We'll retrieve the most up to date information in real-time and summarize it for you.
                 </p>
               </div>
             )}
@@ -662,12 +662,12 @@ function GUI() {
         </NewSessionButton>
       </div>
     ) : null}
-    {!!showTutorialCard && (
+    {!!showTutorialCard && !bareChatMode && !aiderMode && !perplexityMode && (
       <div className="flex justify-center w-full">
         <TutorialCard onClose={onCloseTutorialCard} />
       </div>
     )}
-    {!bareChatMode && !aiderMode && !!showAiderHint && <AiderBetaButton />}
+    {!aiderMode && !!showAiderHint && <AiderBetaButton />}
   </>
 )}
       {!perplexityMode && showPerplexityHint && <PerplexityBetaButton />}

@@ -91,13 +91,21 @@ async function checkPythonInstallation(): Promise<boolean> {
 }
 
 async function checkAiderInstallation(): Promise<boolean> {
-  try {
-    await executeCommand("aider --version");
-    return true;
-  } catch (error) {
-    console.warn(`Aider is not installed: ${error}`);
-    return false;
+  const commands = [
+    "aider --version",
+    "python -m aider --version",
+    "python3 -m aider --version"
+  ];
+
+  for (const cmd of commands) {
+    try {
+      await executeCommand(cmd);
+      return true;
+    } catch (error) {
+      console.warn(`Failed to execute ${cmd}: ${error}`);
+    }
   }
+  return false;
 }
 
 async function installPythonAider() {
