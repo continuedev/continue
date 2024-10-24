@@ -156,10 +156,12 @@ async function installPythonAider() {
     vscode.window.showInformationMessage("Installing Aider");
     const aiderTerminal = vscode.window.createTerminal("Aider Installer");
     aiderTerminal.show();
-    let command = "python -m pip install -U aider-chat;";
+    let command = "";
     if (IS_WINDOWS) {
+      command += "python -m pip install -U aider-chat;";
       command += 'echo "`nAider installation complete."';
-    } else {
+      } else {
+      command += "python3 -m pip install -U aider-chat;";
       command += "echo '\nAider installation complete.'";
     }
     aiderTerminal.sendText(command);
