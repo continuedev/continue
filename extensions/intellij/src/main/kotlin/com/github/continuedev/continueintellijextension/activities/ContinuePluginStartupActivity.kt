@@ -12,6 +12,7 @@ import com.github.continuedev.continueintellijextension.services.SettingsListene
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ApplicationNamesInfo
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -31,24 +32,36 @@ import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.roots.ModuleRootManager
 
 fun showTutorial(project: Project) {
-    ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
-        if (`is` == null) {
-            throw IOException("Resource not found: continue_tutorial.py")
-        }
-        var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
-        if (!System.getProperty("os.name").toLowerCase().contains("mac")) {
-            content = content.replace("⌘", "⌃")
-        }
-        val filepath = Paths.get(getContinueGlobalPath(), "continue_tutorial.py").toString()
-        File(filepath).writeText(content)
-        val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
+    val tutorialFileName = getTutorialFileName()
 
+    ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream(tutorialFileName)
+        .use { `is` ->
+            if (`is` == null) {
+                throw IOException("Resource not found: $tutorialFileName")
+            }
+            var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
+            if (!System.getProperty("os.name").lowercase().contains("mac")) {
+                content = content.replace("⌘", "⌃")
+            }
+            val filepath = Paths.get(getContinueGlobalPath(), tutorialFileName).toString()
+            File(filepath).writeText(content)
+            val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
 
-        ApplicationManager.getApplication().invokeLater {
-            if (virtualFile != null) {
-                FileEditorManager.getInstance(project).openFile(virtualFile, true)
+            ApplicationManager.getApplication().invokeLater {
+                if (virtualFile != null) {
+                    FileEditorManager.getInstance(project).openFile(virtualFile, true)
+                }
             }
         }
+}
+
+private fun getTutorialFileName(): String {
+    val appName = ApplicationNamesInfo.getInstance().fullProductName.lowercase()
+    return when {
+        appName.contains("intellij") -> "continue_tutorial.java"
+        appName.contains("pycharm") -> "continue_tutorial.py"
+        appName.contains("webstorm") -> "continue_tutorial.ts"
+        else -> "continue_tutorial.py" // Default to Python tutorial
     }
 }
 
@@ -101,7 +114,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 ServiceManager.getService(ContinueExtensionSettings::class.java)
             if (!settings.continueState.shownWelcomeDialog) {
                 settings.continueState.shownWelcomeDialog = true
-                // Open continue_tutorial.py
+                // Open continue_tutorial.java
                 showTutorial(project)
             }
 
