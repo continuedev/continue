@@ -338,11 +338,7 @@ declare global {
     capabilities?: ModelCapability;
 
     // IBM watsonx options
-    watsonxUrl?: string;
-    watsonxCreds?: string;
-    watsonxProjectId?: string;
-    watsonxStopToken?: string;
-    watsonxApiVersion?: string;
+    deploymentId?: string;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,
@@ -768,7 +764,8 @@ declare global {
     | "gemini"
     | "continue-proxy"
     | "deepinfra"
-    | "voyage";
+    | "voyage"
+    | "watsonx";
 
   export interface EmbedOptions {
     apiBase?: string;
@@ -779,6 +776,7 @@ declare global {
     apiVersion?: string;
     requestOptions?: RequestOptions;
     maxChunkSize?: number;
+    projectId?: string;
   }
 
   export interface EmbeddingsProviderDescription extends EmbedOptions {
