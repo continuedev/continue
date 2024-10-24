@@ -480,6 +480,61 @@ const commandsMap: (
         "pearai.pearAIChatView",
       ]);
     },
+    "pearai.toggleFullScreen": () => {
+      // Check if full screen is already open by checking open tabs
+      const fullScreenTab = getFullScreenTab();
+
+      // Check if the active editor is the Continue GUI View
+      if (fullScreenTab && fullScreenTab.isActive) {
+        //Full screen open and focused - close it
+        vscode.commands.executeCommand("workbench.action.closeActiveEditor"); //this will trigger the onDidDispose listener below
+        return;
+      }
+
+      if (fullScreenTab && fullScreenPanel) {
+        //Full screen open, but not focused - focus it
+        fullScreenPanel.reveal();
+        return;
+      }
+
+      //Full screen not open - open it
+      captureCommandTelemetry("openFullScreen");
+
+      // Close the sidebar.webviews
+      // vscode.commands.executeCommand("workbench.action.closeSidebar");
+      vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+      // vscode.commands.executeCommand("workbench.action.toggleZenMode");
+
+      //create the full screen panel
+      let panel = vscode.window.createWebviewPanel(
+        "pearai.pearAIChatViewFullscreen",
+        "PearAI",
+        vscode.ViewColumn.One,
+        {
+          retainContextWhenHidden: true,
+        },
+      );
+      fullScreenPanel = panel;
+
+      //Add content to the panel
+      panel.webview.html = sidebar.getSidebarContent(
+        extensionContext,
+        panel,
+        undefined,
+        undefined,
+        true,
+      );
+
+      //When panel closes, reset the webview and focus
+      panel.onDidDispose(
+        () => {
+          sidebar.resetWebviewProtocolWebview();
+          vscode.commands.executeCommand("pearai.focusContinueInput");
+        },
+        null,
+        extensionContext.subscriptions,
+      );
+    },
     "pearai.aiderMode": async () => {
       await handleAiderMode(core, sidebar, extensionContext);
     },
