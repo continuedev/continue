@@ -34,12 +34,6 @@ export function validateConfig(config: SerializedContinueConfig) {
           message: `Model at index ${index} has an invalid 'provider'.`,
         });
       }
-      if (typeof model.provider !== "string") {
-        errors.push({
-          fatal: true,
-          message: `Model at index ${index} has an invalid 'provider'.`,
-        });
-      }
     });
   }
 

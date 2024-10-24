@@ -9,7 +9,6 @@ import { streamLines } from "../diff/util.js";
 import {
   IDE,
   ILLM,
-  ModelDescription,
   ModelProvider,
   Position,
   Range,
