@@ -7,6 +7,7 @@ const {
   execCmdSync,
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
+const { copyConfigSchema } = require("./utils");
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
@@ -48,33 +49,8 @@ const exe = os === "win32" ? ".exe" : "";
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config_schema.json to config.json in docs and intellij
-  fs.copyFileSync(
-    "config_schema.json",
-    path.join("..", "..", "docs", "static", "schemas", "config.json"),
-  );
-  fs.copyFileSync(
-    "config_schema.json",
-    path.join(
-      "..",
-      "intellij",
-      "src",
-      "main",
-      "resources",
-      "config_schema.json",
-    ),
-  );
-  // Modify and copy for .continuerc.json
-  const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
-  schema.definitions.SerializedContinueConfig.properties.mergeBehavior = {
-    type: "string",
-    enum: ["merge", "overwrite"],
-    default: "merge",
-    title: "Merge behavior",
-    markdownDescription:
-      "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
-  };
-  fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
+  // Copy config schemas to docs and intellij
+  copyConfigSchema();
 
   if (!process.cwd().endsWith("vscode")) {
     // This is sometimes run from root dir instead (e.g. in VS Code tasks)
@@ -505,12 +481,11 @@ const exe = os === "win32" ? ".exe" : "";
 
     // onnx runtime bindngs
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
-    `bin/napi-v3/${os}/${arch}/${
-      os === "darwin"
-        ? "libonnxruntime.1.14.0.dylib"
-        : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+    `bin/napi-v3/${os}/${arch}/${os === "darwin"
+      ? "libonnxruntime.1.14.0.dylib"
+      : os === "linux"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -545,17 +520,15 @@ const exe = os === "win32" ? ".exe" : "";
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+    `out/node_modules/@esbuild/${target === "win32-arm64"
+      ? "esbuild.exe"
+      : target === "win32-x64"
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
-    `out/node_modules/@lancedb/vectordb-${
-      os === "win32"
-        ? "win32-x64-msvc"
-        : `${target}${os === "linux" ? "-gnu" : ""}`
+    `out/node_modules/@lancedb/vectordb-${os === "win32"
+      ? "win32-x64-msvc"
+      : `${target}${os === "linux" ? "-gnu" : ""}`
     }/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
