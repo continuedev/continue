@@ -25,7 +25,7 @@ export const HistoryHeader = () => {
           onClick={() => navigate("/")}
           className="ml-4 inline-block cursor-pointer"
         />
-        <h3 className="m-2 inline-block text-lg font-bold">History</h3>
+        <span className="m-2 inline-block text-base font-bold">Chat</span>
       </div>
       {/* {workspacePaths && workspacePaths.length > 0 && (
       <CheckDiv
