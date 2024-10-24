@@ -2427,7 +2427,8 @@
                 "voyage",
                 "nvidia",
                 "bedrock",
-                "sagemaker"
+                "sagemaker",
+                "vertex"
               ]
             },
             "model": {
@@ -2500,6 +2501,31 @@
                   }
                 },
                 "required": ["model"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["vertex"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "properties": {
+                  "projectId": {
+                    "markdownDescription": "The name of your vertexAI project"
+                  },
+                  "region": {
+                    "markdownDescription": "The region your vertexAI model is hosted in - typically central1",
+                    "default": "central1"
+                  },
+                  "model": {
+                    "default": "text-embedding-004"
+                  }
+                },
+                "required": ["projectId", "model", "region"]
               }
             }
           ]

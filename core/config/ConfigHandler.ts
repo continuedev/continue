@@ -86,44 +86,49 @@ export class ConfigHandler {
 
   private async fetchControlPlaneProfiles() {
     // Get the profiles and create their lifecycle managers
-    this.controlPlaneClient.listWorkspaces().then(async (workspaces) => {
-      this.profiles = this.profiles.filter(
-        (profile) => profile.profileId === "local",
-      );
-      workspaces.forEach((workspace) => {
-        const profileLoader = new ControlPlaneProfileLoader(
-          workspace.id,
-          workspace.name,
-          this.controlPlaneClient,
-          this.ide,
-          this.ideSettingsPromise,
-          this.writeLog,
-          this.reloadConfig.bind(this),
+    this.controlPlaneClient
+      .listWorkspaces()
+      .then(async (workspaces) => {
+        this.profiles = this.profiles.filter(
+          (profile) => profile.profileId === "local",
         );
-        this.profiles.push(new ProfileLifecycleManager(profileLoader));
+        workspaces.forEach((workspace) => {
+          const profileLoader = new ControlPlaneProfileLoader(
+            workspace.id,
+            workspace.name,
+            this.controlPlaneClient,
+            this.ide,
+            this.ideSettingsPromise,
+            this.writeLog,
+            this.reloadConfig.bind(this),
+          );
+          this.profiles.push(new ProfileLifecycleManager(profileLoader));
+        });
+
+        this.notifyProfileListeners(
+          this.profiles.map((profile) => profile.profileDescription),
+        );
+
+        // Check the last selected workspace, and reload if it isn't local
+        const workspaceId = await this.getWorkspaceId();
+        const lastSelectedWorkspaceIds =
+          this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+        const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
+        if (selectedWorkspaceId) {
+          this.selectedProfileId = selectedWorkspaceId;
+          await this.loadConfig();
+        } else {
+          // Otherwise we stick with local profile, and record choice
+          lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
+          this.globalContext.update(
+            "lastSelectedProfileForWorkspace",
+            lastSelectedWorkspaceIds,
+          );
+        }
+      })
+      .catch((e) => {
+        console.error(e);
       });
-
-      this.notifyProfileListeners(
-        this.profiles.map((profile) => profile.profileDescription),
-      );
-
-      // Check the last selected workspace, and reload if it isn't local
-      const workspaceId = await this.getWorkspaceId();
-      const lastSelectedWorkspaceIds =
-        this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
-      const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
-      if (selectedWorkspaceId) {
-        this.selectedProfileId = selectedWorkspaceId;
-        this.loadConfig();
-      } else {
-        // Otherwise we stick with local profile, and record choice
-        lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
-        this.globalContext.update(
-          "lastSelectedProfileForWorkspace",
-          lastSelectedWorkspaceIds,
-        );
-      }
-    });
   }
 
   async setSelectedProfile(profileId: string) {

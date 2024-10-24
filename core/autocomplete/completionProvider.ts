@@ -28,7 +28,7 @@ import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt.js";
-import { isOnlyPunctuationAndWhitespace } from "./filter.js";
+import { isOnlyWhitespace } from "./filter.js";
 import { AutocompleteLanguageInfo } from "./languages.js";
 import { postprocessCompletion } from "./postprocessing.js";
 import { AutocompleteSnippet } from "./ranking.js";
@@ -127,14 +127,6 @@ function formatExternalSnippet(
   ];
   return lines.join("\n");
 }
-
-let shownGptClaudeWarning = false;
-const nonAutocompleteModels = [
-  // "gpt",
-  // "claude",
-  "mistral",
-  "instruct",
-];
 
 export type GetLspDefinitionsFunction = (
   filepath: string,
@@ -268,7 +260,10 @@ export class CompletionProvider {
         const workspaceDirs = await this.ide.getWorkspaceDirs();
         let filepath = input.filepath;
         for (const workspaceDir of workspaceDirs) {
-          if (filepath.startsWith(workspaceDir)) {
+          const relativePath = path.relative(workspaceDir, filepath);
+          const relativePathBase = relativePath.split(path.sep).at(0);
+          const isInWorkspace = !path.isAbsolute(relativePath) && relativePathBase !== "..";
+          if (isInWorkspace) {
             filepath = path.relative(workspaceDir, filepath);
             break;
           }
@@ -355,8 +350,12 @@ export class CompletionProvider {
         return undefined;
       }
 
-      // Filter out unwanted results
-      if (isOnlyPunctuationAndWhitespace(outcome.completion)) {
+      /**
+       * This check is most likely not needed because we do trim the LLM output
+       * elsewhere in the code. That said, I'm not yet confident enough to
+       * remove this.
+       */
+      if (isOnlyWhitespace(outcome.completion)) {
         return undefined;
       }
 
@@ -384,11 +383,23 @@ export class CompletionProvider {
       // Wait 10 seconds, then assume it wasn't accepted
       outcome.accepted = false;
       logDevData("autocomplete", outcome);
-      const { prompt, completion, ...restOfOutcome } = outcome;
+      const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
       void Telemetry.capture(
         "autocomplete",
         {
-          ...restOfOutcome,
+          accepted: restOfOutcome.accepted,
+          cacheHit: restOfOutcome.cacheHit,
+          completionId: restOfOutcome.completionId,
+          completionOptions: restOfOutcome.completionOptions,
+          debounceDelay: restOfOutcome.debounceDelay,
+          fileExtension: restOfOutcome.filepath.split(".")?.slice(-1)[0],
+          maxPromptTokens: restOfOutcome.maxPromptTokens,
+          modelName: restOfOutcome.modelName,
+          modelProvider: restOfOutcome.modelProvider,
+          multilineCompletions: restOfOutcome.multilineCompletions,
+          time: restOfOutcome.time,
+          useRecentlyEdited: restOfOutcome.useRecentlyEdited,
+          useRootPathContext: restOfOutcome.useRootPathContext,
         },
         true,
       );
@@ -469,18 +480,6 @@ export class CompletionProvider {
       llm.model = TRIAL_FIM_MODEL;
     }
 
-    if (
-      !shownGptClaudeWarning &&
-      nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-      !llm.model.toLowerCase().includes("deepseek") &&
-      !llm.model.toLowerCase().includes("codestral")
-    ) {
-      shownGptClaudeWarning = true;
-      throw new Error(
-        `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
-      );
-    }
-
     // Prompt
     let fullPrefix =
       getRangeInString(fileContents, {
@@ -490,11 +489,10 @@ export class CompletionProvider {
 
     if (input.injectDetails) {
       const lines = fullPrefix.split("\n");
-      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-        lang.singleLineComment
-      } ${input.injectDetails
-        .split("\n")
-        .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
+      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${lang.singleLineComment
+        } ${input.injectDetails
+          .split("\n")
+          .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
     }
 
     const fullSuffix = getRangeInString(fileContents, {
@@ -515,17 +513,17 @@ export class CompletionProvider {
 
     let extrasSnippets = options.useOtherFiles
       ? ((await Promise.race([
-          this.getDefinitionsFromLsp(
-            filepath,
-            fullPrefix + fullSuffix,
-            fullPrefix.length,
-            this.ide,
-            lang,
-          ),
-          new Promise((resolve) => {
-            setTimeout(() => resolve([]), 100);
-          }),
-        ])) as AutocompleteSnippet[])
+        this.getDefinitionsFromLsp(
+          filepath,
+          fullPrefix + fullSuffix,
+          fullPrefix.length,
+          this.ide,
+          lang,
+        ),
+        new Promise((resolve) => {
+          setTimeout(() => resolve([]), 100);
+        }),
+      ])) as AutocompleteSnippet[])
       : [];
 
     const workspaceDirs = await this.ide.getWorkspaceDirs();
@@ -564,8 +562,8 @@ export class CompletionProvider {
       completionOptions,
       compilePrefixSuffix = undefined,
     } = options.template
-      ? { template: options.template, completionOptions: {} }
-      : getTemplateForModel(llm.model);
+        ? { template: options.template, completionOptions: {} }
+        : getTemplateForModel(llm.model);
 
     let prompt: string;
     const filename = getBasename(filepath);
@@ -662,14 +660,14 @@ export class CompletionProvider {
         () =>
           llm.supportsFim()
             ? llm.streamFim(prefix, suffix, {
-                ...completionOptions,
-                stop,
-              })
+              ...completionOptions,
+              stop,
+            })
             : llm.streamComplete(prompt, {
-                ...completionOptions,
-                raw: true,
-                stop,
-              }),
+              ...completionOptions,
+              raw: true,
+              stop,
+            }),
         multiline,
       );
 
