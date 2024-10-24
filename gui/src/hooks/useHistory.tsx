@@ -48,11 +48,14 @@ function useHistory(dispatch: Dispatch) {
     return result.status === "success" ? result.content : undefined;
   }
 
-  async function saveSession() {
+  async function saveSession(open_new_session = true) {
     if (state.history.length === 0) return;
 
     const stateCopy = { ...state };
-    dispatch(newSession());
+    if (open_new_session){
+      dispatch(newSession());
+      updateLastSessionId(stateCopy.sessionId);
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (
@@ -93,7 +96,6 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    updateLastSessionId(stateCopy.sessionId);
     return await ideMessenger.request("history/save", sessionInfo);
   }
 

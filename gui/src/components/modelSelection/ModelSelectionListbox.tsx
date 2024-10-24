@@ -1,5 +1,9 @@
 import { Transition } from "@headlessui/react";
-import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
+import {
+  CheckIcon,
+  ChevronUpDownIcon,
+  CubeIcon,
+} from "@heroicons/react/24/outline";
 import { Dispatch, Fragment, SetStateAction } from "react";
 import { Listbox } from "@headlessui/react";
 import styled from "styled-components";
@@ -111,7 +115,7 @@ function ModelSelectionListbox({
 }: ModelSelectionListboxProps) {
   return (
     <StyledListbox value={selectedProvider} onChange={setSelectedProvider}>
-      <div className="relative mt-1 mb-2">
+      <div className="relative mb-2 mt-1">
         <StyledListboxButton>
           <span className="flex items-center">
             {window.vscMediaUrl && selectedProvider.icon && (
@@ -141,25 +145,30 @@ function ModelSelectionListbox({
               <StyledListboxOption
                 selected={selectedProvider.title === option.title}
                 key={index}
-                className="relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
+                className="relative cursor-default select-none py-2 pl-10 pr-4 text-gray-400"
                 value={option}
               >
                 {({ selected }) => (
                   <>
-                    {window.vscMediaUrl && option.icon && (
-                      <img
-                        src={`${window.vscMediaUrl}/logos/${option.icon}`}
-                        height="24px"
-                        style={{ marginRight: "10px" }}
-                      />
+                    {option.title === "Autodetect" ? (
+                      <CubeIcon className="mr-2.5 h-6 w-6 text-gray-400" />
+                    ) : (
+                      window.vscMediaUrl &&
+                      option.icon && (
+                        <img
+                          src={`${window.vscMediaUrl}/logos/${option.icon}`}
+                          height="24px"
+                          style={{ marginRight: "10px" }}
+                        />
+                      )
                     )}
                     <span className="text-md">{option.title}</span>
 
-                    {selected ? (
+                    {selected && (
                       <span className="inset-y-0 ml-auto flex items-center pl-3">
                         <CheckIcon className="h-5 w-5" aria-hidden="true" />
                       </span>
-                    ) : null}
+                    )}
                   </>
                 )}
               </StyledListboxOption>
