@@ -319,13 +319,14 @@ function History() {
             borderBottom: `0.5px solid ${lightGray}`,
           }}
         >
-          <ArrowLeftIcon
-            width="1.2em"
-            height="1.2em"
-            onClick={() => navigate("/")}
-            className="inline-block ml-4 cursor-pointer"
-          />
-          <h3 className="text-lg font-bold m-2 inline-block">History</h3>
+          <div className="cursor-pointer hover:text-zinc-100 transition-colors duration-200" onClick={() => navigate("/")}>
+            <ArrowLeftIcon
+              width="1.2em"
+              height="1.2em"
+              className="inline-block ml-4"
+            />
+            <h3 className="text-lg font-bold m-2 inline-block">History</h3>
+          </div>
         </div>
         {/* {workspacePaths && workspacePaths.length > 0 && (
           <CheckDiv
