@@ -114,7 +114,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 ServiceManager.getService(ContinueExtensionSettings::class.java)
             if (!settings.continueState.shownWelcomeDialog) {
                 settings.continueState.shownWelcomeDialog = true
-                // Open continue_tutorial.java
+                // Open tutorial file
                 showTutorial(project)
             }
 
