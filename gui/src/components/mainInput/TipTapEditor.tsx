@@ -156,7 +156,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
   const useActiveFile = useSelector(selectUseActiveFile);
 
-  const { saveSession } = useHistory(dispatch);
+  const { saveSession, loadSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
   const [isEditorFocused, setIsEditorFocused] = useState(false);
@@ -804,6 +804,17 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
     [editorFocusedRef, props.isMainInput],
     !props.isMainInput,
+  );
+
+  useWebviewListener(
+    "focusContinueSessionId",
+    async (data) => {
+      if (!props.isMainInput) {
+        return;
+      }
+      loadSession(data.sessionId);
+    },
+    [loadSession, props.isMainInput],
   );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
