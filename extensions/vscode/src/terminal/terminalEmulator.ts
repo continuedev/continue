@@ -129,7 +129,6 @@ export class CapturedTerminal {
   private readonly writeEmitter: vscode.EventEmitter<string>;
 
   private splitByCommandsBuffer = "";
-  private readonly onCommandOutput: ((output: string) => void) | undefined;
 
   splitByCommandsListener(data: string) {
     // Split the output by commands so it can be sent to Continue Server
@@ -164,10 +163,8 @@ export class CapturedTerminal {
 
   constructor(
     options: { name: string } & Partial<vscode.ExtensionTerminalOptions>,
-    onCommandOutput?: (output: string) => void,
+    private readonly onCommandOutput?: (output: string) => void,
   ) {
-    this.onCommandOutput = onCommandOutput;
-
     // this.shellCmd = "bash"; // getDefaultShell();
     this.shellCmd = getDefaultShell();
 
