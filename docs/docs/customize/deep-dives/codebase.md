@@ -67,6 +67,8 @@ Whether to use re-ranking, which will allow initial selection of `nRetrieve` res
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
 
+Continue also supports a **global** `.continueignore` file that will be respected for all workspaces, which can be created at `~/.continue/.continueignore`.
+
 If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
 
 If you need to force a refresh of the index, reload the VS Code window with `cmd/ctrl + shift + p` + "Reload Window".
