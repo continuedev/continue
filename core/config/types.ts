@@ -542,6 +542,7 @@ declare global {
     | "folder"
     | "jira"
     | "postgres"
+    | "mssql"
     | "database"
     | "code"
     | "docs"
