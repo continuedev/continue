@@ -13,7 +13,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   slidingWindowSize: 500,
   maxSnippetPercentage: 0.6,
   recentlyEditedSimilarityThreshold: 0.3,
-  useCache: true,
+  useCache: false,
   onlyMyCode: true,
   useOtherFiles: true,
   useRecentlyEdited: true,
