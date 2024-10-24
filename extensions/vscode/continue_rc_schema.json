@@ -172,7 +172,6 @@
             "openai",
             "free-trial",
             "anthropic",
-            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -184,11 +183,9 @@
             "llama.cpp",
             "replicate",
             "gemini",
-            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
-            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
@@ -201,7 +198,8 @@
             "sambanova",
             "nvidia",
             "vllm",
-            "cerebras"
+            "cerebras",
+            "vertexai"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -849,53 +847,6 @@
             "properties": {
               "provider": {
                 "enum": [
-                  "anthropic-vertexai"
-                ]
-              }
-            },
-            "required": [
-              "provider"
-            ]
-          },
-          "then": {
-            "properties": {
-              "cacheBehavior": {
-                "title": "Caching Behavior",
-                "description": "Options for the prompt caching",
-                "properties": {
-                  "cacheSystemMessage": {
-                    "type": "boolean"
-                  },
-                  "cacheConversation": {
-                    "type": "boolean"
-                  }
-                }
-              },
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "claude-3-5-opus",
-                      "claude-3-5-sonnet",
-                      "claude-3-5-haiku",
-                      "claude-3-opus",
-                      "claude-3-sonnet",
-                      "claude-3-haiku"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": [
                   "cohere"
                 ]
               }
@@ -1003,44 +954,6 @@
                 ]
               }
             }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": [
-                  "gemini-vertexai"
-                ]
-              }
-            },
-            "required": [
-              "provider"
-            ]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "gemini-pro",
-                      "gemini-1.5-pro-latest",
-                      "gemini-1.5-pro",
-                      "gemini-1.5-flash-latest",
-                      "gemini-1.5-flash"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "projectId",
-              "region"
-            ]
           }
         },
         {
@@ -1260,7 +1173,7 @@
             "properties": {
               "provider": {
                 "enum": [
-                  "mistral-vertexai"
+                  "vertexai"
                 ]
               }
             },
@@ -1269,22 +1182,6 @@
             ]
           },
           "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "codestral",
-                      "mistral-nemo",
-                      "mistral-large"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            },
             "required": [
               "projectId",
               "region"
@@ -2725,7 +2622,7 @@
                 "nvidia",
                 "bedrock",
                 "sagemaker",
-                "vertex"
+                "vertexai"
               ]
             },
             "model": {
@@ -2822,7 +2719,7 @@
                 "properties": {
                   "provider": {
                     "enum": [
-                      "vertex"
+                      "vertexai"
                     ]
                   }
                 },

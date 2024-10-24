@@ -8,7 +8,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
  * [View the Vertex Text Embedding docs.](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings)
  */
 class VertexEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "vertex";
+  static providerName: EmbeddingsProviderName = "vertexai";
   declare apiBase: string;
 
 

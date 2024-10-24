@@ -612,7 +612,6 @@ type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
-  | "anthropic-vertexai"
   | "cohere"
   | "together"
   | "ollama"
@@ -625,9 +624,7 @@ type ModelProvider =
   | "lmstudio"
   | "llamafile"
   | "gemini"
-  | "gemini-vertexai"
   | "mistral"
-  | "mistral-vertexai"
   | "bedrock"
   | "bedrockimport"
   | "sagemaker"
@@ -648,7 +645,8 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
-  | "cerebras";
+  | "cerebras"
+  | "vertexai";
 
 
 export type ModelName =
@@ -823,7 +821,7 @@ export type EmbeddingsProviderName =
   | "nvidia"
   | "voyage"
   | "mistral"
-  | "vertex";
+  | "vertexai";
 
 export interface EmbedOptions {
   apiBase?: string;

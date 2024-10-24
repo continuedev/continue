@@ -72,4 +72,4 @@ See [here](../model-providers/top-level/gemini.md#embeddings-model) for instruct
 
 ### Vertex
 
-See [here](../model-providers/more/vertex.md#embeddings-model) for instructions on how to use Vertex for embeddings.
+See [here](../model-providers/top-level/vertexai.md#embeddings-model) for instructions on how to use Vertex for embeddings.
