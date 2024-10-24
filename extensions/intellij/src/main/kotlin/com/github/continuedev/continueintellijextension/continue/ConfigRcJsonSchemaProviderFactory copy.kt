@@ -22,7 +22,7 @@ class ConfigJsonSchemaProviderFactory : JsonSchemaProviderFactory {
 
 class ConfigJsonSchemaFileProvider : JsonSchemaFileProvider {
     override fun isAvailable(file: VirtualFile): Boolean {
-        return path.endsWith("/.continue/config.json") || file.name == ".continuerc.json"
+        return file.name == ".continuerc.json"
     }
 
     override fun getName(): String {
@@ -30,13 +30,13 @@ class ConfigJsonSchemaFileProvider : JsonSchemaFileProvider {
     }
 
     override fun getSchemaFile(): VirtualFile? {
-        ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("config_schema.json")
+        ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_rc_schema.json")
             .use { `is` ->
                 if (`is` == null) {
-                    throw IOException("Resource not found: config_schema.json")
+                    throw IOException("Resource not found: continue_rc_schema.json")
                 }
                 val content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
-                val filepath = Paths.get(getContinueGlobalPath(), "config_schema.json").toString()
+                val filepath = Paths.get(getContinueGlobalPath(), "continue_rc_schema.json").toString()
                 File(filepath).writeText(content)
                 return LocalFileSystem.getInstance().findFileByPath(filepath)
             }

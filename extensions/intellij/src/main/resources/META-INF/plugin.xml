@@ -15,6 +15,10 @@
         <ProviderFactory
                 implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
     </extensions>
+        <extensions defaultExtensionNs="JavaScript.JsonSchema">
+        <ProviderFactory
+                implementation="com.github.continuedev.continueintellijextension.continue.ConfigRcJsonSchemaProviderFactory"/>
+    </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
         <editorFactoryListener
