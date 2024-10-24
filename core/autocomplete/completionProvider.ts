@@ -111,6 +111,14 @@ const ERRORS_TO_IGNORE = [
   "unexpected server status",
 ];
 
+const LOCAL_PROVIDERS: ModelProvider[] = [
+  "ollama",
+  "lmstudio",
+  "llama.cpp",
+  "llamafile",
+  "text-gen-webui",
+];
+
 function formatExternalSnippet(
   filepath: string,
   snippet: string,
@@ -329,14 +337,6 @@ export class CompletionProvider {
         llm.completionOptions.temperature = 0.01;
       }
 
-      // Set model-specific options
-      const LOCAL_PROVIDERS: ModelProvider[] = [
-        "ollama",
-        "lmstudio",
-        "llama.cpp",
-        "llamafile",
-        "text-gen-webui",
-      ];
       if (
         !config.tabAutocompleteOptions?.maxPromptTokens &&
         LOCAL_PROVIDERS.includes(llm.providerName)
@@ -435,6 +435,33 @@ export class CompletionProvider {
       id: completionId,
       displayedAt: now,
     };
+  }
+
+  private isMultiline({
+    language,
+    prefix,
+    suffix,
+    selectedCompletionInfo,
+    multilineCompletions,
+    completeMultiline,
+  }: {
+    language: AutocompleteLanguageInfo;
+    prefix: string;
+    suffix: string;
+    selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"];
+    multilineCompletions: TabAutocompleteOptions["multilineCompletions"];
+    completeMultiline: boolean;
+  }) {
+    let langMultilineDecision = language.useMultiline?.({ prefix, suffix });
+    if (langMultilineDecision) {
+      return langMultilineDecision;
+    } else {
+      return (
+        !selectedCompletionInfo && // Only ever single-line if using intellisense selected value
+        multilineCompletions !== "never" &&
+        (multilineCompletions === "always" || completeMultiline)
+      );
+    }
   }
 
   async getTabCompletion(
@@ -643,16 +670,14 @@ export class CompletionProvider {
         ...lang.topLevelKeywords.map((word) => `\n${word}`),
       ];
 
-      let langMultilineDecision = lang.useMultiline?.({ prefix, suffix });
-      let multiline: boolean = false;
-      if (langMultilineDecision) {
-        multiline = langMultilineDecision;
-      } else {
-        multiline =
-          !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
-          options.multilineCompletions !== "never" &&
-          (options.multilineCompletions === "always" || completeMultiline);
-      }
+      const multiline = this.isMultiline({
+        multilineCompletions: options.multilineCompletions,
+        language: lang,
+        selectedCompletionInfo: input.selectedCompletionInfo,
+        prefix,
+        suffix,
+        completeMultiline,
+      });
 
       // Try to reuse pending requests if what the user typed matches start of completion
       const generator = this.generatorReuseManager.getGenerator(
@@ -694,13 +719,6 @@ export class CompletionProvider {
         fullStop,
       );
       charGenerator = stopAtStopTokens(charGenerator, stop);
-      charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
-        charGenerator,
-        prefix,
-        suffix,
-        filepath,
-        multiline,
-      );
 
       let lineGenerator = streamLines(charGenerator);
       lineGenerator = stopAtLines(lineGenerator, fullStop);
