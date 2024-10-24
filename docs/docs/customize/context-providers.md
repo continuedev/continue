@@ -346,7 +346,7 @@ By default, the `schema` filter is set to `public`, and the `sampleRows` is set 
 
 ### `@Database`
 
-Reference table schemas from Sqlite, Postgres, and MySQL databases.
+Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
 
 ```json title="config.json"
 {
@@ -364,6 +364,15 @@ Reference table schemas from Sqlite, Postgres, and MySQL databases.
               "database": "exampleDB",
               "password": "yourPassword",
               "port": 5432
+            }
+          }{
+            "name": "exampleMssql",
+            "connection_type": "mssql",
+            "connection": {
+              "user": "username",
+              "server": "localhost",
+              "database": "exampleDB",
+              "password": "yourPassword"
             }
           },
           {
