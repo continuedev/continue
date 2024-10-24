@@ -1,5 +1,4 @@
 import { ModelDescription, SerializedContinueConfig } from "../";
-import { isModelTrainedForTabAutocomplete } from "../autocomplete/completionProvider";
 import { Telemetry } from "../util/posthog";
 
 export interface ConfigValidationError {
@@ -47,7 +46,19 @@ export function validateConfig(config: SerializedContinueConfig) {
   // Validate tab autocomplete model(s)
   if (config.tabAutocompleteModel) {
     function validateTabAutocompleteModel(modelDescription: ModelDescription) {
-      if (!isModelTrainedForTabAutocomplete(modelDescription.model)) {
+      const modelName = modelDescription.model.toLowerCase();
+      const nonAutocompleteModels = [
+        // "gpt",
+        // "claude",
+        "mistral",
+        "instruct",
+      ];
+
+      if (
+        nonAutocompleteModels.some((m) => modelName.includes(m)) &&
+        !modelName.includes("deepseek") &&
+        !modelName.includes("codestral")
+      ) {
         errors.push({
           fatal: false,
           message: `${modelDescription.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,

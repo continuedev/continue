@@ -129,21 +129,6 @@ function formatExternalSnippet(
   return lines.join("\n");
 }
 
-const nonAutocompleteModels = [
-  // "gpt",
-  // "claude",
-  "mistral",
-  "instruct",
-];
-export function isModelTrainedForTabAutocomplete(model: string) {
-  return !(
-    nonAutocompleteModels.some((m) => model.includes(m)) &&
-    !model.toLowerCase().includes("deepseek") &&
-    !model.toLowerCase().includes("codestral")
-  );
-}
-let shownGptClaudeWarning = false;
-
 export type GetLspDefinitionsFunction = (
   filepath: string,
   contents: string,
@@ -479,12 +464,6 @@ export class CompletionProvider {
       llm.model !== TRIAL_FIM_MODEL
     ) {
       llm.model = TRIAL_FIM_MODEL;
-    }
-
-    if (!isModelTrainedForTabAutocomplete(llm.model)) {
-      shownGptClaudeWarning = true;
-      await this.ide.showToast("warning", `${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`);
-      return; // will not attempt autocomplete first time warning message shown
     }
 
     // Prompt
