@@ -839,10 +839,10 @@ export interface EmbedOptions {
   region?: string;
 
   // GCP and Watsonx options
-  deploymentId?: string;
+  projectId?: string;
 
   // Watsonx option
-  projectId?: string;
+  deploymentId?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
