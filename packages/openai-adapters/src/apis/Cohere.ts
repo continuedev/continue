@@ -93,6 +93,7 @@ export class CohereApi implements BaseLlmApi {
           message: {
             role: "assistant",
             content: data.text,
+            refusal: null,
           },
           index: 0,
         },
