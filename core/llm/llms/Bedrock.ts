@@ -111,7 +111,15 @@ class Bedrock extends BaseLLM {
         maxTokens: options.maxTokens,
         temperature: options.temperature,
         topP: options.topP,
-        stopSequences: options.stop?.filter((stop) => stop.trim() !== ""),
+        // TODO: The current approach selects the first 4 items from the list to comply with Bedrock's requirement
+        // of having at most 4 stop sequences, as per the AWS documentation:
+        // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_InferenceConfiguration.html
+        // However, it might be better to implement a strategy that dynamically selects the most appropriate stop sequences
+        // based on the context.
+        // TODO: Additionally, consider implementing a global exception handler for the providers to give users clearer feedback.
+        // For example, differentiate between client-side errors (4XX status codes) and server-side issues (5XX status codes),
+        // providing meaningful error messages to improve the user experience.
+        stopSequences: options.stop?.filter((stop) => stop.trim() !== "").slice(0, 4),
       },
     };
   }
