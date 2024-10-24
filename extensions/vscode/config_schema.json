@@ -1737,6 +1737,7 @@
                 "highlights",
                 "outline",
                 "postgres",
+                "mssql",
                 "code",
                 "currentFile",
                 "url",
@@ -1986,7 +1987,7 @@
                         "connection_type": {
                           "type": "string",
                           "description": "The type of database (e.g., 'postgres', 'mysql')",
-                          "enum": ["postgres", "mysql", "sqlite"]
+                          "enum": ["postgres", "mysql", "sqlite", "mssql"]
                         },
                         "connection": {
                           "type": "object",
@@ -2177,6 +2178,65 @@
                 }
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["mssql"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "server": {
+                    "title": "Host",
+                    "description": "Database host",
+                    "default": "localhost",
+                    "type": "string"
+                  },
+                  "port": {
+                    "title": "Port",
+                    "description": "Database port",
+                    "default": 5432,
+                    "type": "integer"
+                  },
+                  "user": {
+                    "title": "User",
+                    "description": "Database user",
+                    "default": "postgres",
+                    "type": "string"
+                  },
+                  "password": {
+                    "title": "Password",
+                    "description": "Database password",
+                    "type": "string"
+                  },
+                  "database": {
+                    "title": "Database",
+                    "description": "Database name",
+                    "default": "postgres",
+                    "type": "string"
+                  },
+                  "schema": {
+                    "title": "Schema",
+                    "description": "Database schema",
+                    "default": "public",
+                    "type": "string"
+                  },
+                  "sampleRows": {
+                    "title": "Sample Rows",
+                    "description": "Number of rows to sample from the database",
+                    "default": 3,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "required": ["host", "port", "user", "password", "database"]
           }
         },
         {
