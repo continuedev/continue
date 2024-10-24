@@ -1737,7 +1737,6 @@
                 "highlights",
                 "outline",
                 "postgres",
-                "mssql",
                 "code",
                 "currentFile",
                 "url",
