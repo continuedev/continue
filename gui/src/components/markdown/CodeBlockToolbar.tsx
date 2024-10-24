@@ -86,6 +86,7 @@ interface CodeBlockToolBarProps {
   language: string | undefined;
   isNextCodeBlock: boolean;
   filepath?: string;
+  range?: string;
 }
 
 const terminalLanguages = ["bash", "sh"];

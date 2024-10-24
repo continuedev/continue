@@ -57,9 +57,12 @@ async function resolveEditorContent(
       }
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
+        let meta = p.attrs.item.description.split(" ");
+        let relativePath = meta[0] || "";
+        let extName = relativePath.split(".").slice(-1)[0];
         const text =
-          "```" +
-          p.attrs.item.description +
+          "\n\n" +
+          "```" + extName + " " + p.attrs.item.description +
           "\n" +
           p.attrs.item.content +
           "\n```";

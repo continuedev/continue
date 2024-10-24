@@ -36,6 +36,7 @@ function PreWithToolbar(props: {
   language: string | null;
   codeBlockIndex: number;
   filepath?: string | undefined;
+  range?: string;
 }) {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
