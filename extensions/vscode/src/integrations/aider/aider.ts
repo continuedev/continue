@@ -3,7 +3,7 @@ import * as cp from "child_process";
 import { Core } from "core/core";
 import { ContinueGUIWebviewViewProvider } from "../../ContinueGUIWebviewViewProvider";
 import { getIntegrationTab } from "../../util/integrationUtils";
-import Aider from "core/llm/llms/aider";
+import Aider from "core/llm/llms/Aider";
 
 const PLATFORM = process.platform;
 const IS_WINDOWS = PLATFORM === "win32";

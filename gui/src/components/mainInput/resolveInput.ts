@@ -11,6 +11,8 @@ import { IIdeMessenger } from "../../context/IdeMessenger";
 import { setDirectoryItems } from "../../redux/slices/stateSlice";
 import { RootState, store } from "../../redux/store";
 
+const EXCLUDE_DIR_STRUCTURE = ["aider", "perplexity"];
+
 interface MentionAttrs {
   label: string;
   id: string;
@@ -117,9 +119,10 @@ async function resolveEditorContent(
   }
 
   const defaultModelTitle = (store.getState() as any).state.defaultModelTitle;
-  const isBareChatMode = defaultModelTitle?.toLowerCase().includes("aider");
+  const excludeDirStructure = defaultModelTitle?.toLowerCase() &&
+    EXCLUDE_DIR_STRUCTURE.some(term => defaultModelTitle.toLowerCase().includes(term));
 
-  if (!isBareChatMode) {
+  if (!excludeDirStructure) {
     const previousDirectoryItems = (store.getState() as any).state.directoryItems;
     // use directory structure
     const directoryItems = await ideMessenger.request("context/getContextItems", {
@@ -187,7 +190,7 @@ function findLastIndex<T>(
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
   const defaultModelTitle = (store.getState() as any).state.defaultModelTitle;
-  const isBareChatMode = defaultModelTitle?.toLowerCase().includes("aider");
+  const isAiderMode = defaultModelTitle?.toLowerCase().includes("aider");
   let text = "";
   const contextItems = [];
   let slashCommand = undefined;
@@ -195,9 +198,7 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
     if (child.type === "text") {
       text += text === "" ? child.text.trimStart() : child.text;
     } else if (child.type === "mention") {
-      // console.dir("MENTION")
-      // console.dir(child)
-      if (!isBareChatMode) {
+      if (!isAiderMode) {
         text +=
           typeof child.attrs.renderInlineAs === "string"
             ? child.attrs.renderInlineAs
