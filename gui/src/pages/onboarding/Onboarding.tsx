@@ -48,15 +48,9 @@ function Onboarding() {
   const { completeOnboarding } = useOnboarding();
 
   useEffect(() => {
-    if (!session) {
-        ideMessenger.request("getPearAuth", undefined).then((res) => {
-          const newSession = res.accessToken ? true : false;
-          setSession(newSession)
-          if (newSession) {
-            setLocalStorage("onboardingStatus", "Completed");
-            completeOnboarding()
-          }
-      });
+    if (window.isPearOverlay) {
+      // Overlay can skip login step because user will login from sidebar
+      navigate("/")
     }
   }, [])
 
