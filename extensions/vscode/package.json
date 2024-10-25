@@ -280,6 +280,12 @@
         "category": "Continue",
         "title": "Docs Force Re-Index",
         "group": "Continue"
+      },
+      {
+        "command": "continue.focusContinueSessionId",
+        "category": "Continue",
+        "title": "Focus Continue Chat",
+        "group": "Continue"
       }
     ],
     "keybindings": [
