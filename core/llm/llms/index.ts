@@ -33,6 +33,7 @@ import Mistral from "./Mistral";
 import MistralVertexAI from "./MistralVertexAI";
 import Mock from "./Mock";
 import Msty from "./Msty";
+import Nebius from "./Nebius";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -87,6 +88,7 @@ const LLMs = [
   Mock,
   Cerebras,
   Asksage,
+  Nebius,
 ];
 
 export async function llmFromDescription(

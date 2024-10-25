@@ -202,7 +202,8 @@
             "nvidia",
             "vllm",
             "cerebras",
-            "askSage"
+            "askSage",
+            "nebius"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -471,7 +472,8 @@
                   "replicate",
                   "together",
                   "cloudflare",
-                  "sambanova"
+                  "sambanova",
+                  "nebius"
                 ]
               }
             },
@@ -2784,7 +2786,8 @@
                 "nvidia",
                 "bedrock",
                 "sagemaker",
-                "vertex"
+                "vertex",
+                "nebius"
               ]
             },
             "model": {
