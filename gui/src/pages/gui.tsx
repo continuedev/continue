@@ -58,7 +58,7 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
-const TopGuiDiv = styled.div`
+export const TopGuiDiv = styled.div`
   overflow-y: scroll;
 
   scrollbar-width: none; /* Firefox */
@@ -71,7 +71,7 @@ const TopGuiDiv = styled.div`
   height: 100%;
 `;
 
-const StopButton = styled.div`
+export const StopButton = styled.div`
   width: fit-content;
   margin-right: auto;
   margin-left: auto;
@@ -88,7 +88,7 @@ const StopButton = styled.div`
   cursor: pointer;
 `;
 
-const StepsDiv = styled.div`
+export const StepsDiv = styled.div`
   padding-bottom: 8px;
   position: relative;
   background-color: transparent;
@@ -105,7 +105,7 @@ const StepsDiv = styled.div`
   }
 `;
 
-const NewSessionButton = styled.div`
+export const NewSessionButton = styled.div`
   width: fit-content;
   margin-right: auto;
   margin-left: 6px;
@@ -125,7 +125,7 @@ const NewSessionButton = styled.div`
   cursor: pointer;
 `;
 
-function fallbackRender({ error, resetErrorBoundary }) {
+export function fallbackRender({ error, resetErrorBoundary }) {
   return (
     <div
       role="alert"

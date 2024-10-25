@@ -59,77 +59,8 @@ import {
   import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
   import { isBareChatMode, isPerplexityMode } from '../../util/bareChatMode';
   import { Badge } from "../../components/ui/badge";
+  import { TopGuiDiv, StopButton, StepsDiv, NewSessionButton, fallbackRender } from "../../pages/gui";
 
-const TopGuiDiv = styled.div`
-  overflow-y: scroll;
-  scrollbar-width: none;
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  height: 100%;
-`;
-
-const StopButton = styled.div`
-  width: fit-content;
-  margin-right: auto;
-  margin-left: auto;
-  font-size: ${getFontSize() - 2}px;
-  border: 0.5px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  padding: 4px 8px;
-  background: ${vscBackground};
-  z-index: 50;
-  color: var(--vscode-textPreformat-foreground);
-  cursor: pointer;
-`;
-
-const StepsDiv = styled.div`
-  padding-bottom: 8px;
-  position: relative;
-  background-color: transparent;
-  & > * {
-    position: relative;
-  }
-  .thread-message {
-    margin: 16px 8px 0 8px;
-  }
-  .thread-message:not(:first-child) {
-    border-top: 1px solid ${lightGray}22;
-  }
-`;
-
-const NewSessionButton = styled.div`
-  width: fit-content;
-  margin-right: auto;
-  margin-left: 6px;
-  margin-top: 2px;
-  margin-bottom: 8px;
-  font-size: ${getFontSize() - 2}px;
-  border-radius: ${defaultBorderRadius};
-  padding: 2px 6px;
-  color: ${lightGray};
-  &:hover {
-    background-color: ${lightGray}33;
-    color: ${vscForeground};
-  }
-  cursor: pointer;
-`;
-
-function fallbackRender({ error, resetErrorBoundary }) {
-  return (
-    <div
-      role="alert"
-      className="px-2"
-      style={{ backgroundColor: vscBackground }}
-    >
-      <p>Something went wrong:</p>
-      <pre style={{ color: "red" }}>{error.message}</pre>
-      <div className="text-center">
-        <Button onClick={resetErrorBoundary}>Restart</Button>
-      </div>
-    </div>
-  );
-}
 
 function AiderGUI() {
   const posthog = usePostHog();
