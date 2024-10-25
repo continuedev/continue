@@ -1,5 +1,6 @@
 import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyticsProvider.js";
 import type { LLMOptions, ModelProvider } from "../../../index.js";
+import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 
 class ContinueProxy extends OpenAI {
@@ -11,6 +12,11 @@ class ContinueProxy extends OpenAI {
   static providerName: ModelProvider = "continue-proxy";
   static defaultOptions: Partial<LLMOptions> = {
     useLegacyCompletionsEndpoint: false,
+    requestOptions: {
+      headers: {
+        "x-continue-unique-id": Telemetry.uniqueId,
+      },
+    },
   };
 
   supportsCompletions(): boolean {

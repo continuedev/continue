@@ -78,7 +78,7 @@ function OnboardingLocalTab() {
       OLLAMA_CHECK_INTERVAL_MS,
     );
 
-    fetchDownloadedModels();
+    void fetchDownloadedModels();
 
     return () => clearInterval(intervalId);
   }, []);
@@ -86,7 +86,7 @@ function OnboardingLocalTab() {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-col">
-        <p className="text-lg font-bold leading-tight mb-2">Install Ollama</p>
+        <p className="mb-2 text-lg font-bold leading-tight">Install Ollama</p>
         <OllamaStatus isOllamaConnected={isOllamaConnected} />
       </div>
 

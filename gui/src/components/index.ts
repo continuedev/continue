@@ -172,6 +172,7 @@ export const ButtonSubtext = styled.span`
   margin-top: 0;
   text-align: center;
   color: ${lightGray};
+  font-size: 0.75rem;
 `;
 
 export const CustomScrollbarDiv = styled.div`
@@ -304,12 +305,12 @@ export const Label = styled.label<{ fontSize?: number }>`
 `;
 
 const spin = keyframes`
-  from {
-    -webkit-transform: rotate(0deg);
-  }
-  to {
-    -webkit-transform: rotate(360deg);
-  }
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
 `;
 
 export const Loader = styled.div`
@@ -362,9 +363,10 @@ export const HeaderButton = styled.button<{
   &:hover {
     background-color: ${({ inverted, hoverBackgroundColor }) =>
       typeof inverted === "undefined" || inverted
-        ? hoverBackgroundColor ?? vscInputBackground
+        ? (hoverBackgroundColor ?? vscInputBackground)
         : "transparent"};
   }
+
   display: flex;
   align-items: center;
   justify-content: center;

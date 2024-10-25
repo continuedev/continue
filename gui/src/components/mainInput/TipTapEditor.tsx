@@ -16,7 +16,14 @@ import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
-import { useContext, useEffect, useRef, useState } from "react";
+import {
+  KeyboardEvent,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { v4 } from "uuid";
@@ -37,10 +44,7 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import {
-  consumeMainEditorContent,
-  setEditingContextItemAtIndex,
-} from "../../redux/slices/stateSlice";
+import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
@@ -48,6 +52,7 @@ import {
   isMetaEquivalentKeyPressed,
   isWebEnvironment,
 } from "../../util";
+import { handleMetaKeyPressJetBrains } from "../../util/handleMetaKeyPressJetBrains";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -502,6 +507,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         }
       }
     },
+    editable: !active,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
@@ -531,81 +537,101 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 
-  useEffect(() => {
-    if (isJetBrains()) {
-      // This is only for VS Code .ipynb files
-      return;
-    }
+  /**
+   * This handles various issues with meta key actions
+   * - In JetBrains, when using "off screen rendering", there is a bug where using the meta key to
+   *   highlight code using arrow keys is not working
+   * - In VS Code, while working with .ipynb files there is a problem where copy/paste/cut will affect
+   *   the actual notebook cells, even when performing them in our GUI
+   */
+  const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
+    if (!editor || !editorFocusedRef.current) return;
 
-    if (isWebEnvironment()) {
-      const handleKeyDown = async (event: KeyboardEvent) => {
-        if (!editor || !editorFocusedRef.current) return;
-        if ((event.metaKey || event.ctrlKey) && event.key === "x") {
-          // Cut
-          const selectedText = editor.state.doc.textBetween(
-            editor.state.selection.from,
-            editor.state.selection.to,
-          );
-          navigator.clipboard.writeText(selectedText);
-          editor.commands.deleteSelection();
-          event.preventDefault();
-        } else if ((event.metaKey || event.ctrlKey) && event.key === "c") {
-          // Copy
-          const selectedText = editor.state.doc.textBetween(
-            editor.state.selection.from,
-            editor.state.selection.to,
-          );
-          navigator.clipboard.writeText(selectedText);
-          event.preventDefault();
-        } else if ((event.metaKey || event.ctrlKey) && event.key === "v") {
-          // Paste
-          event.preventDefault(); // Prevent default paste behavior
-          const clipboardText = await navigator.clipboard.readText();
-          editor.commands.insertContent(clipboardText);
+    setActiveKey(e.key);
+
+    if (isMetaEquivalentKeyPressed(e)) {
+      const { key, code } = e;
+      const isWebEnv = isWebEnvironment();
+      const text = editor.state.doc.textBetween(
+        editor.state.selection.from,
+        editor.state.selection.to,
+      );
+
+      if (isJetBrains()) {
+        if (code === "KeyJ") {
+          e.stopPropagation();
+          e.preventDefault();
+          setIgnoreHighlightedCode(true);
+          setTimeout(() => {
+            setIgnoreHighlightedCode(false);
+          }, 100);
         }
-      };
 
-      document.addEventListener("keydown", handleKeyDown);
+        if (isMetaEquivalentKeyPressed(e)) {
+          e.stopPropagation();
+          e.preventDefault();
+          handleMetaKeyPressJetBrains(e, text, editor.commands.setContent);
+        }
+      } else {
+        if (code === "KeyL") {
+          e.stopPropagation();
+          e.preventDefault();
+          setIgnoreHighlightedCode(true);
+          setTimeout(() => {
+            setIgnoreHighlightedCode(false);
+          }, 100);
+          return;
+        }
 
-      return () => {
-        document.removeEventListener("keydown", handleKeyDown);
-      };
-    }
-
-    const handleKeyDown = async (event: KeyboardEvent) => {
-      if (!editor || !editorFocusedRef.current) return;
-
-      if (event.metaKey && event.key === "x") {
-        document.execCommand("cut");
-        event.stopPropagation();
-        event.preventDefault();
-      } else if (event.metaKey && event.key === "v") {
-        document.execCommand("paste");
-        event.stopPropagation();
-        event.preventDefault();
-      } else if (event.metaKey && event.key === "c") {
-        document.execCommand("copy");
-        event.stopPropagation();
-        event.preventDefault();
+        switch (key) {
+          case "x":
+            e.stopPropagation();
+            e.preventDefault();
+            if (isWebEnv) {
+              await navigator.clipboard.writeText(text);
+              editor.commands.deleteSelection();
+            } else {
+              document.execCommand("cut");
+            }
+            break;
+          case "c":
+            e.stopPropagation();
+            e.preventDefault();
+            if (isWebEnv) {
+              await navigator.clipboard.writeText(text);
+            } else {
+              document.execCommand("copy");
+            }
+            break;
+          case "v":
+            e.stopPropagation();
+            e.preventDefault();
+            if (isWebEnv) {
+              const clipboardText = await navigator.clipboard.readText();
+              editor.commands.insertContent(clipboardText);
+            } else {
+              document.execCommand("paste");
+            }
+            break;
+        }
       }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [editor, editorFocusedRef]);
-
-  useEffect(() => {
-    if (mainEditorContent && editor) {
-      editor.commands.setContent(mainEditorContent);
-      dispatch(consumeMainEditorContent());
+    } else if (e.key === "Escape") {
+      e.stopPropagation();
+      e.preventDefault();
+      ideMessenger.post("focusEditor", undefined);
     }
-  }, [mainEditorContent, editor]);
+  };
+
+  const handleKeyUp = () => {
+    setActiveKey(null);
+  };
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
+      if (active) {
+        return;
+      }
+
       const json = editor.getJSON();
 
       // Don't do anything if input box is empty
@@ -626,28 +652,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
   const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (
-        isMetaEquivalentKeyPressed(event) &&
-        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyL")
-      ) {
-        setIgnoreHighlightedCode(true);
-        setTimeout(() => {
-          setIgnoreHighlightedCode(false);
-        }, 100);
-      } else if (event.key === "Escape") {
-        ideMessenger.post("focusEditor", undefined);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
 
   // Re-focus main input after done generating
   useEffect(() => {
@@ -828,14 +832,24 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
+  const insertCharacterWithWhitespace = useCallback(
+    (char: string) => {
+      const text = editor.getText();
+      if (!text.endsWith(char)) {
+        if (text.length > 0 && !text.endsWith(" ")) {
+          editor.commands.insertContent(` ${char}`);
+        } else {
+          editor.commands.insertContent(char);
+        }
+      }
+    },
+    [editor],
+  );
+
   return (
     <InputBoxDiv
-      onKeyDown={(e) => {
-        setActiveKey(e.key);
-      }}
-      onKeyUp={(e) => {
-        setActiveKey(null);
-      }}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
       className="cursor-text"
       onClick={() => {
         editor && editor.commands.focus();
@@ -888,16 +902,8 @@ function TipTapEditor(props: TipTapEditorProps) {
       <InputToolbar
         activeKey={activeKey}
         hidden={shouldHideToolbar && !props.isMainInput}
-        onAddContextItem={() => {
-          if (!editor.getText().endsWith("@")) {
-            editor.commands.insertContent("@");
-          }
-        }}
-        onAddSlashCommand={() => {
-          if (!editor.getText().endsWith("/")) {
-            editor.commands.insertContent("/");
-          }
-        }}
+        onAddContextItem={() => insertCharacterWithWhitespace("@")}
+        onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
         onEnter={onEnterRef.current}
         onImageFileSelected={(file) => {
           handleImageFile(file).then(([img, dataUrl]) => {
@@ -909,6 +915,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             });
           });
         }}
+        disabled={active}
       />
 
       {showDragOverMsg &&

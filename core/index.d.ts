@@ -48,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+  ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -464,7 +464,7 @@ export interface IdeSettings {
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
-  getDiff(): Promise<string>;
+  getDiff(includeUnstaged: boolean): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
@@ -500,7 +500,7 @@ export interface IDE {
   getCurrentFile(): Promise<string | undefined>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
-  subprocess(command: string): Promise<[string, string]>;
+  subprocess(command: string, cwd?: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
@@ -563,7 +563,7 @@ type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
-  | "locals"
+  | "debugger"
   | "open"
   | "google"
   | "search"
@@ -612,6 +612,7 @@ type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
+  | "anthropic-vertexai"
   | "cohere"
   | "together"
   | "ollama"
@@ -624,7 +625,9 @@ type ModelProvider =
   | "lmstudio"
   | "llamafile"
   | "gemini"
+  | "gemini-vertexai"
   | "mistral"
+  | "mistral-vertexai"
   | "bedrock"
   | "bedrockimport"
   | "sagemaker"
@@ -644,7 +647,9 @@ type ModelProvider =
   | "sambanova"
   | "nvidia"
   | "vllm"
-  | "mock";
+  | "mock"
+  | "cerebras";
+
 
 export type ModelName =
   | "AUTODETECT"
@@ -683,6 +688,9 @@ export type ModelName =
   // Llama 3
   | "llama3-8b"
   | "llama3-70b"
+  // Llama 3.1
+  | "llama3.1-8b"
+  | "llama3.1-70b"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -801,6 +809,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "sagemaker"
   | "bedrock"
   | "huggingface-tei"
   | "transformers.js"
@@ -813,7 +822,8 @@ export type EmbeddingsProviderName =
   | "deepinfra"
   | "nvidia"
   | "voyage"
-  | "mistral";
+  | "mistral"
+  | "vertex";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -830,6 +840,9 @@ export interface EmbedOptions {
 
   // AWS and GCP Options
   region?: string;
+
+  // GCP Options
+  projectId?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -953,6 +966,11 @@ interface ExperimentalConfig {
   readResponseTTS?: boolean;
 
   /**
+   * Prompt the user's LLM for a title given the current chat content
+   */
+  getChatTitles?: boolean;
+
+  /**
    * If set to true, we will attempt to pull down and install an instance of Chromium
    * that is compatible with the current version of Puppeteer.
    * This is needed to crawl a large number of documentation sites that are dynamically rendered.
@@ -1027,9 +1045,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

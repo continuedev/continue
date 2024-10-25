@@ -31,7 +31,7 @@ export class Telemetry {
       });
 
       if (sendToTeam) {
-        TeamAnalytics.capture(event, properties);
+        void TeamAnalytics.capture(event, properties);
       }
     } catch (e) {
       console.error(`Failed to capture event: ${e}`);

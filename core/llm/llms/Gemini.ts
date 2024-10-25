@@ -190,16 +190,10 @@ class Gemini extends BaseLLM {
         if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
           // Incrementally stream the content to make it smoother
           const content = data.candidates[0].content.parts[0].text;
-          const words = content.split(/(\s+)/);
-          const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
-          while (words.length > 0) {
-            const wordsToYield = Math.min(3, words.length);
-            yield {
-              role: "assistant",
-              content: words.splice(0, wordsToYield).join(""),
-            };
-            await delay(delaySeconds);
-          }
+          yield {
+            role: "assistant",
+            content,
+          };
         } else {
           // Handle the case where the expected data structure is not found
           console.warn("Unexpected response format:", data);

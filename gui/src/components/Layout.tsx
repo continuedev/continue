@@ -1,18 +1,21 @@
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius, vscInputBackground } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useConfigError } from "../redux/hooks";
+import { setShowDialog, updateApplyState } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import PostHogPageView from "./PosthogPageView";
-import Footer from "./Footer";
-import { updateApplyState, setShowDialog } from "../redux/slices/uiStateSlice";
+import { ROUTES } from "../util/navigation";
 import TextDialog from "./dialogs";
-import { useOnboardingCard, isNewUserOnboarding } from "./OnboardingCard";
+import Footer from "./Footer";
+import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
+import PostHogPageView from "./PosthogPageView";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -60,6 +63,13 @@ const Layout = () => {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
+  const { pathname } = useLocation();
+
+  const configError = useConfigError();
+
+  const hasFatalErrors = useMemo(() => {
+    return configError?.some((error) => error.fatal);
+  }, [configError]);
 
   const dialogMessage = useSelector(
     (state: RootState) => state.uiState.dialogMessage,
@@ -116,6 +126,18 @@ const Layout = () => {
   );
 
   useWebviewListener(
+    "navigateTo",
+    async (data) => {
+      if (data.toggle && location.pathname === data.path) {
+        navigate("/");
+      } else {
+        navigate(data.path);
+      }
+    },
+    [location, navigate],
+  );
+
+  useWebviewListener(
     "incrementFtc",
     async () => {
       const u = getLocalStorage("ftc");
@@ -162,39 +184,56 @@ const Layout = () => {
   }, [location]);
 
   return (
-    <LayoutTopDiv>
-      <div
-        style={{
-          scrollbarGutter: "stable both-edges",
-          minHeight: "100%",
-          display: "grid",
-          gridTemplateRows: "1fr auto",
-        }}
-      >
-        <TextDialog
-          showDialog={showDialog}
-          onEnter={() => {
-            dispatch(setShowDialog(false));
+    <LastSessionProvider>
+      <LayoutTopDiv>
+        <div
+          style={{
+            scrollbarGutter: "stable both-edges",
+            minHeight: "100%",
+            display: "grid",
+            gridTemplateRows: "1fr auto",
           }}
-          onClose={() => {
-            dispatch(setShowDialog(false));
-          }}
-          message={dialogMessage}
-        />
+        >
+          <TextDialog
+            showDialog={showDialog}
+            onEnter={() => {
+              dispatch(setShowDialog(false));
+            }}
+            onClose={() => {
+              dispatch(setShowDialog(false));
+            }}
+            message={dialogMessage}
+          />
 
-        <GridDiv>
-          <PostHogPageView />
-          <Outlet />
-          <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
-          <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
-          <Footer />
-        </GridDiv>
-      </div>
-      <div
-        style={{ fontSize: `${getFontSize() - 4}px` }}
-        id="tooltip-portal-div"
-      />
-    </LayoutTopDiv>
+          <GridDiv>
+            <PostHogPageView />
+            <Outlet />
+
+            {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
+              <div
+                className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+                role="alert"
+                onClick={() => navigate(ROUTES.CONFIG_ERROR)}
+              >
+                <strong className="font-bold">Error!</strong>{" "}
+                <span className="block sm:inline">
+                  Could not load config.json
+                </span>
+                <div className="mt-2 underline">Learn More</div>
+              </div>
+            )}
+
+            <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
+            <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
+            <Footer />
+          </GridDiv>
+        </div>
+        <div
+          style={{ fontSize: `${getFontSize() - 4}px` }}
+          id="tooltip-portal-div"
+        />
+      </LayoutTopDiv>
+    </LastSessionProvider>
   );
 };
 

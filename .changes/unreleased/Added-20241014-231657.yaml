@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Discord context provider
+time: 2024-10-14T23:16:57.089953-07:00

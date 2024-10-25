@@ -14,7 +14,6 @@ const watsonxConfig = {
   },
 };
 class WatsonX extends BaseLLM {
-  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);

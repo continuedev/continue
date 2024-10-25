@@ -58,7 +58,7 @@ Reference all of the changes you've made to your current branch. This is useful 
 
 ### `@Terminal`
 
-Reference the contents of your IDE's terminal.
+Reference the last command you ran in your IDE's terminal and its output.
 
 ```json title="config.json"
 {
@@ -100,6 +100,20 @@ Reference the contents of all of your open files. Set `onlyPinned` to `true` to 
       "params": {
         "onlyPinned": true
       }
+    }
+  ]
+}
+```
+
+### `@Web`
+
+Reference relevant pages from across the web, automatically determined from your input.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "web"
     }
   ]
 }
@@ -315,6 +329,36 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 
 You can override this query by setting the `issueQuery` parameter.
 
+### `@Discord`
+
+Reference the messages in a Discord channel.
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "discord",
+      "params": {
+        "discordKey": "bot token",
+        "guildId": "1234567890",
+        "channels": [
+          {
+            "id": "123456",
+            "name": "example-channel"
+          },
+          {
+            "id": "678901",
+            "name": "example-channel-2"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+Make sure to include your own [Bot Token](https://discord.com/developers/applications), and join it to your related server . If you want more granular control over which channels are searched, you can specify a list of channel IDs to search in. If you don't want to specify any channels, just include the guild id(Server ID) and all channels will be included. The provider only reads text channels.
+
 ### `@Postgres`
 
 Reference the schema of a table, and some sample rows
@@ -388,7 +432,7 @@ Available connection types:
 - `mysql`
 - `sqlite`
 
-### `@Locals`
+### `@Debugger`
 
 Reference the contents of the local variables in the debugger.
 
@@ -396,7 +440,7 @@ Reference the contents of the local variables in the debugger.
 {
   "contextProviders": [
     {
-      "name": "locals",
+      "name": "debugger",
       "params": {
         "stackDepth": 3
       }

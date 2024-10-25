@@ -13,7 +13,6 @@ const openGUITypes: (keyof ToWebviewProtocol)[] = [
 
 export const useNavigationListener = () => {
   const navigate = useNavigate();
-  const location = useLocation();
 
   for (const messageType of openGUITypes) {
     useWebviewListener(
@@ -34,17 +33,4 @@ export const useNavigationListener = () => {
       [navigate],
     );
   }
-
-  useWebviewListener(
-    "viewHistory",
-    async () => {
-      // Toggle the history page / main page
-      if (location.pathname === "/history") {
-        navigate("/");
-      } else {
-        navigate("/history");
-      }
-    },
-    [location, navigate],
-  );
 };

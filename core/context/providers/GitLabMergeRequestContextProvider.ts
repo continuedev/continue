@@ -64,9 +64,7 @@ const getSubprocess = async (extras: ContextProviderExtras) => {
   const workingDir = await extras.ide.getWorkspaceDirs().then(trimFirstElement);
 
   return (command: string) =>
-    extras.ide
-      .subprocess(`cd ${workingDir}; ${command}`)
-      .then(trimFirstElement);
+    extras.ide.subprocess(command, workingDir).then(trimFirstElement);
 };
 
 class GitLabMergeRequestContextProvider extends BaseContextProvider {
@@ -269,7 +267,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
       if (ex instanceof AxiosError) {
         if (ex.response) {
           const errorMessage = ex.response?.data
-            ? ex.response.data.message ?? JSON.stringify(ex.response?.data)
+            ? (ex.response.data.message ?? JSON.stringify(ex.response?.data))
             : `${ex.response.status}: ${ex.response.statusText}`;
           content += `GitLab Error: ${errorMessage}`;
         } else {
