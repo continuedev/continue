@@ -30,8 +30,7 @@ export async function showTutorial() {
 }
 
 export class VsCodeWebviewProtocol
-  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol>
-{
+  implements IMessenger<FromWebviewProtocol, ToWebviewProtocol> {
   listeners = new Map<
     keyof FromWebviewProtocol,
     ((message: Message) => any)[]
@@ -125,7 +124,7 @@ export class VsCodeWebviewProtocol
             message = message.split("\n").filter((l: string) => l !== "")[1];
             try {
               message = JSON.parse(message).message;
-            } catch {}
+            } catch { }
             if (message.includes("exceeded")) {
               message +=
                 " To keep using Continue, you can set up a local model or use your own API key.";
@@ -179,7 +178,7 @@ export class VsCodeWebviewProtocol
     });
   }
 
-  constructor(private readonly reloadConfig: () => void) {}
+  constructor(private readonly reloadConfig: () => void) { }
   invoke<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
