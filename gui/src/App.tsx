@@ -21,6 +21,7 @@ import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 import Inventory from "./pages/inventory";
 import AiderGUI from "./integrations/aider/aidergui";
+import AiderOnboarding from "./integrations/aider/aiderOnboarding";
 import PerplexityGUI from "./integrations/perplexity/perplexitygui";
 
 
@@ -48,6 +49,10 @@ const router = createMemoryRouter(
         {
           path: "/aiderMode",
           element: <AiderGUI />,
+        },
+        {
+          path: "/aiderOnboarding",
+          element: <AiderOnboarding />,
         },
         {
           path: "/perplexityMode",

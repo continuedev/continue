@@ -66,6 +66,13 @@ function AiderGUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const hasSeenOnboarding = getLocalStorage('hasSeenAiderOnboarding');
+    if (!hasSeenOnboarding) {
+      navigate('./aiderOnboarding');
+    }
+  }, [navigate]);
   const ideMessenger = useContext(IdeMessengerContext);
   const isBetaAccess = useSelector((state: RootState) => state.state.config.isBetaAccess);
 
