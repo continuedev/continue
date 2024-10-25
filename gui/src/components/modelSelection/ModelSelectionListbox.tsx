@@ -79,13 +79,13 @@ export const StyledListboxOptions = styled(Listbox.Options)`
   }
 `;
 
-export const StyledListboxOption = styled(Listbox.Option)<{
+export const StyledListboxOption = styled(Listbox.Option) <{
   selected: boolean;
 }>`
   background-color: ${({ selected }) =>
     selected ? vscListActiveBackground : vscInputBackground};
   cursor: pointer;
-  padding: 6px 8px;
+  padding: 6px 8px 6px 12px;
 
   display: flex;
   gap: 8px;
@@ -121,11 +121,10 @@ function ModelSelectionListbox({
             {window.vscMediaUrl && selectedProvider.icon && (
               <img
                 src={`${window.vscMediaUrl}/logos/${selectedProvider.icon}`}
-                height="24px"
-                style={{ marginRight: "10px" }}
+                className="object-contain w-4 h-4 object-center mr-3"
               />
             )}
-            <span className="text-md">{selectedProvider.title}</span>
+            <span className="text-xs">{selectedProvider.title}</span>
           </span>
           <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
             <ChevronUpDownIcon
@@ -145,24 +144,23 @@ function ModelSelectionListbox({
               <StyledListboxOption
                 selected={selectedProvider.title === option.title}
                 key={index}
-                className="relative cursor-default select-none py-2 pl-10 pr-4 text-gray-400"
+                className="relative cursor-default select-none py-2 pr-4 text-gray-400"
                 value={option}
               >
                 {({ selected }) => (
                   <>
                     {option.title === "Autodetect" ? (
-                      <CubeIcon className="mr-2.5 h-6 w-6 text-gray-400" />
+                      <CubeIcon className="mr-2 w-4 h-4 text-gray-400" />
                     ) : (
                       window.vscMediaUrl &&
                       option.icon && (
                         <img
                           src={`${window.vscMediaUrl}/logos/${option.icon}`}
-                          height="24px"
-                          style={{ marginRight: "10px" }}
+                          className="object-contain w-4 h-4 object-center mr-1"
                         />
                       )
                     )}
-                    <span className="text-md">{option.title}</span>
+                    <span className="text-xs">{option.title}</span>
 
                     {selected && (
                       <span className="inset-y-0 ml-auto flex items-center pl-3">
