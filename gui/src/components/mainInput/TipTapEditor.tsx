@@ -646,6 +646,10 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "addPerplexityContextinChat",
     async (data) => {
+      if (!props.isMainInput || !editor) {
+        return;
+      }
+      
       const item: ContextItemWithId = {
         content: data.text,
         name: "Context from PearAI Search",

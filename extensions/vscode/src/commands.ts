@@ -444,9 +444,6 @@ const commandsMap: (
         input: text,
       });
     },
-    "pearai.addPerplexityContext": (msg) => {
-      sidebar.webviewProtocol?.request("addPerplexityContextinChat", msg.data, ["pearai.pearAIChatView"]);
-    },
     "pearai.selectRange": (startLine: number, endLine: number) => {
       if (!vscode.window.activeTextEditor) {
         return;
@@ -547,6 +544,14 @@ const commandsMap: (
     },
     "pearai.perplexityMode": () => {
       handlePerplexityMode(sidebar, extensionContext);
+    },
+    "pearai.addPerplexityContext": (msg) => {
+      const fullScreenTab = getFullScreenTab();
+      if (!fullScreenTab) {
+        // focus sidebar
+        vscode.commands.executeCommand("pearai.pearAIChatView.focus");
+      }
+      sidebar.webviewProtocol?.request("addPerplexityContextinChat", msg.data, ["pearai.pearAIChatView"]);
     },
     "pearai.openConfigJson": () => {
       ide.openFile(getConfigJsonPath());
