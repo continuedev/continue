@@ -1,24 +1,15 @@
-import {
-  CheckBadgeIcon,
-  Cog6ToothIcon,
-  ComputerDesktopIcon,
-  GiftIcon,
-} from "@heroicons/react/24/outline";
-import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { defaultBorderRadius, lightGray } from "../../components";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
-import GitHubSignInButton from "../../components/modelSelection/quickSetup/GitHubSignInButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { Div, StyledButton } from "./components";
+import { StyledButton } from "./components";
 import { useOnboarding } from "./utils";
-import { greenButtonColor } from "../../components";
 import styled from "styled-components";
 import { providers } from "../AddNewModel/configs/providers";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
@@ -49,26 +40,11 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
   `}
 `;
 
-enum ModelType {
-  PearAI,
-  Other,
-}
-
-type OnboardingMode =
-  ToCoreFromIdeOrWebviewProtocol["completeOnboarding"][0]["mode"];
-
 function Onboarding() {
-  const [hovered, setHovered] = useState(-1);
   const [session, setSession] = useState(false)
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-
-  const [hasSignedIntoGh, setHasSignedIntoGh] = useState(false);
-  const [selectedOnboardingMode, setSlectedOnboardingMode] = useState<
-    OnboardingMode | undefined
-  >(undefined);
-
   const { completeOnboarding } = useOnboarding();
 
   useEffect(() => {
@@ -83,42 +59,6 @@ function Onboarding() {
       });
     }
   }, [])
-
-  function onSubmit() {
-    ideMessenger.post("completeOnboarding", {
-      mode: "custom",
-    });
-
-    /**
-     * "completeOnboarding" above will update the config with our
-     * new embeddings provider. If it's not the default local provider,
-     * we need to re-index the codebase.
-     */
-    if (selectedOnboardingMode !== "local") {
-      ideMessenger.post("index/forceReIndex", undefined);
-    }
-  }
-
-  const handleSelect = (selectedModel: ModelType) => {
-    ideMessenger.post("completeOnboarding", {
-      mode: "custom",
-    });
-
-    switch (selectedModel) {
-      case ModelType.PearAI:
-        navigate("/addModel/provider/pearai_server", {
-          state: { referrer: "/onboarding" },
-        });
-        break;
-      case ModelType.Other:
-        navigate("/addModel/provider", {
-          state: { showOtherProviders: true, referrer: "/onboarding" },
-        });
-        break;
-      default:
-        break;
-    }
-  };
 
   const modelInfo = providers["pearai_server"];
 
@@ -191,29 +131,6 @@ function Onboarding() {
         </a>
         .
       </small>
-      {/* <div>
-        <Div
-          selected={false}
-          onClick={() => handleSelect(ModelType.PearAI)}
-          onMouseEnter={() => setHovered(ModelType.PearAI)}
-          onMouseLeave={() => setHovered(-1)}
-        >
-          <div className="flex items-center">
-            <img
-              src={`${window.vscMediaUrl}/logos/pearai-color.png`}
-              className="mr-1"
-              height="24px"
-            ></img>
-            <h3>PearAI Server </h3>
-          </div>
-          <p className="mt-0">
-            Convenient, fully-managed integration, with the current
-            best-in-market language models.
-          </p>
-          <p className="mt-0">Code is not stored.</p>
-        </Div>
-        <br></br>
-      </div> */}
       <div className="absolute bottom-4 right-4">
         <StyledButton
           onClick={(e) => {

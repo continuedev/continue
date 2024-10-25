@@ -5,16 +5,16 @@ import * as vscode from "vscode";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { PEARAI_CHAT_VIEW_ID } from "./extension/VsCodeExtension";
 
-// The overlay's webview / panel's title is defined in pearai-app's PearOverlayParts.ts
+// The overlay's webview title/id is defined in pearai-app's PearOverlayParts.ts
 // A unique identifier is needed for the messaging protocol to distinguish the webviews.
-const PEAR_OVERLAY_TITLE = "pearai.pearOverlay"
+export const PEAR_OVERLAY_VIEW_ID = "pearai.pearOverlay"
+export const PEAR_CONTINUE_VIEW_ID = "pearai.pearAIChatView";
 
 export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
-  public static readonly viewType = PEARAI_CHAT_VIEW_ID;
+  public static readonly viewType = PEAR_CONTINUE_VIEW_ID;
   public webviewProtocol: VsCodeWebviewProtocol;
   private _webview?: vscode.Webview;
   private _webviewView?: vscode.WebviewView;
@@ -126,7 +126,7 @@ export class ContinueGUIWebviewViewProvider
     isFullScreen = false,
     initialRoute: string = "/"
   ): string {
-    const isOverlay = panel?.title === PEAR_OVERLAY_TITLE; // defined in pearai-app PearOverlayPart.ts
+    const isOverlay = panel?.title === PEAR_OVERLAY_VIEW_ID; // defined in pearai-app PearOverlayPart.ts
     const extensionUri = getExtensionUri();
     let scriptUri: string;
     let styleMainUri: string;
@@ -176,7 +176,7 @@ export class ContinueGUIWebviewViewProvider
       }
     });
 
-    this.webviewProtocol.addWebview(panel?.title === PEAR_OVERLAY_TITLE? panel.title : panel.viewType, panel.webview);
+    this.webviewProtocol.addWebview(panel?.title === PEAR_OVERLAY_VIEW_ID? panel.title : panel.viewType, panel.webview);
 
     return `<!DOCTYPE html>
     <html lang="en">

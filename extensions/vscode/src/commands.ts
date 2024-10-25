@@ -22,7 +22,7 @@ import {
   quickPickStatusText,
   setupStatusBar,
 } from "./autocomplete/statusBar";
-import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
+import { ContinueGUIWebviewViewProvider, PEAR_OVERLAY_VIEW_ID } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
@@ -31,6 +31,7 @@ import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { getExtensionUri } from "./util/vscode";
 import { handleAiderMode } from './integrations/aider/aider';
 import { handlePerplexityMode } from "./integrations/perplexity/perplexity";
+import { PEAR_CONTINUE_VIEW_ID } from "./ContinueGUIWebviewViewProvider";
 
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -764,7 +765,8 @@ const commandsMap: (
       extensionContext.secrets.store("pearai-token", data.accessToken);
       extensionContext.secrets.store("pearai-refresh", data.refreshToken);
       core.invoke("llm/resetPearAICredentials", undefined);
-      sidebar.webviewProtocol?.request("addPearAIModel", undefined, ["pearai.pearAIChatView"]);
+      sidebar.webviewProtocol?.request("addPearAIModel", undefined, [PEAR_CONTINUE_VIEW_ID]);
+      sidebar.webviewProtocol?.request("addPearAIModel", undefined, [PEAR_OVERLAY_VIEW_ID]);
       vscode.window.showInformationMessage("PearAI: Successfully logged in!");
     },
     "pearai.closeChat": () => {
