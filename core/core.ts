@@ -30,6 +30,13 @@ import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
 import PearAIServer from "./llm/llms/PearAIServer";
 import Aider from "./llm/llms/Aider";
+import {
+  startAiderProcess,
+  killAiderProcess,
+  aiderCtrlC,
+  aiderResetSession
+} from "../extensions/vscode/src/integrations/aider/aider";
+
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -452,75 +459,10 @@ export class Core {
         return undefined;
       }
     });
-    on("llm/startAiderProcess", async () => {
-      const config = await this.configHandler.loadConfig();
-      const aiderModel = config.models.find(model => model instanceof Aider) as Aider | undefined;
+    on("llm/startAiderProcess", () => startAiderProcess(this));
 
-      if (aiderModel) {
-        try {
-          await aiderModel.startAiderChat(aiderModel.model, aiderModel.apiKey);
-        } catch (e) {
-          console.warn(`Error starting Aider process: ${e}`);
-        }
-      } else {
-        console.warn("No Aider model found in configuration");
-        return undefined;
-      }
-    });
-    on("llm/killAiderProcess", async () => {
-      const config = await this.configHandler.loadConfig();
-      const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+    on("llm/killAiderProcess", () => killAiderProcess(this));
 
-      try {
-        if (aiderModels.length > 0) {
-          aiderModels.forEach(model => {
-            model.killAiderProcess();
-          });
-        }
-        return undefined;
-      } catch (e) {
-        console.warn(`Error killing Aider process: ${e}`);
-        return undefined;
-      }
-    });
-    on("llm/aiderCtrlC", async () => {
-      const config = await this.configHandler.loadConfig();
-      const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
-      console.log(config.models)
-      console.log(aiderModels)
-      try {
-        if (aiderModels.length > 0) {
-          aiderModels.forEach(model => {
-            if (model.aiderProcess) {
-              model.aiderCtrlC();
-            }
-          });
-        }
-        return undefined;
-      } catch (e) {
-        console.warn(`Error killing Aider process: ${e}`);
-        return undefined;
-      }
-    });
-    on("llm/aiderResetSession", async () => {
-      const config = await this.configHandler.loadConfig();
-      const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
-      console.log(config.models)
-      console.log(aiderModels)
-      try {
-        if (aiderModels.length > 0) {
-          aiderModels.forEach(model => {
-            if (model.aiderProcess) {
-              model.aiderResetSession(model.model, model.apiKey);
-            }
-          });
-        }
-        return undefined;
-      } catch (e) {
-        console.warn(`Error killing Aider process: ${e}`);
-        return undefined;
-      }
-    });
     on("llm/listModels", async (msg) => {
       const config = await this.configHandler.loadConfig();
       const model =

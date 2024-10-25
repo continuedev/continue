@@ -3,6 +3,7 @@ import * as cp from "child_process";
 import { Core } from "core/core";
 import { ContinueGUIWebviewViewProvider } from "../../ContinueGUIWebviewViewProvider";
 import { getIntegrationTab } from "../../util/integrationUtils";
+import Aider from "core/llm/llms/aider";
 
 const PLATFORM = process.platform;
 const IS_WINDOWS = PLATFORM === "win32";
@@ -10,6 +11,71 @@ const IS_MAC = PLATFORM === "darwin";
 const IS_LINUX = PLATFORM === "linux";
 
 let aiderPanel: vscode.WebviewPanel | undefined;
+
+// Aider process management functions
+export async function startAiderProcess(core: Core) {
+  const config = await core.configHandler.loadConfig();
+  const aiderModel = config.models.find(model => model instanceof Aider) as Aider | undefined;
+
+  if (aiderModel) {
+    try {
+      await aiderModel.startAiderChat(aiderModel.model, aiderModel.apiKey);
+    } catch (e) {
+      console.warn(`Error starting Aider process: ${e}`);
+    }
+  } else {
+    console.warn("No Aider model found in configuration");
+  }
+}
+
+export async function killAiderProcess(core: Core) {
+  const config = await core.configHandler.loadConfig();
+  const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+
+  try {
+    if (aiderModels.length > 0) {
+      aiderModels.forEach(model => {
+        model.killAiderProcess();
+      });
+    }
+  } catch (e) {
+    console.warn(`Error killing Aider process: ${e}`);
+  }
+}
+
+export async function aiderCtrlC(core: Core) {
+  const config = await core.configHandler.loadConfig();
+  const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+
+  try {
+    if (aiderModels.length > 0) {
+      aiderModels.forEach(model => {
+        if (model.aiderProcess) {
+          model.aiderCtrlC();
+        }
+      });
+    }
+  } catch (e) {
+    console.warn(`Error sending Ctrl-C to Aider process: ${e}`);
+  }
+}
+
+export async function aiderResetSession(core: Core) {
+  const config = await core.configHandler.loadConfig();
+  const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+
+  try {
+    if (aiderModels.length > 0) {
+      aiderModels.forEach(model => {
+        if (model.aiderProcess) {
+          model.aiderResetSession(model.model, model.apiKey);
+        }
+      });
+    }
+  } catch (e) {
+    console.warn(`Error resetting Aider session: ${e}`);
+  }
+}
 
 export async function handleAiderMode(
   core: Core,
