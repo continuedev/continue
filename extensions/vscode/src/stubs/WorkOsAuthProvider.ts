@@ -160,7 +160,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   async refreshSessions() {
-    await this._refreshSessions();
+    try {
+      await this._refreshSessions();
+    } catch (e) {
+      console.error(`Error refreshing sessions: ${e}`);
+    }
   }
 
   private async _refreshSessions(): Promise<void> {
