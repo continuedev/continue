@@ -1,4 +1,5 @@
 import { ContinueServerClient } from "core/continueServer/stubs/client";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import {
   getConfigJsPathForRemote,
   getConfigJsonPathForRemote,
@@ -48,7 +49,7 @@ export class RemoteConfigSync {
   }
 
   private loadVsCodeSettings() {
-    const settings = vscode.workspace.getConfiguration("continue");
+    const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
     const userToken = settings.get<string | null>("userToken", null);
     const remoteConfigServerUrl = settings.get<string | null>(
       "remoteConfigServerUrl",
@@ -93,12 +94,15 @@ export class RemoteConfigSync {
     if (this.syncInterval !== undefined) {
       clearInterval(this.syncInterval);
     }
-    this.syncInterval = setInterval(() => {
-      if (!this.userToken || !this.remoteConfigServerUrl) {
-        return;
-      }
-      this.sync(this.userToken, this.remoteConfigServerUrl);
-    }, this.remoteConfigSyncPeriod * 1000 * 60);
+    this.syncInterval = setInterval(
+      () => {
+        if (!this.userToken || !this.remoteConfigServerUrl) {
+          return;
+        }
+        this.sync(this.userToken, this.remoteConfigServerUrl);
+      },
+      this.remoteConfigSyncPeriod * 1000 * 60,
+    );
   }
 
   async sync(userToken: string, remoteConfigServerUrl: string) {

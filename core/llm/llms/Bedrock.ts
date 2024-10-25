@@ -18,7 +18,7 @@ class Bedrock extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    contextLength: 200_000
+    contextLength: 200_000,
   };
   profile?: string | undefined;
 
@@ -49,14 +49,37 @@ class Bedrock extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const credentials = await this._getCredentials();
+
     const client = new BedrockRuntimeClient({
       region: this.region,
+      endpoint: this.apiBase,
       credentials: {
         accessKeyId: credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
         sessionToken: credentials.sessionToken || "",
       },
     });
+
+    let config_headers =
+      this.requestOptions && this.requestOptions.headers
+        ? this.requestOptions.headers
+        : {};
+    // AWS SigV4 requires strict canonicalization of headers.
+    // DO NOT USE "_" in your header name. It will return an error like below.
+    // "The request signature we calculated does not match the signature you provided."
+
+    client.middlewareStack.add(
+      (next) => async (args: any) => {
+        args.request.headers = {
+          ...args.request.headers,
+          ...config_headers,
+        };
+        return next(args);
+      },
+      {
+        step: "build",
+      },
+    );
 
     const input = this._generateConverseInput(messages, options);
     const command = new ConverseStreamCommand(input);
@@ -88,7 +111,15 @@ class Bedrock extends BaseLLM {
         maxTokens: options.maxTokens,
         temperature: options.temperature,
         topP: options.topP,
-        stopSequences: options.stop?.filter((stop) => stop.trim() !== ""),
+        // TODO: The current approach selects the first 4 items from the list to comply with Bedrock's requirement
+        // of having at most 4 stop sequences, as per the AWS documentation:
+        // https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_InferenceConfiguration.html
+        // However, it might be better to implement a strategy that dynamically selects the most appropriate stop sequences
+        // based on the context.
+        // TODO: Additionally, consider implementing a global exception handler for the providers to give users clearer feedback.
+        // For example, differentiate between client-side errors (4XX status codes) and server-side issues (5XX status codes),
+        // providing meaningful error messages to improve the user experience.
+        stopSequences: options.stop?.filter((stop) => stop.trim() !== "").slice(0, 4),
       },
     };
   }
@@ -130,6 +161,7 @@ class Bedrock extends BaseLLM {
     try {
       return await fromIni({
         profile: this.profile,
+        ignoreCache: true
       })();
     } catch (e) {
       console.warn(

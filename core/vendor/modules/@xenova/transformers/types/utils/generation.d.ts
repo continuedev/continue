@@ -320,7 +320,7 @@ export class NoBadWordsLogitsProcessor extends LogitsProcessor {
  * @property {number} [eta_cutoff=0.0] Eta sampling is a hybrid of locally typical sampling and epsilon sampling. If set to float strictly between 0 and 1, a token is only considered if it is greater than either `eta_cutoff` or `sqrt(eta_cutoff) * exp(-entropy(softmax(next_token_logits)))`. The latter term is intuitively the expected next token probability, scaled by `sqrt(eta_cutoff)`. In the paper, suggested values range from 3e-4 to 2e-3, depending on the size of the model. See [Truncation Sampling as Language Model Desmoothing](https://arxiv.org/abs/2210.15191) for more details.
  * @property {number} [diversity_penalty=0.0] This value is subtracted from a beam's score if it generates a token same as any beam from other group at a particular time. Note that `diversity_penalty` is only effective if `group beam search` is enabled.
  * @property {number} [repetition_penalty=1.0] The parameter for repetition penalty. 1.0 means no penalty. See [this paper](https://arxiv.org/pdf/1909.05858.pdf) for more details.
- * @property {number} [encoder_repetition_penalty=1.0] The paramater for encoder_repetition_penalty. An exponential penalty on sequences that are not in the original input. 1.0 means no penalty.
+ * @property {number} [encoder_repetition_penalty=1.0] The parameter for encoder_repetition_penalty. An exponential penalty on sequences that are not in the original input. 1.0 means no penalty.
  * @property {number} [length_penalty=1.0] Exponential penalty to the length that is used with beam-based generation. It is applied as an exponent to the sequence length, which in turn is used to divide the score of the sequence. Since the score is the log likelihood of the sequence (i.e. negative), `length_penalty` > 0.0 promotes longer sequences, while `length_penalty` < 0.0 encourages shorter sequences.
  * @property {number} [no_repeat_ngram_size=0] If set to int > 0, all ngrams of that size can only occur once.
  * @property {number[][]} [bad_words_ids=null] List of token ids that are not allowed to be generated. In order to get the token ids of the words that should not appear in the generated text, use `(await tokenizer(bad_words, {add_prefix_space: true, add_special_tokens: false})).input_ids`.
@@ -488,7 +488,7 @@ export type GenerationConfigType = {
      */
     repetition_penalty?: number;
     /**
-     * The paramater for encoder_repetition_penalty. An exponential penalty on sequences that are not in the original input. 1.0 means no penalty.
+     * The parameter for encoder_repetition_penalty. An exponential penalty on sequences that are not in the original input. 1.0 means no penalty.
      */
     encoder_repetition_penalty?: number;
     /**

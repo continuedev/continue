@@ -1,3 +1,5 @@
+import { GetGhTokenArgs } from "./protocol/ide";
+
 declare global {
   interface Window {
     ide?: "vscode";
@@ -25,6 +27,7 @@ export interface ChunkWithoutID {
   content: string;
   startLine: number;
   endLine: number;
+  signature?: string;
   otherMetadata?: { [key: string]: any };
 }
 
@@ -45,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+  ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -67,6 +70,7 @@ export interface ILLM extends LLMOptions {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   engine?: string;
   apiVersion?: string;
@@ -120,11 +124,12 @@ export interface ILLM extends LLMOptions {
 export type ContextProviderType = "normal" | "query" | "submenu";
 
 export interface ContextProviderDescription {
-  title: string;
+  title: ContextProviderName;
   displayTitle: string;
   description: string;
   renderInlineAs?: string;
   type: ContextProviderType;
+  dependsOnIndexing?: boolean;
 }
 
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
@@ -267,6 +272,13 @@ export interface ContextItemId {
   itemId: string;
 }
 
+export type ContextItemUriTypes = "file" | "url";
+
+export interface ContextItemUri {
+  type: ContextItemUriTypes;
+  value: string;
+}
+
 export interface ContextItem {
   content: string;
   name: string;
@@ -274,16 +286,11 @@ export interface ContextItem {
   editing?: boolean;
   editable?: boolean;
   icon?: string;
+  uri?: ContextItemUri;
 }
 
-export interface ContextItemWithId {
-  content: string;
-  name: string;
-  description: string;
+export interface ContextItemWithId extends ContextItem {
   id: ContextItemId;
-  editing?: boolean;
-  editable?: boolean;
-  icon?: string;
 }
 
 export interface InputModifiers {
@@ -315,6 +322,9 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
   model?: string;
 }
+
+export type ToastType = "info" | "error" | "warning";
+
 export interface LLMOptions {
   model: string;
 
@@ -333,6 +343,7 @@ export interface LLMOptions {
   apiKey?: string;
   aiGatewaySlug?: string;
   apiBase?: string;
+  cacheBehavior?: CacheBehavior;
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -361,8 +372,7 @@ export interface LLMOptions {
   watsonxProjectId?: string;
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
-
-  cacheSystemMessage?: boolean;
+  watsonxFullUrl?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -454,7 +464,7 @@ export interface IdeSettings {
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
-  getDiff(): Promise<string>;
+  getDiff(includeUnstaged: boolean): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
@@ -490,18 +500,20 @@ export interface IDE {
   getCurrentFile(): Promise<string | undefined>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
-  subprocess(command: string): Promise<[string, string]>;
+  subprocess(command: string, cwd?: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
-  errorPopup(message: string): Promise<void>;
-  infoPopup(message: string): Promise<void>;
-
+  showToast(
+    type: ToastType,
+    message: string,
+    ...otherParams: any[]
+  ): Promise<any>;
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
-  getGitHubAuthToken(): Promise<string | undefined>;
+  getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // LSP
   gotoDefinition(location: Location): Promise<RangeInFile[]>;
@@ -551,7 +563,7 @@ type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
-  | "locals"
+  | "debugger"
   | "open"
   | "google"
   | "search"
@@ -567,7 +579,16 @@ type ContextProviderName =
   | "docs"
   | "gitlab-mr"
   | "os"
-  | "currentFile";
+  | "currentFile"
+  | "greptile"
+  | "outline"
+  | "continue-proxy"
+  | "highlights"
+  | "file"
+  | "issue"
+  | "repo-map"
+  | "url"
+  | string;
 
 type TemplateType =
   | "llama2"
@@ -591,6 +612,7 @@ type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
+  | "anthropic-vertexai"
   | "cohere"
   | "together"
   | "ollama"
@@ -603,7 +625,9 @@ type ModelProvider =
   | "lmstudio"
   | "llamafile"
   | "gemini"
+  | "gemini-vertexai"
   | "mistral"
+  | "mistral-vertexai"
   | "bedrock"
   | "bedrockimport"
   | "sagemaker"
@@ -619,7 +643,13 @@ type ModelProvider =
   | "openai-aiohttp"
   | "msty"
   | "watsonx"
-  | "openrouter";
+  | "openrouter"
+  | "sambanova"
+  | "nvidia"
+  | "vllm"
+  | "mock"
+  | "cerebras";
+
 
 export type ModelName =
   | "AUTODETECT"
@@ -634,6 +664,8 @@ export type ModelName =
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
+  | "o1-preview"
+  | "o1-mini"
   // Mistral
   | "codestral-latest"
   | "open-mistral-7b"
@@ -643,6 +675,10 @@ export type ModelName =
   | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
+  | "mistral-tiny"
+  | "mistral-small"
+  | "mistral-medium"
+  | "mistral-embed"
   // Llama 2
   | "llama2-7b"
   | "llama2-13b"
@@ -654,6 +690,15 @@ export type ModelName =
   // Llama 3
   | "llama3-8b"
   | "llama3-70b"
+  // Llama 3.1
+  | "llama3.1-8b"
+  | "llama3.1-70b"
+  | "llama3.1-405b"
+  // Llama 3.2
+  | "llama3.2-1b"
+  | "llama3.2-3b"
+  | "llama3.2-11b"
+  | "llama3.2-90b"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -665,6 +710,8 @@ export type ModelName =
   | "deepseek-7b"
   | "deepseek-33b"
   | "neural-chat-7b"
+  | "gemma-7b-it"
+  | "gemma2-9b-it"
   // Anthropic
   | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"
@@ -681,10 +728,6 @@ export type ModelName =
   | "gemini-1.5-pro"
   | "gemini-1.5-flash-latest"
   | "gemini-1.5-flash"
-  // Mistral
-  | "mistral-tiny"
-  | "mistral-small"
-  | "mistral-medium"
   // Tab autocomplete
   | "deepseek-1b"
   | "starcoder-1b"
@@ -701,6 +744,11 @@ export interface RequestOptions {
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
   clientCertificate?: ClientCertificateOptions;
+}
+
+export interface CacheBehavior {
+  cacheSystemMessage?: boolean;
+  cacheConversation?: boolean;
 }
 
 export interface ClientCertificateOptions {
@@ -765,9 +813,12 @@ export interface ModelDescription {
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
   capabilities?: ModelCapability;
+  cacheBehavior?: CacheBehavior;
 }
 
 export type EmbeddingsProviderName =
+  | "sagemaker"
+  | "bedrock"
   | "huggingface-tei"
   | "transformers.js"
   | "ollama"
@@ -776,7 +827,11 @@ export type EmbeddingsProviderName =
   | "free-trial"
   | "gemini"
   | "continue-proxy"
-  | "deepinfra";
+  | "deepinfra"
+  | "nvidia"
+  | "voyage"
+  | "mistral"
+  | "vertex";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -787,6 +842,15 @@ export interface EmbedOptions {
   apiVersion?: string;
   requestOptions?: RequestOptions;
   maxChunkSize?: number;
+  maxBatchSize?: number;
+  // AWS options
+  profile?: string;
+
+  // AWS and GCP Options
+  region?: string;
+
+  // GCP Options
+  projectId?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -839,12 +903,14 @@ export interface TabAutocompleteOptions {
   recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
   useImports?: boolean;
+  useRootPathContext?: boolean;
 }
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
   displayRawMarkdown?: boolean;
+  showChatScrollbar?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -858,6 +924,7 @@ interface ContextMenuConfig {
 interface ModelRoles {
   inlineEdit?: string;
   applyCodeBlock?: string;
+  repoMapFileSelection?: string;
 }
 
 /**
@@ -905,6 +972,18 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
+
+  /**
+   * Prompt the user's LLM for a title given the current chat content
+   */
+  getChatTitles?: boolean;
+
+  /**
+   * If set to true, we will attempt to pull down and install an instance of Chromium
+   * that is compatible with the current version of Puppeteer.
+   * This is needed to crawl a large number of documentation sites that are dynamically rendered.
+   */
+  useChromiumForDocsCrawling?: boolean;
 }
 
 interface AnalyticsConfig {
@@ -974,9 +1053,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

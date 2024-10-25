@@ -41,22 +41,28 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "together",
   "msty",
   "anthropic",
+  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "continue-proxy",
   "mistral",
+  "mistral-vertexai",
+  "sambanova",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "openai",
   "ollama",
   "gemini",
+  "gemini-vertexai",
   "free-trial",
   "msty",
   "anthropic",
+  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "continue-proxy",
+  "openrouter",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -72,15 +78,19 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "sonnet",
   "opus",
   "haiku",
+  "pixtral",
+  "llama3.2",
 ];
 
 function modelSupportsImages(
   provider: ModelProvider,
   model: string,
   title: string | undefined,
-  capabilities: ModelCapability | undefined
+  capabilities: ModelCapability | undefined,
 ): boolean {
-  if (capabilities?.uploadImage !== undefined) {return capabilities.uploadImage;}
+  if (capabilities?.uploadImage !== undefined) {
+    return capabilities.uploadImage;
+  }
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }
@@ -98,16 +108,20 @@ function modelSupportsImages(
 }
 const PARALLEL_PROVIDERS: ModelProvider[] = [
   "anthropic",
+  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "deepinfra",
   "gemini",
+  "gemini-vertexai",
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
+  "mistral-vertexai",
   "free-trial",
   "replicate",
   "together",
+  "sambanova",
 ];
 
 function llmCanGenerateInParallel(

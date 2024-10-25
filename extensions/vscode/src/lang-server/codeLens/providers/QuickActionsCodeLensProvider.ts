@@ -6,7 +6,11 @@ import {
   CONTINUE_WORKSPACE_KEY,
   getContinueWorkspaceConfig,
 } from "../../../util/workspaceConfig";
-import { isTutorialFile } from "./TutorialCodeLensProvider";
+
+const TUTORIAL_FILE_NAME = "continue_tutorial.py";
+function isTutorialFile(uri: vscode.Uri) {
+  return uri.fsPath.endsWith(TUTORIAL_FILE_NAME);
+}
 
 export const ENABLE_QUICK_ACTIONS_KEY = "enableQuickActions";
 
@@ -58,13 +62,7 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     vscode.SymbolKind.Constructor,
   ];
 
-  customQuickActionsConfig?: QuickActionConfig[];
-
-  constructor(customQuickActionsConfigs?: QuickActionConfig[]) {
-    if (customQuickActionsConfigs) {
-      this.customQuickActionsConfig = customQuickActionsConfigs;
-    }
-  }
+  constructor(private customQuickActionsConfigs?: QuickActionConfig[]) {}
 
   getCustomCommands(
     range: vscode.Range,
@@ -141,8 +139,8 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     const symbols = await this.getTopLevelAndChildrenSymbols(document.uri);
 
     return symbols.flatMap(({ range }) => {
-      const commands: vscode.Command[] = !!this.customQuickActionsConfig
-        ? this.getCustomCommands(range, this.customQuickActionsConfig)
+      const commands: vscode.Command[] = !!this.customQuickActionsConfigs
+        ? this.getCustomCommands(range, this.customQuickActionsConfigs)
         : this.getDefaultCommand(range);
 
       return commands.map((command) => new vscode.CodeLens(range, command));

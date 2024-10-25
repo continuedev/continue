@@ -5,13 +5,10 @@ import type {
   CustomContextProvider,
   IContextProvider,
   LoadSubmenuItemsArgs,
-} from "../../index.js";
+} from "../../";
 
 class CustomContextProviderClass implements IContextProvider {
-  custom: CustomContextProvider;
-  constructor(custom: CustomContextProvider) {
-    this.custom = custom;
-  }
+  constructor(private custom: CustomContextProvider) {}
 
   get description(): ContextProviderDescription {
     return {

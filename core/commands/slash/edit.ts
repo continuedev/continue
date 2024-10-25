@@ -1,3 +1,4 @@
+import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -5,16 +6,15 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream";
+} from "../../autocomplete/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
-import { ContextItemWithId, ILLM, SlashCommand } from "../../";
 import { stripImages } from "../../llm/images";
 import {
   dedentAndGetCommonWhitespace,
   getMarkdownLanguageTagForFile,
 } from "../../util/";
 import {
-  contextItemToRangeInFileWithContents,
+  ctxItemToRifWithContents,
   type RangeInFileWithContents,
 } from "../util";
 
@@ -95,10 +95,10 @@ export async function getPromptParts(
   }
 
   let filePrefix = fullFileContentsList
-    .slice(curStartLine, maxStartLine)
+    .slice(curStartLine, maxStartLine - 1)
     .join("\n");
   let fileSuffix = fullFileContentsList
-    .slice(minEndLine, curEndLine - 1)
+    .slice(minEndLine, curEndLine + 1)
     .join("\n");
 
   if (rif.contents.length > 0) {
@@ -250,7 +250,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     const rif: RangeInFileWithContents =
-      contextItemToRangeInFileWithContents(contextItemToEdit);
+      ctxItemToRifWithContents(contextItemToEdit);
 
     await ide.saveFile(rif.filepath);
     const fullFileContents = await ide.readFile(rif.filepath);
@@ -613,6 +613,7 @@ Please briefly explain the changes made to the code above. Give no more than 2-3
         yield update;
       }
     }
+    yield `Edited ${contextItemToEdit.name}`;
   },
 };
 

@@ -1,3 +1,5 @@
+import { ILLM } from "core";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
 import { Battery } from "../util/battery";
 import {
@@ -38,9 +40,20 @@ export const getStatusBarStatusFromQuickPickItemLabel = (
   }
 };
 
-const statusBarItemText = (status: StatusBarStatus | undefined) => {
+const statusBarItemText = (
+  status: StatusBarStatus | undefined,
+  loading?: boolean,
+  error?: boolean,
+) => {
+  if (error) {
+    return "$(alert) Continue (FATAL ERROR)";
+  }
+
   switch (status) {
     case undefined:
+      if (loading) {
+        return "$(loading~spin) Continue";
+      }
     case StatusBarStatus.Disabled:
       return "$(circle-slash) Continue";
     case StatusBarStatus.Enabled:
@@ -65,6 +78,7 @@ const statusBarItemTooltip = (status: StatusBarStatus | undefined) => {
 let statusBarStatus: StatusBarStatus | undefined = undefined;
 let statusBarItem: vscode.StatusBarItem | undefined = undefined;
 let statusBarFalseTimeout: NodeJS.Timeout | undefined = undefined;
+let statusBarError: boolean = false;
 
 export function stopStatusBarLoading() {
   statusBarFalseTimeout = setTimeout(() => {
@@ -72,9 +86,15 @@ export function stopStatusBarLoading() {
   }, 100);
 }
 
+/**
+ * TODO: We should clean up how status bar is handled.
+ * Ideally, there should be a single 'status' value without
+ * 'loading' and 'error' booleans.
+ */
 export function setupStatusBar(
   status: StatusBarStatus | undefined,
   loading?: boolean,
+  error?: boolean,
 ) {
   if (loading !== false) {
     clearTimeout(statusBarFalseTimeout);
@@ -88,9 +108,19 @@ export function setupStatusBar(
     );
   }
 
-  statusBarItem.text = loading
-    ? "$(loading~spin) Continue"
-    : statusBarItemText(status);
+  if (error !== undefined) {
+    statusBarError = error;
+
+    if (status === undefined) {
+      status = statusBarStatus;
+    }
+
+    if (loading === undefined) {
+      loading = loading;
+    }
+  }
+
+  statusBarItem.text = statusBarItemText(status, loading, statusBarError);
   statusBarItem.tooltip = statusBarItemTooltip(status ?? statusBarStatus);
   statusBarItem.command = "continue.openTabAutocompleteConfigMenu";
 
@@ -120,7 +150,7 @@ export function getStatusBarStatus(): StatusBarStatus | undefined {
 
 export function monitorBatteryChanges(battery: Battery): vscode.Disposable {
   return battery.onChangeAC((acConnected: boolean) => {
-    const config = vscode.workspace.getConfiguration("continue");
+    const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
     const enabled = config.get<boolean>("enableTabAutocomplete");
     if (!!enabled) {
       const pauseOnBattery = config.get<boolean>(
@@ -133,4 +163,38 @@ export function monitorBatteryChanges(battery: Battery): vscode.Disposable {
       );
     }
   });
+}
+
+export function getAutocompleteStatusBarDescription(
+  selected: string | undefined,
+  { title, apiKey, providerName }: ILLM,
+): string | undefined {
+  if (title !== selected) {
+    return undefined;
+  }
+
+  let description = "Current autocomplete model";
+
+  // Only set for Mistral since our default config includes Codestral without
+  // an API key
+  if ((apiKey === undefined || apiKey === "") && providerName === "mistral") {
+    description += " (Missing API key)";
+  }
+
+  return description;
+}
+
+export function getAutocompleteStatusBarTitle(
+  selected: string | undefined,
+  { title }: ILLM,
+): string {
+  if (!title) {
+    return "Unnamed Model";
+  }
+
+  if (title === selected) {
+    return `$(check) ${title}`;
+  }
+
+  return title;
 }

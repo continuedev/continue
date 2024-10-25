@@ -2,29 +2,36 @@ import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
-import HeaderButtonWithText from "../HeaderButtonWithText";
+import ButtonWithTooltip from "../ButtonWithTooltip";
 
 interface CopyButtonProps {
   text: string | (() => string);
-  color?: string;
+  tabIndex?: number;
+  checkIconClassName?: string;
+  clipboardIconClassName?: string;
 }
 
-export function CopyButton(props: CopyButtonProps) {
+export function CopyButton({
+  text,
+  tabIndex,
+  checkIconClassName = "h-4 w-4 text-green-400",
+  clipboardIconClassName = "h-4 w-4 text-gray-400",
+}: CopyButtonProps) {
   const [copied, setCopied] = useState<boolean>(false);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
     <>
-      <HeaderButtonWithText
+      <ButtonWithTooltip
+        tabIndex={tabIndex}
         text={copied ? "Copied!" : "Copy"}
         onClick={(e) => {
-          const text =
-            typeof props.text === "string" ? props.text : props.text();
+          const textVal = typeof text === "string" ? text : text();
           if (isJetBrains()) {
-            ideMessenger.request("copyText", { text });
+            ideMessenger.request("copyText", { text: textVal });
           } else {
-            navigator.clipboard.writeText(text);
+            navigator.clipboard.writeText(textVal);
           }
 
           setCopied(true);
@@ -32,11 +39,11 @@ export function CopyButton(props: CopyButtonProps) {
         }}
       >
         {copied ? (
-          <CheckIcon className="w-4 h-4 text-green-500" />
+          <CheckIcon className={checkIconClassName} />
         ) : (
-          <ClipboardIcon className="w-4 h-4" color={props.color} />
+          <ClipboardIcon className={clipboardIconClassName} />
         )}
-      </HeaderButtonWithText>
+      </ButtonWithTooltip>
     </>
   );
 }

@@ -88,7 +88,10 @@
           "type": "string"
         }
       },
-      "required": ["cert", "key"]
+      "required": [
+        "cert",
+        "key"
+      ]
     },
     "RequestOptions": {
       "title": "RequestOptions",
@@ -169,6 +172,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -180,9 +184,11 @@
             "llama.cpp",
             "replicate",
             "gemini",
+            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
+            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
@@ -191,15 +197,20 @@
             "azure",
             "msty",
             "watsonx",
-            "openrouter"
+            "openrouter",
+            "sambanova",
+            "nvidia",
+            "vllm",
+            "cerebras"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
             "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/anthropicllm)",
+            "### Anthropic Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### Cohere\nTo use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/cohere)",
-            "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
-            "### Bedrock Imported Models\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
+            "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
+            "### Bedrock Imported Models\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
             "### Sagemaker\nSagemaker is AWS' machine learning platform.",
             "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/togetherllm)",
             "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/ollama)",
@@ -208,9 +219,11 @@
             "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamacpp)",
             "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/replicatellm)",
             "### Gemini API\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/geminiapi)",
+            "### Gemini API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/lmstudio)",
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
+            "### Mistral API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
             "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
             "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
@@ -219,7 +232,10 @@
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
             "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
-            "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys)."
+            "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
+            "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
+            "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
+            "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/)."
           ],
           "type": "string"
         },
@@ -236,6 +252,68 @@
         "apiBase": {
           "title": "Api Base",
           "description": "The base URL of the LLM API.",
+          "type": "string"
+        },
+        "region": {
+          "title": "Region",
+          "description": "The region where the model is hosted",
+          "anyOf": [
+            {
+              "enum": [
+                "us-east-1",
+                "us-east-2",
+                "us-west-1",
+                "us-west-2",
+                "eu-west-1",
+                "eu-central-1",
+                "ap-southeast-1",
+                "ap-northeast-1",
+                "ap-south-1",
+                "us-central1",
+                "us-east1",
+                "us-east4",
+                "us-east5",
+                "us-west1",
+                "us-west4",
+                "us-south1",
+                "northamerica-northeast1",
+                "southamerica-east1",
+                "europe-central2",
+                "europe-north1",
+                "europe-west1",
+                "europe-west2",
+                "europe-west3",
+                "europe-west4",
+                "europe-west6",
+                "europe-west8",
+                "europe-west9",
+                "europe-southwest1",
+                "asia-east1",
+                "asia-east2",
+                "asia-south1",
+                "asia-northeast1",
+                "asia-northeast3",
+                "asia-southeast1",
+                "australia-southeast1",
+                "me-central1",
+                "me-central2",
+                "me-west1"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "profile": {
+          "title": "Profile",
+          "description": "The AWS security profile to use",
+          "type": "string"
+        },
+        "modelArn": {
+          "title": "Profile",
+          "description": "The AWS arn for the imported model",
           "type": "string"
         },
         "contextLength": {
@@ -323,7 +401,10 @@
         "apiType": {
           "title": "Api Type",
           "markdownDescription": "OpenAI API type, either `openai` or `azure`",
-          "enum": ["openai", "azure"]
+          "enum": [
+            "openai",
+            "azure"
+          ]
         },
         "apiVersion": {
           "title": "Api Version",
@@ -346,7 +427,11 @@
           }
         }
       },
-      "required": ["title", "provider", "model"],
+      "required": [
+        "title",
+        "provider",
+        "model"
+      ],
       "allOf": [
         {
           "if": {
@@ -356,7 +441,9 @@
               }
             },
             "not": {
-              "required": ["provider"]
+              "required": [
+                "provider"
+              ]
             }
           },
           "then": {
@@ -379,37 +466,72 @@
                   "huggingface-inference-api",
                   "replicate",
                   "together",
-                  "cloudflare"
+                  "cloudflare",
+                  "sambanova"
                 ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
-            "required": ["apiKey"]
+            "required": [
+              "apiKey"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["huggingface-tgi", "huggingface-inference-api"]
+                "enum": [
+                  "bedrockimport"
+                ]
               }
-            }
+            },
+            "required": [
+              "provider"
+            ]
           },
           "then": {
-            "required": ["apiBase"]
-          },
-          "required": ["provider"]
+            "required": [
+              "modelArn"
+            ]
+          }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "huggingface-tgi",
+                  "huggingface-inference-api"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "apiBase"
+            ]
+          },
+          "required": [
+            "provider"
+          ]
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -429,10 +551,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["cloudflare"]
+                "enum": [
+                  "cloudflare"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -490,10 +616,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -525,10 +655,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["replicate"]
+                "enum": [
+                  "replicate"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -536,16 +670,16 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b",
+                      "llama2-7b",
+                      "llama2-13b",
                       "llama3-8b",
                       "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
-                      "llama2-7b",
-                      "llama2-13b"
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b"
                     ]
                   },
                   {
@@ -561,10 +695,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["free-trial"]
+                "enum": [
+                  "free-trial"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -575,9 +713,7 @@
                   "llama3.1-70b",
                   "llama3.1-405b",
                   "gpt-3.5-turbo",
-                  "phind-codellama-34b",
                   "gemini-pro",
-                  "mistral-8x7b",
                   "claude-3-5-sonnet-20240620",
                   "claude-3-haiku-20240307",
                   "AUTODETECT"
@@ -590,7 +726,9 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               },
               "apiType": {
                 "not": {
@@ -598,7 +736,9 @@
                 }
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -660,15 +800,28 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["anthropic"]
+                "enum": [
+                  "anthropic"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "anyOf": [
@@ -695,15 +848,45 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["cohere"]
+                "enum": [
+                  "anthropic-vertexai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
+              },
               "model": {
-                "enum": ["command-r", "command-r-plus"]
+                "anyOf": [
+                  {
+                    "enum": [
+                      "claude-3-5-opus",
+                      "claude-3-5-sonnet",
+                      "claude-3-5-haiku",
+                      "claude-3-opus",
+                      "claude-3-sonnet",
+                      "claude-3-haiku"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
               }
             }
           }
@@ -712,10 +895,38 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["bedrock"]
+                "enum": [
+                  "cohere"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "command-r",
+                  "command-r-plus"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "bedrock"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -740,10 +951,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["sagemaker"]
+                "enum": [
+                  "sagemaker"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -757,15 +972,25 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["gemini"]
+                "enum": [
+                  "gemini"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
                 "enum": [
@@ -784,10 +1009,52 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["together"]
+                "enum": [
+                  "gemini-vertexai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gemini-pro",
+                      "gemini-1.5-pro-latest",
+                      "gemini-1.5-pro",
+                      "gemini-1.5-flash-latest",
+                      "gemini-1.5-flash"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "projectId",
+              "region"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "together"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -804,6 +1071,9 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -824,10 +1094,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["deepinfra"]
+                "enum": [
+                  "deepinfra"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -850,7 +1124,9 @@
                 ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -871,6 +1147,10 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -899,10 +1179,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["ollama"]
+                "enum": [
+                  "ollama"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -922,6 +1206,10 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -953,10 +1241,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["mistral"]
+                "enum": [
+                  "mistral"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -978,18 +1270,70 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["deepseek"]
+                "enum": [
+                  "mistral-vertexai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
-              "cacheSystemMessage": {
-                "type": "boolean"
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "codestral",
+                      "mistral-nemo",
+                      "mistral-large"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "projectId",
+              "region"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "deepseek"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
               },
               "model": {
-                "enum": ["deepseek-chat", "deepseek-coder"]
+                "enum": [
+                  "deepseek-chat",
+                  "deepseek-coder"
+                ]
               }
             }
           }
@@ -998,10 +1342,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["groq"]
+                "enum": [
+                  "groq"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1010,11 +1358,16 @@
                   "llama2-70b",
                   "mistral-8x7b",
                   "gemma",
+                  "gemma2",
                   "llama3-8b",
                   "llama3-70b",
                   "llama3.1-8b",
                   "llama3.1-70b",
                   "llama3.1-405b",
+                  "llama3.2-1b",
+                  "llama3.2-3b",
+                  "llama3.2-11b",
+                  "llama3.2-90b",
                   "AUTODETECT"
                 ]
               }
@@ -1025,15 +1378,21 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["fireworks"]
+                "enum": [
+                  "fireworks"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": ["starcoder-7b"]
+                "enum": [
+                  "starcoder-7b"
+                ]
               }
             }
           }
@@ -1045,20 +1404,30 @@
                 "const": "azure"
               }
             },
-            "required": ["apiType"]
+            "required": [
+              "apiType"
+            ]
           },
           "then": {
-            "required": ["engine", "apiVersion", "apiBase"]
+            "required": [
+              "engine",
+              "apiVersion",
+              "apiBase"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1075,7 +1444,9 @@
                 "const": "llamafile"
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1089,10 +1460,38 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["text-gen-webui"]
+                "enum": [
+                  "cerebras"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "llama3.1-8b",
+                  "llama3.1-70b"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "text-gen-webui"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1106,10 +1505,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["flowise"]
+                "enum": [
+                  "flowise"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1136,7 +1539,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["key", "value"]
+                  "required": [
+                    "key",
+                    "value"
+                  ]
                 }
               },
               "additionalFlowiseConfiguration": {
@@ -1155,7 +1561,10 @@
                       "description": "Configuration Property value"
                     }
                   },
-                  "required": ["key", "value"]
+                  "required": [
+                    "key",
+                    "value"
+                  ]
                 }
               },
               "model": {
@@ -1184,6 +1593,10 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1229,10 +1642,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["watsonx"]
+                "enum": [
+                  "watsonx"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1251,6 +1668,9 @@
               "watsonxStopToken": {
                 "type": "string"
               },
+              "watsonxFullUrl": {
+                "type": "string"
+              },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
@@ -1261,7 +1681,45 @@
                 ]
               }
             },
-            "required": ["watsonxUrl", "watsonxProjectId"]
+            "required": [
+              "watsonxUrl",
+              "watsonxProjectId"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "sambanova"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option."
+              }
+            }
           }
         }
       ]
@@ -1291,7 +1749,9 @@
           "type": "string"
         }
       },
-      "required": ["default"]
+      "required": [
+        "default"
+      ]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -1304,7 +1764,6 @@
               "enum": [
                 "issue",
                 "share",
-                "so",
                 "cmd",
                 "edit",
                 "comment",
@@ -1316,7 +1775,6 @@
               "markdownEnumDescriptions": [
                 "Generate a link to a drafted GitHub issue",
                 "Export the current chat session to markdown",
-                "Reference StackOverflow to answer the question",
                 "Generate a terminal command and paste it into the terminal",
                 "Edit the highlighted code with given instructions",
                 "Add comments to the highlighted code",
@@ -1350,7 +1808,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["issue"]
+                "enum": [
+                  "issue"
+                ]
               }
             }
           },
@@ -1363,17 +1823,23 @@
                     "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
                   }
                 },
-                "required": ["repositoryUrl"]
+                "required": [
+                  "repositoryUrl"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["edit"]
+                "enum": [
+                  "edit"
+                ]
               }
             }
           },
@@ -1398,7 +1864,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["share"]
+                "enum": [
+                  "share"
+                ]
               }
             }
           },
@@ -1414,9 +1882,35 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "commit"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "markdownDescription": "If includeUnstaged is set to true, then unstaged changes are also included in the prompt, otherwise only staged changes are included. Default is false."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
-      "required": ["name", "description"]
+      "required": [
+        "name",
+        "description"
+      ]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -1435,7 +1929,11 @@
           "type": "string"
         }
       },
-      "required": ["name", "prompt", "description"]
+      "required": [
+        "name",
+        "prompt",
+        "description"
+      ]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -1448,7 +1946,7 @@
               "enum": [
                 "diff",
                 "terminal",
-                "locals",
+                "debugger",
                 "open",
                 "google",
                 "search",
@@ -1466,12 +1964,15 @@
                 "currentFile",
                 "url",
                 "database",
-                "os"
+                "os",
+                "repo-map",
+                "greptile",
+                "web"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
-                "Reference the contents of the terminal",
-                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
+                "Reference the last terminal command",
+                "Reference the contents of the local variables in the debugger with top n level (defaulting to 3) of call stack for that thread",
                 "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
@@ -1489,7 +1990,10 @@
                 "Reference the contents of the currently active file",
                 "Reference the contents of a page at a URL",
                 "Reference table schemas",
-                "Operating system and CPU Information"
+                "Operating system and CPU Information",
+                "Map of files in the repository with important code highlights",
+                "Query your greptile index of the current repo",
+                "Search the web for sources related to your question"
               ],
               "type": "string"
             },
@@ -1509,7 +2013,85 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["google"]
+                "enum": [
+                  "discord"
+                ]
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "params": {
+                    "properties": {
+                      "discordKey": {
+                        "type": "string",
+                        "description": "Your Discord bot token to access the Discord API. Required to fetch messages from servers."
+                      },
+                      "guildId": {
+                        "type": "string",
+                        "description": "The ID of the guild (server) from which to fetch channels and messages."
+                      },
+                      "channels": {
+                        "type": "array",
+                        "description": "A list of channel objects to search for messages",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "The unique ID of the channel"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the channel"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "discordKey"
+                    ]
+                  }
+                }
+              },
+              {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "params": {
+                        "required": [
+                          "guildId"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "params": {
+                        "required": [
+                          "channels"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "google"
+                ]
               }
             }
           },
@@ -1522,17 +2104,51 @@
                     "description": "Your API key for https://serper.dev in order to get Google search results"
                   }
                 },
-                "required": ["serperApiKey"]
+                "required": [
+                  "serperApiKey"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["open"]
+                "enum": [
+                  "web"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "n": {
+                    "title": "N",
+                    "description": "The number of results to return",
+                    "default": 6,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "open"
+                ]
               }
             }
           },
@@ -1554,7 +2170,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["issue"]
+                "enum": [
+                  "issue"
+                ]
               }
             }
           },
@@ -1583,24 +2201,37 @@
                         "type": {
                           "type": "string",
                           "description": "The type of issues to search for",
-                          "enum": ["open", "closed", "all"]
+                          "enum": [
+                            "open",
+                            "closed",
+                            "all"
+                          ]
                         }
                       },
-                      "required": ["owner", "repo"]
+                      "required": [
+                        "owner",
+                        "repo"
+                      ]
                     }
                   }
                 },
-                "required": ["repos"]
+                "required": [
+                  "repos"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["database"]
+                "enum": [
+                  "database"
+                ]
               }
             }
           },
@@ -1621,7 +2252,11 @@
                         "connection_type": {
                           "type": "string",
                           "description": "The type of database (e.g., 'postgres', 'mysql')",
-                          "enum": ["postgres", "mysql", "sqlite"]
+                          "enum": [
+                            "postgres",
+                            "mysql",
+                            "sqlite"
+                          ]
                         },
                         "connection": {
                           "type": "object",
@@ -1654,21 +2289,31 @@
                           "required": []
                         }
                       },
-                      "required": ["name", "connection_type", "connection"]
+                      "required": [
+                        "name",
+                        "connection_type",
+                        "connection"
+                      ]
                     }
                   }
                 },
-                "required": ["connections"]
+                "required": [
+                  "connections"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["gitlab-mr"]
+                "enum": [
+                  "gitlab-mr"
+                ]
               }
             }
           },
@@ -1689,17 +2334,23 @@
                     "description": "If you have code selected, filters out comments that aren't related to the selection."
                   }
                 },
-                "required": ["token"]
+                "required": [
+                  "token"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["jira"]
+                "enum": [
+                  "jira"
+                ]
               }
             }
           },
@@ -1745,17 +2396,24 @@
                     ]
                   }
                 },
-                "required": ["domain", "token"]
+                "required": [
+                  "domain",
+                  "token"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["http"]
+                "enum": [
+                  "http"
+                ]
               }
             }
           },
@@ -1766,19 +2424,31 @@
                   "url": {
                     "type": "string",
                     "description": "The HTTP endpoint of your context provider server."
+                  },
+                  "options": {
+                    "title": "Custom Options",
+                    "description": "Additional options to pass to your custom HTTP server.",
+                    "type": "object"
                   }
                 },
-                "required": ["url"]
+                "required": [
+                  "url"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase", "folder"]
+                "enum": [
+                  "codebase",
+                  "folder"
+                ]
               }
             }
           },
@@ -1813,7 +2483,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["postgres"]
+                "enum": [
+                  "postgres"
+                ]
               }
             }
           },
@@ -1865,11 +2537,54 @@
                 }
               }
             },
-            "required": ["host", "port", "user", "password", "database"]
+            "required": [
+              "host",
+              "port",
+              "user",
+              "password",
+              "database"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "greptile"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "GithubToken": {
+                    "title": "GithubToken",
+                    "description": "Your github access token",
+                    "default": "",
+                    "type": "string"
+                  },
+                  "GreptileToken": {
+                    "title": "GreptileToken",
+                    "description": "Your greptile access token",
+                    "default": "",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "GreptileToken",
+              "GithubToken"
+            ]
           }
         }
       ],
-      "required": ["name"]
+      "required": [
+        "name"
+      ]
     },
     "SerializedContinueConfig": {
       "title": "config.json",
@@ -1903,7 +2618,10 @@
                 "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }
             },
-            "required": ["title", "startUrl"]
+            "required": [
+              "title",
+              "startUrl"
+            ]
           }
         },
         "allowAnonymousTelemetry": {
@@ -2023,7 +2741,12 @@
                 "openai",
                 "cohere",
                 "free-trial",
-                "gemini"
+                "gemini",
+                "voyage",
+                "nvidia",
+                "bedrock",
+                "sagemaker",
+                "vertex"
               ]
             },
             "model": {
@@ -2046,34 +2769,106 @@
               "type": "integer",
               "minimum": 128,
               "exclusiveMaximum": 2147483647
+            },
+            "maxBatchSize": {
+              "title": "Maximum Batch Size",
+              "description": "The maximum number of chunks that can be sent to the embeddings provider in a single request",
+              "type": "integer",
+              "minimum": 1,
+              "exclusiveMaximum": 2147483647
+            },
+            "region": {
+              "title": "Region",
+              "description": "The region where the model is hosted",
+              "$ref": "#/definitions/ModelDescription/properties/region"
+            },
+            "profile": {
+              "title": "Profile",
+              "description": "The AWS security profile to use",
+              "type": "string"
             }
           },
-          "required": ["provider"],
+          "required": [
+            "provider"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere"]
+                    "enum": [
+                      "cohere",
+                      "voyage",
+                      "nvidia",
+                      "gemini"
+                    ]
                   }
                 },
-                "required": ["provider"]
+                "required": [
+                  "provider"
+                ]
               },
               "then": {
-                "required": ["apiKey"]
+                "required": [
+                  "apiKey"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["gemini"]
+                    "enum": [
+                      "sagemaker"
+                    ]
                   }
                 },
-                "required": ["provider"]
+                "required": [
+                  "provider"
+                ]
               },
               "then": {
-                "required": ["apiKey"]
+                "properties": {
+                  "model": {
+                    "markdownDescription": "SageMaker endpoint name"
+                  }
+                },
+                "required": [
+                  "model"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "vertex"
+                    ]
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "projectId": {
+                    "markdownDescription": "The name of your vertexAI project"
+                  },
+                  "region": {
+                    "markdownDescription": "The region your vertexAI model is hosted in - typically central1",
+                    "default": "central1"
+                  },
+                  "model": {
+                    "default": "text-embedding-004"
+                  }
+                },
+                "required": [
+                  "projectId",
+                  "model",
+                  "region"
+                ]
               }
             }
           ]
@@ -2096,16 +2891,22 @@
               "type": "object"
             }
           },
-          "required": ["name"],
+          "required": [
+            "name"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["cohere"]
+                    "enum": [
+                      "cohere"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2127,7 +2928,9 @@
                         "type": "string"
                       }
                     },
-                    "required": ["apiKey"]
+                    "required": [
+                      "apiKey"
+                    ]
                   }
                 }
               }
@@ -2136,10 +2939,14 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["llm"]
+                    "enum": [
+                      "llm"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2150,7 +2957,9 @@
                         "type": "string"
                       }
                     },
-                    "required": ["modelTitle"]
+                    "required": [
+                      "modelTitle"
+                    ]
                   }
                 }
               }
@@ -2159,10 +2968,14 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["voyage"]
+                    "enum": [
+                      "voyage"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2173,10 +2986,17 @@
                         "type": "string"
                       },
                       "model": {
-                        "enum": ["rerank-lite-1", "rerank-1"]
+                        "enum": [
+                          "rerank-lite-1",
+                          "rerank-1",
+                          "rerank-2",
+                          "rerank-2-lite"
+                        ]
                       }
                     },
-                    "required": ["apiKey"]
+                    "required": [
+                      "apiKey"
+                    ]
                   }
                 }
               }
@@ -2185,10 +3005,14 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["huggingface-tei"]
+                    "enum": [
+                      "huggingface-tei"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2205,12 +3029,17 @@
                         "default": false
                       },
                       "truncation_direction": {
-                        "enum": ["Right", "Left"],
+                        "enum": [
+                          "Right",
+                          "Left"
+                        ],
                         "markdownDescription": "Wether to truncate sequences from the `left` or `right`.",
                         "default": "Right"
                       }
                     },
-                    "required": ["apiBase"]
+                    "required": [
+                      "apiBase"
+                    ]
                   }
                 },
                 "if": {
@@ -2221,7 +3050,9 @@
                   }
                 },
                 "then": {
-                  "required": ["truncation_direction"]
+                  "required": [
+                    "truncation_direction"
+                  ]
                 }
               }
             }
@@ -2286,7 +3117,11 @@
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
             },
             "multilineCompletions": {
-              "enum": ["always", "never", "auto"],
+              "enum": [
+                "always",
+                "never",
+                "auto"
+              ],
               "description": "If set to true, Continue will only complete a single line at a time."
             },
             "useCache": {
@@ -2315,7 +3150,10 @@
           "type": "object",
           "properties": {
             "codeBlockToolbarPosition": {
-              "enum": ["top", "bottom"],
+              "enum": [
+                "top",
+                "bottom"
+              ],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
             },
@@ -2326,6 +3164,12 @@
               "type": "boolean",
               "description": "If set to true, we will display the model output as raw markdown.",
               "default": false
+            },
+            "showChatScrollbar": {
+              "title": "Show Chat Scrollbar",
+              "markdownDescription": "If set to `true`, a scrollbar will be displayed in the chat window to navigate through messages.",
+              "default": false,
+              "type": "boolean"
             }
           }
         },
@@ -2334,7 +3178,10 @@
           "properties": {
             "provider": {
               "type": "string",
-              "enum": ["posthog", "logstash"],
+              "enum": [
+                "posthog",
+                "logstash"
+              ],
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [
@@ -2351,30 +3198,40 @@
               "description": "The client key to use for analytics"
             }
           },
-          "required": ["provider"],
+          "required": [
+            "provider"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["posthog"]
+                    "enum": [
+                      "posthog"
+                    ]
                   }
                 }
               },
               "then": {
-                "required": ["clientKey"]
+                "required": [
+                  "clientKey"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["logstash"]
+                    "enum": [
+                      "logstash"
+                    ]
                   }
                 }
               },
               "then": {
-                "required": ["url"]
+                "required": [
+                  "url"
+                ]
               }
             }
           ]
@@ -2406,6 +3263,15 @@
               "type": "object",
               "properties": {
                 "inlineEdit": {
+                  "description": "The 'title' property of the model you wish to use for inline edits",
+                  "type": "string"
+                },
+                "applyCodeBlock": {
+                  "description": "The 'title' property of the model you wish to use for applying code blocks",
+                  "type": "string"
+                },
+                "repoMapFileSelection": {
+                  "description": "The 'title' property of the model you wish to use for repo map file selections",
                   "type": "string"
                 }
               }
@@ -2437,7 +3303,10 @@
                     "default": false
                   }
                 },
-                "required": ["prompt", "title"]
+                "required": [
+                  "prompt",
+                  "title"
+                ]
               },
               "description": "Quick actions are a way to add custom commands to the Code Lens of function and class declarations."
             },

@@ -1,4 +1,7 @@
 import ignore from "ignore";
+import path from "path";
+import os from "os";
+import fs from "fs";
 
 export const DEFAULT_IGNORE_FILETYPES = [
   "*.DS_Store",
@@ -67,6 +70,10 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "*.csv",
   "*.uasset",
   "*.pdb",
+  "*.bin",
+  "*.pag",
+  "*.swp",
+  "*.jsonl",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
 
@@ -84,6 +91,7 @@ export const DEFAULT_IGNORE_DIRS = [
   "node_modules/",
   "dist/",
   "build/",
+  "Build/",
   "target/",
   "out/",
   "bin/",
@@ -109,3 +117,18 @@ export function gitIgArrayFromFile(file: string) {
     .map((l) => l.trim()) // Remove whitespace
     .filter((l) => !/^#|^$/.test(l)); // Remove empty lines
 }
+
+export const GLOBAL_CONTINUEIGNORE_PATH = path.join(os.homedir(), ".continue", ".continueignore");
+
+export const getGlobalContinueIgArray = () => {
+  try {
+    const contents = fs.readFileSync(GLOBAL_CONTINUEIGNORE_PATH, "utf8");
+    return gitIgArrayFromFile(contents);
+  } catch (error) {
+    // If the file doesn't exist, that's okay
+    if (error instanceof Error && ("code" in error) && error.code === "ENOENT") {
+      return [];
+    }
+    throw error;
+  }
+};

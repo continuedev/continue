@@ -17,6 +17,7 @@ import {
   uriFromFilePath,
 } from "./vscode";
 
+import { EXTENSION_NAME } from "core/control-plane/env";
 import _ from "lodash";
 
 const util = require("node:util");
@@ -135,9 +136,34 @@ export class VsCodeIdeUtils {
     );
   }
 
-  openFile(filepath: string, range?: vscode.Range) {
+  private async resolveAbsFilepathInWorkspace(
+    filepath: string,
+  ): Promise<string> {
+    // If the filepath is already absolute, return it as is
+    if (this.path.isAbsolute(filepath)) {
+      return filepath;
+    }
+
+    // Try to resolve for each workspace directory
+    const workspaceDirectories = this.getWorkspaceDirectories();
+    for (const dir of workspaceDirectories) {
+      const resolvedPath = this.path.resolve(dir, filepath);
+      if (await this.fileExists(resolvedPath)) {
+        return resolvedPath;
+      }
+    }
+
+    return filepath;
+  }
+
+  async openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(
+      await this.resolveAbsFilepathInWorkspace(filepath),
+      range,
+      vscode.ViewColumn.One,
+      false,
+    );
   }
 
   async fileExists(filepath: string): Promise<boolean> {
@@ -170,7 +196,7 @@ export class VsCodeIdeUtils {
 
   async getUserSecret(key: string) {
     // Check if secret already exists in VS Code settings (global)
-    let secret = vscode.workspace.getConfiguration("continue").get(key);
+    let secret = vscode.workspace.getConfiguration(EXTENSION_NAME).get(key);
     if (typeof secret !== "undefined" && secret !== null) {
       return secret;
     }
@@ -183,7 +209,7 @@ export class VsCodeIdeUtils {
 
     // Add secret to VS Code settings
     vscode.workspace
-      .getConfiguration("continue")
+      .getConfiguration(EXTENSION_NAME)
       .update(key, secret, vscode.ConfigurationTarget.Global);
 
     return secret;
@@ -207,7 +233,7 @@ export class VsCodeIdeUtils {
   // In some cases vscode.window.visibleTextEditors can return non-code editors
   // e.g. terminal editors in side-by-side mode
   private documentIsCode(uri: vscode.Uri) {
-    return uri.scheme === "file";
+    return uri.scheme === "file" || uri.scheme === "vscode-remote";
   }
 
   getOpenFiles(): string[] {
@@ -593,7 +619,7 @@ export class VsCodeIdeUtils {
     return repo?.state?.HEAD?.name || "NONE";
   }
 
-  async getDiff(): Promise<string> {
+  async getDiff(includeUnstaged: boolean): Promise<string> {
     let diffs: string[] = [];
     let repos = [];
 
@@ -604,17 +630,13 @@ export class VsCodeIdeUtils {
       }
 
       repos.push(repo.state.HEAD?.name);
-      // Staged changes
-      // const a = await repo.diffIndexWithHEAD();
+
       const staged = await repo.diff(true);
-      // Un-staged changes
-      // const b = await repo.diffWithHEAD();
-      const unstaged = await repo.diff(false);
-      // All changes
-      // const e = await repo.diffWith("HEAD");
-      // Only staged
-      // const f = await repo.diffIndexWith("HEAD");
-      diffs.push(`${staged}\n${unstaged}`);
+      diffs.push(`${staged}`);
+      if (includeUnstaged) {
+        const unstaged = await repo.diff(false);
+        diffs.push(`\n${unstaged}`);
+      }
     }
 
     const fullDiff = diffs.join("\n\n");

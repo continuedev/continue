@@ -1,9 +1,9 @@
 import {
   BranchAndDir,
   Chunk,
-  EmbeddingsProvider,
+  ContinueConfig,
   IDE,
-  Reranker,
+  ILLM,
 } from "../../../index.js";
 import { chunkDocument } from "../../../indexing/chunk/chunk.js";
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex.js";
@@ -11,9 +11,9 @@ import { retrieveFts } from "../fullTextSearch.js";
 import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache.js";
 
 export interface RetrievalPipelineOptions {
+  llm: ILLM;
+  config: ContinueConfig;
   ide: IDE;
-  embeddingsProvider: EmbeddingsProvider;
-  reranker: Reranker | undefined;
 
   input: string;
   nRetrieve: number;
@@ -31,7 +31,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   private lanceDbIndex: LanceDbIndex;
   constructor(protected readonly options: RetrievalPipelineOptions) {
     this.lanceDbIndex = new LanceDbIndex(
-      options.embeddingsProvider,
+      options.config.embeddingsProvider,
       (path) => options.ide.readFile(path),
       options.pathSep,
     );
@@ -62,7 +62,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       const fileChunks = chunkDocument({
         filepath,
         contents,
-        maxChunkSize: this.options.embeddingsProvider.maxChunkSize,
+        maxChunkSize: this.options.config.embeddingsProvider.maxChunkSize,
         digest: filepath,
       });
 

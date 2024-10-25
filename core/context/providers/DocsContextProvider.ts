@@ -1,3 +1,4 @@
+import { INSTRUCTIONS_BASE_ITEM } from "./utils";
 import { BaseContextProvider } from "../";
 import {
   Chunk,
@@ -90,7 +91,8 @@ class DocsContextProvider extends BaseContextProvider {
       await docsService.isJetBrainsAndPreIndexedDocsProvider();
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
-      extras.ide.errorPopup(
+      await extras.ide.showToast(
+        "error",
         `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
           "the embeddings provider, but it cannot be used with JetBrains. " +
           "Please select a different embeddings provider to use the '@docs' " +
@@ -103,13 +105,14 @@ class DocsContextProvider extends BaseContextProvider {
     const preIndexedDoc = preIndexedDocs[query];
 
     if (!!preIndexedDoc) {
-      Telemetry.capture("docs_pre_indexed_doc_used", {
+      void Telemetry.capture("docs_pre_indexed_doc_used", {
         doc: preIndexedDoc["title"],
       });
     }
 
-    const embeddingsProvider =
-      await docsService.getEmbeddingsProvider(!!preIndexedDoc);
+    const embeddingsProvider = await docsService.getEmbeddingsProvider(
+      !!preIndexedDoc,
+    );
 
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
@@ -144,11 +147,14 @@ class DocsContextProvider extends BaseContextProvider {
             : chunk.otherMetadata?.title || chunk.filepath,
           description: chunk.filepath,
           content: chunk.content,
+          uri: {
+            type: "url" as const,
+            value: chunk.filepath,
+          },
         }))
         .reverse(),
       {
-        name: "Instructions",
-        description: "Instructions",
+        ...INSTRUCTIONS_BASE_ITEM,
         content:
           "Use the above documentation to answer the following question. You should not reference " +
           "anything outside of what is shown, unless it is a commonly known concept. Reference URLs " +

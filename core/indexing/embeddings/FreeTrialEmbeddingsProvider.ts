@@ -1,6 +1,6 @@
 import { Response } from "node-fetch";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
-import { constants } from "../../deploy/constants.js";
+import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
 import {
   EmbeddingsProviderName,
   EmbedOptions,
@@ -24,16 +24,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    const batchedChunks = [];
-    for (
-      let i = 0;
-      i < chunks.length;
-      i += FreeTrialEmbeddingsProvider.maxBatchSize
-    ) {
-      batchedChunks.push(
-        chunks.slice(i, i + FreeTrialEmbeddingsProvider.maxBatchSize),
-      );
-    }
+    const batchedChunks = this.getBatchedChunks(chunks);
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {
@@ -42,7 +33,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
           }
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(async () =>
-              this.fetch(new URL("embeddings", constants.a), {
+              this.fetch(new URL("embeddings", TRIAL_PROXY_URL), {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,

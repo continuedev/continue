@@ -1,11 +1,9 @@
 package com.github.continuedev.continueintellijextension.utils
 
-import java.awt.Toolkit
-import java.awt.event.KeyEvent
-
 enum class Os {
     MAC, WINDOWS, LINUX
 }
+
 fun getOs(): Os {
     val osName = System.getProperty("os.name").toLowerCase()
     val os = when {
@@ -20,8 +18,8 @@ fun getOs(): Os {
 fun getMetaKeyLabel(): String {
     return when (getOs()) {
         Os.MAC -> "⌘"
-        Os.WINDOWS -> "Ctrl"
-        Os.LINUX -> "Ctrl"
+        Os.WINDOWS -> "^"
+        Os.LINUX -> "^"
     }
 }
 

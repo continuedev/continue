@@ -1,26 +1,30 @@
-import { ContextProviderName } from "../../index.js";
-import { BaseContextProvider } from "../index.js";
-import CodeContextProvider from "./CodeContextProvider.js";
-import ContinueProxyContextProvider from "./ContinueProxyContextProvider.js";
-import CurrentFileContextProvider from "./CurrentFileContextProvider.js";
-import DatabaseContextProvider from "./DatabaseContextProvider.js";
-import DiffContextProvider from "./DiffContextProvider.js";
-import DocsContextProvider from "./DocsContextProvider.js";
-import FileTreeContextProvider from "./FileTreeContextProvider.js";
-import FolderContextProvider from "./FolderContextProvider.js";
-import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider.js";
-import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider.js";
-import GoogleContextProvider from "./GoogleContextProvider.js";
-import HttpContextProvider from "./HttpContextProvider.js";
-import JiraIssuesContextProvider from "./JiraIssuesContextProvider/index.js";
-import LocalsProvider from "./LocalsProvider.js";
-import OSContextProvider from "./OSContextProvider.js";
-import OpenFilesContextProvider from "./OpenFilesContextProvider.js";
-import PostgresContextProvider from "./PostgresContextProvider.js";
-import ProblemsContextProvider from "./ProblemsContextProvider.js";
-import SearchContextProvider from "./SearchContextProvider.js";
-import TerminalContextProvider from "./TerminalContextProvider.js";
-import URLContextProvider from "./URLContextProvider.js";
+import { BaseContextProvider } from "../";
+import { ContextProviderName } from "../../";
+import CodeContextProvider from "./CodeContextProvider";
+import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
+import CurrentFileContextProvider from "./CurrentFileContextProvider";
+import DatabaseContextProvider from "./DatabaseContextProvider";
+import DiffContextProvider from "./DiffContextProvider";
+import DiscordContextProvider from "./DiscordContextProvider";
+import DocsContextProvider from "./DocsContextProvider";
+import FileTreeContextProvider from "./FileTreeContextProvider";
+import FolderContextProvider from "./FolderContextProvider";
+import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
+import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
+import GoogleContextProvider from "./GoogleContextProvider";
+import GreptileContextProvider from "./GreptileContextProvider";
+import HttpContextProvider from "./HttpContextProvider";
+import JiraIssuesContextProvider from "./JiraIssuesContextProvider/";
+import DebugLocalsProvider from "./DebugLocalsProvider";
+import OSContextProvider from "./OSContextProvider";
+import OpenFilesContextProvider from "./OpenFilesContextProvider";
+import PostgresContextProvider from "./PostgresContextProvider";
+import ProblemsContextProvider from "./ProblemsContextProvider";
+import RepoMapContextProvider from "./RepoMapContextProvider";
+import SearchContextProvider from "./SearchContextProvider";
+import TerminalContextProvider from "./TerminalContextProvider";
+import URLContextProvider from "./URLContextProvider";
+import WebContextProvider from "./WebContextProvider";
 
 /**
  * Note: We are currently omitting the following providers due to bugs:
@@ -29,13 +33,13 @@ import URLContextProvider from "./URLContextProvider.js";
  *
  * See this issue for details: https://github.com/continuedev/continue/issues/1365
  */
-const Providers: (typeof BaseContextProvider)[] = [
+export const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,
   GoogleContextProvider,
   TerminalContextProvider,
-  LocalsProvider,
+  DebugLocalsProvider,
   OpenFilesContextProvider,
   HttpContextProvider,
   SearchContextProvider,
@@ -51,6 +55,10 @@ const Providers: (typeof BaseContextProvider)[] = [
   CurrentFileContextProvider,
   URLContextProvider,
   ContinueProxyContextProvider,
+  RepoMapContextProvider,
+  DiscordContextProvider,
+  GreptileContextProvider,
+  WebContextProvider,
 ];
 
 export function contextProviderClassFromName(

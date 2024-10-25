@@ -18,16 +18,7 @@ class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
       this.options.apiBase += "/";
     }
 
-    const batchedChunks = [];
-    for (
-      let i = 0;
-      i < chunks.length;
-      i += CohereEmbeddingsProvider.maxBatchSize
-    ) {
-      batchedChunks.push(
-        chunks.slice(i, i + CohereEmbeddingsProvider.maxBatchSize),
-      );
-    }
+    const batchedChunks = this.getBatchedChunks(chunks);
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {

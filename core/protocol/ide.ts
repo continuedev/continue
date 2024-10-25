@@ -1,8 +1,8 @@
-import { ControlPlaneSessionInfo } from "../control-plane/client.js";
 import type {
   ContinueRcJson,
   DiffLine,
   FileType,
+  IDE,
   IdeInfo,
   IdeSettings,
   IndexTag,
@@ -11,7 +11,12 @@ import type {
   Range,
   RangeInFile,
   Thread,
-} from "../index.js";
+} from "../";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
+
+export interface GetGhTokenArgs {
+  force?: boolean;
+}
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
@@ -24,7 +29,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   openFile: [{ path: string }, void];
   runCommand: [{ command: string }, void];
   getSearchResults: [{ query: string }, string];
-  subprocess: [{ command: string }, [string, string]];
+  subprocess: [{ command: string; cwd?: string }, [string, string]];
   saveFile: [{ filepath: string }, void];
   fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
@@ -47,7 +52,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
-  getDiff: [undefined, string];
+  getDiff: [{ includeUnstaged: boolean }, string];
   getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
   getDebugLocals: [{ threadIndex: number }, string];
@@ -67,15 +72,17 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getBranch: [{ dir: string }, string];
   getRepoName: [{ dir: string }, string | undefined];
 
-  errorPopup: [{ message: string }, void];
-  infoPopup: [{ message: string }, void];
+  showToast: [
+    Parameters<IDE["showToast"]>,
+    Awaited<ReturnType<IDE["showToast"]>>,
+  ];
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
   getLastModified: [{ files: string[] }, { [path: string]: number }];
 
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
-  getGitHubAuthToken: [undefined, string | undefined];
+  getGitHubAuthToken: [GetGhTokenArgs, string | undefined];
   getControlPlaneSessionInfo: [
     { silent: boolean },
     ControlPlaneSessionInfo | undefined,
@@ -90,4 +97,5 @@ export type ToWebviewOrCoreFromIdeProtocol = {
     { sessionInfo: ControlPlaneSessionInfo | undefined },
     void,
   ];
+  didChangeIdeSettings: [{ settings: IdeSettings }, void];
 };

@@ -1,25 +1,41 @@
 import { Chunk } from "../../../index.js";
 import { RETRIEVAL_PARAMS } from "../../../util/parameters.js";
-import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache.js";
+import { requestFilesFromRepoMap } from "../repoMapRequest.js";
 import { deduplicateChunks } from "../util.js";
 import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(): Promise<Chunk[]> {
-    const { input, nRetrieve } = this.options;
+    const { input, nRetrieve, filterDirectory } = this.options;
 
-    const retrievalResults: Chunk[] = [];
+    let retrievalResults: Chunk[] = [];
 
     const ftsChunks = await this.retrieveFts(input, nRetrieve);
     const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
     const recentlyEditedFilesChunks =
       await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
 
+    const repoMapChunks = await requestFilesFromRepoMap(
+      this.options.llm,
+      this.options.config,
+      this.options.ide,
+      input,
+      filterDirectory,
+    );
+
     retrievalResults.push(
       ...recentlyEditedFilesChunks,
       ...ftsChunks,
       ...embeddingsChunks,
+      ...repoMapChunks,
     );
+
+    if (filterDirectory) {
+      // Backup if the individual retrieval methods don't listen
+      retrievalResults = retrievalResults.filter((chunk) =>
+        chunk.filepath.startsWith(filterDirectory),
+      );
+    }
 
     const deduplicatedRetrievalResults: Chunk[] =
       deduplicateChunks(retrievalResults);
@@ -28,11 +44,17 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   }
 
   private async _rerank(input: string, chunks: Chunk[]): Promise<Chunk[]> {
-    if (!this.options.reranker) {
+    if (!this.options.config.reranker) {
       throw new Error("No reranker provided");
     }
 
-    let scores: number[] = await this.options.reranker.rerank(input, chunks);
+    // remove empty chunks -- some APIs fail on that
+    chunks = chunks.filter((chunk) => chunk.content);
+
+    let scores: number[] = await this.options.config.reranker.rerank(
+      input,
+      chunks,
+    );
 
     // Filter out low-scoring results
     let results = chunks;
@@ -43,8 +65,11 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     //   (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
     // );
 
+    const chunkIndexMap = new Map<Chunk, number>();
+    chunks.forEach((chunk, idx) => chunkIndexMap.set(chunk, idx));
+
     results.sort(
-      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
+      (a, b) => scores[chunkIndexMap.get(a)!] - scores[chunkIndexMap.get(b)!],
     );
     results = results.slice(-this.options.nFinal);
     return results;

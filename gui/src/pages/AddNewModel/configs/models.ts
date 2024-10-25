@@ -1,6 +1,6 @@
 import { ILLM, ModelProvider } from "core";
-import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { InputDescriptor } from "./providers";
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
 // You would set options to the field that should be changed for that option in the params field of ModelPackage
@@ -33,7 +33,7 @@ export interface ModelPackage {
 export const models: { [key: string]: ModelPackage } = {
   llama31Chat: {
     title: "Llama3.1 Chat",
-    description: "The latest model from Meta, fine-tuned for chat",
+    description: "A model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
       title: "Llama3.1-8b",
@@ -67,6 +67,49 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "sambanova",
+      "cerebras",
+    ],
+    isOpenSource: true,
+  },
+  llama32Chat: {
+    title: "Llama3.2 Chat",
+    description: "The latest model from Meta, fine-tuned for chat. Llama3.1 recommended - chat stayed the same",
+    refUrl: "",
+    params: {
+      title: "Llama3.2-11b",
+      model: "llama3.2-11b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "1b": {
+            model: "llama3.2-1b",
+            title: "Llama3.2-1b",
+          },
+          "3b": {
+            model: "llama3.2-3b",
+            title: "Llama3.2-3b",
+          },
+          "11b": {
+            model: "llama3.2-11b",
+            title: "Llama3.2-11b",
+          },
+          "90b": {
+            model: "llama3.2-90b",
+            title: "Llama3.2-90b",
+          },
+        },
+      },
+    ],
+    providerOptions: [
+      "ollama",
+      "groq",
+      "llama.cpp",
     ],
     isOpenSource: true,
   },
@@ -276,7 +319,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   llama318bChat: {
     title: "Llama3.1 8b Chat",
-    description: "The latest Llama model from Meta, fine-tuned for chat",
+    description: "A model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
       title: "Llama3.1-8b",
@@ -289,7 +332,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   llama3170bChat: {
     title: "Llama3.1 70b Chat",
-    description: "The latest Llama model from Meta, fine-tuned for chat",
+    description: "A model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
       title: "Llama3.1-70b",
@@ -302,7 +345,7 @@ export const models: { [key: string]: ModelPackage } = {
   },
   llama31405bChat: {
     title: "Llama3.1 405b Chat",
-    description: "The latest Llama model from Meta, fine-tuned for chat",
+    description: "A model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
       title: "Llama3.1-405b",
@@ -313,22 +356,61 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["groq"],
     isOpenSource: false,
   },
-  llama270bChat: {
-    title: "Llama2 70b Chat",
-    description: "The latest Llama model from Meta, fine-tuned for chat",
+  llama321bChat: {
+    title: "Llama3.2 1b Chat",
+    description: "The latest super-lightweight model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
-      title: "Llama2-70b",
-      model: "llama2-70b",
-      contextLength: 4096,
+      title: "Llama3.2-1b",
+      model: "llama3.2-1b",
+      contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova"],
+    isOpenSource: false,
+  },
+  llama323bChat: {
+    title: "Llama3.2 3b Chat",
+    description: "The latest lightweight model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.2-3b",
+      model: "llama3.2-3b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["ollama", "groq", "llama.cpp", "sambanova", "together"],
+    isOpenSource: false,
+  },
+  llama3211bChat: {
+    title: "Llama3.2 11b Chat",
+    description: "The latest lightweight multi-modal model from Meta",
+    refUrl: "",
+    params: {
+      title: "Llama3.2-11b",
+      model: "llama3.2-11b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["ollama", "groq", "llama.cpp", "together"],
+    isOpenSource: false,
+  },
+  llama3290bChat: {
+    title: "Llama3.2 90b Chat",
+    description: "The latest lightweight multi-modal model from Meta",
+    refUrl: "",
+    params: {
+      title: "Llama3.2-90b",
+      model: "llama3.2-90b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["ollama", "groq", "llama.cpp"],
     isOpenSource: false,
   },
   llama3Chat: {
     title: "Llama3 Chat",
-    description: "The latest model from Meta, fine-tuned for chat",
+    description: "A model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
       title: "Llama3-8b",
@@ -454,7 +536,7 @@ export const models: { [key: string]: ModelPackage } = {
   codestral: {
     title: "Codestral",
     description:
-      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion. Trained on more than 80 programming languages, Codestral demonstrates proficiency in both widely-used and less-common languages.",
+      "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion.",
     params: {
       title: "Codestral",
       model: "codestral-latest",
@@ -741,7 +823,7 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       model: "ibm/granite-20b-code-instruct",
       contextLength: 20_000,
-      title: "watsonx - Granite Code 20b"
+      title: "watsonx - Granite Code 20b",
     },
     providerOptions: ["watsonx"],
     icon: "watsonx.png",

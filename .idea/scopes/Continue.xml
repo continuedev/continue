@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Continue" pattern="file[continue-intellij-extension]:*/&amp;&amp;!file[continue-intellij-extension]:binary/bin//*&amp;&amp;!file[continue-intellij-extension]:binary/build//*&amp;&amp;!file[continue-intellij-extension]:binary/out//*&amp;&amp;!file[continue-intellij-extension]:gui/dist//*&amp;&amp;!file[continue-intellij-extension]:extensions/intellij/build//*&amp;&amp;!file[continue-intellij-extension]:extensions/vscode/bin//*&amp;&amp;!file[continue-intellij-extension]:extensions/vscode/build//*&amp;&amp;!file[continue-intellij-extension]:extensions/vscode/out//*" />
+</component>

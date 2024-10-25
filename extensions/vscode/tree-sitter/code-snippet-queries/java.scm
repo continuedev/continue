@@ -1,8 +1,15 @@
 (class_declaration
-  name: (identifier) @name.definition.class) @definition.class
+  name: (_) @name.definition.class
+  interfaces: (_) @interfaces
+)  @definition.class
+
 
 (method_declaration
-  name: (identifier) @name.definition.method) @definition.method
+  type: (_) @return_type
+  name: (_) @name.definition.method
+  parameters: (_) @parameters
+) @definition.method
 
 (interface_declaration
-  name: (identifier) @name.definition.interface) @definition.interface
+  name: (_) @name.definition.interface
+) @definition.interface

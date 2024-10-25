@@ -1,9 +1,0 @@
-[[redirects]]
-  from = "/"
-  to = "/intro"
-  force = true
-
-[[redirects]]
-  from = "/docs"
-  to = "/intro"
-  force = true

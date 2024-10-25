@@ -99,6 +99,9 @@ export function slashCommandFromPromptFile(
     name,
     description,
     run: async function* (context) {
+      const originalSystemMessage = context.llm.systemMessage;
+      context.llm.systemMessage = systemMessage;
+
       const userInput = extractUserInput(context.input, name);
       const renderedPrompt = await renderPrompt(prompt, context, userInput);
       const messages = updateChatHistory(
@@ -111,6 +114,8 @@ export function slashCommandFromPromptFile(
       for await (const chunk of context.llm.streamChat(messages)) {
         yield stripImages(chunk.content);
       }
+
+      context.llm.systemMessage = originalSystemMessage;
     },
   };
 }
@@ -146,7 +151,7 @@ async function renderPrompt(prompt: string, context: any, userInput: string) {
   const helpers = getContextProviderHelpers(context);
 
   // A few context providers that don't need to be in config.json to work in .prompt files
-  const diff = await context.ide.getDiff();
+  const diff = await context.ide.getDiff(false);
   const currentFilePath = await context.ide.getCurrentFile();
   const currentFile = currentFilePath
     ? await context.ide.readFile(currentFilePath)

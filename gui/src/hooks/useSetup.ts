@@ -7,17 +7,18 @@ import { setVscMachineId } from "../redux/slices/configSlice";
 import {
   addContextItemsAtIndex,
   setConfig,
-  setTTSActive,
+  setConfigError,
   setInactive,
   setSelectedProfileId,
+  setTTSActive,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
+import { debounce } from "lodash";
 import { isJetBrains } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
-import { debounce } from "lodash";
 
 function useSetup(dispatch: Dispatch<any>) {
   const [configLoaded, setConfigLoaded] = useState<boolean>(false);
@@ -25,10 +26,14 @@ function useSetup(dispatch: Dispatch<any>) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const loadConfig = async () => {
-    const { config, profileId } = await ideMessenger.request(
+    const result = await ideMessenger.request(
       "config/getSerializedProfileInfo",
       undefined,
     );
+    if (result.status === "error") {
+      return;
+    }
+    const { config, profileId } = result.content;
     dispatch(setConfig(config));
     dispatch(setSelectedProfileId(profileId));
     setConfigLoaded(true);
@@ -60,7 +65,11 @@ function useSetup(dispatch: Dispatch<any>) {
     dispatch(setInactive());
 
     // Tell JetBrains the webview is ready
-    ideMessenger.request("onLoad", undefined).then((msg) => {
+    ideMessenger.request("onLoad", undefined).then((result) => {
+      if (result.status === "error") {
+        return;
+      }
+      const msg = result.content;
       (window as any).windowId = msg.windowId;
       (window as any).serverUrl = msg.serverUrl;
       (window as any).workspacePaths = msg.workspacePaths;
@@ -103,6 +112,10 @@ function useSetup(dispatch: Dispatch<any>) {
     if (!isJetBrains && !getLocalStorage("disableIndexing")) {
       debouncedIndexDocs();
     }
+  });
+
+  useWebviewListener("configError", async (error) => {
+    dispatch(setConfigError(error));
   });
 
   useWebviewListener("submitMessage", async (data) => {

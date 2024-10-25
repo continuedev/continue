@@ -28,10 +28,15 @@ class OpenFilesContextProvider extends BaseContextProvider {
       openFiles.map(async (filepath: string) => {
         return {
           description: filepath,
-          content: `\`\`\`${await getRelativePath(filepath, workspaceDirs)}\n${await ide.readFile(
+          content: `\`\`\`${await getRelativePath(
             filepath,
-          )}\n\`\`\``,
+            workspaceDirs,
+          )}\n${await ide.readFile(filepath)}\n\`\`\``,
           name: (filepath.split("/").pop() ?? "").split("\\").pop() ?? "",
+          uri: {
+            type: "file",
+            value: filepath,
+          },
         };
       }),
     );

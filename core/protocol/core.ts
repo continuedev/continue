@@ -1,5 +1,3 @@
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -10,17 +8,27 @@ import type {
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
+  ModelRoles,
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
 } from "../";
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
   content: T;
 }>;
+
+export type OnboardingModes =
+  | "Local"
+  | "Best"
+  | "Custom"
+  | "Quickstart"
+  | "LocalAfterFreeTrial";
 
 export interface ListHistoryOptions {
   offset?: number;
@@ -43,7 +51,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
-    { model: SerializedContinueConfig["models"][number] },
+    {
+      model: SerializedContinueConfig["models"][number];
+      role?: keyof ModelRoles;
+    },
     void,
   ];
   "config/newPromptFile": [undefined, void];
@@ -120,6 +131,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
+  "chatDescriber/describe": [string, string | undefined];
   "stats/getTokensPerDay": [
     undefined,
     { day: string; promptTokens: number; generatedTokens: number }[],
@@ -137,13 +149,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {
-      mode:
-        | "local"
-        | "apiKeys"
-        | "custom"
-        | "freeTrial"
-        | "localAfterFreeTrial"
-        | "bestExperience";
+      mode: OnboardingModes;
     },
     void,
   ];

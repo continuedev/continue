@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Web context provider
+time: 2024-10-14T23:15:51.670444-07:00

@@ -12,10 +12,7 @@ export function ChatScrollAnchor({
   isAtBottom,
   scrollAreaRef,
 }: ChatScrollAnchorProps) {
-  const { ref, inView, entry } = useInView({
-    trackVisibility,
-    delay: 100,
-  });
+  const { ref, inView, entry } = useInView();
 
   useEffect(() => {
     if (isAtBottom && trackVisibility && !inView) {

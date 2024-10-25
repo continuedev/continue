@@ -92,6 +92,8 @@ export class SqliteDb {
       driver: sqlite3.Database,
     });
 
+    await SqliteDb.db.exec("PRAGMA busy_timeout = 3000;");
+
     await SqliteDb.createTables(SqliteDb.db);
 
     return SqliteDb.db;
@@ -226,7 +228,7 @@ async function getAddRemoveForTag(
           break;
         case AddRemoveResultType.Add:
           await db.run(
-            "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
+            "REPLACE INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
             path,
             cacheKey,
             newLastUpdatedTimestamp,
@@ -414,11 +416,9 @@ export async function getComputeDeleteAddRemove(
 
 export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
-  private db: DatabaseConnection;
 
-  constructor(db: DatabaseConnection) {
-    this.db = db;
-  }
+  constructor(private db: DatabaseConnection) {}
+
   artifactId = "globalCache";
 
   static async create(): Promise<GlobalCacheCodeBaseIndex> {

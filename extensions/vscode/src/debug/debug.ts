@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import type { VsCodeIde } from "../ideProtocol";
+import type { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export const threadStopped: Map<number, boolean> = new Map();
@@ -13,7 +13,7 @@ export function registerDebugTracker(
     createDebugAdapterTracker(_session: vscode.DebugSession) {
       const updateThreads = async () => {
         webviewProtocol?.request("updateSubmenuItems", {
-          provider: "locals",
+          provider: "debugger",
           submenuItems: (await ide.getAvailableThreads()).map((thread) => ({
             id: `${thread.id}`,
             title: thread.name,

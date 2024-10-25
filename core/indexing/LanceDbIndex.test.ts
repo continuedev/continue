@@ -48,7 +48,7 @@ describe("ChunkCodebaseIndex", () => {
    * - We cannot open either the 'dev' or 'main' tag tables ubtil after we
    *   can assume they've been created through `updateIndexAndAwaitGenerator`
    */
-  it.skip("should update the index and maintain expected database state", async () => {
+  it("should update the index and maintain expected database state", async () => {
     const mainTag = mockTag;
     const mainTagTableName = index.tableNameForTag(mainTag);
 

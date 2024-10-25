@@ -54,7 +54,7 @@ const hljsToTextMate: Record<string, string[]> = {
 };
 
 function constructTheme(
-  tmTheme: typeof window.fullColorTheme
+  tmTheme: typeof window.fullColorTheme,
 ): Record<string, string> {
   const rules = tmTheme["rules"] || [];
 
@@ -151,7 +151,7 @@ function fallbackTheme() {
 
 export function useVscTheme() {
   const [theme, setTheme] = useState<any>(
-    constructTheme(window.fullColorTheme || {})
+    constructTheme(window.fullColorTheme || {}),
   );
 
   useWebviewListener("setTheme", async (data) => {

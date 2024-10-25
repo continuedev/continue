@@ -509,8 +509,8 @@ const exe = os === "win32" ? ".exe" : "";
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-        ? "libonnxruntime.so.1.14.0"
-        : "onnxruntime.dll"
+          ? "libonnxruntime.so.1.14.0"
+          : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -519,7 +519,7 @@ const exe = os === "win32" ? ".exe" : "";
     "gui/assets/index.css",
 
     // Tutorial
-    "media/welcome.md",
+    "media/move-chat-panel-right.md",
     "continue_tutorial.py",
     "config_schema.json",
 
@@ -549,8 +549,8 @@ const exe = os === "win32" ? ".exe" : "";
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-        ? "win32-x64/esbuild.exe"
-        : `${target}/bin/esbuild`
+          ? "win32-x64/esbuild.exe"
+          : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"

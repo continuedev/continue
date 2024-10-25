@@ -62,7 +62,13 @@ export const Mention = Node.create<MentionOptions>({
           const type = state.schema.nodes[this.name];
           const allow = !!$from.parent.type.contentMatch.matchType(type);
 
-          return allow;
+          // Check if there's a space after the "@"
+          const textFrom = range.from;
+          const textTo = state.selection.$to.pos;
+          const text = state.doc.textBetween(textFrom, textTo);
+          const hasSpace = text.includes(" ");
+
+          return allow && !hasSpace;
         },
       },
     };
@@ -170,7 +176,7 @@ export const Mention = Node.create<MentionOptions>({
         mergeAttributes(
           { "data-type": this.name },
           this.options.HTMLAttributes,
-          HTMLAttributes
+          HTMLAttributes,
         ),
         html,
       ];
@@ -196,7 +202,7 @@ export const Mention = Node.create<MentionOptions>({
               tr.insertText(
                 this.options.suggestion.char || "",
                 pos,
-                pos + node.nodeSize
+                pos + node.nodeSize,
               );
 
               return false;

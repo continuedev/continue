@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.199",
+  "version": "0.9.223",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -56,7 +56,6 @@
     "onView:continueGUIView"
   ],
   "main": "./out/extension.js",
-  "browser": "./out/extension.js",
   "contributes": {
     "languages": [
       {
@@ -78,7 +77,7 @@
         "continue.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "_(Requires window reload)_ Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
+          "markdownDescription": "Enable Continue for teams beta features. To sign in, click the person icon in the bottom right of the sidebar."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -129,6 +128,12 @@
     },
     "commands": [
       {
+        "command": "continue.applyCodeFromChat",
+        "category": "Continue",
+        "title": "Apply code from chat",
+        "group": "Continue"
+      },
+      {
         "command": "continue.acceptDiff",
         "category": "Continue",
         "title": "Accept Diff",
@@ -162,7 +167,7 @@
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context",
+        "title": "Add Highlighted Code to Context and Clear Chat",
         "group": "Continue"
       },
       {
@@ -214,6 +219,12 @@
         "category": "Continue",
         "title": "View History",
         "icon": "$(history)",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.navigateTo",
+        "category": "Continue",
+        "title": "Navigate to a path",
         "group": "Continue"
       },
       {
@@ -341,6 +352,11 @@
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "continue.applyCodeFromChat",
+        "mac": "alt+a",
+        "key": "alt+a"
       }
     ],
     "submenus": [
@@ -428,20 +444,25 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.toggleFullScreen",
-          "group": "navigation@1",
+          "command": "continue.viewHistory",
+          "group": "navigation@2",
           "when": "view == continue.continueGUIView"
         },
         {
-          "command": "continue.viewHistory",
-          "group": "navigation@1",
+          "command": "continue.toggleFullScreen",
+          "group": "navigation@3",
           "when": "view == continue.continueGUIView"
         }
       ],
       "editor/title": [
         {
-          "command": "continue.toggleFullScreen",
+          "command": "continue.newSession",
           "group": "navigation@1",
+          "when": "activeWebviewPanelId == continue.continueGUIView"
+        },
+        {
+          "command": "continue.viewHistory",
+          "group": "navigation@2",
           "when": "activeWebviewPanelId == continue.continueGUIView"
         }
       ],
@@ -471,45 +492,6 @@
         }
       ]
     },
-    "walkthroughs": [
-      {
-        "id": "continue",
-        "title": "Getting Started",
-        "description": "Learn how to use Continue",
-        "steps": [
-          {
-            "id": "edit",
-            "title": "Edit in natural language",
-            "description": "Highlight a section of code and instruct Continue to refactor it (e.g. `/edit rewrite this function to be async`)",
-            "media": {
-              "image": "media/edit.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          },
-          {
-            "id": "explain",
-            "title": "Get possible explanations",
-            "description": "Ask Continue about a part of your code to get another perspective (e.g. `where in the page should I be making this request to the backend?`)",
-            "media": {
-              "image": "media/explain.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          },
-          {
-            "id": "generate",
-            "title": "Generate files from scratch",
-            "description": "Let Continue build the scaffolding of Python scripts, React components, and more (e.g. `/edit here is a connector for postgres, now write one for kafka`)",
-            "media": {
-              "image": "media/generate.png",
-              "altText": "Empty image"
-            },
-            "completionEvents": []
-          }
-        ]
-      }
-    ],
     "jsonValidation": [
       {
         "fileMatch": "config.json",
@@ -527,6 +509,7 @@
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
     "tsc": "tsc -p ./",
+    "tsc:check": "tsc -p ./ --noEmit",
     "tsc-watch": "tsc -watch -p ./",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
@@ -556,7 +539,6 @@
     "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
     "esbuild": "0.17.19",

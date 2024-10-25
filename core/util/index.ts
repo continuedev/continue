@@ -2,19 +2,19 @@ export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
   // Replace smart quotes
-  output = output.replace("“", "\"");
-  output = output.replace("”", "\"");
+  output = output.replace("“", '"');
+  output = output.replace("”", '"');
   output = output.replace("‘", "'");
   output = output.replace("’", "'");
 
   // Remove escapes
-  output = output.replace("\\\"", "\"");
+  output = output.replace('\\"', '"');
   output = output.replace("\\'", "'");
   output = output.replace("\\n", "\n");
   output = output.replace("\\t", "\t");
   output = output.replace("\\\\", "\\");
   while (
-    (output.startsWith("\"") && output.endsWith("\"")) ||
+    (output.startsWith('"') && output.endsWith('"')) ||
     (output.startsWith("'") && output.endsWith("'"))
   ) {
     output = output.slice(1, -1);
@@ -120,7 +120,9 @@ export function getUniqueFilePath(
 }
 
 export function shortestRelativePaths(paths: string[]): string[] {
-  if (paths.length === 0) {return [];}
+  if (paths.length === 0) {
+    return [];
+  }
 
   const partsLengths = paths.map((x) => x.split(SEP_REGEX).length);
   const currentRelativePaths = paths.map(getBasename);
@@ -135,7 +137,9 @@ export function shortestRelativePaths(paths: string[]): string[] {
     const firstDuplicatedPath = currentRelativePaths.find(
       (x, i) => isDuplicated[i],
     );
-    if (!firstDuplicatedPath) {break;}
+    if (!firstDuplicatedPath) {
+      break;
+    }
 
     currentRelativePaths.forEach((x, i) => {
       if (x === firstDuplicatedPath) {
@@ -270,3 +274,33 @@ export function deduplicateArray<T>(
 }
 
 export type TODO = any;
+
+export function dedent(strings: TemplateStringsArray, ...values: any[]) {
+  let result = strings.reduce(
+    (acc, str, i) => acc + str + (values[i] || ""),
+    "",
+  );
+  result = result.replace(/^\n/, "").replace(/\n\s*$/, "");
+  let lines = result.split("\n");
+
+  // Remove leading white-space-only lines
+  while (lines.length > 0 && lines[0].trim() === "") {
+    lines.shift();
+  }
+
+  // Remove trailing white-space-only lines
+  while (lines.length > 0 && lines[lines.length - 1].trim() === "") {
+    lines.pop();
+  }
+
+  const minIndent = lines.reduce((min, line) => {
+    if (line.trim() === "") {
+      // Don't consider empty lines when calculating indentation
+      return min;
+    }
+    const match = line.match(/^\s*/);
+    return Math.min(min, match ? match[0].length : Infinity);
+  }, Infinity);
+
+  return lines.map((line) => line.slice(minIndent)).join("\n");
+}

@@ -8,17 +8,15 @@ export class AutocompleteLruCache {
   private static capacity = 1000;
   private mutex = new Mutex();
 
-  db: DatabaseConnection;
-
-  constructor(db: DatabaseConnection) {
-    this.db = db;
-  }
+  constructor(private db: DatabaseConnection) {}
 
   static async get(): Promise<AutocompleteLruCache> {
     const db = await open({
       filename: getTabAutocompleteCacheSqlitePath(),
       driver: sqlite3.Database,
     });
+
+    await db.exec("PRAGMA busy_timeout = 3000;");
 
     await db.run(`
       CREATE TABLE IF NOT EXISTS cache (

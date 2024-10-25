@@ -2,6 +2,7 @@ import React, { isValidElement, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import {
+  CloseButton,
   VSC_BACKGROUND_VAR,
   defaultBorderRadius,
   lightGray,
@@ -9,6 +10,16 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
+import { useDispatch } from "react-redux";
+import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { XMarkIcon } from "@heroicons/react/24/outline";
+
+interface TextDialogProps {
+  showDialog: boolean;
+  onEnter: () => void;
+  onClose: () => void;
+  message?: string | JSX.Element;
+}
 
 const ScreenCover = styled.div`
   position: fixed;
@@ -38,12 +49,9 @@ const Dialog = styled.div`
   // overflow: hidden;
 `;
 
-const TextDialog = (props: {
-  showDialog: boolean;
-  onEnter: () => void;
-  onClose: () => void;
-  message?: string | JSX.Element;
-}) => {
+const TextDialog = (props: TextDialogProps) => {
+  const dispatch = useDispatch();
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -62,18 +70,16 @@ const TextDialog = (props: {
   }
 
   return (
-    <ScreenCover
-      onClick={() => {
-        props.onClose();
-      }}
-      hidden={!props.showDialog}
-    >
+    <ScreenCover onClick={props.onClose} hidden={!props.showDialog}>
       <DialogContainer
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
         <Dialog>
+          <CloseButton onClick={props.onClose}>
+            <XMarkIcon className="h-5 w-5" />
+          </CloseButton>
           {typeof props.message === "string" ? (
             <ReactMarkdown>{props.message || ""}</ReactMarkdown>
           ) : !React.isValidElement(props.message) ? null : (

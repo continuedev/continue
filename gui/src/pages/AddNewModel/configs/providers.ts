@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
-import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -165,7 +165,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
   },
   mistral: {
-    title: "Mistral API",
+    title: "Mistral",
     provider: "mistral",
     description:
       "The Mistral API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
@@ -202,7 +202,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     description:
       "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
     longDescription:
-      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
+      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/download) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
     tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: [
@@ -219,7 +219,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
-    downloadUrl: "https://ollama.ai/",
+    downloadUrl: "https://ollama.ai/download",
   },
   cohere: {
     title: "Cohere",
@@ -301,7 +301,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
   together: {
     title: "TogetherAI",
     provider: "together",
-    refPage: "togetherllm",
+    refPage: "together",
     description:
       "Use the TogetherAI API for extremely fast streaming of open-source models",
     icon: "together.png",
@@ -490,43 +490,38 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         key: "watsonxUrl",
         label: "watsonx URL",
         placeholder: "e.g. http://us-south.dataplatform.cloud.ibm.com",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
         key: "watsonxProjectId",
         label: "watsonx Project ID",
         placeholder: "Enter your project ID",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
         key: "watsonxCreds",
         label: "watsonx API key",
         placeholder: "Enter your API key (SaaS) or ZenApiKey (Software)",
-        required: true
+        required: true,
       },
       {
         inputType: "text",
         key: "watsonxApiVersion",
         label: "watsonx API version",
         placeholder: "Enter the API Version",
-        defaultValue: "2023-05-29"
+        defaultValue: "2023-05-29",
+        required: true
       },
-      // {
-      //   inputType: "text",
-      //   key: "title",
-      //   label: "Model name",
-      //   placeholder: "Granite 13B Chat v2",
-      //   isWatsonxAttribute: true,
-      // },
-      // {
-      //   inputType: "text",
-      //   key: "model",
-      //   label: "Model Id",
-      //   placeholder: "ibm/granite-13b-chat-v2",
-      //   isWatsonxAttribute: true,
-      // },
+      {
+        inputType: "text",
+        key: "watsonxFullUrl",
+        label: "Full watsonx URL",
+        placeholder:
+          "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
+        required: false,
+      },
       {
         inputType: "text",
         key: "watsonxStopToken",
@@ -572,5 +567,63 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     collectInputFor: [...completionParamsInputsConfigs],
+  },
+  sambanova: {
+    title: "SambaNova Cloud",
+    provider: "sambanova",
+    refPage: "sambanova",
+    description: "Use SambaNova Cloud for fast inference performance",
+    icon: "sambanova.png",
+    longDescription: `The SambaNova Cloud is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your SambaNova Cloud API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.llama31Chat].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl: "https://cloud.sambanova.ai/apis",
+  },
+  cerebras: {
+    title: "Cerebras",
+    provider: "cerebras",
+    icon: "cerebras.png",
+    description:
+      "Cerebras Inference is a custom silicon for fast inference of LLM models.",
+    longDescription:
+      "Get your API key [here](https://cloud.cerebras.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cerebras API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.llama3170bChat,
+      models.llama318bChat,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Cerebras",
+        },
+      },
+    ],
+    apiKeyUrl: "https://cloud.cerebras.ai/",
   },
 };

@@ -1,4 +1,3 @@
-import Parser from "web-tree-sitter";
 import { RangeInFileWithContents } from "../commands/util.js";
 import { TabAutocompleteOptions } from "../index.js";
 
@@ -7,8 +6,7 @@ import {
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
-import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
-import { getAst, getTreePathAtCursor } from "./ast.js";
+import { AstPath, getAst, getTreePathAtCursor } from "./ast.js";
 import {
   AutocompleteLanguageInfo,
   LANGUAGES,
@@ -22,96 +20,14 @@ import {
   type AutocompleteSnippet,
 } from "./ranking.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
+import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
+import { RootPathContextService } from "./services/RootPathContextService.js";
+import { shouldCompleteMultiline } from "./shouldCompleteMultiline.js";
 
 export function languageForFilepath(
   filepath: string,
 ): AutocompleteLanguageInfo {
   return LANGUAGES[filepath.split(".").slice(-1)[0]] || Typescript;
-}
-
-const BLOCK_TYPES = ["body", "statement_block"];
-
-function shouldCompleteMultilineAst(
-  treePath: Parser.SyntaxNode[],
-  cursorLine: number,
-): boolean {
-  // If at the base of the file, do multiline
-  if (treePath.length === 1) {
-    return true;
-  }
-
-  // If at the first line of an otherwise empty funtion body, do multiline
-  for (let i = treePath.length - 1; i >= 0; i--) {
-    const node = treePath[i];
-    if (
-      BLOCK_TYPES.includes(node.type) &&
-      Math.abs(node.startPosition.row - cursorLine) <= 1
-    ) {
-      let text = node.text;
-      text = text.slice(text.indexOf("{") + 1);
-      text = text.slice(0, text.lastIndexOf("}"));
-      text = text.trim();
-      return text.split("\n").length === 1;
-    }
-  }
-
-  return false;
-}
-
-function isMidlineCompletion(prefix: string, suffix: string): boolean {
-  return !suffix.startsWith("\n");
-}
-
-async function shouldCompleteMultiline(
-  filepath: string,
-  fullPrefix: string,
-  fullSuffix: string,
-  language: AutocompleteLanguageInfo,
-): Promise<boolean> {
-  // Don't complete multi-line if you are mid-line
-  if (isMidlineCompletion(fullPrefix, fullSuffix)) {
-    return false;
-  }
-
-  // Don't complete multi-line for single-line comments
-  if (
-    fullPrefix
-      .split("\n")
-      .slice(-1)[0]
-      ?.trimStart()
-      .startsWith(language.singleLineComment)
-  ) {
-    return false;
-  }
-
-  // First, if the line before ends with an opening bracket, then assume multi-line
-  if (
-    ["{", "(", "["].includes(
-      fullPrefix.split("\n").slice(-2)[0]?.trim().slice(-1)[0],
-    )
-  ) {
-    return true;
-  }
-
-  // Use AST to determine whether to complete multiline
-  let treePath: Parser.SyntaxNode[] | undefined;
-  try {
-    const ast = await getAst(filepath, fullPrefix + fullSuffix);
-    if (!ast) {
-      return true;
-    }
-
-    treePath = await getTreePathAtCursor(ast, fullPrefix.length);
-  } catch (e) {
-    console.error("Failed to parse AST", e);
-  }
-
-  let completeMultiline = false;
-  if (treePath) {
-    const cursorLine = fullPrefix.split("\n").length - 1;
-    completeMultiline = shouldCompleteMultilineAst(treePath, cursorLine);
-  }
-  return completeMultiline;
 }
 
 export async function constructAutocompletePrompt(
@@ -127,6 +43,7 @@ export async function constructAutocompletePrompt(
   modelName: string,
   extraSnippets: AutocompleteSnippet[],
   importDefinitionsService: ImportDefinitionsService,
+  rootPathContextService: RootPathContextService,
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -144,6 +61,17 @@ export async function constructAutocompletePrompt(
     options.maxSuffixPercentage * options.maxPromptTokens,
   );
   const suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
+
+  // Calculate AST Path
+  let treePath: AstPath | undefined;
+  try {
+    const ast = await getAst(filepath, fullPrefix + fullSuffix);
+    if (ast) {
+      treePath = await getTreePathAtCursor(ast, fullPrefix.length);
+    }
+  } catch (e) {
+    console.error("Failed to parse AST", e);
+  }
 
   // Find external snippets
   let snippets: AutocompleteSnippet[] = [];
@@ -215,6 +143,14 @@ export async function constructAutocompletePrompt(
       snippets.push(...importSnippets);
     }
 
+    if (options.useRootPathContext && treePath) {
+      const ctx = await rootPathContextService.getContextForPath(
+        filepath,
+        treePath,
+      );
+      snippets.push(...ctx);
+    }
+
     // Filter out empty snippets and ones that are already in the prefix/suffix
     snippets = snippets
       .map((snippet) => ({ ...snippet }))
@@ -269,7 +205,7 @@ export async function constructAutocompletePrompt(
     suffix,
     useFim: true,
     completeMultiline: await shouldCompleteMultiline(
-      filepath,
+      treePath,
       fullPrefix,
       fullSuffix,
       language,

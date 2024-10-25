@@ -16,6 +16,7 @@ class CodeContextProvider extends BaseContextProvider {
     displayTitle: "Code",
     description: "Type to search",
     type: "submenu",
+    dependsOnIndexing: true,
   };
 
   async getContextItems(
@@ -39,6 +40,7 @@ class CodeContextProvider extends BaseContextProvider {
     );
 
     const submenuItems: ContextSubmenuItem[] = [];
+
     for (const snippetList of snippets.slice(-MAX_SUBMENU_ITEMS)) {
       submenuItems.push(...snippetList);
     }

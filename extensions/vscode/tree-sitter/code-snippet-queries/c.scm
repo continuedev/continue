@@ -4,6 +4,6 @@
 
 (declaration type: (union_specifier name: (type_identifier) @name.definition.class)) @definition.class
 
-(type_definition declarator: (type_identifier) @name ) @body
+(type_definition declarator: (type_identifier) @name ) @definition
 
 (enum_specifier name: (type_identifier) @name.definition.type) @definition.type

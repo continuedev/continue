@@ -48,6 +48,9 @@ if (($null -eq $node)) {
     return "`nSome dependencies that may require installation could not be found. Exiting"
 }
 
+Write-Host "`nInstalling root-level dependencies..." -ForegroundColor White
+npm install
+
 Write-Host "`nInstalling Core extension dependencies..." -ForegroundColor White
 Push-Location core
 npm install

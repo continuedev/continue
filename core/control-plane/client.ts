@@ -1,6 +1,7 @@
 import { ConfigJson } from "@continuedev/config-types";
 import fetch, { RequestInit, Response } from "node-fetch";
 import { ModelDescription } from "../index.js";
+import { controlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -18,13 +19,11 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
-export const CONTROL_PLANE_URL =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3001"
-    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app";
+export const TRIAL_PROXY_URL =
+  "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 export class ControlPlaneClient {
-  private static URL = CONTROL_PLANE_URL;
+  private static URL = controlPlaneEnv.CONTROL_PLANE_URL;
   private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
 
   private lastAccessTokenRefresh = 0;
@@ -50,7 +49,8 @@ export class ControlPlaneClient {
     if (!accessToken) {
       throw new Error("No access token");
     }
-    const resp = await fetch(new URL(path, ControlPlaneClient.URL).toString(), {
+    const url = new URL(path, ControlPlaneClient.URL).toString();
+    const resp = await fetch(url, {
       ...init,
       headers: {
         ...init.headers,
@@ -74,7 +74,7 @@ export class ControlPlaneClient {
     }
 
     try {
-      const resp = await this.request("/workspaces", {
+      const resp = await this.request("workspaces", {
         method: "GET",
       });
       return (await resp.json()) as any;
@@ -89,7 +89,7 @@ export class ControlPlaneClient {
       throw new Error("No user id");
     }
 
-    const resp = await this.request(`/workspaces/${workspaceId}`, {
+    const resp = await this.request(`workspaces/${workspaceId}`, {
       method: "GET",
     });
     return ((await resp.json()) as any).settings;

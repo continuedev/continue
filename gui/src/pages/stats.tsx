@@ -46,102 +46,104 @@ function Stats() {
   >([]);
 
   useEffect(() => {
-    ideMessenger.request("stats/getTokensPerDay", undefined).then((days) => {
-      setDays(days);
+    ideMessenger.request("stats/getTokensPerDay", undefined).then((result) => {
+      result.status === "success" && setDays(result.content);
     });
   }, []);
 
   useEffect(() => {
     ideMessenger
       .request("stats/getTokensPerModel", undefined)
-      .then((models) => {
-        setModels(models);
+      .then((result) => {
+        result.status === "success" && setModels(result.content);
       });
   }, []);
 
   return (
-    <div>
+    <div
+      style={{
+        backgroundColor: vscBackground,
+      }}
+    >
       <div
-        className="items-center flex m-0 p-0 sticky top-0"
+        onClick={() => navigate(-1)}
+        className="sticky top-0 m-0 flex cursor-pointer items-center p-0"
         style={{
           borderBottom: `0.5px solid ${lightGray}`,
           backgroundColor: vscBackground,
         }}
       >
-        <ArrowLeftIcon
-          width="1.2em"
-          height="1.2em"
-          onClick={() => navigate(-1)}
-          className="inline-block ml-4 cursor-pointer"
-        />
-        <h3 className="text-lg font-bold m-2 inline-block">My Usage</h3>
+        <ArrowLeftIcon className="ml-4 inline-block h-3 w-3 cursor-pointer" />
+        <span className="m-2 inline-block text-base font-bold">More</span>
       </div>
 
-      <div className="flex gap-2 items-center">
-        <h2 className="ml-2">Tokens per Day</h2>
-        <CopyButton
-          text={generateTable(
-            ([["Day", "Generated Tokens", "Prompt Tokens"]] as any).concat(
-              days.map((day) => [
-                day.day,
-                day.generatedTokens,
-                day.promptTokens,
-              ]),
-            ),
-          )}
-        />
-      </div>
-      <table className="w-full border-collapse">
-        <thead>
-          <Tr>
-            <Th>Day</Th>
-            <Th>Generated Tokens</Th>
-            <Th>Prompt Tokens</Th>
-          </Tr>
-        </thead>
-        <tbody>
-          {days.map((day) => (
-            <Tr key={day.day} className="">
-              <Td>{day.day}</Td>
-              <Td>{day.generatedTokens}</Td>
-              <Td>{day.promptTokens}</Td>
+      <div className="p-2">
+        <div className="flex items-center gap-2">
+          <h2 className="ml-2">Tokens per Day</h2>
+          <CopyButton
+            text={generateTable(
+              ([["Day", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+                days.map((day) => [
+                  day.day,
+                  day.generatedTokens,
+                  day.promptTokens,
+                ]),
+              ),
+            )}
+          />
+        </div>
+        <table className="w-full border-collapse">
+          <thead>
+            <Tr>
+              <Th>Day</Th>
+              <Th>Generated Tokens</Th>
+              <Th>Prompt Tokens</Th>
             </Tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {days.map((day) => (
+              <Tr key={day.day} className="">
+                <Td>{day.day}</Td>
+                <Td>{day.generatedTokens.toLocaleString()}</Td>
+                <Td>{day.promptTokens.toLocaleString()}</Td>
+              </Tr>
+            ))}
+          </tbody>
+        </table>
 
-      <div className="flex gap-2 items-center">
-        <h2 className="ml-2">Tokens per Model</h2>
-        <CopyButton
-          text={generateTable(
-            ([["Model", "Generated Tokens", "Prompt Tokens"]] as any).concat(
-              models.map((model) => [
-                model.model,
-                model.generatedTokens,
-                model.promptTokens,
-              ]),
-            ),
-          )}
-        />
-      </div>
-      <table className="w-full border-collapse">
-        <thead>
-          <Tr>
-            <Th>Model</Th>
-            <Th>Generated Tokens</Th>
-            <Th>Prompt Tokens</Th>
-          </Tr>
-        </thead>
-        <tbody>
-          {models.map((model) => (
-            <Tr key={model.model} className="">
-              <Td>{model.model}</Td>
-              <Td>{model.generatedTokens}</Td>
-              <Td>{model.promptTokens}</Td>
+        <div className="flex items-center gap-2">
+          <h2 className="ml-2">Tokens per Model</h2>
+          <CopyButton
+            text={generateTable(
+              ([["Model", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+                models.map((model) => [
+                  model.model,
+                  model.generatedTokens.toLocaleString(),
+                  model.promptTokens.toLocaleString(),
+                ]),
+              ),
+            )}
+          />
+        </div>
+        <table className="w-full border-collapse">
+          <thead>
+            <Tr>
+              <Th>Model</Th>
+              <Th>Generated Tokens</Th>
+              <Th>Prompt Tokens</Th>
             </Tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {models.map((model) => (
+              <Tr key={model.model} className="">
+                <Td>{model.model}</Td>
+                <Td>{model.generatedTokens.toLocaleString()}</Td>
+                <Td>{model.promptTokens.toLocaleString()}</Td>
+              </Tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

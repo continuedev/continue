@@ -74,6 +74,7 @@ const config = {
           alt: "Continue Logo",
           src: "img/logo.png",
           href: "https://continue.dev",
+          target: "_blank",
         },
         items: [
           {
@@ -81,12 +82,14 @@ const config = {
             sidebarId: "docsSidebar",
             position: "left",
             label: "Docs",
+            href: "/",
           },
           {
             type: "docSidebar",
-            sidebarId: "referenceSidebar",
+            sidebarId: "customizingSidebar",
             position: "left",
-            label: "Reference",
+            label: "Customize",
+            href: "/customize/overview",
           },
           {
             to: "https://github.com/continuedev/continue",
@@ -170,46 +173,230 @@ const config = {
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [
-          // Redirects from old docs
           {
+            to: "/customize/overview",
             from: "/customization",
-            to: "/customization/overview",
           },
           {
-            from: "/getting-started",
-            to: "/quickstart",
+            to: "/getting-started/install",
+            from: ["/install/vscode", "/install/jetbrains"],
+          },
+          // {
+          //   to: "/getting-started/install",
+          //   from: "/getting-started",
+          // },
+          {
+            to: "/customize/model-types",
+            from: "/setup/overview",
           },
           {
-            from: "/model-setup/overview",
-            to: "/setup/overview",
+            to: "/getting-started/overview",
+            from: [
+              "/model-setup/overview",
+              "/model-setup/select-model",
+              "/model-setup/configuration",
+              "/quickstart",
+              "/how-to-use-continue",
+            ],
           },
           {
-            from: "/model-setup/select-model",
-            to: "/setup/select-model",
+            to: "/customize/model-providers",
+            from: ["/setup/select-provider", "/setup/model-providers"],
           },
           {
-            from: "/model-setup/configuration",
-            to: "/setup/configuration",
+            to: "/customize/deep-dives/codebase",
+            from: [
+              "/walkthroughs/codebase-embeddings",
+              "/features/codebase-embeddings",
+            ],
           },
           {
-            from: "/setup/select-provider",
-            to: "/setup/model-providers",
+            to: "/customize/deep-dives/autocomplete",
+            from: [
+              "/walkthroughs/tab-autocomplete",
+              "/features/tab-autocomplete",
+            ],
           },
           {
-            from: "/walkthroughs/codebase-embeddings",
-            to: "/features/codebase-embeddings",
+            to: "/customize/deep-dives/prompt-files",
+            from: ["/walkthroughs/prompt-files", "/features/prompt-files"],
           },
           {
-            from: "/walkthroughs/tab-autocomplete",
-            to: "/features/tab-autocomplete",
-          },
-          {
-            from: "/walkthroughs/prompt-files",
-            to: "/features/prompt-files",
-          },
-          {
+            to: "/actions/how-to-use-it#quick-actions",
             from: "/walkthroughs/quick-actions",
-            to: "/features/quick-actions",
+          },
+          {
+            to: "/customize/changelog",
+            from: "/changelog",
+          },
+          {
+            to: "/customize/config",
+            from: ["/customization/code-config", "/reference/config"],
+          },
+          {
+            to: "/customize/context-providers",
+            from: "/customization/context-providers",
+          },
+          {
+            to: "/customize/development-data",
+            from: "/development-data",
+          },
+          {
+            to: "/customize/deep-dives/docs",
+            from: "/features/talk-to-your-docs",
+          },
+          {
+            to: "/customize/model-providers/anthropic",
+            from: "/reference/Model Providers/anthropicllm",
+          },
+          {
+            to: "/customize/model-providers/azure",
+            from: "/reference/Model Providers/azure",
+          },
+          {
+            to: "/customize/model-providers/bedrock",
+            from: "/reference/Model Providers/bedrock",
+          },
+          {
+            to: "/customize/model-providers/deepseek",
+            from: "/reference/Model Providers/deepseek",
+          },
+          {
+            to: "/customize/model-providers/free-trial",
+            from: "/reference/Model Providers/freetrial",
+          },
+          {
+            to: "/customize/model-providers/gemini",
+            from: "/reference/Model Providers/geminiapi",
+          },
+          {
+            to: "/customize/model-providers/mistral",
+            from: "/reference/Model Providers/mistral",
+          },
+          {
+            to: "/customize/model-providers/ollama",
+            from: "/reference/Model Providers/ollama",
+          },
+          {
+            to: "/customize/model-providers/openai",
+            from: "/reference/Model Providers/openai",
+          },
+          {
+            to: "/customize/slash-commands",
+            from: "/customization/slash-commands",
+          },
+          {
+            to: "/customize/tutorials/custom-code-rag",
+            from: "/walkthroughs/custom-code-rag",
+          },
+          {
+            to: "/customize/tutorials/llama3.1",
+            from: "/walkthroughs/llama3.1",
+          },
+          {
+            to: "/customize/tutorials/running-continue-without-internet",
+            from: "/walkthroughs/running-continue-without-internet",
+          },
+          {
+            to: "/customize/tutorials/set-up-codestral",
+            from: "/walkthroughs/set-up-codestral",
+          },
+          {
+            to: "/",
+            from: "/intro",
+          },
+          {
+            to: "/customize/model-providers/more/cloudflare",
+            from: "/reference/Model Providers/cloudflare",
+          },
+          {
+            to: "/customize/model-providers/more/cohere",
+            from: "/reference/Model Providers/cohere",
+          },
+          {
+            to: "/customize/model-providers/more/deepinfra",
+            from: "/reference/Model Providers/deepinfra",
+          },
+          {
+            to: "/customize/model-providers/more/flowise",
+            from: "/reference/Model Providers/flowise",
+          },
+          {
+            to: "/customize/model-providers/more/huggingfaceinferenceapi",
+            from: "/reference/Model Providers/huggingfaceinferenceapi",
+          },
+          {
+            to: "/customize/model-providers/more/ipex_llm",
+            from: "/reference/Model Providers/ipex_llm",
+          },
+          {
+            to: "/customize/model-providers/more/kindo",
+            from: "/reference/Model Providers/kindo",
+          },
+          {
+            to: "/customize/model-providers/more/llamacpp",
+            from: "/reference/Model Providers/llamacpp",
+          },
+          {
+            to: "/customize/model-providers/more/llamafile",
+            from: "/reference/Model Providers/llamafile",
+          },
+          {
+            to: "/customize/model-providers/more/lmstudio",
+            from: "/reference/Model Providers/lmstudio",
+          },
+          {
+            to: "/customize/model-providers/more/msty",
+            from: "/reference/Model Providers/msty",
+          },
+          {
+            to: "/customize/model-providers/more/openrouter",
+            from: "/reference/Model Providers/openrouter",
+          },
+          {
+            to: "/customize/model-providers/more/replicatellm",
+            from: "/reference/Model Providers/replicatellm",
+          },
+          {
+            to: "/customize/model-providers/more/sagemaker",
+            from: "/reference/Model Providers/sagemaker",
+          },
+          {
+            to: "/customize/model-providers/more/textgenwebui",
+            from: "/reference/Model Providers/textgenwebui",
+          },
+          {
+            to: "/customize/model-providers/more/together",
+            from: "/reference/Model Providers/togetherllm",
+          },
+          {
+            to: "/customize/model-providers/more/vllm",
+            from: "/reference/Model Providers/vllm",
+          },
+          {
+            to: "/customize/model-providers/more/watsonx",
+            from: "/reference/Model Providers/watsonx",
+          },
+          // Sidebar items that should route directly to a subpage
+          {
+            to: "/chat/how-to-use-it",
+            from: "/chat",
+          },
+          {
+            to: "/edit/how-to-use-it",
+            from: "/edit",
+          },
+          {
+            to: "/actions/how-to-use-it",
+            from: "/actions",
+          },
+          {
+            to: "/autocomplete/how-to-use-it",
+            from: "/autocomplete",
+          },
+          {
+            to: "/getting-started/install",
+            from: "/getting-started",
           },
         ],
       },

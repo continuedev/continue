@@ -1,17 +1,17 @@
+import { BaseContextProvider } from "../";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../../index.js";
-import { walkDir } from "../../indexing/walkDir.js";
+} from "../../";
+import { walkDir } from "../../indexing/walkDir";
 import {
   getBasename,
   getUniqueFilePath,
   groupByLastNPathParts,
-} from "../../util/index.js";
-import { BaseContextProvider } from "../index.js";
+} from "../../util/";
 
 const MAX_SUBMENU_ITEMS = 10_000;
 
@@ -35,6 +35,10 @@ class FileContextProvider extends BaseContextProvider {
         name: query.split(/[\\/]/).pop() ?? query,
         description: query,
         content: `\`\`\`${query}\n${content}\n\`\`\``,
+        uri: {
+          type: "file",
+          value: query,
+        },
       },
     ];
   }

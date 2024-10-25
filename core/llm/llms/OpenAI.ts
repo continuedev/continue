@@ -37,12 +37,12 @@ const CHAT_ONLY_MODELS = [
   "gpt-4-0125-preview",
   "gpt-4-1106-preview",
   "gpt-4o-mini",
+  "o1-preview",
+  "o1-mini",
 ];
 
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
-
-  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);
@@ -89,9 +89,15 @@ class OpenAI extends BaseLLM {
     return model;
   }
 
+  private isO1Model(model?: string): boolean {
+    return (
+      !!model && (model.startsWith("o1-preview") || model.startsWith("o1-mini"))
+    );
+  }
+
   protected _convertArgs(options: any, messages: ChatMessage[]) {
     const url = new URL(this.apiBase!);
-    const finalOptions = {
+    const finalOptions: any = {
       messages: messages.map(this._convertMessage),
       model: this._convertModelName(options.model),
       max_tokens: options.maxTokens,
@@ -99,6 +105,7 @@ class OpenAI extends BaseLLM {
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
+      stream: options.stream ?? true,
       stop:
         // Jan + Azure OpenAI don't truncate and will throw an error
         this.maxStopWords !== undefined
@@ -106,12 +113,27 @@ class OpenAI extends BaseLLM {
           : url.host === "api.deepseek.com"
             ? options.stop?.slice(0, 16)
             : url.port === "1337" ||
-                url.host === "api.openai.com" ||
-                url.host === "api.groq.com" ||
-                this.apiType === "azure"
+              url.host === "api.openai.com" ||
+              url.host === "api.groq.com" ||
+              this.apiType === "azure"
               ? options.stop?.slice(0, 4)
               : options.stop,
     };
+
+    // OpenAI o1-preview and o1-mini:
+    if (this.isO1Model(options.model)) {
+      // a) use max_completion_tokens instead of max_tokens
+      finalOptions.max_completion_tokens = options.maxTokens;
+      finalOptions.max_tokens = undefined;
+
+      // b) don't support streaming currently
+      finalOptions.stream = false;
+
+      // c) don't support system message
+      finalOptions.messages = finalOptions.messages?.filter(
+        (message: any) => message?.role !== "system",
+      );
+    }
 
     return finalOptions;
   }
@@ -216,12 +238,9 @@ class OpenAI extends BaseLLM {
       return;
     }
 
-    const body = {
-      ...this._convertArgs(options, messages),
-      stream: true,
-    };
+    const body = this._convertArgs(options, messages);
     // Empty messages cause an error in LM Studio
-    body.messages = body.messages.map((m) => ({
+    body.messages = body.messages.map((m: any) => ({
       ...m,
       content: m.content === "" ? " " : m.content,
     })) as any;
@@ -231,6 +250,13 @@ class OpenAI extends BaseLLM {
       body: JSON.stringify(body),
     });
 
+    // Handle non-streaming response
+    if (body.stream === false) {
+      const data = await response.json();
+      yield data.choices[0].message;
+      return;
+    }
+
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
@@ -238,7 +264,7 @@ class OpenAI extends BaseLLM {
     }
   }
 
-  async *_streamFim(
+  protected async *_streamFim(
     prefix: string,
     suffix: string,
     options: CompletionOptions,

@@ -23,7 +23,6 @@
   "scripts": {
     "test": "jest",
     "build": "node build.js",
-    "build:old": "ncc build src/index.ts -o out && pkg .",
     "build:dev": "tsc",
     "esbuild": "node build.js --esbuild-only"
   },

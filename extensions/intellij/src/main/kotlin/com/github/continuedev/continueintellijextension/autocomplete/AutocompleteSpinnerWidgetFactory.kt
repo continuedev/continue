@@ -17,23 +17,25 @@ import java.awt.event.MouseEvent
 import javax.swing.Icon
 import javax.swing.JLabel
 
-class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), StatusBarWidget.IconPresentation, Disposable {
+class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), StatusBarWidget.IconPresentation,
+    Disposable {
     private val iconLabel = JLabel()
     private var isLoading = false
-
+    
     private val animatedIcon = AnimatedIcon(
-            100,
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading1(RiderLight).svg", javaClass),
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading2(RiderLight).svg", javaClass),
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading3(RiderLight).svg", javaClass),
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading4(RiderLight).svg", javaClass),
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading5(RiderLight).svg", javaClass),
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading6(RiderLight).svg", javaClass),
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading7(RiderLight).svg", javaClass),
-            IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading8(RiderLight).svg", javaClass),
+        100,
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading1(RiderLight).svg", javaClass),
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading2(RiderLight).svg", javaClass),
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading3(RiderLight).svg", javaClass),
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading4(RiderLight).svg", javaClass),
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading5(RiderLight).svg", javaClass),
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading6(RiderLight).svg", javaClass),
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading7(RiderLight).svg", javaClass),
+        IconLoader.getIcon("/icons/AnimationLoadingIcon/AnimationLoading8(RiderLight).svg", javaClass),
     )
 
     init {
+        Disposer.register(project, this)
         updateIcon()
     }
 
@@ -49,7 +51,7 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
 
     override fun getTooltipText(): String? {
         val enabled = service<ContinueExtensionSettings>().state.enableTabAutocomplete
-        return if (enabled) "Continue Autocomplete Enabled" else "Continue Autocomplete Disabled"
+        return if (enabled) "Continue autocomplete enabled" else "Continue autocomplete disabled"
     }
 
     override fun getClickConsumer(): Consumer<MouseEvent>? {
@@ -70,7 +72,7 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
 
         // Update the widget
         val statusBar = WindowManager.getInstance().getStatusBar(project)
-        statusBar.updateWidget(ID())
+        statusBar?.updateWidget(ID())
     }
 
     override fun install(statusBar: StatusBar) {
@@ -82,7 +84,7 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
     }
 }
 
-class AutocompleteSpinnerWidgetFactory: StatusBarWidgetFactory {
+class AutocompleteSpinnerWidgetFactory : StatusBarWidgetFactory {
     fun create(project: Project): AutocompleteSpinnerWidget {
         return AutocompleteSpinnerWidget(project)
     }

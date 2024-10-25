@@ -1,0 +1,30 @@
+---
+title: Changelog
+description: Changelogs for the latest releases of the VSCode and JetBrains extensions
+keywords: [changelog]
+hide_table_of_contents: true
+---
+
+import VSCodeChangelog from "../../../extensions/vscode/CHANGELOG.md";
+import JetBrainsChangelog from "../../../extensions/intellij/CHANGELOG.md";
+
+Below are the changelogs for the latest releases of the VSCode and JetBrains extensions. Prior to 2024-07-02, the changelogs do not reflect all updates.
+
+import TOCInline from "@theme/TOCInline";
+
+<TOCInline
+  toc={toc.filter(
+    (node) =>
+      node.value === "VSCode Changelog" || node.value === "JetBrains Changelog",
+  )}
+/>
+
+<hr />
+
+## VSCode Changelog
+
+<VSCodeChangelog />
+
+## JetBrains Changelog
+
+<JetBrainsChangelog />

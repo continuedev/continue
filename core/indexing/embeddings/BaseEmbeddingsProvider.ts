@@ -45,7 +45,9 @@ abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
     }
   }
   defaultOptions?: EmbedOptions | undefined;
-  maxBatchSize?: number | undefined;
+  get maxBatchSize(): number | undefined {
+    return this.options.maxBatchSize ?? (this.constructor as typeof BaseEmbeddingsProvider).maxBatchSize;
+  }
 
   abstract embed(chunks: string[]): Promise<number[][]>;
 
@@ -53,7 +55,7 @@ abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
     return this.options.maxChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
   }
 
-  static getBatchedChunks(chunks: string[]): string[][] {
+  getBatchedChunks(chunks: string[]): string[][] {
     if (!this.maxBatchSize) {
       console.warn(
         `${this.getBatchedChunks.name} should only be called if 'maxBatchSize' is defined`,
@@ -62,15 +64,10 @@ abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
       return [chunks];
     }
 
-    if (chunks.length > this.maxBatchSize) {
-      return [chunks];
-    }
-
     const batchedChunks = [];
 
     for (let i = 0; i < chunks.length; i += this.maxBatchSize) {
-      const batchSizedChunk = chunks.slice(i, i + this.maxBatchSize);
-      batchedChunks.push(batchSizedChunk);
+      batchedChunks.push(chunks.slice(i, i + this.maxBatchSize));
     }
 
     return batchedChunks;
