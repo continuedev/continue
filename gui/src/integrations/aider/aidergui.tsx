@@ -184,6 +184,7 @@ function AiderGUI() {
 
   return (
     <>
+
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
         <div className="mx-2">
           <div className="pl-2 mt-8 border-b border-gray-700">
@@ -334,6 +335,14 @@ function AiderGUI() {
           Inventory
         </NewSessionButton>
       }
+      <NewSessionButton
+          onClick={() => {
+            dispatch(newSession()); // Reset the state
+            setLocalStorage('hasSeenAiderOnboarding', false); // Reset onboarding flag
+            navigate("/aiderOnboarding");
+          }}
+        >Return to Onboarding (Remove when in prod)</NewSessionButton>
+
     </>
   );
 }
