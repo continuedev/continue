@@ -79,6 +79,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "opus",
   "haiku",
   "pixtral",
+  "llama3.2",
 ];
 
 function modelSupportsImages(
