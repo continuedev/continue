@@ -9,11 +9,13 @@
     <idea-version since-build="223.7571.182"/>
 
     <extensions defaultExtensionNs="JavaScript.JsonSchema">
-        <ProviderFactory implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
+        <ProviderFactory
+                implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
-        <editorFactoryListener implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteEditorListener"/>
+        <editorFactoryListener
+                implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteEditorListener"/>
         <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.svg"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
@@ -24,8 +26,11 @@
         <projectService
                 id="AutocompleteLookupListener"
                 serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteLookupListener"/>
-        <statusBarWidgetFactory implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteSpinnerWidgetFactory"
-                                id="AutocompleteSpinnerWidget"/>
+        <statusBarWidgetFactory
+                implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteSpinnerWidgetFactory"
+                id="AutocompleteSpinnerWidget"/>
+        <notificationGroup id="Continue"
+                           displayType="BALLOON"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -51,49 +56,49 @@
                                first-keystroke="ctrl I"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta I"/>
-        </action>
-
-        <action class="com.github.continuedev.continueintellijextension.editor.ToggleInlineEditAction"
-                id="continue.toggleInlineEdit"
-                description="Toggle Inline Edit"
-                text="Toggle Inline Edit">
-            <keyboard-shortcut keymap="$default"
-                               first-keystroke="ctrl shift I"/>
-            <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="meta shift I"/>
+            <override-text place="GoToAction" text="Continue: Edit Code"/>
         </action>
 
         <action id="continue.acceptDiff"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Diff">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="alt shift Y"/>
+                               first-keystroke="shift ctrl ENTER"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="alt shift Y"/>
+                               first-keystroke="shift meta ENTER"/>
+            <override-text place="GoToAction" text="Continue: Accept Diff"/>
         </action>
+
         <action id="continue.rejectDiff"
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Diff">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="alt shift N"/>
+                               first-keystroke="shift ctrl DELETE"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="alt shift N"/>
+                               first-keystroke="shift meta DELETE"/>
+            <override-text place="GoToAction" text="Continue: Reject Diff"/>
         </action>
-        <action id="continue.quickTextEntry"
-                class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction"
-                text="Quick Text Entry" description="Quick Text Entry">
+
+        <action id="continue.acceptVerticalDiffBlock"
+                class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
+                text="Accept Diff" description="Accept Vertical Diff Block">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="alt shift J"/>
+                               first-keystroke="alt shift Y"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="alt shift J"/>
+                               first-keystroke="alt shift Y"/>
+            <override-text place="GoToAction" text="Continue: Accept Vertical Diff Block"/>
         </action>
-        <action id="continue.viewLogs"
-                class="com.github.continuedev.continueintellijextension.actions.ViewLogsAction"
-                text="View Continue Server Logs"
-                description="View Continue Server Logs">
-            <!-- No shortcut defined -->
+
+        <action id="continue.rejectVerticalDiffBlock"
+                class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
+                text="Reject Diff" description="Reject Vertical Diff Block">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="alt shift N"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="alt shift N"/>
+            <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
         </action>
-       
+
         <action id="continue.focusContinueInputWithoutClear"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"
@@ -102,24 +107,26 @@
                                first-keystroke="ctrl shift J"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta shift J"/>
+            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context"/>
         </action>
 
-<!--        <action id="InsertLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction" />-->
-<!--        <action id="SurroundWithLiveTemplate" class="com.intellij.openapi.actionSystem.EmptyAction"/>-->
-
         <action id="continue.newContinueSession"
+                icon="AllIcons.General.Add"
                 class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
                 text="Start New Continue Session"
-                icon="AllIcons.General.Add"
                 description="Start New Continue Session">
+
+            <override-text place="GoToAction" text="Continue: New Session"/>
         </action>
 
         <action id="continue.viewHistory"
+                icon="AllIcons.Vcs.History"
                 class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
                 text="View History"
-                icon="AllIcons.Vcs.History"
                 description="View History">
+            <override-text place="GoToAction" text="Continue: View History"/>
         </action>
+
         <action id="continue.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
                 text="Add selected code to context"
@@ -129,6 +136,7 @@
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
+            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
         </action>
 
         <group id="ContinueSidebarActionsGroup">
@@ -142,11 +150,13 @@
             <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
         </action>
+
         <action id="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
                 class="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
                 text="Cancel Autocomplete Suggestion" description="Cancel Autocomplete Suggestion">
             <keyboard-shortcut keymap="$default" first-keystroke="ESCAPE"/>
         </action>
+
         <action id="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
                 class="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
                 text="Partial Accept Autocomplete Suggestion"
@@ -155,6 +165,4 @@
             <keyboard-shortcut first-keystroke="alt meta RIGHT" keymap="Mac OS X"/>
         </action>
     </actions>
-
-
 </idea-plugin>

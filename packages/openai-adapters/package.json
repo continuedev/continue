@@ -16,7 +16,7 @@
     "@continuedev/config-types": "^1.0.5",
     "@continuedev/fetch": "^1.0.3",
     "node-fetch": "^3.3.2",
-    "openai": "^4.52.5"
+    "openai": "^4.67.0"
   },
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",

@@ -420,25 +420,28 @@ export default class DocsService {
 
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
 
-    configHandler.onConfigUpdate(async (newConfig) => {
-      const oldConfig = this.config;
+    configHandler.onConfigUpdate(async ({ config: newConfig }) => {
+      if (newConfig) {
+        const oldConfig = this.config;
 
-      // Need to update class property for config at the beginning of this callback
-      // to ensure downstream methods have access to the latest config.
-      this.config = newConfig;
+        // Need to update class property for config at the beginning of this callback
+        // to ensure downstream methods have access to the latest config.
+        this.config = newConfig;
 
-      if (oldConfig.docs !== newConfig.docs) {
-        await this.syncConfigAndSqlite();
-      }
+        if (oldConfig.docs !== newConfig.docs) {
+          await this.syncConfigAndSqlite();
+        }
 
-      const shouldReindex = await this.shouldReindexDocsOnNewEmbeddingsProvider(
-        newConfig.embeddingsProvider.id,
-      );
+        const shouldReindex =
+          await this.shouldReindexDocsOnNewEmbeddingsProvider(
+            newConfig.embeddingsProvider.id,
+          );
 
-      if (shouldReindex) {
-        await this.reindexDocsOnNewEmbeddingsProvider(
-          newConfig.embeddingsProvider,
-        );
+        if (shouldReindex) {
+          await this.reindexDocsOnNewEmbeddingsProvider(
+            newConfig.embeddingsProvider,
+          );
+        }
       }
     });
   }
@@ -534,8 +537,12 @@ export default class DocsService {
     await table.delete(`title = '${mockRowTitle}'`);
   }
 
-  private removeInvalidLanceTableNameChars(tableName: string) {
-    return tableName.replace(/:/g, "");
+  /**
+   * From Lance: Table names can only contain alphanumeric characters,
+   * underscores, hyphens, and periods
+   */
+  private sanitizeLanceTableName(name: string) {
+    return name.replace(/[^a-zA-Z0-9_.-]/g, "_");
   }
 
   private async getLanceTableNameFromEmbeddingsProvider(
@@ -544,10 +551,10 @@ export default class DocsService {
     const embeddingsProvider = await this.getEmbeddingsProvider(
       isPreIndexedDoc,
     );
-    const embeddingsProviderId = this.removeInvalidLanceTableNameChars(
-      embeddingsProvider.id,
+
+    const tableName = this.sanitizeLanceTableName(
+      `${DocsService.lanceTableName}${embeddingsProvider.id}`,
     );
-    const tableName = `${DocsService.lanceTableName}${embeddingsProviderId}`;
 
     return tableName;
   }

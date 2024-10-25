@@ -22,7 +22,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
   focusEditor: [undefined, void];
-  toggleFullScreen: [undefined, void];
+  toggleFullScreen: [{ newWindow?: boolean } | undefined, void];
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
@@ -58,8 +58,13 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
     },
     void,
   ];
+  navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
+
   openSettings: [undefined, void];
+  /**
+   * @deprecated Use navigateTo with a path instead.
+   */
   viewHistory: [undefined, void];
   newSession: [undefined, void];
   setTheme: [{ theme: any }, void];

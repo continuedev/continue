@@ -1,4 +1,0 @@
-project: extensions/intellij
-kind: Fixed
-body: Fix ability to load config.ts in JetBrains IDEs
-time: 2024-09-29T09:54:40.284968-07:00

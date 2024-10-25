@@ -104,11 +104,20 @@ const ReadMeContextProvider: CustomContextProvider = {
   loadSubmenuItems: async (
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> => {
+    const { ide } = args;
+
     // Filter all workspace files for READMEs
-    const allFiles = await args.ide.listWorkspaceContents();
-    const readmes = allFiles.filter((filepath) =>
-      filepath.endsWith("README.md"),
+    const workspaceDirs = await ide.getWorkspaceDirs()
+
+    const allFiles = await Promise.all(
+      workspaceDirs.map(dir => ide.subprocess(`find ${dir} -name "README.md"`)),
     );
+
+    // 'readmes' now contains an array of file paths for each README.md file found in the workspace,
+    // excluding those in 'node_modules'
+    const readmes = allFiles
+      .flatMap(mds => mds[0].split("\n"))
+      .filter(file => file.trim() !== '' && !file.includes("/node_modules/"))
 
     // Return the items that will be shown in the dropdown
     return readmes.map((filepath) => {
@@ -180,12 +189,15 @@ If you'd like to write a context provider in a language other than TypeScript, y
     "url": "https://myserver.com/context-provider",
     "title": "http",
     "description": "Custom HTTP Context Provider",
-    "displayTitle": "My Custom Context"
+    "displayTitle": "My Custom Context",
+    "options": {}
   }
 }
 ```
 
-<!-- Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI. -->
+Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
+
+The `"options"` property can be used to send additional parameters to your endpoint, which will be included in the request body.
 
 ## Extension API for VSCode
 

@@ -1,5 +1,4 @@
 import { ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import ReactDOM from "react-dom";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import AddModelForm from "../../forms/AddModelForm";
@@ -19,8 +18,6 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
-
-  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   function onClick() {
     dispatch(setShowDialog(true));
@@ -46,13 +43,10 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
           <ExclamationCircleIcon width="18px" height="18px" color="red" />
           Trial limit reached
         </div>
-        {tooltipPortalDiv &&
-          ReactDOM.createPortal(
-            <ToolTip id="usage_progress_bar" place="top">
-              Configure a model above in order to continue
-            </ToolTip>,
-            tooltipPortalDiv,
-          )}
+
+        <ToolTip id="usage_progress_bar" place="top">
+          Configure a model above in order to continue
+        </ToolTip>
       </>
     );
   }
@@ -85,14 +79,9 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
           />
         </div>
       </div>
-
-      {tooltipPortalDiv &&
-        ReactDOM.createPortal(
-          <ToolTip id="usage_progress_bar" place="top">
-            {`Click to use your own API key or local LLM (required after ${FREE_TRIAL_LIMIT_REQUESTS} inputs)`}
-          </ToolTip>,
-          tooltipPortalDiv,
-        )}
+      <ToolTip id="usage_progress_bar" place="top">
+        {`Click to use your own API key or local LLM (required after ${FREE_TRIAL_LIMIT_REQUESTS} inputs)`}
+      </ToolTip>
     </>
   );
 }

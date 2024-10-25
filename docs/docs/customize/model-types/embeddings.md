@@ -69,3 +69,7 @@ See [here](../model-providers/more/cohere.md#embeddings-model) for instructions 
 ### Gemini
 
 See [here](../model-providers/top-level/gemini.md#embeddings-model) for instructions on how to use Gemini for embeddings.
+
+### Vertex
+
+See [here](../model-providers/more/vertex.md#embeddings-model) for instructions on how to use Vertex for embeddings.

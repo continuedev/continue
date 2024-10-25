@@ -72,6 +72,7 @@ export class OpenAIApi implements BaseLlmApi {
         prompt: body.prompt,
         suffix: body.suffix,
         max_tokens: body.max_tokens,
+        max_completion_tokens: (body as any).max_completion_tokens,
         temperature: body.temperature,
         top_p: body.top_p,
         frequency_penalty: body.frequency_penalty,
