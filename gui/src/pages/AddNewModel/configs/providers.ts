@@ -64,6 +64,8 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       models.gpt4omini,
       models.gpt4turbo,
       models.gpt35turbo,
+      models.gpt4gov,
+      models.gpt4ogov, 
       {
         ...models.AUTODETECT,
         params: {
@@ -625,5 +627,34 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     apiKeyUrl: "https://cloud.cerebras.ai/",
+  },
+  "ask-sage": {
+    title: "Ask Sage",
+    provider: "ask-sage",
+    description:
+      "The Ask Sage API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
+    icon: "ask-sage.png",
+    longDescription: `To get access to the Ask Sage API, obtain your API key from the [Ask Sage platform](https://chat.asksage.ai/) for all other models.`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      { ...apiBaseInput, required: true },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.gpt4gov,
+      models.gpt4ogov,
+      models.gpt4o,
+      models.gpt4omini,
+      models.claude35Sonnet,
+      models.claude3Opus,
+      models.claude3Sonnet,
+      models.mistralLarge,
+      models.llama3Chat,
+      models.geminiPro,
+    ],
+    apiKeyUrl: "https://chat.asksage.ai/",
   },
 };

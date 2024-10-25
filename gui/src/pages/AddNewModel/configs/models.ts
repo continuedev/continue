@@ -360,6 +360,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "ask-sage",
     ],
     isOpenSource: true,
   },
@@ -540,7 +541,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32000,
     },
     icon: "mistral.png",
-    providerOptions: ["mistral"],
+    providerOptions: ["mistral", "ask-sage"],
     isOpenSource: false,
   },
   geminiPro: {
@@ -553,7 +554,7 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
-    providerOptions: ["gemini"],
+    providerOptions: ["gemini", "ask-sage"],
     isOpenSource: false,
   },
   gemini15Pro: {
@@ -635,7 +636,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai", "free-trial"],
+    providerOptions: ["openai", "free-trial", "ask-sage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -650,7 +651,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai"],
+    providerOptions: ["openai", "ask-sage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -677,7 +678,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3.5 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial"],
+    providerOptions: ["anthropic", "free-trial", "ask-sage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -691,7 +692,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Opus",
       apiKey: "",
     },
-    providerOptions: ["anthropic"],
+    providerOptions: ["anthropic", "ask-sage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -705,7 +706,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial"],
+    providerOptions: ["anthropic", "free-trial", "ask-sage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -789,6 +790,36 @@ export const models: { [key: string]: ModelPackage } = {
       },
     ],
     providerOptions: ["watsonx"],
+    isOpenSource: false,
+  },
+  gpt4gov: {
+    title: "GPT-4 gov",
+    description:
+      "U.S. Government. Most capable model today - which is similar to GPT-4o but approved for use by the U.S. Government.",
+    params: {
+      model: "gpt4-gov",
+      contextLength: 128_000,
+      title: "GPT-4 gov",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
+    },
+    providerOptions: ["ask-sage", "openai"], 
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt4ogov: {
+    title: "GPT-4o gov",
+    description:
+      "U.S. Government. Most capable model today - which is similar to GPT-4o but approved for use by the U.S. Government.",
+    params: {
+      model: "gpt-4o-gov",
+      contextLength: 128_000,
+      title: "GPT-4o",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
+    },
+    providerOptions: ["ask-sage", "openai"], 
+    icon: "openai.png",
     isOpenSource: false,
   },
   AUTODETECT: {

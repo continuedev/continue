@@ -648,7 +648,8 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
-  | "cerebras";
+  | "cerebras"
+  | "ask-sage";
 
 
 export type ModelName =
