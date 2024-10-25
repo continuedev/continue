@@ -1,7 +1,7 @@
 import { dedent } from "../../util";
 import { AutocompleteFileringTestInput } from "./util";
 
-export const testCases: AutocompleteFileringTestInput[] = [
+export const TEST_CASES: AutocompleteFileringTestInput[] = [
   {
     description: "should pass",
     filename: "test.js",
@@ -188,7 +188,6 @@ input:focus {
     llmOutput: `--primary-color`,
     expectedCompletion: `--primary-color`,
   },
-
   {
     description: "Should complete CSS grid template columns",
     filename: "grid.css",
@@ -199,8 +198,8 @@ input:focus {
   grid-gap: 10px;
 }
 `,
-    llmOutput: `3, 1fr);`,
-    expectedCompletion: `3, 1fr);`,
+    llmOutput: `3, 1fr`,
+    expectedCompletion: `3, 1fr`,
   },
 
   {
@@ -1007,7 +1006,8 @@ fn get_status_code_description(code: u16) -> &'static str {
 `,
     expectedCompletion: `403 => "Forbidden",
         401 => "Unauthorized",
-        _ => "Unknown Status",`,
+        _ => "Unknown Status",
+`,
   },
   {
     description: "Should autocomplete Rust struct definition",
@@ -1955,9 +1955,9 @@ export default {
     expectedCompletion: `this.completed`,
   },
   {
-  description: "Should autocomplete Svelte reactive statement",
-  filename: "Counter.svelte",
-  input: `
+    description: "Should autocomplete Svelte reactive statement",
+    filename: "Counter.svelte",
+    input: `
 <script>
   let count = 0;
 
@@ -1972,14 +1972,14 @@ export default {
   Clicked {count} times
 </button>
 `,
-  llmOutput: `doubledCount = count * 2`,
-  expectedCompletion: `doubledCount = count * 2`,
-},
+    llmOutput: `doubledCount = count * 2`,
+    expectedCompletion: `doubledCount = count * 2`,
+  },
 
-{
-  description: "Should autocomplete Svelte component inside HTML",
-  filename: "NestedComponent.svelte",
-  input: `
+  {
+    description: "Should autocomplete Svelte component inside HTML",
+    filename: "NestedComponent.svelte",
+    input: `
 <script>
   import ChildComponent from './ChildComponent.svelte';
 </script>
@@ -1989,14 +1989,14 @@ export default {
   <ChildComponent <|fim|> />
 </main>
 `,
-  llmOutput: `name="World"`,
-  expectedCompletion: `name="World"`,
-},
+    llmOutput: `name="World"`,
+    expectedCompletion: `name="World"`,
+  },
 
-{
-  description: "Should handle autocomplete in Svelte each block",
-  filename: "List.svelte",
-  input: `
+  {
+    description: "Should handle autocomplete in Svelte each block",
+    filename: "List.svelte",
+    input: `
 <script>
   let items = ["Apple", "Banana", "Cherry"];
 </script>
@@ -2007,8 +2007,7 @@ export default {
   {/each<|fim|>
 </ul>
 `,
-  llmOutput: `}`,
-  expectedCompletion: `}`,
-},
-
+    llmOutput: `}`,
+    expectedCompletion: `}`,
+  },
 ];

@@ -17,6 +17,9 @@ export interface AutocompleteFileringTestInput {
   input: string;
   llmOutput: string;
   expectedCompletion: string | null;
+  options?: {
+    only?: boolean;
+  };
 }
 
 export async function testAutocompleteFiltering(
