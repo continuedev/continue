@@ -54,12 +54,12 @@ const StartButton = styled(Button)`
   font-size: 1.2rem;
 `;
 
-const AiderOnboarding = () => {
+const PerplexityOnboarding = () => {
   const navigate = useNavigate();
 
   const handleStart = () => {
-    setLocalStorage('hasSeenAiderOnboarding', 'true');
-    navigate(-1); // Go back to previous page
+    setLocalStorage('hasSeenPerplexityOnboarding', true);
+    navigate('/perplexityMode');
   };
 
   return (
@@ -84,4 +84,4 @@ const AiderOnboarding = () => {
   );
 };
 
-export default AiderOnboarding;
+export default PerplexityOnboarding;

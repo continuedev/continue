@@ -62,9 +62,16 @@ import {
   import { TopGuiDiv, StopButton, StepsDiv, NewSessionButton, fallbackRender } from "../../pages/gui";
 
   function PerplexityGUI() {
+    const navigate = useNavigate();
+    useEffect(() => {
+      const hasSeenOnboarding = getLocalStorage('hasSeenPerplexityOnboarding');
+      if (!hasSeenOnboarding) {
+        navigate('./perplexityOnboarding');
+      }
+    }, [navigate]);
+
     const posthog = usePostHog();
     const dispatch = useDispatch();
-    const navigate = useNavigate();
     const ideMessenger = useContext(IdeMessengerContext);
     const isBetaAccess = useSelector((state: RootState) => state.state.config.isBetaAccess);
 
