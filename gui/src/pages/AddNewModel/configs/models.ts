@@ -360,7 +360,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
-      "ask-sage",
+      "askSage",
     ],
     isOpenSource: true,
   },
@@ -541,7 +541,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32000,
     },
     icon: "mistral.png",
-    providerOptions: ["mistral", "ask-sage"],
+    providerOptions: ["mistral", "askSage"],
     isOpenSource: false,
   },
   geminiPro: {
@@ -554,7 +554,7 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
-    providerOptions: ["gemini", "ask-sage"],
+    providerOptions: ["gemini", "askSage"],
     isOpenSource: false,
   },
   gemini15Pro: {
@@ -636,7 +636,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai", "free-trial", "ask-sage"],
+    providerOptions: ["openai", "free-trial", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -651,7 +651,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai", "ask-sage"],
+    providerOptions: ["openai", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -678,7 +678,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3.5 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial", "ask-sage"],
+    providerOptions: ["anthropic", "free-trial", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -692,7 +692,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Opus",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "ask-sage"],
+    providerOptions: ["anthropic", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -706,7 +706,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial", "ask-sage"],
+    providerOptions: ["anthropic", "free-trial", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -803,7 +803,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
-    providerOptions: ["ask-sage", "openai"], 
+    providerOptions: ["askSage"], 
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -818,7 +818,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
-    providerOptions: ["ask-sage", "openai"], 
+    providerOptions: ["askSage"], 
     icon: "openai.png",
     isOpenSource: false,
   },

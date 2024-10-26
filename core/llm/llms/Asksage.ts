@@ -5,13 +5,12 @@ import {
   ModelProvider,
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
-import { streamSse } from "../stream.js";
 
 /**
  * Asksage is a class that interfaces with the Ask Sage API.
  */
 class Asksage extends BaseLLM {
-  static providerName: ModelProvider = "ask-sage"; // Provider Name
+  static providerName: ModelProvider = "askSage"; // Provider Name
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.asksage.ai/server/", // Base URL for Ask Sage API
     model: "gpt-4o", // Default model
@@ -21,12 +20,20 @@ class Asksage extends BaseLLM {
   private static modelConversion: { [key: string]: string } = {
     "gpt-4o": "gpt-4o",
     "gpt-4o-mini": "gpt-4o-mini",
+    "gpt4-gov": "gpt4-gov",
+    "gpt-4o-gov": "gpt-4o-gov",
+    "mistral-large-latest": "mistral-large",
+    "llama3-8b": "llma3",
+    "gemini-pro": "google-gemini-pro",
+    "claude-3-5-sonnet-20240620": "claude-35-sonnet",
+    "claude-3-opus-20240229": "claude-3-opus",
+    "claude-3-sonnet-20240229": "claude-3-sonnet",
     // Add other models as needed
   };
 
   constructor(options: LLMOptions) {
     super(options);
-    this.apiVersion = options.apiVersion ?? "v1";
+    this.apiVersion = options.apiVersion ?? "v1.2.4";
   }
 
   /**
@@ -72,13 +79,13 @@ class Asksage extends BaseLLM {
 
     const args: any = {
       message: formattedMessage,
-      persona: options.persona ?? "default",
-      dataset: options.dataset ?? "all",
+      persona: options.persona ?? "default", // set the software persona
+      dataset: options.dataset ?? "none", // set this to 'none' as we don't want to use a specific dataset
       limit_references: options.limitReferences ?? 0,
       temperature: options.temperature ?? 0.0,
       live: options.live ?? 0,
       model: this._convertModelName(options.model),
-      system_prompt: options.systemPrompt,
+      system_prompt: options.systemPrompt, 
       tools: options.tools,
       tool_choice: options.toolChoice,
       // Add other parameters as required by your API
@@ -155,7 +162,7 @@ class Asksage extends BaseLLM {
     }
 
     const data = await response.json();
-    return data.response; // Adjust based on your API's response structure
+    return data.message; // Adjust based on your API's response structure
   }
 
   /**
@@ -203,7 +210,7 @@ class Asksage extends BaseLLM {
     // Construct a ChatMessage from the response
     const assistantMessage: ChatMessage = {
       role: "assistant",
-      content: data.response, // Adjust based on your API's response structure
+      content: data.message, // Adjust based on your API's response structure
     };
 
     yield assistantMessage;

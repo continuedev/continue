@@ -649,7 +649,7 @@ type ModelProvider =
   | "vllm"
   | "mock"
   | "cerebras"
-  | "ask-sage";
+  | "askSage";
 
 
 export type ModelName =

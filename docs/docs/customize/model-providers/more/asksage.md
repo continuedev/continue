@@ -1,7 +1,15 @@
 ---
 title: Ask Sage
-slug: ../ask-sage
+slug: ../askSage
 ---
+
+
+## Introduction
+
+Ask Sage models are now available on the Continue.Dev platform.
+
+
+
 
 ## Chat model
 
