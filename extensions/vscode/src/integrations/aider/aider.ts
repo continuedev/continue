@@ -15,13 +15,18 @@ let aiderPanel: vscode.WebviewPanel | undefined;
 // Aider process management functions
 export async function startAiderProcess(core: Core) {
   const config = await core.configHandler.loadConfig();
-  const aiderModel = config.models.find(model => model instanceof Aider) as Aider | undefined;
+  const aiderModel = config.models.find((model) => model instanceof Aider) as
+    | Aider
+    | undefined;
 
   if (aiderModel) {
+    core.send("aiderProcessStateUpdate", { status: "starting" });
     try {
       await aiderModel.startAiderChat(aiderModel.model, aiderModel.apiKey);
+      core.send("aiderProcessStateUpdate", { status: "ready" });
     } catch (e) {
       console.warn(`Error starting Aider process: ${e}`);
+      core.send("aiderProcessStateUpdate", { status: "crashed" });
     }
   } else {
     console.warn("No Aider model found in configuration");
@@ -30,13 +35,16 @@ export async function startAiderProcess(core: Core) {
 
 export async function killAiderProcess(core: Core) {
   const config = await core.configHandler.loadConfig();
-  const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+  const aiderModels = config.models.filter(
+    (model) => model instanceof Aider,
+  ) as Aider[];
 
   try {
     if (aiderModels.length > 0) {
-      aiderModels.forEach(model => {
+      aiderModels.forEach((model) => {
         model.killAiderProcess();
       });
+      core.send("aiderProcessStateUpdate", { status: "stopped" });
     }
   } catch (e) {
     console.warn(`Error killing Aider process: ${e}`);
@@ -45,15 +53,19 @@ export async function killAiderProcess(core: Core) {
 
 export async function aiderCtrlC(core: Core) {
   const config = await core.configHandler.loadConfig();
-  const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+  const aiderModels = config.models.filter(
+    (model) => model instanceof Aider,
+  ) as Aider[];
 
   try {
     if (aiderModels.length > 0) {
-      aiderModels.forEach(model => {
+      aiderModels.forEach((model) => {
         if (model.aiderProcess) {
           model.aiderCtrlC();
         }
       });
+      // This is when we cancelled an onboing request
+      core.send("aiderProcessStateUpdate", { status: "ready" });
     }
   } catch (e) {
     console.warn(`Error sending Ctrl-C to Aider process: ${e}`);
@@ -62,11 +74,13 @@ export async function aiderCtrlC(core: Core) {
 
 export async function aiderResetSession(core: Core) {
   const config = await core.configHandler.loadConfig();
-  const aiderModels = config.models.filter(model => model instanceof Aider) as Aider[];
+  const aiderModels = config.models.filter(
+    (model) => model instanceof Aider,
+  ) as Aider[];
 
   try {
     if (aiderModels.length > 0) {
-      aiderModels.forEach(model => {
+      aiderModels.forEach((model) => {
         if (model.aiderProcess) {
           model.aiderResetSession(model.model, model.apiKey);
         }
@@ -82,7 +96,16 @@ export async function handleAiderMode(
   sidebar: ContinueGUIWebviewViewProvider,
   extensionContext: vscode.ExtensionContext,
 ) {
-  await installPythonAider();
+  const isPythonInstalled = await checkPythonInstallation();
+  const isAiderInstalled = await checkAiderInstallation();
+
+
+  if (!isPythonInstalled || !isAiderInstalled) {
+    await handlePythonAiderNotInstalled();
+    return;
+    // Todo: We should probably have something open up here saying Python not installed
+  }
+
   // Check if aider is already open by checking open tabs
   const aiderTab = getIntegrationTab("pearai.aiderGUIView");
   core.invoke("llm/startAiderProcess", undefined);
@@ -123,7 +146,11 @@ export async function handleAiderMode(
     "/aiderMode",
   );
 
-  sidebar.webviewProtocol?.request("focusContinueInputWithNewSession", undefined, ["pearai.aiderGUIView"]);
+  sidebar.webviewProtocol?.request(
+    "focusContinueInputWithNewSession",
+    undefined,
+    ["pearai.aiderGUIView"],
+  );
 
   //When panel closes, reset the webview and focus
   panel.onDidDispose(
@@ -160,7 +187,7 @@ async function checkAiderInstallation(): Promise<boolean> {
   const commands = [
     "aider --version",
     "python -m aider --version",
-    "python3 -m aider --version"
+    "python3 -m aider --version",
   ];
 
   for (const cmd of commands) {
@@ -174,7 +201,7 @@ async function checkAiderInstallation(): Promise<boolean> {
   return false;
 }
 
-async function installPythonAider() {
+async function handlePythonAiderNotInstalled() {
   const isPythonInstalled = await checkPythonInstallation();
   console.log("PYTHON CHECK RESULT :");
   console.dir(isPythonInstalled);
@@ -188,15 +215,21 @@ async function installPythonAider() {
 
   if (!isPythonInstalled) {
     const installPythonConfirm = await vscode.window.showInformationMessage(
-      "Python is required to run Creator (Aider). Choose 'Install' to install Python3.9",
+      "Python was not found in your ENV PATH. Python is required to run Creator (Aider). Choose 'Install' to install Python3.9 and add it to PATH (if already installed, add it to PATH)",
       "Install",
-      "Cancel",
       "Manual Installation Guide",
+      "Cancel",
     );
+
+    if (!installPythonConfirm) {
+      return;
+    }
 
     if (installPythonConfirm === "Cancel") {
       return;
-    } else if (installPythonConfirm === "Manual Installation Guide") {
+    }
+
+    if (installPythonConfirm === "Manual Installation Guide") {
       vscode.env.openExternal(
         vscode.Uri.parse(
           "https://trypear.ai/blog/how-to-setup-aider-in-pearai",
@@ -211,7 +244,7 @@ async function installPythonAider() {
     terminal.sendText(getPythonInstallCommand());
 
     vscode.window.showInformationMessage(
-      "Please restart PearAI after python installation completes sucessfully, and then run Creator (Aider) again.",
+      "Please restart PearAI after python installation (or adding to PATH) completes sucessfully, and then run Creator (Aider) again.",
       "OK",
     );
 
@@ -226,7 +259,7 @@ async function installPythonAider() {
     if (IS_WINDOWS) {
       command += "python -m pip install -U aider-chat;";
       command += 'echo "`nAider installation complete."';
-      } else {
+    } else {
       command += "python3 -m pip install -U aider-chat;";
       command += "echo '\nAider installation complete.'";
     }
@@ -256,3 +289,85 @@ function getPythonInstallCommand(): string {
       return "sudo apt-get install -y python3";
   }
 }
+
+// Commented out as the user must do this themselves
+
+// async function isPythonInPath(): Promise<boolean> {
+//   try {
+//     return checkPythonInstallation();
+//   } catch (error) {
+//     console.warn(`Error checking Python in PATH: ${error}`);
+//     return false;
+//   }
+// }
+
+// async function setupPythonEnvironmentVariables(): Promise<void> {
+//   const pythonAlreadyInPath = await isPythonInPath();
+//   if (pythonAlreadyInPath) {
+//     console.log("Python is already in PATH, skipping environment setup");
+//     return;
+//   }
+
+//   vscode.window.showInformationMessage(
+//     "Adding Python to PATH. Please restart PearAI after Python is added to PATH successfully.",
+//   );
+//   const terminal = vscode.window.createTerminal("Python PATH Setup");
+//   terminal.show();
+
+//   switch (PLATFORM) {
+//     case "win32":
+//       terminal.sendText(`
+// # PowerShell Script to Add Specific Python Paths to User PATH Variable at the Top
+
+// # Get the current username
+// $username = [System.Environment]::UserName
+
+// # Define Python paths with the current username
+// $pythonPath = "C:\\Users\\$username\\AppData\\Local\\Programs\\Python\\Python39"
+// $pythonScriptsPath = "C:\\Users\\$username\\AppData\\Local\\Programs\\Python\\Python39\\Scripts"
+
+// # Retrieve the current user PATH
+// $currentUserPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
+
+// # Add the new paths at the top if they're not already present
+// if ($currentUserPath -notlike "*$pythonPath*") {
+//     # Prepend the Python paths to the existing user PATH
+//     $newUserPath = "$pythonPath;$pythonScriptsPath;$currentUserPath"
+//     [System.Environment]::SetEnvironmentVariable("Path", $newUserPath, [System.EnvironmentVariableTarget]::User)
+//     Write-Output "Python paths have been added to user PATH."
+// } else {
+//     Write-Output "Python paths are already in the user PATH. "
+//     Write-Output "Try Running PearAI Creator (Aider) Again."
+// }
+//         `);
+//       break;
+
+//     case "darwin":
+//       terminal.sendText(`
+//           PYTHON_PATH=$(which python3)
+//           if [ -n "$PYTHON_PATH" ]; then
+//             PYTHON_DIR=$(dirname "$PYTHON_PATH")
+//             if ! grep -q "export PATH=.*$PYTHON_DIR" ~/.zshrc; then
+//               echo "\\nexport PATH=\\"$PYTHON_DIR:\$PATH\\"" >> ~/.zshrc
+//               echo "Python path added to .zshrc"
+//               source ~/.zshrc
+//             fi
+//           fi
+//         `);
+//       break;
+
+//     case "linux":
+//       terminal.sendText(`
+//           PYTHON_PATH=$(which python3)
+//           if [ -n "$PYTHON_PATH" ]; then
+//             PYTHON_DIR=$(dirname "$PYTHON_PATH")
+//             if ! grep -q "export PATH=.*$PYTHON_DIR" ~/.bashrc; then
+//               echo "\\nexport PATH=\\"$PYTHON_DIR:\$PATH\\"" >> ~/.bashrc
+//               echo "Python path added to .bashrc"
+//               source ~/.bashrc
+//             fi
+//           fi
+//         `);
+//       break;
+//   }
+// }

@@ -14,6 +14,8 @@ import { stripImages } from "core/llm/images";
 import { createSelector } from "reselect";
 import { v4 } from "uuid";
 import { RootState } from "../store";
+import { update } from "lodash";
+import { AiderStatusUpdate } from "core/llm/llms/Aider";
 
 export const memoizedContextItemsSelector = createSelector(
   [(state: RootState) => state.state.history],
@@ -110,6 +112,7 @@ type State = {
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
   directoryItems: string;
+  aiderProcessStatus: AiderStatusUpdate;
 };
 
 const initialState: State = {
@@ -118,6 +121,7 @@ const initialState: State = {
   aiderHistory: [],
   contextItems: [],
   active: false,
+  aiderProcessStatus: { status: "starting" },
   perplexityActive: false,
   aiderActive: false,
   config: {
@@ -184,13 +188,16 @@ export const stateSlice = createSlice({
     setActive: (state) => {
       state.active = true;
     },
+    updateAiderProcessStatus: (state, action: PayloadAction<AiderStatusUpdate>) => {
+      state.aiderProcessStatus = action.payload;
+    },
     setPerplexityActive: (state) => {
       state.perplexityActive = true;
     },
     setAiderActive: (state) => {
       state.aiderActive = true;
     },
-    clearLastResponse: (state, action: PayloadAction<'perplexity' | 'aider' | 'continue'>) => {
+    clearLastResponse: (state, action?: PayloadAction<'perplexity' | 'aider' | 'continue'>) => {
       if (action.payload === 'perplexity') {
         if (state.perplexityHistory.length < 2) return;
         state.mainEditorContent = state.perplexityHistory[state.perplexityHistory.length - 2].editorState;
@@ -298,12 +305,12 @@ export const stateSlice = createSlice({
     //   }
     // },
     deleteMessage: (
-      state, 
+      state,
       action: PayloadAction<{index: number, source: 'perplexity' | 'aider' | 'continue'}>
     ) => {
       const { index, source } = action.payload;
       const history = source === 'perplexity' ? state.perplexityHistory : source === 'aider' ? state.aiderHistory : state.history;
-      
+
       if (index >= 0 && index < history.length) {
         history.splice(index, 1);
           if (
@@ -645,6 +652,7 @@ export const {
   setConfig,
   addPromptCompletionPair,
   setActive,
+  updateAiderProcessStatus,
   setPerplexityActive,
   setAiderActive,
   setEditingContextItemAtIndex,

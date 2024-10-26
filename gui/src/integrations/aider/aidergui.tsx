@@ -1,7 +1,12 @@
-import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { usePostHog } from "posthog-js/react";
+import {
+  ArrowLeftIcon,
+  ChatBubbleOvalLeftIcon,
+  CodeBracketSquareIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 import {
   Fragment,
   useCallback,
@@ -12,12 +17,21 @@ import {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import {
+  Button,
+  defaultBorderRadius,
+  lightGray,
+  vscBackground,
+  vscForeground,
+} from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
+import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useChatHandler from "../../hooks/useChatHandler";
 import useHistory from "../../hooks/useHistory";
@@ -28,6 +42,7 @@ import {
   deleteMessage,
   newSession,
   setAiderInactive,
+  updateAiderProcessStatus,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
@@ -47,10 +62,16 @@ function AiderGUI() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
+  const isBetaAccess = useSelector(
+    (state: RootState) => state.state.config.isBetaAccess,
+  );
+  const aiderProcessStatus = useSelector(
+    (state: RootState) => state.state.aiderProcessStatus,
+  );
 
   const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
-  const active = useSelector((state: RootState) => state.state.active);
+  const active = useSelector((state: RootState) => state.state.aiderActive);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
@@ -152,6 +173,14 @@ function AiderGUI() {
     [saveSession],
   );
 
+  useWebviewListener(
+    "aiderProcessStateUpdate",
+    async (data) => {
+      dispatch(updateAiderProcessStatus({ status: data.status }));
+    },
+    [],
+  );
+
   const isLastUserInput = useCallback(
     (index: number): boolean => {
       let foundLaterUserInput = false;
@@ -172,7 +201,9 @@ function AiderGUI() {
         <div className="mx-2">
           <div className="pl-2 border-b border-gray-700">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold mb-2">PearAI Creator</h1>
+              <h1 className="text-2xl font-bold mb-2">
+                PearAI Creator - Beta
+              </h1>
               <Badge variant="outline" className="pl-0">
                 Beta (Powered by{" "}
                 <a
@@ -191,21 +222,21 @@ function AiderGUI() {
                 your project. Creator will make and apply the changes to your
                 files directly.
               </p>
-              {state.aiderHistory.length > 0 ? (
-                <div className="mt-0">
-                  <NewSessionButton
-                    onClick={() => {
-                      saveSession();
-                    }}
-                    className="mr-auto"
-                  >
-                    Clear chat
-                  </NewSessionButton>
-                </div>
-              ) : null}
             </div>
           </div>
 
+          {aiderProcessStatus.status === "starting" ? (
+            <div className="fixed top-[200px] left-0 w-full h-[calc(100%-200px)] bg-gray-500 bg-opacity-50 z-10 flex items-center justify-center">
+              <div className="text-white text-2xl">
+                <div className="spinner-border text-white" role="status">
+                  <span className="visually-hidden">
+                    Spinning up Aider, please wait...
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
           <StepsDiv>
             {state.aiderHistory.map((item, index: number) => (
               <Fragment key={index}>
@@ -311,6 +342,8 @@ function AiderGUI() {
             hidden={active}
             source="aider"
           />
+          </>
+          )}
           {active ? (
             <>
               <br />
@@ -335,6 +368,7 @@ function AiderGUI() {
           isAtBottom={isAtBottom}
           trackVisibility={active}
         />
+
       </TopGuiDiv>
       {active && (
         <StopButton
