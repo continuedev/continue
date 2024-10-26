@@ -447,22 +447,26 @@ class IdeProtocolClient(
                     }
 
                     "getDiff" -> {
-                        val builder = ProcessBuilder("git", "diff")
-                        builder.directory(File(workspacePath ?: "."))
-                        val process = builder.start()
-
-                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val workspaceDirs = workspaceDirectories()
                         val output = StringBuilder()
-                        var line: String? = reader.readLine()
-                        while (line != null) {
-                            output.append(line)
-                            output.append("\n")
-                            line = reader.readLine()
+
+                        for (workspaceDir in workspaceDirs) {
+                            val builder = ProcessBuilder("git", "diff")
+                            builder.directory(File(workspaceDir))
+                            val process = builder.start()
+
+                            val reader = BufferedReader(InputStreamReader(process.inputStream))
+                            var line: String? = reader.readLine()
+                            while (line != null) {
+                                output.append(line)
+                                output.append("\n")
+                                line = reader.readLine()
+                            }
+
+                            process.waitFor()
                         }
 
-                        process.waitFor()
-
-                        respond(output.toString());
+                        respond(output.toString())
                     }
 
                     "getProblems" -> {
