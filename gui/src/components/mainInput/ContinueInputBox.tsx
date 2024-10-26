@@ -71,15 +71,13 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     (store: RootState) => store.state.config.contextProviders,
   );
   const bareChatMode = isBareChatMode()
-  const filteredContextProviders = useMemo(() => {
-    return bareChatMode
+  const filteredContextProviders = bareChatMode
       ? availableContextProviders.filter(
           (provider) => provider.title === "relativefilecontext",
         )
       : availableContextProviders.filter(
           (provider) => provider.title !== "relativefilecontext",
         );
-  }, [bareChatMode, availableContextProviders]);
 
   useWebviewListener(
     "newSessionWithPrompt",

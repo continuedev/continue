@@ -11,6 +11,10 @@ import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
 import { useWebviewListener } from "./useWebviewListener";
+import { store } from '../redux/store';
+
+// Use only relative file paths context instead of any other contexts, including absolute file paths context
+const ONLY_RELATIVE_FILE_CONTEXT = ["aider"]
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -192,39 +196,51 @@ function useSubmenuContextProviders() {
     [fallbackResults, getSubmenuSearchResults],
   );
 
-  useEffect(() => {
-    if (contextProviderDescriptions.length === 0 || loaded) {
+
+useEffect(() => {
+  if (contextProviderDescriptions.length === 0 || loaded) {
+    return;
+  }
+  setLoaded(true);
+
+  contextProviderDescriptions.forEach(async (description) => {
+    // Check if we should use relative file paths by checking the default model title
+    const defaultModelTitle = (store.getState() as any).state.defaultModelTitle;
+    const useOnlyRelativeFilePathContext = ONLY_RELATIVE_FILE_CONTEXT.some(model => defaultModelTitle?.toLowerCase().includes(model));
+    // only include relativefilecontext if useOnlyRelativeFilePathContext (Right now this is just used for PearAI Creator)
+    if ((useOnlyRelativeFilePathContext && description.title !== "relativefilecontext") ||
+        (!useOnlyRelativeFilePathContext && description.title === "relativefilecontext")) {
       return;
     }
-    setLoaded(true);
-    contextProviderDescriptions.forEach(async (description) => {
-      const minisearch = new MiniSearch<ContextSubmenuItem>({
-        fields: ["title", "description"],
-        storeFields: ["id", "title", "description"],
-      });
-      const items = await ideMessenger.request("context/loadSubmenuItems", {
-        title: description.title,
-      });
-      minisearch.addAll(items);
-      setMinisearches((prev) => ({ ...prev, [description.title]: minisearch }));
 
-      if (description.title === "file") {
-        const openFiles = await getOpenFileItems();
-        setFallbackResults((prev) => ({
-          ...prev,
-          file: [
-            ...openFiles,
-            ...items.slice(0, MAX_LENGTH - openFiles.length),
-          ],
-        }));
-      } else {
-        setFallbackResults((prev) => ({
-          ...prev,
-          [description.title]: items.slice(0, MAX_LENGTH),
-        }));
-      }
+    const minisearch = new MiniSearch<ContextSubmenuItem>({
+      fields: ["title", "description"],
+      storeFields: ["id", "title", "description"],
     });
-  }, [contextProviderDescriptions, loaded]);
+    const items = await ideMessenger.request("context/loadSubmenuItems", {
+      title: description.title,
+    });
+    minisearch.addAll(items);
+    setMinisearches((prev) => ({ ...prev, [description.title]: minisearch }));
+
+    if (description.title === "file") {
+      const openFiles = await getOpenFileItems();
+      setFallbackResults((prev) => ({
+        ...prev,
+        file: [
+          ...openFiles,
+          ...items.slice(0, MAX_LENGTH - openFiles.length),
+        ],
+      }));
+    } else {
+      setFallbackResults((prev) => ({
+        ...prev,
+        [description.title]: items.slice(0, MAX_LENGTH),
+      }));
+    }
+  });
+}, [contextProviderDescriptions, loaded]);
+
 
   useWebviewListener("configUpdate", async () => {
     // When config is updated (for example switching to a different workspace)
