@@ -27,7 +27,7 @@ export default function ErrorPage() {
         disabled={false}
         showStop={false}
         onClick={() => {
-          dispatch(newSession());
+          dispatch(newSession({session: undefined, source: 'continue'}));
           localStorage.removeItem("persist:root");
           navigate("/");
         }}

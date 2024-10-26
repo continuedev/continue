@@ -1,21 +1,27 @@
-import { useState } from 'react'
-import { Search, Star, X } from 'lucide-react'
-import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { ReactElement, useState } from "react";
+import { Search, Star } from "lucide-react";
+import { XMarkIcon } from "@heroicons/react/24/solid";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
-import { Badge } from '@/components/ui/badge'
+import { Badge } from "@/components/ui/badge";
 
 interface AITool {
   id: string;
   name: string;
-  description: string;
+  description: ReactElement;
   icon: string;
-  whenToUse: string;
-  strengths: string[];
-  weaknesses: string[];
+  whenToUse: ReactElement;
+  strengths: ReactElement[];
+  weaknesses: ReactElement[];
   enabled: boolean;
   comingSoon?: boolean;
 }
@@ -24,89 +30,136 @@ const initialTools: AITool[] = [
   {
     id: "1",
     name: "Search (Perplexity)",
-    description:
-      "AI-powered search engine: up-to-date information for docs, libraries, etc.",
+    description: (
+      <span>
+        AI-powered search engine: up-to-date information for docs, libraries,
+        etc.
+      </span>
+    ),
     icon: "🔍",
-    whenToUse:
-      "When you need to find information where the latest, most up-to-date version is important, e.g. documentation, software libraries, etc. Regular LLMs' knowledge are outdated by several months, so they will not be as good as Perplexity for such use cases",
+    whenToUse: (
+      <span>
+        When you need to find information where recency is important. Regular
+        LLMs' knowledge are outdated by several months, PearAI Search will also
+        search the web for the latest data.
+      </span>
+    ),
     strengths: [
-      "Most up-to-date information",
-      "Non coding specific questions are also supported",
-      "Provides cited sources",
+      <span>Most up-to-date information</span>,
+      <span>Non coding specific questions are also supported</span>,
+      <span>Provides cited sources</span>,
     ],
     weaknesses: [
-      "May be wordy and verbose",
-      "Not specialized for pure code generation",
+      <span>May be wordy and verbose</span>,
+      <span>Not specialized for pure code generation</span>,
     ],
     enabled: true,
   },
   {
     id: "2",
-    name: "AI Chat (Continue)",
-    description: "AI pair programmer for flexible coding assistance",
+    name: "Chat (Continue)",
+    description: <span>AI pair programmer for flexible coding assistance</span>,
     icon: "👨‍💻",
-    whenToUse:
-      "When you need fragmented coding assistance and suggestions. Ask the chat any question, it can generate code decently well and also create files. Requires medium human intervention to apply and review changes.",
+    whenToUse: (
+      <span>
+        When you need fragmented coding assistance and suggestions. Ask the chat
+        any question, it can generate code decently well and also create files.
+        Requires medium human intervention to apply and review changes.
+      </span>
+    ),
     strengths: [
-      "AI chat (CMD/CTRL+L and CMD/CTRL+I)",
-      "Context-aware suggestions",
-      "Code and file generation",
-      "Flexibility on choosing what you want to keep and discard from suggestions",
+      <span>
+        AI chat (<kbd>CMD/CTRL+L</kbd> and <kbd>CMD/CTRL+I</kbd>)
+      </span>,
+      <span>Context-aware suggestions</span>,
+      <span>Code and file generation</span>,
+      <span>
+        Flexibility on choosing what you want to keep and discard from
+        suggestions
+      </span>,
     ],
     weaknesses: [
-      "The flexibility also means it requires at least a medium level of human intervention",
+      <span>
+        The flexibility also means it requires more human intervention
+      </span>,
+      <span>
+        The <kbd>Apply</kbd> button may not work as expected in some cases,
+        requiring manual copy-pasting
+      </span>,
     ],
     enabled: true,
   },
   {
     id: "3",
     name: "Memory (mem0)",
-    description: "Personalization: let the AI remember your past thoughts",
+    description: (
+      <span>
+        Personalization: let the AI remember your past thoughts (coming soon)
+      </span>
+    ),
     icon: "📝",
-    whenToUse:
-      "When you want the AI to remember insights from past prompts you've given it. It can automatically remember details like what version of for e.g. Python you're using, or other specific details of your codebase, like your coding styles, or your expertise level",
+    whenToUse: (
+      <span>
+        When you want the AI to remember insights from past prompts you've given
+        it. It can automatically remember details like what version of for e.g.
+        Python you're using, or other specific details of your codebase, like
+        your coding styles, or your expertise level
+      </span>
+    ),
     strengths: [
-      "Intelligent memory of your coding profile",
-      "Increase in accuracy of results due to personalization",
+      <span>Intelligent memory of your coding profile</span>,
+      <span>Increase in accuracy of results due to personalization</span>,
     ],
     weaknesses: [
-      "Requires you to remove expired memories manually that are no longer relevant",
-      "Requires PearAI server due to essential custom logic",
+      <span>
+        Requires you to remove expired memories manually that are no longer
+        relevant
+      </span>,
+      <span>Requires PearAI server due to essential custom logic</span>,
     ],
     enabled: false,
+    comingSoon: true,
   },
   {
     id: "4",
     name: "Creator (aider)",
-    description: '"No-code" assistant: complete features zero to one directly',
+    description: (
+      <span>"No-code" assistant; complete features zero to one directly</span>
+    ),
     icon: "🤖",
-    whenToUse:
-      "When you need a feature or bug fixes investigated, or completed directly. Requires lower human intervention.",
+    whenToUse: (
+      <span>
+        When you need a feature or a bug fix completed directly, Creator will
+        find the relevant files, and make changes directly to your code. You can
+        see specific diff changes in your source control tab afterwards.
+      </span>
+    ),
     strengths: [
-      "Zero to one feature completions",
-      "Automated refactoring",
-      "Lower level of human intervention needed",
+      <span>Zero to one feature completions</span>,
+      <span>Automated refactoring</span>,
+      <span>Lower level of human intervention needed</span>,
     ],
-    weaknesses: [
-      "Lower level of human intervention needed means less flexibility on what to keep and discard from suggestions",
-    ],
+    weaknesses: [<span>May fail on more complex tasks</span>],
     enabled: true,
   },
   {
     id: "5",
-    name: "Painter (DALL-E)",
-    description: "AI image generation from textual descriptions",
+    name: "Painter (Flux)",
+    description: <span>AI image generation from textual descriptions</span>,
     icon: "🎨",
-    whenToUse:
-      "Use when you need to create unique images based on text prompts",
+    whenToUse: (
+      <span>
+        Use when you need to create unique images based on text prompts
+      </span>
+    ),
     strengths: [
-      "Creative image generation",
-      "Wide range of styles",
-      "Quick results",
+      <span>Creative image generation</span>,
+      <span>Wide range of styles</span>,
+      <span>Quick results</span>,
     ],
     weaknesses: [
-      "May misinterpret complex prompts",
-      "Limited control over specific details",
+      <span>May misinterpret complex prompts</span>,
+      <span>Limited control over specific details</span>,
     ],
     enabled: false,
     comingSoon: true,
@@ -126,26 +179,28 @@ function AIToolCard({
 }) {
   return (
     <Card
-      className={`cursor-pointer transition-all ${tool.enabled ? "bg-button" : "bg-input"} ${tool.comingSoon ? "opacity-50" : ""}`}
+      className={`cursor-pointer h-32 transition-all bg-input ${tool.comingSoon ? "opacity-50" : ""}`}
       onClick={tool.comingSoon ? undefined : onClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-2xl">{tool.icon}</div>
+      <CardContent className="p-2 px-4">
+        <div className="flex items-center justify-between">
+          <div className="text-lg bg-primary/10 rounded-full">{tool.icon}</div>
           <Switch
-            checked={tool.enabled}
-            onCheckedChange={onToggle}
+            checked={tool.comingSoon ? false : true} // always enabled
             aria-label={`Toggle ${tool.name}`}
-            disabled={tool.comingSoon}
+            disabled={true} // disable toggle for now
+            className={`bg-button text-button-foreground border border-input rounded-full transition-colors duration-200 ease-in-out ${
+              tool.comingSoon ? "opacity-50" : "opacity-100"
+            }`}
           />
         </div>
         <h3
-          className={`font-bold mb-1 ${tool.enabled ? "text-button-foreground" : ""}`}
+          className={`text-sm font-semibold ${tool.enabled ? "text-foreground" : ""} transition-colors`}
         >
           {tool.name}
         </h3>
         <p
-          className={`text-sm ${tool.enabled ? "text-button-foreground" : "text-muted-foreground"}`}
+          className={`text-xs ${tool.enabled ? "text-foreground" : "text-muted-foreground"}`}
         >
           {tool.comingSoon ? "Coming soon" : tool.description}
         </p>
@@ -154,33 +209,38 @@ function AIToolCard({
   );
 }
 
-function QuickActionSlot({
-  tool,
-  onRemove,
-}: {
+interface QuickActionSlotProps {
   tool: AITool | null;
   onRemove: () => void;
-}) {
+}
+
+function QuickActionSlot({ tool, onRemove }: QuickActionSlotProps) {
   return (
     <div
-      className={`w-24 h-24 flex flex-col items-center justify-center ${tool ? "bg-button" : "bg-input"} rounded relative`}
+      className={`relative w-24 h-24 rounded-lg shadow-sm transition-all duration-200 ease-in-out
+                  flex flex-col items-center justify-center space-y-2
+                  hover:shadow-md
+                  ${tool ? "bg-button" : "bg-input"}
+                  ${tool ? "border border-input-border" : "border border-dashed border-input-border"}`}
     >
       {tool ? (
         <>
-          <div className="text-2xl mb-1">{tool.icon}</div>
-          <div className="text-xs text-button-foreground text-center">
+          <div className="text-3xl text-foreground">{tool.icon}</div>
+          <div className="text-xs font-medium text-center text-button-foreground px-2 line-clamp-2">
             {tool.name}
           </div>
           <button
+            className="absolute top-0.5 right-1 p-0.5 m-1 text-foreground/50
+                       bg-button hover:bg-button-hover border-0
+                       rounded-md duration-200 ease-in-out"
             onClick={onRemove}
-            className="absolute top-1 right-1 p-1 text-foreground/50 cursor-pointer hover:text-input bg-button border-none outline-none focus:outline-none transition-colors duration-50 ease-in-out"
             aria-label={`Remove ${tool.name} from quick action slot`}
           >
-            <X size={14} />
+            <XMarkIcon className="h-4 w-4" />
           </button>
         </>
       ) : (
-        <div className="text-muted-foreground">Empty</div>
+        <div className="text-sm text-foreground/50">Empty</div>
       )}
     </div>
   );
@@ -230,95 +290,119 @@ export default function AIToolInventory() {
 
   return (
     <TooltipProvider>
-      <div className="flex flex-col h-full bg-background text-foreground">
-        <header className="mb-6">
+      <div className="flex flex-col h-full overflow-y-auto bg-background text-foreground">
+        <header className="flex-none mb-6">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-bold mb-2">PearAI Inventory</h1>{" "}
-            <Badge variant="outline" className="pl-0">Beta</Badge>
-            <Button
-              onClick={() => navigate("/")}
-              className="mt-3 bg-input text-foreground cursor-pointer"
-            >
-              Temporary Back Button
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search AI tools..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-full bg-input text-foreground border-input"
-              aria-label="Search AI tools"
-            />
+            <h1 className="text-2xl font-bold mb-2 ml-4">PearAI Inventory</h1>
+            <Badge variant="outline" className="pl-0">
+              Beta
+            </Badge>
+            <div className="relative mt-2 w-full max-w-md">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-foreground opacity-60"
+                size={18}
+              />
+              <Input
+                type="text"
+                placeholder="Search AI tools..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 py-0 w-64 bg-input text-foreground border border-input rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                aria-label="Search AI tools"
+              />
+            </div>
           </div>
         </header>
 
-        <main className="flex-grow flex gap-4 overflow-hidden">
+        <main className="flex-1 flex gap-4 min-h-0">
           <div className="w-1/2 flex flex-col">
-            <div className="flex-grow overflow-auto pr-4">
-              <div className="grid grid-cols-2 gap-4">
-                {filteredTools.map((tool) => (
-                  <AIToolCard
-                    key={tool.id}
-                    tool={tool}
-                    onClick={() => setFocusedTool(tool)}
-                    onToggle={() => handleToggle(tool.id)}
-                  />
-                ))}
-              </div>
+            <div className="flex-1 overflow-y-auto pr-4 border-solid rounded-2xl p-2">
+              {filteredTools.length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {filteredTools.map((tool) => (
+                    <AIToolCard
+                      key={tool.id}
+                      tool={tool}
+                      onClick={() => setFocusedTool(tool)}
+                      onToggle={() => handleToggle(tool.id)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-center">
+                  <div className="text-muted-foreground">
+                    <p className="text-lg font-semibold mb-2">
+                      No tools match your search.
+                    </p>
+                    <p className="text-sm">
+                      Try adjusting your search criteria.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="w-1/2 overflow-auto pl-4 border-l border-input text-base">
+          <div className="w-1/2 overflow-y-auto pl-4 border-l border-input text-sm border-solid rounded-2xl p-2 flex flex-col justify-between">
             {focusedTool ? (
-              <div>
-                <h2 className="text-2xl font-bold mb-4">
-                  {focusedTool.name} {focusedTool.icon}
-                </h2>
-                <p className="mb-4">{focusedTool.description}</p>
-                <h3 className="font-bold mb-2">When to use:</h3>
-                <p className="mb-4">{focusedTool.whenToUse}</p>
-                <h3 className="font-bold mb-2">Strengths:</h3>
-                <ul className="list-disc mb-4">
-                  {focusedTool.strengths.map((strength, index) => (
-                    <li key={index}>{strength}</li>
-                  ))}
-                </ul>
-                <h3 className="font-bold mb-2">Weaknesses:</h3>
-                <ul className="list-discmb-4">
-                  {focusedTool.weaknesses.map((weakness, index) => (
-                    <li key={index}>{weakness}</li>
-                  ))}
-                </ul>
+              <>
+                <div className="flex-grow text-foreground">
+                  <h2 className="text-lg text-font-bold mb-2">
+                    {focusedTool.name} {focusedTool.icon}
+                  </h2>
+                  <p className="mb-2">{focusedTool.description}</p>{" "}
+                  <h3 className="font-semibold mb-1">When to use:</h3>
+                  <p className="mb-2">{focusedTool.whenToUse}</p>{" "}
+                  <h3 className="font-semibold mb-1">Strengths:</h3>
+                  <ul className="list-disc mb-2 pl-4">
+                    {focusedTool.strengths.map((strength, index) => (
+                      <li key={index}>{strength}</li>
+                    ))}
+                  </ul>
+                  <h3 className="font-semibold mb-1">Weaknesses:</h3>
+                  <ul className="list-disc mb-2 pl-4">
+                    {focusedTool.weaknesses.map((weakness, index) => (
+                      <li key={index}>{weakness}</li>
+                    ))}
+                  </ul>
+                </div>
                 {!focusedTool.comingSoon && (
-                  <div className="mt-4">
+                  <div className="mt-2 flex items-center sticky bottom-0 bg-background p-2">
                     <Button
-                      className="border bg-input text-foreground cursor-pointer"
-                      onClick={() => handleEquipToQuickSlot(focusedTool)}
+                      className="bg-button text-button-foreground cursor-not-allowed text-xs opacity-50"
+                      // onClick={() => handleEquipToQuickSlot(focusedTool)}
+                      // disabled={true} // Disable the button for now
                     >
-                      Equip to quick action slots
+                      Equip to quick slots
                     </Button>
+                    <span className="ml-2 py-0.5 bg-accent text-accent-foreground text-xs rounded-full font-medium">
+                      (Equip functionality coming soon!)
+                    </span>
                     {quickSlots.every((slot) => slot !== null) && (
-                      <p className="text-destructive mt-2">
-                        Quick action slots are full
+                      <p className="text-destructive mt-1 text-xs">
+                        Quick slots are full
                       </p>
                     )}
                   </div>
                 )}
-              </div>
+              </>
             ) : (
-              <div className="text-center text-muted-foreground mt-8">
-                Select an AI tool to view details
+              <div className="flex flex-col items-center justify-center text-foreground opacity-60 mt-4 flex-grow">
+                <p className="text-sm font-medium">No tool selected</p>
+                <p className="text-xs">Select a tool to view its details</p>
               </div>
             )}
           </div>
         </main>
 
-        <footer className="mt-6">
-          <h3 className="font-bold mb-2">Quick Action Slots</h3>
-          <div className="flex gap-2 mb-4">
+        <footer className="flex-none mt-2 mb-2 p-2">
+          <h3 className="flex items-center gap-1 font-semibold text-sm mb-2">
+            Quick Action Slots{" "}
+            <Badge variant="outline" className="pl-0">
+              (Coming soon)
+            </Badge>
+          </h3>
+          <div className="flex gap-1 mb-2">
             {quickSlots.map((slot, index) => (
               <QuickActionSlot
                 key={index}
@@ -327,22 +411,24 @@ export default function AIToolInventory() {
               />
             ))}
           </div>
-          <div className="flex items-center">
-            <Star className="text-accent-foreground mr-1" />
-            <span className="font-bold">Suggested Build:</span>
-            <div className="flex ml-2">
+          <div className="flex mt-6 items-center text-xs">
+            <Star className="text-accent mr-1" size={14} />
+            <span className="font-medium">Suggested Build:</span>
+            <div className="flex ml-2 space-x-1">
               {suggestedBuild.map((id) => {
                 const tool = tools.find((t) => t.id === id);
                 return tool ? (
                   <Tooltip key={id}>
                     <TooltipTrigger asChild>
-                      <div className="flex text-button-foreground items-center bg-button rounded mr-2 px-2 py-1">
+                      <div className="flex items-center bg-button text-button-foreground rounded-full px-2 py-0.5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
                         <span className="mr-1">{tool.icon}</span>
-                        <span className="text-xs">{tool.name}</span>
+                        <span className="truncate">{tool.name}</span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{tool.description}</p>
+                      <p className="text-xs bg-input p-1 px-2 rounded-xl">
+                        {tool.description}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 ) : null;

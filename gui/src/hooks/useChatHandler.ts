@@ -24,14 +24,20 @@ import {
   addPromptCompletionPair,
   clearLastResponse,
   initNewActiveMessage,
+  initNewActivePerplexityMessage,
+  initNewActiveAiderMessage,
   resubmitAtIndex,
   setInactive,
+  setPerplexityInactive,
+  setAiderInactive,
   setMessageAtIndex,
   streamUpdate,
+  streamAiderUpdate,
+  streamPerplexityUpdate
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
-function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
+function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source?: 'perplexity' | 'aider' | 'continue') {
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
@@ -45,16 +51,16 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   );
 
   const history = useSelector((store: RootState) => store.state.history);
-  const active = useSelector((store: RootState) => store.state.active);
+  const active = source === 'perplexity' ? useSelector((store: RootState) => store.state.perplexityActive) : source === 'aider' ? useSelector((store: RootState) => store.state.aiderActive) : useSelector((store: RootState) => store.state.active);
   const activeRef = useRef(active);
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
 
-  async function _streamNormalInput(messages: ChatMessage[]) {
+  async function _streamNormalInput(messages: ChatMessage[], source: 'perplexity' | 'aider' | 'continue'='continue') {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
-
+    
     try {
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,
@@ -62,25 +68,25 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         messages,
       );
       let next = await gen.next();
-
       while (!next.done) {
         if (!activeRef.current) {
           abortController.abort();
           break;
         }
+        const stream = source === 'perplexity' ? streamPerplexityUpdate : source === 'aider' ? streamAiderUpdate : streamUpdate;
         dispatch(
-          streamUpdate(stripImages((next.value as ChatMessage).content)),
+          stream(stripImages((next.value as ChatMessage).content)),
         );
         next = await gen.next();
       }
 
       let returnVal = next.value as PromptLog;
       if (returnVal) {
-        dispatch(addPromptCompletionPair([returnVal]));
+        dispatch(addPromptCompletionPair({promptLogs: [returnVal], source: source}));
       }
     } catch (e) {
       // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
+      dispatch(clearLastResponse(source));
     }
   }
 
@@ -157,12 +163,14 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
     index?: number,
+    source: 'perplexity' | 'aider' | 'continue'='continue'
   ) {
     try {
       if (typeof index === "number") {
         dispatch(resubmitAtIndex({ index, editorState }));
       } else {
-        dispatch(initNewActiveMessage({ editorState }));
+        const init = source === 'perplexity' ? initNewActivePerplexityMessage : source === 'aider' ? initNewActiveAiderMessage : initNewActiveMessage;
+        dispatch(init({ editorState }));
       }
 
       // Resolve context providers and construct new history
@@ -239,7 +247,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       let commandAndInput = getSlashCommandForInput(content);
 
       if (!commandAndInput) {
-        await _streamNormalInput(messages);
+        await _streamNormalInput(messages, source);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
         posthog.capture("step run", {
@@ -260,7 +268,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         message: `Error streaming response: ${e.message}`,
       });
     } finally {
-      dispatch(setInactive());
+      const disableActive = source === 'perplexity' ? setPerplexityInactive : source === 'aider' ? setAiderInactive : setInactive;
+      dispatch(disableActive());
     }
   }
 

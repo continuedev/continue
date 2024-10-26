@@ -25,11 +25,10 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
-import { isBareChatMode, isPerplexityMode } from '../../util/bareChatMode';
+import { isBareChatMode, isPerplexityMode } from "../../util/bareChatMode";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { RootState } from "@/redux/store";
 import { useLocation } from "react-router-dom";
-
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding: 4px 0;
@@ -108,14 +107,14 @@ function InputToolbar(props: InputToolbarProps) {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === "/aiderMode") {
-      const aider = allModels.find(
-        (model) => model?.title?.toLowerCase().includes("aider"),
+    if (location.pathname.split("/").pop() === "aiderMode") {
+      const aider = allModels.find((model) =>
+        model?.title?.toLowerCase().includes("aider"),
       );
       dispatch(setDefaultModel({ title: aider?.title }));
-    } else if (location.pathname === "/perplexityMode") {
-      const perplexity = allModels.find(
-        (model) => model?.title?.toLowerCase().includes("perplexity"),
+    } else if (location.pathname.split("/").pop() === "perplexityMode") {
+      const perplexity = allModels.find((model) =>
+        model?.title?.toLowerCase().includes("perplexity"),
       );
       dispatch(setDefaultModel({ title: perplexity?.title }));
     }
@@ -243,4 +242,3 @@ function InputToolbar(props: InputToolbarProps) {
 }
 
 export default InputToolbar;
-

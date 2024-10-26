@@ -17,7 +17,6 @@ class Calculator {
     this.result *= number;
     return this;
     }
-  }
 
   divide(number) {
     if (number === 0) {

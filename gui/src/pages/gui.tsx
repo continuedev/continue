@@ -1,8 +1,6 @@
 import {
   ArrowLeftIcon,
   ChatBubbleOvalLeftIcon,
-  CodeBracketSquareIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
@@ -43,11 +41,6 @@ import {
   newSession,
   setInactive,
 } from "../redux/slices/stateSlice";
-import {
-  setDialogEntryOn,
-  setDialogMessage,
-  setShowDialog,
-} from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import {
   getFontSize,
@@ -147,7 +140,6 @@ function GUI() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const isBetaAccess = useSelector((state: RootState) => state.state.config.isBetaAccess);
 
   const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
@@ -198,7 +190,7 @@ function GUI() {
     }, 1);
 
     return () => {
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
       window.removeEventListener("scroll", handleScroll);
     };
   }, [topGuiDivRef.current]);
@@ -303,7 +295,7 @@ function GUI() {
                   <ErrorBoundary
                     FallbackComponent={fallbackRender}
                     onReset={() => {
-                      dispatch(newSession());
+                      dispatch(newSession({session: undefined, source: 'continue'}));
                     }}
                   >
                     {item.message.role === "user" ? (
@@ -372,7 +364,12 @@ function GUI() {
                               );
                             }}
                             onDelete={() => {
-                              dispatch(deleteMessage(index));
+                              dispatch(
+                                deleteMessage({
+                                  index: index + 1,
+                                  source: "continue",
+                                }),
+                              );
                             }}
                             modelTitle={
                               item.promptLogs?.[0]?.completionOptions?.model ??
@@ -450,16 +447,13 @@ function GUI() {
               state.history[state.history.length - 1]?.message.content
                 .length === 0
             ) {
-              dispatch(clearLastResponse());
+              dispatch(clearLastResponse("continue"));
             }
           }}
         >
           {getMetaKeyLabel()} ⌫ Cancel
         </StopButton>
       )}
-      {isBetaAccess &&
-        <NewSessionButton onClick={() => navigate("/inventory")} style={{marginLeft: "0.8rem", marginBottom: "0rem"}} >Inventory</NewSessionButton>
-      }
     </>
   );
 }

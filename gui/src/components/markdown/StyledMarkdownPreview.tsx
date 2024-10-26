@@ -25,7 +25,7 @@ const StyledMarkdown = styled.div<{
   showBorder?: boolean;
 }>`
   pre {
-    background-color: ${vscEditorBackground};
+    background-color: ${window.isPearOverlay ?  vscBackground : vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
     max-width: calc(100vw - 24px);
@@ -39,7 +39,7 @@ const StyledMarkdown = styled.div<{
         `;
       }
     }}
-    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
+    padding: 12px;
   }
 
   code {
@@ -58,7 +58,7 @@ const StyledMarkdown = styled.div<{
     color: #f78383;
   }
 
-  background-color: ${vscBackground};
+  background-color: ${window.isPearOverlay ?  "transparent" : vscBackground};
   font-family:
     var(--vscode-font-family),
     system-ui,
@@ -90,6 +90,7 @@ interface StyledMarkdownPreviewProps {
   className?: string;
   showCodeBorder?: boolean;
   scrollLocked?: boolean;
+  integrationSource?: "perplexity" | "aider" | "continue";
 }
 
 const FadeInWords: React.FC = (props: any) => {
@@ -215,7 +216,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.source]);
 
   return (
-    <StyledMarkdown fontSize={getFontSize()} showBorder={props.showCodeBorder}>
+    <StyledMarkdown fontSize={getFontSize()} showBorder={false}>
       {reactContent}
     </StyledMarkdown>
   );

@@ -197,6 +197,8 @@ export interface IContextProvider {
 
 export interface PersistedSessionInfo {
   history: ChatHistory;
+  perplexityHistory: ChatHistory;
+  aiderHistory: ChatHistory;
   title: string;
   workspaceDirectory: string;
   sessionId: string;

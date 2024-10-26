@@ -97,8 +97,12 @@ fn bubble_sort<T: Ord>(values: &mut[T]) {
 
 type State = {
   history: ChatHistory;
+  perplexityHistory: ChatHistory;
+  aiderHistory: ChatHistory;
   contextItems: ContextItemWithId[];
   active: boolean;
+  perplexityActive: boolean;
+  aiderActive: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
   sessionId: string;
@@ -110,8 +114,12 @@ type State = {
 
 const initialState: State = {
   history: [],
+  perplexityHistory: [],
+  aiderHistory: [],
   contextItems: [],
   active: false,
+  perplexityActive: false,
+  aiderActive: false,
   config: {
     slashCommands: [
       {
@@ -160,28 +168,54 @@ export const stateSlice = createSlice({
     },
     addPromptCompletionPair: (
       state,
-      { payload }: PayloadAction<PromptLog[]>,
+      { payload }: PayloadAction<{promptLogs: PromptLog[], source: string}>,
     ) => {
+      const {promptLogs, source} = payload;
+      const history = source === 'perplexity' ? state.perplexityHistory : source === 'aider' ? state.aiderHistory : state.history;
       if (!state.history.length) {
         return;
       }
-      const lastHistory = state.history[state.history.length - 1];
+      const lastHistory = history[history.length - 1];
 
       lastHistory.promptLogs = lastHistory.promptLogs
-        ? lastHistory.promptLogs.concat(payload)
-        : payload;
+        ? lastHistory.promptLogs.concat(promptLogs)
+        : promptLogs;
     },
     setActive: (state) => {
       state.active = true;
     },
-    clearLastResponse: (state) => {
-      if (state.history.length < 2) {
-        return;
-      }
-      state.mainEditorContent =
-        state.history[state.history.length - 2].editorState;
-      state.history = state.history.slice(0, -2);
+    setPerplexityActive: (state) => {
+      state.perplexityActive = true;
     },
+    setAiderActive: (state) => {
+      state.aiderActive = true;
+    },
+    clearLastResponse: (state, action: PayloadAction<'perplexity' | 'aider' | 'continue'>) => {
+      if (action.payload === 'perplexity') {
+        if (state.perplexityHistory.length < 2) return;
+        state.mainEditorContent = state.perplexityHistory[state.perplexityHistory.length - 2].editorState;
+        state.perplexityHistory = state.perplexityHistory.slice(0, -2);
+      } else if (action.payload === 'aider') {
+        if (state.aiderHistory.length < 2) return;
+        state.mainEditorContent = state.aiderHistory[state.aiderHistory.length - 2].editorState;
+        state.aiderHistory = state.aiderHistory.slice(0, -2);
+      } else {
+        if (state.history.length < 2) {
+          return;
+        }
+        state.mainEditorContent =
+          state.history[state.history.length - 2].editorState;
+        state.history = state.history.slice(0, -2);
+      }
+    },
+    // clearLastResponse: (state) => {
+    //   if (state.history.length < 2) {
+    //     return;
+    //   }
+    //   state.mainEditorContent =
+    //     state.history[state.history.length - 2].editorState;
+    //   state.history = state.history.slice(0, -2);
+    // },
     consumeMainEditorContent: (state) => {
       state.mainEditorContent = undefined;
     },
@@ -247,20 +281,37 @@ export const stateSlice = createSlice({
       // state.contextItems = [];
       state.active = true;
     },
-    deleteMessage: (state, action: PayloadAction<number>) => {
-      const index = action.payload + 1;
+    // deleteMessage: (state, action: PayloadAction<number>) => {
+    //   const index = action.payload + 1;
 
-      if (index >= 0 && index < state.history.length) {
-        // Delete the current message
-        state.history.splice(index, 1);
+    //   if (index >= 0 && index < state.history.length) {
+    //     // Delete the current message
+    //     state.history.splice(index, 1);
 
-        // If the next message is an assistant message, delete it too
-        if (
-          index < state.history.length &&
-          state.history[index].message.role === "assistant"
-        ) {
-          state.history.splice(index, 1);
-        }
+    //     // If the next message is an assistant message, delete it too
+    //     if (
+    //       index < state.history.length &&
+    //       state.history[index].message.role === "assistant"
+    //     ) {
+    //       state.history.splice(index, 1);
+    //     }
+    //   }
+    // },
+    deleteMessage: (
+      state, 
+      action: PayloadAction<{index: number, source: 'perplexity' | 'aider' | 'continue'}>
+    ) => {
+      const { index, source } = action.payload;
+      const history = source === 'perplexity' ? state.perplexityHistory : source === 'aider' ? state.aiderHistory : state.history;
+      
+      if (index >= 0 && index < history.length) {
+        history.splice(index, 1);
+          if (
+            index < history.length &&
+            history[index].message.role === "assistant"
+          ) {
+            history.splice(index, 1);
+          }
       }
     },
 
@@ -287,6 +338,50 @@ export const stateSlice = createSlice({
       // https://github.com/continuedev/continue/pull/1021
       // state.contextItems = [];
       state.active = true;
+    },
+    initNewActivePerplexityMessage: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        editorState: JSONContent;
+      }>,
+    ) => {
+      state.perplexityHistory.push({
+        message: { role: "user", content: "" },
+        contextItems: state.contextItems,
+        editorState: payload.editorState,
+      });
+      state.perplexityHistory.push({
+        message: {
+          role: "assistant",
+          content: "",
+        },
+        contextItems: [],
+      });
+      state.perplexityActive = true;
+    },
+    initNewActiveAiderMessage: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        editorState: JSONContent;
+      }>,
+    ) => {
+      state.aiderHistory.push({
+        message: { role: "user", content: "" },
+        contextItems: state.contextItems,
+        editorState: payload.editorState,
+      });
+      state.aiderHistory.push({
+        message: {
+          role: "assistant",
+          content: "",
+        },
+        contextItems: [],
+      });
+      state.aiderActive = true;
     },
     setMessageAtIndex: (
       state,
@@ -335,22 +430,49 @@ export const stateSlice = createSlice({
     setInactive: (state) => {
       state.active = false;
     },
+    setPerplexityInactive: (state) => {
+      state.perplexityActive = false;
+    },
+    setAiderInactive: (state) => {
+      state.aiderActive = false;
+    },
     streamUpdate: (state, action: PayloadAction<string>) => {
       if (state.history.length) {
         state.history[state.history.length - 1].message.content +=
           action.payload;
       }
     },
+    streamPerplexityUpdate: (state, action: PayloadAction<string>) => {
+      if (state.perplexityHistory.length) {
+        state.perplexityHistory[state.perplexityHistory.length - 1].message.content +=
+          action.payload;
+      }
+    },
+    streamAiderUpdate: (state, action: PayloadAction<string>) => {
+      if (state.aiderHistory.length) {
+        state.aiderHistory[state.aiderHistory.length - 1].message.content +=
+          action.payload;
+      }
+    },
     newSession: (
       state,
-      { payload }: PayloadAction<PersistedSessionInfo | undefined>,
+      { payload }: PayloadAction<{session: PersistedSessionInfo | undefined, source: 'perplexity' | 'aider' | 'continue'}>,
     ) => {
-      if (payload) {
-        state.history = payload.history;
-        state.title = payload.title;
-        state.sessionId = payload.sessionId;
+      const {session, source} = payload;
+      if (session) {
+        state.history = session.history;
+        state.perplexityHistory = session.perplexityHistory;
+        state.aiderHistory = session.aiderHistory;
+        state.title = session.title;
+        state.sessionId = session.sessionId;
       } else {
-        state.history = [];
+        if (source === 'perplexity') {
+          state.perplexityHistory = [];
+        } else if (source === 'aider') {
+          state.aiderHistory = [];
+        } else {
+          state.history = [];
+        }
         state.contextItems = [];
         state.active = false;
         state.title = "New Session";
@@ -508,7 +630,11 @@ export const {
   addContextItems,
   addContextItemsAtIndex,
   setInactive,
+  setPerplexityInactive,
+  setAiderInactive,
   streamUpdate,
+  streamPerplexityUpdate,
+  streamAiderUpdate,
   newSession,
   deleteContextWithIds,
   resubmitAtIndex,
@@ -519,8 +645,12 @@ export const {
   setConfig,
   addPromptCompletionPair,
   setActive,
+  setPerplexityActive,
+  setAiderActive,
   setEditingContextItemAtIndex,
   initNewActiveMessage,
+  initNewActivePerplexityMessage,
+  initNewActiveAiderMessage,
   setMessageAtIndex,
   clearLastResponse,
   consumeMainEditorContent,

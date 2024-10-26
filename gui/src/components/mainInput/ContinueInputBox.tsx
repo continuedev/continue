@@ -10,7 +10,6 @@ import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 import { useMemo } from "react";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { isBareChatMode } from "../../util/bareChatMode";
 import { getContextProviders } from "../../integrations/util/integrationSpecificContextProviders";
 
@@ -61,21 +60,40 @@ interface ContinueInputBoxProps {
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
   hidden?: boolean;
+  source?: "perplexity" | "aider" | "continue";
 }
 
-function ContinueInputBox(props: ContinueInputBoxProps) {
+function ContinueInputBox({
+  isLastUserInput,
+  isMainInput,
+  onEnter,
+  editorState,
+  contextItems,
+  hidden,
+  source = "continue",
+}: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
-  const active = useSelector((store: RootState) => store.state.active);
+  const active = useSelector((store: RootState) => {
+    switch (source) {
+      case "perplexity":
+        return store.state.perplexityActive;
+      case "aider":
+        return store.state.aiderActive;
+      default:
+        return store.state.active;
+    }
+  });
+
   const availableSlashCommands = useSelector(selectSlashCommands);
-  let availableContextProviders = getContextProviders()
-  const bareChatMode = isBareChatMode()
+  let availableContextProviders = getContextProviders();
+  const bareChatMode = isBareChatMode();
 
   useWebviewListener(
     "newSessionWithPrompt",
     async (data) => {
-      if (props.isMainInput) {
-        dispatch(newSession());
+      if (isMainInput) {
+        dispatch(newSession({session: undefined, source}));
         dispatch(
           setMessageAtIndex({
             message: { role: "user", content: data.prompt },
@@ -84,35 +102,36 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         );
       }
     },
-    [props.isMainInput],
+    [isMainInput],
   );
 
+  // check if lastActiveIntegration === source, if so, activate gradient border and tiptap editor
+  // actually can get history here and check if last message of passed in source was a lastUserInput
   return (
     <div
       style={{
-        display: props.hidden ? "none" : "inherit",
+        display: hidden ? "none" : "inherit",
       }}
     >
       <GradientBorder
-        loading={active && props.isLastUserInput ? 1 : 0}
+        loading={active && isLastUserInput ? 1 : 0}
         isFirst={false}
         isLast={false}
-        borderColor={
-          active && props.isLastUserInput ? undefined : vscBackground
-        }
+        borderColor={active && isLastUserInput ? undefined : vscBackground}
         borderRadius={defaultBorderRadius}
       >
         <TipTapEditor
-          editorState={props.editorState}
-          onEnter={props.onEnter}
-          isMainInput={props.isMainInput}
+          editorState={editorState}
+          onEnter={onEnter}
+          isMainInput={isMainInput}
           availableContextProviders={availableContextProviders}
           availableSlashCommands={
             bareChatMode ? undefined : availableSlashCommands
           }
+          source={source}
         ></TipTapEditor>
       </GradientBorder>
-      <ContextItemsPeek contextItems={props.contextItems}></ContextItemsPeek>
+      <ContextItemsPeek contextItems={contextItems}></ContextItemsPeek>
     </div>
   );
 }

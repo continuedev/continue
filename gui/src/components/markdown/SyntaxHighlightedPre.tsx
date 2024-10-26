@@ -1,11 +1,12 @@
 import { useContext } from "react";
 import styled from "styled-components";
-import { vscForeground } from "..";
+import { vscBackground, vscButtonBackground, vscEditorBackground, vscForeground } from "..";
 import { VscThemeContext } from "../../context/VscTheme";
 
 const StyledPre = styled.pre<{ theme: any }>`
   & .hljs {
     color: ${vscForeground};
+    background: ${window.isPearOverlay ? vscBackground : vscEditorBackground};
   }
 
   ${(props) =>

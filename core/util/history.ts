@@ -66,6 +66,8 @@ class HistoryManager {
       console.log(`Error loading session: ${e}`);
       return {
         history: [],
+        perplexityHistory: [],
+        aiderHistory: [],
         title: "Failed to load session",
         workspaceDirectory: "",
         sessionId: sessionId,

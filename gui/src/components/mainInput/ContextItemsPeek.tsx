@@ -82,7 +82,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
       style={{
         paddingLeft: "8px",
         paddingTop: "8px",
-        backgroundColor: vscBackground,
+        backgroundColor: window.isPearOverlay ?  "transparent" : vscBackground,
       }}
     >
       <div
