@@ -12,6 +12,7 @@ import TipTapEditor from "./TipTapEditor";
 import { useMemo } from "react";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { isBareChatMode } from "../../util/bareChatMode";
+import { getContextProviders } from "../../integrations/util/integrationSpecificContextProviders";
 
 const gradient = keyframes`
   0% {
@@ -67,17 +68,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   const active = useSelector((store: RootState) => store.state.active);
   const availableSlashCommands = useSelector(selectSlashCommands);
-  let availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
-  );
+  let availableContextProviders = getContextProviders()
   const bareChatMode = isBareChatMode()
-  const filteredContextProviders = bareChatMode
-      ? availableContextProviders.filter(
-          (provider) => provider.title === "relativefilecontext",
-        )
-      : availableContextProviders.filter(
-          (provider) => provider.title !== "relativefilecontext",
-        );
 
   useWebviewListener(
     "newSessionWithPrompt",
@@ -114,7 +106,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           editorState={props.editorState}
           onEnter={props.onEnter}
           isMainInput={props.isMainInput}
-          availableContextProviders={filteredContextProviders}
+          availableContextProviders={availableContextProviders}
           availableSlashCommands={
             bareChatMode ? undefined : availableSlashCommands
           }

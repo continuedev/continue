@@ -55,24 +55,24 @@ class Aider extends BaseLLM {
     console.log("Aider constructor called");
   }
 
-public async aiderResetSession(model: string, apiKey: string | undefined): Promise<void> {
-  console.log("Resetting Aider process...");
+  public async aiderResetSession(model: string, apiKey: string | undefined): Promise<void> {
+    console.log("Resetting Aider process...");
 
-  // Kill the current process if it exists
-  this.killAiderProcess();
+    // Kill the current process if it exists
+    this.killAiderProcess();
 
-  // Reset the output
-  this.aiderOutput = "";
+    // Reset the output
+    this.aiderOutput = "";
 
-  // Restart the Aider chat with the provided model and API key
-  try {
-    await this.startAiderChat(model, apiKey);
-    console.log("Aider process reset successfully.");
-  } catch (error) {
-    console.error("Error resetting Aider process:", error);
-    throw error;
+    // Restart the Aider chat with the provided model and API key
+    try {
+      await this.startAiderChat(model, apiKey);
+      console.log("Aider process reset successfully.");
+    } catch (error) {
+      console.error("Error resetting Aider process:", error);
+      throw error;
+    }
   }
-}
 
 
   public killAiderProcess(): void {
@@ -229,8 +229,6 @@ public async aiderResetSession(model: string, apiKey: string | undefined): Promi
 
       const userPath = this.getUserPath();
       const userShell = this.getUserShell();
-
-      console.log("User PATH:", userPath);
 
       const spawnAiderProcess = async () => {
         if (IS_WINDOWS) {
