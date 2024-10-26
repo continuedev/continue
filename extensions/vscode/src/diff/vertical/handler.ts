@@ -336,6 +336,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
+    let diffLines = []
     try {
       // As an indicator of loading
       this.updateIndexLineDecorations();
@@ -344,6 +345,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
         if (this.isCancelled) {
           return;
         }
+        diffLines.push(diffLine)
         await this.queueDiffLine(diffLine);
       }
 
@@ -366,6 +368,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.clearForFilepath(this.filepath, false);
       throw e;
     }
+    return diffLines
   }
 
   async acceptRejectBlock(

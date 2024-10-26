@@ -71,7 +71,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       }
     }
 
-    return chunks;
+    return chunks.slice(0, n);
   }
 
   protected async retrieveFts(input: string, n: number): Promise<Chunk[]> {
