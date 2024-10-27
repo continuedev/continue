@@ -629,9 +629,9 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
   vertexai: {
     title: "VertexAI",
     provider: "vertexai",
-    description: "Use supported vertex AI models",
+    description: "Use supported Vertex AI models",
     longDescription:
-      "Use the supported vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
+      "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
     icon: "vertexai.png",
     packages: [
       models.VertexGemini15Pro,
@@ -643,7 +643,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
         inputType: "project",
         key: "projectId",
         label: "Project Id",
-        placeholder: "Enter your Vertex AI project id",
+        placeholder: "Enter your Vertex AI project Id",
         required: true,
       },
       {
