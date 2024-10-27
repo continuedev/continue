@@ -6,22 +6,6 @@ To get an Ask Sage API key login to the Ask Sage platform (If you don't have an 
 
 :::
 
-The current Models available provided by Ask Sage are:
-
-| Model              | Added |
-|--------------------|-------|
-| Gov GPT-4.0        |  Yes  |
-| Gov GPT-4o         |  Yes  |
-| GPT-4o             |  Yes  |
-| GPT-4o-mini        |  Yes  |
-| GPT-3.5-16K        |  Yes  |
-| Calude 3 Opus      |  Yes  |
-| Calude 3 Sonet     |  Yes  |
-| Calude 3.5 Sonnet  |  Yes  |
-| Gemini Pro         |  Yes  |
-| llama 3            |  Yes  |
-| Mistral Large      |  Yes  |
-
 ## Configuration
 
 To use the Ask Sage models, the following configuration is required to the `config.json` file:
@@ -40,7 +24,7 @@ To use the Ask Sage models, the following configuration is required to the `conf
 }
 ```
 
-The `apiBase` will be listed on the Ask Sage platform when you generate an API key. You will see context like this: 
+The `apiBase` will be listed on the Ask Sage platform when you generate an `API key`. You will see context as shown below:
 
 > Server API for query/training etc.:
 > - Documentation: https://app.swaggerhub.com/apis-docs/NICOLASCHAILLAN_1/server_ask-sage_api/1.0
@@ -50,7 +34,28 @@ The `apiBase` will be listed on the Ask Sage platform when you generate an API k
 
 Currently, the setup for the models provided by Ask Sage is to support the following two functionalities provided by Continue.Dev: 
 
-- Chat to understand and iterate on code in the sidebar
-- Edit to modify code without leaving your current file
+- `Chat` to understand and iterate on code in the sidebar
+- `Edit` to modify code without leaving your current file
 
 More models, functionalities and documentation will be added in the future for Ask Sage Integration.
+
+> We recommend to utilize the`OpenAI` or `Anthropic` models for the best performance and results for the `Chat` and `Edit` functionalities.
+
+## Current Models From Ask Sage Supported
+
+The current Models available provided by Ask Sage are:
+
+| Model              | Added |
+|--------------------|-------|
+| Gov GPT-4.0        |  Yes  |
+| Gov GPT-4o         |  Yes  |
+| GPT-4o             |  Yes  |
+| GPT-4o-mini        |  Yes  |
+| GPT-3.5-16K        |  Yes  |
+| Calude 3 Opus      |  Yes  |
+| Calude 3 Sonet     |  Yes  |
+| Calude 3.5 Sonnet  |  Yes  |
+| Gemini Pro         |  Yes  |
+| llama 3            |  Yes  |
+| Mistral Large      |  Yes  |
+
