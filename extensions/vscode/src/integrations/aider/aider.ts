@@ -91,24 +91,13 @@ export async function aiderResetSession(core: Core) {
   }
 }
 
-export async function handleAiderMode(
+export async function openAiderPanel(
   core: Core,
   sidebar: ContinueGUIWebviewViewProvider,
   extensionContext: vscode.ExtensionContext,
 ) {
-  const isPythonInstalled = await checkPythonInstallation();
-  const isAiderInstalled = await checkAiderInstallation();
-
-
-  if (!isPythonInstalled || !isAiderInstalled) {
-    await handlePythonAiderNotInstalled();
-    return;
-    // Todo: We should probably have something open up here saying Python not installed
-  }
-
   // Check if aider is already open by checking open tabs
   const aiderTab = getIntegrationTab("pearai.aiderGUIView");
-  core.invoke("llm/startAiderProcess", undefined);
   console.log("Aider tab found:", aiderTab);
   console.log("Aider tab active:", aiderTab?.isActive);
   console.log("Aider panel exists:", !!aiderPanel);
@@ -165,6 +154,24 @@ export async function handleAiderMode(
     null,
     extensionContext.subscriptions,
   );
+}
+
+
+export async function handleAiderMode(
+  core: Core,
+  sidebar: ContinueGUIWebviewViewProvider,
+  extensionContext: vscode.ExtensionContext,
+) {
+  const isPythonInstalled = await checkPythonInstallation();
+  const isAiderInstalled = await checkAiderInstallation();
+
+
+  if (!isPythonInstalled || !isAiderInstalled) {
+    await handlePythonAiderNotInstalled();
+    return;
+    // Todo: We should wait for installation to finish and then try agian
+  }
+  core.invoke("llm/startAiderProcess", undefined);
 }
 
 async function checkPythonInstallation(): Promise<boolean> {

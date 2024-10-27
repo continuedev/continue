@@ -224,18 +224,6 @@ function AiderGUI() {
               </p>
             </div>
           </div>
-
-          {aiderProcessStatus.status === "starting" ? (
-            <div className="fixed top-[200px] left-0 w-full h-[calc(100%-200px)] bg-gray-500 bg-opacity-50 z-10 flex items-center justify-center">
-              <div className="text-white text-2xl">
-                <div className="spinner-border text-white" role="status">
-                  <span className="visually-hidden">
-                    Spinning up Aider, please wait...
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : (
             <>
           <StepsDiv>
             {state.aiderHistory.map((item, index: number) => (
@@ -343,7 +331,6 @@ function AiderGUI() {
             source="aider"
           />
           </>
-          )}
           {active ? (
             <>
               <br />
