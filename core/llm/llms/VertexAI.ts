@@ -10,11 +10,15 @@ import {
   ModelProvider,
 } from "../../index.js";
 import { streamResponse } from "../stream.js";
+import Anthropic from "./Anthropic.js";
+import Gemini from "./Gemini.js";
 
 class VertexAI extends BaseLLM {
   static providerName: ModelProvider = "vertexai";
   declare apiBase: string;
   declare vertexProvider: string;
+  declare anthropicInstance: Anthropic;
+  declare geminiInstance: Gemini;
 
   private clientPromise = new GoogleAuth({
     scopes: "https://www.googleapis.com/auth/cloud-platform",
@@ -35,12 +39,15 @@ class VertexAI extends BaseLLM {
     this.apiBase ??= VertexAI.getDefaultApiBaseFrom(_options);
     this.vertexProvider =
       _options.model.includes("mistral") || _options.model.includes("codestral") || _options.model.includes("mixtral")
-        ? "Mistral"
+        ? "mistral"
         : _options.model.includes("claude")
           ? "anthropic"
           : _options.model.includes("gemini")
             ? "gemini" :
             "unknown";
+    this.anthropicInstance = new Anthropic(_options);
+    this.geminiInstance = new Gemini(_options)
+    
   }
 
   async fetch(url: RequestInfo | URL, init?: RequestInit) {
@@ -63,68 +70,16 @@ class VertexAI extends BaseLLM {
 
   // Anthropic functions
   private _anthropicConvertArgs(options: CompletionOptions) {
-    const finalOptions = {
+    const convertedArgs = this.anthropicInstance.convertArgs(options);
+
+    // Remove the `model` property and add `anthropic_version`
+    const { model, ...finalOptions } = convertedArgs;
+    return {
+      ...finalOptions,
       anthropic_version: "vertex-2023-10-16",
-      top_k: options.topK,
-      top_p: options.topP,
-      temperature: options.temperature,
-      max_tokens: options.maxTokens ?? 2048,
-      stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
-      stream: options.stream ?? true,
     };
-
-    return finalOptions;
   }
 
-  private _anthropicConvertMessages(msgs: ChatMessage[]): any[] {
-    const filteredmessages = msgs.filter((m) => m.role !== "system")
-    const lastTwoUserMsgIndices = filteredmessages
-      .map((msg, index) => (msg.role === "user" ? index : -1))
-      .filter((index) => index !== -1).slice(-2);
-
-    const messages = filteredmessages.map((message, filteredMsgIdx) => {
-      // Add cache_control parameter to the last two user messages
-      // The second-to-last because it retrieves potentially already cached contents,
-      // The last one because we want it cached for later retrieval.
-      // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-      const addCaching = this.cacheBehavior?.cacheConversation && lastTwoUserMsgIndices.includes(filteredMsgIdx);
-
-      if (typeof message.content === "string") {
-        var chatMessage = {
-          ...message,
-          content: [{
-            type: "text",
-            text: message.content,
-            ...(addCaching ? { cache_control: { type: "ephemeral" } } : {})
-          }]
-        };
-        return chatMessage;
-      }
-
-      return {
-        ...message,
-        content: message.content.map((part, contentIdx) => {
-          if (part.type === "text") {
-            const newpart = {
-              ...part,
-              // If multiple text parts, only add cache_control to the last one
-              ...((addCaching && contentIdx == message.content.length - 1) ? { cache_control: { type: "ephemeral" } } : {})
-            };
-            return newpart;
-          }
-          return {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: "image/jpeg",
-              data: part.imageUrl?.url.split(",")[1],
-            },
-          };
-        }),
-      };
-    });
-    return messages;
-  }
 
   protected async *StreamChatAnthropic(
     messages: ChatMessage[],
@@ -148,7 +103,7 @@ class VertexAI extends BaseLLM {
       },
       body: JSON.stringify({
         ...this._anthropicConvertArgs(options),
-        messages: this._anthropicConvertMessages(messages),
+        messages: this.anthropicInstance.convertMessages(messages),
         system: shouldCacheSystemMessage
           ? [
             {
@@ -177,58 +132,6 @@ class VertexAI extends BaseLLM {
 
 
   //Gemini
-  // Function to convert completion options to Gemini format
-  private _geminiConvertArgs(options: CompletionOptions) {
-    const finalOptions: any = {}; // Initialize an empty object
-
-    // Map known options
-    if (options.topK) {
-      finalOptions.topK = options.topK;
-    }
-    if (options.topP) {
-      finalOptions.topP = options.topP;
-    }
-    if (options.temperature !== undefined && options.temperature !== null) {
-      finalOptions.temperature = options.temperature;
-    }
-    if (options.maxTokens) {
-      finalOptions.maxOutputTokens = options.maxTokens;
-    }
-    if (options.stop) {
-      finalOptions.stopSequences = options.stop.filter((x) => x.trim() !== "");
-    }
-
-    return { generationConfig: finalOptions }; // Wrap options under 'generationConfig'
-  }
-
-
-  private removeSystemMessage(messages: ChatMessage[]) {
-    const msgs = [...messages];
-
-    if (msgs[0]?.role === "system") {
-      const sysMsg = msgs.shift()?.content;
-      // @ts-ignore
-      if (msgs[0]?.role === "user") {
-        msgs[0].content = `System message - follow these instructions in every response: ${sysMsg}\n\n---\n\n${msgs[0].content}`;
-      }
-    }
-
-    return msgs;
-  }
-
-
-  private _continuePartToGeminiPart(part: MessagePart) {
-    return part.type === "text"
-      ? {
-        text: part.text,
-      }
-      : {
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: part.imageUrl?.url.split(",")[1],
-        },
-      };
-  }
 
   private async *streamChatGemini(
     messages: ChatMessage[],
@@ -252,13 +155,13 @@ class VertexAI extends BaseLLM {
           parts:
             typeof msg.content === "string"
               ? [{ text: msg.content }]
-              : msg.content.map(this._continuePartToGeminiPart),
+              : msg.content.map(this.geminiInstance.continuePartToGeminiPart),
         };
       })
       .filter((c) => c !== null);
 
     const body = {
-      ...this._geminiConvertArgs(options),
+      ...this.geminiInstance.convertArgs(options),
       contents,
       // if this.systemMessage is defined, reformat it for Gemini API
       ...(this.systemMessage &&
@@ -392,7 +295,10 @@ class VertexAI extends BaseLLM {
     });
 
     for await (const chunk of streamSse(response)) {
-      yield chunk.choices[0].delta;
+      if (chunk.choices?.[0]) {
+        // At the end vertexai will return a empty chunk.
+        yield chunk.choices[0].delta;
+      }
     }
   }
 
@@ -471,7 +377,7 @@ class VertexAI extends BaseLLM {
 
     // Conditionally apply removeSystemMessage
     const convertedMsgs = isV1API
-      ? this.removeSystemMessage(messages)
+      ? this.geminiInstance.removeSystemMessage(messages)
       : messages;
     if (this.vertexProvider == "gemini") {
       yield* this.streamChatGemini(convertedMsgs, options);

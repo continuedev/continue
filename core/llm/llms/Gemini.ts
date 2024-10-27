@@ -18,7 +18,7 @@ class Gemini extends BaseLLM {
   };
 
   // Function to convert completion options to Gemini format
-  private _convertArgs(options: CompletionOptions) {
+  public convertArgs(options: CompletionOptions) {  // should be public for use within VertexAI
     const finalOptions: any = {}; // Initialize an empty object
 
     // Map known options
@@ -53,7 +53,7 @@ class Gemini extends BaseLLM {
     }
   }
 
-  private removeSystemMessage(messages: ChatMessage[]) {
+  public removeSystemMessage(messages: ChatMessage[]) { // should be public for use within VertexAI
     const msgs = [...messages];
 
     if (msgs[0]?.role === "system") {
@@ -100,7 +100,7 @@ class Gemini extends BaseLLM {
     }
   }
 
-  private _continuePartToGeminiPart(part: MessagePart) {
+  continuePartToGeminiPart(part: MessagePart) {
     return part.type === "text"
       ? {
           text: part.text,
@@ -139,13 +139,13 @@ class Gemini extends BaseLLM {
           parts:
             typeof msg.content === "string"
               ? [{ text: msg.content }]
-              : msg.content.map(this._continuePartToGeminiPart),
+              : msg.content.map(this.continuePartToGeminiPart),
         };
       })
       .filter((c) => c !== null);
 
     const body = {
-      ...this._convertArgs(options),
+      ...this.convertArgs(options),
       contents,
       // if this.systemMessage is defined, reformat it for Gemini API
       ...(this.systemMessage &&

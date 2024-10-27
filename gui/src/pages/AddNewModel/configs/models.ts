@@ -816,6 +816,20 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["vertexai"],
     isOpenSource: false,
   },
+  vertexMistralLarge: {
+    title: "Mistral Large",
+    description:
+      "Mistral's flagship model that's ideal for complex tasks that require large reasoning capabilities or are highly specialized (Synthetic Text Generation, Code Generation, RAG, or Agents).",
+    params: {
+      title: "Mistral Large",
+      model: "mistral-large",
+      contextLength: 32000,
+    },
+    icon: "mistral.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+
 
 
   AUTODETECT: {

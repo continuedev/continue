@@ -636,6 +636,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [
       models.VertexGemini15Pro,
       models.VertexGemini15Flash,
+      models.mistralLarge
 
     ],
     collectInputFor: [

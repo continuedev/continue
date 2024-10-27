@@ -11,35 +11,7 @@ You need to enable the [Vertex AI API](https://console.cloud.google.com/marketpl
 
 ## Chat model
 
-We recommend configuring **Mistral Large**, **Gemini 1.5 Pro**, or **Claude 3.5 Sonnet** as your chat model.
-
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Mistral Large (Vertex AI)",
-      "provider": "vertexai",
-      "model": "mistral-large",
-      "projectId": "[PROJECT_ID]",
-      "region": "us-central1"
-    }
-  ]
-}
-```
-
-```json title="config.json"
-{
-  "models": [
-    {
-      "title": "Gemini 1.5 Pro (Vertex AI)",
-      "provider": "vertexai",
-      "model": "gemini-1.5-pro",
-      "projectId": "[PROJECT_ID]",
-      "region": "us-central1"
-    }
-  ]
-}
-```
+We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 
 ```json title="config.json"
 {
@@ -71,19 +43,6 @@ We recommend configuring **Codestral** or **code-gecko** as your autocomplete mo
   }
 }
 ```
-
-```json title="config.json"
-{
-  "tabAutocompleteModel": {
-    "title": "Code Gecko (Vertex AI)",
-    "provider": "vertexai",
-    "model": "codestral",
-    "projectId": "[PROJECT_ID]",
-    "region": "us-central1"
-  }
-}
-```
-
 ## Embeddings model
 
 We recommend configuring **text-embedding-004** as your embeddings model.
