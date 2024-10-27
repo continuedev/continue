@@ -56,6 +56,8 @@ class Aider extends BaseLLM {
       options.setCredentials || (async () => {}),
     );
     console.log("Aider constructor called");
+    this.model = options.model;
+    this.apiKey = options.apiKey;
   }
 
   public async aiderResetSession(
@@ -295,9 +297,9 @@ class Aider extends BaseLLM {
   };
 
   const spawnAiderProcessUnix = () => {
-    if (model === "claude-3-5-sonnet-20240620") {
+    if (model.includes("claude")) {
       command.unshift(`export ANTHROPIC_API_KEY=${apiKey};`);
-    } else if (model === "gpt-4o") {
+    } else if (model.includes("gpt")) {
       command.unshift(`export OPENAI_API_KEY=${apiKey};`);
     } else {
       // For pearai_model, we're using the access token
@@ -399,6 +401,14 @@ class Aider extends BaseLLM {
       this.aiderProcess.stdin.write(`${formattedMessage}\n`);
     } else {
       console.error("Aider process is not running");
+      vscode.window.showErrorMessage(
+        "Aider process is not running. Please view PearAI Creator troubleshooting guide.",
+        "View Troubleshooting"
+      ).then(selection => {
+        if (selection === "View Troubleshooting") {
+          vscode.env.openExternal(vscode.Uri.parse("https://trypear.ai/blog/how-to-setup-aider-in-pearai"));
+        }
+      });
     }
   }
 
