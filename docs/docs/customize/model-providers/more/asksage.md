@@ -1,65 +1,56 @@
----
-title: Ask Sage
-slug: ../askSage
----
+# Ask Sage Inc. 
 
+:::info
 
-## Introduction
+To get an Ask Sage API key login to the Ask Sage platform (If you don't have an account, you can create one [here](https://chat.asksage.ai/)) and follow the instructions in the Ask Sage Docs:[Ask Sage API Key](https://docs.asksage.ai/docs/api-documentation/api-documentation.html) 
 
-Ask Sage models are now available on the Continue.Dev platform.
-
-
-
-
-## Chat model
-
-We recommend configuring **GPT-4o** as your chat model.
-
-```json title="config.json"
-"models": [{
-    "title": "GPT-4o",
-    "provider": "azure",
-    "model": "gpt-4o",
-    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
-}]
-```
-
-## Privacy
-
-If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant.
-
-:::info[Getting access]
-You need to apply for access to the Azure OpenAI service. Response times are typically within a few days.
-
-**[Click here to apply for access to the Azure OpenAI service](https://azure.microsoft.com/en-us/products/ai-services/openai-service)**
 :::
 
-## General model configuration
+The current Models available provided by Ask Sage are:
 
-Azure OpenAI requires a handful of additional parameters to be configured, such as a model engine and API version.
+| Model              | Added |
+|--------------------|-------|
+| Gov GPT-4.0        |  Yes  |
+| Gov GPT-4o         |  Yes  |
+| GPT-4o             |  Yes  |
+| GPT-4o-mini        |  Yes  |
+| GPT-3.5-16K        |  Yes  |
+| Calude 3 Opus      |  Yes  |
+| Calude 3 Sonet     |  Yes  |
+| Calude 3.5 Sonnet  |  Yes  |
+| Gemini Pro         |  Yes  |
+| llama 3            |  Yes  |
+| Mistral Large      |  Yes  |
 
-To find this information in _Azure AI Studio_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
+## Configuration
 
-For example, a Target URI of `<https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-03-15-preview>` would map to the following:
+To use the Ask Sage models, the following configuration is required to the `config.json` file:
 
 ```json
 {
-  "title": "GPT-4o Azure",
-  "model": "gpt-4o",
-  "provider": "azure",
-  "apiBase": "https://just-an-example.openai.azure.com",
-  "apiType": "azure",
-  "engine": "gpt-4o",
-  "apiVersion": "2023-03-15-preview",
-  "apiKey": "<MY_API_KEY>"
+  "models": [
+    {
+      "apiKey": "YOUR_API_KEY", 
+      "apiBase": "https://api.asksage.ai/server/", // apiBase will be the same for all models, but will vary based on tenant. 
+      "model": "gpt4-gov",
+      "title": "GPT-4 gov",
+      "provider": "askSage"
+    }
+  ]
 }
 ```
 
-## Future Work 
+The `apiBase` will be listed on the Ask Sage platform when you generate an API key. You will see context like this: 
 
-Ask Sage is working on enabling the utilization of the other functionalities that Continue.Dev offers. Stay tuned for more updates! 
+> Server API for query/training etc.:
+> - Documentation: https://app.swaggerhub.com/apis-docs/NICOLASCHAILLAN_1/server_ask-sage_api/1.0
+> - URL for this API is: https://api.asksage.ai/server/
 
+## Usage
+
+Currently, the setup for the models provided by Ask Sage is to support the following two functionalities provided by Continue.Dev: 
+
+- Chat to understand and iterate on code in the sidebar
+- Edit to modify code without leaving your current file
+
+More models, functionalities and documentation will be added in the future for Ask Sage Integration.
