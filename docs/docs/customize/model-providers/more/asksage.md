@@ -1,4 +1,4 @@
-# Ask Sage Inc. 
+# Ask Sage
 
 :::info
 
