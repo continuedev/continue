@@ -6,29 +6,25 @@ import {
 } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
-/**
- * Asksage is a class that interfaces with the Ask Sage API.
- */
 class Asksage extends BaseLLM {
-  static providerName: ModelProvider = "askSage"; // Provider Name
+  static providerName: ModelProvider = "askSage";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.asksage.ai/server/", // Base URL for Ask Sage API
-    model: "gpt-4o", // Default model
+    apiBase: "https://api.asksage.ai/server/",
+    model: "gpt-4o",
   };
 
-  // Supported models and their corresponding API identifiers
   private static modelConversion: { [key: string]: string } = {
     "gpt-4o": "gpt-4o",
     "gpt-4o-mini": "gpt-4o-mini",
     "gpt4-gov": "gpt4-gov",
     "gpt-4o-gov": "gpt-4o-gov",
+    "gpt-3.5-turbo": "gpt35-16k",
     "mistral-large-latest": "mistral-large",
-    "llama3-8b": "llma3",
-    "gemini-pro": "google-gemini-pro",
+    "llama3-70b": "llma3",
+    "gemini-1.5-pro-latest": "google-gemini-pro",
     "claude-3-5-sonnet-20240620": "claude-35-sonnet",
     "claude-3-opus-20240229": "claude-3-opus",
     "claude-3-sonnet-20240229": "claude-3-sonnet",
-    // Add other models as needed
   };
 
   constructor(options: LLMOptions) {
@@ -36,20 +32,10 @@ class Asksage extends BaseLLM {
     this.apiVersion = options.apiVersion ?? "v1.2.4";
   }
 
-  /**
-   * Converts the given model name to the corresponding model identifier used by the API.
-   * @param model - The model name.
-   * @returns The API-specific model identifier.
-   */
   protected _convertModelName(model: string): string {
     return Asksage.modelConversion[model] ?? model;
   }
 
-  /**
-   * Converts a ChatMessage into the format required by the Ask Sage API.
-   * @param message - The ChatMessage to convert.
-   * @returns The converted message.
-   */
   protected _convertMessage(message: ChatMessage) {
     return {
       user: message.role === "assistant" ? "gpt" : "me",
@@ -60,38 +46,27 @@ class Asksage extends BaseLLM {
     };
   }
 
-  /**
-   * Prepares the arguments for the API request.
-   * @param options - The completion options.
-   * @param messages - An array of ChatMessage objects.
-   * @returns The arguments for the API request.
-   */
   protected _convertArgs(options: any, messages: ChatMessage[]) {
-    // Format message as per API requirement
     let formattedMessage: any;
     if (messages.length === 1) {
-      // Single message
       formattedMessage = messages[0].content;
     } else {
-      // Array of messages
       formattedMessage = messages.map(this._convertMessage);
     }
 
     const args: any = {
       message: formattedMessage,
-      persona: options.persona ?? "default", // set the software persona
-      dataset: options.dataset ?? "none", // set this to 'none' as we don't want to use a specific dataset
+      persona: options.persona ?? "default",
+      dataset: options.dataset ?? "none",
       limit_references: options.limitReferences ?? 0,
       temperature: options.temperature ?? 0.0,
       live: options.live ?? 0,
       model: this._convertModelName(options.model),
-      system_prompt: options.systemPrompt, 
+      system_prompt: options.systemPrompt ?? "You are an expert software developer. You give helpful and concise responses.",
       tools: options.tools,
       tool_choice: options.toolChoice,
-      // Add other parameters as required by your API
     };
 
-    // Remove undefined properties
     Object.keys(args).forEach(
       (key) => args[key] === undefined && delete args[key]
     );
@@ -99,27 +74,18 @@ class Asksage extends BaseLLM {
     return args;
   }
 
-  /**
-   * Gets the headers required for the API requests.
-   * @returns An object containing header key-value pairs.
-   */
   protected _getHeaders() {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
 
     if (this.apiKey) {
-      headers["x-access-tokens"] = this.apiKey; // Use x-access-tokens as per API requirement
+      headers["x-access-tokens"] = this.apiKey;
     }
 
     return headers;
   }
 
-  /**
-   * Constructs the full URL for a given API endpoint.
-   * @param endpoint - The endpoint path.
-   * @returns A URL object representing the full API endpoint URL.
-   */
   protected _getEndpoint(endpoint: string) {
     if (!this.apiBase) {
       throw new Error(
@@ -130,17 +96,10 @@ class Asksage extends BaseLLM {
     return new URL(endpoint, this.apiBase);
   }
 
-  /**
-   * Sends a completion request to the API and returns the response.
-   * @param prompt - The input prompt for the language model.
-   * @param options - Additional completion options.
-   * @returns The generated completion text.
-   */
   protected async _complete(
     prompt: string,
     options: CompletionOptions
   ): Promise<string> {
-    // Input validation to prevent injections
     if (typeof prompt !== "string" || prompt.trim() === "") {
       throw new Error("Prompt must be a non-empty string.");
     }
@@ -162,31 +121,17 @@ class Asksage extends BaseLLM {
     }
 
     const data = await response.json();
-    return data.message; // Adjust based on your API's response structure
+    return data.message;
   }
 
-  /**
-   * Streams completion data from the API.
-   * Note: If streaming is not supported, you can remove this method or adjust accordingly.
-   * @param prompt - The input prompt for the language model.
-   * @param options - Additional completion options.
-   * @returns An async generator yielding completion text chunks.
-   */
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    // Since streaming is not indicated, yield the full completion
     const completion = await this._complete(prompt, options);
     yield completion;
   }
 
-  /**
-   * Streams chat messages from the API.
-   * @param messages - An array of ChatMessage objects.
-   * @param options - Additional completion options.
-   * @returns An async generator yielding ChatMessage chunks.
-   */
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions
@@ -207,22 +152,15 @@ class Asksage extends BaseLLM {
 
     const data = await response.json();
 
-    // Construct a ChatMessage from the response
     const assistantMessage: ChatMessage = {
       role: "assistant",
-      content: data.message, // Adjust based on your API's response structure
+      content: data.message,
     };
 
     yield assistantMessage;
   }
 
-  /**
-   * Retrieves a list of available models from the API.
-   * @returns A promise that resolves to an array of model names.
-   */
   async listModels(): Promise<string[]> {
-    // If your API provides an endpoint to list models, implement it here
-    // For now, return the keys from modelConversion
     return Object.keys(Asksage.modelConversion);
   }
 }
