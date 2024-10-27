@@ -406,7 +406,7 @@ export async function getComputeDeleteAddRemove(
       for await (const _ of globalCacheIndex.update(
         tag,
         results,
-        async () => {},
+        async () => { },
         repoName,
       )) {
       }
@@ -417,7 +417,7 @@ export async function getComputeDeleteAddRemove(
 export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
 
-  constructor(private db: DatabaseConnection) {}
+  constructor(private db: DatabaseConnection) { }
 
   artifactId = "globalCache";
 
@@ -468,4 +468,15 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
       tag.artifactId,
     );
   }
+}
+
+const SQLITE_MAX_LIKE_PATTERN_LENGTH = 50000;
+
+function truncateToBytes(input: string, maxBytes: number): string {
+  let bytes = 0;
+  return input.split("").filter(char => (bytes += new TextEncoder().encode(char).length) <= maxBytes).join("");
+}
+
+export function truncateSqliteLikePattern(input: string) {
+  return truncateToBytes(input, SQLITE_MAX_LIKE_PATTERN_LENGTH);
 }
