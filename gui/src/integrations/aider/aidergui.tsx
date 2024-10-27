@@ -1,12 +1,7 @@
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
 import { usePostHog } from "posthog-js/react";
-import {
-  ArrowLeftIcon,
-  ChatBubbleOvalLeftIcon,
-  CodeBracketSquareIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
+import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import {
   Fragment,
   useCallback,
@@ -17,21 +12,12 @@ import {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate } from "react-router-dom";
-import styled from "styled-components";
-import {
-  Button,
-  defaultBorderRadius,
-  lightGray,
-  vscBackground,
-  vscForeground,
-} from "../../components";
+import { useNavigate } from "react-router-dom";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
-import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useChatHandler from "../../hooks/useChatHandler";
 import useHistory from "../../hooks/useHistory";
@@ -56,18 +42,13 @@ import {
   NewSessionButton,
   fallbackRender,
 } from "../../pages/gui";
+import { CustomTutorialCard } from "@/components/mainInput/CustomTutorialCard";
 
 function AiderGUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const isBetaAccess = useSelector(
-    (state: RootState) => state.state.config.isBetaAccess,
-  );
-  const aiderProcessStatus = useSelector(
-    (state: RootState) => state.state.aiderProcessStatus,
-  );
 
   const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
@@ -78,6 +59,19 @@ function AiderGUI() {
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
+
+  // TODO: Remove this later. This is supposed to be set in Onboarding, but
+  // many users won't reach onboarding screen due to cache. So set it manually,
+  // and on next release we remove it.
+  setLocalStorage("showAiderTutorialCard", true);
+  const [showAiderTutorialCard, setShowAiderTutorialCard] = useState<boolean>(
+    getLocalStorage("showAiderTutorialCard"),
+  );
+  const onCloseTutorialCard = () => {
+    posthog.capture("closedAiderTutorialCard");
+    setLocalStorage("showAiderTutorialCard", false);
+    setShowAiderTutorialCard(false);
+  };
 
   const handleScroll = () => {
     const OFFSET_HERUISTIC = 300;
@@ -126,7 +120,7 @@ function AiderGUI() {
     return () => window.removeEventListener("keydown", listener);
   }, [active]);
 
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger, 'aider');
+  const { streamResponse } = useChatHandler(dispatch, ideMessenger, "aider");
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
@@ -201,9 +195,7 @@ function AiderGUI() {
         <div className="mx-2">
           <div className="pl-2 border-b border-gray-700">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold mb-2">
-                PearAI Creator - Beta
-              </h1>
+              <h1 className="text-2xl font-bold mb-2">PearAI Creator</h1>
               <Badge variant="outline" className="pl-0">
                 Beta (Powered by{" "}
                 <a
@@ -222,114 +214,133 @@ function AiderGUI() {
                 your project. Creator will make and apply the changes to your
                 files directly.
               </p>
+              {state.aiderHistory.length > 0 && (
+                <div>
+                  <NewSessionButton
+                    onClick={() => {
+                      saveSession();
+                      ideMessenger.post("aiderResetSession", undefined);
+                    }}
+                    className="mr-auto"
+                  >
+                    Clear chat
+                  </NewSessionButton>
+                </div>
+              )}
             </div>
           </div>
-            <>
-          <StepsDiv>
-            {state.aiderHistory.map((item, index: number) => (
-              <Fragment key={index}>
-                <ErrorBoundary
-                  FallbackComponent={fallbackRender}
-                  onReset={() => {
-                    dispatch(newSession({session: undefined, source: 'aider'}));
-                  }}
-                >
-                  {item.message.role === "user" ? (
-                    <ContinueInputBox
-                      onEnter={async (editorState, modifiers) => {
-                        streamResponse(
-                          editorState,
-                          modifiers,
-                          ideMessenger,
-                          index,
-                          "aider",
-                        );
-                      }}
-                      isLastUserInput={isLastUserInput(index)}
-                      isMainInput={false}
-                      editorState={item.editorState}
-                      contextItems={item.contextItems}
-                      source="aider"
-                    />
-                  ) : (
-                    <div className="thread-message">
-                      <TimelineItem
-                        item={item}
-                        iconElement={
-                          <ChatBubbleOvalLeftIcon width="16px" height="16px" />
-                        }
-                        open={
-                          typeof stepsOpen[index] === "undefined"
-                            ? true
-                            : stepsOpen[index]!
-                        }
-                        onToggle={() => {}}
-                      >
-                        <StepContainer
-                          index={index}
-                          isLast={
-                            index === sessionState.aiderHistory.length - 1
+          <>
+            <StepsDiv>
+              {state.aiderHistory.map((item, index: number) => (
+                <Fragment key={index}>
+                  <ErrorBoundary
+                    FallbackComponent={fallbackRender}
+                    onReset={() => {
+                      dispatch(
+                        newSession({ session: undefined, source: "aider" }),
+                      );
+                    }}
+                  >
+                    {item.message.role === "user" ? (
+                      <ContinueInputBox
+                        onEnter={async (editorState, modifiers) => {
+                          streamResponse(
+                            editorState,
+                            modifiers,
+                            ideMessenger,
+                            index,
+                            "aider",
+                          );
+                        }}
+                        isLastUserInput={isLastUserInput(index)}
+                        isMainInput={false}
+                        editorState={item.editorState}
+                        contextItems={item.contextItems}
+                        source="aider"
+                      />
+                    ) : (
+                      <div className="thread-message">
+                        <TimelineItem
+                          item={item}
+                          iconElement={
+                            <ChatBubbleOvalLeftIcon
+                              width="16px"
+                              height="16px"
+                            />
                           }
-                          isFirst={index === 0}
                           open={
                             typeof stepsOpen[index] === "undefined"
                               ? true
                               : stepsOpen[index]!
                           }
-                          key={index}
-                          onUserInput={(input: string) => {}}
-                          item={item}
-                          onReverse={() => {}}
-                          onRetry={() => {
-                            streamResponse(
-                              state.aiderHistory[index - 1].editorState,
-                              state.aiderHistory[index - 1].modifiers ??
-                                defaultInputModifiers,
-                              ideMessenger,
-                              index - 1,
-                              "aider",
-                            );
-                          }}
-                          onContinueGeneration={() => {
-                            window.postMessage(
-                              {
-                                messageType: "userInput",
-                                data: {
-                                  input: "Keep going.",
+                          onToggle={() => {}}
+                        >
+                          <StepContainer
+                            index={index}
+                            isLast={
+                              index === sessionState.aiderHistory.length - 1
+                            }
+                            isFirst={index === 0}
+                            open={
+                              typeof stepsOpen[index] === "undefined"
+                                ? true
+                                : stepsOpen[index]!
+                            }
+                            key={index}
+                            onUserInput={(input: string) => {}}
+                            item={item}
+                            onReverse={() => {}}
+                            onRetry={() => {
+                              streamResponse(
+                                state.aiderHistory[index - 1].editorState,
+                                state.aiderHistory[index - 1].modifiers ??
+                                  defaultInputModifiers,
+                                ideMessenger,
+                                index - 1,
+                                "aider",
+                              );
+                            }}
+                            onContinueGeneration={() => {
+                              window.postMessage(
+                                {
+                                  messageType: "userInput",
+                                  data: {
+                                    input: "Keep going.",
+                                  },
                                 },
-                              },
-                              "*",
-                            );
-                          }}
-                          onDelete={() => {
-                            dispatch(
-                              deleteMessage({
-                                index: index + 1,
-                                source: "aider",
-                              }),
-                            );
-                          }}
-                          modelTitle={
-                            item.promptLogs?.[0]?.completionOptions?.model ?? ""
-                          }
-                          source="aider"
-                        />
-                      </TimelineItem>
-                    </div>
-                  )}
-                </ErrorBoundary>
-              </Fragment>
-            ))}
-          </StepsDiv>
-          <ContinueInputBox
-            onEnter={(editorContent, modifiers) => {
-              sendInput(editorContent, modifiers);
-            }}
-            isLastUserInput={false}
-            isMainInput={true}
-            hidden={active}
-            source="aider"
-          />
+                                "*",
+                              );
+                            }}
+                            onDelete={() => {
+                              dispatch(
+                                deleteMessage({
+                                  index: index + 1,
+                                  source: "aider",
+                                }),
+                              );
+                            }}
+                            modelTitle={
+                              item.promptLogs?.[0]?.completionOptions?.model ??
+                              ""
+                            }
+                            source="aider"
+                          />
+                        </TimelineItem>
+                      </div>
+                    )}
+                  </ErrorBoundary>
+                </Fragment>
+              ))}
+            </StepsDiv>
+            <ContinueInputBox
+              onEnter={(editorContent, modifiers) => {
+                sendInput(editorContent, modifiers);
+              }}
+              isLastUserInput={false}
+              isMainInput={true}
+              hidden={active}
+              source="aider"
+            />
           </>
           {active ? (
             <>
@@ -348,14 +359,26 @@ function AiderGUI() {
                 Clear chat
               </NewSessionButton>
             </div>
-          ) : null}
+          ) : (
+            <>
+              {" "}
+              {/** TODO: Prevent removing tutorial card for now. Set to showAiderTutorialCard later */}
+              {true && (
+                <div className="flex justify-center w-full mt-10">
+                  <CustomTutorialCard
+                    content={tutorialContent}
+                    onClose={onCloseTutorialCard}
+                  />{" "}
+                </div>
+              )}
+            </>
+          )}
         </div>
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
           isAtBottom={isAtBottom}
           trackVisibility={active}
         />
-
       </TopGuiDiv>
       {active && (
         <StopButton
@@ -379,3 +402,13 @@ function AiderGUI() {
 }
 
 export default AiderGUI;
+
+const tutorialContent = {
+  goodFor: "direct feature implementations, bug fixes, code refactoring",
+  notGoodFor:
+    "anything not requiring actual code changes (use PearAI Chat instead)",
+  example: {
+    text: '"make a new FAQ page for my website"',
+    copyText: "make a new FAQ page for my website",
+  },
+};

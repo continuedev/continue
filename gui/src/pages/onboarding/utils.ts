@@ -36,6 +36,8 @@ export function useOnboarding() {
     if (onboardingStatus === "Started") {
       setLocalStorage("onboardingStatus", "Completed");
       setLocalStorage("showTutorialCard", true);
+      setLocalStorage("showAiderTutorialCard", true);
+      setLocalStorage("showPerplexityTutorialCard", true);
       posthog.capture("Onboarding Step", { status: "Completed" });
     }
 

@@ -43,6 +43,7 @@ import {
   NewSessionButton,
   fallbackRender,
 } from "../../pages/gui";
+import { CustomTutorialCard } from "@/components/mainInput/CustomTutorialCard";
 
 function PerplexityGUI() {
   const posthog = usePostHog();
@@ -52,22 +53,27 @@ function PerplexityGUI() {
 
   const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
-  const active = useSelector((state: RootState) => state.state.perplexityActive);
+  const active = useSelector(
+    (state: RootState) => state.state.perplexityActive,
+  );
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
-  const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard"),
-  );
+  // TODO: Remove this later. This is supposed to be set in Onboarding, but
+  // many users won't reach onboarding screen due to cache. So set it manually,
+  // and on next release we remove it.
+  setLocalStorage("showPerplexityTutorialCard", true);
+  const [showPerplexityTutorialCard, setShowPerplexityTutorialCard] =
+    useState<boolean>(getLocalStorage("showPerplexityTutorialCard"));
 
   const bareChatMode = isBareChatMode();
 
   const onCloseTutorialCard = () => {
-    posthog.capture("closedTutorialCard");
-    setLocalStorage("showTutorialCard", false);
-    setShowTutorialCard(false);
+    posthog.capture("closedPerplexityTutorialCard");
+    setLocalStorage("showPerplexityTutorialCard", false);
+    setShowPerplexityTutorialCard(false);
   };
 
   const handleScroll = () => {
@@ -122,7 +128,11 @@ function PerplexityGUI() {
     };
   }, [active]);
 
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger, 'perplexity');
+  const { streamResponse } = useChatHandler(
+    dispatch,
+    ideMessenger,
+    "perplexity",
+  );
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
@@ -231,7 +241,9 @@ function PerplexityGUI() {
                 <ErrorBoundary
                   FallbackComponent={fallbackRender}
                   onReset={() => {
-                    dispatch(newSession({session: undefined, source: 'perplexity'}));
+                    dispatch(
+                      newSession({ session: undefined, source: "perplexity" }),
+                    );
                   }}
                 >
                   {item.message.role === "user" ? (
@@ -328,7 +340,7 @@ function PerplexityGUI() {
             isLastUserInput={false}
             isMainInput={true}
             hidden={active}
-            source='perplexity'
+            source="perplexity"
           ></ContinueInputBox>
           {active ? (
             <>
@@ -348,14 +360,20 @@ function PerplexityGUI() {
             </div>
           ) : (
             <>
-              {!!showTutorialCard && !bareChatMode && (
-                <div className="flex justify-center w-full">
-                  <TutorialCard onClose={onCloseTutorialCard} />
+              {" "}
+              {/** TODO: Prevent removing tutorial card for now. Set to showerPerplexityTutorialCard later */}
+              {true && (
+                <div className="flex justify-center w-full mt-10">
+                  <CustomTutorialCard
+                    content={tutorialContent}
+                    onClose={onCloseTutorialCard}
+                  />{" "}
                 </div>
               )}
             </>
           )}
         </div>
+
         <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
           isAtBottom={isAtBottom}
@@ -381,5 +399,14 @@ function PerplexityGUI() {
     </>
   );
 }
+
+const tutorialContent = {
+  goodFor: "searching documentation, debugging errors, quick look-ups",
+  notGoodFor: "direct feature implementations (use PearAI chat instead)",
+  example: {
+    text: '"what\'s new in the latest python version?"',
+    copyText: "what's new in the latest python version?",
+  },
+};
 
 export default PerplexityGUI;

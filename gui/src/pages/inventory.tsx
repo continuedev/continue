@@ -5,14 +5,6 @@ import AiderGUI from "@/integrations/aider/aidergui";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-const TemplateComponent = ({ name }: { name: string }) => {
-  return (
-    <div className="flex items-center justify-center h-screen text-7xl">
-      {name} here
-    </div>
-  );
-};
-
 const tabs = [
   { id: "inventory", name: "Inventory", component: <InventoryPage /> },
   {
@@ -40,12 +32,30 @@ export default function Inventory() {
     navigate(`/inventory/${value}`);
   };
 
-  // // Set initial path if on root inventory path
-  // useEffect(() => {
-  //   if (location.pathname === '/inventory') {
-  //     navigate('/inventory/inventory');
-  //   }
-  // }, [location.pathname, navigate]);
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLElement &&
+        (activeElement.isContentEditable ||
+          activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT")
+      ) {
+        return;
+      }
+      if (event.key >= "1" && event.key <= "3") {
+        // Convert key to index (0-2)
+        const index = parseInt(event.key) - 1;
+        if (index >= 0 && index < tabs.length) {
+          handleTabChange(tabs[index].id);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, []);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
@@ -58,7 +68,7 @@ export default function Inventory() {
         <div className="flex flex-col h-full">
           <div className="top-0 px-4 pt-4 z-10">
             <TabsList className="bg-input text-center">
-              {tabs.map((tab) => (
+              {tabs.map((tab, index) => (
                 <TabsTrigger
                   key={tab.id}
                   value={tab.id}
@@ -68,14 +78,11 @@ export default function Inventory() {
                       : "text-foreground hover:bg-muted hover:text-muted-foreground"
                   }`}
                 >
-                  {tab.name}
+                  {`${tab.name}`}
+                  <kbd className="ml-1">{index + 1}</kbd>
                 </TabsTrigger>
               ))}
             </TabsList>
-            {/* commenting out for now, it will be handy until we finish developing the overlay feature */}
-            {/* <span className="ml-2 text-sm text-muted-foreground">
-              Current path: {location.pathname}
-            </span> */}
           </div>
 
           <div className="flex-1 min-h-0 p-4 pt-0 overflow-hidden">
