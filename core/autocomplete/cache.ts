@@ -4,11 +4,19 @@ import sqlite3 from "sqlite3";
 import { DatabaseConnection } from "../indexing/refreshIndex.js";
 import { getTabAutocompleteCacheSqlitePath } from "../util/paths.js";
 
+const SQLITE_MAX_LIKE_PATTERN_LENGTH = 50000;
+
+function truncateToBytes(input: string, maxBytes: number): string {
+  let bytes = 0;
+  return input.split("").filter(char => (bytes += new TextEncoder().encode(char).length) <= maxBytes).join("");
+}
+
+
 export class AutocompleteLruCache {
   private static capacity = 1000;
   private mutex = new Mutex();
 
-  constructor(private db: DatabaseConnection) {}
+  constructor(private db: DatabaseConnection) { }
 
   static async get(): Promise<AutocompleteLruCache> {
     const db = await open({
@@ -35,9 +43,10 @@ export class AutocompleteLruCache {
     // If the query is "co" and we have "c" -> "ontinue" in the cache,
     // we should return "ntinue" as the completion.
     // Have to make sure we take the key with shortest length
+    const truncatedPrefix = truncateToBytes(prefix, SQLITE_MAX_LIKE_PATTERN_LENGTH);
     const result = await this.db.get(
       "SELECT key, value FROM cache WHERE ? LIKE key || '%' ORDER BY LENGTH(key) DESC LIMIT 1",
-      prefix,
+      truncatedPrefix,
     );
 
     // Validate that the cached compeltion is a valid completion for the prefix
