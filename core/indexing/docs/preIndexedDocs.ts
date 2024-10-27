@@ -299,12 +299,12 @@ const preIndexedDocs: Record<
     rootUrl: "https://docs.godotengine.org/en/latest/",
     faviconUrl: "https://godotengine.org/favicon.ico",
   },
-  // "https://docs.asksage.ai/": {
-  //   title: "AskSage",
-  //   startUrl: "https://docs.asksage.ai/",
-  //   rootUrl: "https://docs.asksage.ai/",
-  //   faviconUrl: ""
-  // },
+  "https://docs.asksage.ai/": {
+    title: "Ask Sage",
+    startUrl: "https://docs.asksage.ai/",
+    rootUrl: "https://docs.asksage.ai/",
+    faviconUrl: "https://docs.asksage.ai/favicon.ico",
+  },
 };
 
 export default preIndexedDocs;
