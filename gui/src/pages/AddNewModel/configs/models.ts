@@ -273,7 +273,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "askSage"],
     isOpenSource: false,
   },
   llama318bChat: {
@@ -360,7 +360,6 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
-      "askSage",
     ],
     isOpenSource: true,
   },
@@ -554,7 +553,7 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
-    providerOptions: ["gemini", "askSage"],
+    providerOptions: ["gemini"],
     isOpenSource: false,
   },
   gemini15Pro: {
@@ -567,7 +566,7 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
-    providerOptions: ["gemini", "free-trial"],
+    providerOptions: ["gemini", "free-trial", "askSage"],
     isOpenSource: false,
   },
   gemini15Flash: {
@@ -664,7 +663,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8096,
       title: "GPT-3.5-Turbo",
     },
-    providerOptions: ["openai", "free-trial"],
+    providerOptions: ["openai", "free-trial", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
