@@ -464,7 +464,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     ],
     editorProps: {
       attributes: {
-        class: "outline-none -mt-1 overflow-hidden",
+        class: "outline-none -mt-1 overflow-y-auto resize-none h-[calc(1.5rem*15)] leading-6",
         style: `font-size: ${getFontSize()}px;`,
       },
     },
