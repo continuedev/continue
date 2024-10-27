@@ -84,6 +84,14 @@ export class QuickEdit {
    */
   private _curModelTitle?: string;
 
+  private BLOCKED_MODELS = new Set([
+    'PearAI Creator (Powered by aider)',
+    'PearAI Search (Powered by Perplexity)'
+  ]);
+
+  private DEFAULT_MODEL = 'PearAI Model';
+
+
   constructor(
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
     private readonly configHandler: ConfigHandler,
@@ -126,19 +134,21 @@ export class QuickEdit {
   private async _getCurModelTitle() {
     const config = await this.configHandler.loadConfig();
 
-    if (this._curModelTitle) {
+    // If there's a currently selected model and it's not blocked, use it
+    if (this._curModelTitle && !this.BLOCKED_MODELS.has(this._curModelTitle)) {
       return this._curModelTitle;
     }
 
+    // Get default model from config
     let defaultModelTitle =
-      config.experimental?.modelRoles?.inlineEdit ??
-      (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
+        config.experimental?.modelRoles?.inlineEdit ??
+        (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
 
-    if (!defaultModelTitle) {
-      defaultModelTitle = config.models[0]?.title!;
-    }
-
-    return defaultModelTitle;
+    // If default model is the blocked one or not set, use fallback
+    if (!defaultModelTitle || this.BLOCKED_MODELS.has(defaultModelTitle)) {
+      defaultModelTitle = this.DEFAULT_MODEL;
+   }
+   return defaultModelTitle;
   }
 
   /**
@@ -424,10 +434,16 @@ export class QuickEdit {
 
       case QuickEditInitialItemLabels.Model:
         const curModelTitle = await this._getCurModelTitle();
-
+        const filteredConfig = {
+          ...config,
+          models: config.models.filter((model: any) => 
+            !this.BLOCKED_MODELS.has(model.title)
+          )
+        };
+        
         const selectedModelTitle = await getModelQuickPickVal(
           curModelTitle,
-          config,
+          filteredConfig,
         );
 
         if (selectedModelTitle) {
