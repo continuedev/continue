@@ -135,7 +135,10 @@ const initialTools: AITool[] = [
       <span>Lower level of human intervention needed</span>,
     ],
     weaknesses: [
-      <span>Less control over code changes as they are instantly applied</span>,
+      <span>
+        Less control over code changes during generation as they are instantly
+        applied
+      </span>,
     ],
     enabled: true,
   },
