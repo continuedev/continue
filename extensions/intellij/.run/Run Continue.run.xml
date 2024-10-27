@@ -3,7 +3,7 @@
     <toRun name="Run Extension" type="GradleRunConfiguration" />
     <toRun name="Start Dev Server (core)" type="NodeJSConfigurationType" />
     <toRun name="Start Dev Server (gui)" type="js.build_tools.npm" />
-    <toRun name="Tail Dev Logs" type="ShConfigurationType" />
+    <toRun name="Prompt Logs" type="ShConfigurationType" />
     <method v="2" />
   </configuration>
 </component>
