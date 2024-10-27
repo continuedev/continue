@@ -35,6 +35,7 @@ import { VsCodeWebviewProtocol } from "../webviewProtocol";
 type TODO = any;
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
+
 export class VsCodeMessenger {
   onWebview<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -149,7 +150,7 @@ export class VsCodeMessenger {
       await vscode.commands.executeCommand("continue.rejectDiff", filepath);
     });
 
-    this.onWebview("applyToCurrentFile", async (msg) => {
+    this.onWebview("applyToCurrentFile", async ({ data }) => {
       // Get active text editor
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
@@ -164,16 +165,11 @@ export class VsCodeMessenger {
       let llm = getModelByRole(config, "applyCodeBlock");
 
       if (!llm) {
-        const defaultModelTitle = await this.webviewProtocol.request(
-          "getDefaultModelTitle",
-          undefined,
-        );
-
-        llm = config.models.find((model) => model.title === defaultModelTitle);
+        llm = config.models.find((model) => model.title === data.curSelectedModelTitle);
 
         if (!llm) {
           vscode.window.showErrorMessage(
-            `Model ${defaultModelTitle} not found in config.`,
+            `Model ${data.curSelectedModelTitle} not found in config.`,
           );
           return;
         }
@@ -184,20 +180,20 @@ export class VsCodeMessenger {
       // Generate the diff and pass through diff manager
       const [instant, diffLines] = await applyCodeBlock(
         editor.document.getText(),
-        msg.data.text,
+        data.text,
         getBasename(editor.document.fileName),
         llm,
         fastLlm,
       );
       const verticalDiffManager = await this.verticalDiffManagerPromise;
       if (instant) {
-        verticalDiffManager.streamDiffLines(
+        await verticalDiffManager.streamDiffLines(
           diffLines,
           instant,
-          msg.data.streamId,
+          data.streamId,
         );
       } else {
-        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
+        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`;
         const fullEditorRange = new vscode.Range(
           0,
           0,
@@ -207,10 +203,11 @@ export class VsCodeMessenger {
         const rangeToApplyTo = editor.selection.isEmpty
           ? fullEditorRange
           : editor.selection;
-        verticalDiffManager.streamEdit(
+
+        await verticalDiffManager.streamEdit(
           prompt,
           llm.title,
-          msg.data.streamId,
+          data.streamId,
           undefined,
           undefined,
           rangeToApplyTo,
