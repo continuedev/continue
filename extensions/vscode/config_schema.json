@@ -350,9 +350,9 @@
           "description": "Azure OpenAI API version (e.g. 2023-07-01-preview)",
           "type": "string"
         },
-        "engine": {
-          "title": "Engine",
-          "description": "Azure OpenAI engine",
+        "deployment": {
+          "title": "Deployment",
+          "description": "Azure OpenAI deployment",
           "type": "string"
         },
         "capabilities": {
@@ -447,7 +447,7 @@
           },
           "then": {
             "properties": {
-              "engine": {
+              "deployment": {
                 "type": "string"
               },
               "apiType": {
@@ -1105,7 +1105,7 @@
             "required": ["apiType"]
           },
           "then": {
-            "required": ["engine", "apiVersion", "apiBase"]
+            "required": ["deployment", "apiBase"]
           }
         },
         {

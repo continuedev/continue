@@ -27,7 +27,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
 
     if (this.options.apiType === "azure") {
       return new URL(
-        `openai/deployments/${this.options.engine}/embeddings?api-version=${this.options.apiVersion}`,
+        `openai/deployments/${this.options.deployment}/embeddings?api-version=${this.options.apiVersion}`,
         this.options.apiBase,
       );
     }

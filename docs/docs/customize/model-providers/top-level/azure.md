@@ -14,7 +14,7 @@ We recommend configuring **GPT-4o** as your chat model.
     "apiType": "azure",                      // Needed to construct Azure-style URL
     "model": "gpt-4o",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",               // Your deployment, eg "gpt4o-beta"
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",  // Your deployment, eg "gpt4o-beta"
     "apiVersion": "<YOUR_API_VERSION>",      // Typically a date like "2024-06-01"
     "apiKey": "<MY_API_KEY>"                 // If you use subscription key, try using Azure gateway to rename it apiKey
 }]
@@ -31,7 +31,7 @@ We recommend configuring **Codestral** as your autocomplete model.
     "apiType": "azure",                      // Needed to construct Azure-style URL
     "model": "codestral-latest",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",               // Your deployment, eg "codestral-small"
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",  // Your deployment, eg "codestral-small"
     "apiVersion": "<YOUR_API_VERSION>",      // Typically a date like "2024-06-01"
     "apiKey": "<MY_API_KEY>"                 // If you use subscription key, try using Azure gateway to rename it apiKey
 }]
@@ -47,7 +47,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
     "apiType": "azure",                      // Needed to construct Azure-style URL
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",               // Your deployment, eg "codestral-small"
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",               // Your deployment, eg "codestral-small"
     "apiVersion": "<YOUR_API_VERSION>",      // Typically a date like "2024-06-01"
     "apiKey": "<MY_API_KEY>"                 // If you use subscription key, try using Azure gateway to rename it apiKey
 }]
@@ -71,15 +71,16 @@ You need to apply for access to the Azure OpenAI service. Response times are typ
 
 ## General model configuration
 
-Azure OpenAI requires a handful of additional parameters to be configured, such as a model engine and API version.
+Azure OpenAI requires a handful of additional parameters to be configured, such as a deployment name and API version.
 
 To find this information in _Azure AI Studio_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
 
 For example, a Target URI of:
-```
+
+````````````
 https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                    ```````````                              ****************** 
-```
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                    ```````````                              ******************
+````````````
 
 would map to the following:
 
@@ -90,7 +91,7 @@ would map to the following:
   "provider": "openai",
   "apiType": "azure",
   "apiBase": "https://just-an-example.openai.azure.com",
-  "engine": "gpt-4o-july",
+  "deployment": "gpt-4o-july",
   "apiVersion": "2023-03-15-preview",
   "apiKey": "<MY_API_KEY>"
 }

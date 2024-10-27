@@ -85,7 +85,7 @@ const embeddingsProviderSchema = z.object({
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),
   model: z.string().optional(),
-  engine: z.string().optional(),
+  deployment: z.string().optional(),
   apiType: z.string().optional(),
   apiVersion: z.string().optional(),
   requestOptions: z

@@ -106,7 +106,7 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
 
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
   region?: string;
@@ -200,7 +200,7 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
 
-    this.engine = options.engine;
+    this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
     this.apiType = options.apiType;
     this.region = options.region;
