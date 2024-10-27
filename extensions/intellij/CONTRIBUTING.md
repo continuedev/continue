@@ -1,6 +1,7 @@
 # Contributing to Continue (JetBrains extension) <!-- omit in toc -->
 
-This file is for contribution guidelines specific to the JetBrains extension. See the root [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
+This file is for contribution guidelines specific to the JetBrains extension. See the root [
+`CONTRIBUTING.md`](../../CONTRIBUTING.md) for general contribution guidelines.
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -12,7 +13,8 @@ This file is for contribution guidelines specific to the JetBrains extension. Se
   - [Install all dependencies](#install-all-dependencies)
   - [Misc](#misc)
 - [Development Workflow](#development-workflow)
-  - [Running the extension](#running-the-extension)
+  - [Running the extension in debug mode](#running-the-extension-in-debug-mode)
+  - [Accessing files in the `.continue` directory](#accessing-files-in-the-continue-directory)
   - [Reloading changes](#reloading-changes)
   - [Setting breakpoints](#setting-breakpoints)
   - [Available Gradle tasks](#available-gradle-tasks)
@@ -57,22 +59,18 @@ This project requires Node.js version 20.11.0 (LTS) or higher. You have two opti
 
 ## Development Workflow
 
-Because the `gui` and `core` are written in TypeScript, our development workflow is built around the assumption that you
-have VS Code installed.
+### Running the extension in debug mode
 
-### Running the extension
+Select the `Run Continue` task in the top right corner of the IDE and then select the "Debug" option.
 
-- Open the project in VS Code and star the `Core binary` task
-- Switch back to Intellij and select the "Run Continue" configuration in the top-right corner of the IDE
-- Click the "Debug" button
-  - The first time running this will install the IDE version specified by the `platformVersion` property in [
-    `./run/Run Extension.run.xml`](./.run/Run%20Extension.run.xml). This will take a moment as the installation size
-    can be close to 1GB.
+![run-extension-screenshot](../../media/run-continue-intellij.png)
 
-![run-extension-screenshot](../../media/run-intellij-extension.png)\
+This should open a new instance on IntelliJ with the extension installed.
 
-This should open a new instance on IntelliJ with the extension installed and connected via TCP to the server started
-through the `Core binary` task.
+### Accessing files in the `.continue` directory
+
+When running the `Start Dev Server (core)` task, we set the location of your Continue directory to `./binary/.continue`. This is to
+allow for changes to your `config.json` and other files during development, without affecting your actual configuration.
 
 ### Reloading changes
 
@@ -80,13 +78,13 @@ through the `Core binary` task.
   _Run | Debugging Actions | Reload Changed Classes`_
   - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
-- `core`: Run `npm run build` from the `binary` directory and restart the `Core binary` task in VS Code
+- `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Dev Server (core)` task)
 
 ### Setting breakpoints
 
 - `extensions/intellij`: Breakpoints can be set in Intellij
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
-- `core`: Breakpoints can be set in VS Code
+- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Dev Server (core)` task)
 
 ### Available Gradle tasks
 
@@ -111,7 +109,8 @@ verifyPluginConfiguration - Checks if Java and Kotlin compilers configuration me
 - Unix: `./gradlew buildPlugin`
 - Windows: `./gradlew.bat buildPlugin`
 
-This will generate a .zip file in `./build/distributions` with the version defined in [`./gradle.properties`](./gradle.properties)
+This will generate a .zip file in `./build/distributions` with the version defined in [
+`./gradle.properties`](./gradle.properties)
 
 #### Testing the packaged extension
 

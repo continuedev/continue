@@ -1,6 +1,7 @@
 import { ConfigJson } from "@continuedev/config-types";
 import fetch, { RequestInit, Response } from "node-fetch";
 import { ModelDescription } from "../index.js";
+import { controlPlaneEnv } from "./env.js";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -21,19 +22,8 @@ export interface ControlPlaneModelDescription extends ModelDescription {}
 export const TRIAL_PROXY_URL =
   "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
-export const DEFAULT_CONTROL_PLANE_PROXY_URL =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3001/"
-    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/";
-// : "https://control-plane-proxy.continue.dev/";
-
-export const CONTROL_PLANE_URL =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3001/"
-    : "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/";
-
 export class ControlPlaneClient {
-  private static URL = CONTROL_PLANE_URL;
+  private static URL = controlPlaneEnv.CONTROL_PLANE_URL;
   private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
 
   private lastAccessTokenRefresh = 0;

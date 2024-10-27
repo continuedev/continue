@@ -17,9 +17,6 @@ export interface VerticalDiffHandlerOptions {
 }
 
 export class VerticalDiffHandler implements vscode.Disposable {
-  private editor: vscode.TextEditor;
-  private startLine: number;
-  private endLine: number;
   private currentLineIndex: number;
   private cancelled = false;
 
@@ -31,12 +28,10 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
   private newLinesAdded = 0;
 
-  public options: VerticalDiffHandlerOptions;
-
   constructor(
-    startLine: number,
-    endLine: number,
-    editor: vscode.TextEditor,
+    private startLine: number,
+    private endLine: number,
+    private editor: vscode.TextEditor,
     private readonly editorToVerticalDiffCodeLens: Map<
       string,
       VerticalDiffCodeLens[]
@@ -46,18 +41,15 @@ export class VerticalDiffHandler implements vscode.Disposable {
       accept: boolean,
     ) => void,
     private readonly refreshCodeLens: () => void,
-    options: VerticalDiffHandlerOptions,
+    public options: VerticalDiffHandlerOptions,
   ) {
     this.currentLineIndex = startLine;
-    this.startLine = startLine;
-    this.endLine = endLine;
-    this.editor = editor;
-    this.options = options;
 
     this.redDecorationManager = new DecorationTypeRangeManager(
       redDecorationType,
       this.editor,
     );
+
     this.greenDecorationManager = new DecorationTypeRangeManager(
       greenDecorationType,
       this.editor,
@@ -344,6 +336,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
+    let diffLines = []
     try {
       // As an indicator of loading
       this.updateIndexLineDecorations();
@@ -352,6 +345,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
         if (this.isCancelled) {
           return;
         }
+        diffLines.push(diffLine)
         await this.queueDiffLine(diffLine);
       }
 
@@ -374,6 +368,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.clearForFilepath(this.filepath, false);
       throw e;
     }
+    return diffLines
   }
 
   async acceptRejectBlock(

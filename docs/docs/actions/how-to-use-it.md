@@ -14,7 +14,7 @@ Actions are shortcuts for common use cases. For example, you might want to revie
 
 ### Slash commands
 
-The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
+The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' in a chat session (press cmd/ctrl + L (VS Code) or cmd/ctrl + J (JetBrains)), and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
 
 ![slash-commands](/img/slash-commands.png)
 

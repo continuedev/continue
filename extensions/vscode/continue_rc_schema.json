@@ -668,16 +668,16 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b",
+                      "llama2-7b",
+                      "llama2-13b",
                       "llama3-8b",
                       "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
-                      "llama2-7b",
-                      "llama2-13b"
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b"
                     ]
                   },
                   {
@@ -984,6 +984,9 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -1057,6 +1060,10 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1112,6 +1119,10 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -1250,6 +1261,10 @@
                   "llama3.1-8b",
                   "llama3.1-70b",
                   "llama3.1-405b",
+                  "llama3.2-1b",
+                  "llama3.2-3b",
+                  "llama3.2-11b",
+                  "llama3.2-90b",
                   "AUTODETECT"
                 ]
               }
@@ -1475,6 +1490,10 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b",
+                      "llama3.2-11b",
+                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1586,7 +1605,9 @@
                     "enum": [
                       "llama3.1-8b",
                       "llama3.1-70b",
-                      "llama3.1-405b"
+                      "llama3.1-405b",
+                      "llama3.2-1b",
+                      "llama3.2-3b"
                     ]
                   },
                   {

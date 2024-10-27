@@ -13,22 +13,34 @@ export class Telemetry {
     event: string,
     properties: { [key: string]: any },
     sendToTeam: boolean = false,
+    isExtensionActivationError: boolean = false,
   ) {
-    if (process.env.NODE_ENV === "test") {
-      return;
-    }
     try {
-      Telemetry.client?.capture({
+      const augmentedProperties = {
+        ...properties,
+        os: Telemetry.os,
+        extensionVersion: Telemetry.ideInfo?.extensionVersion,
+        ideName: Telemetry.ideInfo?.name,
+        ideType: Telemetry.ideInfo?.ideType,
+      };
+      const payload = {
         distinctId: Telemetry.uniqueId,
         event,
-        properties: {
-          ...properties,
-          os: Telemetry.os,
-          extensionVersion: Telemetry.ideInfo?.extensionVersion,
-          ideName: Telemetry.ideInfo?.name,
-          ideType: Telemetry.ideInfo?.ideType,
-        },
-      });
+        properties: augmentedProperties,
+      };
+
+      // In cases where an extremely early fatal error occurs, we may not have initialized yet
+      if (isExtensionActivationError && !Telemetry.client) {
+        const client = await Telemetry.getTelemetryClient();
+        client?.capture(payload);
+        return;
+      }
+
+      if (process.env.NODE_ENV === "test") {
+        return;
+      }
+
+      Telemetry.client?.capture(payload);
 
       if (sendToTeam) {
         void TeamAnalytics.capture(event, properties);
@@ -42,6 +54,17 @@ export class Telemetry {
     Telemetry.client?.shutdown();
   }
 
+  static async getTelemetryClient() {
+    try {
+      const { PostHog } = await import("posthog-node");
+      return new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
+        host: "https://app.posthog.com",
+      });
+    } catch (e) {
+      console.error(`Failed to setup telemetry: ${e}`);
+    }
+  }
+
   static async setup(allow: boolean, uniqueId: string, ideInfo: IdeInfo) {
     Telemetry.uniqueId = uniqueId;
     Telemetry.os = os.platform();
@@ -49,20 +72,8 @@ export class Telemetry {
 
     if (!allow || process.env.NODE_ENV === "test") {
       Telemetry.client = undefined;
-    } else {
-      try {
-        if (!Telemetry.client) {
-          const { PostHog } = await import("posthog-node");
-          Telemetry.client = new PostHog(
-            "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
-            {
-              host: "https://app.posthog.com",
-            },
-          );
-        }
-      } catch (e) {
-        console.error(`Failed to setup telemetry: ${e}`);
-      }
+    } else if (!Telemetry.client) {
+      Telemetry.client = await Telemetry.getTelemetryClient();
     }
   }
 }

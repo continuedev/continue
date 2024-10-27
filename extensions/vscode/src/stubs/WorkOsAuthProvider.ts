@@ -17,15 +17,8 @@ import {
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
 const AUTH_NAME = "Continue";
-const CLIENT_ID =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "client_01J0FW6XCPMJMQ3CG51RB4HBZQ"
-    : "client_01J0FW6XN8N2XJAECF7NE0Y65J";
-const APP_URL =
-  process.env.CONTROL_PLANE_ENV === "local"
-    ? "http://localhost:3000"
-    : "https://app.continue.dev";
-const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`;
+
+const SESSIONS_SECRET_KEY = `${controlPlaneEnv.AUTH_TYPE}.sessions`;
 
 class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   public handleUri(uri: Uri) {
@@ -33,12 +26,9 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   }
 }
 
-import {
-  CONTROL_PLANE_URL,
-  ControlPlaneSessionInfo,
-} from "core/control-plane/client";
+import { ControlPlaneSessionInfo } from "core/control-plane/client";
+import { controlPlaneEnv } from "core/control-plane/env";
 import crypto from "crypto";
-import { AUTH_TYPE } from "../util/constants";
 import { SecretStorage } from "./SecretStorage";
 
 // Function to generate a random string of specified length
@@ -93,7 +83,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
       authentication.registerAuthenticationProvider(
-        AUTH_TYPE,
+        controlPlaneEnv.AUTH_TYPE,
         AUTH_NAME,
         this,
         { supportsMultipleAccounts: false },
@@ -104,31 +94,42 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     this.secretStorage = new SecretStorage(context);
   }
 
-  private decodeJwt(jwt: string): any {
-    const decodedToken = JSON.parse(
-      Buffer.from(jwt.split(".")[1], "base64").toString(),
-    );
-    return decodedToken;
+  private decodeJwt(jwt: string): Record<string, any> | null {
+    try {
+      const decodedToken = JSON.parse(
+        Buffer.from(jwt.split(".")[1], "base64").toString(),
+      );
+      return decodedToken;
+    } catch (e: any) {
+      console.warn(`Error decoding JWT: ${e}`);
+      return null;
+    }
   }
 
   private getExpirationTimeMs(jwt: string): number {
     const decodedToken = this.decodeJwt(jwt);
+    if (!decodedToken) {
+      return WorkOsAuthProvider.EXPIRATION_TIME_MS;
+    }
     return decodedToken.exp && decodedToken.iat
       ? (decodedToken.exp - decodedToken.iat) * 1000
       : WorkOsAuthProvider.EXPIRATION_TIME_MS;
   }
 
-  private jwtIsExpired(jwt: string): boolean {
+  private jwtIsExpiredOrInvalid(jwt: string): boolean {
     const decodedToken = this.decodeJwt(jwt);
+    if (!decodedToken) {
+      return true;
+    }
     return decodedToken.exp * 1000 < Date.now();
   }
 
   private async debugAccessTokenValidity(jwt: string, refreshToken: string) {
-    const expired = this.jwtIsExpired(jwt);
-    if (expired) {
-      console.debug(`Invalid JWT: ${expired}`);
+    const expiredOrInvalid = this.jwtIsExpiredOrInvalid(jwt);
+    if (expiredOrInvalid) {
+      console.debug("Invalid JWT");
     } else {
-      console.debug(`Valid JWT: ${expired}`);
+      console.debug("Valid JWT");
     }
   }
 
@@ -145,8 +146,13 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       return [];
     }
 
-    const value = JSON.parse(data) as ContinueAuthenticationSession[];
-    return value;
+    try {
+      const value = JSON.parse(data) as ContinueAuthenticationSession[];
+      return value;
+    } catch (e: any) {
+      console.warn(`Error parsing sessions.json: ${e}`);
+      return [];
+    }
   }
 
   get onDidChangeSessions() {
@@ -162,7 +168,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   get redirectUri() {
     if (env.uriScheme === "vscode-insiders" || env.uriScheme === "vscode") {
       // We redirect to a page that says "you can close this page", and that page finishes the redirect
-      const url = new URL(APP_URL);
+      const url = new URL(controlPlaneEnv.APP_URL);
       url.pathname = `/auth/${env.uriScheme}-redirect`;
       return url.toString();
     }
@@ -170,7 +176,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   async refreshSessions() {
-    await this._refreshSessions();
+    try {
+      await this._refreshSessions();
+    } catch (e) {
+      console.error(`Error refreshing sessions: ${e}`);
+    }
   }
 
   private async _refreshSessions(): Promise<void> {
@@ -228,15 +238,18 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     refreshToken: string;
     expiresInMs: number;
   }> {
-    const response = await fetch(new URL("/auth/refresh", CONTROL_PLANE_URL), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      new URL("/auth/refresh", controlPlaneEnv.CONTROL_PLANE_URL),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          refreshToken,
+        }),
       },
-      body: JSON.stringify({
-        refreshToken,
-      }),
-    });
+    );
     if (!response.ok) {
       const text = await response.text();
       throw new Error("Error refreshing token: " + text);
@@ -356,7 +369,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         const url = new URL("https://api.workos.com/user_management/authorize");
         const params = {
           response_type: "code",
-          client_id: CLIENT_ID,
+          client_id: controlPlaneEnv.WORKOS_CLIENT_ID,
           redirect_uri: this.redirectUri,
           state: stateId,
           code_challenge: codeChallenge,
@@ -453,7 +466,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          client_id: CLIENT_ID,
+          client_id: controlPlaneEnv.WORKOS_CLIENT_ID,
           code_verifier: codeVerifier,
           grant_type: "authorization_code",
           code: token,
@@ -470,7 +483,7 @@ export async function getControlPlaneSessionInfo(
   silent: boolean,
 ): Promise<ControlPlaneSessionInfo | undefined> {
   const session = await authentication.getSession(
-    AUTH_TYPE,
+    controlPlaneEnv.AUTH_TYPE,
     [],
     silent ? { silent: true } : { createIfNone: true },
   );

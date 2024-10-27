@@ -56,10 +56,10 @@ export function HistoryTableRow({
         onMouseLeave={() => setHovered(false)}
       >
         <div
-          className="hover:bg-vsc-editor-background relative box-border flex max-w-full overflow-hidden rounded-lg p-3"
+          className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
           onClick={async () => {
             // Save current session
-            saveSession();
+            await saveSession();
             await loadSession(session.sessionId);
             navigate("/");
           }}
@@ -113,7 +113,7 @@ export function HistoryTableRow({
               <ButtonWithTooltip
                 text="Delete"
                 onClick={async () => {
-                  deleteSession(session.sessionId);
+                  await deleteSession(session.sessionId);
                   onDelete(session.sessionId);
                 }}
               >

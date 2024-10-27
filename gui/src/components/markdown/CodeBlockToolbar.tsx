@@ -29,6 +29,7 @@ import ButtonWithTooltip from "../ButtonWithTooltip";
 import FileIcon from "../FileIcon";
 import { CopyButton as CopyButtonHeader } from "./CopyButton";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 
 const ToolbarDiv = styled.div`
   display: flex;
@@ -127,6 +128,7 @@ function getTerminalCommand(text: string): string {
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
+  const defaultModel = useSelector(defaultModelSelector);
   const isTerminal = isTerminalCodeBlock(props.language, props.text);
   const [isCopied, setIsCopied] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
@@ -148,6 +150,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     "applyCodeFromChat",
     async () => {
       await ideMessenger.request("applyToCurrentFile", {
+        curSelectedModelTitle: defaultModel.title,
         text: props.text,
         streamId: streamIdRef.current,
       });
@@ -157,24 +160,25 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     !props.isNextCodeBlock,
   );
 
-  function onClickCopy() {
+  async function onClickCopy() {
     if (isJetBrains()) {
-      ideMessenger.request("copyText", { text: props.text });
+      await ideMessenger.request("copyText", { text: props.text });
     } else {
-      navigator.clipboard.writeText(props.text);
+      await navigator.clipboard.writeText(props.text);
     }
 
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   }
 
-  function onClickApply() {
+  async function onClickApply() {
     if (isApplying) return;
 
     if (isTerminal) {
-      ideMessenger.ide.runCommand(getTerminalCommand(props.text));
+      await ideMessenger.ide.runCommand(getTerminalCommand(props.text));
     } else {
       ideMessenger.post("applyToCurrentFile", {
+        curSelectedModelTitle: defaultModel.title,
         text: props.text,
         streamId: streamIdRef.current,
       });
@@ -214,7 +218,9 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     );
   }
 
-  if (!props.filepath) {
+  // Currently we only use the "old" apply logic in JetBrains. This check can be removed once
+  // we implement the "new" lazy apply logic.
+  if (!props.filepath || isJetBrains()) {
     return (
       <HoverDiv>
         <InnerHoverDiv bottom={props.bottom || false}>
@@ -225,9 +231,20 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               style={{ backgroundColor: vscEditorBackground }}
               onClick={onClickApply}
             >
-              <CommandLineIcon className="w-4 h-4" />
+              <CommandLineIcon className="h-4 w-4 text-gray-400" />
             </ButtonWithTooltip>
           )}
+          <ButtonWithTooltip
+            text={isApplying ? "Applying..." : "Apply"}
+            style={{ backgroundColor: vscEditorBackground }}
+            onClick={onClickApply}
+          >
+            {isApplying ? (
+              <CheckIcon className="h-4 w-4 text-green-400" />
+            ) : (
+              <PlayIcon className="h-4 w-4 text-gray-400" />
+            )}
+          </ButtonWithTooltip>
           <ButtonWithTooltip
             text="Insert at cursor"
             style={{ backgroundColor: vscEditorBackground }}
@@ -235,7 +252,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               ideMessenger.post("insertAtCursor", { text: props.text })
             }
           >
-            <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+            <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
           </ButtonWithTooltip>
           <CopyButtonHeader text={props.text} />
         </InnerHoverDiv>
@@ -246,7 +263,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   return (
     <ToolbarDiv>
       <div
-        className="flex items-center gap-1 cursor-pointer max-w-[50%]"
+        className="flex max-w-[50%] cursor-pointer items-center gap-1"
         onClick={onClickHeader}
       >
         <FileIcon height="20px" width="20px" filename={props.filepath} />
@@ -256,86 +273,81 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
       <div className="flex items-center gap-1">
         <ToolbarButton onClick={onClickCopy}>
           <div
-            className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
+            className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
             style={{ color: lightGray }}
           >
             {isCopied ? (
               <>
-                <CheckIcon className="w-3 h-3 text-green-500 hover:brightness-125" />
+                <CheckIcon className="h-3 w-3 text-green-500 hover:brightness-125" />
                 <span className="hidden sm:inline">Copied</span>
               </>
             ) : (
               <>
-                <ClipboardIcon className="w-3 h-3 hover:brightness-125" />
-                <span className="hidden xs:inline">Copy</span>
+                <ClipboardIcon className="h-3 w-3 hover:brightness-125" />
+                <span className="xs:inline hidden">Copy</span>
               </>
             )}
           </div>
         </ToolbarButton>
 
-        {!isJetBrains() && (
-          <div className="flex">
-            {applyState === "closed" ? (
-              <ToolbarButton
-                onClick={onClickApply}
+        <div className="flex">
+          {applyState === "closed" ? (
+            <ToolbarButton onClick={onClickApply} style={{ color: lightGray }}>
+              <div
+                className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
                 style={{ color: lightGray }}
               >
-                <div
-                  className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200"
-                  style={{ color: lightGray }}
-                >
-                  <PlayIcon className="w-3 h-3" />
-                  <span className="hidden xs:inline">Apply</span>
-                </div>
-              </ToolbarButton>
-            ) : applyState === "done" ? (
-              <>
-                <ToolbarButtonWithTooltip
-                  onClick={onClickReject}
-                  tooltipContent={`${getMetaKeyLabel()}⇧⌫`}
-                >
-                  <XMarkIcon className="w-4 h-4 text-red-500 hover:brightness-125 mr-1" />
-                  <div className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200 ">
-                    <span>Reject</span>
-                  </div>
-                </ToolbarButtonWithTooltip>
-
-                <ToolbarButtonWithTooltip
-                  onClick={onClickAccept}
-                  tooltipContent={`${getMetaKeyLabel()}⇧⏎`}
-                >
-                  <CheckIcon className="w-4 h-4 text-green-500 hover:brightness-125 mr-1" />
-                  <div className="flex items-center gap-1 hover:brightness-125 transition-colors duration-200">
-                    <span>Accept</span>
-                  </div>
-                </ToolbarButtonWithTooltip>
-              </>
-            ) : (
-              <div className="flex items-center mr-2">
-                <svg
-                  className="animate-spin h-4 w-4 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
+                <PlayIcon className="h-3 w-3" />
+                <span className="xs:inline hidden">Apply</span>
               </div>
-            )}
-          </div>
-        )}
+            </ToolbarButton>
+          ) : applyState === "done" ? (
+            <>
+              <ToolbarButtonWithTooltip
+                onClick={onClickReject}
+                tooltipContent={`${getMetaKeyLabel()}⇧⌫`}
+              >
+                <XMarkIcon className="mr-1 h-4 w-4 text-red-500 hover:brightness-125" />
+                <div className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125">
+                  <span>Reject</span>
+                </div>
+              </ToolbarButtonWithTooltip>
+
+              <ToolbarButtonWithTooltip
+                onClick={onClickAccept}
+                tooltipContent={`${getMetaKeyLabel()}⇧⏎`}
+              >
+                <CheckIcon className="mr-1 h-4 w-4 text-green-500 hover:brightness-125" />
+                <div className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125">
+                  <span>Accept</span>
+                </div>
+              </ToolbarButtonWithTooltip>
+            </>
+          ) : (
+            <div className="mr-2 flex items-center">
+              <svg
+                className="h-4 w-4 animate-spin text-gray-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            </div>
+          )}
+        </div>
       </div>
     </ToolbarDiv>
   );
