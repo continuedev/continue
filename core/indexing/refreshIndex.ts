@@ -472,11 +472,21 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
 
 const SQLITE_MAX_LIKE_PATTERN_LENGTH = 50000;
 
-function truncateToBytes(input: string, maxBytes: number): string {
+function truncateFirstNBytes(input: string, maxBytes: number): string {
   let bytes = 0;
-  return input.split("").filter(char => (bytes += new TextEncoder().encode(char).length) <= maxBytes).join("");
+  let startIndex = 0;
+
+  for (let i = 0; i < input.length; i++) {
+    bytes += new TextEncoder().encode(input[i]).length;
+    if (bytes > maxBytes) {
+      startIndex = i;
+      break;
+    }
+  }
+
+  return input.substring(startIndex);
 }
 
 export function truncateSqliteLikePattern(input: string) {
-  return truncateToBytes(input, SQLITE_MAX_LIKE_PATTERN_LENGTH);
+  return truncateFirstNBytes(input, SQLITE_MAX_LIKE_PATTERN_LENGTH);
 }
