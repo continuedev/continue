@@ -20,6 +20,12 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
+      - name: Cache root node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+
       - name: Cache extension node_modules
         uses: actions/cache@v3
         with:
@@ -43,6 +49,10 @@ jobs:
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: root install
+        run: |
+          npm ci
 
       - name: extensions/vscode install
         run: |
@@ -71,6 +81,7 @@ jobs:
         run: |
           cd extensions/vscode
           npx tsc --noEmit
+          npm run lint
 
       - name: core checks
         run: |
