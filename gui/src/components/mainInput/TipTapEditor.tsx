@@ -361,7 +361,7 @@ function TipTapEditor({
               return true;
             },
 
-            "Cmd-Enter": () => {
+            "Mod-Enter": () => {
               onEnterRef.current({
                 useCodebase: true,
                 noContext: !useActiveFile,
@@ -378,7 +378,7 @@ function TipTapEditor({
 
               return true;
             },
-            "Cmd-Backspace": () => {
+            "Mod-Backspace": () => {
               // If you press cmd+backspace wanting to cancel,
               // but are inside of a text box, it shouldn't
               // delete the text
