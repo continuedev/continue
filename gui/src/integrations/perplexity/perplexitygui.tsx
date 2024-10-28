@@ -141,7 +141,7 @@ function PerplexityGUI() {
         }
       }
 
-      streamResponse(editorState, modifiers, ideMessenger, null, "perplexity");
+      streamResponse(editorState, modifiers, ideMessenger, undefined, "perplexity");
 
       const currentCount = getLocalStorage("mainTextEntryCounter");
       if (currentCount) {

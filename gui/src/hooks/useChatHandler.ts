@@ -37,7 +37,7 @@ import {
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
-function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source?: 'perplexity' | 'aider' | 'continue') {
+function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source: 'perplexity' | 'aider' | 'continue'='continue') {
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
@@ -50,8 +50,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source?
     (state: RootState) => state.state.contextItems,
   );
 
-  const history = useSelector((store: RootState) => store.state.history);
-  const active = source === 'perplexity' ? useSelector((store: RootState) => store.state.perplexityActive) : source === 'aider' ? useSelector((store: RootState) => store.state.aiderActive) : useSelector((store: RootState) => store.state.active);
+  const state = useSelector((store: RootState) => store.state);
+  const history = source === 'perplexity' ? state.perplexityHistory : source === 'aider' ? state.aiderHistory : state.history;
+  // const history = useSelector((store: RootState) => store.state.history);
+  const active = source === 'perplexity' ? state.perplexityActive : source === 'aider' ? state.aiderActive : state.active;
   const activeRef = useRef(active);
   useEffect(() => {
     activeRef.current = active;
@@ -60,7 +62,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source?
   async function _streamNormalInput(messages: ChatMessage[], source: 'perplexity' | 'aider' | 'continue'='continue') {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
-    
+
     try {
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,
@@ -162,12 +164,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source?
     editorState: JSONContent,
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
-    index?: number,
+    index?: number,  // only for when user enters a new prompt in earlier input box
     source: 'perplexity' | 'aider' | 'continue'='continue'
   ) {
     try {
       if (typeof index === "number") {
-        dispatch(resubmitAtIndex({ index, editorState }));
+        dispatch(resubmitAtIndex({ index, editorState, source }));
       } else {
         const init = source === 'perplexity' ? initNewActivePerplexityMessage : source === 'aider' ? initNewActiveAiderMessage : initNewActiveMessage;
         dispatch(init({ editorState }));
@@ -221,7 +223,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source?
         //   : contextItems,
         editorState,
       };
-
       let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
       const historyIndex = index || newHistory.length - 1;
       dispatch(
@@ -229,6 +230,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source?
           message,
           index: historyIndex,
           contextItems,
+          source,
         }),
       );
 
