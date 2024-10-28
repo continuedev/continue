@@ -120,7 +120,7 @@ export const defaultConfig: SerializedContinueConfig = {
     {
       model: "claude-3-5-sonnet",
       contextLength: 3000000,
-      title: "Claude 3.5 Sonnet (PearAI)",
+      title: "Claude 3.5 Sonnet - New (PearAI)",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
       provider: "pearai_server",
