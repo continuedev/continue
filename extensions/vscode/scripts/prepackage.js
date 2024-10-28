@@ -48,11 +48,7 @@ const exe = os === "win32" ? ".exe" : "";
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config_schema.json to config.json in docs and intellij
-  fs.copyFileSync(
-    "config_schema.json",
-    path.join("..", "..", "docs", "static", "schemas", "config.json"),
-  );
+  // Copy config_schema.json to config.json in intellij
   fs.copyFileSync(
     "config_schema.json",
     path.join(
@@ -505,12 +501,11 @@ const exe = os === "win32" ? ".exe" : "";
 
     // onnx runtime bindngs
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
-    `bin/napi-v3/${os}/${arch}/${
-      os === "darwin"
-        ? "libonnxruntime.1.14.0.dylib"
-        : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+    `bin/napi-v3/${os}/${arch}/${os === "darwin"
+      ? "libonnxruntime.1.14.0.dylib"
+      : os === "linux"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -545,17 +540,15 @@ const exe = os === "win32" ? ".exe" : "";
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+    `out/node_modules/@esbuild/${target === "win32-arm64"
+      ? "esbuild.exe"
+      : target === "win32-x64"
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
-    `out/node_modules/@lancedb/vectordb-${
-      os === "win32"
-        ? "win32-x64-msvc"
-        : `${target}${os === "linux" ? "-gnu" : ""}`
+    `out/node_modules/@lancedb/vectordb-${os === "win32"
+      ? "win32-x64-msvc"
+      : `${target}${os === "linux" ? "-gnu" : ""}`
     }/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
