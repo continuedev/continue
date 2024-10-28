@@ -50,7 +50,7 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
-      - name: Install Root Dependencies
+      - name: root install
         run: |
           npm ci
 
