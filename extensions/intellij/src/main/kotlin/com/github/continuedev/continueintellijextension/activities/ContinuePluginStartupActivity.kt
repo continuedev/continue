@@ -147,6 +147,19 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
             })
 
+            // Handle file changes and deletions - reindex
+            connection.subscribe(VirtualFileManager.VFS_CHANGES, object : VirtualFileListener {
+                override fun fileDeleted(event: VirtualFileEvent) {
+                    val data = mapOf("dirs" to listOf(event.filePath))
+                    continuePluginService.coreMessenger?.request("index/forceReIndex", data, null) { _ -> }
+                }
+
+                override fun contentsChanged(event: VirtualFileEvent) {
+                    val data = mapOf("dirs" to listOf(event.filePath))
+                    continuePluginService.coreMessenger?.request("index/forceReIndex", data, null) { _ -> }
+                }
+            })
+
             // Listen for clicking settings button to start the auth flow
             val authService = service<ContinueAuthService>()
             val initialSessionInfo = authService.loadControlPlaneSessionInfo()
