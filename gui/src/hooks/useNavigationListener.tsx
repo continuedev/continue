@@ -43,7 +43,7 @@ export const useNavigationListener = () => {
       if (location.pathname === "/history") {
         navigate("/");
       } else {
-        navigate("/history");
+        navigate("/history"), { state: { from: location.pathname } };
       }
     },
     [location, navigate],

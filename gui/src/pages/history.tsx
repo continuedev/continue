@@ -7,7 +7,7 @@ import { SessionInfo } from "core";
 import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -95,6 +95,8 @@ function TableRow({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location?.state?.from; // indicates where the user came from, todo: use with navigate below
   const apiUrl = window.serverUrl;
   const workspacePaths = window.workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
@@ -133,7 +135,7 @@ function TableRow({
             // Save current session
             saveSession();
             await loadSession(session.sessionId);
-            navigate("/");
+            navigate("/");  //todo: use from variable to determine where to go back to, currently history only enabled for continue
           }}
         >
           <div className="text-md w-100">
@@ -203,7 +205,8 @@ function lastPartOfPath(path: string): string {
 function History() {
   useNavigationListener();
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const from = location?.state?.from === '/' ? 'continue' : location?.state?.from; // indicates where the user came from
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
@@ -308,6 +311,16 @@ function History() {
             return true;
           }
           return workspacePaths.includes(session.workspaceDirectory);
+        })
+        // Filter by session type
+        .filter((session) => {
+          if (typeof from === "undefined") {
+            return true;
+          }
+          if (!session.integrationType) {
+            return true;  // older history with no integration type
+          }
+          return session.integrationType === from;
         })
         // Filter by search term
         .filter((session) => {

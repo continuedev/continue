@@ -250,7 +250,7 @@ function GUI() {
   );
 
   const { saveSession, getLastSessionId, loadLastSession, loadMostRecentChat } =
-    useHistory(dispatch);
+    useHistory(dispatch, 'continue');
 
   useWebviewListener(
     "newSession",

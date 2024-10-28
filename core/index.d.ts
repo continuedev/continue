@@ -195,6 +195,14 @@ export interface IContextProvider {
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
+export interface IntegrationHistoryMap {
+  perplexityHistory: 'perplexity';
+  aiderHistory: 'aider';
+  history: 'continue';
+}
+
+export type IntegrationType = IntegrationHistoryMap[keyof IntegrationHistoryMap];
+
 export interface PersistedSessionInfo {
   history: ChatHistory;
   perplexityHistory: ChatHistory;
@@ -209,6 +217,7 @@ export interface SessionInfo {
   title: string;
   dateCreated: string;
   workspaceDirectory: string;
+  integrationType: IntegrationType;
 }
 
 export interface RangeInFile {
