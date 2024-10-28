@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - dev
+      - dallin/lint-modules
 
 jobs:
   tsc-check:
@@ -49,6 +50,10 @@ jobs:
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: Install Root Dependencies
+        run: |
+          npm ci
 
       - name: extensions/vscode install
         run: |
