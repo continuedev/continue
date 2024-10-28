@@ -302,7 +302,7 @@ function PerplexityGUI() {
                           onDelete={() => {
                             dispatch(
                               deleteMessage({
-                                index: index + 1,
+                                index: index,
                                 source: "perplexity",
                               }),
                             );

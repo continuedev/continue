@@ -366,7 +366,7 @@ function GUI() {
                             onDelete={() => {
                               dispatch(
                                 deleteMessage({
-                                  index: index + 1,
+                                  index: index,
                                   source: "continue",
                                 }),
                               );
