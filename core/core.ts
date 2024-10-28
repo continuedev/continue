@@ -77,7 +77,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => {},
+    private readonly onWrite: (text: string) => Promise<void> = async () => { },
   ) {
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
 
@@ -165,7 +165,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => {},
+      (e) => { },
       (..._) => Promise.resolve([]),
     );
 
@@ -483,7 +483,7 @@ export class Core {
     on("tts/kill", async () => {
       void TTS.kill();
     });
-    
+
     on("chatDescriber/describe", async (msg) => {
       const currentModel = await this.getSelectedModel();
       return await ChatDescriber.describe(currentModel, {}, msg.data);
@@ -674,7 +674,7 @@ export class Core {
         await codebaseIndexer.clearIndexes();
       }
 
-      const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
+      const dirs = data?.dirs ?? await this.ide.getWorkspaceDirs();
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {

@@ -272,10 +272,17 @@ export class VsCodeExtension {
         this.core.invoke("index/forceReIndex", undefined);
       } else {
         // Reindex the file
-        const indexer = await this.core.codebaseIndexerPromise;
-        indexer.refreshFile(filepath);
+        this.core.invoke("index/forceReIndex", {
+          dirs: [filepath]
+        })
       }
     });
+
+    vscode.workspace.onDidDeleteFiles(async (event) => {
+      this.core.invoke("index/forceReIndex", {
+        dirs: event.files.map((file) => file.fsPath)
+      })
+    })
 
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {
@@ -309,7 +316,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.core.invoke("index/forceReIndex", { dir });
+                  this.core.invoke("index/forceReIndex", { dirs: [dir] });
                 }
               }
 
@@ -322,8 +329,7 @@ export class VsCodeExtension {
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider
-    {
+      implements vscode.TextDocumentContentProvider {
       // emitter and its event
       onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
       onDidChange = this.onDidChangeEmitter.event;
