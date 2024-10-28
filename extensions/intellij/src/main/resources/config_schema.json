@@ -88,10 +88,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "cert",
-        "key"
-      ]
+      "required": ["cert", "key"]
     },
     "RequestOptions": {
       "title": "RequestOptions",
@@ -353,6 +350,7 @@
         "promptTemplates": {
           "title": "Prompt Templates",
           "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "x-intellij-html-description": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See <a href='https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt'>here</a> for an example.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -401,10 +399,8 @@
         "apiType": {
           "title": "Api Type",
           "markdownDescription": "OpenAI API type, either `openai` or `azure`",
-          "enum": [
-            "openai",
-            "azure"
-          ]
+          "x-intellij-html-description": "OpenAI API type, either <code>openai</code> or <code>azure</code>",
+          "enum": ["openai", "azure"]
         },
         "apiVersion": {
           "title": "Api Version",
@@ -427,11 +423,7 @@
           }
         }
       },
-      "required": [
-        "title",
-        "provider",
-        "model"
-      ],
+      "required": ["title", "provider", "model"],
       "allOf": [
         {
           "if": {
@@ -441,9 +433,7 @@
               }
             },
             "not": {
-              "required": [
-                "provider"
-              ]
+              "required": ["provider"]
             }
           },
           "then": {
@@ -471,67 +461,46 @@
                 ]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
-            "required": [
-              "apiKey"
-            ]
+            "required": ["apiKey"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "bedrockimport"
-                ]
+                "enum": ["bedrockimport"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
-            "required": [
-              "modelArn"
-            ]
+            "required": ["modelArn"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "huggingface-tgi",
-                  "huggingface-inference-api"
-                ]
+                "enum": ["huggingface-tgi", "huggingface-inference-api"]
               }
             }
           },
           "then": {
-            "required": [
-              "apiBase"
-            ]
+            "required": ["apiBase"]
           },
-          "required": [
-            "provider"
-          ]
+          "required": ["provider"]
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -551,14 +520,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "cloudflare"
-                ]
+                "enum": ["cloudflare"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -616,14 +581,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -655,14 +616,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "replicate"
-                ]
+                "enum": ["replicate"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -670,16 +627,16 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "llama2-7b",
-                      "llama2-13b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "llama3-8b",
                       "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b"
+                      "llama2-7b",
+                      "llama2-13b"
                     ]
                   },
                   {
@@ -687,7 +644,8 @@
                   }
                 ]
               },
-              "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
+              "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models).",
+              "x-intellij-html-description": "Select a pre-defined option, or find an exact model ID from Replicate <a href='https://replicate.com/collections/streaming-language-models'>here</a>."
             }
           }
         },
@@ -695,14 +653,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "free-trial"
-                ]
+                "enum": ["free-trial"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -726,9 +680,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               },
               "apiType": {
                 "not": {
@@ -736,9 +688,7 @@
                 }
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -800,14 +750,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "anthropic"
-                ]
+                "enum": ["anthropic"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -848,14 +794,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "anthropic-vertexai"
-                ]
+                "enum": ["anthropic-vertexai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -895,22 +837,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "cohere"
-                ]
+                "enum": ["cohere"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "command-r",
-                  "command-r-plus"
-                ]
+                "enum": ["command-r", "command-r-plus"]
               }
             }
           }
@@ -919,14 +854,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "bedrock"
-                ]
+                "enum": ["bedrock"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -951,19 +882,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "sagemaker"
-                ]
+                "enum": ["sagemaker"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "markdownDescription": "SageMaker endpoint name"
+                "description": "SageMaker endpoint name"
               }
             }
           }
@@ -972,14 +899,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "gemini"
-                ]
+                "enum": ["gemini"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1009,14 +932,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "gemini-vertexai"
-                ]
+                "enum": ["gemini-vertexai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1031,30 +950,21 @@
                       "gemini-1.5-flash"
                     ]
                   },
-                  {
-                    "type": "string"
-                  }
+                  { "type": "string" }
                 ]
               }
             },
-            "required": [
-              "projectId",
-              "region"
-            ]
+            "required": ["projectId", "region"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "together"
-                ]
+                "enum": ["together"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1071,9 +981,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -1085,7 +992,8 @@
                     "type": "string"
                   }
                 ],
-                "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
+                "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models).",
+                "x-intellij-html-description": "Select a pre-defined option, or find an exact model string from Together AI <a href='https://docs.together.ai/docs/inference-models'>here</a>."
               }
             }
           }
@@ -1094,19 +1002,16 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "deepinfra"
-                ]
+                "enum": ["deepinfra"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "markdownDescription": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
+                "markdownDescription": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation).",
+                "x-intellij-html-description": "Find the model name you want to use from DeepInfra <a href='https://deepinfra.com/models?type=text-generation'>here</a>."
               }
             }
           }
@@ -1124,9 +1029,7 @@
                 ]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1147,10 +1050,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1179,14 +1078,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "ollama"
-                ]
+                "enum": ["ollama"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1206,10 +1101,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -1232,7 +1123,8 @@
                     "type": "string"
                   }
                 ],
-                "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
+                "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library).",
+                "x-intellij-html-description": "Select a pre-defined option, or find the exact model tag for an Ollama model <a href='https://ollama.ai/library'>here</a>."
               }
             }
           }
@@ -1241,14 +1133,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "mistral"
-                ]
+                "enum": ["mistral"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1270,50 +1158,33 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "mistral-vertexai"
-                ]
+                "enum": ["mistral-vertexai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
                 "anyOf": [
                   {
-                    "enum": [
-                      "codestral",
-                      "mistral-nemo",
-                      "mistral-large"
-                    ]
+                    "enum": ["codestral", "mistral-nemo", "mistral-large"]
                   },
-                  {
-                    "type": "string"
-                  }
+                  { "type": "string" }
                 ]
               }
             },
-            "required": [
-              "projectId",
-              "region"
-            ]
+            "required": ["projectId", "region"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "deepseek"
-                ]
+                "enum": ["deepseek"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1330,10 +1201,7 @@
                 }
               },
               "model": {
-                "enum": [
-                  "deepseek-chat",
-                  "deepseek-coder"
-                ]
+                "enum": ["deepseek-chat", "deepseek-coder"]
               }
             }
           }
@@ -1342,14 +1210,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "groq"
-                ]
+                "enum": ["groq"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1364,10 +1228,6 @@
                   "llama3.1-8b",
                   "llama3.1-70b",
                   "llama3.1-405b",
-                  "llama3.2-1b",
-                  "llama3.2-3b",
-                  "llama3.2-11b",
-                  "llama3.2-90b",
                   "AUTODETECT"
                 ]
               }
@@ -1378,21 +1238,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "fireworks"
-                ]
+                "enum": ["fireworks"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "starcoder-7b"
-                ]
+                "enum": ["starcoder-7b"]
               }
             }
           }
@@ -1404,30 +1258,20 @@
                 "const": "azure"
               }
             },
-            "required": [
-              "apiType"
-            ]
+            "required": ["apiType"]
           },
           "then": {
-            "required": [
-              "engine",
-              "apiVersion",
-              "apiBase"
-            ]
+            "required": ["engine", "apiVersion", "apiBase"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1444,9 +1288,7 @@
                 "const": "llamafile"
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1460,22 +1302,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "cerebras"
-                ]
+                "enum": ["cerebras"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "llama3.1-8b",
-                  "llama3.1-70b"
-                ]
+                "enum": ["llama3.1-8b", "llama3.1-70b"]
               }
             }
           }
@@ -1484,14 +1319,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "text-gen-webui"
-                ]
+                "enum": ["text-gen-webui"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1505,14 +1336,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "flowise"
-                ]
+                "enum": ["flowise"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1539,10 +1366,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "key",
-                    "value"
-                  ]
+                  "required": ["key", "value"]
                 }
               },
               "additionalFlowiseConfiguration": {
@@ -1561,10 +1385,7 @@
                       "description": "Configuration Property value"
                     }
                   },
-                  "required": [
-                    "key",
-                    "value"
-                  ]
+                  "required": ["key", "value"]
                 }
               },
               "model": {
@@ -1593,10 +1414,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1642,79 +1459,65 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "watsonx"
-                ]
+                "enum": ["watsonx"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
-              "apiBase": {
+              "watsonxUrl": {
                 "type": "string"
               },
-              "apiKey": {
+              "watsonxApiKey": {
                 "type": "string"
               },
-              "apiVersion": {
+              "watsonxApiVersion": {
                 "type": "string"
               },
-              "projectId": {
+              "watsonxProjectId": {
                 "type": "string"
               },
-              "deploymentId": {
+              "watsonxStopToken": {
+                "type": "string"
+              },
+              "watsonxFullUrl": {
                 "type": "string"
               },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
-                  "ibm/granite-3b-code-instruct",
-                  "ibm/granite-8b-code-instruct",
                   "ibm/granite-20b-code-instruct",
-                  "ibm/granite-34b-code-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
                 ]
               }
             },
-            "required": ["apiBase", "apiKey", "apiVersion"]
+            "required": ["watsonxUrl", "watsonxProjectId"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "sambanova"
-                ]
+                "enum": ["sambanova"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
                 "anyOf": [
                   {
-                    "enum": [
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b"
-                    ]
+                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
                   },
                   {
                     "type": "string"
                   }
                 ],
-                "markdownDescription": "Select a pre-defined option."
+                "description": "Select a pre-defined option."
               }
             }
           }
@@ -1746,9 +1549,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "default"
-      ]
+      "required": ["default"]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -1805,9 +1606,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "issue"
-                ]
+                "enum": ["issue"]
               }
             }
           },
@@ -1820,23 +1619,17 @@
                     "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
                   }
                 },
-                "required": [
-                  "repositoryUrl"
-                ]
+                "required": ["repositoryUrl"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "edit"
-                ]
+                "enum": ["edit"]
               }
             }
           },
@@ -1846,11 +1639,12 @@
                 "properties": {
                   "recap": {
                     "type": "boolean",
-                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit.",
+                    "x-intellij-html-description": "If recap is set to <code>true</code>, Continue will generate a summary of the changes after making the edit."
                   },
                   "tokenLimit": {
                     "type": "integer",
-                    "markdownDescription": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
+                    "description": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
                   }
                 }
               }
@@ -1861,9 +1655,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "share"
-                ]
+                "enum": ["share"]
               }
             }
           },
@@ -1873,7 +1665,8 @@
                 "properties": {
                   "outputDir": {
                     "type": "string",
-                    "markdownDescription": "If outputDir is set to `.` or begins with `./` or `.\\`, file will be saved to the current workspace or a subdirectory thereof, respectively. `~` can similarly be used to specify the user's home directory."
+                    "markdownDescription": "If outputDir is set to `.` or begins with `./` or `.\\`, file will be saved to the current workspace or a subdirectory thereof, respectively. `~` can similarly be used to specify the user's home directory.",
+                    "x-intellij-html-description": "If outputDir is set to <code>.</code> or begins with <code>./</code> or <code>.\\</code>, file will be saved to the current workspace or a subdirectory thereof, respectively. <code>~</code> can similarly be used to specify the user's home directory."
                   }
                 }
               }
@@ -1884,9 +1677,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "commit"
-                ]
+                "enum": ["commit"]
               }
             }
           },
@@ -1896,7 +1687,8 @@
                 "properties": {
                   "includeUnstaged": {
                     "type": "boolean",
-                    "markdownDescription": "If includeUnstaged is set to true, then unstaged changes are also included in the prompt, otherwise only staged changes are included. Default is false."
+                    "markdownDescription": "If set to `true`, then unstaged changes are also included in the prompt, otherwise only staged changes are included. Default is `false`.",
+                    "x-intellij-html-description": "If set to <code>true</code>, then unstaged changes are also included in the prompt, otherwise only staged changes are included. Default is <code>false</code>."
                   }
                 }
               }
@@ -1904,10 +1696,7 @@
           }
         }
       ],
-      "required": [
-        "name",
-        "description"
-      ]
+      "required": ["name", "description"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -1926,11 +1715,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "prompt",
-        "description"
-      ]
+      "required": ["name", "prompt", "description"]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -2010,9 +1795,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "discord"
-                ]
+                "enum": ["discord"]
               }
             }
           },
@@ -2045,15 +1828,11 @@
                               "description": "The name of the channel"
                             }
                           },
-                          "required": [
-                            "id"
-                          ]
+                          "required": ["id"]
                         }
                       }
                     },
-                    "required": [
-                      "discordKey"
-                    ]
+                    "required": ["discordKey"]
                   }
                 }
               },
@@ -2062,18 +1841,14 @@
                   {
                     "properties": {
                       "params": {
-                        "required": [
-                          "guildId"
-                        ]
+                        "required": ["guildId"]
                       }
                     }
                   },
                   {
                     "properties": {
                       "params": {
-                        "required": [
-                          "channels"
-                        ]
+                        "required": ["channels"]
                       }
                     }
                   }
@@ -2086,9 +1861,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "google"
-                ]
+                "enum": ["google"]
               }
             }
           },
@@ -2101,26 +1874,14 @@
                     "description": "Your API key for https://serper.dev in order to get Google search results"
                   }
                 },
-                "required": [
-                  "serperApiKey"
-                ]
+                "required": ["serperApiKey"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
-          "if": {
-            "properties": {
-              "name": {
-                "enum": [
-                  "web"
-                ]
-              }
-            }
-          },
+          "if": { "properties": { "name": { "enum": ["web"] } } },
           "then": {
             "properties": {
               "params": {
@@ -2134,18 +1895,14 @@
                 }
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "open"
-                ]
+                "enum": ["open"]
               }
             }
           },
@@ -2167,9 +1924,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "issue"
-                ]
+                "enum": ["issue"]
               }
             }
           },
@@ -2198,37 +1953,24 @@
                         "type": {
                           "type": "string",
                           "description": "The type of issues to search for",
-                          "enum": [
-                            "open",
-                            "closed",
-                            "all"
-                          ]
+                          "enum": ["open", "closed", "all"]
                         }
                       },
-                      "required": [
-                        "owner",
-                        "repo"
-                      ]
+                      "required": ["owner", "repo"]
                     }
                   }
                 },
-                "required": [
-                  "repos"
-                ]
+                "required": ["repos"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "database"
-                ]
+                "enum": ["database"]
               }
             }
           },
@@ -2249,11 +1991,7 @@
                         "connection_type": {
                           "type": "string",
                           "description": "The type of database (e.g., 'postgres', 'mysql')",
-                          "enum": [
-                            "postgres",
-                            "mysql",
-                            "sqlite"
-                          ]
+                          "enum": ["postgres", "mysql", "sqlite"]
                         },
                         "connection": {
                           "type": "object",
@@ -2286,31 +2024,21 @@
                           "required": []
                         }
                       },
-                      "required": [
-                        "name",
-                        "connection_type",
-                        "connection"
-                      ]
+                      "required": ["name", "connection_type", "connection"]
                     }
                   }
                 },
-                "required": [
-                  "connections"
-                ]
+                "required": ["connections"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "gitlab-mr"
-                ]
+                "enum": ["gitlab-mr"]
               }
             }
           },
@@ -2331,23 +2059,17 @@
                     "description": "If you have code selected, filters out comments that aren't related to the selection."
                   }
                 },
-                "required": [
-                  "token"
-                ]
+                "required": ["token"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "jira"
-                ]
+                "enum": ["jira"]
               }
             }
           },
@@ -2373,7 +2095,8 @@
                   },
                   "apiVersion": {
                     "type": "integer",
-                    "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
+                    "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property.",
+                    "x-intellij-html-description": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the <code>apiVersion</code> property."
                   },
                   "requestOptions": {
                     "title": "Request Options",
@@ -2393,24 +2116,17 @@
                     ]
                   }
                 },
-                "required": [
-                  "domain",
-                  "token"
-                ]
+                "required": ["domain", "token"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "http"
-                ]
+                "enum": ["http"]
               }
             }
           },
@@ -2428,24 +2144,17 @@
                     "type": "object"
                   }
                 },
-                "required": [
-                  "url"
-                ]
+                "required": ["url"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "codebase",
-                  "folder"
-                ]
+                "enum": ["codebase", "folder"]
               }
             }
           },
@@ -2480,9 +2189,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "postgres"
-                ]
+                "enum": ["postgres"]
               }
             }
           },
@@ -2534,22 +2241,14 @@
                 }
               }
             },
-            "required": [
-              "host",
-              "port",
-              "user",
-              "password",
-              "database"
-            ]
+            "required": ["host", "port", "user", "password", "database"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "greptile"
-                ]
+                "enum": ["greptile"]
               }
             }
           },
@@ -2572,16 +2271,11 @@
                 }
               }
             },
-            "required": [
-              "GreptileToken",
-              "GithubToken"
-            ]
+            "required": ["GreptileToken", "GithubToken"]
           }
         }
       ],
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "SerializedContinueConfig": {
       "title": "config.json",
@@ -2615,21 +2309,20 @@
                 "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }
             },
-            "required": [
-              "title",
-              "startUrl"
-            ]
+            "required": ["title", "startUrl"]
           }
         },
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
-          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://docs.continue.dev/telemetry).",
+          "markdownDescription": "If this field is set to `true`, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://docs.continue.dev/telemetry).",
+          "x-intellij-html-description": "If this field is set to `true`, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in <a href='https://docs.continue.dev/telemetry'>the docs</a>.",
           "default": true,
           "type": "boolean"
         },
         "models": {
           "title": "Models",
           "markdownDescription": "Learn about setting up models in [the documentation](https://docs.continue.dev/model-setup/overview).",
+          "x-intellij-html-description": "Learn about setting up models in <a href='https://docs.continue.dev/model-setup/overview'>the documentation</a>.",
           "default": [
             {
               "title": "GPT-4 (trial)",
@@ -2678,6 +2371,7 @@
         "slashCommands": {
           "title": "Slash Commands",
           "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands).",
+          "x-intellij-html-description": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the <a href='https://docs.continue.dev/customization/slash-commands'>documentation</a>.",
           "default": [],
           "type": "array",
           "items": {
@@ -2686,7 +2380,8 @@
         },
         "customCommands": {
           "title": "Custom Commands",
-          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands#custom-commands-use-natural-language).",
+          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter `/<name>` in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands#custom-commands-use-natural-language).",
+          "x-intellij-html-description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter <code>/<name></code> in the text input, it will act as a shortcut to the prompt. Learn more in the <a href='https://docs.continue.dev/customization/slash-commands#custom-commands-use-natural-language'>documentation</a>.",
           "default": [
             {
               "name": "test",
@@ -2702,6 +2397,7 @@
         "contextProviders": {
           "title": "Context Providers",
           "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://docs.continue.dev/customization/context-providers).",
+          "x-intellij-html-description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in <a href='https://docs.continue.dev/customization/context-providers'>the documentation</a>.",
           "default": [],
           "type": "array",
           "items": {
@@ -2716,18 +2412,21 @@
         "disableIndexing": {
           "title": "Disable Indexing",
           "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "x-intellij-html-description": "If set to <code>true</code>, Continue will not index the codebase. This is mainly used for debugging purposes.",
           "default": false,
           "type": "boolean"
         },
         "disableSessionTitles": {
           "title": "Disable Session Titles",
           "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "x-intellij-html-description": "If set to <code>true</code>, Continue will not make extra requests to the LLM to generate a summary title of each session.",
           "default": false,
           "type": "boolean"
         },
         "embeddingsProvider": {
           "title": "Embeddings Provider",
           "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/features/codebase-embeddings#embeddings-providers).",
+          "x-intellij-html-description": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options <a href='https://docs.continue.dev/features/codebase-embeddings#embeddings-providers'>here</a>.",
           "type": "object",
           "properties": {
             "provider": {
@@ -2785,94 +2484,69 @@
               "type": "string"
             }
           },
-          "required": [
-            "provider"
-          ],
+          "required": ["provider"],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "cohere",
-                      "voyage",
-                      "nvidia",
-                      "gemini"
-                    ]
+                    "enum": ["cohere", "voyage", "nvidia", "gemini"]
                   }
                 },
-                "required": [
-                  "provider"
-                ]
+                "required": ["provider"]
               },
               "then": {
-                "required": [
-                  "apiKey"
-                ]
+                "required": ["apiKey"]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "sagemaker"
-                    ]
+                    "enum": ["sagemaker"]
                   }
                 },
-                "required": [
-                  "provider"
-                ]
+                "required": ["provider"]
               },
               "then": {
                 "properties": {
                   "model": {
-                    "markdownDescription": "SageMaker endpoint name"
+                    "description": "SageMaker endpoint name"
                   }
                 },
-                "required": [
-                  "model"
-                ]
+                "required": ["model"]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "vertex"
-                    ]
+                    "enum": ["vertex"]
                   }
                 },
-                "required": [
-                  "provider"
-                ]
+                "required": ["provider"]
               },
               "then": {
                 "properties": {
                   "projectId": {
-                    "markdownDescription": "The name of your vertexAI project"
+                    "description": "The name of your VertexAI project"
                   },
                   "region": {
-                    "markdownDescription": "The region your vertexAI model is hosted in - typically central1",
+                    "description": "The region your VertexAI model is hosted in - typically central1",
                     "default": "central1"
                   },
                   "model": {
                     "default": "text-embedding-004"
                   }
                 },
-                "required": [
-                  "projectId",
-                  "model",
-                  "region"
-                ]
+                "required": ["projectId", "model", "region"]
               }
             }
           ]
         },
         "reranker": {
           "title": "Reranker",
-          "markdownDescription": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
+          "description": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
           "type": "object",
           "properties": {
             "name": {
@@ -2888,22 +2562,16 @@
               "type": "object"
             }
           },
-          "required": [
-            "name"
-          ],
+          "required": ["name"],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "name": {
-                    "enum": [
-                      "cohere"
-                    ]
+                    "enum": ["cohere"]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               },
               "then": {
                 "properties": {
@@ -2925,9 +2593,7 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "apiKey"
-                    ]
+                    "required": ["apiKey"]
                   }
                 }
               }
@@ -2936,14 +2602,10 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": [
-                      "llm"
-                    ]
+                    "enum": ["llm"]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               },
               "then": {
                 "properties": {
@@ -2954,9 +2616,7 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "modelTitle"
-                    ]
+                    "required": ["modelTitle"]
                   }
                 }
               }
@@ -2965,14 +2625,10 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": [
-                      "voyage"
-                    ]
+                    "enum": ["voyage"]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               },
               "then": {
                 "properties": {
@@ -2991,9 +2647,7 @@
                         ]
                       }
                     },
-                    "required": [
-                      "apiKey"
-                    ]
+                    "required": ["apiKey"]
                   }
                 }
               }
@@ -3002,14 +2656,10 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": [
-                      "huggingface-tei"
-                    ]
+                    "enum": ["huggingface-tei"]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               },
               "then": {
                 "properties": {
@@ -3022,21 +2672,16 @@
                       },
                       "truncate": {
                         "type": "boolean",
-                        "description": "Wether to truncate long sequences to the maximum allowed context length.",
+                        "description": "Whether to truncate long sequences to the maximum allowed context length.",
                         "default": false
                       },
                       "truncation_direction": {
-                        "enum": [
-                          "Right",
-                          "Left"
-                        ],
-                        "markdownDescription": "Wether to truncate sequences from the `left` or `right`.",
+                        "enum": ["Right", "Left"],
+                        "description": "Whether to truncate sequences from the left or right.",
                         "default": "Right"
                       }
                     },
-                    "required": [
-                      "apiBase"
-                    ]
+                    "required": ["apiBase"]
                   }
                 },
                 "if": {
@@ -3047,9 +2692,7 @@
                   }
                 },
                 "then": {
-                  "required": [
-                    "truncation_direction"
-                  ]
+                  "required": ["truncation_direction"]
                 }
               }
             }
@@ -3058,6 +2701,7 @@
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
           "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
@@ -3079,6 +2723,7 @@
           "title": "TabAutocompleteOptions",
           "type": "object",
           "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/features/tab-autocomplete#configuration-options).",
+          "x-intellij-html-description": "These options let you customize your tab-autocomplete experience. Read about all options in <a href='https://docs.continue.dev/features/tab-autocomplete#configuration-options'>the docs</a>.",
           "properties": {
             "disable": {
               "type": "boolean",
@@ -3114,11 +2759,7 @@
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
             },
             "multilineCompletions": {
-              "enum": [
-                "always",
-                "never",
-                "auto"
-              ],
+              "enum": ["always", "never", "auto"],
               "description": "If set to true, Continue will only complete a single line at a time."
             },
             "useCache": {
@@ -3147,10 +2788,7 @@
           "type": "object",
           "properties": {
             "codeBlockToolbarPosition": {
-              "enum": [
-                "top",
-                "bottom"
-              ],
+              "enum": ["top", "bottom"],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
             },
@@ -3165,6 +2803,7 @@
             "showChatScrollbar": {
               "title": "Show Chat Scrollbar",
               "markdownDescription": "If set to `true`, a scrollbar will be displayed in the chat window to navigate through messages.",
+              "x-intellij-html-description": "If set to <code>true</code>, a scrollbar will be displayed in the chat window to navigate through messages.",
               "default": false,
               "type": "boolean"
             }
@@ -3175,10 +2814,7 @@
           "properties": {
             "provider": {
               "type": "string",
-              "enum": [
-                "posthog",
-                "logstash"
-              ],
+              "enum": ["posthog", "logstash"],
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [
@@ -3195,40 +2831,30 @@
               "description": "The client key to use for analytics"
             }
           },
-          "required": [
-            "provider"
-          ],
+          "required": ["provider"],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "posthog"
-                    ]
+                    "enum": ["posthog"]
                   }
                 }
               },
               "then": {
-                "required": [
-                  "clientKey"
-                ]
+                "required": ["clientKey"]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "logstash"
-                    ]
+                    "enum": ["logstash"]
                   }
                 }
               },
               "then": {
-                "required": [
-                  "url"
-                ]
+                "required": ["url"]
               }
             }
           ]
@@ -3300,10 +2926,7 @@
                     "default": false
                   }
                 },
-                "required": [
-                  "prompt",
-                  "title"
-                ]
+                "required": ["prompt", "title"]
               },
               "description": "Quick actions are a way to add custom commands to the Code Lens of function and class declarations."
             },

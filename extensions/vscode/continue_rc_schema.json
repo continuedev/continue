@@ -670,16 +670,16 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "llama2-7b",
-                      "llama2-13b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "llama3-8b",
                       "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b"
+                      "llama2-7b",
+                      "llama2-13b"
                     ]
                   },
                   {
@@ -1071,9 +1071,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -1147,10 +1144,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1206,10 +1199,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -1364,10 +1353,6 @@
                   "llama3.1-8b",
                   "llama3.1-70b",
                   "llama3.1-405b",
-                  "llama3.2-1b",
-                  "llama3.2-3b",
-                  "llama3.2-11b",
-                  "llama3.2-90b",
                   "AUTODETECT"
                 ]
               }
@@ -1593,10 +1578,6 @@
                       "llama3.1-8b",
                       "llama3.1-70b",
                       "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b",
-                      "llama3.2-11b",
-                      "llama3.2-90b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1653,28 +1634,28 @@
           },
           "then": {
             "properties": {
-              "apiBase": {
+              "watsonxUrl": {
                 "type": "string"
               },
-              "apiKey": {
+              "watsonxApiKey": {
                 "type": "string"
               },
-              "apiVersion": {
+              "watsonxApiVersion": {
                 "type": "string"
               },
-              "projectId": {
+              "watsonxProjectId": {
                 "type": "string"
               },
-              "deploymentId": {
+              "watsonxStopToken": {
+                "type": "string"
+              },
+              "watsonxFullUrl": {
                 "type": "string"
               },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
-                  "ibm/granite-3b-code-instruct",
-                  "ibm/granite-8b-code-instruct",
                   "ibm/granite-20b-code-instruct",
-                  "ibm/granite-34b-code-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
@@ -1682,9 +1663,8 @@
               }
             },
             "required": [
-              "apiBase",
-              "apiKey",
-              "apiVersion"
+              "watsonxUrl",
+              "watsonxProjectId"
             ]
           }
         },
@@ -1709,9 +1689,7 @@
                     "enum": [
                       "llama3.1-8b",
                       "llama3.1-70b",
-                      "llama3.1-405b",
-                      "llama3.2-1b",
-                      "llama3.2-3b"
+                      "llama3.1-405b"
                     ]
                   },
                   {
