@@ -71,6 +71,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     override fun runActivity(project: Project) {
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
         removeShortcutFromAction(getPlatformSpecificKeyStroke("shift J"))
+        removeShortcutFromAction(getPlatformSpecificKeyStroke("I"))
         initializePlugin(project)
     }
 
