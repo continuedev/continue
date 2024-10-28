@@ -231,7 +231,7 @@ function GUI() {
         }
       }
 
-      streamResponse(editorState, modifiers, ideMessenger);
+      streamResponse(editorState, modifiers, ideMessenger, undefined, 'continue');
 
       const currentCount = getLocalStorage("mainTextEntryCounter");
       if (currentCount) {

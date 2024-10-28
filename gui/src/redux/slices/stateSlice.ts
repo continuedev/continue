@@ -27,6 +27,21 @@ export const memoizedContextItemsSelector = createSelector(
   },
 );
 
+const integrationStatesMap = {
+  'perplexity': {
+    history: 'perplexityHistory',
+    active: 'perplexityActive'
+  },
+  'aider': {
+    history: 'aiderHistory',
+    active: 'aiderActive'
+  },
+  'continue': {
+    history: 'history',
+    active: 'active'
+  }
+} as const;
+
 const TEST_CONTEXT_ITEMS: ContextItemWithId[] = [
   {
     content: "def add(a, b):\n  return a + b",
@@ -172,14 +187,15 @@ export const stateSlice = createSlice({
     },
     addPromptCompletionPair: (
       state,
-      { payload }: PayloadAction<{promptLogs: PromptLog[], source: string}>,
+      { payload }: PayloadAction<{promptLogs: PromptLog[], source: keyof typeof integrationStatesMap}>,
     ) => {
       const {promptLogs, source} = payload;
-      const history = source === 'perplexity' ? state.perplexityHistory : source === 'aider' ? state.aiderHistory : state.history;
-      if (!state.history.length) {
+      const { history: historyKey } = integrationStatesMap[source];
+      const currentHistory = state[historyKey];
+      if (!currentHistory.length) {
         return;
       }
-      const lastHistory = history[history.length - 1];
+      const lastHistory = currentHistory[currentHistory.length - 1];
 
       lastHistory.promptLogs = lastHistory.promptLogs
         ? lastHistory.promptLogs.concat(promptLogs)
@@ -266,27 +282,27 @@ export const stateSlice = createSlice({
       }: PayloadAction<{
         index: number;
         editorState: JSONContent;
+        source: keyof typeof integrationStatesMap;  // todo: put this into an interface
       }>,
     ) => {
-      const historyItem = state.history[payload.index];
-      if (!historyItem) {
-        return;
-      }
+      const source = payload.source || 'continue';
+      const { history: historyKey } = integrationStatesMap[source];
+      const currentHistory = state[historyKey];
+      
+      // Early return if invalid index
+      const historyItem = currentHistory[payload.index];
+      if (!historyItem) return;
+
+      // Update history item
       historyItem.message.content = "";
       historyItem.editorState = payload.editorState;
 
-      // Cut off history after the resubmitted message
-      state.history = state.history.slice(0, payload.index + 1).concat({
-        message: {
-          role: "assistant",
-          content: "",
-        },
+      // Update history and set active
+      state[historyKey] = currentHistory.slice(0, payload.index + 1).concat({
+        message: { role: "assistant", content: "" },
         contextItems: [],
       });
-
-      // https://github.com/continuedev/continue/pull/1021
-      // state.contextItems = [];
-      state.active = true;
+      state[integrationStatesMap[source].active] = true;
     },
     // deleteMessage: (state, action: PayloadAction<number>) => {
     //   const index = action.payload + 1;
@@ -306,18 +322,21 @@ export const stateSlice = createSlice({
     // },
     deleteMessage: (
       state,
-      action: PayloadAction<{index: number, source: 'perplexity' | 'aider' | 'continue'}>
+      action: PayloadAction<{
+        index: number,
+        source: keyof typeof integrationStatesMap}>
     ) => {
-      const { index, source } = action.payload;
-      const history = source === 'perplexity' ? state.perplexityHistory : source === 'aider' ? state.aiderHistory : state.history;
+      const { index, source = 'continue' } = action.payload;
+      const { history: historyKey } = integrationStatesMap[source];
+      const currentHistory = state[historyKey];
 
-      if (index >= 0 && index < history.length) {
-        history.splice(index, 1);
+      if (index >= 0 && index < currentHistory.length) {
+        currentHistory.splice(index, 1);
           if (
-            index < history.length &&
-            history[index].message.role === "assistant"
+            index < currentHistory.length &&
+            currentHistory[index].message.role === "assistant"
           ) {
-            history.splice(index, 1);
+            currentHistory.splice(index, 1);
           }
       }
     },
@@ -398,10 +417,13 @@ export const stateSlice = createSlice({
         message: ChatMessage;
         index: number;
         contextItems?: ContextItemWithId[];
+        source: keyof typeof integrationStatesMap;
       }>,
     ) => {
-      if (payload.index >= state.history.length) {
-        state.history.push({
+      const { history: historyKey } = integrationStatesMap[payload.source];
+      const currentHistory = state[historyKey];      
+      if (payload.index >= currentHistory.length) {
+        currentHistory.push({
           message: payload.message,
           editorState: {
             type: "doc",
@@ -416,8 +438,8 @@ export const stateSlice = createSlice({
         });
         return;
       }
-      state.history[payload.index].message = payload.message;
-      state.history[payload.index].contextItems = payload.contextItems || [];
+      currentHistory[payload.index].message = payload.message;
+      currentHistory[payload.index].contextItems = payload.contextItems || [];
     },
     addContextItemsAtIndex: (
       state,
@@ -463,7 +485,9 @@ export const stateSlice = createSlice({
     },
     newSession: (
       state,
-      { payload }: PayloadAction<{session: PersistedSessionInfo | undefined, source: 'perplexity' | 'aider' | 'continue'}>,
+      { payload }: PayloadAction<{
+        session: PersistedSessionInfo | undefined,
+        source: keyof typeof integrationStatesMap}>,
     ) => {
       const {session, source} = payload;
       if (session) {
@@ -473,13 +497,8 @@ export const stateSlice = createSlice({
         state.title = session.title;
         state.sessionId = session.sessionId;
       } else {
-        if (source === 'perplexity') {
-          state.perplexityHistory = [];
-        } else if (source === 'aider') {
-          state.aiderHistory = [];
-        } else {
-          state.history = [];
-        }
+        const { history: historyKey } = integrationStatesMap[source];
+        state[historyKey] = [];
         state.contextItems = [];
         state.active = false;
         state.title = "New Session";

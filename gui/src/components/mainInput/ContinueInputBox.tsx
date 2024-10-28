@@ -98,6 +98,8 @@ function ContinueInputBox({
           setMessageAtIndex({
             message: { role: "user", content: data.prompt },
             index: 0,
+            contextItems: [],
+            source,
           }),
         );
       }
