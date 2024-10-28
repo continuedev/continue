@@ -171,7 +171,7 @@ class Aider extends BaseLLM {
       let command: string[];
 
       const aiderFlags =
-        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands";
+        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048";
       const aiderCommands = [
         `python -m aider ${aiderFlags}`,
         `python3 -m aider ${aiderFlags}`,
