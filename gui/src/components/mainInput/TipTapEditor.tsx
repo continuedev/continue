@@ -56,7 +56,6 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
-import { isBareChatMode } from '../../util/bareChatMode';
 import { useLocation } from "react-router-dom";
 
 
@@ -679,7 +678,7 @@ function TipTapEditor({
       if (!isMainInput || !editor) {
         return;
       }
-      
+
       const item: ContextItemWithId = {
         content: data.text,
         name: "Context from PearAI Search",

@@ -42,7 +42,6 @@ function PreWithToolbar(props: {
   const [isCreateFile, setIsCreateFile] = useState(false);
   const [checkedForCreateFile, setCheckedForCreateFile] = useState(false);
 
-  const defaultModel = useSelector(defaultModelSelector);
   const bareChatMode = isBareChatMode()
 
   useEffect(() => {

@@ -68,8 +68,6 @@ function PerplexityGUI() {
   const [showPerplexityTutorialCard, setShowPerplexityTutorialCard] =
     useState<boolean>(getLocalStorage("showPerplexityTutorialCard"));
 
-  const bareChatMode = isBareChatMode();
-
   const onCloseTutorialCard = () => {
     posthog.capture("closedPerplexityTutorialCard");
     setLocalStorage("showPerplexityTutorialCard", false);
