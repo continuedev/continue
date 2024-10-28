@@ -11,6 +11,8 @@ import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { useLastSessionContext } from "../context/LastSessionContext";
 
+const MAX_TITLE_LENGTH = 100;
+
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
     return text.slice(0, maxLength - 3) + "...";
@@ -84,7 +86,7 @@ function useHistory(dispatch: Dispatch) {
               .split("\n")
               .filter((l) => l.trim() !== "")
               .slice(-1)[0] || "",
-            50,
+            MAX_TITLE_LENGTH,
           )
         : stateCopy.title?.length > 0
         ? stateCopy.title

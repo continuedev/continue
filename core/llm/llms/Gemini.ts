@@ -15,6 +15,7 @@ class Gemini extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> = {
     model: "gemini-pro",
     apiBase: "https://generativelanguage.googleapis.com/v1beta/",
+    maxStopWords: 5,
   };
 
   // Function to convert completion options to Gemini format
@@ -35,7 +36,9 @@ class Gemini extends BaseLLM {
       finalOptions.maxOutputTokens = options.maxTokens;
     }
     if (options.stop) {
-      finalOptions.stopSequences = options.stop.filter((x) => x.trim() !== "");
+      finalOptions.stopSequences = options.stop
+        .filter((x) => x.trim() !== "")
+        .slice(0, this.maxStopWords ?? Gemini.defaultOptions.maxStopWords);
     }
 
     return { generationConfig: finalOptions }; // Wrap options under 'generationConfig'

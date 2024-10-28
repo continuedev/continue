@@ -15,6 +15,7 @@ import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider
 import NvidiaEmbeddingsProvider from "./NvidiaEmbeddingsProvider.js";
 import VoyageEmbeddingsProvider from "./VoyageEmbeddingsProvider.js";
 import VertexEmbeddingsProvider from "./VertexEmbeddingsProvider.js";
+import WatsonxEmbeddingsProvider from "./WatsonxEmbeddingsProvider.js";
 
 type EmbeddingsProviderConstructor = new (
   ...args: any[]
@@ -39,4 +40,5 @@ export const allEmbeddingsProviders: Record<
   voyage: VoyageEmbeddingsProvider,
   mistral: MistralEmbeddingsProvider,
   vertexai: VertexEmbeddingsProvider
+  watsonx: WatsonxEmbeddingsProvider,
 };
