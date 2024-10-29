@@ -6,12 +6,15 @@ import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(): Promise<Chunk[]> {
-    const { input, nRetrieve, filterDirectory } = this.options;
+    const { input, nRetrieve, filterDirectory, includeEmbeddings } =
+      this.options;
 
     let retrievalResults: Chunk[] = [];
 
     const ftsChunks = await this.retrieveFts(input, nRetrieve);
-    const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
+    const embeddingsChunks = includeEmbeddings
+      ? await this.retrieveEmbeddings(input, nRetrieve)
+      : [];
     const recentlyEditedFilesChunks =
       await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
 
