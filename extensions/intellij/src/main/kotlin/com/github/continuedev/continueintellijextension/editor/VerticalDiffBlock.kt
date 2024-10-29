@@ -116,7 +116,7 @@ class VerticalDiffBlock(
         )
 
         acceptButton.setBounds(
-            x + rejectButton.width + 5,
+            x + rejectButton.width + 2,
             y,
             acceptButton.preferredSize.width,
             acceptButton.preferredSize.height
@@ -220,13 +220,12 @@ class VerticalDiffBlock(
                 g2.dispose()
             }
         }.apply {
-            // This isn't working currently, font color is transparent
-            foreground = JBColor.WHITE
+            foreground = Color(240, 240, 240)
             font = Font("Arial", Font.BOLD, 9)
             isContentAreaFilled = false
             isOpaque = false
-            border = null
-            preferredSize = Dimension(preferredSize.width, 16)
+            border = BorderFactory.createEmptyBorder(4, 2, 4, 2)
+            preferredSize = Dimension(preferredSize.width - 30, 16)
             cursor = Cursor(Cursor.HAND_CURSOR)
         }
     }
