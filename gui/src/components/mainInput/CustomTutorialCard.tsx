@@ -15,7 +15,7 @@ export interface TutorialContent {
     text: string;
     copyText: string;
   };
-  moreInfo: string[];
+  moreInfo?: string[];
 }
 
 const fadeIn = keyframes`
