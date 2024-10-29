@@ -31,8 +31,8 @@ export async function retrieveContextItemsFromEmbeddings(
     void extras.ide.showToast(
       "warning",
       "Codebase retrieval is limited when `embeddingsProvider` is empty or set to `transformers.js` in JetBrains. " +
-        "You can use Ollama to set up local embeddings, or use our 'free-trial' " +
-        "embeddings provider. See here to learn more: " +
+        "You can use Ollama to set up local embeddings, use our 'free-trial', " +
+        "or configure your own. See here to learn more: " +
         "https://docs.continue.dev/customize/model-types/embeddings",
     );
   }
