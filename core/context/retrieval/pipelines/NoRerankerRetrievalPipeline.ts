@@ -5,7 +5,7 @@ import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
 
 export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
   async run(): Promise<Chunk[]> {
-    const { input, nFinal, filterDirectory } = this.options;
+    const { input, nFinal, filterDirectory, includeEmbeddings } = this.options;
 
     // We give 1/4 weight to recently edited files, 1/4 to full text search,
     // and the remaining 1/2 to embeddings
@@ -17,10 +17,9 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     const ftsChunks = await this.retrieveFts(input, ftsNFinal);
 
-    const embeddingsChunks = await this.retrieveEmbeddings(
-      input,
-      embeddingsNFinal,
-    );
+    const embeddingsChunks = includeEmbeddings
+      ? await this.retrieveEmbeddings(input, embeddingsNFinal)
+      : [];
 
     const recentlyEditedFilesChunks =
       await this.retrieveAndChunkRecentlyEditedFiles(recentlyEditedNFinal);

@@ -2425,8 +2425,8 @@
         },
         "embeddingsProvider": {
           "title": "Embeddings Provider",
-          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/features/codebase-embeddings#embeddings-providers).",
-          "x-intellij-html-description": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options <a href='https://docs.continue.dev/features/codebase-embeddings#embeddings-providers'>here</a>.",
+          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is `transformers.js`, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/features/codebase-embeddings#embeddings-providers).",
+          "x-intellij-html-description": "The method that will be used to generate codebase embeddings. The default is <code>transformers.js</code>, which will run locally in the browser. Learn about the other options <a href='https://docs.continue.dev/features/codebase-embeddings#embeddings-providers'>here</a>.<br><br><strong>Note</strong>: <code>transformers.js</code> currently cannot be used in JetBrains.",
           "type": "object",
           "properties": {
             "provider": {
