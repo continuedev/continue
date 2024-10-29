@@ -155,6 +155,18 @@ export const defaultConfig: SerializedContinueConfig = {
       provider: "aider",
       isDefault: true,
     },
+    {
+      model: "o1-mini",
+      title: "GPTo1 Mini (PearAI annual only)",
+      provider: "pearai_server",
+      isDefault: true
+    },
+    {
+      model: "o1-preview",
+      title: "GPTo1 Preview (PearAI annual only)",
+      provider: "pearai_server",
+      isDefault: true
+    }
   ],
   customCommands: [
     {
