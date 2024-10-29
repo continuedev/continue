@@ -45,6 +45,7 @@ import Together from "./Together";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
+import Asksage from "./Asksage";
 
 const LLMs = [
   Anthropic,
@@ -85,6 +86,7 @@ const LLMs = [
   SambaNova,
   Mock,
   Cerebras,
+  Asksage,
 ];
 
 export async function llmFromDescription(

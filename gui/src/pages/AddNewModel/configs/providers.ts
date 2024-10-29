@@ -622,4 +622,48 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.cerebras.ai/",
   },
+  askSage: {
+    title: "Ask Sage",
+    provider: "askSage",
+    icon: "ask-Sage.png",
+    description:
+      "The Ask Sage API provides seamless access to LLMs including OpenAI, Anthropic, Meta, Mistral, and more.",
+    longDescription: `To get access to the Ask Sage API, obtain your API key from the [Ask Sage platform](https://chat.asksage.ai/) for all other models.`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    params: {
+      apiKey: "",
+      apiBase: "https://api.asksage.ai/server/", // Default base URL
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Ask Sage API key",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "apiBase",
+        label: "API Base URL",
+        placeholder: "Enter the API Base URL",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.gpt4gov,
+      models.gpt4ogov,
+      models.gpt4o,
+      models.gpt4omini,
+      models.gpt35turbo,
+      models.claude35Sonnet,
+      models.claude3Opus,
+      models.claude3Sonnet,
+      models.mistralLarge,
+      models.llama370bChat,
+      models.gemini15Pro,
+    ],
+    apiKeyUrl: "https://chat.asksage.ai/",
+  },
 };
