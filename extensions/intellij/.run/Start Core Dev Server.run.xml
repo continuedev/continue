@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Start Dev Server (core)" type="NodeJSConfigurationType" path-to-js-file="out/index.js" working-dir="$PROJECT_DIR$/binary">
+  <configuration default="false" name="Start Core Dev Server" type="NodeJSConfigurationType" path-to-js-file="out/index.js" working-dir="$PROJECT_DIR$/binary">
     <envs>
       <env name="CONTINUE_DEVELOPMENT" value="true" />
       <env name="CONTINUE_GLOBAL_DIR" value="$PROJECT_DIR$/binary/.continue" />
