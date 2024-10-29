@@ -219,6 +219,18 @@ function PerplexityGUI() {
                 real-time on the web. Search uses less credits than PearAI Chat,
                 and is perfect for documentation lookups.
               </p>
+              {state.perplexityHistory.length > 0 && (
+                <div className="mt-2">
+                  <NewSessionButton
+                    onClick={() => {
+                      saveSession();
+                    }}
+                    className="mr-auto"
+                  >
+                    Clear chat
+                  </NewSessionButton>
+                </div>
+              )}
             </div>
           </div>
           <StepsDiv>
