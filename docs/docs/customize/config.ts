@@ -78,7 +78,6 @@ interface ContextProviderWithParams {
 }
 
 interface SerializedContinueConfig {
-
     completionOptions?: BaseCompletionOptions; // Default completion options, overridden by model-specific options.
     requestOptions?: RequestOptions; // Default HTTP request options for models and context providers.
     models?: ModelDescription[]; // Model configurations, defaulting to GPT-4 (trial) with free-trial provider.
@@ -121,7 +120,6 @@ interface SerializedContinueConfig {
 
 
     // RERANKING
-
     reranker?: {
         name: "cohere" | "voyage" | "llm" | "free-trial" | "huggingface-tei"; // Reranker name.
         params?: Record<string, any>; // Additional parameters for reranking.
