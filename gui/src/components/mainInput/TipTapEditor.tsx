@@ -514,7 +514,7 @@ function TipTapEditor({
         }
       }
     },
-  });
+  }, [historyLength]);
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 

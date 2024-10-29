@@ -176,7 +176,7 @@ class Aider extends BaseLLM {
       let command: string[];
 
       const aiderFlags =
-        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048";
+        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048 --edit-format udiff";
       const aiderCommands = [
         `python -m aider ${aiderFlags}`,
         `python3 -m aider ${aiderFlags}`,
@@ -338,7 +338,7 @@ class Aider extends BaseLLM {
             // Look for the prompt that indicates aider is ready
             const output = data.toString();
             console.log("Output: ", output);
-            if (output.endsWith("> ")) {
+            if (output.endsWith("udiff> ")) {
               // Aider's ready prompt
               console.log("Aider is ready!");
               this.isAiderUp = true;
@@ -481,7 +481,7 @@ class Aider extends BaseLLM {
     let lastProcessedIndex = 0;
     let responseComplete = false;
 
-    const END_MARKER = IS_WINDOWS ? "\r\n> " : "\n> ";
+    const END_MARKER = IS_WINDOWS ? "\r\nudiff> " : "\nudiff> ";
 
     const escapeDollarSigns = (text: string | undefined) => {
       if (!text) return "Aider response over";
@@ -492,17 +492,24 @@ class Aider extends BaseLLM {
       await new Promise((resolve) => setTimeout(resolve, 100));
       const newOutput = this.aiderOutput.slice(lastProcessedIndex);
       if (newOutput) {
-        // newOutput = escapeDollarSigns(newOutput);
-        lastProcessedIndex = this.aiderOutput.length;
-        yield {
-          role: "assistant",
-          content: escapeDollarSigns(newOutput),
-        };
+          if (newOutput.endsWith(END_MARKER)) {
+              // Remove the END_MARKER from the output before yielding
+              const cleanOutput = newOutput.slice(0, -END_MARKER.length);
+              if (cleanOutput) {
+                  yield {
+                      role: "assistant",
+                      content: escapeDollarSigns(cleanOutput),
+                  };
+              }
+              responseComplete = true;
+              break;
+          }
 
-        if (newOutput.endsWith(END_MARKER)) {
-          responseComplete = true;
-          break;
-        }
+          lastProcessedIndex = this.aiderOutput.length;
+          yield {
+              role: "assistant",
+              content: escapeDollarSigns(newOutput),
+          };
       }
 
       // Safety check
