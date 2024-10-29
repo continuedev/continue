@@ -168,4 +168,4 @@ extensions/intellij/.idea/**
 **/.idea/shelf/
 
 extensions/intellij/bin
-extensions/.continue-debug
+extensions/.continue-debug/
