@@ -160,17 +160,18 @@ export const Mention = Node.create<MentionOptions>({
 
   renderHTML({ node, HTMLAttributes }) {
     if (node.attrs.itemType === "file") {
+      const normalizedPath = node.attrs.id.replace(/\\/g, '/');
       return [
         "button",
         mergeAttributes(
           { 
             "data-type": this.name,
-            "data-file-id": node.attrs.id,
+            "data-file-id": normalizedPath,
             class: "file-mention-button",
             style: "cursor: pointer; border: none",
             onclick: `(function() {
               const event = new CustomEvent('showFile', { 
-                detail: { filepath: "${node.attrs.id}" },
+                detail: { filepath: "${normalizedPath}" },
                 bubbles: true
               });
               this.dispatchEvent(event);
