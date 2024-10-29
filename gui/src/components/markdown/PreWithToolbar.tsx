@@ -36,13 +36,12 @@ function PreWithToolbar(props: {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
 
-  const [hovering, setHovering] = useState(false);
-
   const [rawCodeBlock, setRawCodeBlock] = useState("");
   const [isCreateFile, setIsCreateFile] = useState(false);
   const [checkedForCreateFile, setCheckedForCreateFile] = useState(false);
 
-  const bareChatMode = isBareChatMode()
+  const defaultModel = useSelector(defaultModelSelector);
+  const bareChatMode = isBareChatMode();
 
   useEffect(() => {
     const debouncedEffect = debounce(() => {
@@ -77,13 +76,8 @@ function PreWithToolbar(props: {
   return isCreateFile ? (
     <FileCreateChip rawCodeBlock={rawCodeBlock}></FileCreateChip>
   ) : (
-    <div
-      style={{ padding: "0px" }}
-      className="relative"
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => setHovering(false)}
-    >
-      {!toolbarBottom && hovering && !bareChatMode && (
+    <div style={{ padding: "0px" }} className="relative">
+      {!toolbarBottom && !bareChatMode && (
         <CodeBlockToolBar
           text={rawCodeBlock}
           bottom={toolbarBottom}
@@ -91,7 +85,7 @@ function PreWithToolbar(props: {
         ></CodeBlockToolBar>
       )}
       {props.children}
-      {toolbarBottom && hovering && (
+      {toolbarBottom && (
         <CodeBlockToolBar
           text={rawCodeBlock}
           bottom={toolbarBottom}

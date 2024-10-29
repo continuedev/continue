@@ -27,7 +27,7 @@ import { getFontSize } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { isBareChatMode, isPerplexityMode } from '../../util/bareChatMode';
+import { isBareChatMode, isPerplexityMode } from "../../util/bareChatMode";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -47,7 +47,11 @@ interface StepContainerProps {
 const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
   padding: 4px 0px 8px 0px;
   background-color: ${(props) =>
-    props.isUserInput ? vscInputBackground : window.isPearOverlay ?  "transparent" : vscBackground};
+    props.isUserInput
+      ? vscInputBackground
+      : window.isPearOverlay
+        ? "transparent"
+        : vscBackground};
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   // border-radius: ${defaultBorderRadius};
   overflow: hidden;
@@ -60,16 +64,20 @@ function StepContainer({
   onRetry,
   onContinueGeneration,
   onDelete,
-  open, 
-  isFirst, 
-  isLast, 
-  index, 
-  modelTitle, 
+  open,
+  isFirst,
+  isLast,
+  index,
+  modelTitle,
   source = "continue",
 }: StepContainerProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const isUserInput = item.message.role === "user";
-  const active = source === "continue" ? useSelector((store: RootState) => store.state.active) : source === "perplexity" ? useSelector((store: RootState) => store.state.perplexityActive) : useSelector((store: RootState) => store.state.aiderActive);
+  const active =
+    source === "continue"
+      ? useSelector((store: RootState) => store.state.active)
+      : source === "perplexity"
+        ? useSelector((store: RootState) => store.state.perplexityActive)
+        : useSelector((store: RootState) => store.state.aiderActive);
   const ideMessenger = useContext(IdeMessengerContext);
   const bareChatMode = isBareChatMode();
   const isPerplexity = isPerplexityMode();
@@ -114,14 +122,7 @@ function StepContainer({
   }, [item.message.content, active]);
 
   return (
-    <div
-      onMouseEnter={() => {
-        setIsHovered(true);
-      }}
-      onMouseLeave={() => {
-        setIsHovered(false);
-      }}
-    >
+    <div>
       <div className="relative">
         <ContentDiv
           hidden={!open}
@@ -142,14 +143,20 @@ function StepContainer({
             />
           )}
         </ContentDiv>
-        {!active && isPerplexity && <HeaderButtonWithText
-          onClick={() => {
-            ideMessenger.post("addPerplexityContext", { text: stripImages(item.message.content), language: "" });
-          }}>
-          <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
-          Add to PearAI chat context
-        </HeaderButtonWithText>}
-        {(isHovered || typeof feedback !== "undefined") && !active && (
+        {!active && isPerplexity && (
+          <HeaderButtonWithText
+            onClick={() => {
+              ideMessenger.post("addPerplexityContext", {
+                text: stripImages(item.message.content),
+                language: "",
+              });
+            }}
+          >
+            <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+            Add to PearAI chat context
+          </HeaderButtonWithText>
+        )}
+        {!active && (
           <div
             className="flex gap-1 absolute -bottom-2 right-0"
             style={{
@@ -185,7 +192,7 @@ function StepContainer({
                 />
               </HeaderButtonWithText>
             )}
-            
+
             <CopyButton
               text={stripImages(item.message.content)}
               color={lightGray}
@@ -197,11 +204,11 @@ function StepContainer({
                   onRetry();
                 }}
               >
-              <ArrowUturnLeftIcon
-                color={lightGray}
-                width="1.2em"
-                height="1.2em"
-              />
+                <ArrowUturnLeftIcon
+                  color={lightGray}
+                  width="1.2em"
+                  height="1.2em"
+                />
               </HeaderButtonWithText>
             )}
             <HeaderButtonWithText text="Delete Message">
