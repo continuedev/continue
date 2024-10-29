@@ -32,7 +32,7 @@ import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
-import { handleAiderMode } from "../integrations/aider/aider";
+import { startAiderProcess } from "../integrations/aider/aider";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -371,7 +371,7 @@ export class VsCodeExtension {
       this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
-    handleAiderMode(this.core, this.sidebar, this.extensionContext);
+    startAiderProcess(this.core);
   }
 
   static continueVirtualDocumentScheme = "pearai";

@@ -59,6 +59,11 @@ function AiderGUI() {
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
+  const aiderProcessStatus = useSelector(
+    (state: RootState) => state.state.aiderProcessStatus,
+  );
+
+  // console.dir(aiderProcessStatus.status);
 
   // TODO: Remove this later. This is supposed to be set in Onboarding, but
   // many users won't reach onboarding screen due to cache. So set it manually,
@@ -167,6 +172,10 @@ function AiderGUI() {
     [saveSession],
   );
 
+  useEffect(() => {
+    ideMessenger.request("refreshAiderProcessStatus", undefined);
+  }, []);
+
   useWebviewListener(
     "aiderProcessStateUpdate",
     async (data) => {
@@ -188,6 +197,30 @@ function AiderGUI() {
     },
     [state.aiderHistory],
   );
+
+  if (aiderProcessStatus.status !== "ready") {
+    let msg = "";
+    if (aiderProcessStatus.status === "stopped") {
+      msg = "PearAI Creator (Powered By aider) process is not running.";
+    }
+    if (aiderProcessStatus.status === "uninstalled") {
+      return <AiderManualInstallation />;
+    }
+
+    if (aiderProcessStatus.status === "starting") {
+      msg = "Spinning up PearAI Creator (Powered By aider), please give it a second...";
+    }
+
+    return (
+      <div className="top-[200px] left-0 w-full h-[calc(100%-200px)] bg-gray-500 bg-opacity-50 z-10 flex items-center justify-center">
+        <div className="text-white text-2xl">
+          <div className="spinner-border text-white" role="status">
+            <span className="visually-hidden">{msg}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -391,11 +424,17 @@ function AiderGUI() {
 export default AiderGUI;
 
 const tutorialContent = {
-  goodFor: "direct feature implementations, bug fixes, code refactoring",
+  goodFor: "Direct feature implementations, bug fixes, code refactoring",
   notGoodFor:
-    "anything not requiring actual code changes (use PearAI Chat instead)",
+    "Questions unrelated to feature creation and bugs (use PearAI Chat instead)",
   example: {
-    text: '"make a new FAQ page for my website"',
-    copyText: "make a new FAQ page for my website",
+    text: '"Make a new FAQ page for my website"',
+    copyText: "Make a new FAQ page for my website",
   },
+  moreInfo: [
+    "Type '@' to add file context to your request.",
+    "Note that PearAI Creator will create files and make in-line changes for you automatically."
+  ]
 };
+import AiderManualInstallation from "./AiderManualInstallation";
+

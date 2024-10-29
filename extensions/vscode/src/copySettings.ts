@@ -7,7 +7,11 @@ const pearAISettingsDir = path.join(os.homedir(), '.pearai');
 const pearAIDevExtensionsDir = path.join(os.homedir(), '.pearai', 'extensions');
 
 const firstLaunchFlag = path.join(pearAISettingsDir, 'firstLaunch.flag');
-export const isFirstLaunch = fs.existsSync(firstLaunchFlag);
+export const isFirstLaunch = !fs.existsSync(firstLaunchFlag);
+const firstPearAICreatorLaunchFlag = path.join(pearAISettingsDir, 'firstLaunchCreator.flag');
+export const isFirstPearAICreatorLaunch = !fs.existsSync(firstPearAICreatorLaunchFlag);
+
+
 
 function getPearAISettingsDir() {
     const platform = process.platform;
@@ -106,6 +110,14 @@ export function importUserSettingsFromVSCode() {
             copyVSCodeSettingsToPearAIDir();
             fs.writeFileSync(firstLaunchFlag, 'This is the first launch flag file');
             vscode.window.showInformationMessage('Your VSCode settings and extensions have been transferred over to PearAI! You may need to restart your editor for the changes to take effect.', 'Ok');
+        }
+    }, 3000);
+
+    setTimeout(() => {
+        const flagFile = firstPearAICreatorLaunchFlag;
+        const productName ='PearAI Creator';
+        if (!fs.existsSync(flagFile)) {
+            fs.writeFileSync(flagFile, `This is the first launch flag file for ${productName}`);
         }
     }, 3000);
 }

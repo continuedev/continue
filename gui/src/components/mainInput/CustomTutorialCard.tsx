@@ -15,6 +15,7 @@ export interface TutorialContent {
     text: string;
     copyText: string;
   };
+  moreInfo: string[];
 }
 
 const fadeIn = keyframes`
@@ -53,6 +54,9 @@ const AnimatedListItem = styled.li`
   &:nth-child(3) {
     animation-delay: 0.3s;
   }
+  &:nth-child(4) {
+    animation-delay: 0.4s;
+  }
   list-style: none;
 `;
 
@@ -79,7 +83,7 @@ export function CustomTutorialCard({
       <ul className="text-gray-300 space-y-4 pl-0">
         <AnimatedListItem>
           <div className="flex">
-            <div className="flex items-center gap-2 min-w-[120px]">
+            <div className="flex items-center gap-2 min-w-[160px]">
               <Check className="h-4 w-4 text-green-500" />
               <strong>Good for</strong>
             </div>
@@ -88,16 +92,16 @@ export function CustomTutorialCard({
         </AnimatedListItem>
         <AnimatedListItem>
           <div className="flex">
-            <div className="flex items-center gap-2 min-w-[120px]">
+            <div className="flex items-center gap-2 min-w-[160px]">
               <X className="h-4 w-4 text-red-500" />
-              <strong>Not good for</strong>
+              <strong>Less suited for</strong>
             </div>
             <span>{content.notGoodFor}</span>
           </div>
         </AnimatedListItem>
         <AnimatedListItem>
           <div className="flex">
-            <div className="flex items-center gap-2 min-w-[120px]">
+            <div className="flex items-center gap-2 min-w-[160px]">
               <LightBulbIcon className="h-4 w-4 text-yellow-500" />
               <strong>Try yourself</strong>
             </div>
@@ -107,6 +111,21 @@ export function CustomTutorialCard({
             </span>
           </div>
         </AnimatedListItem>
+        {content.moreInfo && content.moreInfo.length > 0 && (
+          <AnimatedListItem>
+            <div className="flex">
+              <div className="flex items-center gap-2 min-w-[160px]">
+                <LightBulbIcon className="h-4 w-4 text-blue-500" />
+                <strong>More information</strong>
+              </div>
+              <div>
+                {content.moreInfo.map((info, index) => (
+                  <div key={index}>{info}</div>
+                ))}
+              </div>
+            </div>
+          </AnimatedListItem>
+        )}
       </ul>
     </CustomTutorialCardDiv>
   );

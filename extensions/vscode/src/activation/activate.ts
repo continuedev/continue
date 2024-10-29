@@ -21,7 +21,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const vscodeExtension = new VsCodeExtension(context);
 
-  setupPearAPPLayout();
+  setupPearAppLayout();
 
   migrate("showWelcome_1", () => {
     vscode.commands.executeCommand(
@@ -65,7 +65,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 }
 
 // Custom Layout settings that we want default for PearAPP
-const setupPearAPPLayout = () => {
+const setupPearAppLayout = () => {
   // * always * move pearai extension to auxiliary bar (secondary side bar)
   vscode.commands.executeCommand("workbench.action.movePearExtensionToAuxBar");
 
