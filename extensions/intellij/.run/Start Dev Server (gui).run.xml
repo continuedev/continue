@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Start Dev Server (gui)" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/gui/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="dev" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs />
+    <EXTENSION ID="com.intellij.lang.javascript.buildTools.npm.rc.StartBrowserRunConfigurationExtension">
+      <browser start="true" with-js-debugger="true" url="http://localhost:5173/jetbrains_index.html" />
+    </EXTENSION>
+    <method v="2" />
+  </configuration>
+</component>
