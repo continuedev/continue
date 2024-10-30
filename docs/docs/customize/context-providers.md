@@ -409,7 +409,8 @@ Reference table schemas from Sqlite, Postgres, MSSQL, and MySQL databases.
               "password": "yourPassword",
               "port": 5432
             }
-          }{
+          },
+          {
             "name": "exampleMssql",
             "connection_type": "mssql",
             "connection": {
