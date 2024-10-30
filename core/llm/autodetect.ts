@@ -47,8 +47,8 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "continue-proxy",
   "mistral",
   "sambanova",
-  "vertexai"
-  "watsonx",
+  "vertexai",
+  "watsonx"
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -220,7 +220,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   }
 
   if (lower.includes("granite")) {
-        return "granite";
+    return "granite";
   }
 
   return "chatml";
