@@ -7,7 +7,7 @@ sidebar_position: 5
 
 ## Built-in slash commands
 
-Continue has a large library of built-in slash commands, but when you first install we only display the most commonly used ones, like “/edit”, “/comment”, and “/share”. To add more actions, you can open [config.json](../customize/config.md) and add them to the `slashCommands` array.
+Continue has a large library of built-in slash commands, but when you first install we only display the most commonly used ones, like “/edit”, “/comment”, and “/share”. To add more actions, you can open [config.json](../reference.md) and add them to the `slashCommands` array.
 
 ## Custom slash commands
 

@@ -1,11 +1,8 @@
 ---
-title: Configuration
-description: Continue configuration
+title: Reference
+description: Reference for the Continue _config.json_ configuration file
 keywords: [config, config_schema.json, json]
-sidebar_position: 2
 ---
-
-# Continue Configuration
 
 Continue can be deeply customized. User-level configuration is stored and can be edited in your home directory in [`config.json`](#configjson):
 
@@ -464,7 +461,7 @@ Several experimental config parameters are available, as described below:
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
   - `fixGrammar`: Prompt for fixing grammar or spelling.
-- `useChromiumForDocsCrawling`: use chromium to crawl docs instead of default lighter-weight tool that can't render sites. Downloads and installs Chromium to `~/.continue/.utils`.
+- `useChromiumForDocsCrawling`: Use chromium to crawl docs instead of default lighter-weight tool that can't render sites. Downloads and installs Chromium to `~/.continue/.utils`.
 
 Example
 
