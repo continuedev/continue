@@ -1,11 +1,11 @@
 ---
-title: Continue Configuration
-description: Continue configuration files
+title: Configuration
+description: Continue configuration
 keywords: [config, config_schema.json, json]
 sidebar_position: 2
 ---
 
-# Continue Config
+# Continue Configuration
 
 Continue can be deeply customized. User-level configuration is stored and can be edited in your home directory in [`config.json`](#configjson):
 
@@ -406,7 +406,7 @@ Example
 
 ### `disableSessionTitles`
 
-Prevents generating summary titles for each chat session when set to true.
+Prevents generating summary titles for each chat session when set to `true`.
 
 ### `ui`
 
@@ -414,10 +414,10 @@ Customizable UI settings to control interface appearance and behavior.
 
 **Properties:**
 
-- `codeBlockToolbarPosition`: Sets the toolbar position within code blocks, either "top" (default) or "bottom".
+- `codeBlockToolbarPosition`: Sets the toolbar position within code blocks, either `top` (default) or `bottom`.
 - `fontSize`: Specifies font size for UI elements.
-- `displayRawMarkdown`: If true, shows raw markdown in responses.
-- `showChatScrollbar`: If true, enables a scrollbar in the chat window.
+- `displayRawMarkdown`: If `true`, shows raw markdown in responses.
+- `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
 
 Example:
 
@@ -480,12 +480,12 @@ Several experimental config parameters are available, as described below:
   - `inlineEdit`: Model title for inline edits.
   - `applyCodeBlock`: Model title for applying code blocks.
   - `repoMapFileSelection`: Model title for repo map selections.
-- `readResponseTTS`: If true, reads LLM responses aloud with TTS. Default is true.
+- `readResponseTTS`: If `true`, reads LLM responses aloud with TTS. Default is `true`.
 - `promptPath`: Change the path to custom prompt files from the default ".prompts"
 - `quickActions`: Array of custom quick actions
   - `title` (**required**): Display title for the quick action.
   - `prompt` (**required**): Prompt for quick action.
-  - `sendToChat`: If true, sends result to chat; else inserts in document. Default is false.
+  - `sendToChat`: If `true`, sends result to chat; else inserts in document. Default is `false`.
 - `contextMenuPrompts`:
   - `comment`: Prompt for commenting code.
   - `docstring`: Prompt for adding docstrings.
