@@ -21,22 +21,22 @@ export async function startAiderProcess(
   const isBrewInstalled = IS_MAC || IS_LINUX ? await checkBrewInstallation() : true;
   const isPythonInstalled = await checkPythonInstallation();
   const isAiderInstalled = await checkAiderInstallation();
+  let setAiderUninstalled = false;
   // If this is the first time running, try to install aider automatically if we can
   if (isFirstPearAICreatorLaunch) {
     if (!isAiderInstalled) {
       // If aider is not installed and prereq's are not installed, then go to manual installation
       if (!isBrewInstalled || !isPythonInstalled) {
-        return
+        setAiderUninstalled = true;
       } else { // If prereq's are installed, then try to install aider automatically
-        await handleAiderNotInstalled(core);
-        return
+        setAiderUninstalled = (await handleAiderNotInstalled(core)) || true;
       }
     }
   } else {
     // If this is not the first time we are running and aider is not installed, give up.
     // Users will have to manual install
     if (!isAiderInstalled) {
-      return
+      setAiderUninstalled = true;
     }
   }
 
@@ -47,7 +47,12 @@ export async function startAiderProcess(
 
   if (aiderModel) {
     try {
-      await aiderModel.startAiderChat(aiderModel.model, aiderModel.apiKey);
+      if (setAiderUninstalled) {
+        await aiderModel.setAiderState("uninstalled");
+      }
+      else {
+        await aiderModel.startAiderChat(aiderModel.model, aiderModel.apiKey);
+      }
     } catch (e) {
       console.warn(`Error starting Aider process: ${e}`);
     }
@@ -56,30 +61,16 @@ export async function startAiderProcess(
   }
 }
 
-export async function refreshAiderProcessStatus(core: Core) {
+export async function refreshAiderProcessState(core: Core) {
   const config = await core.configHandler.loadConfig();
   const aiderModel = config.models.find((model) => model instanceof Aider) as Aider | undefined;
 
   if (!aiderModel) {
-    core.send("aiderProcessStateUpdate", { status: "stopped" });
+    core.send("aiderProcessStateUpdate", { state: "stopped" });
     return;
   }
 
-  if (aiderModel.isAiderUp) {
-    core.send("aiderProcessStateUpdate", { status: "ready" });
-    return;
-  }
-
-  if (aiderModel.isAiderStarted) {
-    core.send("aiderProcessStateUpdate", { status: "starting" });
-  }
-
-  if (aiderModel.isAiderStopped) {
-    core.send("aiderProcessStateUpdate", { status: "stopped" });
-  }
-
-  // Else, means there was a problem with installation
-  core.send("aiderProcessStateUpdate", { status: "uninstalled" });
+  core.send("aiderProcessStateUpdate", { state: aiderModel.getAiderState() });
 }
 
 export async function killAiderProcess(core: Core) {
@@ -92,7 +83,6 @@ export async function killAiderProcess(core: Core) {
     if (aiderModels.length > 0) {
       aiderModels.forEach((model) => {
         model.killAiderProcess();
-        model.isAiderStopped = true
       });
     }
   } catch (e) {
@@ -193,7 +183,7 @@ export async function openAiderPanel(
   panel.onDidDispose(
     () => {
       // Kill background process
-      core.invoke("llm/killAiderProcess", undefined);
+      // core.invoke("llm/killAiderProcess", undefined);
 
       // The following order is important as it does not reset the history in chat when closing creator
       vscode.commands.executeCommand("pearai.focusContinueInput");
@@ -250,6 +240,8 @@ async function checkBrewInstallation(): Promise<boolean> {
   }
 }
 
+
+// Return whether or not automatic install worked or not
 async function handleAiderNotInstalled(core: Core) {
   const isPythonInstalled = await checkPythonInstallation();
   console.log("PYTHON CHECK RESULT :");
@@ -261,7 +253,7 @@ async function handleAiderNotInstalled(core: Core) {
   console.log("AIDER CHECK RESULT :");
   console.dir(isAiderInstalled);
   if (isAiderInstalled) {
-    return;
+    return false;
   }
 
   if (!isAiderInstalled) {
@@ -278,9 +270,11 @@ async function handleAiderNotInstalled(core: Core) {
         execSync(command);
         // If execution was successful, start the Aider process
         core.invoke("llm/startAiderProcess", undefined);
+        return false;
     } catch (error) {
         // Handle the error case
         console.error("Failed to execute Aider command:", error);
+        return true;
     }
   }
 }
@@ -297,19 +291,19 @@ async function executeCommand(command: string): Promise<string> {
   });
 }
 
-function getPythonInstallCommand(): string {
-  switch (PLATFORM) {
-    case "win32":
-      return "winget install Python.Python.3.9";
-    case "darwin":
-      return "brew install python@3";
-    default: // Linux
-      return "sudo apt-get install -y python3";
-  }
-}
 
 // Commented out as the user must do this themselves
 
+// function getPythonInstallCommand(): string {
+//   switch (PLATFORM) {
+//     case "win32":
+//       return "winget install Python.Python.3.9";
+//     case "darwin":
+//       return "brew install python@3";
+//     default: // Linux
+//       return "sudo apt-get install -y python3";
+//   }
+// }
 // async function isPythonInPath(): Promise<boolean> {
 //   try {
 //     return checkPythonInstallation();

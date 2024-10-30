@@ -33,8 +33,6 @@ import Aider from "./llm/llms/Aider";
 import {
   startAiderProcess,
   killAiderProcess,
-  aiderCtrlC,
-  aiderResetSession
 } from "../extensions/vscode/src/integrations/aider/aider";
 
 

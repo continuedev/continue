@@ -26,7 +26,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   aiderMode: [undefined, void];
   aiderCtrlC: [undefined, void];
   aiderResetSession: [undefined, void];
-  refreshAiderProcessStatus: [undefined, void];
+  refreshAiderProcessState: [undefined, void];
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
   focusEditor: [undefined, void];

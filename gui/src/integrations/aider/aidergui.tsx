@@ -28,7 +28,7 @@ import {
   deleteMessage,
   newSession,
   setAiderInactive,
-  updateAiderProcessStatus,
+  updateAiderProcessState,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
@@ -59,11 +59,11 @@ function AiderGUI() {
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
-  const aiderProcessStatus = useSelector(
-    (state: RootState) => state.state.aiderProcessStatus,
+  const aiderProcessState = useSelector(
+    (state: RootState) => state.state.aiderProcessState,
   );
 
-  // console.dir(aiderProcessStatus.status);
+  // console.dir(aiderProcessState.state);
 
   // TODO: Remove this later. This is supposed to be set in Onboarding, but
   // many users won't reach onboarding screen due to cache. So set it manually,
@@ -173,13 +173,13 @@ function AiderGUI() {
   );
 
   useEffect(() => {
-    ideMessenger.request("refreshAiderProcessStatus", undefined);
+    ideMessenger.request("refreshAiderProcessState", undefined);
   }, []);
 
   useWebviewListener(
     "aiderProcessStateUpdate",
     async (data) => {
-      dispatch(updateAiderProcessStatus({ status: data.status }));
+      dispatch(updateAiderProcessState({ state: data.state }));
     },
     [],
   );
@@ -198,16 +198,16 @@ function AiderGUI() {
     [state.aiderHistory],
   );
 
-  if (aiderProcessStatus.status !== "ready") {
+  if (aiderProcessState.state !== "ready") {
     let msg = "";
-    if (aiderProcessStatus.status === "stopped") {
+    if (aiderProcessState.state === "stopped") {
       msg = "PearAI Creator (Powered By aider) process is not running.";
     }
-    if (aiderProcessStatus.status === "uninstalled") {
+    if (aiderProcessState.state === "uninstalled") {
       return <AiderManualInstallation />;
     }
 
-    if (aiderProcessStatus.status === "starting") {
+    if (aiderProcessState.state === "starting") {
       msg = "Spinning up PearAI Creator (Powered By aider), please give it a second...";
     }
 
