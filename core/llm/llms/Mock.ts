@@ -2,14 +2,14 @@ import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 class Mock extends BaseLLM {
-  static Completion = "Test Completion";
+  completion = "Test Completion";
   static providerName: ModelProvider = "mock";
 
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    yield Mock.Completion;
+    yield this.completion;
   }
 
   protected async *_streamChat(
@@ -18,7 +18,7 @@ class Mock extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     yield {
       role: "assistant",
-      content: Mock.Completion,
+      content: this.completion,
     };
   }
 }

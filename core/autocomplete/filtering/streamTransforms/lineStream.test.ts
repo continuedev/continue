@@ -1,5 +1,5 @@
 import { jest } from "@jest/globals";
-import * as lineStream from "./streamTransforms/lineStream";
+import * as lineStream from "./lineStream";
 
 describe("lineStream", () => {
   let mockFullStop: jest.Mock;

@@ -2,10 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import Mock from "../../../llm/llms/Mock";
 import { testConfigHandler, testIde } from "../../../test/util/fixtures";
-import {
-  AutocompleteInput,
-  CompletionProvider,
-} from "../../CompletionProvider";
+import { CompletionProvider } from "../../completionProvider";
+import { AutocompleteInput } from "../../types";
 
 const FIM_DELIMITER = "<|fim|>";
 

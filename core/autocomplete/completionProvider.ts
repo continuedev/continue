@@ -32,7 +32,11 @@ import { getConfigJsonPath } from "../util/paths.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
-import { stopAtStopTokens } from "./filtering/streamTransforms/charStream.js";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+  stopAtStopTokens,
+} from "./filtering/streamTransforms/charStream.js";
 import {
   avoidPathLineAndEmptyComments,
   noTopLevelKeywordsMidline,
