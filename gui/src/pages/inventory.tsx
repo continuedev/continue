@@ -3,7 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PerplexityGUI from "@/integrations/perplexity/perplexitygui";
 import AiderGUI from "@/integrations/aider/aidergui";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useWebviewListener } from "@/hooks/useWebviewListener";
+
 
 const tabs = [
   { id: "inventory", name: "Inventory", component: <InventoryPage /> },
@@ -22,9 +24,55 @@ const tabs = [
 export default function Inventory() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("inventory");
   const currentTab = location.pathname.split("/").pop() || "inventory";
+  const platform = navigator.userAgent.toLowerCase();
+
+  // Update activeTab whenever location changes
+  useEffect(() => {
+    const tab = location.pathname.split("/").pop() || "inventory";
+    setActiveTab(tab);
+  }, [location]);
+
+  // listen for navigation change requests from vscode
+  useWebviewListener(
+    "navigateToCreator",
+    async () => {
+      setActiveTab("aiderMode"); // Set active tab immediately
+      navigate("/inventory/aiderMode");
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "navigateToSearch",
+    async () => {
+      setActiveTab("perplexityMode"); // Set active tab immediately
+      navigate("/inventory/perplexityMode");
+    },  
+    [],
+  );
+
+  useWebviewListener(
+    "navigateToInventory",
+    async () => {
+      setActiveTab("inventory"); // Set active tab immediately
+      navigate("/inventory");
+    },  
+    [],
+  );
+
+  // IDE event listeners
+  useWebviewListener(
+    "getCurrentTab",
+    async () => {
+      return activeTab;
+    },
+    [activeTab], // Add dependency to ensure we have latest value
+  );
 
   const handleTabChange = (value: string) => {
+    setActiveTab(value); // Update active tab immediately
     if (value === "inventory") {
       navigate("/inventory");
       return;
@@ -32,30 +80,8 @@ export default function Inventory() {
     navigate(`/inventory/${value}`);
   };
 
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      const activeElement = document.activeElement;
-      if (
-        activeElement instanceof HTMLElement &&
-        (activeElement.isContentEditable ||
-          activeElement.tagName === "INPUT" ||
-          activeElement.tagName === "TEXTAREA" ||
-          activeElement.tagName === "SELECT")
-      ) {
-        return;
-      }
-      if (event.key >= "1" && event.key <= "3") {
-        // Convert key to index (0-2)
-        const index = parseInt(event.key) - 1;
-        if (index >= 0 && index < tabs.length) {
-          handleTabChange(tabs[index].id);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
+  const isMac = platform.includes("mac");
+  const modifierKey = isMac ? '⌘' : "Ctrl";
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
@@ -79,7 +105,7 @@ export default function Inventory() {
                   }`}
                 >
                   {`${tab.name}`}
-                  <kbd className="ml-1">{index + 1}</kbd>
+                  <kbd className="ml-1">{modifierKey}</kbd><kbd className="ml-1">{index + 1}</kbd>
                 </TabsTrigger>
               ))}
             </TabsList>

@@ -32,6 +32,7 @@ import { getExtensionUri } from "./util/vscode";
 import { aiderCtrlC, aiderResetSession, openAiderPanel, refreshAiderProcessStatus } from './integrations/aider/aider';
 import { handlePerplexityMode } from "./integrations/perplexity/perplexity";
 import { PEAR_CONTINUE_VIEW_ID } from "./ContinueGUIWebviewViewProvider";
+import { handleIntegrationShortcutKey } from "./util/integrationUtils";
 
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -311,6 +312,15 @@ const commandsMap: (
     },
     "pearai.docsReIndex": async () => {
       core.invoke("context/indexDocs", { reIndex: true });
+    },
+    "pearai.toggleCreator": async () => {
+      await handleIntegrationShortcutKey("navigateToCreator", "aiderMode", sidebar, PEAR_OVERLAY_VIEW_ID)
+    },
+    "pearai.toggleSearch": async () => {
+      await handleIntegrationShortcutKey("navigateToSearch", "perplexityMode", sidebar, PEAR_OVERLAY_VIEW_ID)
+    },
+    "pearai.toggleInventory": async () => {
+      await handleIntegrationShortcutKey("navigateToInventory", "inventory", sidebar, PEAR_OVERLAY_VIEW_ID)
     },
     "pearai.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
