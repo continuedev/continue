@@ -10,12 +10,10 @@ We recommend configuring **GPT-4o** as your chat model.
 ```json title="config.json"
 "models": [{
     "title": "GPT-4o",
-    "provider": "openai",                    // As of Oct 15, "azure" isn't recognized
-    "apiType": "azure",                      // Needed to construct Azure-style URL
+    "provider": "azure",
     "model": "gpt-4o",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "deployment": "<YOUR_DEPLOYMENT_NAME>",  // Your deployment, eg "gpt4o-beta"
-    "apiVersion": "<YOUR_API_VERSION>",      // Typically a date like "2024-06-01"
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",
     "apiKey": "<MY_API_KEY>"                 // If you use subscription key, try using Azure gateway to rename it apiKey
 }]
 ```
@@ -36,7 +34,7 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 ```json title="config.json"
 "embeddingsProvider": {
-    "provider": "azure",
+    "provider": "openai",
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
     "engine": "<YOUR_ENGINE>",
@@ -68,12 +66,7 @@ Azure OpenAI requires a handful of additional parameters to be configured, such 
 
 To find this information in _Azure AI Studio_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
 
-For example, a Target URI of:
-
-````````````
-https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                    ```````````                              ******************
-````````````
+For example, a Target URI of: `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview`
 
 would map to the following:
 
@@ -81,8 +74,7 @@ would map to the following:
 {
   "title": "GPT-4o Azure",
   "model": "gpt-4o",
-  "provider": "openai",
-  "apiType": "azure",
+  "provider": "azure",
   "apiBase": "https://just-an-example.openai.azure.com",
   "deployment": "gpt-4o-july",
   "apiVersion": "2023-03-15-preview",
