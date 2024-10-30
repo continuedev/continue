@@ -133,6 +133,7 @@ export const tabAutocompleteOptionsSchema = z.object({
   debounceDelay: z.number(),
   maxSuffixPercentage: z.number(),
   prefixPercentage: z.number(),
+  transform: z.boolean().optional(),
   template: z.string().optional(),
   multilineCompletions: z.enum(["always", "never", "auto"]),
   slidingWindowPrefixPercentage: z.number(),
