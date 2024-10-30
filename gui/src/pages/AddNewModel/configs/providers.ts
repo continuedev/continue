@@ -242,6 +242,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [models.commandR, models.commandRPlus],
+    apiKeyUrl: "https://docs.cohere.com/v2/docs/rate-limits",
   },
   groq: {
     title: "Groq",
@@ -328,6 +329,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       p.params.contextLength = 4096;
       return p;
     }),
+    apiKeyUrl: "https://api.together.xyz/settings/api-keys",
   },
   gemini: {
     title: "Google Gemini API",
