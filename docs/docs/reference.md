@@ -40,7 +40,7 @@ Parameters that control the behavior of text generation and completion settings.
 - `frequencePenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
 - `mirostat`: Enables Mirostat sampling, which controls the perplexity during text generation. Supported by Ollama, LM Studio, and llama.cpp providers (default: `0`, where `0` = disabled, `1` = Mirostat, and `2` = Mirostat 2.0).
 - `stop`: An array of stop tokens that, when encountered, will terminate the completion. Allows specifying multiple end conditions.
-- `maxTokens`: The maximum number of tokens to generate in a completion (default: `600`).
+- `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
 - `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
 - `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
 
@@ -285,7 +285,7 @@ Custom commands initiated by typing "/" in the sidebar. Commands include predefi
 
 **Properties:**
 
-- `name`: The command name. Options include "issue", "share", "cmd", "edit", "comment", "http", "commit", "review", or a custom name.
+- `name`: The command name. Options include "issue", "share", "cmd", "edit", "comment", "http", "commit", and "review".
 - `description`: Brief description of the command.
 - `step`: (Deprecated) Used for built-in commands; set the name for pre-configured options.
 - `params`: Additional parameters to configure command behavior (command-specific - see code for command)
@@ -396,28 +396,6 @@ Example:
     "codeBlockToolbarPosition": "bottom",
     "fontSize": 14,
     "displayRawMarkdown": false
-  }
-}
-```
-
-### `analytics`
-
-You can set up Continue to route analytics to your own provider.
-
-**Properties:**
-
-- `provider` (**required**): Specifies the analytics provider, options are "posthog" or "logstash"
-- `url`: The URL where analytics data is sent
-- `clientKey`: Key for identifying the client within analytics
-
-Example:
-
-```json title="config.json"
-{
-  "analytics": {
-    "provider": "posthog",
-    "url": "https://analytics.example.com",
-    "clientKey": "CLIENT_KEY"
   }
 }
 ```

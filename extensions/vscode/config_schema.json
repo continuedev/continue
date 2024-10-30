@@ -368,7 +368,7 @@
             "presencePenalty": null,
             "frequencyPenalty": null,
             "stop": null,
-            "maxTokens": 600
+            "maxTokens": 2048
           },
           "allOf": [
             {
@@ -2851,12 +2851,11 @@
           "properties": {
             "provider": {
               "type": "string",
-              "enum": ["posthog", "logstash"],
+              "enum": ["posthog"],
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [
-                "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field.",
-                "### Logstash\nContinue's Logstash integration uses the TCP input at the specified URL"
+                "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field."
               ]
             },
             "url": {
@@ -2880,18 +2879,6 @@
               },
               "then": {
                 "required": ["clientKey"]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "provider": {
-                    "enum": ["logstash"]
-                  }
-                }
-              },
-              "then": {
-                "required": ["url"]
               }
             }
           ]
