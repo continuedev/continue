@@ -134,7 +134,7 @@ class VerticalDiffBlock(
 
     private fun createButtons(): Pair<JButton, JButton> {
         val rejectBtn =
-            createButton("${getAltKeyLabel()}⇧N", JBColor(0x99FF0000.toInt(), 0x99FF0000.toInt())).apply {
+            createButton("${getAltKeyLabel()}↑N", JBColor(0x99FF0000.toInt(), 0x99FF0000.toInt())).apply {
                 addActionListener {
                     handleReject();
                     onAcceptReject(this@VerticalDiffBlock, false)
@@ -143,7 +143,7 @@ class VerticalDiffBlock(
             }
 
         val acceptBtn =
-            createButton("${getAltKeyLabel()}⇧Y", JBColor(0x9900FF00.toInt(), 0x9900FF00.toInt())).apply {
+            createButton("${getAltKeyLabel()}↑Y", JBColor(0x9900FF00.toInt(), 0x9900FF00.toInt())).apply {
                 addActionListener {
                     handleAccept();
                     onAcceptReject(this@VerticalDiffBlock, true)
