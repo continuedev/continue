@@ -644,8 +644,8 @@ type ModelProvider =
   | "vllm"
   | "mock"
   | "cerebras"
-  | "vertexai";
-
+  | "vertexai"
+  | "askSage";
 
 export type ModelName =
   | "AUTODETECT"
@@ -827,7 +827,7 @@ export type EmbeddingsProviderName =
   | "nvidia"
   | "voyage"
   | "mistral"
-  | "vertexai";
+  | "vertexai"
   | "watsonx";
 
 export interface EmbedOptions {
@@ -887,6 +887,7 @@ export interface TabAutocompleteOptions {
   debounceDelay: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
+  transform?: boolean;
   template?: string;
   multilineCompletions: "always" | "never" | "auto";
   slidingWindowPrefixPercentage: number;

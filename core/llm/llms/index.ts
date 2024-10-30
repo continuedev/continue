@@ -43,6 +43,7 @@ import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
 import VertexAI from "./VertexAI";
+import Asksage from "./Asksage";
 
 const LLMs = [
   Anthropic,
@@ -80,6 +81,7 @@ const LLMs = [
   SambaNova,
   Mock,
   Cerebras,
+  Asksage,
   VertexAI
 ];
 

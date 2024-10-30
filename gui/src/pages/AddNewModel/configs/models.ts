@@ -311,7 +311,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8192,
     },
     icon: "meta.png",
-    providerOptions: ["groq"],
+    providerOptions: ["groq", "askSage"],
     isOpenSource: false,
   },
   llama318bChat: {
@@ -618,7 +618,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 32000,
     },
     icon: "mistral.png",
-    providerOptions: ["mistral"],
+    providerOptions: ["mistral", "askSage"],
     isOpenSource: false,
   },
   geminiPro: {
@@ -644,7 +644,7 @@ export const models: { [key: string]: ModelPackage } = {
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
-    providerOptions: ["gemini", "free-trial"],
+    providerOptions: ["gemini", "free-trial", "askSage"],
     isOpenSource: false,
   },
   gemini15Flash: {
@@ -713,7 +713,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai", "free-trial"],
+    providerOptions: ["openai", "free-trial", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -728,7 +728,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
-    providerOptions: ["openai"],
+    providerOptions: ["openai", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -741,7 +741,7 @@ export const models: { [key: string]: ModelPackage } = {
       contextLength: 8096,
       title: "GPT-3.5-Turbo",
     },
-    providerOptions: ["openai", "free-trial"],
+    providerOptions: ["openai", "free-trial", "askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -755,7 +755,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3.5 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial"],
+    providerOptions: ["anthropic", "free-trial", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -769,7 +769,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Opus",
       apiKey: "",
     },
-    providerOptions: ["anthropic"],
+    providerOptions: ["anthropic", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -783,7 +783,7 @@ export const models: { [key: string]: ModelPackage } = {
       title: "Claude 3 Sonnet",
       apiKey: "",
     },
-    providerOptions: ["anthropic", "free-trial"],
+    providerOptions: ["anthropic", "free-trial", "askSage"],
     icon: "anthropic.png",
     isOpenSource: false,
   },
@@ -949,6 +949,36 @@ export const models: { [key: string]: ModelPackage } = {
 
 
 
+  gpt4gov: {
+    title: "GPT-4 gov",
+    description:
+      "U.S. Government. Most capable model today - which is similar to GPT-4o but approved for use by the U.S. Government.",
+    params: {
+      model: "gpt4-gov",
+      contextLength: 128_000,
+      title: "GPT-4 gov",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt4ogov: {
+    title: "GPT-4o gov",
+    description:
+      "U.S. Government. Most capable model today - which is similar to GPT-4o but approved for use by the U.S. Government.",
+    params: {
+      model: "gpt-4o-gov",
+      contextLength: 128_000,
+      title: "GPT-4o",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
+    },
+    providerOptions: ["askSage"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   AUTODETECT: {
     title: "Autodetect",
     description:
