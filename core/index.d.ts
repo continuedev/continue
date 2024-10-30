@@ -649,7 +649,6 @@ type ModelProvider =
   | "cerebras"
   | "askSage";
 
-
 export type ModelName =
   | "AUTODETECT"
   // OpenAI
@@ -890,6 +889,7 @@ export interface TabAutocompleteOptions {
   debounceDelay: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
+  transform?: boolean;
   template?: string;
   multilineCompletions: "always" | "never" | "auto";
   slidingWindowPrefixPercentage: number;
