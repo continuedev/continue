@@ -189,34 +189,6 @@ Example
 }
 ```
 
-### `embeddingsProvider`
-
-Configuration for the embeddings provider used for codebase embeddings.
-
-**Properties:**
-
-- `provider`: The embeddings provider (`"huggingface-tei"`, `"transformers.js"`, `"ollama"`, `"openai"`, `"cohere"`, `"free-trial"`, `"gemini"`, `"voyage"`, `"nvidia"`, `"bedrock"`, `"sagemaker"`, `"vertex"`).
-- `model`: Model name for embeddings.
-- `apiKey`: API key for the provider.
-- `apiBase`: Base URL for API requests.
-- `requestOptions`: Same format as `requestOptions` for embeddings provider.
-- `maxChunkSize`: Maximum tokens per document chunk (minimum: 128).
-- `maxBatchSize`: Maximum chunks per request (minimum: 1).
-- `region`: Region where the model is hosted.
-- `profile`: AWS security profile.
-
-Example
-
-```json title="config.json"
-{
-  "embeddingsProvider": {
-    "provider": "voyage",
-    "model": "voyage-code-2",
-    "apiKey": "<VOYAGE_API_KEY>"
-  }
-}
-```
-
 ### `reranker`
 
 Configuration for the reranker model used in response ranking.
@@ -277,13 +249,13 @@ Configuration for analytics tracking.
 - `url`: URL for analytics data.
 - `clientKey`: Client key for analytics.
 
-### embeddingsProvider
+### `embeddingsProvider`
 
-Defines the provider and settings for codebase embeddings, allowing specific models to handle code embeddings.
+Embeddings model settings - the model used for @Codebase and @docs.
 
 **Properties:**
 
-- `provider` (**required**): Specifies the embeddings provider, with options including "transformers.js", "ollama", "openai", "cohere", "free-trial", "gemini", etc
+- `provider` (**required**): Specifies the embeddings provider, with options including `transformers.js`, `ollama`, `openai`, `cohere`, `free-trial`, `gemini`, etc
 - `model`: Model name for embeddings.
 - `apiKey`: API key for the provider.
 - `apiBase`: Base URL for API requests.
