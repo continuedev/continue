@@ -36,7 +36,6 @@ import { RecentlyEditedRange } from "./recentlyEdited.js";
 import { RootPathContextService } from "./services/RootPathContextService.js";
 import {
   avoidPathLineAndEmptyComments,
-  noTopLevelKeywordsMidline,
   skipPrefixes,
   stopAtLines,
   stopAtRepeatingLines,
@@ -50,11 +49,7 @@ import Handlebars from "handlebars";
 import { getConfigJsonPath } from "../util/paths.js";
 import { BracketMatchingService } from "./services/BracketMatchingService.js";
 import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
-import {
-  noFirstCharNewline,
-  onlyWhitespaceAfterEndOfLine,
-  stopAtStopTokens,
-} from "./streamTransforms/charStream.js";
+import { stopAtStopTokens } from "./streamTransforms/charStream.js";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -733,6 +728,14 @@ export class CompletionProvider {
         //   fullStop,
         // );
         charGenerator = stopAtStopTokens(charGenerator, stop);
+        charGenerator =
+          this.bracketMatchingService.stopOnUnmatchedClosingBracket(
+            charGenerator,
+            prefix,
+            suffix,
+            filepath,
+            multiline,
+          );
       }
 
       let lineGenerator = streamLines(charGenerator);

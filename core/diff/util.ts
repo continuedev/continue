@@ -111,10 +111,10 @@ export async function* streamLines(
         allLines.push(line);
       }
 
-      if (buffer === "" && chunk.endsWith("\n")) {
-        yield "";
-        allLines.push("");
-      }
+      // if (buffer === "" && chunk.endsWith("\n")) {
+      //   yield "";
+      //   allLines.push("");
+      // }
     }
     if (buffer.length > 0) {
       yield buffer;
