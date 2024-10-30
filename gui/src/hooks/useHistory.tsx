@@ -11,6 +11,8 @@ import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { useLastSessionContext } from "../context/LastSessionContext";
 
+const MAX_TITLE_LENGTH = 100;
+
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
     return text.slice(0, maxLength - 3) + "...";
@@ -48,11 +50,14 @@ function useHistory(dispatch: Dispatch) {
     return result.status === "success" ? result.content : undefined;
   }
 
-  async function saveSession() {
+  async function saveSession(open_new_session = true) {
     if (state.history.length === 0) return;
 
     const stateCopy = { ...state };
-    dispatch(newSession());
+    if (open_new_session){
+      dispatch(newSession());
+      updateLastSessionId(stateCopy.sessionId);
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     if (
@@ -81,7 +86,7 @@ function useHistory(dispatch: Dispatch) {
               .split("\n")
               .filter((l) => l.trim() !== "")
               .slice(-1)[0] || "",
-            50,
+            MAX_TITLE_LENGTH,
           )
         : stateCopy.title?.length > 0
         ? stateCopy.title
@@ -93,7 +98,6 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    updateLastSessionId(stateCopy.sessionId);
     return await ideMessenger.request("history/save", sessionInfo);
   }
 

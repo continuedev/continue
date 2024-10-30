@@ -2,7 +2,10 @@
 <idea-plugin>
     <id>com.github.continuedev.continueintellijextension</id>
     <name>Continue</name>
-    <vendor>continue-dev</vendor>
+    <vendor url="https://www.continue.dev/">continue-dev</vendor>
+    <change-notes>
+        <![CDATA[View the latest release notes on <a href="https://github.com/continuedev/continue/releases">GitHub</a>]]></change-notes>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.json</depends>
     <!-- com.intellij.openapi.module.ModuleManager.Companion is only available since this build -->

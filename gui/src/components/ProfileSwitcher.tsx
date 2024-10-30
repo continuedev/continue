@@ -116,7 +116,7 @@ function ListBoxOption({
         setHovered(false);
       }}
     >
-      <div className="flex items-center justify-between gap-3 h-5 relative">
+      <div className="relative flex h-5 items-center justify-between gap-3">
         {option.title}
       </div>
     </StyledListboxOption>
@@ -249,10 +249,14 @@ function ProfileSwitcher() {
         (session?.account ? (
           <ButtonWithTooltip
             tooltipPlacement="top-end"
-            text={`Logged in as ${session.account.label}`}
+            text={
+              session.account.label === ""
+                ? "Logged in"
+                : `Logged in as ${session.account.label}`
+            }
             onClick={logout}
           >
-            <UserCircleIconSolid className="w-4 h-4" />
+            <UserCircleIconSolid className="h-4 w-4" />
           </ButtonWithTooltip>
         ) : (
           <ButtonWithTooltip
@@ -260,7 +264,7 @@ function ProfileSwitcher() {
             text="Click to login to Continue"
             onClick={login}
           >
-            <UserCircleIconOutline className="w-4 h-4" />
+            <UserCircleIconOutline className="h-4 w-4" />
           </ButtonWithTooltip>
         ))}
     </>

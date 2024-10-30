@@ -1,4 +1,3 @@
-import { KeyboardEvent } from "react";
 import Document from "@tiptap/extension-document";
 import History from "@tiptap/extension-history";
 import Image from "@tiptap/extension-image";
@@ -17,7 +16,14 @@ import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
 import { debounce } from "lodash";
 import { usePostHog } from "posthog-js/react";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  KeyboardEvent,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { v4 } from "uuid";
@@ -38,18 +44,15 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import {
-  consumeMainEditorContent,
-  setEditingContextItemAtIndex,
-} from "../../redux/slices/stateSlice";
+import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
-  getPlatform,
   isJetBrains,
   isMetaEquivalentKeyPressed,
   isWebEnvironment,
 } from "../../util";
+import { handleMetaKeyPressJetBrains } from "../../util/handleMetaKeyPressJetBrains";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -60,7 +63,6 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
-import { handleMetaKeyPressJetBrains } from "../../util/handleMetaKeyPressJetBrains";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -154,7 +156,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
   const useActiveFile = useSelector(selectUseActiveFile);
 
-  const { saveSession } = useHistory(dispatch);
+  const { saveSession, loadSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
   const [isEditorFocused, setIsEditorFocused] = useState(false);
@@ -548,9 +550,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     setActiveKey(e.key);
 
     if (isMetaEquivalentKeyPressed(e)) {
-      e.stopPropagation();
-      e.preventDefault();
-
       const { key, code } = e;
       const isWebEnv = isWebEnvironment();
       const text = editor.state.doc.textBetween(
@@ -560,6 +559,8 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       if (isJetBrains()) {
         if (code === "KeyJ") {
+          e.stopPropagation();
+          e.preventDefault();
           setIgnoreHighlightedCode(true);
           setTimeout(() => {
             setIgnoreHighlightedCode(false);
@@ -567,11 +568,14 @@ function TipTapEditor(props: TipTapEditorProps) {
         }
 
         if (isMetaEquivalentKeyPressed(e)) {
+          e.stopPropagation();
+          e.preventDefault();
           handleMetaKeyPressJetBrains(e, text, editor.commands.setContent);
         }
       } else {
         if (code === "KeyL") {
-          debugger;
+          e.stopPropagation();
+          e.preventDefault();
           setIgnoreHighlightedCode(true);
           setTimeout(() => {
             setIgnoreHighlightedCode(false);
@@ -581,6 +585,8 @@ function TipTapEditor(props: TipTapEditorProps) {
 
         switch (key) {
           case "x":
+            e.stopPropagation();
+            e.preventDefault();
             if (isWebEnv) {
               await navigator.clipboard.writeText(text);
               editor.commands.deleteSelection();
@@ -589,6 +595,8 @@ function TipTapEditor(props: TipTapEditorProps) {
             }
             break;
           case "c":
+            e.stopPropagation();
+            e.preventDefault();
             if (isWebEnv) {
               await navigator.clipboard.writeText(text);
             } else {
@@ -596,6 +604,8 @@ function TipTapEditor(props: TipTapEditorProps) {
             }
             break;
           case "v":
+            e.stopPropagation();
+            e.preventDefault();
             if (isWebEnv) {
               const clipboardText = await navigator.clipboard.readText();
               editor.commands.insertContent(clipboardText);
@@ -606,6 +616,8 @@ function TipTapEditor(props: TipTapEditorProps) {
         }
       }
     } else if (e.key === "Escape") {
+      e.stopPropagation();
+      e.preventDefault();
       ideMessenger.post("focusEditor", undefined);
     }
   };
@@ -792,6 +804,17 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
     [editorFocusedRef, props.isMainInput],
     !props.isMainInput,
+  );
+
+  useWebviewListener(
+    "focusContinueSessionId",
+    async (data) => {
+      if (!props.isMainInput) {
+        return;
+      }
+      loadSession(data.sessionId);
+    },
+    [loadSession, props.isMainInput],
   );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);

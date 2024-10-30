@@ -5,6 +5,7 @@ import {
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
+  graniteTemplateMessages,
   llama2TemplateMessages,
   llama3TemplateMessages,
   llavaTemplateMessages,
@@ -48,6 +49,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "mistral",
   "mistral-vertexai",
   "sambanova",
+  "watsonx",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -79,6 +81,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "opus",
   "haiku",
   "pixtral",
+  "llama3.2",
 ];
 
 function modelSupportsImages(
@@ -220,6 +223,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "neural-chat";
   }
 
+  if (lower.includes("granite")) {
+        return "granite";
+  }
+
   return "chatml";
 }
 
@@ -253,6 +260,7 @@ function autodetectTemplateFunction(
       llava: llavaTemplateMessages,
       "codellama-70b": codeLlama70bTemplateMessages,
       gemma: gemmaTemplateMessage,
+      granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
       none: null,
     };

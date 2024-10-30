@@ -1,5 +1,6 @@
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
@@ -26,7 +27,6 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { arePathsEqual } from "../util/arePathsEqual";
 import { Battery } from "../util/battery";
-import { AUTH_TYPE, EXTENSION_NAME } from "../util/constants";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -281,7 +281,7 @@ export class VsCodeExtension {
     vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
-      } else if (e.provider.id === AUTH_TYPE) {
+      } else if (e.provider.id === controlPlaneEnv.AUTH_TYPE) {
         const sessionInfo = await getControlPlaneSessionInfo(true);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
           webviewProtocol.request("didChangeControlPlaneSessionInfo", {

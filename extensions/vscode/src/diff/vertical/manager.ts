@@ -22,6 +22,8 @@ export class VerticalDiffManager {
 
   private userChangeListener: vscode.Disposable | undefined;
 
+  logDiffs: DiffLine[] | undefined;
+
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
@@ -237,8 +239,8 @@ export class VerticalDiffManager {
     );
 
     try {
-      await diffHandler.run(diffStream);
-
+      this.logDiffs = await diffHandler.run(diffStream);
+      
       // enable a listener for user edits to file while diff is open
       this.enableDocumentChangeListener();
     } catch (e) {
@@ -410,7 +412,7 @@ export class VerticalDiffManager {
     );
 
     try {
-      await diffHandler.run(
+      this.logDiffs = await diffHandler.run(
         streamDiffLines(
           prefix,
           rangeContent,

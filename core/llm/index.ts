@@ -114,13 +114,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
 
-  // For IBM watsonx only.
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxStopToken?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // For IBM watsonx
+  deploymentId?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -186,13 +181,8 @@ export abstract class BaseLLM implements ILLM {
     this.apiBase = options.apiBase;
     this.cacheBehavior = options.cacheBehavior;
 
-    // for watsonx only
-    this.watsonxUrl = options.watsonxUrl;
-    this.watsonxCreds = options.watsonxCreds;
-    this.watsonxProjectId = options.watsonxProjectId;
-    this.watsonxStopToken = options.watsonxStopToken;
-    this.watsonxApiVersion = options.watsonxApiVersion;
-    this.watsonxFullUrl = options.watsonxFullUrl;
+    // watsonx deploymentId
+    this.deploymentId = options.deploymentId;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

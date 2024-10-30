@@ -48,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+  ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -363,16 +363,13 @@ export interface LLMOptions {
   region?: string;
 
   // GCP Options
-  projectId?: string;
   capabilities?: ModelCapability;
 
-  // IBM watsonx options
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxStopToken?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // GCP and Watsonx Options
+  projectId?: string;
+
+  // IBM watsonx Options
+  deploymentId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -606,6 +603,7 @@ type TemplateType =
   | "codellama-70b"
   | "llava"
   | "gemma"
+  | "granite"
   | "llama3";
 
 type ModelProvider =
@@ -648,7 +646,8 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
-  | "cerebras";
+  | "cerebras"
+  | "askSage";
 
 export type ModelName =
   | "AUTODETECT"
@@ -663,6 +662,8 @@ export type ModelName =
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
+  | "o1-preview"
+  | "o1-mini"
   // Mistral
   | "codestral-latest"
   | "open-mistral-7b"
@@ -690,6 +691,12 @@ export type ModelName =
   // Llama 3.1
   | "llama3.1-8b"
   | "llama3.1-70b"
+  | "llama3.1-405b"
+  // Llama 3.2
+  | "llama3.2-1b"
+  | "llama3.2-3b"
+  | "llama3.2-11b"
+  | "llama3.2-90b"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -821,7 +828,9 @@ export type EmbeddingsProviderName =
   | "deepinfra"
   | "nvidia"
   | "voyage"
-  | "mistral";
+  | "mistral"
+  | "vertex"
+  | "watsonx";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -838,6 +847,9 @@ export interface EmbedOptions {
 
   // AWS and GCP Options
   region?: string;
+
+  // GCP and Watsonx Options
+  projectId?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -1041,9 +1053,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

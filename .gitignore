@@ -166,3 +166,6 @@ extensions/intellij/.idea/**
 **/.idea/workspace.xml
 **/.idea/usage.statistics.xml
 **/.idea/shelf/
+
+extensions/intellij/bin
+extensions/.continue-debug/

@@ -17,8 +17,8 @@ import {
   uriFromFilePath,
 } from "./vscode";
 
+import { EXTENSION_NAME } from "core/control-plane/env";
 import _ from "lodash";
-import { EXTENSION_NAME } from "./constants";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);

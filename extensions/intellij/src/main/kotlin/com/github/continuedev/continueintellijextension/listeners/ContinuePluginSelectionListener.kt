@@ -15,6 +15,10 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
 import kotlinx.coroutines.CoroutineScope
 import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.ex.util.EditorUtil
+import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 
 class ContinuePluginSelectionListener(
     coroutineScope: CoroutineScope,
@@ -41,6 +45,11 @@ class ContinuePluginSelectionListener(
         ApplicationManager.getApplication().runReadAction {
             val editor = e.editor
 
+            if (!isFileEditor(editor)) {
+                removeAllTooltips()
+                return@runReadAction
+            }
+
             // Fixes a bug where the tooltip isn't being disposed of when opening new files
             if (editor != lastActiveEditor) {
                 removeAllTooltips()
@@ -59,10 +68,25 @@ class ContinuePluginSelectionListener(
         }
     }
 
+    private fun isFileEditor(editor: Editor): Boolean {
+        val project = editor.project ?: return false
+        val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+
+        // Check if the file exists and is not in-memory only
+        if (virtualFile == null || !virtualFile.isInLocalFileSystem) {
+            return false
+        }
+
+        // Check if the editor is not associated with a console
+        val fileEditorManager = FileEditorManager.getInstance(project)
+        val fileEditor = fileEditorManager.getSelectedEditor(virtualFile)
+
+        return fileEditor is TextEditor
+    }
+
     private fun shouldRemoveTooltip(selectedText: String?, editor: Editor): Boolean {
         return selectedText.isNullOrEmpty() ||
-                !service<ContinueExtensionSettings>().continueState.displayEditorTooltip ||
-                EditorUtils().isTerminal(editor)
+                !service<ContinueExtensionSettings>().continueState.displayEditorTooltip
     }
 
     private fun removeExistingTooltips(editor: Editor, onComplete: () -> Unit = {}) {

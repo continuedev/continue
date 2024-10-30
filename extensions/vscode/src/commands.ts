@@ -4,6 +4,7 @@ import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
@@ -28,7 +29,6 @@ import { DiffManager } from "./diff/horizontal";
 import { VerticalDiffManager } from "./diff/vertical/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
-import { EXTENSION_NAME } from "./util/constants";
 import { getFullyQualifiedPath } from "./util/util";
 import { uriFromFilePath } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -479,6 +479,14 @@ const commandsMap: (
     },
     "continue.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined);
+    },
+    "continue.focusContinueSessionId": async (sessionId: string | undefined) => {
+      if (!sessionId) {
+        sessionId = await vscode.window.showInputBox({
+          prompt: "Enter the Session ID"
+        });
+      }
+      sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
     },
     "continue.applyCodeFromChat": () => {
       sidebar.webviewProtocol.request("applyCodeFromChat", undefined);

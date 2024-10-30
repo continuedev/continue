@@ -1,5 +1,5 @@
+import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
-import { EXTENSION_NAME } from "../util/constants";
 
 export async function getUserToken(): Promise<string> {
   // Prefer manual user token first

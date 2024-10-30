@@ -3,9 +3,9 @@ import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
-import { IdeType, SerializedContinueConfig } from "../";
 
 dotenv.config();
 
@@ -347,4 +347,19 @@ export function getRepoMapFilePath(): string {
 
 export function getEsbuildBinaryPath(): string {
   return path.join(getContinueUtilsPath(), "esbuild");
+}
+
+export function setupInitialDotContinueDirectory() {
+  const devDataTypes = [
+    "chat",
+    "autocomplete",
+    "quickEdit",
+    "tokens_generated",
+  ];
+  devDataTypes.forEach((p) => {
+    const devDataPath = getDevDataFilePath(p);
+    if (!fs.existsSync(devDataPath)) {
+      fs.writeFileSync(devDataPath, "");
+    }
+  });
 }
