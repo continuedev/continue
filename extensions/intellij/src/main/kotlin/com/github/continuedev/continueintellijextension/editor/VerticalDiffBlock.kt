@@ -116,7 +116,7 @@ class VerticalDiffBlock(
         )
 
         acceptButton.setBounds(
-            x + rejectButton.width + 5,
+            x + rejectButton.width + 2,
             y,
             acceptButton.preferredSize.width,
             acceptButton.preferredSize.height
@@ -215,18 +215,17 @@ class VerticalDiffBlock(
                 val g2 = g.create() as Graphics2D
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
                 g2.color = backgroundColor
-                g2.fillRoundRect(0, 0, width - 1, height - 1, 8, 8)
+                g2.fillRoundRect(0, 0, width - 1, height - 1, 4, 4)
                 super.paintComponent(g2)
                 g2.dispose()
             }
         }.apply {
-            // This isn't working currently, font color is transparent
-            foreground = JBColor.WHITE
+            foreground = Color(240, 240, 240)
             font = Font("Arial", Font.BOLD, 9)
             isContentAreaFilled = false
             isOpaque = false
-            border = null
-            preferredSize = Dimension(preferredSize.width, 16)
+            border = BorderFactory.createEmptyBorder(4, 2, 4, 2)
+            preferredSize = Dimension(preferredSize.width - 30, 14)
             cursor = Cursor(Cursor.HAND_CURSOR)
         }
     }
