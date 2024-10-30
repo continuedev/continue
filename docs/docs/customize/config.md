@@ -12,20 +12,22 @@ Continue can be deeply customized. User-level configuration is stored and can be
 - `~/.continue/config.json` (MacOS / Linux)
 - `%USERPROFILE%\.continue\config.json` (Windows)
 
-To open `config.json`, you can click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can use IntelliSense to see the available options as you type, or check the reference below.
+To open `config.json`, you can click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can see the available options through IntelliSense as you type, or check the reference below.
 
-When you save `config.json`, Continue will automatically refresh to take into account your changes. `config.json` is automatically created the first time you use Continue.
+When you save `config.json`, Continue will automatically refresh to take into account your changes. `config.json` is automatically created the first time you use Continue. `config.json` is automatically generated if it doesn't exist.
 
 In the vast majority of cases, you will only need to edit `config.json`. However, Continue offers two additional ways to customize configuration:
 
 - [`.continuerc.json`](#continuercjson) - Workspace-level configuration. If you'd like to scope certain settings to a particular workspace, you can add a `.continuerc.json` to the root of your project. This can be set to merge with _or_ override the user-level `config.json`
-- [`config.ts`](#config-ts) - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
+- [`config.ts`](#configts) - Advanced configuration (probably unnecessary) - a TypeScript file in your home directory that can be used to programmatically modify (_merged_) the `config.json` schema:
   - `~/.continue/config.ts` (MacOS / Linux)
   - `%USERPROFILE%\.continue\config.ts` (Windows)
 
 ## `config.json`
 
 Below are details for each property that can be set in `config.json`. The config schema code is found in [`extensions/vscode/config_schema.json`](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json).
+
+**All properties at all levels are optional unless explicitly marked required**
 
 ### `completionOptions`
 
@@ -45,6 +47,17 @@ Parameters that control the behavior of text generation and completion settings.
 - `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
 - `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
 
+Example
+
+```json title="config.json"
+{
+  "completionOptions": {
+    "stream": false,
+    "temperature": 0.5
+  }
+}
+```
+
 ### `requestOptions`
 
 Default HTTP request options that apply to all models and context providers, unless overridden at the model level.
@@ -53,52 +66,63 @@ Default HTTP request options that apply to all models and context providers, unl
 
 - `timeout`: Timeout for each request to the LLM (default: 7200 seconds).
 - `verifySsl`: Whether to verify SSL certificates for requests.
-- `caBundlePath`: Path to a custom CA bundle for HTTP requests.
+- `caBundlePath`: Path to a custom CA bundle for HTTP requests - path to `.pem` file (or array of paths)
 - `proxy`: Proxy URL to use for HTTP requests.
 - `headers`: Custom headers for HTTP requests.
 - `extraBodyProperties`: Additional properties to merge with the HTTP request body.
 - `noProxy`: List of hostnames that should bypass the specified proxy.
 - `clientCertificate`: Client certificate for HTTP requests.
+
   - `cert`: Path to the client certificate file.
   - `key`: Path to the client certificate key file.
   - `passphrase`: Optional passphrase for the client certificate key file.
 
+Example
+
+```json title="config.json"
+{
+  "requestOptions": {
+    "headers": {
+      "X-Auth-Token": "xxx"
+    }
+  }
+}
+```
+
 ### `models`
 
-Your **chat** models are defined here, which are used for chat, edit, and actions.
+Your **chat** models are defined here, which are used for [Chat](../chat/how-to-use-it.md), [Edit](../edit/how-to-use-it.md), and [Actions](../actions/how-to-use-it.md).
+Each model has specific configuration options tailored to its provider and functionality, which can be seen with Intellisense.
 
 **Properties:**
 
-### `models`
-
-Your **chat** models are defined here, which are used for chat, edit, and actions. Each model has specific configuration options tailored to its provider and functionality.
-
-Properties:
-
-- `title`: The title to assign to your model.
-- `provider`: The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, etc., see intelliJ suggestions.
-- `model`: The name of the model, used for prompt template auto-detection.
+- `title` (**required**): The title to assign to your model, shown in dropdowns, etc.
+- `provider` (**required**): The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, etc., see intelliJ suggestions.
+- `model` (**required**): The name of the model, used for prompt template auto-detection.
 - `apiKey`: API key required by providers like OpenAI, Anthropic, and Cohere.
 - `apiBase`: The base URL of the LLM API.
-- `region`: Region where the model is hosted (e.g., `us-east-1`, `eu-central-1`).
-- `profile`: AWS security profile for authorization.
-- `modelArn`: AWS ARN for imported models (e.g., for `bedrockimport` provider).
 - `contextLength`: Maximum context length of the model, typically in tokens (default: 2048).
 - `maxStopWords`: Maximum number of stop words allowed, to avoid API errors with extensive lists.
 - `template`: Chat template to format messages. Auto-detected for most models but can be overridden. See intelliJ suggestions.
 - `promptTemplates`: A mapping of prompt template names (e.g., `edit`) to template strings. [Customization Guide](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt).
-- `completionOptions`: Model-specific completion options, same format as top-level `completionOptions`, which they override.
+- `completionOptions`: Model-specific completion options, same format as top-level [`completionOptions`](#completionoptions), which they override.
 - `systemMessage`: A system message that will precede responses from the LLM.
-- `requestOptions`: Model-specific HTTP request options, same format as top-level `requestOptions`, which they override.
+- `requestOptions`: Model-specific HTTP request options, same format as top-level [`requestOptions`](#requestoptions), which they override.
 - `apiType`: Specifies the type of API (`openai` or `azure`).
 - `apiVersion`: Azure API version (e.g., `2023-07-01-preview`).
 - `engine`: Engine for Azure OpenAI requests.
-- `capabilities`: Override auto-detected capabilities, including:
+- `capabilities`: Override auto-detected capabilities:
   - `uploadImage`: Boolean indicating if the model supports image uploads.
 
+_(AWS Only)_
+
+- `profile`: AWS security profile for authorization.
+- `modelArn`: AWS ARN for imported models (e.g., for `bedrockimport` provider).
+- `region`: Region where the model is hosted (e.g., `us-east-1`, `eu-central-1`).
+
 Example:
 
-````json
+```json title="config.json"
 {
   "models": [
     {
@@ -115,56 +139,23 @@ Example:
     }
   ]
 }
-
-
-- `title`: "... I will manually enter these"
-- `provider`: ""
-- `model`: ""
-- `apiKey`: ""
-- `apiBase`: ""
-- `region`: ""
-- `profile`: ""
-- `modelArn`: ""
-- `contextLength`: ""
-- `maxStopWords`: ""
-- `template`: ""
-- `promptTemplates`: ""
-- `completionOptions`: Same format as top-level `completionOptions` - model-specific options overwrite.
-- `systemMessage`: ""
-- `requestOptions`: Same format as top-level `requestOptions` - model-specific options overwrite.
-- `apiType`: ""
-- `apiVersion`: ""
-- `engine`: ""
-- `capabilities`: ""
-
-Example:
-
-```json
-{
-  "models": [
-    {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "AUTODETECT"
-    },
-    {
-      "model": "gpt-4o",
-      "contextLength": 128000,
-      "title": "GPT-4o",
-      "provider": "openai",
-      "apiKey": "YOUR_API_KEY"
-    }
-  ]
-}
-````
+```
 
 ### `tabAutocompleteModel`
 
-Specifies the model or models for tab autocompletion, defaulting to an Ollama instance. This property uses the same format as `models`.
+Specifies the model or models for tab autocompletion, defaulting to an Ollama instance. This property uses the same format as `models`. Can be an array of models or an object for one model.
 
-### `experimental.defaultContext`
+Example
 
-Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.
+```json title="config.json"
+{
+  "tabAutocompleteModel": {
+    "title": "My Starcoder",
+    "provider": "ollama",
+    "model": "starcoder2:3b"
+  }
+}
+```
 
 ### `tabAutocompleteOptions`
 
@@ -186,6 +177,18 @@ Specifies options for tab autocompletion behavior.
 - `useOtherFiles`: If `true`, includes snippets from other files (default: `true`).
 - `disableInFiles`: Array of glob patterns for files where autocomplete is disabled.
 
+Example
+
+```json title="config.json"
+{
+  "tabAutocompleteOptions": {
+    "debounceDelay": 500,
+    "maxPromptTokens": 1500,
+    "disableInFiles": ["*.md"]
+  }
+}
+```
+
 ### `embeddingsProvider`
 
 Configuration for the embeddings provider used for codebase embeddings.
@@ -202,18 +205,42 @@ Configuration for the embeddings provider used for codebase embeddings.
 - `region`: Region where the model is hosted.
 - `profile`: AWS security profile.
 
+Example
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "voyage",
+    "model": "voyage-code-2",
+    "apiKey": "<VOYAGE_API_KEY>"
+  }
+}
+```
+
 ### `reranker`
 
-Configuration for the reranker used in response ranking.
+Configuration for the reranker model used in response ranking.
 
 **Properties:**
 
-- `name`: Reranker name (`"cohere"`, `"voyage"`, `"llm"`, `"free-trial"`, `"huggingface-tei"`).
-- `params`: Additional parameters for reranking.
+- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`
+- `params`:
+  - `model`: Model name
+  - `apiKey`: Api key
 
-### `contextProviders`
+Example
 
-List of context providers for enriching LLM context.
+```json title="config.json"
+{
+  "reranker": {
+    "name": "voyage",
+    "params": {
+      "model": "rerank-2",
+      "apiKey": "<VOYAGE_API_KEY>"
+    }
+  }
+}
+```
 
 ### `docs`
 
@@ -221,11 +248,24 @@ List of documentation sites to index.
 
 **Properties:**
 
-- `title`: Title of the documentation site.
-- `startUrl`: Starting URL for indexing.
-- `rootUrl`: Optional root URL of the site.
-- `maxDepth`: Maximum depth for crawling.
+- `title` (**required**): Title of the documentation site, displayed in dropdowns, etc.
+- `startUrl` (**required**): Start page for crawling - usually root or intro page for docs
+- `rootUrl`: Crawler will only index docs within this domain - pages that contain this URL
+- `maxDepth`: Maximum depth for crawling. Default `3`
 - `favicon`: URL for site favicon (default is `/favicon.ico` from `startUrl`).
+
+Example
+
+```json title="config.json"
+"docs": [
+    {
+    "title": "Continue",
+    "startUrl": "https://docs.continue.dev/intro",
+    "rootUrl": "https://docs.continue.dev",
+    "faviconUrl": "https://docs.continue.dev/favicon.ico",
+  }
+]
+```
 
 ### `analytics`
 
@@ -237,41 +277,247 @@ Configuration for analytics tracking.
 - `url`: URL for analytics data.
 - `clientKey`: Client key for analytics.
 
-### `experimental.modelRoles`
+### embeddingsProvider
 
-Model roles used for various tasks.
-
-**Properties:**
-
-- `inlineEdit`: Model title for inline edits.
-- `applyCodeBlock`: Model title for applying code blocks.
-- `repoMapFileSelection`: Model title for repo map selections.
-
-### `experimental.promptPath`
-
-Path for prompt configuration.
-
-### `experimental.quickActions`
-
-Array of custom quick actions for code lens.
+Defines the provider and settings for codebase embeddings, allowing specific models to handle code embeddings.
 
 **Properties:**
 
-- `title`: Display title for the quick action.
-- `prompt`: Prompt for the quick action.
-- `sendToChat`: If `true`, sends result to chat; otherwise, inserts it into the document (default: `false`).
+- `provider` (**required**): Specifies the embeddings provider, with options including "transformers.js", "ollama", "openai", "cohere", "free-trial", "gemini", etc
+- `model`: Model name for embeddings.
+- `apiKey`: API key for the provider.
+- `apiBase`: Base URL for API requests.
+- `requestOptions`: Additional HTTP request settings specific to the embeddings provider.
+- `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+- `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
 
-### `experimental.contextMenuPrompts`
+(AWS ONLY)
 
-Predefined prompts for context menu actions.
+- `region`: Specifies the region hosting the model.
+- `profile`: AWS security profile.
+
+Example:
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-ada-002",
+    "apiKey": "<API_KEY>",
+    "maxChunkSize": 256,
+    "maxBatchSize": 5
+  }
+}
+```
+
+### `slashCommands`
+
+Custom commands initiated by typing "/" in the sidebar. Commands include predefined functionality or may be user-defined.
 
 **Properties:**
 
-- `comment`: Prompt for commenting code.
-- `docstring`: Prompt for adding docstrings.
-- `fix`: Prompt for fixing code.
-- `optimize`: Prompt for optimizing code.
-- `fixGrammar`: Prompt for fixing grammar or spelling.
+- `name`: The command name. Options include "issue", "share", "cmd", "edit", "comment", "http", "commit", "review", or a custom name.
+- `description`: Brief description of the command.
+- `step`: (Deprecated) Used for built-in commands; set the name for pre-configured options.
+- `params`: Additional parameters to configure command behavior (command-specific - see code for command)
+
+Example:
+
+```json title="config.json"
+{
+  "slashCommands": [
+    {
+      "name": "commit",
+      "description": "Generate a commit message"
+    },
+    {
+      "name": "comment",
+      "description": "Write comments for the selected code"
+    },
+    {
+      "name": "share",
+      "description": "Export this session as markdown"
+    },
+    {
+      "name": "cmd",
+      "description": "Generate a shell command"
+    }
+  ]
+}
+```
+
+### `customCommands`
+
+User-defined commands for prompt shortcuts in the sidebar, allowing quick access to common actions.
+
+**Properties:**
+
+- `name`: The name of the custom command.
+- `prompt`: Text prompt for the command.
+- `description`: Brief description explaining the command's function.
+
+Example:
+
+```json title="config.json"
+{
+  "customCommands": [
+    {
+      "name": "test",
+      "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+      "description": "Write unit tests for highlighted code"
+    }
+  ]
+}
+```
+
+### `contextProviders`
+
+List of the pre-defined context providers that will show up as options while typing in the chat, and their customization with `params`.
+
+**Properties:**
+
+- `name`: Name of the context provider, e.g. `docs` or `web`
+- `params`: A context-provider-specific record of params to configure the context behavior
+
+Example
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "code",
+      "params": {}
+    },
+    {
+      "name": "docs",
+      "params": {}
+    },
+    {
+      "name": "diff",
+      "params": {}
+    },
+    {
+      "name": "open",
+      "params": {}
+    }
+  ]
+}
+```
+
+### `disableSessionTitles`
+
+Prevents generating summary titles for each chat session when set to true.
+
+### `ui`
+
+Customizable UI settings to control interface appearance and behavior.
+
+**Properties:**
+
+- `codeBlockToolbarPosition`: Sets the toolbar position within code blocks, either "top" (default) or "bottom".
+- `fontSize`: Specifies font size for UI elements.
+- `displayRawMarkdown`: If true, shows raw markdown in responses.
+- `showChatScrollbar`: If true, enables a scrollbar in the chat window.
+
+Example:
+
+```json title="config.json"
+{
+  "ui": {
+    "codeBlockToolbarPosition": "bottom",
+    "fontSize": 14,
+    "displayRawMarkdown": false
+  }
+}
+```
+
+### `analytics`
+
+You can set up Continue to route analytics to your own provider.
+
+**Properties:**
+
+- `provider` (**required**): Specifies the analytics provider, options are "posthog" or "logstash"
+- `url`: The URL where analytics data is sent
+- `clientKey`: Key for identifying the client within analytics
+
+Example:
+
+```json title="config.json"
+{
+  "analytics": {
+    "provider": "posthog",
+    "url": "https://analytics.example.com",
+    "clientKey": "CLIENT_KEY"
+  }
+}
+```
+
+### `allowAnonymousTelemetry`
+
+When `true`, anonymous usage data is collected using Posthog, to improve features. Default is `true`.
+
+### `userToken`
+
+An optional token that identifies the user, primarily for authenticated services.
+
+### `systemMessage`
+
+Defines a system message that appears before every response from the language model, providing guidance or context.
+
+### `disableIndexing`
+
+Prevents indexing of the codebase, useful primarily for debugging purposes.
+
+### `experimental`
+
+Several experimental config parameters are available, as described below:
+
+`experimental`:
+
+- `defaultContext`: Defines the default context for the LLM. Uses the same format as `contextProviders` but includes an additional `query` property to specify custom query parameters.=
+- `modelRoles`:
+  - `inlineEdit`: Model title for inline edits.
+  - `applyCodeBlock`: Model title for applying code blocks.
+  - `repoMapFileSelection`: Model title for repo map selections.
+- `readResponseTTS`: If true, reads LLM responses aloud with TTS. Default is true.
+- `promptPath`: Change the path to custom prompt files from the default ".prompts"
+- `quickActions`: Array of custom quick actions
+  - `title` (**required**): Display title for the quick action.
+  - `prompt` (**required**): Prompt for quick action.
+  - `sendToChat`: If true, sends result to chat; else inserts in document. Default is false.
+- `contextMenuPrompts`:
+  - `comment`: Prompt for commenting code.
+  - `docstring`: Prompt for adding docstrings.
+  - `fix`: Prompt for fixing code.
+  - `optimize`: Prompt for optimizing code.
+  - `fixGrammar`: Prompt for fixing grammar or spelling.
+- `useChromiumForDocsCrawling`: use chromium to crawl docs instead of default lighter-weight tool that can't render sites. Downloads and installs Chromium to `~/.continue/.utils`.
+
+Example
+
+```json title="config.json"
+{
+  "experimental": {
+    "modelRoles": {
+      "inlineEdit": "Edit Model"
+    },
+    "promptPath": "custom/.prompts",
+    "quickActions": [
+      {
+        "title": "Tags",
+        "prompt": "Return a list of any function and class names from the included code block",
+        "sendToChat": true
+      }
+    ],
+    "contextMenuPrompts": {
+      "fixGrammar": "Fix grammar in the above but allow for typos."
+    },
+    "readResponseTTS": false,
+    "useChromiumForDocsCrawling": true
+  }
+}
+```
 
 ## `.continuerc.json`
 
@@ -279,7 +525,7 @@ The format of `.continuerc.json` is the same as `config.json`, plus one _additio
 
 Example
 
-```json
+```json title="config.json"
 {
   "tabAutocompleteOptions": {
     "disable": true
@@ -287,3 +533,30 @@ Example
   "mergeBehavior": "overwrite"
 }
 ```
+
+## `config.ts`
+
+To programatically extend `config.json`, you can place a `config.ts` script in same directory as `config.json` and export a `modifyConfig` function, like:
+
+```ts title="config.ts"
+export function modifyConfig(config: Config): Config {
+  config.slashCommands?.push({
+    name: "commit",
+    description: "Write a commit message",
+    run: async function* (sdk) {
+      const diff = await sdk.ide.getDiff();
+      for await (const message of sdk.llm.streamComplete(
+        `${diff}\n\nWrite a commit message for the above changes. Use no more than 20 tokens to give a brief description in the imperative mood (e.g. 'Add feature' not 'Added feature'):`,
+        {
+          maxTokens: 20,
+        },
+      )) {
+        yield message;
+      }
+    },
+  });
+  return config;
+}
+```
+
+This can be used for slash commands and custom context providers.

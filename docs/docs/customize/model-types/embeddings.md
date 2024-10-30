@@ -76,4 +76,8 @@ See [here](../model-providers/top-level/gemini.md#embeddings-model) for instruct
 
 ### Vertex
 
-See [here](../model-providers/more/vertex.md#embeddings-model) for instructions on how to use Vertex for embeddings.
+See the following for instructions on how to use Vertex for embeddings:
+
+- [Gemini with Vertex](../model-providers/more/gemini-vertexai.md)
+- [Anthropic with Vertex](../model-providers/more/anthropic-vertexai.md)
+- [Mistral with Vertex](../model-providers/more/mistral-vertexai.md)
