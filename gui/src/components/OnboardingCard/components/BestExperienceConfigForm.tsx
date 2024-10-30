@@ -77,21 +77,21 @@ function BestExperienceConfigForm({
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-3">
         <div>
-          <div className="text-lg font-bold mb-1 flex flex-row justify-between gap-4">
+          <div className="mb-1 flex flex-row justify-between gap-4 text-lg font-bold">
             <label className="text-lg font-bold">Chat model</label>
             <div
-              className="flex items-center text-xs font-semibold justify-end hidden sm:flex"
+              className="flex hidden items-center justify-end text-xs font-semibold sm:flex"
               style={{ color: lightGray }}
             >
-              <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-              <span className="italic text-right inline">
+              <CubeIcon className="mr-1 h-4 w-4 flex-shrink-0" />
+              <span className="inline text-right italic">
                 {chatModel.title}{" "}
                 <span className="hidden md:inline">by Anthropic</span>
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col pb-4 w-full">
+          <div className="flex w-full flex-col pb-4">
             <Input
               placeholder="Enter your Anthropic API Key"
               value={chatApiKey}
@@ -101,7 +101,7 @@ function BestExperienceConfigForm({
               <a
                 href={chatProvider.apiKeyUrl}
                 target="_blank"
-                className="text-inherit underline cursor-pointer hover:text-inherit"
+                className="cursor-pointer text-inherit underline hover:text-inherit"
               >
                 Click here
               </a>{" "}
@@ -111,23 +111,23 @@ function BestExperienceConfigForm({
         </div>
 
         <div>
-          <div className="text-lg font-bold mb-1 flex flex-row justify-between gap-4">
+          <div className="mb-1 flex flex-row justify-between gap-4 text-lg font-bold">
             <label className="text-lg font-bold">Autocomplete model</label>
             <div
-              className="flex items-center text-xs font-semibold  hidden sm:flex"
+              className="flex hidden items-center text-xs font-semibold sm:flex"
               style={{ color: lightGray }}
             >
-              <CubeIcon className="w-4 h-4 mr-1 flex-shrink-0  inline" />
-              <span className="italic text-right">
+              <CubeIcon className="mr-1 inline h-4 w-4 flex-shrink-0" />
+              <span className="text-right italic">
                 {autocompleteModel.title}{" "}
                 <span className="hidden md:inline">by Mistral</span>
               </span>
             </div>
           </div>
 
-          <div className="flex flex-col pb-4 w-full">
+          <div className="flex w-full flex-col pb-4">
             <Input
-              placeholder="Enter your Codestral API Key"
+              placeholder="Enter your Mistral API Key"
               value={autocompleteApiKey}
               onChange={(e) => setAutocompleteApiKey(e.target.value)}
             />
@@ -135,11 +135,11 @@ function BestExperienceConfigForm({
               <a
                 href={autocompleteProvider.apiKeyUrl}
                 target="_blank"
-                className="text-inherit underline cursor-pointer hover:text-inherit"
+                className="cursor-pointer text-inherit underline hover:text-inherit"
               >
                 Click here
               </a>{" "}
-              to create a Codestral API key
+              to create a Mistral API key
             </InputSubtext>
           </div>
         </div>
@@ -154,4 +154,5 @@ function BestExperienceConfigForm({
     </form>
   );
 }
+
 export default BestExperienceConfigForm;

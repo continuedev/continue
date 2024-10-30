@@ -137,6 +137,8 @@ Click the "Continue" button in the status panel at the bottom right of the scree
 
 Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
 
+You can also use the default shortcut to disable autocomplete directly: press `ctrl/cmd + K`, `ctrl/cmd + A`. This will turn off autocomplete without navigating through settings.
+
 #### JetBrains
 
 Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocomplete".

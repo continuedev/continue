@@ -1,4 +1,5 @@
 package com.github.continuedev.continueintellijextension.`continue`
+
 import com.github.continuedev.continueintellijextension.constants.getSessionFilePath
 import com.github.continuedev.continueintellijextension.constants.getSessionsListPath
 import com.google.gson.Gson
@@ -10,6 +11,7 @@ import java.lang.reflect.Type
 
 typealias PersistedSessionInfo = MutableMap<String, Any>
 typealias SessionInfo = MutableMap<String, Any>
+
 class HistoryManager {
     private val gson = Gson()
 
@@ -90,10 +92,10 @@ class HistoryManager {
 
         if (!found) {
             val sessionInfo = mutableMapOf(
-                    "sessionId" to session["sessionId"],
-                    "title" to  session["title"],
-                    "dateCreated" to System.currentTimeMillis().toString(),
-                    "workspaceDirectory" to session["workspaceDirectory"]
+                "sessionId" to session["sessionId"],
+                "title" to session["title"],
+                "dateCreated" to System.currentTimeMillis().toString(),
+                "workspaceDirectory" to session["workspaceDirectory"]
             ) as MutableMap<String, Any>
             sessionsList.add(sessionInfo)
         }

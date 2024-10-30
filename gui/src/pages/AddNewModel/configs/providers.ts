@@ -595,4 +595,35 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     }),
     apiKeyUrl: "https://cloud.sambanova.ai/apis",
   },
+  cerebras: {
+    title: "Cerebras",
+    provider: "cerebras",
+    icon: "cerebras.png",
+    description:
+      "Cerebras Inference is a custom silicon for fast inference of LLM models.",
+    longDescription:
+      "Get your API key [here](https://cloud.cerebras.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cerebras API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.llama3170bChat,
+      models.llama318bChat,
+      {
+        ...models.AUTODETECT,
+        params: {
+          ...models.AUTODETECT.params,
+          title: "Cerebras",
+        },
+      },
+    ],
+    apiKeyUrl: "https://cloud.cerebras.ai/",
+  },
 };

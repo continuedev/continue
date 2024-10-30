@@ -22,6 +22,7 @@ export default function PostHogPageView() {
 
       posthog.capture("$pageview", {
         $current_url: url,
+        pathname,
       });
     }
   }, [pathname, searchParams, posthog]);

@@ -8,9 +8,11 @@ import {
 import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
+import AnthropicVertexAI from "./AnthropicVertexAI";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
+import Cerebras from "./Cerebras";
 import Cloudflare from "./Cloudflare";
 import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
@@ -19,6 +21,7 @@ import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
+import GeminiVertexAI from "./GeminiVertexAI";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
@@ -27,6 +30,7 @@ import LMStudio from "./LMStudio";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import Mistral from "./Mistral";
+import MistralVertexAI from "./MistralVertexAI";
 import Mock from "./Mock";
 import Msty from "./Msty";
 import Nvidia from "./Nvidia";
@@ -44,9 +48,11 @@ import ContinueProxy from "./stubs/ContinueProxy";
 
 const LLMs = [
   Anthropic,
+  AnthropicVertexAI,
   Cohere,
   FreeTrial,
   Gemini,
+  GeminiVertexAI,
   Llamafile,
   Ollama,
   Replicate,
@@ -59,6 +65,7 @@ const LLMs = [
   OpenAI,
   LMStudio,
   Mistral,
+  MistralVertexAI,
   Bedrock,
   BedrockImport,
   SageMaker,
@@ -77,6 +84,7 @@ const LLMs = [
   Vllm,
   SambaNova,
   Mock,
+  Cerebras,
 ];
 
 export async function llmFromDescription(

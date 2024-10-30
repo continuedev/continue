@@ -17,8 +17,8 @@ import {
   uriFromFilePath,
 } from "./vscode";
 
+import { EXTENSION_NAME } from "core/control-plane/env";
 import _ from "lodash";
-import { EXTENSION_NAME } from "./constants";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
@@ -233,7 +233,7 @@ export class VsCodeIdeUtils {
   // In some cases vscode.window.visibleTextEditors can return non-code editors
   // e.g. terminal editors in side-by-side mode
   private documentIsCode(uri: vscode.Uri) {
-    return uri.scheme === "file";
+    return uri.scheme === "file" || uri.scheme === "vscode-remote";
   }
 
   getOpenFiles(): string[] {
@@ -619,7 +619,7 @@ export class VsCodeIdeUtils {
     return repo?.state?.HEAD?.name || "NONE";
   }
 
-  async getDiff(): Promise<string> {
+  async getDiff(includeUnstaged: boolean): Promise<string> {
     let diffs: string[] = [];
     let repos = [];
 
@@ -630,17 +630,13 @@ export class VsCodeIdeUtils {
       }
 
       repos.push(repo.state.HEAD?.name);
-      // Staged changes
-      // const a = await repo.diffIndexWithHEAD();
+
       const staged = await repo.diff(true);
-      // Un-staged changes
-      // const b = await repo.diffWithHEAD();
-      const unstaged = await repo.diff(false);
-      // All changes
-      // const e = await repo.diffWith("HEAD");
-      // Only staged
-      // const f = await repo.diffIndexWith("HEAD");
-      diffs.push(`${staged}\n${unstaged}`);
+      diffs.push(`${staged}`);
+      if (includeUnstaged) {
+        const unstaged = await repo.diff(false);
+        diffs.push(`\n${unstaged}`);
+      }
     }
 
     const fullDiff = diffs.join("\n\n");

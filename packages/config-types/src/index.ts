@@ -207,6 +207,7 @@ export const siteIndexingConfigSchema = z.object({
 });
 
 export const controlPlaneConfigSchema = z.object({
+  useContinueForTeamsProxy: z.boolean().optional(),
   proxyUrl: z.string().optional(),
 });
 

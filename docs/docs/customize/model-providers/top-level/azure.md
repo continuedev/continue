@@ -22,35 +22,28 @@ We recommend configuring **GPT-4o** as your chat model.
 
 ## Autocomplete model
 
-We recommend configuring **Codestral** as your autocomplete model.
+Azure OpenAI currently does not offer any autocomplete models.
 
-```json title="config.json"
-"tabAutocompleteModel": [{
-    "title": "Codestral",
-    "provider": "openai",                    // As of Oct 15, "azure" isn't recognized
-    "apiType": "azure",                      // Needed to construct Azure-style URL
-    "model": "codestral-latest",
-    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "deployment": "<YOUR_DEPLOYMENT_NAME>",  // Your deployment, eg "codestral-small"
-    "apiVersion": "<YOUR_API_VERSION>",      // Typically a date like "2024-06-01"
-    "apiKey": "<MY_API_KEY>"                 // If you use subscription key, try using Azure gateway to rename it apiKey
-}]
-```
+[Click here](../../model-types/autocomplete.md) to see a list of autocomplete models.
+
+:::info
+**Codestral** will be available on Azure in the near future.
+:::
 
 ## Embeddings model
 
 We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 ```json title="config.json"
-"embeddingsProvider": [{
-    "provider": "openai",                    // As of Oct 15, "azure" isn't recognized
-    "apiType": "azure",                      // Needed to construct Azure-style URL
+"embeddingsProvider": {
+    "provider": "azure",
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "deployment": "<YOUR_DEPLOYMENT_NAME>",               // Your deployment, eg "codestral-small"
-    "apiVersion": "<YOUR_API_VERSION>",      // Typically a date like "2024-06-01"
-    "apiKey": "<MY_API_KEY>"                 // If you use subscription key, try using Azure gateway to rename it apiKey
-}]
+    "engine": "<YOUR_ENGINE>",
+    "apiVersion": "<YOUR_API_VERSION>",
+    "apiType": "azure",
+    "apiKey": "<MY_API_KEY>"
+}
 ```
 
 ## Reranking model

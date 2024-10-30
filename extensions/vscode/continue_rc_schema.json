@@ -172,6 +172,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -183,9 +184,11 @@
             "llama.cpp",
             "replicate",
             "gemini",
+            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
+            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
@@ -197,12 +200,14 @@
             "openrouter",
             "sambanova",
             "nvidia",
-            "vllm"
+            "vllm",
+            "cerebras"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
             "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/anthropicllm)",
+            "### Anthropic Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### Cohere\nTo use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/cohere)",
             "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
             "### Bedrock Imported Models\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock)",
@@ -214,9 +219,11 @@
             "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamacpp)",
             "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/replicatellm)",
             "### Gemini API\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/geminiapi)",
+            "### Gemini API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/lmstudio)",
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
+            "### Mistral API on Vertex AI\nTo get started you need to enable the [Vertex AI API](https://console.cloud.google.com/marketplace/product/google/aiplatform.googleapis.com) and set up the [Google Application Default Credentials](https://cloud.google.com/docs/authentication/provide-credentials-adc).",
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
             "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
             "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
@@ -227,7 +234,8 @@
             "### IBM watsonx\nwatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.",
             "### OpenRouter\nOpenRouter offers a single API to access almost any language model. To get started, obtain an API key from [their console](https://openrouter.ai/settings/keys).",
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
-            "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server."
+            "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
+            "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/)."
           ],
           "type": "string"
         },
@@ -249,7 +257,54 @@
         "region": {
           "title": "Region",
           "description": "The region where the model is hosted",
-          "type": "string"
+          "anyOf": [
+            {
+              "enum": [
+                "us-east-1",
+                "us-east-2",
+                "us-west-1",
+                "us-west-2",
+                "eu-west-1",
+                "eu-central-1",
+                "ap-southeast-1",
+                "ap-northeast-1",
+                "ap-south-1",
+                "us-central1",
+                "us-east1",
+                "us-east4",
+                "us-east5",
+                "us-west1",
+                "us-west4",
+                "us-south1",
+                "northamerica-northeast1",
+                "southamerica-east1",
+                "europe-central2",
+                "europe-north1",
+                "europe-west1",
+                "europe-west2",
+                "europe-west3",
+                "europe-west4",
+                "europe-west6",
+                "europe-west8",
+                "europe-west9",
+                "europe-southwest1",
+                "asia-east1",
+                "asia-east2",
+                "asia-south1",
+                "asia-northeast1",
+                "asia-northeast3",
+                "asia-southeast1",
+                "australia-southeast1",
+                "me-central1",
+                "me-central2",
+                "me-west1"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
         },
         "profile": {
           "title": "Profile",
@@ -794,6 +849,53 @@
             "properties": {
               "provider": {
                 "enum": [
+                  "anthropic-vertexai"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "cacheBehavior": {
+                "title": "Caching Behavior",
+                "description": "Options for the prompt caching",
+                "properties": {
+                  "cacheSystemMessage": {
+                    "type": "boolean"
+                  },
+                  "cacheConversation": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "claude-3-5-opus",
+                      "claude-3-5-sonnet",
+                      "claude-3-5-haiku",
+                      "claude-3-opus",
+                      "claude-3-sonnet",
+                      "claude-3-haiku"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
                   "cohere"
                 ]
               }
@@ -901,6 +1003,44 @@
                 ]
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "gemini-vertexai"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gemini-pro",
+                      "gemini-1.5-pro-latest",
+                      "gemini-1.5-pro",
+                      "gemini-1.5-flash-latest",
+                      "gemini-1.5-flash"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "projectId",
+              "region"
+            ]
           }
         },
         {
@@ -1120,6 +1260,42 @@
             "properties": {
               "provider": {
                 "enum": [
+                  "mistral-vertexai"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "codestral",
+                      "mistral-nemo",
+                      "mistral-large"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "projectId",
+              "region"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
                   "deepseek"
                 ]
               }
@@ -1261,6 +1437,30 @@
             "properties": {
               "llamafileCommand": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "cerebras"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "llama3.1-8b",
+                  "llama3.1-70b"
+                ]
               }
             }
           }
@@ -1543,7 +1743,6 @@
               "enum": [
                 "issue",
                 "share",
-                "so",
                 "cmd",
                 "edit",
                 "comment",
@@ -1555,7 +1754,6 @@
               "markdownEnumDescriptions": [
                 "Generate a link to a drafted GitHub issue",
                 "Export the current chat session to markdown",
-                "Reference StackOverflow to answer the question",
                 "Generate a terminal command and paste it into the terminal",
                 "Edit the highlighted code with given instructions",
                 "Add comments to the highlighted code",
@@ -1663,6 +1861,29 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "commit"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "includeUnstaged": {
+                    "type": "boolean",
+                    "markdownDescription": "If includeUnstaged is set to true, then unstaged changes are also included in the prompt, otherwise only staged changes are included. Default is false."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": [
@@ -1704,7 +1925,7 @@
               "enum": [
                 "diff",
                 "terminal",
-                "locals",
+                "debugger",
                 "open",
                 "google",
                 "search",
@@ -1724,12 +1945,13 @@
                 "database",
                 "os",
                 "repo-map",
-                "greptile"
+                "greptile",
+                "web"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
-                "Reference the contents of the terminal",
-                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
+                "Reference the last terminal command",
+                "Reference the contents of the local variables in the debugger with top n level (defaulting to 3) of call stack for that thread",
                 "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
@@ -1749,7 +1971,8 @@
                 "Reference table schemas",
                 "Operating system and CPU Information",
                 "Map of files in the repository with important code highlights",
-                "Query your greptile index of the current repo"
+                "Query your greptile index of the current repo",
+                "Search the web for sources related to your question"
               ],
               "type": "string"
             },
@@ -1765,6 +1988,82 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "discord"
+                ]
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "params": {
+                    "properties": {
+                      "discordKey": {
+                        "type": "string",
+                        "description": "Your Discord bot token to access the Discord API. Required to fetch messages from servers."
+                      },
+                      "guildId": {
+                        "type": "string",
+                        "description": "The ID of the guild (server) from which to fetch channels and messages."
+                      },
+                      "channels": {
+                        "type": "array",
+                        "description": "A list of channel objects to search for messages",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "description": "The unique ID of the channel"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "The name of the channel"
+                            }
+                          },
+                          "required": [
+                            "id"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "discordKey"
+                    ]
+                  }
+                }
+              },
+              {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "params": {
+                        "required": [
+                          "guildId"
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "properties": {
+                      "params": {
+                        "required": [
+                          "channels"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
         {
           "if": {
             "properties": {
@@ -1787,6 +2086,34 @@
                 "required": [
                   "serperApiKey"
                 ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "web"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "n": {
+                    "title": "N",
+                    "description": "The number of results to return",
+                    "default": 6,
+                    "type": "integer"
+                  }
+                }
               }
             },
             "required": [
@@ -2076,6 +2403,11 @@
                   "url": {
                     "type": "string",
                     "description": "The HTTP endpoint of your context provider server."
+                  },
+                  "options": {
+                    "title": "Custom Options",
+                    "description": "Additional options to pass to your custom HTTP server.",
+                    "type": "object"
                   }
                 },
                 "required": [
@@ -2391,7 +2723,9 @@
                 "gemini",
                 "voyage",
                 "nvidia",
-                "bedrock"
+                "bedrock",
+                "sagemaker",
+                "vertex"
               ]
             },
             "model": {
@@ -2425,7 +2759,7 @@
             "region": {
               "title": "Region",
               "description": "The region where the model is hosted",
-              "type": "string"
+              "$ref": "#/definitions/ModelDescription/properties/region"
             },
             "profile": {
               "title": "Profile",
@@ -2456,6 +2790,63 @@
               "then": {
                 "required": [
                   "apiKey"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "sagemaker"
+                    ]
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "model": {
+                    "markdownDescription": "SageMaker endpoint name"
+                  }
+                },
+                "required": [
+                  "model"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "vertex"
+                    ]
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "projectId": {
+                    "markdownDescription": "The name of your vertexAI project"
+                  },
+                  "region": {
+                    "markdownDescription": "The region your vertexAI model is hosted in - typically central1",
+                    "default": "central1"
+                  },
+                  "model": {
+                    "default": "text-embedding-004"
+                  }
+                },
+                "required": [
+                  "projectId",
+                  "model",
+                  "region"
                 ]
               }
             }
@@ -2576,7 +2967,9 @@
                       "model": {
                         "enum": [
                           "rerank-lite-1",
-                          "rerank-1"
+                          "rerank-1",
+                          "rerank-2",
+                          "rerank-2-lite"
                         ]
                       }
                     },

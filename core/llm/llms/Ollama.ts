@@ -33,7 +33,7 @@ class Ollama extends BaseLLM {
       body: JSON.stringify({ name: this._getModel() }),
     })
       .then(async (response) => {
-        if (response.status !== 200) {
+        if (response?.status !== 200) {
           // console.warn(
           //   "Error calling Ollama /api/show endpoint: ",
           //   await response.text(),

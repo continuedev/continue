@@ -1,15 +1,16 @@
 import * as JSONC from "comment-json";
 import * as fs from "fs";
 import path from "path";
+import * as tar from "tar";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index.js";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
-import FileContextProvider from "../context/providers/FileContextProvider.js";
-import { contextProviderClassFromName } from "../context/providers/index.js";
-import { AllRerankers } from "../context/rerankers/index.js";
-import { LLMReranker } from "../context/rerankers/llm.js";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+import FileContextProvider from "../context/providers/FileContextProvider";
+import { contextProviderClassFromName } from "../context/providers/index";
+import { AllRerankers } from "../context/rerankers/index";
+import { LLMReranker } from "../context/rerankers/llm";
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -28,40 +29,51 @@ import {
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
-} from "../index.js";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { allEmbeddingsProviders } from "../indexing/embeddings/index.js";
-import { BaseLLM } from "../llm/index.js";
-import CustomLLMClass from "../llm/llms/CustomLLM.js";
-import FreeTrial from "../llm/llms/FreeTrial.js";
-import { llmFromDescription } from "../llm/llms/index.js";
-
+} from "..";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { allEmbeddingsProviders } from "../indexing/embeddings";
+import { BaseLLM } from "../llm";
+import CustomLLMClass from "../llm/llms/CustomLLM";
+import FreeTrial from "../llm/llms/FreeTrial";
+import { llmFromDescription } from "../llm/llms";
+import os from "os";
 import { execSync } from "child_process";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
-import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
-import { copyOf } from "../util/index.js";
-import mergeJson from "../util/merge.js";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
+import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
+import { copyOf } from "../util";
+import mergeJson from "../util/merge";
 import {
+  DEFAULT_CONFIG_TS_CONTENTS,
   getConfigJsPath,
   getConfigJsPathForRemote,
   getConfigJsonPath,
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
+  getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
-} from "../util/paths.js";
+} from "../util/paths";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
-} from "./default.js";
+} from "./default";
 import {
   DEFAULT_PROMPTS_FOLDER,
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
+import { validateConfig, ConfigValidationError } from "./validation.js";
+
+import { GlobalContext } from "../util/GlobalContext";
+
+export interface ConfigResult<T> {
+  config: T | undefined;
+  errors: ConfigValidationError[] | undefined;
+  configLoadInterrupted: boolean;
+}
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -97,7 +109,7 @@ function loadSerializedConfig(
   ideSettings: IdeSettings,
   ideType: IdeType,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): SerializedContinueConfig {
+): ConfigResult<SerializedContinueConfig> {
   const configPath = getConfigJsonPath(ideType);
   let config: SerializedContinueConfig = overrideConfigJson!;
   if (!config) {
@@ -106,6 +118,16 @@ function loadSerializedConfig(
     } catch (e) {
       throw new Error(`Failed to parse config.json: ${e}`);
     }
+  }
+
+  const errors = validateConfig(config);
+
+  if (errors?.some((error) => error.fatal)) {
+    return {
+      errors,
+      config: undefined,
+      configLoadInterrupted: true,
+    };
   }
 
   if (config.allowAnonymousTelemetry === undefined) {
@@ -142,7 +164,7 @@ function loadSerializedConfig(
       ? [...defaultSlashCommandsVscode]
       : [...defaultSlashCommandsJetBrains];
 
-  return config;
+  return { config, errors, configLoadInterrupted: false };
 }
 
 async function serializedToIntermediateConfig(
@@ -492,80 +514,184 @@ function finalToBrowserConfig(
   };
 }
 
-function getTarget() {
-  const os =
-    {
-      aix: "linux",
-      darwin: "darwin",
-      freebsd: "linux",
-      linux: "linux",
-      openbsd: "linux",
-      sunos: "linux",
-      win32: "win32",
-    }[process.platform as string] ?? "linux";
-  const arch = {
-    arm: "arm64",
-    arm64: "arm64",
-    ia32: "x64",
-    loong64: "arm64",
-    mips: "arm64",
-    mipsel: "arm64",
-    ppc: "x64",
-    ppc64: "x64",
-    riscv64: "arm64",
-    s390: "x64",
-    s390x: "x64",
-    x64: "x64",
-  }[process.arch];
-
-  return `${os}-${arch}`;
-}
-
 function escapeSpacesInPath(p: string): string {
   return p.replace(/ /g, "\\ ");
 }
 
-async function buildConfigTs() {
-  if (!fs.existsSync(getConfigTsPath())) {
-    return undefined;
+async function handleEsbuildInstallation(ide: IDE, ideType: IdeType) {
+  // JetBrains is currently the only IDE that we've reached the plugin size limit and
+  // therefore need to install esbuild manually to reduce the size
+  if (ideType !== "jetbrains") {
+    return;
   }
 
+  const globalContext = new GlobalContext();
+  if (globalContext.get("hasDismissedConfigTsNoticeJetBrains")) {
+    return;
+  }
+
+  const esbuildPath = getEsbuildBinaryPath();
+
+  if (fs.existsSync(esbuildPath)) {
+    return;
+  }
+
+  console.debug("No esbuild binary detected");
+
+  const shouldInstall = await promptEsbuildInstallation(ide);
+
+  if (shouldInstall) {
+    await downloadAndInstallEsbuild(ide);
+  }
+}
+
+async function promptEsbuildInstallation(ide: IDE): Promise<boolean> {
+  const installMsg = "Install esbuild";
+  const dismissMsg = "Dismiss";
+
+  const res = await ide.showToast(
+    "warning",
+    "You're using a custom 'config.ts' file, which requires 'esbuild' to be installed. Would you like to install it now?",
+    dismissMsg,
+    installMsg,
+  );
+
+  if (res === dismissMsg) {
+    const globalContext = new GlobalContext();
+    globalContext.update("hasDismissedConfigTsNoticeJetBrains", true);
+    return false;
+  }
+
+  return res === installMsg;
+}
+
+/**
+ * The download logic is adapted from here: https://esbuild.github.io/getting-started/#download-a-build
+ */
+async function downloadAndInstallEsbuild(ide: IDE) {
+  const esbuildPath = getEsbuildBinaryPath();
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esbuild-"));
+
+  try {
+    const target = `${os.platform()}-${os.arch()}`;
+    const version = "0.19.11";
+    const url = `https://registry.npmjs.org/@esbuild/${target}/-/${target}-${version}.tgz`;
+    const tgzPath = path.join(tempDir, `esbuild-${version}.tgz`);
+
+    console.debug(`Downloading esbuild from: ${url}`);
+    execSync(`curl -fo "${tgzPath}" "${url}"`);
+
+    console.debug(`Extracting tgz file to: ${tempDir}`);
+    await tar.x({
+      file: tgzPath,
+      cwd: tempDir,
+      strip: 2, // Remove the top two levels of directories
+    });
+
+    // Ensure the destination directory exists
+    const destDir = path.dirname(esbuildPath);
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    // Move the file
+    const extractedBinaryPath = path.join(tempDir, "esbuild");
+    fs.renameSync(extractedBinaryPath, esbuildPath);
+
+    // Ensure the binary is executable (not needed on Windows)
+    if (os.platform() !== "win32") {
+      fs.chmodSync(esbuildPath, 0o755);
+    }
+
+    // Clean up
+    fs.unlinkSync(tgzPath);
+    fs.rmSync(tempDir, { recursive: true });
+
+    await ide.showToast(
+      "info",
+      `'esbuild' successfully installed to ${esbuildPath}`,
+    );
+  } catch (error) {
+    console.error("Error downloading or saving esbuild binary:", error);
+    throw error;
+  }
+}
+
+async function tryBuildConfigTs() {
   try {
     if (process.env.IS_BINARY === "true") {
-      execSync(
-        `${escapeSpacesInPath(path.dirname(process.execPath))}/esbuild${
-          getTarget().startsWith("win32") ? ".exe" : ""
-        } ${escapeSpacesInPath(
-          getConfigTsPath(),
-        )} --bundle --outfile=${escapeSpacesInPath(
-          getConfigJsPath(),
-        )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
-      );
+      await buildConfigTsWithBinary();
     } else {
-      // Dynamic import esbuild so potentially disastrous errors can be caught
-      const esbuild = await import("esbuild");
-
-      await esbuild.build({
-        entryPoints: [getConfigTsPath()],
-        bundle: true,
-        platform: "node",
-        format: "cjs",
-        outfile: getConfigJsPath(),
-        external: ["fetch", "fs", "path", "os", "child_process"],
-        sourcemap: true,
-      });
+      await buildConfigTsWithNodeModule();
     }
   } catch (e) {
     console.log(
       `Build error. Please check your ~/.continue/config.ts file: ${e}`,
     );
+  }
+}
+
+async function buildConfigTsWithBinary() {
+  const cmd = [
+    escapeSpacesInPath(getEsbuildBinaryPath()),
+    escapeSpacesInPath(getConfigTsPath()),
+    "--bundle",
+    `--outfile=${escapeSpacesInPath(getConfigJsPath())}`,
+    "--platform=node",
+    "--format=cjs",
+    "--sourcemap",
+    "--external:fetch",
+    "--external:fs",
+    "--external:path",
+    "--external:os",
+    "--external:child_process",
+  ].join(" ");
+
+  execSync(cmd);
+}
+
+async function buildConfigTsWithNodeModule() {
+  const { build } = await import("esbuild");
+
+  await build({
+    entryPoints: [getConfigTsPath()],
+    bundle: true,
+    platform: "node",
+    format: "cjs",
+    outfile: getConfigJsPath(),
+    external: ["fetch", "fs", "path", "os", "child_process"],
+    sourcemap: true,
+  });
+}
+
+function readConfigJs(): string | undefined {
+  const configJsPath = getConfigJsPath();
+
+  if (!fs.existsSync(configJsPath)) {
     return undefined;
   }
 
-  if (!fs.existsSync(getConfigJsPath())) {
-    return undefined;
+  return fs.readFileSync(configJsPath, "utf8");
+}
+
+async function buildConfigTsandReadConfigJs(ide: IDE, ideType: IdeType) {
+  const configTsPath = getConfigTsPath();
+
+  if (!fs.existsSync(configTsPath)) {
+    return;
   }
-  return fs.readFileSync(getConfigJsPath(), "utf8");
+
+  const currentContent = fs.readFileSync(configTsPath, "utf8");
+
+  // If the user hasn't modified the default config.ts, don't bother building
+  if (currentContent.trim() === DEFAULT_CONFIG_TS_CONTENTS.trim()) {
+    return;
+  }
+
+  await handleEsbuildInstallation(ide, ideType);
+  await tryBuildConfigTs();
+
+  return readConfigJs();
 }
 
 async function loadFullConfigNode(
@@ -577,20 +703,28 @@ async function loadFullConfigNode(
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
   overrideConfigJson: SerializedContinueConfig | undefined,
-): Promise<ContinueConfig> {
+): Promise<ConfigResult<ContinueConfig>> {
   // Serialized config
-  let serialized = loadSerializedConfig(
+  let {
+    config: serialized,
+    errors,
+    configLoadInterrupted,
+  } = loadSerializedConfig(
     workspaceConfigs,
     ideSettings,
     ideType,
     overrideConfigJson,
   );
 
+  if (!serialized || configLoadInterrupted) {
+    return { errors, config: undefined, configLoadInterrupted: true };
+  }
+
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
 
   // Apply config.ts to modify intermediate config
-  const configJsContents = await buildConfigTs();
+  const configJsContents = await buildConfigTsandReadConfigJs(ide, ideType);
   if (configJsContents) {
     try {
       // Try config.ts first
@@ -653,7 +787,7 @@ async function loadFullConfigNode(
     writeLog,
     workOsAccessToken,
   );
-  return finalConfig;
+  return { config: finalConfig, errors, configLoadInterrupted: false };
 }
 
 export {
