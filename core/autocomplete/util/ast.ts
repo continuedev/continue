@@ -1,6 +1,6 @@
 import Parser from "web-tree-sitter";
-import { RangeInFileWithContents } from "../commands/util.js";
-import { getParserForFile } from "../util/treeSitter.js";
+import { RangeInFileWithContents } from "../../commands/util.js";
+import { getParserForFile } from "../../util/treeSitter.js";
 
 export type AstPath = Parser.SyntaxNode[];
 

@@ -1,5 +1,5 @@
-import { AstPath } from "./ast";
-import { AutocompleteLanguageInfo } from "./languages";
+import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
+import { AstPath } from "../util/ast";
 
 const BLOCK_TYPES = ["body", "statement_block"];
 

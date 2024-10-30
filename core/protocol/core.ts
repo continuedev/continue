@@ -15,7 +15,7 @@ import type {
   SessionInfo,
   SiteIndexingConfig,
 } from "../";
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import type { AutocompleteInput } from "../autocomplete/CompletionProvider";
 import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{

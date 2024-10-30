@@ -6,23 +6,23 @@ import {
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
-import { AstPath, getAst, getTreePathAtCursor } from "./ast.js";
+import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import {
   AutocompleteLanguageInfo,
   LANGUAGES,
   Typescript,
-} from "./languages.js";
+} from "./constants/AutocompleteLanguageInfo.js";
+import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import {
   fillPromptWithSnippets,
   getSymbolsForSnippet,
   rankSnippets,
   removeRangeFromSnippets,
   type AutocompleteSnippet,
-} from "./ranking.js";
+} from "./context/ranking/index.js";
+import { RootPathContextService } from "./context/RootPathContextService.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
-import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
-import { RootPathContextService } from "./services/RootPathContextService.js";
-import { shouldCompleteMultiline } from "./shouldCompleteMultiline.js";
+import { AstPath, getAst, getTreePathAtCursor } from "./util/ast.js";
 
 export function languageForFilepath(
   filepath: string,

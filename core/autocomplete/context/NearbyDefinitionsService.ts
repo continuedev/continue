@@ -1,6 +1,6 @@
 import { IDE, Location } from "../..";
-import { LANGUAGES } from "../languages";
-import { getSymbolsForSnippet } from "../ranking";
+import { LANGUAGES } from "../constants/AutocompleteLanguageInfo";
+import { getSymbolsForSnippet } from "./ranking";
 
 interface FileInfo {
   filepath: string;

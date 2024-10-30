@@ -2,18 +2,10 @@ import ignore from "ignore";
 import OpenAI from "openai";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { RangeInFileWithContents } from "../commands/util.js";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
-import {
-  IDE,
-  ILLM,
-  ModelProvider,
-  Position,
-  Range,
-  TabAutocompleteOptions,
-} from "../index.js";
+import { IDE, ILLM, ModelProvider, TabAutocompleteOptions } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
@@ -23,17 +15,24 @@ import {
 import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
 
-import AutocompleteLruCache from "./cache.js";
+import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
+import { getTemplateForModel } from "./constants/AutocompleteTemplate.js";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt.js";
-import { isOnlyWhitespace } from "./filter.js";
-import { AutocompleteLanguageInfo } from "./languages.js";
-import { postprocessCompletion } from "./postprocessing.js";
-import { AutocompleteSnippet } from "./ranking.js";
-import { RecentlyEditedRange } from "./recentlyEdited.js";
-import { RootPathContextService } from "./services/RootPathContextService.js";
+import { AutocompleteSnippet } from "./context/ranking/index.js";
+import { RootPathContextService } from "./context/RootPathContextService.js";
+import { isOnlyWhitespace } from "./filtering/filter.js";
+import { GeneratorReuseManager } from "./generation/GeneratorReuseManager.js";
+import { postprocessCompletion } from "./postprocessing/index.js";
+// @prettier-ignore
+import Handlebars from "handlebars";
+import { getConfigJsonPath } from "../util/paths.js";
+import AutocompleteLruCache from "./AutocompleteLruCache.js";
+import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
+import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
+import { stopAtStopTokens } from "./filtering/streamTransforms/charStream.js";
 import {
   avoidPathLineAndEmptyComments,
   noTopLevelKeywordsMidline,
@@ -42,67 +41,10 @@ import {
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
-} from "./streamTransforms/lineStream.js";
-import { getTemplateForModel } from "./templates.js";
-import { GeneratorReuseManager } from "./util.js";
-// @prettier-ignore
-import Handlebars from "handlebars";
-import { getConfigJsonPath } from "../util/paths.js";
-import { BracketMatchingService } from "./services/BracketMatchingService.js";
-import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
-import {
-  noFirstCharNewline,
-  onlyWhitespaceAfterEndOfLine,
-  stopAtStopTokens,
-} from "./streamTransforms/charStream.js";
-
-export interface AutocompleteInput {
-  completionId: string;
-  filepath: string;
-  pos: Position;
-  recentlyEditedFiles: RangeInFileWithContents[];
-  recentlyEditedRanges: RecentlyEditedRange[];
-  clipboardText: string;
-  // Used for notebook files
-  manuallyPassFileContents?: string;
-  // Used for VS Code git commit input box
-  manuallyPassPrefix?: string;
-  selectedCompletionInfo?: {
-    text: string;
-    range: Range;
-  };
-  injectDetails?: string;
-}
-
-export interface AutocompleteOutcome extends TabAutocompleteOptions {
-  accepted?: boolean;
-  time: number;
-  prefix: string;
-  suffix: string;
-  prompt: string;
-  completion: string;
-  modelProvider: string;
-  modelName: string;
-  completionOptions: any;
-  cacheHit: boolean;
-  filepath: string;
-  gitRepo?: string;
-  completionId: string;
-  uniqueId: string;
-}
+} from "./filtering/streamTransforms/lineStream.js";
+import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
-
-const DOUBLE_NEWLINE = "\n\n";
-const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
-const SRC_DIRECTORY = "/src/";
-// Starcoder2 tends to output artifacts starting with the letter "t"
-const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
-const PYTHON_ENCODING = "#- coding: utf-8";
-const CODE_BLOCK_END = "```";
-
-const multilineStops: string[] = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
-const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
 // Not worth disrupting the user to tell them that a single autocomplete request didn't go through
@@ -262,7 +204,8 @@ export class CompletionProvider {
         for (const workspaceDir of workspaceDirs) {
           const relativePath = path.relative(workspaceDir, filepath);
           const relativePathBase = relativePath.split(path.sep).at(0);
-          const isInWorkspace = !path.isAbsolute(relativePath) && relativePathBase !== "..";
+          const isInWorkspace =
+            !path.isAbsolute(relativePath) && relativePathBase !== "..";
           if (isInWorkspace) {
             filepath = path.relative(workspaceDir, filepath);
             break;
@@ -489,10 +432,11 @@ export class CompletionProvider {
 
     if (input.injectDetails) {
       const lines = fullPrefix.split("\n");
-      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${lang.singleLineComment
-        } ${input.injectDetails
-          .split("\n")
-          .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
+      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
+        lang.singleLineComment
+      } ${input.injectDetails
+        .split("\n")
+        .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
     }
 
     const fullSuffix = getRangeInString(fileContents, {
@@ -513,17 +457,17 @@ export class CompletionProvider {
 
     let extrasSnippets = options.useOtherFiles
       ? ((await Promise.race([
-        this.getDefinitionsFromLsp(
-          filepath,
-          fullPrefix + fullSuffix,
-          fullPrefix.length,
-          this.ide,
-          lang,
-        ),
-        new Promise((resolve) => {
-          setTimeout(() => resolve([]), 100);
-        }),
-      ])) as AutocompleteSnippet[])
+          this.getDefinitionsFromLsp(
+            filepath,
+            fullPrefix + fullSuffix,
+            fullPrefix.length,
+            this.ide,
+            lang,
+          ),
+          new Promise((resolve) => {
+            setTimeout(() => resolve([]), 100);
+          }),
+        ])) as AutocompleteSnippet[])
       : [];
 
     const workspaceDirs = await this.ide.getWorkspaceDirs();
@@ -562,8 +506,8 @@ export class CompletionProvider {
       completionOptions,
       compilePrefixSuffix = undefined,
     } = options.template
-        ? { template: options.template, completionOptions: {} }
-        : getTemplateForModel(llm.model);
+      ? { template: options.template, completionOptions: {} }
+      : getTemplateForModel(llm.model);
 
     let prompt: string;
     const filename = getBasename(filepath);
@@ -660,14 +604,14 @@ export class CompletionProvider {
         () =>
           llm.supportsFim()
             ? llm.streamFim(prefix, suffix, {
-              ...completionOptions,
-              stop,
-            })
+                ...completionOptions,
+                stop,
+              })
             : llm.streamComplete(prompt, {
-              ...completionOptions,
-              raw: true,
-              stop,
-            }),
+                ...completionOptions,
+                raw: true,
+                stop,
+              }),
         multiline,
       );
 

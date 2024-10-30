@@ -1,4 +1,4 @@
-import { LineFilter } from "./streamTransforms/lineStream";
+import { LineFilter } from "../filtering/streamTransforms/lineStream";
 
 export interface AutocompleteLanguageInfo {
   name: string;
