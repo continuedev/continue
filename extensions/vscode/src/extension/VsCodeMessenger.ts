@@ -158,6 +158,16 @@ export class VsCodeMessenger {
         return;
       }
 
+      // If document is empty, insert at 0,0 and finish
+      if (!editor.document.getText().trim()) {
+        editor.edit(builder => builder.insert(new vscode.Position(0, 0), data.text));
+        await webviewProtocol.request("updateApplyState", {
+          streamId: data.streamId,
+          status: "done",
+        });
+        return;
+      }
+
       // Get LLM from config
       const configHandler = await configHandlerPromise;
       const config = await configHandler.loadConfig();

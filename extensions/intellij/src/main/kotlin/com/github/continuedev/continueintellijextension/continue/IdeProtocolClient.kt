@@ -635,6 +635,22 @@ class IdeProtocolClient(
                         val text = msg["text"] as String
                         val curSelectedModelTitle = msg["curSelectedModelTitle"] as String
 
+                        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+
+                        if (editor == null) {
+                            showToast("error", "No active editor to apply edits to")
+                            respond(null)
+                            return@launch
+                        }
+                       
+                        if (editor.document.text.trim().isEmpty()) {
+                            WriteCommandAction.runWriteCommandAction(project) {
+                                document.insertString(0, text)
+                            }
+                            respond(null)
+                            return@launch
+                        }
+
                         val config = readConfigJson()
                         var llm = getModelByRole(config, "applyCodeBlock")
 
@@ -653,14 +669,6 @@ class IdeProtocolClient(
 
                         val prompt =
                             "The following code was suggested as an edit:\n```\n${text}\n```\nPlease apply it to the previous code."
-
-                        val editor = FileEditorManager.getInstance(project).selectedTextEditor
-
-                        if (editor == null) {
-                            showToast("error", "No active editor to apply edits to")
-                            respond(null)
-                            return@launch
-                        }
 
                         val rif = getHighlightedCode()
 
