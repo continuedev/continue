@@ -215,7 +215,7 @@ class VerticalDiffBlock(
                 val g2 = g.create() as Graphics2D
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
                 g2.color = backgroundColor
-                g2.fillRoundRect(0, 0, width - 1, height - 1, 8, 8)
+                g2.fillRoundRect(0, 0, width - 1, height - 1, 4, 4)
                 super.paintComponent(g2)
                 g2.dispose()
             }
@@ -225,7 +225,7 @@ class VerticalDiffBlock(
             isContentAreaFilled = false
             isOpaque = false
             border = BorderFactory.createEmptyBorder(4, 2, 4, 2)
-            preferredSize = Dimension(preferredSize.width - 30, 16)
+            preferredSize = Dimension(preferredSize.width - 30, 14)
             cursor = Cursor(Cursor.HAND_CURSOR)
         }
     }
