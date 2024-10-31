@@ -42,6 +42,10 @@ function isExtremeRepetition(completion: string): boolean {
   }
   return false;
 }
+export function isOnlyWhitespace(completion: string): boolean {
+  const whitespaceRegex = /^[\s]+$/;
+  return whitespaceRegex.test(completion);
+}
 
 export function postprocessCompletion({
   completion,
@@ -55,7 +59,7 @@ export function postprocessCompletion({
   suffix: string;
 }): string | undefined {
   // Don't return empty
-  if (completion.trim().length <= 0) {
+  if (isOnlyWhitespace(completion)) {
     return undefined;
   }
 

@@ -1,7 +1,6 @@
 import ignore from "ignore";
 import OpenAI from "openai";
 import path from "path";
-import { v4 as uuidv4 } from "uuid";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
@@ -16,19 +15,19 @@ import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
 
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
-import { getTemplateForModel } from "./constants/AutocompleteTemplate.js";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt.js";
 import { AutocompleteSnippet } from "./context/ranking/index.js";
 import { RootPathContextService } from "./context/RootPathContextService.js";
-import { isOnlyWhitespace } from "./filtering/filter.js";
 import { GeneratorReuseManager } from "./generation/GeneratorReuseManager.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
+import { getTemplateForModel } from "./templating/AutocompleteTemplate.js";
 // @prettier-ignore
 import Handlebars from "handlebars";
 import { getConfigJsonPath } from "../util/paths.js";
+import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
@@ -41,6 +40,7 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./filtering/streamTransforms/lineStream.js";
+import { formatExternalSnippet } from "./templating/index.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -60,23 +60,6 @@ const LOCAL_PROVIDERS: ModelProvider[] = [
   "text-gen-webui",
 ];
 
-function formatExternalSnippet(
-  filepath: string,
-  snippet: string,
-  language: AutocompleteLanguageInfo,
-) {
-  const comment = language.singleLineComment;
-  const lines = [
-    `${comment} Path: ${getBasename(filepath)}`,
-    ...snippet
-      .trim()
-      .split("\n")
-      .map((line) => `${comment} ${line}`),
-    comment,
-  ];
-  return lines.join("\n");
-}
-
 export type GetLspDefinitionsFunction = (
   filepath: string,
   contents: string,
@@ -86,9 +69,14 @@ export type GetLspDefinitionsFunction = (
 ) => Promise<AutocompleteSnippet[]>;
 
 export class CompletionProvider {
-  private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
-  private static debouncing = false;
-  private static lastUUID: string | undefined = undefined;
+  private importDefinitionsService: ImportDefinitionsService;
+  private rootPathContextService: RootPathContextService;
+  private generatorReuseManager: GeneratorReuseManager;
+  private autocompleteCache = AutocompleteLruCache.get();
+  public errorsShown: Set<string> = new Set();
+  private bracketMatchingService = new BracketMatchingService();
+  private debouncer = new AutocompleteDebouncer();
+  // private nearbyDefinitionsService = new NearbyDefinitionsService();
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -106,14 +94,6 @@ export class CompletionProvider {
       this.ide,
     );
   }
-
-  private importDefinitionsService: ImportDefinitionsService;
-  private rootPathContextService: RootPathContextService;
-  private generatorReuseManager: GeneratorReuseManager;
-  private autocompleteCache = AutocompleteLruCache.get();
-  public errorsShown: Set<string> = new Set();
-  private bracketMatchingService = new BracketMatchingService();
-  // private nearbyDefinitionsService = new NearbyDefinitionsService();
 
   private onError(e: any) {
     console.warn("Error generating autocompletion: ", e);
@@ -150,19 +130,7 @@ export class CompletionProvider {
 
     if (this._outcomes.has(completionId)) {
       const outcome = this._outcomes.get(completionId)!;
-      outcome.accepted = true;
-      logDevData("autocomplete", outcome);
-      void Telemetry.capture(
-        "autocomplete",
-        {
-          accepted: outcome.accepted,
-          modelName: outcome.modelName,
-          modelProvider: outcome.modelProvider,
-          time: outcome.time,
-          cacheHit: outcome.cacheHit,
-        },
-        true,
-      );
+      this.logAcceptedCompletion(completionId, outcome);
       this._outcomes.delete(completionId);
 
       this.bracketMatchingService.handleAcceptedCompletion(
@@ -170,6 +138,25 @@ export class CompletionProvider {
         outcome.filepath,
       );
     }
+  }
+
+  private logAcceptedCompletion(
+    completionId: string,
+    outcome: AutocompleteOutcome,
+  ) {
+    outcome.accepted = true;
+    logDevData("autocomplete", outcome);
+    void Telemetry.capture(
+      "autocomplete",
+      {
+        accepted: outcome.accepted,
+        modelName: outcome.modelName,
+        modelProvider: outcome.modelProvider,
+        time: outcome.time,
+        cacheHit: outcome.cacheHit,
+      },
+      true,
+    );
   }
 
   public cancelRejectionTimeout(completionId: string) {
@@ -188,10 +175,6 @@ export class CompletionProvider {
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
-      // Debounce
-      const uuid = uuidv4();
-      CompletionProvider.lastUUID = uuid;
-
       const config = await this.configHandler.loadConfig();
       const options = {
         ...DEFAULT_AUTOCOMPLETE_OPTS,
@@ -244,21 +227,8 @@ export class CompletionProvider {
       }
 
       // Debounce
-      if (CompletionProvider.debouncing) {
-        CompletionProvider.debounceTimeout?.refresh();
-        const lastUUID = await new Promise((resolve) =>
-          setTimeout(() => {
-            resolve(CompletionProvider.lastUUID);
-          }, options.debounceDelay),
-        );
-        if (uuid !== lastUUID) {
-          return undefined;
-        }
-      } else {
-        CompletionProvider.debouncing = true;
-        CompletionProvider.debounceTimeout = setTimeout(async () => {
-          CompletionProvider.debouncing = false;
-        }, options.debounceDelay);
+      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
+        return undefined;
       }
 
       // Get completion
@@ -289,15 +259,6 @@ export class CompletionProvider {
       const outcome = await this.getTabCompletion(token, options, llm, input);
 
       if (!outcome?.completion) {
-        return undefined;
-      }
-
-      /**
-       * This check is most likely not needed because we do trim the LLM output
-       * elsewhere in the code. That said, I'm not yet confident enough to
-       * remove this.
-       */
-      if (options.transform && isOnlyWhitespace(outcome.completion)) {
         return undefined;
       }
 
