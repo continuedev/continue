@@ -392,7 +392,7 @@ export class CompletionProvider {
     );
 
     // Completion
-    let completion = "";
+    let completion: string | undefined = "";
 
     const cache = await autocompleteCache;
     const cachedCompletion = options.useCache
@@ -473,13 +473,15 @@ export class CompletionProvider {
           })
         : completion;
 
-      if (!processedCompletion) {
-        return undefined;
-      }
       completion = processedCompletion;
     }
 
     const time = Date.now() - startTime;
+
+    if (!completion) {
+      return undefined;
+    }
+
     return {
       time,
       completion,
