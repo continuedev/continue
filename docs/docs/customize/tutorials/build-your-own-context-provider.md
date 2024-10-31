@@ -242,9 +242,9 @@ import {
 class MyCustomProvider implements IContextProvider {
   get description(): ContextProviderDescription {
     return {
-      title: "custom",
+      title: "Custom",
       displayTitle: "Custom",
-      description: "Custom description",
+      description: "my custom context provider",
       type: "normal",
     };
   }
@@ -273,7 +273,7 @@ class MyCustomProvider implements IContextProvider {
 const customProvider = new MyCustomProvider();
 
 // get Continue extension using vscode API
-const continueExt = vscode.extensions.getExtension("continue.continue");
+const continueExt = vscode.extensions.getExtension("Continue.continue");
 
 // get the API from the extension
 const continueApi = continueExt?.exports;
@@ -281,3 +281,7 @@ const continueApi = continueExt?.exports;
 // register your custom provider
 continueApi?.registerCustomContextProvider(customProvider);
 ```
+
+This will register `MyCustomProvider` provider with Continue
+
+![alt text](./assets/image.png)
