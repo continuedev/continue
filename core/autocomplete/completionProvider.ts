@@ -1,5 +1,4 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { streamLines } from "../diff/util.js";
 import { IDE, ILLM, TabAutocompleteOptions } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import { getBasename, getLastNPathParts } from "../util/index.js";
@@ -29,15 +28,7 @@ import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { decideMultilineEarly } from "./classification/shouldCompleteMultiline.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
-import { stopAtStopTokens } from "./filtering/streamTransforms/charStream.js";
-import {
-  avoidPathLineAndEmptyComments,
-  skipPrefixes,
-  stopAtLines,
-  stopAtRepeatingLines,
-  stopAtSimilarLine,
-  streamWithNewLines,
-} from "./filtering/streamTransforms/lineStream.js";
+import { StreamTransformPipeline } from "./filtering/streamTransforms/StreamTransformPipeline.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
 import { formatExternalSnippet } from "./templating/index.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
@@ -67,6 +58,7 @@ export class CompletionProvider {
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
   private debouncer = new AutocompleteDebouncer();
+  private streamTransformPipeline = new StreamTransformPipeline();
   // private nearbyDefinitionsService = new NearbyDefinitionsService();
 
   constructor(
@@ -344,17 +336,6 @@ export class CompletionProvider {
       end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
     });
 
-    // First non-whitespace line below the cursor
-    let lineBelowCursor = "";
-    let i = 1;
-    while (
-      lineBelowCursor.trim() === "" &&
-      pos.line + i <= fileLines.length - 1
-    ) {
-      lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
-      i++;
-    }
-
     let extrasSnippets = options.useOtherFiles
       ? ((await Promise.race([
           this.getDefinitionsFromLsp(
@@ -476,7 +457,7 @@ export class CompletionProvider {
       cacheHit = true;
       completion = cachedCompletion;
     } else {
-      const stop = [
+      const stopTokens = [
         ...(completionOptions?.stop || []),
         // ...multilineStops,
         ...commonStops,
@@ -505,12 +486,12 @@ export class CompletionProvider {
           llm.supportsFim()
             ? llm.streamFim(prefix, suffix, {
                 ...completionOptions,
-                stop,
+                stop: stopTokens,
               })
             : llm.streamComplete(prompt, {
                 ...completionOptions,
                 raw: true,
-                stop,
+                stop: stopTokens,
               }),
         multiline,
       );
@@ -530,53 +511,22 @@ export class CompletionProvider {
           yield update;
         }
       };
-      let charGenerator = generatorWithCancellation();
 
-      if (options.transform) {
-        // charGenerator = noFirstCharNewline(charGenerator);
-        // charGenerator = onlyWhitespaceAfterEndOfLine(
-        //   charGenerator,
-        //   lang.endOfLine,
-        //   fullStop,
-        // );
-        charGenerator = stopAtStopTokens(charGenerator, stop);
-        charGenerator =
-          this.bracketMatchingService.stopOnUnmatchedClosingBracket(
-            charGenerator,
+      const initialGenerator = generatorWithCancellation();
+      const finalGenerator = options.transform
+        ? this.streamTransformPipeline.transform(
+            initialGenerator,
             prefix,
             suffix,
             filepath,
             multiline,
-          );
-      }
-
-      let lineGenerator = streamLines(charGenerator);
-      if (options.transform) {
-        lineGenerator = stopAtLines(lineGenerator, fullStop);
-        lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-        lineGenerator = avoidPathLineAndEmptyComments(
-          lineGenerator,
-          lang.singleLineComment,
-        );
-        lineGenerator = skipPrefixes(lineGenerator);
-
-        // lineGenerator = noTopLevelKeywordsMidline(
-        //   lineGenerator,
-        //   lang.topLevelKeywords,
-        //   fullStop,
-        // );
-        for (const lineFilter of lang.lineFilters ?? []) {
-          lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
-        }
-
-        lineGenerator = stopAtSimilarLine(
-          lineGenerator,
-          lineBelowCursor,
-          fullStop,
-        );
-      }
-
-      const finalGenerator = streamWithNewLines(lineGenerator);
+            pos,
+            fileLines,
+            stopTokens,
+            lang,
+            fullStop,
+          )
+        : initialGenerator;
 
       try {
         for await (const update of finalGenerator) {
