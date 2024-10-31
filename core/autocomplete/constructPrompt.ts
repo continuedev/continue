@@ -1,6 +1,3 @@
-import { RangeInFileWithContents } from "../commands/util.js";
-import { TabAutocompleteOptions } from "../index.js";
-
 import {
   countTokens,
   pruneLinesFromBottom,
@@ -21,7 +18,8 @@ import {
   type AutocompleteSnippet,
 } from "./context/ranking/index.js";
 import { RootPathContextService } from "./context/RootPathContextService.js";
-import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
+import { HelperVars } from "./HelperVars.js";
+import { findMatchingRange } from "./recentlyEdited.js";
 import { AstPath, getAst, getTreePathAtCursor } from "./util/ast.js";
 
 export function languageForFilepath(
@@ -31,16 +29,9 @@ export function languageForFilepath(
 }
 
 export async function constructAutocompletePrompt(
-  filepath: string,
-  cursorLine: number,
   fullPrefix: string,
   fullSuffix: string,
-  clipboardText: string,
-  language: AutocompleteLanguageInfo,
-  options: TabAutocompleteOptions,
-  recentlyEditedRanges: RecentlyEditedRange[],
-  recentlyEditedFiles: RangeInFileWithContents[],
-  modelName: string,
+  helper: HelperVars,
   extraSnippets: AutocompleteSnippet[],
   importDefinitionsService: ImportDefinitionsService,
   rootPathContextService: RootPathContextService,
@@ -52,20 +43,29 @@ export async function constructAutocompletePrompt(
   snippets: AutocompleteSnippet[];
 }> {
   // Construct basic prefix
-  const maxPrefixTokens = options.maxPromptTokens * options.prefixPercentage;
-  const prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
+  const maxPrefixTokens =
+    helper.options.maxPromptTokens * helper.options.prefixPercentage;
+  const prefix = pruneLinesFromTop(
+    fullPrefix,
+    maxPrefixTokens,
+    helper.modelName,
+  );
 
   // Construct suffix
   const maxSuffixTokens = Math.min(
-    options.maxPromptTokens - countTokens(prefix, modelName),
-    options.maxSuffixPercentage * options.maxPromptTokens,
+    helper.options.maxPromptTokens - countTokens(prefix, helper.modelName),
+    helper.options.maxSuffixPercentage * helper.options.maxPromptTokens,
   );
-  const suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
+  const suffix = pruneLinesFromBottom(
+    fullSuffix,
+    maxSuffixTokens,
+    helper.modelName,
+  );
 
   // Calculate AST Path
   let treePath: AstPath | undefined;
   try {
-    const ast = await getAst(filepath, fullPrefix + fullSuffix);
+    const ast = await getAst(helper.filepath, fullPrefix + fullSuffix);
     if (ast) {
       treePath = await getTreePathAtCursor(ast, fullPrefix.length);
     }
@@ -76,15 +76,17 @@ export async function constructAutocompletePrompt(
   // Find external snippets
   let snippets: AutocompleteSnippet[] = [];
 
-  if (options.useOtherFiles) {
+  if (helper.options.useOtherFiles) {
     snippets.push(...extraSnippets);
 
     const windowAroundCursor =
       fullPrefix.slice(
-        -options.slidingWindowSize * options.slidingWindowPrefixPercentage,
+        -helper.options.slidingWindowSize *
+          helper.options.slidingWindowPrefixPercentage,
       ) +
       fullSuffix.slice(
-        options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage),
+        helper.options.slidingWindowSize *
+          (1 - helper.options.slidingWindowPrefixPercentage),
       );
 
     // This was much too slow, and not super useful
@@ -103,11 +105,14 @@ export async function constructAutocompletePrompt(
     //   })),
     // );
 
-    if (options.useRecentlyEdited) {
+    if (helper.options.useRecentlyEdited) {
       const currentLinePrefix = prefix.trim().split("\n").slice(-1)[0];
-      if (currentLinePrefix?.length > options.recentLinePrefixMatchMinLength) {
+      if (
+        currentLinePrefix?.length >
+        helper.options.recentLinePrefixMatchMinLength
+      ) {
         const matchingRange = findMatchingRange(
-          recentlyEditedRanges,
+          helper.input.recentlyEditedRanges,
           currentLinePrefix,
         );
         if (matchingRange) {
@@ -121,9 +126,9 @@ export async function constructAutocompletePrompt(
     }
 
     // Use imports
-    if (options.useImports) {
+    if (helper.options.useImports) {
       const importSnippets = [];
-      const fileInfo = importDefinitionsService.get(filepath);
+      const fileInfo = importDefinitionsService.get(helper.filepath);
       if (fileInfo) {
         const { imports } = fileInfo;
         // Look for imports of any symbols around the current range
@@ -132,7 +137,7 @@ export async function constructAutocompletePrompt(
           fullSuffix.split("\n").slice(0, 3).join("\n");
         const symbols = Array.from(
           getSymbolsForSnippet(textAroundCursor),
-        ).filter((symbol) => !language.topLevelKeywords.includes(symbol));
+        ).filter((symbol) => !helper.lang.topLevelKeywords.includes(symbol));
         for (const symbol of symbols) {
           const rifs = imports[symbol];
           if (Array.isArray(rifs)) {
@@ -143,9 +148,9 @@ export async function constructAutocompletePrompt(
       snippets.push(...importSnippets);
     }
 
-    if (options.useRootPathContext && treePath) {
+    if (helper.options.useRootPathContext && treePath) {
       const ctx = await rootPathContextService.getContextForPath(
-        filepath,
+        helper.filepath,
         treePath,
       );
       snippets.push(...ctx);
@@ -165,7 +170,7 @@ export async function constructAutocompletePrompt(
 
     // Fill maxSnippetTokens with snippets
     const maxSnippetTokens =
-      options.maxPromptTokens * options.maxSnippetPercentage;
+      helper.options.maxPromptTokens * helper.options.maxSnippetPercentage;
 
     // Remove prefix range from snippets
     const prefixLines = prefix.split("\n").length;
@@ -173,28 +178,29 @@ export async function constructAutocompletePrompt(
     const buffer = 8;
     const prefixSuffixRangeWithBuffer = {
       start: {
-        line: cursorLine - prefixLines - buffer,
+        line: helper.pos.line - prefixLines - buffer,
         character: 0,
       },
       end: {
-        line: cursorLine + suffixLines + buffer,
+        line: helper.pos.line + suffixLines + buffer,
         character: 0,
       },
     };
     let finalSnippets = removeRangeFromSnippets(
       scoredSnippets,
-      filepath.split("://").slice(-1)[0],
+      helper.filepath.split("://").slice(-1)[0],
       prefixSuffixRangeWithBuffer,
     );
 
     // Filter snippets for those with best scores (must be above threshold)
     finalSnippets = finalSnippets.filter(
-      (snippet) => snippet.score >= options.recentlyEditedSimilarityThreshold,
+      (snippet) =>
+        snippet.score >= helper.options.recentlyEditedSimilarityThreshold,
     );
     finalSnippets = fillPromptWithSnippets(
       scoredSnippets,
       maxSnippetTokens,
-      modelName,
+      helper.modelName,
     );
 
     snippets = finalSnippets;
@@ -208,7 +214,7 @@ export async function constructAutocompletePrompt(
       treePath,
       fullPrefix,
       fullSuffix,
-      language,
+      helper.lang,
     ),
     snippets,
   };

@@ -1,18 +1,14 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { IDE, ILLM, TabAutocompleteOptions } from "../index.js";
+import { IDE, ILLM } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
 } from "../util/parameters.js";
 import { Telemetry } from "../util/posthog.js";
-import { getRangeInString } from "../util/ranges.js";
 
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
-import {
-  constructAutocompletePrompt,
-  languageForFilepath,
-} from "./constructPrompt.js";
+import { constructAutocompletePrompt } from "./constructPrompt.js";
 import { AutocompleteSnippet } from "./context/ranking/index.js";
 import { RootPathContextService } from "./context/RootPathContextService.js";
 import { GeneratorReuseManager } from "./generation/GeneratorReuseManager.js";
@@ -25,7 +21,9 @@ import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { StreamTransformPipeline } from "./filtering/streamTransforms/StreamTransformPipeline.js";
+import { HelperVars } from "./HelperVars.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
+import { constructInitialPrefixSuffix } from "./templating/constructPrefixSuffix.js";
 import { renderPrompt } from "./templating/index.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
 
@@ -199,9 +197,15 @@ export class CompletionProvider {
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
-      const options = await this._getAutocompleteOptions();
+      const llm = await this._prepareLlm();
+      if (!llm) {
+        return undefined;
+      }
 
-      if (await shouldPrefilter(input, options, this.ide)) {
+      const options = await this._getAutocompleteOptions();
+      const helper = new HelperVars(input, options, llm.model, this.ide);
+
+      if (await shouldPrefilter(helper, this.ide)) {
         return undefined;
       }
 
@@ -211,10 +215,6 @@ export class CompletionProvider {
       }
 
       // Get completion
-      const llm = await this._prepareLlm();
-      if (!llm) {
-        return undefined;
-      }
 
       // Create abort signal if not given
       if (!token) {
@@ -223,7 +223,7 @@ export class CompletionProvider {
         this._abortControllers.set(input.completionId, controller);
       }
 
-      const outcome = await this.getTabCompletion(token, options, llm, input);
+      const outcome = await this.getTabCompletion(token, llm, helper);
 
       if (!outcome?.completion) {
         return undefined;
@@ -287,59 +287,19 @@ export class CompletionProvider {
     };
   }
 
-  async getTabCompletion(
-    token: AbortSignal,
-    options: TabAutocompleteOptions,
-    llm: ILLM,
-    input: AutocompleteInput,
-  ): Promise<AutocompleteOutcome | undefined> {
-    const startTime = Date.now();
-
-    const {
-      filepath,
-      pos,
-      recentlyEditedFiles,
-      recentlyEditedRanges,
-      clipboardText,
-      manuallyPassFileContents,
-      manuallyPassPrefix,
-    } = input;
-    const fileContents =
-      manuallyPassFileContents ?? (await this.ide.readFile(filepath));
-    const fileLines = fileContents.split("\n");
-
-    // Filter
-    const lang = languageForFilepath(filepath);
-
-    // Prompt
-    let fullPrefix =
-      getRangeInString(fileContents, {
-        start: { line: 0, character: 0 },
-        end: input.selectedCompletionInfo?.range.start ?? pos,
-      }) + (input.selectedCompletionInfo?.text ?? "");
-
-    if (input.injectDetails) {
-      const lines = fullPrefix.split("\n");
-      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-        lang.singleLineComment
-      } ${input.injectDetails
-        .split("\n")
-        .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
-    }
-
-    const fullSuffix = getRangeInString(fileContents, {
-      start: pos,
-      end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
-    });
-
-    let extrasSnippets = options.useOtherFiles
+  private async _getExtraSnippets(
+    helper: HelperVars,
+    fullPrefix: string,
+    fullSuffix: string,
+  ): Promise<AutocompleteSnippet[]> {
+    let extraSnippets = helper.options.useOtherFiles
       ? ((await Promise.race([
           this.getDefinitionsFromLsp(
-            filepath,
+            helper.input.filepath,
             fullPrefix + fullSuffix,
             fullPrefix.length,
             this.ide,
-            lang,
+            helper.lang,
           ),
           new Promise((resolve) => {
             setTimeout(() => resolve([]), 100);
@@ -348,54 +308,64 @@ export class CompletionProvider {
       : [];
 
     const workspaceDirs = await this.ide.getWorkspaceDirs();
-    if (options.onlyMyCode) {
-      extrasSnippets = extrasSnippets.filter((snippet) => {
+    if (helper.options.onlyMyCode) {
+      extraSnippets = extraSnippets.filter((snippet) => {
         return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
       });
     }
 
+    return extraSnippets;
+  }
+
+  async getTabCompletion(
+    token: AbortSignal,
+    llm: ILLM,
+    helper: HelperVars,
+  ): Promise<AutocompleteOutcome | undefined> {
+    const startTime = Date.now();
+
+    // Construct full prefix/suffix (a few edge cases handled in here)
+    const { prefix: fullPrefix, suffix: fullSuffix } =
+      await constructInitialPrefixSuffix(helper.input, this.ide);
+
+    // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
+    // or they might separately track recently edited ranges)
+    const extraSnippets = await this._getExtraSnippets(
+      helper,
+      fullPrefix,
+      fullSuffix,
+    );
+
     let { prefix, suffix, completeMultiline, snippets } =
       await constructAutocompletePrompt(
-        filepath,
-        pos.line,
         fullPrefix,
         fullSuffix,
-        clipboardText,
-        lang,
-        options,
-        recentlyEditedRanges,
-        recentlyEditedFiles,
-        llm.model,
-        extrasSnippets,
+        helper,
+        extraSnippets,
         this.importDefinitionsService,
         this.rootPathContextService,
       );
 
     // If prefix is manually passed
-    if (manuallyPassPrefix) {
-      prefix = manuallyPassPrefix;
+    if (helper.input.manuallyPassPrefix) {
+      prefix = helper.input.manuallyPassPrefix;
       suffix = "";
     }
 
     const [prompt, completionOptions, multiline] = renderPrompt(
-      options,
       prefix,
       suffix,
-      filepath,
-      lang,
       snippets,
-      llm.model,
-      workspaceDirs,
-      options.template,
-      input.selectedCompletionInfo,
+      await this.ide.getWorkspaceDirs(),
       completeMultiline,
+      helper,
     );
 
     // Completion
     let completion: string | undefined = "";
 
     const cache = await autocompleteCache;
-    const cachedCompletion = options.useCache
+    const cachedCompletion = helper.options.useCache
       ? await cache.get(prefix)
       : undefined;
     let cacheHit = false;
@@ -434,17 +404,17 @@ export class CompletionProvider {
       };
 
       const initialGenerator = generatorWithCancellation();
-      const finalGenerator = options.transform
+      const finalGenerator = helper.options.transform
         ? this.streamTransformPipeline.transform(
             initialGenerator,
             prefix,
             suffix,
-            filepath,
+            helper.filepath,
             multiline,
-            pos,
-            fileLines,
+            helper.pos,
+            helper.fileLines,
             completionOptions?.stop || [],
-            lang,
+            helper.lang,
             fullStop,
           )
         : initialGenerator;
@@ -464,7 +434,7 @@ export class CompletionProvider {
         return undefined;
       }
 
-      const processedCompletion = options.transform
+      const processedCompletion = helper.options.transform
         ? postprocessCompletion({
             completion,
             prefix,
@@ -492,11 +462,11 @@ export class CompletionProvider {
       modelName: llm.model,
       completionOptions,
       cacheHit,
-      filepath: input.filepath,
-      completionId: input.completionId,
-      gitRepo: await this.ide.getRepoName(input.filepath),
+      filepath: helper.filepath,
+      completionId: helper.input.completionId,
+      gitRepo: await this.ide.getRepoName(helper.filepath),
       uniqueId: await this.ide.getUniqueId(),
-      ...options,
+      ...helper.options,
     };
   }
 }

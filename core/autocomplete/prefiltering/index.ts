@@ -1,9 +1,8 @@
 import path from "node:path";
-import { IDE, Position, TabAutocompleteOptions } from "../..";
+import { IDE } from "../..";
 import { getBasename } from "../../util";
 import { getConfigJsonPath } from "../../util/paths";
-import { languageForFilepath } from "../constructPrompt";
-import { AutocompleteInput } from "../types";
+import { HelperVars } from "../HelperVars";
 
 async function isDisabledForFile(
   currentFilepath: string,
@@ -38,52 +37,39 @@ async function isDisabledForFile(
   }
 }
 
-async function shouldLanguageSpecificPrefilter(
-  manuallyPassFileContents: string | undefined,
-  filepath: string,
-  pos: Position,
-  ide: IDE,
-) {
-  const lang = languageForFilepath(filepath);
-  const fileContents =
-    manuallyPassFileContents ?? (await ide.readFile(filepath));
-  const fileLines = fileContents.split("\n");
-  const line = fileLines[pos.line] ?? "";
-  for (const endOfLine of lang.endOfLine) {
-    if (line.endsWith(endOfLine) && pos.character >= line.length) {
+async function shouldLanguageSpecificPrefilter(helper: HelperVars) {
+  const line = helper.fileLines[helper.pos.line] ?? "";
+  for (const endOfLine of helper.lang.endOfLine) {
+    if (line.endsWith(endOfLine) && helper.pos.character >= line.length) {
       return true;
     }
   }
 }
 
 export async function shouldPrefilter(
-  input: AutocompleteInput,
-  options: TabAutocompleteOptions,
+  helper: HelperVars,
   ide: IDE,
 ): Promise<boolean> {
   // Allow disabling autocomplete from config.json
-  if (options.disable) {
+  if (helper.options.disable) {
     return true;
   }
 
   // Check whether we're in the continue config.json file
-  if (input.filepath === getConfigJsonPath()) {
+  if (helper.filepath === getConfigJsonPath()) {
     return true;
   }
 
   // Check whether autocomplete is disabled for this file
-  if (await isDisabledForFile(input.filepath, options.disableInFiles, ide)) {
+  if (
+    await isDisabledForFile(helper.filepath, helper.options.disableInFiles, ide)
+  ) {
     return true;
   }
 
   if (
-    options.transform &&
-    (await shouldLanguageSpecificPrefilter(
-      input.manuallyPassFileContents,
-      input.filepath,
-      input.pos,
-      ide,
-    ))
+    helper.options.transform &&
+    (await shouldLanguageSpecificPrefilter(helper))
   ) {
     return true;
   }

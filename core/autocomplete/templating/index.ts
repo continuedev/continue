@@ -1,9 +1,9 @@
-import { CompletionOptions, TabAutocompleteOptions } from "../..";
+import { CompletionOptions } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
 import { decideMultilineEarly } from "../classification/shouldCompleteMultiline";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { AutocompleteSnippet } from "../context/ranking";
-import { AutocompleteInput } from "../types";
+import { HelperVars } from "../HelperVars";
 import { getTemplateForModel } from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
 
@@ -61,25 +61,20 @@ function renderStringTemplate(
   return prompt;
 }
 export function renderPrompt(
-  options: TabAutocompleteOptions,
   prefix: string,
   suffix: string,
-  filepath: string,
-  lang: AutocompleteLanguageInfo,
   snippets: AutocompleteSnippet[],
-  model: string,
   workspaceDirs: string[],
-  userDefinedTemplate: string | undefined,
-  selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"],
   completeMultiline: boolean,
+  helper: HelperVars,
 ): [string, Partial<CompletionOptions> | undefined, boolean] {
   let {
     template,
     completionOptions,
     compilePrefixSuffix = undefined,
-  } = userDefinedTemplate
-    ? { template: userDefinedTemplate, completionOptions: {} }
-    : getTemplateForModel(model);
+  } = helper.options.template
+    ? { template: helper.options.template, completionOptions: {} }
+    : getTemplateForModel(helper.modelName);
 
   let prompt: string;
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
@@ -90,7 +85,7 @@ export function renderPrompt(
     [prefix, suffix] = compilePrefixSuffix(
       prefix,
       suffix,
-      filepath,
+      helper.filepath,
       reponame,
       snippets,
     );
@@ -103,26 +98,37 @@ export function renderPrompt(
       prefix,
       suffix,
       snippets,
-      lang,
-      filepath,
+      helper.lang,
+      helper.filepath,
       reponame,
     );
   } else {
-    prompt = template(prefix, suffix, filepath, reponame, lang.name, snippets);
+    prompt = template(
+      prefix,
+      suffix,
+      helper.filepath,
+      reponame,
+      helper.lang.name,
+      snippets,
+    );
   }
 
   const multiline =
-    !options.transform ||
+    !helper.options.transform ||
     decideMultilineEarly({
-      multilineCompletions: options.multilineCompletions,
-      language: lang,
-      selectedCompletionInfo: selectedCompletionInfo,
+      multilineCompletions: helper.options.multilineCompletions,
+      language: helper.lang,
+      selectedCompletionInfo: helper.input.selectedCompletionInfo,
       prefix,
       suffix,
       completeMultiline,
     });
 
-  const stopTokens = getStopTokens(completionOptions, lang, model);
+  const stopTokens = getStopTokens(
+    completionOptions,
+    helper.lang,
+    helper.modelName,
+  );
 
   completionOptions = {
     ...completionOptions,
