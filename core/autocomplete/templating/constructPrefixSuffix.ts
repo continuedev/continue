@@ -2,7 +2,7 @@ import { IDE } from "../..";
 import { getRangeInString } from "../../util/ranges";
 import { languageForFilepath } from "../constants/AutocompleteLanguageInfo";
 
-import { AutocompleteInput } from "../types";
+import { AutocompleteInput } from "../util/types";
 
 /**
  * We have to handle a few edge cases in getting the entire prefix/suffix for the current file.

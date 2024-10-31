@@ -8,16 +8,16 @@ import { postprocessCompletion } from "./postprocessing/index.js";
 // @prettier-ignore
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import OpenAI from "../llm/llms/OpenAI.js";
-import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
-import { AutocompleteLoggingService } from "./AutocompleteLoggingService.js";
-import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
-import { HelperVars } from "./HelperVars.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
 import { renderPrompt } from "./templating/index.js";
-import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
+import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
+import { AutocompleteLoggingService } from "./util/AutocompleteLoggingService.js";
+import AutocompleteLruCache from "./util/AutocompleteLruCache.js";
+import { HelperVars } from "./util/HelperVars.js";
+import { AutocompleteInput, AutocompleteOutcome } from "./util/types.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
 

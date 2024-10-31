@@ -2,7 +2,7 @@ import path from "node:path";
 import { IDE } from "../..";
 import { getBasename } from "../../util";
 import { getConfigJsonPath } from "../../util/paths";
-import { HelperVars } from "../HelperVars";
+import { HelperVars } from "../util/HelperVars";
 
 async function isDisabledForFile(
   currentFilepath: string,

@@ -1,11 +1,11 @@
-import { IDE, TabAutocompleteOptions } from "..";
+import { IDE, TabAutocompleteOptions } from "../..";
 import {
   AutocompleteLanguageInfo,
   languageForFilepath,
-} from "./constants/AutocompleteLanguageInfo";
-import { constructInitialPrefixSuffix } from "./templating/constructPrefixSuffix";
+} from "../constants/AutocompleteLanguageInfo";
+import { constructInitialPrefixSuffix } from "../templating/constructPrefixSuffix";
+import { AstPath, getAst, getTreePathAtCursor } from "./ast";
 import { AutocompleteInput } from "./types";
-import { AstPath, getAst, getTreePathAtCursor } from "./util/ast";
 
 /**
  * A collection of variables that are often accessed throughout the autocomplete pipeline

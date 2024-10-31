@@ -1,6 +1,6 @@
 import { CompletionOptions, ILLM } from "../..";
 import { StreamTransformPipeline } from "../filtering/streamTransforms/StreamTransformPipeline";
-import { HelperVars } from "../HelperVars";
+import { HelperVars } from "../util/HelperVars";
 import { GeneratorReuseManager } from "./GeneratorReuseManager";
 
 export class CompletionStreamer {

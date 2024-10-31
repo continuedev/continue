@@ -11,7 +11,7 @@ import {
   removeRangeFromSnippets,
   type AutocompleteSnippet,
 } from "./context/ranking/index.js";
-import { HelperVars } from "./HelperVars.js";
+import { HelperVars } from "./util/HelperVars.js";
 
 function prunePrefixSuffix(helper: HelperVars) {
   // Construct basic prefix

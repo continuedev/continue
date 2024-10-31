@@ -1,14 +1,17 @@
 import { Mutex } from "async-mutex";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { DatabaseConnection, truncateSqliteLikePattern } from "../indexing/refreshIndex.js";
-import { getTabAutocompleteCacheSqlitePath } from "../util/paths.js";
+import {
+  DatabaseConnection,
+  truncateSqliteLikePattern,
+} from "../../indexing/refreshIndex.js";
+import { getTabAutocompleteCacheSqlitePath } from "../../util/paths.js";
 
 export class AutocompleteLruCache {
   private static capacity = 1000;
   private mutex = new Mutex();
 
-  constructor(private db: DatabaseConnection) { }
+  constructor(private db: DatabaseConnection) {}
 
   static async get(): Promise<AutocompleteLruCache> {
     const db = await open({

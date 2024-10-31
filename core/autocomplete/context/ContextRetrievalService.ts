@@ -1,9 +1,20 @@
 import { IDE } from "../..";
-import { HelperVars } from "../HelperVars";
-import { findMatchingRange } from "../recentlyEdited";
+import { HelperVars } from "../util/HelperVars";
+import { RecentlyEditedRange } from "../util/types";
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
 import { AutocompleteSnippet, getSymbolsForSnippet } from "./ranking";
 import { RootPathContextService } from "./RootPathContextService";
+
+export function findMatchingRange(
+  recentlyEditedRanges: RecentlyEditedRange[],
+  linePrefix: string,
+): RecentlyEditedRange | undefined {
+  return recentlyEditedRanges.find((recentlyEditedRange) => {
+    return recentlyEditedRange.lines.some((line) =>
+      line.startsWith(linePrefix),
+    );
+  });
+}
 
 export class ContextRetrievalService {
   private importDefinitionsService: ImportDefinitionsService;

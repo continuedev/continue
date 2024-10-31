@@ -1,9 +1,9 @@
 import { CompletionOptions } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
-import { decideMultilineEarly as shouldCompleteMultiline } from "../classification/shouldCompleteMultiline";
+import { shouldCompleteMultiline } from "../classification/shouldCompleteMultiline";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { AutocompleteSnippet } from "../context/ranking";
-import { HelperVars } from "../HelperVars";
+import { HelperVars } from "../util/HelperVars";
 import { getTemplateForModel } from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
 
@@ -60,6 +60,7 @@ function renderStringTemplate(
   });
   return prompt;
 }
+
 export function renderPrompt(
   prefix: string,
   suffix: string,

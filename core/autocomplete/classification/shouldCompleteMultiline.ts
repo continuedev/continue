@@ -1,5 +1,5 @@
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
-import { HelperVars } from "../HelperVars";
+import { HelperVars } from "../util/HelperVars";
 
 function isMidlineCompletion(prefix: string, suffix: string): boolean {
   return !suffix.startsWith("\n");
@@ -14,7 +14,7 @@ function shouldCompleteMultilineBasedOnLanguage(
   return langMultilineDecision;
 }
 
-export function decideMultilineEarly(
+export function shouldCompleteMultiline(
   helper: HelperVars,
   prefix: string,
   suffix: string,
@@ -26,6 +26,11 @@ export function decideMultilineEarly(
       return false;
     default:
       break;
+  }
+
+  // Always single-line if an intellisense option is selected
+  if (helper.input.selectedCompletionInfo) {
+    return true;
   }
 
   // Don't complete multi-line if you are mid-line
@@ -45,10 +50,6 @@ export function decideMultilineEarly(
   }
 
   if (shouldCompleteMultilineBasedOnLanguage(helper.lang, prefix, suffix)) {
-    return true;
-  }
-
-  if (helper.input.selectedCompletionInfo) {
     return true;
   }
 

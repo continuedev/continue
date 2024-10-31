@@ -1,6 +1,6 @@
-import { logDevData } from "../util/devdata";
-import { COUNT_COMPLETION_REJECTED_AFTER } from "../util/parameters";
-import { Telemetry } from "../util/posthog";
+import { logDevData } from "../../util/devdata";
+import { COUNT_COMPLETION_REJECTED_AFTER } from "../../util/parameters";
+import { Telemetry } from "../../util/posthog";
 import { AutocompleteOutcome } from "./types";
 
 export class AutocompleteLoggingService {

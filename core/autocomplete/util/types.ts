@@ -1,6 +1,11 @@
-import { Position, Range, TabAutocompleteOptions } from "..";
-import { RangeInFileWithContents } from "../commands/util";
-import { RecentlyEditedRange } from "./recentlyEdited";
+import { Position, Range, RangeInFile, TabAutocompleteOptions } from "../..";
+import { RangeInFileWithContents } from "../../commands/util";
+
+export type RecentlyEditedRange = RangeInFile & {
+  timestamp: number;
+  lines: string[];
+  symbols: Set<string>;
+};
 
 export interface AutocompleteInput {
   completionId: string;
