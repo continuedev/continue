@@ -29,6 +29,7 @@ import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
 import { ChatDescriber } from "./util/chatDescriber";
+import { walkDir } from "./indexing/walkDir";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -483,7 +484,7 @@ export class Core {
     on("tts/kill", async () => {
       void TTS.kill();
     });
-    
+
     on("chatDescriber/describe", async (msg) => {
       const currentModel = await this.getSelectedModel();
       return await ChatDescriber.describe(currentModel, {}, msg.data);
@@ -701,8 +702,12 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
-      recentlyEditedFilesCache.set(filepath, filepath);
+    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
+      const dirs = await this.ide.getWorkspaceDirs();
+      const paths = await walkDir(dirs[0], this.ide);
+      if (paths.includes(filepath)) {
+        recentlyEditedFilesCache.set(filepath, filepath);
+      }
     });
   }
 
