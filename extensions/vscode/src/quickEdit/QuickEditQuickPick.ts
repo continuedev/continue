@@ -181,39 +181,70 @@ export class QuickEdit {
   };
 
   private async _streamEditWithInputAndContext(prompt: string) {
-    const modelTitle = await this._getCurModelTitle();
+    const cancelTokenSource = new vscode.CancellationTokenSource();
+    const quickPick = vscode.window.createQuickPick();
+    quickPick.ignoreFocusOut = true;
+    quickPick.value = prompt;
+    
+    try {
+        quickPick.items = [{
+            label: "$(sync~spin) Processing edit...",
+            alwaysShow: true
+        }];
+        quickPick.show();
 
-    // Extracts all file references from the prompt string,
-    // which are denoted by  an '@' symbol followed by
-    // one or more non-whitespace characters.
-    const fileReferences = prompt.match(/@[^\s]+/g) || [];
+        const modelTitle = await this._getCurModelTitle();
 
-    // Replace file references with the content of the file
-    for (const fileRef of fileReferences) {
-      const filePath = fileRef.slice(1); // Remove the '@' symbol
+        // Extracts all file references from the prompt string,
+        // which are denoted by  an '@' symbol followed by
+        // one or more non-whitespace characters.
+        const fileReferences = prompt.match(/@[^\s]+/g) || [];
+         // Replace file references with the content of the file
+         for (const fileRef of fileReferences) {
+            if (cancelTokenSource.token.isCancellationRequested) {
+                return;
+            }
 
-      const fileContent = await this.ide.readFile(filePath);
+            quickPick.items = [{
+                label: `$(sync~spin) Loading file ${fileRef}...`,
+                alwaysShow: true
+            }];
+            const filePath = fileRef.slice(1); // Remove the '@' symbol
+            const fileContent = await this.ide.readFile(filePath);
+            prompt = prompt.replace(
+                fileRef,
+                `\`\`\`${filePath}\n${fileContent}\n\`\`\`\n\n`,
+            );
+        }
 
-      prompt = prompt.replace(
-        fileRef,
-        `\`\`\`${filePath}\n${fileContent}\n\`\`\`\n\n`,
-      );
+        if (this.contextProviderStr) {
+            prompt = this.contextProviderStr + prompt;
+        }
+
+        this.webviewProtocol.request("incrementFtc", undefined);
+        quickPick.items = [{
+            label: "$(sync~spin) Applying changes...",
+            alwaysShow: true
+        }];
+
+        const streamEditPromise = this.verticalDiffManager.streamEdit(
+            prompt,
+            modelTitle,
+            undefined,
+            this.previousInput,
+            this.range,
+        );
+
+        await streamEditPromise;
+    } catch (error) {
+        if (!(error instanceof Error && error.message === "Cancelled")) {
+            vscode.window.showErrorMessage(`Edit operation failed: ${error}`);
+        }
+    } finally {
+        quickPick.dispose();
+        cancelTokenSource.dispose();
     }
-
-    if (this.contextProviderStr) {
-      prompt = this.contextProviderStr + prompt;
-    }
-
-    this.webviewProtocol.request("incrementFtc", undefined);
-
-    await this.verticalDiffManager.streamEdit(
-      prompt,
-      modelTitle,
-      undefined,
-      this.previousInput,
-      this.range,
-    );
-  }
+}
 
   async _getInitialQuickPickVal(): Promise<string | undefined> {
     const modelTitle = await this._getCurModelTitle();

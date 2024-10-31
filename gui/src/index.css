@@ -55,7 +55,7 @@ a:focus {
 }
 
 .fade-in-span {
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.3s ease-in-out forwards;
 }
 
 @layer utilities {

@@ -90,45 +90,128 @@ interface StyledMarkdownPreviewProps {
   className?: string;
   showCodeBorder?: boolean;
   scrollLocked?: boolean;
+  isStreaming?: boolean;
+  isLast?: boolean;
+  messageIndex?: number;
   integrationSource?: "perplexity" | "aider" | "continue";
 }
 
-const FadeInWords: React.FC = (props: any) => {
-  const { children, ...otherProps } = props;
+interface FadeInWordsProps extends StyledMarkdownPreviewProps {
+  children: any;
+}
 
-  const active = useSelector((store: RootState) => store.state.active);
-
-  const [textWhenActiveStarted, setTextWhenActiveStarted] = useState(
-    props.children,
-  );
-
-  useEffect(() => {
-    if (active) {
-      setTextWhenActiveStarted(children);
+const FadeInWords: React.FC<FadeInWordsProps> = (props: FadeInWordsProps) => {
+  const { children, integrationSource, isStreaming, messageIndex, ...otherProps } = props;
+  const active = props.integrationSource === "continue"
+    ? useSelector((store: RootState) => store.state.active)
+    : props.integrationSource === "perplexity"
+      ? useSelector((store: RootState) => store.state.perplexityActive)
+      : useSelector((store: RootState) => store.state.aiderActive);
+  
+  // Get the appropriate history based on the source
+  const history = useSelector((store: RootState) => {
+    switch (integrationSource) {
+      case "perplexity":
+        return store.state.perplexityHistory;
+      case "aider":
+        return store.state.aiderHistory;
+      default:
+        return store.state.history;
     }
-  }, [active]);
+  });
 
-  // Split the text into words
+  // The last message in the history array is the one being streamed
+  // Only apply animation after initial render
+  const isStreamingMessage = active && messageIndex === history.length - 1;
+
   const words = children
     .map((child) => {
       if (typeof child === "string") {
-        return child.split(" ").map((word, index) => (
-          <span className="fade-in-span" key={index}>
-            {word}{" "}
+        return child.split(/(\s+)/).map((word, index) => (
+          <span 
+            className={word.trim() && isStreamingMessage ? "fade-in-span" : undefined} 
+            key={index}
+          >
+            {word}
           </span>
         ));
       } else {
-        return <span className="fade-in-span">{child}</span>;
+        return <span className={isStreamingMessage ? "fade-in-span" : undefined}>{child}</span>;
       }
     })
     .flat();
 
-  return active && children !== textWhenActiveStarted ? (
-    <p {...otherProps}>{words}</p>
-  ) : (
-    <p>{children}</p>
-  );
+  return <p {...otherProps}>{words}</p>;
 };
+
+
+interface FadeInElementProps extends StyledMarkdownPreviewProps {
+  children: any;
+  as?: keyof JSX.IntrinsicElements;
+}
+
+
+const FadeInElement: React.FC<FadeInElementProps> = (props: FadeInElementProps) => {
+  const { children, integrationSource, isStreaming, messageIndex, as = 'p', ...otherProps } = props;
+  const ElementType = as;
+  
+  const active = props.integrationSource === "continue"
+    ? useSelector((store: RootState) => store.state.active)
+    : props.integrationSource === "perplexity"
+      ? useSelector((store: RootState) => store.state.perplexityActive)
+      : useSelector((store: RootState) => store.state.aiderActive);
+  
+  const history = useSelector((store: RootState) => {
+    switch (integrationSource) {
+      case "perplexity":
+        return store.state.perplexityHistory;
+      case "aider":
+        return store.state.aiderHistory;
+      default:
+        return store.state.history;
+    }
+  });
+
+  // The last message in the history array is the one being streamed
+  const isStreamingMessage = active && messageIndex === history.length - 1;
+
+  if (!children) {
+    return <ElementType {...otherProps}></ElementType>;
+  }
+
+  if (typeof children === 'string' || !Array.isArray(children)) {
+    return (
+      <ElementType {...otherProps}>
+        <span className={isStreamingMessage ? "fade-in-span" : undefined}>
+          {children}
+        </span>
+      </ElementType>
+    );
+  }
+
+  const words = children
+    .map((child) => {
+      if (!child) return null;
+      if (typeof child === "string") {
+        return child.split(/(\s+)/).map((word, index) => (
+          <span 
+            className={word.trim() && isStreamingMessage ? "fade-in-span" : undefined} 
+            key={index}
+          >
+            {word}
+          </span>
+        ));
+      } else {
+        return <span className={isStreamingMessage ? "fade-in-span" : undefined}>{child}</span>;
+      }
+    })
+    .filter(Boolean)
+    .flat();
+
+  return <ElementType {...otherProps}>{words}</ElementType>;
+};
+
+
 
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
@@ -204,9 +287,96 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         //       <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
         //     );
         //   },
-        // p: ({ node, ...props }) => {
-        //   return <FadeInWords {...props}></FadeInWords>;
-        // },
+
+        h1: ({ node, ...hProps }) => {
+          if (props.isLast) {
+            return (
+              <FadeInElement as="h1" {...hProps} {...props}>
+                {hProps.children}
+              </FadeInElement>
+            );
+          }
+          return <h1 {...hProps}>{hProps.children}</h1>;
+        },
+        h2: ({ node, ...hProps }) => {
+          if (props.isLast) {
+            return (
+              <FadeInElement as="h2" {...hProps} {...props}>
+                {hProps.children}
+              </FadeInElement>
+            );
+          }
+          return <h2 {...hProps}>{hProps.children}</h2>;
+        },
+        h3: ({ node, ...hProps }) => {
+          if (props.isLast) {
+            return (
+              <FadeInElement as="h3" {...hProps} {...props}>
+                {hProps.children}
+              </FadeInElement>
+            );
+          }
+          return <h3 {...hProps}>{hProps.children}</h3>;
+        },
+        h4: ({ node, ...hProps }) => {
+          if (props.isLast) {
+            return (
+              <FadeInElement as="h4" {...hProps} {...props}>
+                {hProps.children}
+              </FadeInElement>
+            );
+          }
+          return <h4 {...hProps}>{hProps.children}</h4>;
+        },
+
+        p: ({ node, ...pProps }) => {
+          // pProps is the props of the paragraph node from rehypeReact
+          // props is the actual props of StyledMarkdownPreview
+          if (props.isLast) {
+            return (
+              <FadeInWords {...pProps} {...props}>
+                {pProps.children}
+              </FadeInWords>
+            );
+          }
+          return <p {...pProps}>{pProps.children}</p>;
+        },
+        li: ({ node, ...liProps }) => {
+          // liProps is the actual props of li node from rehype-react
+          // props is the actual props of StyledMarkdownPreview
+          if (props.isLast) {
+            return (
+              <FadeInElement as="li" {...liProps} {...props}>
+                {liProps.children}
+              </FadeInElement>
+            );
+          }
+          return <li {...liProps}>{liProps.children}</li>;
+        },
+        ul: ({ node, ...ulProps }) => {
+          // ulProps is the actual props of ul node from rehype-react
+          // props is the actual props of StyledMarkdownPreview
+          if (props.isLast) {
+            return (
+              <FadeInElement as="ul" {...ulProps} {...props}>
+                {ulProps.children}
+              </FadeInElement>
+            );
+          }
+          return <ul {...ulProps}>{ulProps.children}</ul>;
+        },
+        ol: ({ node, ...olProps }) => {
+          // olProps is the actual props of ol node from rehype-react
+          // props is the actual props of StyledMarkdownPreview
+          if (props.isLast) {
+            return (
+              <FadeInElement as="ol" {...olProps} {...props}>
+                {olProps.children}
+              </FadeInElement>
+            );
+          }
+          return <ol {...olProps}>{olProps.children}</ol>;
+        },
       },
     },
   });
