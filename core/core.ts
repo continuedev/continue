@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
-import { CompletionProvider } from "./autocomplete/completionProvider";
+import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import {
   setupBestConfig,
