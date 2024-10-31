@@ -228,7 +228,7 @@ You can add the Continue core module as a dev dependency in your `package.json`:
 Then, you can use the `registerCustomContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface.
 Here is an example:
 
-```typescript
+```typescript title="myCustomContextProvider.ts"
 import * as vscode from "vscode";
 import {
   IContextProvider,
