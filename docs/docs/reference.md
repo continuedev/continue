@@ -8,66 +8,6 @@ Below are details for each property that can be set in `config.json`. The config
 
 **All properties at all levels are optional unless explicitly marked required**
 
-### `completionOptions`
-
-Parameters that control the behavior of text generation and completion settings. Top-level `completionOptions` apply to all models, _unless overridden at the model level_.
-
-**Properties:**
-
-- `stream`: Whether to stream the LLM response. Currently only respected by the `anthropic` and `ollama` providers; other providers will always stream (default: `true`).
-- `temperature`: Controls the randomness of the completion. Higher values result in more diverse outputs.
-- `topP`: The cumulative probability for nucleus sampling. Lower values limit responses to tokens within the top probability mass.
-- `topK`: The maximum number of tokens considered at each step. Limits the generated text to tokens within this probability.
-- `presencePenalty`: Discourages the model from generating tokens that have already appeared in the output.
-- `frequencePenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
-- `mirostat`: Enables Mirostat sampling, which controls the perplexity during text generation. Supported by Ollama, LM Studio, and llama.cpp providers (default: `0`, where `0` = disabled, `1` = Mirostat, and `2` = Mirostat 2.0).
-- `stop`: An array of stop tokens that, when encountered, will terminate the completion. Allows specifying multiple end conditions.
-- `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
-- `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
-- `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
-
-Example
-
-```json title="config.json"
-{
-  "completionOptions": {
-    "stream": false,
-    "temperature": 0.5
-  }
-}
-```
-
-### `requestOptions`
-
-Default HTTP request options that apply to all models and context providers, unless overridden at the model level.
-
-**Properties:**
-
-- `timeout`: Timeout for each request to the LLM (default: 7200 seconds).
-- `verifySsl`: Whether to verify SSL certificates for requests.
-- `caBundlePath`: Path to a custom CA bundle for HTTP requests - path to `.pem` file (or array of paths)
-- `proxy`: Proxy URL to use for HTTP requests.
-- `headers`: Custom headers for HTTP requests.
-- `extraBodyProperties`: Additional properties to merge with the HTTP request body.
-- `noProxy`: List of hostnames that should bypass the specified proxy.
-- `clientCertificate`: Client certificate for HTTP requests.
-
-  - `cert`: Path to the client certificate file.
-  - `key`: Path to the client certificate key file.
-  - `passphrase`: Optional passphrase for the client certificate key file.
-
-Example
-
-```json title="config.json"
-{
-  "requestOptions": {
-    "headers": {
-      "X-Auth-Token": "xxx"
-    }
-  }
-}
-```
-
 ### `models`
 
 Your **chat** models are defined here, which are used for [Chat](../chat/how-to-use-it.md), [Edit](../edit/how-to-use-it.md), and [Actions](../actions/how-to-use-it.md).
@@ -168,6 +108,99 @@ Example
 }
 ```
 
+### `embeddingsProvider`
+
+Embeddings model settings - the model used for @Codebase and @docs.
+
+**Properties:**
+
+- `provider` (**required**): Specifies the embeddings provider, with options including `transformers.js`, `ollama`, `openai`, `cohere`, `free-trial`, `gemini`, etc
+- `model`: Model name for embeddings.
+- `apiKey`: API key for the provider.
+- `apiBase`: Base URL for API requests.
+- `requestOptions`: Additional HTTP request settings specific to the embeddings provider.
+- `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
+- `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
+
+(AWS ONLY)
+
+- `region`: Specifies the region hosting the model.
+- `profile`: AWS security profile.
+
+Example:
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-ada-002",
+    "apiKey": "<API_KEY>",
+    "maxChunkSize": 256,
+    "maxBatchSize": 5
+  }
+}
+```
+
+### `completionOptions`
+
+Parameters that control the behavior of text generation and completion settings. Top-level `completionOptions` apply to all models, _unless overridden at the model level_.
+
+**Properties:**
+
+- `stream`: Whether to stream the LLM response. Currently only respected by the `anthropic` and `ollama` providers; other providers will always stream (default: `true`).
+- `temperature`: Controls the randomness of the completion. Higher values result in more diverse outputs.
+- `topP`: The cumulative probability for nucleus sampling. Lower values limit responses to tokens within the top probability mass.
+- `topK`: The maximum number of tokens considered at each step. Limits the generated text to tokens within this probability.
+- `presencePenalty`: Discourages the model from generating tokens that have already appeared in the output.
+- `frequencePenalty`: Penalizes tokens based on their frequency in the text, reducing repetition.
+- `mirostat`: Enables Mirostat sampling, which controls the perplexity during text generation. Supported by Ollama, LM Studio, and llama.cpp providers (default: `0`, where `0` = disabled, `1` = Mirostat, and `2` = Mirostat 2.0).
+- `stop`: An array of stop tokens that, when encountered, will terminate the completion. Allows specifying multiple end conditions.
+- `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
+- `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
+- `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
+
+Example
+
+```json title="config.json"
+{
+  "completionOptions": {
+    "stream": false,
+    "temperature": 0.5
+  }
+}
+```
+
+### `requestOptions`
+
+Default HTTP request options that apply to all models and context providers, unless overridden at the model level.
+
+**Properties:**
+
+- `timeout`: Timeout for each request to the LLM (default: 7200 seconds).
+- `verifySsl`: Whether to verify SSL certificates for requests.
+- `caBundlePath`: Path to a custom CA bundle for HTTP requests - path to `.pem` file (or array of paths)
+- `proxy`: Proxy URL to use for HTTP requests.
+- `headers`: Custom headers for HTTP requests.
+- `extraBodyProperties`: Additional properties to merge with the HTTP request body.
+- `noProxy`: List of hostnames that should bypass the specified proxy.
+- `clientCertificate`: Client certificate for HTTP requests.
+
+  - `cert`: Path to the client certificate file.
+  - `key`: Path to the client certificate key file.
+  - `passphrase`: Optional passphrase for the client certificate key file.
+
+Example
+
+```json title="config.json"
+{
+  "requestOptions": {
+    "headers": {
+      "X-Auth-Token": "xxx"
+    }
+  }
+}
+```
+
 ### `reranker`
 
 Configuration for the reranker model used in response ranking.
@@ -227,39 +260,6 @@ Configuration for analytics tracking.
 - `provider`: Analytics provider (`"posthog"` or `"logstash"`).
 - `url`: URL for analytics data.
 - `clientKey`: Client key for analytics.
-
-### `embeddingsProvider`
-
-Embeddings model settings - the model used for @Codebase and @docs.
-
-**Properties:**
-
-- `provider` (**required**): Specifies the embeddings provider, with options including `transformers.js`, `ollama`, `openai`, `cohere`, `free-trial`, `gemini`, etc
-- `model`: Model name for embeddings.
-- `apiKey`: API key for the provider.
-- `apiBase`: Base URL for API requests.
-- `requestOptions`: Additional HTTP request settings specific to the embeddings provider.
-- `maxChunkSize`: Maximum tokens per document chunk. Minimum is 128 tokens.
-- `maxBatchSize`: Maximum number of chunks per request. Minimum is 1 chunk.
-
-(AWS ONLY)
-
-- `region`: Specifies the region hosting the model.
-- `profile`: AWS security profile.
-
-Example:
-
-```json title="config.json"
-{
-  "embeddingsProvider": {
-    "provider": "openai",
-    "model": "text-embedding-ada-002",
-    "apiKey": "<API_KEY>",
-    "maxChunkSize": 256,
-    "maxBatchSize": 5
-  }
-}
-```
 
 ### `slashCommands`
 
