@@ -1,7 +1,6 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IDE, ILLM, TabAutocompleteOptions } from "../index.js";
 import { logDevData } from "../util/devdata.js";
-import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
@@ -18,19 +17,16 @@ import { AutocompleteSnippet } from "./context/ranking/index.js";
 import { RootPathContextService } from "./context/RootPathContextService.js";
 import { GeneratorReuseManager } from "./generation/GeneratorReuseManager.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
-import { getTemplateForModel } from "./templating/AutocompleteTemplate.js";
 // @prettier-ignore
-import Handlebars from "handlebars";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
-import { decideMultilineEarly } from "./classification/shouldCompleteMultiline.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { StreamTransformPipeline } from "./filtering/streamTransforms/StreamTransformPipeline.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
-import { formatExternalSnippet } from "./templating/index.js";
+import { renderPrompt } from "./templating/index.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -381,68 +377,19 @@ export class CompletionProvider {
       suffix = "";
     }
 
-    // Template prompt
-    const {
-      template,
-      completionOptions,
-      compilePrefixSuffix = undefined,
-    } = options.template
-      ? { template: options.template, completionOptions: {} }
-      : getTemplateForModel(llm.model);
-
-    let prompt: string;
-    const filename = getBasename(filepath);
-    const reponame = getBasename(workspaceDirs[0] ?? "myproject");
-
-    // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
-    // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
-    if (compilePrefixSuffix) {
-      [prefix, suffix] = compilePrefixSuffix(
-        prefix,
-        suffix,
-        filepath,
-        reponame,
-        snippets,
-      );
-    }
-
-    if (typeof template === "string") {
-      const compiledTemplate = Handlebars.compile(template);
-
-      // Format snippets as comments and prepend to prefix
-      const formattedSnippets = snippets
-        .map((snippet) =>
-          formatExternalSnippet(snippet.filepath, snippet.contents, lang),
-        )
-        .join("\n");
-      if (formattedSnippets.length > 0) {
-        prefix = `${formattedSnippets}\n\n${prefix}`;
-      } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
-        // If it's an empty file, include the file name as a comment
-        prefix = `${lang.singleLineComment} ${getLastNPathParts(
-          filepath,
-          2,
-        )}\n${prefix}`;
-      }
-
-      prompt = compiledTemplate({
-        prefix,
-        suffix,
-        filename,
-        reponame,
-        language: lang.name,
-      });
-    } else {
-      // Let the template function format snippets
-      prompt = template(
-        prefix,
-        suffix,
-        filepath,
-        reponame,
-        lang.name,
-        snippets,
-      );
-    }
+    const [prompt, completionOptions, multiline] = renderPrompt(
+      options,
+      prefix,
+      suffix,
+      filepath,
+      lang,
+      snippets,
+      llm.model,
+      workspaceDirs,
+      options.template,
+      input.selectedCompletionInfo,
+      completeMultiline,
+    );
 
     // Completion
     let completion = "";
@@ -457,41 +404,15 @@ export class CompletionProvider {
       cacheHit = true;
       completion = cachedCompletion;
     } else {
-      const stopTokens = [
-        ...(completionOptions?.stop || []),
-        // ...multilineStops,
-        ...commonStops,
-        ...(llm.model.toLowerCase().includes("starcoder2")
-          ? STARCODER2_T_ARTIFACTS
-          : []),
-        ...(lang.stopWords ?? []),
-        // ...lang.topLevelKeywords.map((word) => `\n${word}`),
-      ];
-
-      const multiline =
-        !options.transform ||
-        decideMultilineEarly({
-          multilineCompletions: options.multilineCompletions,
-          language: lang,
-          selectedCompletionInfo: input.selectedCompletionInfo,
-          prefix,
-          suffix,
-          completeMultiline,
-        });
-
       // Try to reuse pending requests if what the user typed matches start of completion
       const generator = this.generatorReuseManager.getGenerator(
         prefix,
         () =>
           llm.supportsFim()
-            ? llm.streamFim(prefix, suffix, {
-                ...completionOptions,
-                stop: stopTokens,
-              })
+            ? llm.streamFim(prefix, suffix, completionOptions)
             : llm.streamComplete(prompt, {
                 ...completionOptions,
                 raw: true,
-                stop: stopTokens,
               }),
         multiline,
       );
@@ -522,7 +443,7 @@ export class CompletionProvider {
             multiline,
             pos,
             fileLines,
-            stopTokens,
+            completionOptions?.stop || [],
             lang,
             fullStop,
           )
