@@ -201,7 +201,12 @@ export class CompletionProvider {
       }
 
       const options = await this._getAutocompleteOptions();
-      const helper = new HelperVars(input, options, llm.model, this.ide);
+      const helper = await HelperVars.create(
+        input,
+        options,
+        llm.model,
+        this.ide,
+      );
 
       if (await shouldPrefilter(helper, this.ide)) {
         return undefined;

@@ -63,5 +63,9 @@ export class CompletionStreamer {
           fullStop,
         )
       : initialGenerator;
+
+    for await (const update of finalGenerator) {
+      yield update;
+    }
   }
 }

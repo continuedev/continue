@@ -12,7 +12,7 @@ export class HelperVars {
   private _fileContents: string | undefined;
   private _fileLines: string[] | undefined;
 
-  constructor(
+  private constructor(
     public readonly input: AutocompleteInput,
     public readonly options: TabAutocompleteOptions,
     public readonly modelName: string,
@@ -21,7 +21,7 @@ export class HelperVars {
     this.lang = languageForFilepath(input.filepath);
   }
 
-  async init() {
+  private async init() {
     // Don't do anything if already initialized
     if (this._fileContents !== undefined) return;
 
@@ -30,6 +30,17 @@ export class HelperVars {
       (await this.ide.readFile(this.filepath));
 
     this._fileLines = this._fileContents.split("\n");
+  }
+
+  static async create(
+    input: AutocompleteInput,
+    options: TabAutocompleteOptions,
+    modelName: string,
+    ide: IDE,
+  ): Promise<HelperVars> {
+    const instance = new HelperVars(input, options, modelName, ide);
+    await instance.init();
+    return instance;
   }
 
   // Fast access
