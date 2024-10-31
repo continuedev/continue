@@ -1,11 +1,6 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IDE, ILLM } from "../index.js";
-import { logDevData } from "../util/devdata.js";
-import {
-  COUNT_COMPLETION_REJECTED_AFTER,
-  DEFAULT_AUTOCOMPLETE_OPTS,
-} from "../util/parameters.js";
-import { Telemetry } from "../util/posthog.js";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
 import { constructAutocompletePrompt } from "./constructPrompt.js";
@@ -16,6 +11,7 @@ import { postprocessCompletion } from "./postprocessing/index.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
+import { AutocompleteLoggingService } from "./AutocompleteLoggingService.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
@@ -51,6 +47,7 @@ export class CompletionProvider {
   private bracketMatchingService = new BracketMatchingService();
   private debouncer = new AutocompleteDebouncer();
   private completionStreamer: CompletionStreamer;
+  private loggingService = new AutocompleteLoggingService();
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -114,69 +111,22 @@ export class CompletionProvider {
   }
 
   public cancel() {
-    this._abortControllers.forEach((abortController, id) => {
-      abortController.abort();
-    });
-    this._abortControllers.clear();
+    this.loggingService.cancel();
   }
-
-  // Key is completionId
-  private _abortControllers = new Map<string, AbortController>();
-  private _logRejectionTimeouts = new Map<string, NodeJS.Timeout>();
-  private _outcomes = new Map<string, AutocompleteOutcome>();
 
   public accept(completionId: string) {
-    if (this._logRejectionTimeouts.has(completionId)) {
-      clearTimeout(this._logRejectionTimeouts.get(completionId));
-      this._logRejectionTimeouts.delete(completionId);
+    const outcome = this.loggingService.accept(completionId);
+    if (!outcome) {
+      return;
     }
-
-    if (this._outcomes.has(completionId)) {
-      const outcome = this._outcomes.get(completionId)!;
-      this.logAutocompleteOutcome(outcome);
-      this._outcomes.delete(completionId);
-
-      this.bracketMatchingService.handleAcceptedCompletion(
-        outcome.completion,
-        outcome.filepath,
-      );
-    }
-  }
-
-  private logAutocompleteOutcome(outcome: AutocompleteOutcome) {
-    outcome.accepted = true;
-    logDevData("autocomplete", outcome);
-    const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
-    void Telemetry.capture(
-      "autocomplete",
-      {
-        accepted: restOfOutcome.accepted,
-        cacheHit: restOfOutcome.cacheHit,
-        completionId: restOfOutcome.completionId,
-        completionOptions: restOfOutcome.completionOptions,
-        debounceDelay: restOfOutcome.debounceDelay,
-        fileExtension: restOfOutcome.filepath.split(".")?.slice(-1)[0],
-        maxPromptTokens: restOfOutcome.maxPromptTokens,
-        modelName: restOfOutcome.modelName,
-        modelProvider: restOfOutcome.modelProvider,
-        multilineCompletions: restOfOutcome.multilineCompletions,
-        time: restOfOutcome.time,
-        useRecentlyEdited: restOfOutcome.useRecentlyEdited,
-        useRootPathContext: restOfOutcome.useRootPathContext,
-      },
-      true,
+    this.bracketMatchingService.handleAcceptedCompletion(
+      outcome.completion,
+      outcome.filepath,
     );
   }
 
-  public cancelRejectionTimeout(completionId: string) {
-    if (this._logRejectionTimeouts.has(completionId)) {
-      clearTimeout(this._logRejectionTimeouts.get(completionId)!);
-      this._logRejectionTimeouts.delete(completionId);
-    }
-
-    if (this._outcomes.has(completionId)) {
-      this._outcomes.delete(completionId);
-    }
+  public markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
+    this.loggingService.markDisplayed(completionId, outcome);
   }
 
   private async _getAutocompleteOptions() {
@@ -219,9 +169,10 @@ export class CompletionProvider {
 
       // Create abort signal if not given
       if (!token) {
-        const controller = new AbortController();
+        const controller = this.loggingService.createAbortController(
+          input.completionId,
+        );
         token = controller.signal;
-        this._abortControllers.set(input.completionId, controller);
       }
 
       //////////
@@ -344,50 +295,8 @@ export class CompletionProvider {
     } catch (e: any) {
       this.onError(e);
     } finally {
-      this._abortControllers.delete(input.completionId);
+      this.loggingService.deleteAbortController(input.completionId);
     }
-  }
-
-  _lastDisplayedCompletion: { id: string; displayedAt: number } | undefined =
-    undefined;
-
-  markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
-    const logRejectionTimeout = setTimeout(() => {
-      // Wait 10 seconds, then assume it wasn't accepted
-      outcome.accepted = false;
-      this.logAutocompleteOutcome(outcome);
-      this._logRejectionTimeouts.delete(completionId);
-    }, COUNT_COMPLETION_REJECTED_AFTER);
-    this._outcomes.set(completionId, outcome);
-    this._logRejectionTimeouts.set(completionId, logRejectionTimeout);
-
-    // If the previously displayed completion is still waiting for rejection,
-    // and this one is a continuation of that (the outcome.completion is the same modulo prefix)
-    // then we should cancel the rejection timeout
-    const previous = this._lastDisplayedCompletion;
-    const now = Date.now();
-    if (previous && this._logRejectionTimeouts.has(previous.id)) {
-      const previousOutcome = this._outcomes.get(previous.id);
-      const c1 = previousOutcome?.completion.split("\n")[0] ?? "";
-      const c2 = outcome.completion.split("\n")[0];
-      if (
-        previousOutcome &&
-        (c1.endsWith(c2) ||
-          c2.endsWith(c1) ||
-          c1.startsWith(c2) ||
-          c2.startsWith(c1))
-      ) {
-        this.cancelRejectionTimeout(previous.id);
-      } else if (now - previous.displayedAt < 500) {
-        // If a completion isn't shown for more than
-        this.cancelRejectionTimeout(previous.id);
-      }
-    }
-
-    this._lastDisplayedCompletion = {
-      id: completionId,
-      displayedAt: now,
-    };
   }
 
   private async _getExtraSnippets(
