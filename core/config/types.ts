@@ -598,7 +598,8 @@ declare global {
     | "watsonx"
     | "openrouter"
     | "sambanova"
-    | "nvidia";
+    | "nvidia"
+    | "nebius";
 
   export type ModelName =
     | "AUTODETECT"
@@ -765,7 +766,8 @@ declare global {
     | "continue-proxy"
     | "deepinfra"
     | "voyage"
-    | "watsonx";
+    | "watsonx"
+    | "nebius";
 
   export interface EmbedOptions {
     apiBase?: string;
