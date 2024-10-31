@@ -203,13 +203,27 @@ The `"options"` property can be used to send additional parameters to your endpo
 
 Continue exposes an API for registering context providers from a 3rd party VSCode extension. This is useful if you have a VSCode extension that provides some additional context that you would like to use in Continue. To use this API, add the following to your `package.json`:
 
-```json
+```json title="package.json"
 {
   "extensionDependencies": ["continue.continue"]
 }
 ```
 
-Or copy `~/.continue/type/core/index.d.ts` to your extension repository.
+Or install the Continue Core module from npm:
+
+```bash
+npm i @continuedev/core
+```
+
+You can add the Continue core module as a dev dependency in your `package.json`:
+
+```json title="package.json"
+{
+  "devDependencies": {
+    "@continuedev/core": "^0.0.1"
+  }
+}
+```
 
 Then, you can use the `registerCustomContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface.
 Here is an example:
