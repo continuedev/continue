@@ -12,6 +12,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "https://api.openai.com/v1/",
     model: "text-embedding-3-small",
+    apiVersion: "2024-02-15-preview",
   };
 
   private _getEndpoint() {
