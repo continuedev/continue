@@ -1,6 +1,7 @@
 import { RangeInFileWithContents } from "../../../commands/util.js";
 import { Range } from "../../../index.js";
 import { countTokens } from "../../../llm/countTokens.js";
+import { HelperVars } from "../../HelperVars.js";
 
 export type AutocompleteSnippet = RangeInFileWithContents & {
   score?: number;
@@ -43,8 +44,18 @@ export function jaccardSimilarity(a: string, b: string): number {
  */
 export function rankSnippets(
   ranges: AutocompleteSnippet[],
-  windowAroundCursor: string,
+  helper: HelperVars,
 ): Required<AutocompleteSnippet>[] {
+  const windowAroundCursor =
+    helper.fullPrefix.slice(
+      -helper.options.slidingWindowSize *
+        helper.options.slidingWindowPrefixPercentage,
+    ) +
+    helper.fullSuffix.slice(
+      helper.options.slidingWindowSize *
+        (1 - helper.options.slidingWindowPrefixPercentage),
+    );
+
   const snippets: Required<AutocompleteSnippet>[] = ranges.map((snippet) => ({
     score:
       snippet.score ?? jaccardSimilarity(snippet.contents, windowAroundCursor),

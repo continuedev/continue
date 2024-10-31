@@ -1,7 +1,9 @@
 import { IDE, TabAutocompleteOptions } from "..";
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo";
 import { languageForFilepath } from "./constructPrompt";
+import { constructInitialPrefixSuffix } from "./templating/constructPrefixSuffix";
 import { AutocompleteInput } from "./types";
+import { AstPath, getAst, getTreePathAtCursor } from "./util/ast";
 
 /**
  * A collection of variables that are often accessed throughout the autocomplete pipeline
@@ -9,8 +11,12 @@ import { AutocompleteInput } from "./types";
  */
 export class HelperVars {
   lang: AutocompleteLanguageInfo;
+  treePath: AstPath | undefined;
+
   private _fileContents: string | undefined;
   private _fileLines: string[] | undefined;
+  private _fullPrefix: string | undefined;
+  private _fullSuffix: string | undefined;
 
   private constructor(
     public readonly input: AutocompleteInput,
@@ -30,6 +36,21 @@ export class HelperVars {
       (await this.ide.readFile(this.filepath));
 
     this._fileLines = this._fileContents.split("\n");
+
+    // Construct full prefix/suffix (a few edge cases handled in here)
+    const { prefix: fullPrefix, suffix: fullSuffix } =
+      await constructInitialPrefixSuffix(this.input, this.ide);
+    this._fullPrefix = fullPrefix;
+    this._fullSuffix = fullSuffix;
+
+    try {
+      const ast = await getAst(this.filepath, fullPrefix + fullSuffix);
+      if (ast) {
+        this.treePath = await getTreePathAtCursor(ast, fullPrefix.length);
+      }
+    } catch (e) {
+      console.error("Failed to parse AST", e);
+    }
   }
 
   static async create(
@@ -68,5 +89,23 @@ export class HelperVars {
       );
     }
     return this._fileLines;
+  }
+
+  get fullPrefix(): string {
+    if (this._fullPrefix === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing fullPrefix",
+      );
+    }
+    return this._fullPrefix;
+  }
+
+  get fullSuffix(): string {
+    if (this._fullSuffix === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing fullSuffix",
+      );
+    }
+    return this._fullSuffix;
   }
 }

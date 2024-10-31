@@ -1,11 +1,9 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IDE, ILLM } from "../index.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
-
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
 import { constructAutocompletePrompt } from "./constructPrompt.js";
 import { AutocompleteSnippet } from "./context/ranking/index.js";
-import { RootPathContextService } from "./context/RootPathContextService.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
 // @prettier-ignore
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
@@ -13,12 +11,11 @@ import OpenAI from "../llm/llms/OpenAI.js";
 import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
 import { AutocompleteLoggingService } from "./AutocompleteLoggingService.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
-import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
+import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { HelperVars } from "./HelperVars.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
-import { constructInitialPrefixSuffix } from "./templating/constructPrefixSuffix.js";
 import { renderPrompt } from "./templating/index.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
 
@@ -40,14 +37,13 @@ export type GetLspDefinitionsFunction = (
 ) => Promise<AutocompleteSnippet[]>;
 
 export class CompletionProvider {
-  private importDefinitionsService: ImportDefinitionsService;
-  private rootPathContextService: RootPathContextService;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
   private debouncer = new AutocompleteDebouncer();
   private completionStreamer: CompletionStreamer;
   private loggingService = new AutocompleteLoggingService();
+  private contextRetrievalService: ContextRetrievalService;
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -57,11 +53,7 @@ export class CompletionProvider {
     private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
   ) {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
-    this.importDefinitionsService = new ImportDefinitionsService(this.ide);
-    this.rootPathContextService = new RootPathContextService(
-      this.importDefinitionsService,
-      this.ide,
-    );
+    this.contextRetrievalService = new ContextRetrievalService(this.ide);
   }
 
   private async _prepareLlm(): Promise<ILLM | undefined> {
@@ -144,13 +136,18 @@ export class CompletionProvider {
   ): Promise<AutocompleteOutcome | undefined> {
     try {
       const startTime = Date.now();
+      const options = await this._getAutocompleteOptions();
+
+      // Debounce
+      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
+        return undefined;
+      }
 
       const llm = await this._prepareLlm();
       if (!llm) {
         return undefined;
       }
 
-      const options = await this._getAutocompleteOptions();
       const helper = await HelperVars.create(
         input,
         options,
@@ -159,11 +156,6 @@ export class CompletionProvider {
       );
 
       if (await shouldPrefilter(helper, this.ide)) {
-        return undefined;
-      }
-
-      // Debounce
-      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
       }
 
@@ -177,26 +169,15 @@ export class CompletionProvider {
 
       //////////
 
-      // Construct full prefix/suffix (a few edge cases handled in here)
-      const { prefix: fullPrefix, suffix: fullSuffix } =
-        await constructInitialPrefixSuffix(helper.input, this.ide);
-
       // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
       // or they might separately track recently edited ranges)
-      const extraSnippets = await this._getExtraSnippets(
-        helper,
-        fullPrefix,
-        fullSuffix,
-      );
+      const extraSnippets = await this._getExtraSnippets(helper);
 
       let { prefix, suffix, completeMultiline, snippets } =
         await constructAutocompletePrompt(
-          fullPrefix,
-          fullSuffix,
           helper,
           extraSnippets,
-          this.importDefinitionsService,
-          this.rootPathContextService,
+          this.contextRetrievalService,
         );
 
       // If prefix is manually passed
@@ -301,15 +282,13 @@ export class CompletionProvider {
 
   private async _getExtraSnippets(
     helper: HelperVars,
-    fullPrefix: string,
-    fullSuffix: string,
   ): Promise<AutocompleteSnippet[]> {
     let extraSnippets = helper.options.useOtherFiles
       ? ((await Promise.race([
           this.getDefinitionsFromLsp(
             helper.input.filepath,
-            fullPrefix + fullSuffix,
-            fullPrefix.length,
+            helper.fullPrefix + helper.fullSuffix,
+            helper.fullPrefix.length,
             this.ide,
             helper.lang,
           ),

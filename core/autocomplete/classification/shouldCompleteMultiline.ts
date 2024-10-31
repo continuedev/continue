@@ -1,7 +1,7 @@
 import { TabAutocompleteOptions } from "@continuedev/config-types";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
+import { HelperVars } from "../HelperVars";
 import { AutocompleteInput } from "../types";
-import { AstPath } from "../util/ast";
 
 const BLOCK_TYPES = ["body", "statement_block"];
 
@@ -10,23 +10,20 @@ function isMidlineCompletion(prefix: string, suffix: string): boolean {
 }
 
 export async function shouldCompleteMultiline(
-  treePath: AstPath | undefined,
-  fullPrefix: string,
-  fullSuffix: string,
-  language: AutocompleteLanguageInfo,
+  helper: HelperVars,
 ): Promise<boolean> {
   // Don't complete multi-line if you are mid-line
-  if (isMidlineCompletion(fullPrefix, fullSuffix)) {
+  if (isMidlineCompletion(helper.fullPrefix, helper.fullSuffix)) {
     return false;
   }
 
   // Don't complete multi-line for single-line comments
   if (
-    fullPrefix
+    helper.fullPrefix
       .split("\n")
       .slice(-1)[0]
       ?.trimStart()
-      .startsWith(language.singleLineComment)
+      .startsWith(helper.lang.singleLineComment)
   ) {
     return false;
   }
