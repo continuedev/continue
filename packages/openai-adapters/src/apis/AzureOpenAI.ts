@@ -31,10 +31,8 @@ const MS_TOKEN = 30;
 
 export class AzureOpenAIApi implements BaseLlmApi {
   private client: OpenAIClient;
-  private config: LlmApiConfig;
 
-  constructor(config: LlmApiConfig) {
-    this.config = config;
+  constructor(private config: LlmApiConfig) {
     let proxyOptions;
     const PROXY = HTTPS_PROXY ?? HTTP_PROXY;
     if (PROXY) {
@@ -70,7 +68,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
       frequencyPenalty: body.frequency_penalty ?? undefined,
       presencePenalty: body.presence_penalty ?? undefined,
       stop:
-        typeof body.stop === "string" ? [body.stop] : body.stop ?? undefined,
+        typeof body.stop === "string" ? [body.stop] : (body.stop ?? undefined),
     };
   }
 
@@ -101,6 +99,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
         message: {
           role: "assistant",
           content: choice.message?.content ?? null,
+          refusal: null,
         },
       })),
     };

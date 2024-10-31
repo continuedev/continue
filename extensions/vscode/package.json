@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.221",
+  "version": "0.9.222",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -280,6 +280,12 @@
         "category": "Continue",
         "title": "Docs Force Re-Index",
         "group": "Continue"
+      },
+      {
+        "command": "continue.focusContinueSessionId",
+        "category": "Continue",
+        "title": "Focus Continue Chat",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -539,7 +545,6 @@
     "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
     "esbuild": "0.17.19",

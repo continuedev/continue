@@ -36,7 +36,6 @@ import { RecentlyEditedRange } from "./recentlyEdited.js";
 import { RootPathContextService } from "./services/RootPathContextService.js";
 import {
   avoidPathLineAndEmptyComments,
-  noTopLevelKeywordsMidline,
   skipPrefixes,
   stopAtLines,
   stopAtRepeatingLines,
@@ -50,11 +49,7 @@ import Handlebars from "handlebars";
 import { getConfigJsonPath } from "../util/paths.js";
 import { BracketMatchingService } from "./services/BracketMatchingService.js";
 import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
-import {
-  noFirstCharNewline,
-  onlyWhitespaceAfterEndOfLine,
-  stopAtStopTokens,
-} from "./streamTransforms/charStream.js";
+import { stopAtStopTokens } from "./streamTransforms/charStream.js";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -95,6 +90,7 @@ const autocompleteCache = AutocompleteLruCache.get();
 
 const DOUBLE_NEWLINE = "\n\n";
 const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
+// TODO: Do we want to stop completions when reaching a `/src/` string?
 const SRC_DIRECTORY = "/src/";
 // Starcoder2 tends to output artifacts starting with the letter "t"
 const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
@@ -109,6 +105,14 @@ const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 const ERRORS_TO_IGNORE = [
   // From Ollama
   "unexpected server status",
+];
+
+const LOCAL_PROVIDERS: ModelProvider[] = [
+  "ollama",
+  "lmstudio",
+  "llama.cpp",
+  "llamafile",
+  "text-gen-webui",
 ];
 
 function formatExternalSnippet(
@@ -127,14 +131,6 @@ function formatExternalSnippet(
   ];
   return lines.join("\n");
 }
-
-let shownGptClaudeWarning = false;
-const nonAutocompleteModels = [
-  // "gpt",
-  // "claude",
-  "mistral",
-  "instruct",
-];
 
 export type GetLspDefinitionsFunction = (
   filepath: string,
@@ -268,7 +264,10 @@ export class CompletionProvider {
         const workspaceDirs = await this.ide.getWorkspaceDirs();
         let filepath = input.filepath;
         for (const workspaceDir of workspaceDirs) {
-          if (filepath.startsWith(workspaceDir)) {
+          const relativePath = path.relative(workspaceDir, filepath);
+          const relativePathBase = relativePath.split(path.sep).at(0);
+          const isInWorkspace = !path.isAbsolute(relativePath) && relativePathBase !== "..";
+          if (isInWorkspace) {
             filepath = path.relative(workspaceDir, filepath);
             break;
           }
@@ -334,14 +333,6 @@ export class CompletionProvider {
         llm.completionOptions.temperature = 0.01;
       }
 
-      // Set model-specific options
-      const LOCAL_PROVIDERS: ModelProvider[] = [
-        "ollama",
-        "lmstudio",
-        "llama.cpp",
-        "llamafile",
-        "text-gen-webui",
-      ];
       if (
         !config.tabAutocompleteOptions?.maxPromptTokens &&
         LOCAL_PROVIDERS.includes(llm.providerName)
@@ -360,7 +351,7 @@ export class CompletionProvider {
        * elsewhere in the code. That said, I'm not yet confident enough to
        * remove this.
        */
-      if (isOnlyWhitespace(outcome.completion)) {
+      if (options.transform && isOnlyWhitespace(outcome.completion)) {
         return undefined;
       }
 
@@ -442,6 +433,33 @@ export class CompletionProvider {
     };
   }
 
+  private isMultiline({
+    language,
+    prefix,
+    suffix,
+    selectedCompletionInfo,
+    multilineCompletions,
+    completeMultiline,
+  }: {
+    language: AutocompleteLanguageInfo;
+    prefix: string;
+    suffix: string;
+    selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"];
+    multilineCompletions: TabAutocompleteOptions["multilineCompletions"];
+    completeMultiline: boolean;
+  }) {
+    let langMultilineDecision = language.useMultiline?.({ prefix, suffix });
+    if (langMultilineDecision) {
+      return langMultilineDecision;
+    } else {
+      return (
+        !selectedCompletionInfo && // Only ever single-line if using intellisense selected value
+        multilineCompletions !== "never" &&
+        (multilineCompletions === "always" || completeMultiline)
+      );
+    }
+  }
+
   async getTabCompletion(
     token: AbortSignal,
     options: TabAutocompleteOptions,
@@ -465,10 +483,13 @@ export class CompletionProvider {
 
     // Filter
     const lang = languageForFilepath(filepath);
-    const line = fileLines[pos.line] ?? "";
-    for (const endOfLine of lang.endOfLine) {
-      if (line.endsWith(endOfLine) && pos.character >= line.length) {
-        return undefined;
+
+    if (options.transform) {
+      const line = fileLines[pos.line] ?? "";
+      for (const endOfLine of lang.endOfLine) {
+        if (line.endsWith(endOfLine) && pos.character >= line.length) {
+          return undefined;
+        }
       }
     }
 
@@ -485,18 +506,6 @@ export class CompletionProvider {
       llm.model = TRIAL_FIM_MODEL;
     }
 
-    if (
-      !shownGptClaudeWarning &&
-      nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-      !llm.model.toLowerCase().includes("deepseek") &&
-      !llm.model.toLowerCase().includes("codestral")
-    ) {
-      shownGptClaudeWarning = true;
-      throw new Error(
-        `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
-      );
-    }
-
     // Prompt
     let fullPrefix =
       getRangeInString(fileContents, {
@@ -506,11 +515,10 @@ export class CompletionProvider {
 
     if (input.injectDetails) {
       const lines = fullPrefix.split("\n");
-      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-        lang.singleLineComment
-      } ${input.injectDetails
-        .split("\n")
-        .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
+      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${lang.singleLineComment
+        } ${input.injectDetails
+          .split("\n")
+          .join(`\n${lang.singleLineComment} `)}\n${lines[lines.length - 1]}`;
     }
 
     const fullSuffix = getRangeInString(fileContents, {
@@ -531,17 +539,17 @@ export class CompletionProvider {
 
     let extrasSnippets = options.useOtherFiles
       ? ((await Promise.race([
-          this.getDefinitionsFromLsp(
-            filepath,
-            fullPrefix + fullSuffix,
-            fullPrefix.length,
-            this.ide,
-            lang,
-          ),
-          new Promise((resolve) => {
-            setTimeout(() => resolve([]), 100);
-          }),
-        ])) as AutocompleteSnippet[])
+        this.getDefinitionsFromLsp(
+          filepath,
+          fullPrefix + fullSuffix,
+          fullPrefix.length,
+          this.ide,
+          lang,
+        ),
+        new Promise((resolve) => {
+          setTimeout(() => resolve([]), 100);
+        }),
+      ])) as AutocompleteSnippet[])
       : [];
 
     const workspaceDirs = await this.ide.getWorkspaceDirs();
@@ -580,8 +588,8 @@ export class CompletionProvider {
       completionOptions,
       compilePrefixSuffix = undefined,
     } = options.template
-      ? { template: options.template, completionOptions: {} }
-      : getTemplateForModel(llm.model);
+        ? { template: options.template, completionOptions: {} }
+        : getTemplateForModel(llm.model);
 
     let prompt: string;
     const filename = getBasename(filepath);
@@ -652,25 +660,25 @@ export class CompletionProvider {
     } else {
       const stop = [
         ...(completionOptions?.stop || []),
-        ...multilineStops,
+        // ...multilineStops,
         ...commonStops,
         ...(llm.model.toLowerCase().includes("starcoder2")
           ? STARCODER2_T_ARTIFACTS
           : []),
         ...(lang.stopWords ?? []),
-        ...lang.topLevelKeywords.map((word) => `\n${word}`),
+        // ...lang.topLevelKeywords.map((word) => `\n${word}`),
       ];
 
-      let langMultilineDecision = lang.useMultiline?.({ prefix, suffix });
-      let multiline: boolean = false;
-      if (langMultilineDecision) {
-        multiline = langMultilineDecision;
-      } else {
-        multiline =
-          !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
-          options.multilineCompletions !== "never" &&
-          (options.multilineCompletions === "always" || completeMultiline);
-      }
+      const multiline =
+        !options.transform ||
+        this.isMultiline({
+          multilineCompletions: options.multilineCompletions,
+          language: lang,
+          selectedCompletionInfo: input.selectedCompletionInfo,
+          prefix,
+          suffix,
+          completeMultiline,
+        });
 
       // Try to reuse pending requests if what the user typed matches start of completion
       const generator = this.generatorReuseManager.getGenerator(
@@ -678,14 +686,14 @@ export class CompletionProvider {
         () =>
           llm.supportsFim()
             ? llm.streamFim(prefix, suffix, {
-                ...completionOptions,
-                stop,
-              })
+              ...completionOptions,
+              stop,
+            })
             : llm.streamComplete(prompt, {
-                ...completionOptions,
-                raw: true,
-                stop,
-              }),
+              ...completionOptions,
+              raw: true,
+              stop,
+            }),
         multiline,
       );
 
@@ -705,46 +713,52 @@ export class CompletionProvider {
         }
       };
       let charGenerator = generatorWithCancellation();
-      charGenerator = noFirstCharNewline(charGenerator);
-      charGenerator = onlyWhitespaceAfterEndOfLine(
-        charGenerator,
-        lang.endOfLine,
-        fullStop,
-      );
-      charGenerator = stopAtStopTokens(charGenerator, stop);
-      charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
-        charGenerator,
-        prefix,
-        suffix,
-        filepath,
-        multiline,
-      );
 
-      let lineGenerator = streamLines(charGenerator);
-      lineGenerator = stopAtLines(lineGenerator, fullStop);
-      lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-      lineGenerator = avoidPathLineAndEmptyComments(
-        lineGenerator,
-        lang.singleLineComment,
-      );
-      lineGenerator = skipPrefixes(lineGenerator);
-      lineGenerator = noTopLevelKeywordsMidline(
-        lineGenerator,
-        lang.topLevelKeywords,
-        fullStop,
-      );
-
-      for (const lineFilter of lang.lineFilters ?? []) {
-        lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
+      if (options.transform) {
+        // charGenerator = noFirstCharNewline(charGenerator);
+        // charGenerator = onlyWhitespaceAfterEndOfLine(
+        //   charGenerator,
+        //   lang.endOfLine,
+        //   fullStop,
+        // );
+        charGenerator = stopAtStopTokens(charGenerator, stop);
+        charGenerator =
+          this.bracketMatchingService.stopOnUnmatchedClosingBracket(
+            charGenerator,
+            prefix,
+            suffix,
+            filepath,
+            multiline,
+          );
       }
 
-      lineGenerator = streamWithNewLines(lineGenerator);
+      let lineGenerator = streamLines(charGenerator);
+      if (options.transform) {
+        lineGenerator = stopAtLines(lineGenerator, fullStop);
+        lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
+        lineGenerator = avoidPathLineAndEmptyComments(
+          lineGenerator,
+          lang.singleLineComment,
+        );
+        lineGenerator = skipPrefixes(lineGenerator);
 
-      const finalGenerator = stopAtSimilarLine(
-        lineGenerator,
-        lineBelowCursor,
-        fullStop,
-      );
+        // lineGenerator = noTopLevelKeywordsMidline(
+        //   lineGenerator,
+        //   lang.topLevelKeywords,
+        //   fullStop,
+        // );
+        for (const lineFilter of lang.lineFilters ?? []) {
+          lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
+        }
+
+        lineGenerator = stopAtSimilarLine(
+          lineGenerator,
+          lineBelowCursor,
+          fullStop,
+        );
+      }
+
+      const finalGenerator = streamWithNewLines(lineGenerator);
 
       try {
         for await (const update of finalGenerator) {
@@ -761,12 +775,14 @@ export class CompletionProvider {
         return undefined;
       }
 
-      const processedCompletion = postprocessCompletion({
-        completion,
-        prefix,
-        suffix,
-        llm,
-      });
+      const processedCompletion = options.transform
+        ? postprocessCompletion({
+            completion,
+            prefix,
+            suffix,
+            llm,
+          })
+        : completion;
 
       if (!processedCompletion) {
         return undefined;

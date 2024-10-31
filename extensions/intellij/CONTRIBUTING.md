@@ -30,11 +30,11 @@ packaging it in a binary in the `binary` directory. Communication occurs over st
 
 ### IDE Installation
 
-We recommend using IntelliJ IDEA, which you can download from
-the [JetBrains website](https://www.jetbrains.com/idea/download).
+Continue is built with JDK version 17 (as specified in [`./build.gradle.kts`](./build.gradle.kts)), which can be downloaded from [Oracle](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html).
 
-Both Ultimate and Community (free) editions are suitable for this project. Continue is built with JDK version 17, as
-specified in [`./build.gradle.kts`](./build.gradle.kts).
+We recommend using IntelliJ IDEA, which you can download from the [JetBrains website](https://www.jetbrains.com/idea/download).
+
+Both Ultimate and Community (free) editions are suitable for this project, although Ultimate has better debugging (see notes below).
 
 ### IDE configuration
 
@@ -63,13 +63,15 @@ This project requires Node.js version 20.11.0 (LTS) or higher. You have two opti
 
 Select the `Run Continue` task in the top right corner of the IDE and then select the "Debug" option.
 
+> In community edition, use `Run Continue (CE)` instead, which uses shell scripts instead of Ultimate-only node configs. If you want to debug the core in CE, you'll need to quit the `Start Core Dev Server (CE)` process and run the core in a different environment that supports debugging, such as VS Code (Launch "Core Binary").
+
 ![run-extension-screenshot](../../media/run-continue-intellij.png)
 
 This should open a new instance on IntelliJ with the extension installed.
 
 ### Accessing files in the `.continue` directory
 
-When running the `Start Dev Server (core)` task, we set the location of your Continue directory to `./binary/.continue`. This is to
+When running the `Start Core Dev Server` task, we set the location of your Continue directory to `./binary/.continue`. This is to
 allow for changes to your `config.json` and other files during development, without affecting your actual configuration.
 
 ### Reloading changes
@@ -78,13 +80,13 @@ allow for changes to your `config.json` and other files during development, with
   _Run | Debugging Actions | Reload Changed Classes`_
   - This will often fail on new imports, schema changes etc. In that case, you need to stop and restart the extension
 - `gui`: Changes will be reloaded automatically
-- `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Dev Server (core)` task)
+- `core`: Run `npm run build` from the `binary` directory (requires restarting the `Start Core Dev Server` task)
 
 ### Setting breakpoints
 
 - `extensions/intellij`: Breakpoints can be set in Intellij
 - `gui`: You'll need to set explicit `debugger` statements in the source code, or through the browser dev tools
-- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Dev Server (core)` task)
+- `core`: Breakpoints can be set in Intellij (requires restarting the `Start Core Dev Server` task)
 
 ### Available Gradle tasks
 

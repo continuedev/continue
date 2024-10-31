@@ -14,13 +14,13 @@ export interface RetrievalPipelineOptions {
   llm: ILLM;
   config: ContinueConfig;
   ide: IDE;
-
   input: string;
   nRetrieve: number;
   nFinal: number;
   tags: BranchAndDir[];
   pathSep: string;
   filterDirectory?: string;
+  includeEmbeddings?: boolean; // Used to handle JB w/o an embeddings model
 }
 
 export interface IRetrievalPipeline {
@@ -29,6 +29,7 @@ export interface IRetrievalPipeline {
 
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   private lanceDbIndex: LanceDbIndex;
+
   constructor(protected readonly options: RetrievalPipelineOptions) {
     this.lanceDbIndex = new LanceDbIndex(
       options.config.embeddingsProvider,
@@ -71,7 +72,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       }
     }
 
-    return chunks;
+    return chunks.slice(0, n);
   }
 
   protected async retrieveFts(input: string, n: number): Promise<Chunk[]> {

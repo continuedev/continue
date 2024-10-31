@@ -49,7 +49,7 @@ const exe = os === "win32" ? ".exe" : "";
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config schemas to docs and intellij
+  // Copy config schemas to intellij
   copyConfigSchema();
 
   if (!process.cwd().endsWith("vscode")) {

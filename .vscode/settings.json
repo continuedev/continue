@@ -17,7 +17,8 @@
     "**/core/vendor/**": true,
     "**/gui/dist": true,
     "**/extensions/vscode/gui/**": true,
-    "**/extensions/vscode/out/**": true
+    "**/extensions/vscode/out/**": true,
+    "**/extensions/intellij/build/**": true
   },
   "eslint.workingDirectories": ["./core"]
 }

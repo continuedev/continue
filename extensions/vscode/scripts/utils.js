@@ -23,11 +23,7 @@ function copyConfigSchema() {
   };
   fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
 
-  // Copy config schemas to docs and intellij
-  fs.copyFileSync(
-    "config_schema.json",
-    path.join("..", "..", "docs", "static", "schemas", "config.json"),
-  );
+  // Copy config schemas to intellij
   fs.copyFileSync(
     "config_schema.json",
     path.join(
@@ -50,7 +46,6 @@ function copyConfigSchema() {
       "continue_rc_schema.json",
     ),
   );
-
 }
 
 function copyTokenizers() {
