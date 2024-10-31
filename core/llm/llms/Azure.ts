@@ -11,7 +11,7 @@ class Azure extends OpenAI {
 
   constructor(options: LLMOptions) {
     super(options);
-    this.engine = options.model;
+    this.deployment = options.deployment ?? options.model;
   }
 }
 

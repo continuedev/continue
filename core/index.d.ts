@@ -72,7 +72,7 @@ export interface ILLM extends LLMOptions {
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
 
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
   region?: string;
@@ -351,7 +351,7 @@ export interface LLMOptions {
   accountId?: string;
 
   // Azure options
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
 
@@ -836,7 +836,7 @@ export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
-  engine?: string;
+  deployment?: string;
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;

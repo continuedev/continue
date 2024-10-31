@@ -49,7 +49,7 @@ declare global {
     apiBase?: string;
     cacheBehavior?: CacheBehavior;
 
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
     region?: string;
@@ -322,7 +322,7 @@ declare global {
     accountId?: string;
 
     // Azure options
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
 
@@ -773,7 +773,7 @@ declare global {
     apiBase?: string;
     apiKey?: string;
     model?: string;
-    engine?: string;
+    deployment?: string;
     apiType?: string;
     apiVersion?: string;
     requestOptions?: RequestOptions;

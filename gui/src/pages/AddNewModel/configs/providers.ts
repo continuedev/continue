@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
-import { ModelProviderTags } from "../../../components/modelSelection/utils";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -132,7 +132,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.gpt4o],
     params: {
       apiKey: "",
-      engine: "",
+      deployment: "",
       apiBase: "",
       apiVersion: "",
       apiType: "azure",
@@ -147,9 +147,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
       {
         inputType: "text",
-        key: "engine",
-        label: "Engine",
-        placeholder: "Enter the engine name",
+        key: "deployment",
+        label: "Deployment",
+        placeholder: "Enter the deployment name",
         required: true,
       },
       { ...apiBaseInput, required: true },
