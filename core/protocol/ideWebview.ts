@@ -15,7 +15,12 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
   ];
   openUrl: [string, void];
-  applyToCurrentFile: [{ text: string; streamId: string }, void];
+  // We pass the `curSelectedModel` because we currently cannot access the
+  // default model title in the GUI from JB
+  applyToCurrentFile: [
+    { text: string; streamId: string; curSelectedModelTitle: string },
+    void,
+  ];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
@@ -66,6 +71,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
    * @deprecated Use navigateTo with a path instead.
    */
   viewHistory: [undefined, void];
+  focusContinueSessionId: [{ sessionId: string | undefined }, void];
   newSession: [undefined, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];

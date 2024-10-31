@@ -43,7 +43,7 @@ export async function* streamLazyApply(
   let lazyCompletionLines = streamLines(lazyCompletion, true);
   // Process line output
   // lazyCompletionLines = filterEnglishLinesAtStart(lazyCompletionLines);
-  lazyCompletionLines = stopAtLines(lazyCompletionLines, () => {}, ["```"]);
+  lazyCompletionLines = stopAtLines(lazyCompletionLines, () => { }, ["```"]);
   lazyCompletionLines = filterLeadingNewline(lazyCompletionLines);
 
   // Fill in unchanged code

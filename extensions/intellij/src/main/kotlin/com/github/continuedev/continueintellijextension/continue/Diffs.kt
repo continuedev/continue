@@ -6,8 +6,6 @@ import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
 import com.intellij.diff.DiffRequestPanel
 import com.intellij.diff.contents.DiffContent
-import com.intellij.diff.contents.DocumentContent
-import com.intellij.diff.requests.DiffRequest
 import com.intellij.diff.requests.SimpleDiffRequest
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
@@ -18,7 +16,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.ui.content.ContentFactory
 import java.awt.Toolkit
 import java.io.File
 import java.nio.file.Paths
@@ -51,10 +48,9 @@ interface DiffInfo {
 
 class DiffManager(private val project: Project) : DumbAware {
 
-    private val diffContentFactory = DiffContentFactory.getInstance()
-
     // Mapping from file2 to relevant info
     private val diffInfoMap: MutableMap<String, DiffInfo> = mutableMapOf()
+    private var lastFile2: String? = null
 
     fun showDiff(filepath: String, replacement: String, stepIndex: Int) {
         val diffDir = getDiffDirectory()
@@ -68,7 +64,7 @@ class DiffManager(private val project: Project) : DumbAware {
         openDiffWindow(filepath, file.path, stepIndex)
     }
 
-    fun cleanUpFile(file2: String) {
+    private fun cleanUpFile(file2: String) {
         diffInfoMap[file2]?.dialog?.close(0)
         diffInfoMap.remove(file2)
         File(file2).delete()
@@ -77,7 +73,6 @@ class DiffManager(private val project: Project) : DumbAware {
         }
     }
 
-    private var lastFile2: String? = null
 
     fun acceptDiff(file2: String?) {
         val file = (file2 ?: lastFile2) ?: return
@@ -128,7 +123,7 @@ class DiffManager(private val project: Project) : DumbAware {
 
         // Create a SimpleDiffRequest and populate it with the DiffContents and titles
         val diffRequest = SimpleDiffRequest("Continue Diff", content1, content2, "Old", "New")
-        
+
         // Get a DiffRequestPanel from the DiffManager and set the DiffRequest to it
         val diffInfo = diffInfoMap[file2]
 
@@ -176,10 +171,10 @@ class DiffManager(private val project: Project) : DumbAware {
                         }
 
                         override fun createActions(): Array<Action> {
-                            val okAction = getOKAction()
+                            val okAction = okAction
                             okAction.putValue(Action.NAME, "Accept (${getAltKeyLabel()} ⇧ Y)")
 
-                            val cancelAction = getCancelAction()
+                            val cancelAction = cancelAction
                             cancelAction.putValue(Action.NAME, "Reject (${getAltKeyLabel()} ⇧ N)")
 
                             return arrayOf(okAction, cancelAction)

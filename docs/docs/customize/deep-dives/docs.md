@@ -69,6 +69,25 @@ The [configuration schema for docs](https://github.com/continuedev/continue/blob
 - `rootUrl`: The base URL of the documentation site, used to determine which pages to index.
 - `faviconUrl`: The URL of the site's favicon, used for visual identification in the UI.
 
+## Configuration
+
+As with [@Codebase context provider configuration](https://docs.continue.dev/customize/deep-dives/codebase#configuration), you can adjust the behavior of the docs context provider with the `nRetrieve`, `nFinal`, and `useReranking`
+
+```json title="config.json"
+{
+  "contextProviders": [
+    {
+      "name": "docs",
+      "params": {
+        "nRetrieve": 25,
+        "nFinal": 5,
+        "useReranking": true
+      }
+    }
+  ]
+}
+```
+
 ## Crawling dynamically generated sites with `useChromiumForDocsCrawling`
 
 By default, we use a lighter weight tool to crawl documentation sites that cannot render sites that are dynamically generated using JavaScript.

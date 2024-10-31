@@ -13,10 +13,6 @@ const continueDir = path.join(__dirname, "..", "..", "..");
 function copyConfigSchema() {
   fs.copyFileSync(
     "config_schema.json",
-    path.join("..", "..", "docs", "static", "schemas", "config.json"),
-  );
-  fs.copyFileSync(
-    "config_schema.json",
     path.join(
       "..",
       "intellij",

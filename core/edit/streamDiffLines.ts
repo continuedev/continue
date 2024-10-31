@@ -60,7 +60,7 @@ export async function* streamDiffLines(
   language: string | undefined,
   onlyOneInsertion?: boolean,
 ): AsyncGenerator<DiffLine> {
-  Telemetry.capture(
+  void Telemetry.capture(
     "inlineEdit",
     {
       model: llm.model,
@@ -94,7 +94,6 @@ export async function* streamDiffLines(
   );
   const inept = modelIsInept(llm.model);
 
-  const options: LLMFullCompletionOptions = {};
   const completion =
     typeof prompt === "string"
       ? llm.streamComplete(prompt, { raw: true })
