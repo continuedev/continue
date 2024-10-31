@@ -1,17 +1,33 @@
-import { TabAutocompleteOptions } from "@continuedev/config-types";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../HelperVars";
-import { AutocompleteInput } from "../types";
-
-const BLOCK_TYPES = ["body", "statement_block"];
 
 function isMidlineCompletion(prefix: string, suffix: string): boolean {
   return !suffix.startsWith("\n");
 }
 
-export async function shouldCompleteMultiline(
+function shouldCompleteMultilineBasedOnLanguage(
+  language: AutocompleteLanguageInfo,
+  prefix: string,
+  suffix: string,
+) {
+  let langMultilineDecision = language.useMultiline?.({ prefix, suffix });
+  return langMultilineDecision;
+}
+
+export function decideMultilineEarly(
   helper: HelperVars,
-): Promise<boolean> {
+  prefix: string,
+  suffix: string,
+) {
+  switch (helper.options.multilineCompletions) {
+    case "always":
+      return true;
+    case "never":
+      return false;
+    default:
+      break;
+  }
+
   // Don't complete multi-line if you are mid-line
   if (isMidlineCompletion(helper.fullPrefix, helper.fullSuffix)) {
     return false;
@@ -28,56 +44,11 @@ export async function shouldCompleteMultiline(
     return false;
   }
 
-  return true;
-}
-
-function shouldCompleteMultilineBasedOnLanguage(
-  language: AutocompleteLanguageInfo,
-  prefix: string,
-  suffix: string,
-) {
-  let langMultilineDecision = language.useMultiline?.({ prefix, suffix });
-  return langMultilineDecision;
-}
-
-function shouldCompleteMultilineBasedOnSelectedCompletion(
-  selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"],
-  multilineCompletions: TabAutocompleteOptions["multilineCompletions"],
-  completeMultiline: boolean,
-) {
-  return (
-    !selectedCompletionInfo && // Only ever single-line if using intellisense selected value
-    multilineCompletions !== "never" &&
-    (multilineCompletions === "always" || completeMultiline)
-  );
-}
-
-export function decideMultilineEarly({
-  language,
-  prefix,
-  suffix,
-  selectedCompletionInfo,
-  multilineCompletions,
-  completeMultiline,
-}: {
-  language: AutocompleteLanguageInfo;
-  prefix: string;
-  suffix: string;
-  selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"];
-  multilineCompletions: TabAutocompleteOptions["multilineCompletions"];
-  completeMultiline: boolean;
-}) {
-  if (shouldCompleteMultilineBasedOnLanguage(language, prefix, suffix)) {
+  if (shouldCompleteMultilineBasedOnLanguage(helper.lang, prefix, suffix)) {
     return true;
   }
 
-  if (
-    shouldCompleteMultilineBasedOnSelectedCompletion(
-      selectedCompletionInfo,
-      multilineCompletions,
-      completeMultiline,
-    )
-  ) {
+  if (helper.input.selectedCompletionInfo) {
     return true;
   }
 

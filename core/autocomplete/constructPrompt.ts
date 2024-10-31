@@ -4,7 +4,6 @@ import {
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
-import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import {
   fillPromptWithSnippets,
@@ -84,8 +83,6 @@ export async function constructAutocompletePrompt(
 ): Promise<{
   prefix: string;
   suffix: string;
-  useFim: boolean;
-  completeMultiline: boolean;
   snippets: AutocompleteSnippet[];
 }> {
   // Prune prefix/suffix based on token budgets
@@ -104,13 +101,14 @@ export async function constructAutocompletePrompt(
 
   const scoredSnippets = rankAndOrderSnippets(snippets, helper);
 
+  // This might be redundant with filterSnippetsAlreadyInCaretWindow
   let finalSnippets = removeRangeFromSnippets(
     scoredSnippets,
     helper.filepath.split("://").slice(-1)[0],
     getRangeOfPrefixAndSuffixWithBuffer(prunedPrefix, prunedSuffix, helper.pos),
   );
 
-  // Filter snippets for those with best scores (must be above threshold)
+  // Filter snippets below similarity threshold
   finalSnippets = finalSnippets.filter(
     (snippet) =>
       snippet.score >= helper.options.recentlyEditedSimilarityThreshold,
@@ -127,8 +125,6 @@ export async function constructAutocompletePrompt(
   return {
     prefix: prunedPrefix,
     suffix: prunedSuffix,
-    useFim: true,
-    completeMultiline: await shouldCompleteMultiline(helper),
     snippets,
   };
 }

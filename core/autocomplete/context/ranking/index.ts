@@ -130,7 +130,8 @@ function mergeOverlappingRangeContents(
 }
 
 /**
- * Fill the allowed space with snippets
+ * Fill the allowed space with snippets.
+ * It is assumed that the snippets are sorted by score.
  */
 export function fillPromptWithSnippets(
   snippets: Required<AutocompleteSnippet>[],

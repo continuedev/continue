@@ -1,6 +1,6 @@
 import { CompletionOptions } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
-import { decideMultilineEarly } from "../classification/shouldCompleteMultiline";
+import { decideMultilineEarly as shouldCompleteMultiline } from "../classification/shouldCompleteMultiline";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { AutocompleteSnippet } from "../context/ranking";
 import { HelperVars } from "../HelperVars";
@@ -65,7 +65,6 @@ export function renderPrompt(
   suffix: string,
   snippets: AutocompleteSnippet[],
   workspaceDirs: string[],
-  completeMultiline: boolean,
   helper: HelperVars,
 ): [string, Partial<CompletionOptions> | undefined, boolean] {
   let {
@@ -115,14 +114,7 @@ export function renderPrompt(
 
   const multiline =
     !helper.options.transform ||
-    decideMultilineEarly({
-      multilineCompletions: helper.options.multilineCompletions,
-      language: helper.lang,
-      selectedCompletionInfo: helper.input.selectedCompletionInfo,
-      prefix,
-      suffix,
-      completeMultiline,
-    });
+    shouldCompleteMultiline(helper, prefix, suffix);
 
   const stopTokens = getStopTokens(
     completionOptions,

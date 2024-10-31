@@ -173,12 +173,11 @@ export class CompletionProvider {
       // or they might separately track recently edited ranges)
       const extraSnippets = await this._getExtraSnippets(helper);
 
-      let { prefix, suffix, completeMultiline, snippets } =
-        await constructAutocompletePrompt(
-          helper,
-          extraSnippets,
-          this.contextRetrievalService,
-        );
+      let { prefix, suffix, snippets } = await constructAutocompletePrompt(
+        helper,
+        extraSnippets,
+        this.contextRetrievalService,
+      );
 
       // If prefix is manually passed
       if (helper.input.manuallyPassPrefix) {
@@ -191,7 +190,6 @@ export class CompletionProvider {
         suffix,
         snippets,
         await this.ide.getWorkspaceDirs(),
-        completeMultiline,
         helper,
       );
 
