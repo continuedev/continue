@@ -42,7 +42,7 @@ export function jaccardSimilarity(a: string, b: string): number {
 /**
  * Rank code snippets to be used in tab-autocomplete prompt. Returns a sorted version of the snippet array.
  */
-export function rankSnippets(
+export function rankAndOrderSnippets(
   ranges: AutocompleteSnippet[],
   helper: HelperVars,
 ): Required<AutocompleteSnippet>[] {

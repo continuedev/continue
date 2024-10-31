@@ -1,6 +1,8 @@
 import { IDE, TabAutocompleteOptions } from "..";
-import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo";
-import { languageForFilepath } from "./constructPrompt";
+import {
+  AutocompleteLanguageInfo,
+  languageForFilepath,
+} from "./constants/AutocompleteLanguageInfo";
 import { constructInitialPrefixSuffix } from "./templating/constructPrefixSuffix";
 import { AutocompleteInput } from "./types";
 import { AstPath, getAst, getTreePathAtCursor } from "./util/ast";
@@ -70,6 +72,9 @@ export class HelperVars {
   }
   get pos() {
     return this.input.pos;
+  }
+  get maxSnippetTokens() {
+    return this.options.maxPromptTokens * this.options.maxSnippetPercentage;
   }
 
   // Getters for lazy access

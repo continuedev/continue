@@ -346,3 +346,9 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   yml: YAML,
   md: Markdown,
 };
+
+export function languageForFilepath(
+  filepath: string,
+): AutocompleteLanguageInfo {
+  return LANGUAGES[filepath.split(".").slice(-1)[0]] || Typescript;
+}

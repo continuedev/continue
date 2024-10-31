@@ -1,6 +1,7 @@
 import { IDE } from "../..";
 import { getRangeInString } from "../../util/ranges";
-import { languageForFilepath } from "../constructPrompt";
+import { languageForFilepath } from "../constants/AutocompleteLanguageInfo";
+
 import { AutocompleteInput } from "../types";
 
 /**

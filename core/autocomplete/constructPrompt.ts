@@ -1,40 +1,20 @@
+import { Position, Range } from "../index.js";
 import {
   countTokens,
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
-import {
-  AutocompleteLanguageInfo,
-  LANGUAGES,
-  Typescript,
-} from "./constants/AutocompleteLanguageInfo.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import {
   fillPromptWithSnippets,
-  rankSnippets,
+  rankAndOrderSnippets,
   removeRangeFromSnippets,
   type AutocompleteSnippet,
 } from "./context/ranking/index.js";
 import { HelperVars } from "./HelperVars.js";
 
-export function languageForFilepath(
-  filepath: string,
-): AutocompleteLanguageInfo {
-  return LANGUAGES[filepath.split(".").slice(-1)[0]] || Typescript;
-}
-
-export async function constructAutocompletePrompt(
-  helper: HelperVars,
-  extraSnippets: AutocompleteSnippet[],
-  contextRetrievalService: ContextRetrievalService,
-): Promise<{
-  prefix: string;
-  suffix: string;
-  useFim: boolean;
-  completeMultiline: boolean;
-  snippets: AutocompleteSnippet[];
-}> {
+function prunePrefixSuffix(helper: HelperVars) {
   // Construct basic prefix
   const maxPrefixTokens =
     helper.options.maxPromptTokens * helper.options.prefixPercentage;
@@ -56,46 +36,78 @@ export async function constructAutocompletePrompt(
     helper.modelName,
   );
 
+  return {
+    prunedPrefix,
+    prunedSuffix,
+  };
+}
+
+function filterSnippetsAlreadyInCaretWindow(
+  snippets: AutocompleteSnippet[],
+  caretWindow: string,
+): AutocompleteSnippet[] {
+  return snippets
+    .map((snippet) => ({ ...snippet }))
+    .filter(
+      (s) =>
+        s.contents.trim() !== "" && !caretWindow.includes(s.contents.trim()),
+    );
+}
+
+function getRangeOfPrefixAndSuffixWithBuffer(
+  prefix: string,
+  suffix: string,
+  caretPos: Position,
+): Range {
+  // Remove prefix range from snippets
+  const prefixLines = prefix.split("\n").length;
+  const suffixLines = suffix.split("\n").length;
+  const buffer = 8;
+  const prefixSuffixRangeWithBuffer = {
+    start: {
+      line: caretPos.line - prefixLines - buffer,
+      character: 0,
+    },
+    end: {
+      line: caretPos.line + suffixLines + buffer,
+      character: 0,
+    },
+  };
+
+  return prefixSuffixRangeWithBuffer;
+}
+
+export async function constructAutocompletePrompt(
+  helper: HelperVars,
+  extraSnippets: AutocompleteSnippet[],
+  contextRetrievalService: ContextRetrievalService,
+): Promise<{
+  prefix: string;
+  suffix: string;
+  useFim: boolean;
+  completeMultiline: boolean;
+  snippets: AutocompleteSnippet[];
+}> {
+  // Prune prefix/suffix based on token budgets
+  const { prunedPrefix, prunedSuffix } = prunePrefixSuffix(helper);
+
   let snippets = await contextRetrievalService.retrieve(
     prunedPrefix,
     helper,
     extraSnippets,
   );
 
-  // Filter out empty snippets and ones that are already in the prefix/suffix
-  snippets = snippets
-    .map((snippet) => ({ ...snippet }))
-    .filter(
-      (s) =>
-        s.contents.trim() !== "" &&
-        !(prunedPrefix + prunedSuffix).includes(s.contents.trim()),
-    );
+  snippets = filterSnippetsAlreadyInCaretWindow(
+    snippets,
+    prunedPrefix + prunedSuffix,
+  );
 
-  // Rank / order the snippets
-  const scoredSnippets = rankSnippets(snippets, helper);
+  const scoredSnippets = rankAndOrderSnippets(snippets, helper);
 
-  // Fill maxSnippetTokens with snippets
-  const maxSnippetTokens =
-    helper.options.maxPromptTokens * helper.options.maxSnippetPercentage;
-
-  // Remove prefix range from snippets
-  const prefixLines = prunedPrefix.split("\n").length;
-  const suffixLines = prunedSuffix.split("\n").length;
-  const buffer = 8;
-  const prefixSuffixRangeWithBuffer = {
-    start: {
-      line: helper.pos.line - prefixLines - buffer,
-      character: 0,
-    },
-    end: {
-      line: helper.pos.line + suffixLines + buffer,
-      character: 0,
-    },
-  };
   let finalSnippets = removeRangeFromSnippets(
     scoredSnippets,
     helper.filepath.split("://").slice(-1)[0],
-    prefixSuffixRangeWithBuffer,
+    getRangeOfPrefixAndSuffixWithBuffer(prunedPrefix, prunedSuffix, helper.pos),
   );
 
   // Filter snippets for those with best scores (must be above threshold)
@@ -103,9 +115,10 @@ export async function constructAutocompletePrompt(
     (snippet) =>
       snippet.score >= helper.options.recentlyEditedSimilarityThreshold,
   );
+
   finalSnippets = fillPromptWithSnippets(
     scoredSnippets,
-    maxSnippetTokens,
+    helper.maxSnippetTokens,
     helper.modelName,
   );
 
