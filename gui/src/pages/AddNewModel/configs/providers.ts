@@ -530,6 +530,8 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     icon: "WatsonX.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
+      models.granite3Instruct8b,
+      models.granite3Instruct2b,
       models.graniteCode3b,
       models.graniteCode8b,
       models.graniteCode20b,

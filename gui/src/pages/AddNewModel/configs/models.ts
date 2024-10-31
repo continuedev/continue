@@ -866,6 +866,30 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "WatsonX.png",
     isOpenSource: false,
   },
+  granite3Instruct8b: {
+    title: "Granite 3.0 8b Instruct",
+    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-8b-instruct",
+      contextLength: 8_000,
+      title: "Granite 3.0 8b Instruct"
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false
+  },
+  granite3Instruct2b: {
+    title: "Granite 3.0 2b Instruct",
+    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-2b-instruct",
+      contextLength: 2_000,
+      title: "Granite 3.0 2b Instruct"
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false
+  },
   MistralLarge: {
     title: "Mistral Large",
     description:

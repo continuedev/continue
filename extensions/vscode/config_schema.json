@@ -1561,6 +1561,11 @@
                 "enum": [
                   "ibm/granite-13b-chat-v2",
                   "ibm/granite-20b-code-instruct",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
+                  "ibm/granite-34b-code-instruct",
+                  "ibm/granite-3-8b-instruct",
+                  "ibm/granite-3-2b-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
@@ -3120,16 +3125,10 @@
           "properties": {
             "provider": {
               "type": "string",
-<<<<<<< HEAD
-              "enum": [
-                "posthog"
-              ],
-=======
               "enum": [
                 "posthog",
                 "logstash"
               ],
->>>>>>> 6e622157f1a727ba54d3bc22b337079e832c7556
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [
