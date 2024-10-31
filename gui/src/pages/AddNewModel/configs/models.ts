@@ -868,6 +868,30 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "WatsonX.png",
     isOpenSource: false,
   },
+  granite3Instruct8b: {
+    title: "Granite 3.0 8b Instruct",
+    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-8b-instruct",
+      contextLength: 8_000,
+      title: "Granite 3.0 8b Instruct"
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false
+  },
+  granite3Instruct2b: {
+    title: "Granite 3.0 2b Instruct",
+    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-2b-instruct",
+      contextLength: 2_000,
+      title: "Granite 3.0 2b Instruct"
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false
+  },
   MistralLarge: {
     title: "Mistral Large",
     description:
@@ -910,6 +934,47 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["watsonx"],
     isOpenSource: false,
   },
+  VertexGemini15Pro: {
+    title: "Gemini 1.5 Pro",
+    description: "A newer Gemini model with 1M token context length",
+    params: {
+      title: "Gemini 1.5 Pro",
+      model: "gemini-1.5-pro-002",
+      contextLength: 2_097_152,
+    },
+    icon: "gemini.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+  VertexGemini15Flash: {
+    title: "Gemini 1.5 Flash",
+    description:
+      "Fast and versatile multimodal model for scaling across diverse tasks",
+    params: {
+      title: "Gemini 1.5 Flash",
+      model: "gemini-1.5-flash-002",
+      contextLength: 1_048_576,
+    },
+    icon: "gemini.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+  vertexMistralLarge: {
+    title: "Mistral Large",
+    description:
+      "Mistral's flagship model that's ideal for complex tasks that require large reasoning capabilities or are highly specialized (Synthetic Text Generation, Code Generation, RAG, or Agents).",
+    params: {
+      title: "Mistral Large",
+      model: "mistral-large",
+      contextLength: 32000,
+    },
+    icon: "mistral.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+
+
+
   gpt4gov: {
     title: "GPT-4 gov",
     description:

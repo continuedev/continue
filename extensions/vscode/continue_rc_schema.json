@@ -172,7 +172,6 @@
             "openai",
             "free-trial",
             "anthropic",
-            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -184,11 +183,9 @@
             "llama.cpp",
             "replicate",
             "gemini",
-            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
-            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
@@ -203,7 +200,8 @@
             "vllm",
             "cerebras",
             "askSage",
-            "nebius"
+            "nebius",
+            "vertexai"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -856,53 +854,6 @@
             "properties": {
               "provider": {
                 "enum": [
-                  "anthropic-vertexai"
-                ]
-              }
-            },
-            "required": [
-              "provider"
-            ]
-          },
-          "then": {
-            "properties": {
-              "cacheBehavior": {
-                "title": "Caching Behavior",
-                "description": "Options for the prompt caching",
-                "properties": {
-                  "cacheSystemMessage": {
-                    "type": "boolean"
-                  },
-                  "cacheConversation": {
-                    "type": "boolean"
-                  }
-                }
-              },
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "claude-3-5-opus",
-                      "claude-3-5-sonnet",
-                      "claude-3-5-haiku",
-                      "claude-3-opus",
-                      "claude-3-sonnet",
-                      "claude-3-haiku"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": [
                   "cohere"
                 ]
               }
@@ -1010,44 +961,6 @@
                 ]
               }
             }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": [
-                  "gemini-vertexai"
-                ]
-              }
-            },
-            "required": [
-              "provider"
-            ]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "gemini-pro",
-                      "gemini-1.5-pro-latest",
-                      "gemini-1.5-pro",
-                      "gemini-1.5-flash-latest",
-                      "gemini-1.5-flash"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            },
-            "required": [
-              "projectId",
-              "region"
-            ]
           }
         },
         {
@@ -1270,7 +1183,7 @@
             "properties": {
               "provider": {
                 "enum": [
-                  "mistral-vertexai"
+                  "vertexai"
                 ]
               }
             },
@@ -1279,22 +1192,6 @@
             ]
           },
           "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "codestral",
-                      "mistral-nemo",
-                      "mistral-large"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            },
             "required": [
               "projectId",
               "region"
@@ -1644,28 +1541,32 @@
           },
           "then": {
             "properties": {
-              "watsonxUrl": {
+              "apiBase": {
                 "type": "string"
               },
-              "watsonxApiKey": {
+              "apiKey": {
                 "type": "string"
               },
-              "watsonxApiVersion": {
+              "apiVersion": {
                 "type": "string"
               },
-              "watsonxProjectId": {
+              "projectId": {
                 "type": "string"
               },
-              "watsonxStopToken": {
-                "type": "string"
-              },
-              "watsonxFullUrl": {
+              "deploymentId": {
                 "type": "string"
               },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
                   "ibm/granite-20b-code-instruct",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
+                  "ibm/granite-34b-code-instruct",
+                  "ibm/granite-3-8b-instruct",
+                  "ibm/granite-3-2b-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
@@ -1673,8 +1574,9 @@
               }
             },
             "required": [
-              "watsonxUrl",
-              "watsonxProjectId"
+              "apiBase",
+              "apiKey",
+              "apiVersion"
             ]
           }
         },
@@ -2786,8 +2688,8 @@
                 "nvidia",
                 "bedrock",
                 "sagemaker",
-                "vertex",
-                "nebius"
+                "nebius",
+                "vertexai"
               ]
             },
             "model": {
@@ -2884,7 +2786,7 @@
                 "properties": {
                   "provider": {
                     "enum": [
-                      "vertex"
+                      "vertexai"
                     ]
                   }
                 },
@@ -3158,7 +3060,7 @@
             "transform": {
               "type": "boolean",
               "description": "Whether LLM output should be transformed to correct common model pitfalls."
-            }, 
+            },
             "template": {
               "type": "string",
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."

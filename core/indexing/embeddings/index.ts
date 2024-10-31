@@ -40,7 +40,7 @@ export const allEmbeddingsProviders: Record<
   nvidia: NvidiaEmbeddingsProvider,
   voyage: VoyageEmbeddingsProvider,
   mistral: MistralEmbeddingsProvider,
-  vertex: VertexEmbeddingsProvider,
-  watsonx: WatsonxEmbeddingsProvider,
   nebius: NebiusEmbeddingsProvider,
+  vertexai: VertexEmbeddingsProvider,
+  watsonx: WatsonxEmbeddingsProvider
 };

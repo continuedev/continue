@@ -88,7 +88,10 @@
           "type": "string"
         }
       },
-      "required": ["cert", "key"]
+      "required": [
+        "cert",
+        "key"
+      ]
     },
     "RequestOptions": {
       "title": "RequestOptions",
@@ -169,7 +172,6 @@
             "openai",
             "free-trial",
             "anthropic",
-            "anthropic-vertexai",
             "cohere",
             "bedrock",
             "bedrockimport",
@@ -181,11 +183,9 @@
             "llama.cpp",
             "replicate",
             "gemini",
-            "gemini-vertexai",
             "lmstudio",
             "llamafile",
             "mistral",
-            "mistral-vertexai",
             "deepinfra",
             "groq",
             "fireworks",
@@ -200,7 +200,8 @@
             "vllm",
             "cerebras",
             "askSage",
-            "nebius"
+            "nebius",
+            "vertexai",
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -403,7 +404,10 @@
           "title": "Api Type",
           "markdownDescription": "OpenAI API type, either `openai` or `azure`",
           "x-intellij-html-description": "OpenAI API type, either <code>openai</code> or <code>azure</code>",
-          "enum": ["openai", "azure"]
+          "enum": [
+            "openai",
+            "azure"
+          ]
         },
         "apiVersion": {
           "title": "Api Version",
@@ -426,7 +430,11 @@
           }
         }
       },
-      "required": ["title", "provider", "model"],
+      "required": [
+        "title",
+        "provider",
+        "model"
+      ],
       "allOf": [
         {
           "if": {
@@ -436,7 +444,9 @@
               }
             },
             "not": {
-              "required": ["provider"]
+              "required": [
+                "provider"
+              ]
             }
           },
           "then": {
@@ -465,46 +475,67 @@
                 ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
-            "required": ["apiKey"]
+            "required": [
+              "apiKey"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["bedrockimport"]
+                "enum": [
+                  "bedrockimport"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
-            "required": ["modelArn"]
+            "required": [
+              "modelArn"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["huggingface-tgi", "huggingface-inference-api"]
+                "enum": [
+                  "huggingface-tgi",
+                  "huggingface-inference-api"
+                ]
               }
             }
           },
           "then": {
-            "required": ["apiBase"]
+            "required": [
+              "apiBase"
+            ]
           },
-          "required": ["provider"]
+          "required": [
+            "provider"
+          ]
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -524,10 +555,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["cloudflare"]
+                "enum": [
+                  "cloudflare"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -585,10 +620,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -620,10 +659,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["replicate"]
+                "enum": [
+                  "replicate"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -657,10 +700,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["free-trial"]
+                "enum": [
+                  "free-trial"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -684,7 +731,9 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               },
               "apiType": {
                 "not": {
@@ -692,7 +741,9 @@
                 }
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -754,10 +805,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["anthropic"]
+                "enum": [
+                  "anthropic"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -798,40 +853,21 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["anthropic-vertexai"]
+                "enum": [
+                  "cohere"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
-              "cacheBehavior": {
-                "title": "Caching Behavior",
-                "description": "Options for the prompt caching",
-                "properties": {
-                  "cacheSystemMessage": {
-                    "type": "boolean"
-                  },
-                  "cacheConversation": {
-                    "type": "boolean"
-                  }
-                }
-              },
               "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "claude-3-5-opus",
-                      "claude-3-5-sonnet",
-                      "claude-3-5-haiku",
-                      "claude-3-opus",
-                      "claude-3-sonnet",
-                      "claude-3-haiku"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
+                "enum": [
+                  "command-r",
+                  "command-r-plus"
                 ]
               }
             }
@@ -841,27 +877,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["cohere"]
+                "enum": [
+                  "bedrock"
+                ]
               }
             },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "enum": ["command-r", "command-r-plus"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["bedrock"]
-              }
-            },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -886,10 +909,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["sagemaker"]
+                "enum": [
+                  "sagemaker"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -903,10 +930,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["gemini"]
+                "enum": [
+                  "gemini"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -936,39 +967,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["gemini-vertexai"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "gemini-pro",
-                      "gemini-1.5-pro-latest",
-                      "gemini-1.5-pro",
-                      "gemini-1.5-flash-latest",
-                      "gemini-1.5-flash"
-                    ]
-                  },
-                  { "type": "string" }
+                "enum": [
+                  "together"
                 ]
               }
             },
-            "required": ["projectId", "region"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["together"]
-              }
-            },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1006,10 +1012,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["deepinfra"]
+                "enum": [
+                  "deepinfra"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1033,7 +1043,9 @@
                 ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1082,10 +1094,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["ollama"]
+                "enum": [
+                  "ollama"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1137,10 +1153,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["mistral"]
+                "enum": [
+                  "mistral"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1162,33 +1182,34 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["mistral-vertexai"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": ["codestral", "mistral-nemo", "mistral-large"]
-                  },
-                  { "type": "string" }
+                "enum": [
+                  "vertexai"
                 ]
               }
             },
-            "required": ["projectId", "region"]
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "required": [
+              "projectId",
+              "region"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["deepseek"]
+                "enum": [
+                  "deepseek"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1205,7 +1226,10 @@
                 }
               },
               "model": {
-                "enum": ["deepseek-chat", "deepseek-coder"]
+                "enum": [
+                  "deepseek-chat",
+                  "deepseek-coder"
+                ]
               }
             }
           }
@@ -1214,10 +1238,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["groq"]
+                "enum": [
+                  "groq"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1242,15 +1270,21 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["fireworks"]
+                "enum": [
+                  "fireworks"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": ["starcoder-7b"]
+                "enum": [
+                  "starcoder-7b"
+                ]
               }
             }
           }
@@ -1262,20 +1296,30 @@
                 "const": "azure"
               }
             },
-            "required": ["apiType"]
+            "required": [
+              "apiType"
+            ]
           },
           "then": {
-            "required": ["engine", "apiVersion", "apiBase"]
+            "required": [
+              "engine",
+              "apiVersion",
+              "apiBase"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1292,7 +1336,9 @@
                 "const": "llamafile"
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1306,15 +1352,22 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["cerebras"]
+                "enum": [
+                  "cerebras"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": ["llama3.1-8b", "llama3.1-70b"]
+                "enum": [
+                  "llama3.1-8b",
+                  "llama3.1-70b"
+                ]
               }
             }
           }
@@ -1323,10 +1376,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["text-gen-webui"]
+                "enum": [
+                  "text-gen-webui"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1340,10 +1397,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["flowise"]
+                "enum": [
+                  "flowise"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1370,7 +1431,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["key", "value"]
+                  "required": [
+                    "key",
+                    "value"
+                  ]
                 }
               },
               "additionalFlowiseConfiguration": {
@@ -1389,7 +1453,10 @@
                       "description": "Configuration Property value"
                     }
                   },
-                  "required": ["key", "value"]
+                  "required": [
+                    "key",
+                    "value"
+                  ]
                 }
               },
               "model": {
@@ -1463,59 +1530,79 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["watsonx"]
+                "enum": [
+                  "watsonx"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
-              "watsonxUrl": {
+              "apiBase": {
                 "type": "string"
               },
-              "watsonxApiKey": {
+              "apiKey": {
                 "type": "string"
               },
-              "watsonxApiVersion": {
+              "apiVersion": {
                 "type": "string"
               },
-              "watsonxProjectId": {
+              "projectId": {
                 "type": "string"
               },
-              "watsonxStopToken": {
-                "type": "string"
-              },
-              "watsonxFullUrl": {
+              "deploymentId": {
                 "type": "string"
               },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
                   "ibm/granite-20b-code-instruct",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
+                  "ibm/granite-34b-code-instruct",
+                  "ibm/granite-3-8b-instruct",
+                  "ibm/granite-3-2b-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
                 ]
               }
             },
-            "required": ["watsonxUrl", "watsonxProjectId"]
+            "required": [
+              "apiBase",
+              "apiKey",
+              "apiVersion"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["sambanova"]
+                "enum": [
+                  "sambanova"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
               "model": {
                 "anyOf": [
                   {
-                    "enum": ["llama3.1-8b", "llama3.1-70b", "llama3.1-405b"]
+                    "enum": [
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b"
+                    ]
                   },
                   {
                     "type": "string"
@@ -1530,10 +1617,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["ask-sage"]
+                "enum": [
+                  "ask-sage"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -1588,7 +1679,9 @@
           "type": "string"
         }
       },
-      "required": ["default"]
+      "required": [
+        "default"
+      ]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -1645,7 +1738,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["issue"]
+                "enum": [
+                  "issue"
+                ]
               }
             }
           },
@@ -1658,17 +1753,23 @@
                     "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
                   }
                 },
-                "required": ["repositoryUrl"]
+                "required": [
+                  "repositoryUrl"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["edit"]
+                "enum": [
+                  "edit"
+                ]
               }
             }
           },
@@ -1694,7 +1795,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["share"]
+                "enum": [
+                  "share"
+                ]
               }
             }
           },
@@ -1716,7 +1819,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["commit"]
+                "enum": [
+                  "commit"
+                ]
               }
             }
           },
@@ -1735,7 +1840,10 @@
           }
         }
       ],
-      "required": ["name", "description"]
+      "required": [
+        "name",
+        "description"
+      ]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -1754,7 +1862,11 @@
           "type": "string"
         }
       },
-      "required": ["name", "prompt", "description"]
+      "required": [
+        "name",
+        "prompt",
+        "description"
+      ]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -1834,7 +1946,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["discord"]
+                "enum": [
+                  "discord"
+                ]
               }
             }
           },
@@ -1867,11 +1981,15 @@
                               "description": "The name of the channel"
                             }
                           },
-                          "required": ["id"]
+                          "required": [
+                            "id"
+                          ]
                         }
                       }
                     },
-                    "required": ["discordKey"]
+                    "required": [
+                      "discordKey"
+                    ]
                   }
                 }
               },
@@ -1880,14 +1998,18 @@
                   {
                     "properties": {
                       "params": {
-                        "required": ["guildId"]
+                        "required": [
+                          "guildId"
+                        ]
                       }
                     }
                   },
                   {
                     "properties": {
                       "params": {
-                        "required": ["channels"]
+                        "required": [
+                          "channels"
+                        ]
                       }
                     }
                   }
@@ -1900,7 +2022,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["google"]
+                "enum": [
+                  "google"
+                ]
               }
             }
           },
@@ -1913,14 +2037,26 @@
                     "description": "Your API key for https://serper.dev in order to get Google search results"
                   }
                 },
-                "required": ["serperApiKey"]
+                "required": [
+                  "serperApiKey"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
-          "if": { "properties": { "name": { "enum": ["web"] } } },
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "web"
+                ]
+              }
+            }
+          },
           "then": {
             "properties": {
               "params": {
@@ -1934,14 +2070,18 @@
                 }
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["open"]
+                "enum": [
+                  "open"
+                ]
               }
             }
           },
@@ -1963,7 +2103,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["issue"]
+                "enum": [
+                  "issue"
+                ]
               }
             }
           },
@@ -1992,24 +2134,37 @@
                         "type": {
                           "type": "string",
                           "description": "The type of issues to search for",
-                          "enum": ["open", "closed", "all"]
+                          "enum": [
+                            "open",
+                            "closed",
+                            "all"
+                          ]
                         }
                       },
-                      "required": ["owner", "repo"]
+                      "required": [
+                        "owner",
+                        "repo"
+                      ]
                     }
                   }
                 },
-                "required": ["repos"]
+                "required": [
+                  "repos"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["database"]
+                "enum": [
+                  "database"
+                ]
               }
             }
           },
@@ -2030,7 +2185,11 @@
                         "connection_type": {
                           "type": "string",
                           "description": "The type of database (e.g., 'postgres', 'mysql')",
-                          "enum": ["postgres", "mysql", "sqlite"]
+                          "enum": [
+                            "postgres",
+                            "mysql",
+                            "sqlite"
+                          ]
                         },
                         "connection": {
                           "type": "object",
@@ -2063,21 +2222,31 @@
                           "required": []
                         }
                       },
-                      "required": ["name", "connection_type", "connection"]
+                      "required": [
+                        "name",
+                        "connection_type",
+                        "connection"
+                      ]
                     }
                   }
                 },
-                "required": ["connections"]
+                "required": [
+                  "connections"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["gitlab-mr"]
+                "enum": [
+                  "gitlab-mr"
+                ]
               }
             }
           },
@@ -2098,17 +2267,23 @@
                     "description": "If you have code selected, filters out comments that aren't related to the selection."
                   }
                 },
-                "required": ["token"]
+                "required": [
+                  "token"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["jira"]
+                "enum": [
+                  "jira"
+                ]
               }
             }
           },
@@ -2155,17 +2330,24 @@
                     ]
                   }
                 },
-                "required": ["domain", "token"]
+                "required": [
+                  "domain",
+                  "token"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["http"]
+                "enum": [
+                  "http"
+                ]
               }
             }
           },
@@ -2183,17 +2365,24 @@
                     "type": "object"
                   }
                 },
-                "required": ["url"]
+                "required": [
+                  "url"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase", "folder"]
+                "enum": [
+                  "codebase",
+                  "folder"
+                ]
               }
             }
           },
@@ -2228,7 +2417,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["postgres"]
+                "enum": [
+                  "postgres"
+                ]
               }
             }
           },
@@ -2280,14 +2471,22 @@
                 }
               }
             },
-            "required": ["host", "port", "user", "password", "database"]
+            "required": [
+              "host",
+              "port",
+              "user",
+              "password",
+              "database"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["greptile"]
+                "enum": [
+                  "greptile"
+                ]
               }
             }
           },
@@ -2310,11 +2509,16 @@
                 }
               }
             },
-            "required": ["GreptileToken", "GithubToken"]
+            "required": [
+              "GreptileToken",
+              "GithubToken"
+            ]
           }
         }
       ],
-      "required": ["name"]
+      "required": [
+        "name"
+      ]
     },
     "SerializedContinueConfig": {
       "title": "config.json",
@@ -2348,7 +2552,10 @@
                 "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }
             },
-            "required": ["title", "startUrl"]
+            "required": [
+              "title",
+              "startUrl"
+            ]
           }
         },
         "allowAnonymousTelemetry": {
@@ -2481,8 +2688,8 @@
                 "nvidia",
                 "bedrock",
                 "sagemaker",
-                "vertex",
-                "nebius"
+                "nebius",
+                "vertexai"
               ]
             },
             "model": {
@@ -2524,29 +2731,44 @@
               "type": "string"
             }
           },
-          "required": ["provider"],
+          "required": [
+            "provider"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "nvidia", "gemini"]
+                    "enum": [
+                      "cohere",
+                      "voyage",
+                      "nvidia",
+                      "gemini"
+                    ]
                   }
                 },
-                "required": ["provider"]
+                "required": [
+                  "provider"
+                ]
               },
               "then": {
-                "required": ["apiKey"]
+                "required": [
+                  "apiKey"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["sagemaker"]
+                    "enum": [
+                      "sagemaker"
+                    ]
                   }
                 },
-                "required": ["provider"]
+                "required": [
+                  "provider"
+                ]
               },
               "then": {
                 "properties": {
@@ -2554,17 +2776,23 @@
                     "description": "SageMaker endpoint name"
                   }
                 },
-                "required": ["model"]
+                "required": [
+                  "model"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["vertex"]
+                    "enum": [
+                      "vertexai"
+                    ]
                   }
                 },
-                "required": ["provider"]
+                "required": [
+                  "provider"
+                ]
               },
               "then": {
                 "properties": {
@@ -2579,7 +2807,11 @@
                     "default": "text-embedding-004"
                   }
                 },
-                "required": ["projectId", "model", "region"]
+                "required": [
+                  "projectId",
+                  "model",
+                  "region"
+                ]
               }
             }
           ]
@@ -2602,16 +2834,22 @@
               "type": "object"
             }
           },
-          "required": ["name"],
+          "required": [
+            "name"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["cohere"]
+                    "enum": [
+                      "cohere"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2633,7 +2871,9 @@
                         "type": "string"
                       }
                     },
-                    "required": ["apiKey"]
+                    "required": [
+                      "apiKey"
+                    ]
                   }
                 }
               }
@@ -2642,10 +2882,14 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["llm"]
+                    "enum": [
+                      "llm"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2656,7 +2900,9 @@
                         "type": "string"
                       }
                     },
-                    "required": ["modelTitle"]
+                    "required": [
+                      "modelTitle"
+                    ]
                   }
                 }
               }
@@ -2665,10 +2911,14 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["voyage"]
+                    "enum": [
+                      "voyage"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2687,7 +2937,9 @@
                         ]
                       }
                     },
-                    "required": ["apiKey"]
+                    "required": [
+                      "apiKey"
+                    ]
                   }
                 }
               }
@@ -2696,10 +2948,14 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": ["huggingface-tei"]
+                    "enum": [
+                      "huggingface-tei"
+                    ]
                   }
                 },
-                "required": ["name"]
+                "required": [
+                  "name"
+                ]
               },
               "then": {
                 "properties": {
@@ -2716,12 +2972,17 @@
                         "default": false
                       },
                       "truncation_direction": {
-                        "enum": ["Right", "Left"],
+                        "enum": [
+                          "Right",
+                          "Left"
+                        ],
                         "description": "Whether to truncate sequences from the left or right.",
                         "default": "Right"
                       }
                     },
-                    "required": ["apiBase"]
+                    "required": [
+                      "apiBase"
+                    ]
                   }
                 },
                 "if": {
@@ -2732,7 +2993,9 @@
                   }
                 },
                 "then": {
-                  "required": ["truncation_direction"]
+                  "required": [
+                    "truncation_direction"
+                  ]
                 }
               }
             }
@@ -2803,7 +3066,11 @@
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
             },
             "multilineCompletions": {
-              "enum": ["always", "never", "auto"],
+              "enum": [
+                "always",
+                "never",
+                "auto"
+              ],
               "description": "If set to true, Continue will only complete a single line at a time."
             },
             "useCache": {
@@ -2832,7 +3099,10 @@
           "type": "object",
           "properties": {
             "codeBlockToolbarPosition": {
-              "enum": ["top", "bottom"],
+              "enum": [
+                "top",
+                "bottom"
+              ],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
             },
@@ -2858,7 +3128,10 @@
           "properties": {
             "provider": {
               "type": "string",
-              "enum": ["posthog", "logstash"],
+              "enum": [
+                "posthog",
+                "logstash"
+              ],
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [
@@ -2875,30 +3148,40 @@
               "description": "The client key to use for analytics"
             }
           },
-          "required": ["provider"],
+          "required": [
+            "provider"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["posthog"]
+                    "enum": [
+                      "posthog"
+                    ]
                   }
                 }
               },
               "then": {
-                "required": ["clientKey"]
+                "required": [
+                  "clientKey"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["logstash"]
+                    "enum": [
+                      "logstash"
+                    ]
                   }
                 }
               },
               "then": {
-                "required": ["url"]
+                "required": [
+                  "url"
+                ]
               }
             }
           ]
@@ -2970,7 +3253,10 @@
                     "default": false
                   }
                 },
-                "required": ["prompt", "title"]
+                "required": [
+                  "prompt",
+                  "title"
+                ]
               },
               "description": "Quick actions are a way to add custom commands to the Code Lens of function and class declarations."
             },

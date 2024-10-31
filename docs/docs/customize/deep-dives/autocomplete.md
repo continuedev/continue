@@ -44,7 +44,7 @@ All of the configuration options available for chat models are available to use 
 }
 ```
 
-If you aren't yet familiar with the available options, you can find the full reference [here](../config.mdx).
+If you aren't yet familiar with the available options, you can find the full reference [here](./ways-to-configure.md).
 
 ## Configuration Options
 
