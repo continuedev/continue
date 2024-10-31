@@ -1,9 +1,9 @@
 import type { IDE } from "core";
+import { CompletionProvider } from "core/autocomplete/completionProvider";
 import {
-  AutocompleteOutcome,
-  CompletionProvider,
   type AutocompleteInput,
-} from "core/autocomplete/completionProvider";
+  type AutocompleteOutcome,
+} from "core/autocomplete/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";

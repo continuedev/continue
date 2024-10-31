@@ -3155,7 +3155,7 @@
             "transform": {
               "type": "boolean",
               "description": "Whether LLM output should be transformed to correct common model pitfalls."
-            }, 
+            },
             "template": {
               "type": "string",
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
