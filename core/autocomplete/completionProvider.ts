@@ -1,8 +1,4 @@
-import ignore from "ignore";
-import OpenAI from "openai";
-import path from "path";
 import { ConfigHandler } from "../config/ConfigHandler.js";
-import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
 import { IDE, ILLM, TabAutocompleteOptions } from "../index.js";
 import { logDevData } from "../util/devdata.js";
@@ -26,7 +22,8 @@ import { postprocessCompletion } from "./postprocessing/index.js";
 import { getTemplateForModel } from "./templating/AutocompleteTemplate.js";
 // @prettier-ignore
 import Handlebars from "handlebars";
-import { getConfigJsonPath } from "../util/paths.js";
+import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
+import OpenAI from "../llm/llms/OpenAI.js";
 import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { decideMultilineEarly } from "./classification/shouldCompleteMultiline.js";
@@ -41,6 +38,7 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./filtering/streamTransforms/lineStream.js";
+import { shouldPrefilter } from "./prefiltering/index.js";
 import { formatExternalSnippet } from "./templating/index.js";
 import { AutocompleteInput, AutocompleteOutcome } from "./types.js";
 
@@ -88,7 +86,7 @@ export class CompletionProvider {
     );
   }
 
-  private async _getLlm(): Promise<ILLM | undefined> {
+  private async _prepareLlm(): Promise<ILLM | undefined> {
     const llm = await this._injectedGetLlm();
 
     if (!llm) {
@@ -104,6 +102,15 @@ export class CompletionProvider {
     // Set temperature (but don't override)
     if (llm.completionOptions.temperature === undefined) {
       llm.completionOptions.temperature = 0.01;
+    }
+
+    if (llm instanceof OpenAI) {
+      llm.useLegacyCompletionsEndpoint = true;
+    } else if (
+      llm.providerName === "free-trial" &&
+      llm.model !== TRIAL_FIM_MODEL
+    ) {
+      llm.model = TRIAL_FIM_MODEL;
     }
 
     return llm;
@@ -199,60 +206,6 @@ export class CompletionProvider {
     return options;
   }
 
-  private async _isDisabledForFile(
-    currentFilepath: string,
-    disableInFiles: string[] | undefined,
-  ) {
-    if (disableInFiles) {
-      // Relative path needed for `ignore`
-      const workspaceDirs = await this.ide.getWorkspaceDirs();
-      let filepath = currentFilepath;
-      for (const workspaceDir of workspaceDirs) {
-        const relativePath = path.relative(workspaceDir, filepath);
-        const relativePathBase = relativePath.split(path.sep).at(0);
-        const isInWorkspace =
-          !path.isAbsolute(relativePath) && relativePathBase !== "..";
-        if (isInWorkspace) {
-          filepath = path.relative(workspaceDir, filepath);
-          break;
-        }
-      }
-
-      // Worst case we can check filetype glob patterns
-      if (filepath === currentFilepath) {
-        filepath = getBasename(filepath);
-      }
-
-      // @ts-ignore
-      const pattern = ignore.default().add(options.disableInFiles);
-      if (pattern.ignores(filepath)) {
-        return true;
-      }
-    }
-  }
-
-  private async _shouldSkipCompletionForAnyReason(
-    input: AutocompleteInput,
-    options: TabAutocompleteOptions,
-  ): Promise<boolean> {
-    // Allow disabling autocomplete from config.json
-    if (options.disable) {
-      return true;
-    }
-
-    // Check whether we're in the continue config.json file
-    if (input.filepath === getConfigJsonPath()) {
-      return true;
-    }
-
-    // Check whether autocomplete is disabled for this file
-    if (await this._isDisabledForFile(input.filepath, options.disableInFiles)) {
-      return true;
-    }
-
-    return false;
-  }
-
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
@@ -260,13 +213,17 @@ export class CompletionProvider {
     try {
       const options = await this._getAutocompleteOptions();
 
+      if (await shouldPrefilter(input, options, this.ide)) {
+        return undefined;
+      }
+
       // Debounce
       if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
       }
 
       // Get completion
-      const llm = await this._getLlm();
+      const llm = await this._prepareLlm();
       if (!llm) {
         return undefined;
       }
@@ -365,28 +322,6 @@ export class CompletionProvider {
 
     // Filter
     const lang = languageForFilepath(filepath);
-
-    if (options.transform) {
-      const line = fileLines[pos.line] ?? "";
-      for (const endOfLine of lang.endOfLine) {
-        if (line.endsWith(endOfLine) && pos.character >= line.length) {
-          return undefined;
-        }
-      }
-    }
-
-    // Model
-    if (!llm) {
-      return;
-    }
-    if (llm instanceof OpenAI) {
-      llm.useLegacyCompletionsEndpoint = true;
-    } else if (
-      llm.providerName === "free-trial" &&
-      llm.model !== TRIAL_FIM_MODEL
-    ) {
-      llm.model = TRIAL_FIM_MODEL;
-    }
 
     // Prompt
     let fullPrefix =
