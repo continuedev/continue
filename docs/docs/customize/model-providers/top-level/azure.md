@@ -3,6 +3,14 @@ title: Azure OpenAI
 slug: ../azure
 ---
 
+Azure OpenAI is a cloud-based service that provides access to OpenAI's models, integrated with the security and enterprise features of the Microsoft Azure platform. To get started, create an Azure OpenAI resource in the [Azure portal](https://portal.azure.com).
+
+:::info
+
+For details on model setup, see [General model configuration](#general-model-configuration).
+
+:::
+
 ## Chat model
 
 We recommend configuring **GPT-4o** as your chat model.

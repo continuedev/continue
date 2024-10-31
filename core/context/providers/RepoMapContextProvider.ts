@@ -7,9 +7,9 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../";
 import {
-  groupByLastNPathParts,
   getBasename,
   getUniqueFilePath,
+  groupByLastNPathParts,
 } from "../../util";
 import generateRepoMap from "../../util/generateRepoMap";
 
@@ -25,7 +25,6 @@ class RepoMapContextProvider extends BaseContextProvider {
     displayTitle: "Repository Map",
     description: "Select a folder",
     type: "submenu",
-    dependsOnIndexing: true,
   };
 
   async getContextItems(

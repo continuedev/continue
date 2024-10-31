@@ -34,7 +34,7 @@ const config = {
     locales: ["en"],
   },
 
-  themes: [["docusaurus-json-schema-plugin", {}]],
+  themes: [],
 
   presets: [
     [
@@ -90,6 +90,13 @@ const config = {
             position: "left",
             label: "Customize",
             href: "/customize/overview",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "customizingSidebar",
+            position: "left",
+            label: "Reference",
+            href: "/reference",
           },
           {
             to: "https://github.com/continuedev/continue",
@@ -230,7 +237,7 @@ const config = {
             from: "/changelog",
           },
           {
-            to: "/customize/config",
+            to: "/reference",
             from: ["/customization/code-config", "/reference/config"],
           },
           {

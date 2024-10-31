@@ -89,7 +89,8 @@ export class GeminiApi implements BaseLlmApi {
           parts:
             typeof msg.content === "string"
               ? [{ text: msg.content }]
-              : msg.content.map(this._oaiPartToGeminiPart),
+              : // @ts-ignore
+                msg.content.map(this._oaiPartToGeminiPart),
         };
       })
       .filter((c) => c !== null);
@@ -130,6 +131,7 @@ export class GeminiApi implements BaseLlmApi {
           message: {
             role: "assistant",
             content: completion,
+            refusal: null,
           },
         },
       ],

@@ -242,6 +242,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [models.commandR, models.commandRPlus],
+    apiKeyUrl: "https://docs.cohere.com/v2/docs/rate-limits",
   },
   groq: {
     title: "Groq",
@@ -328,6 +329,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       p.params.contextLength = 4096;
       return p;
     }),
+    apiKeyUrl: "https://api.together.xyz/settings/api-keys",
   },
   gemini: {
     title: "Google Gemini API",
@@ -487,54 +489,53 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     collectInputFor: [
       {
         inputType: "text",
-        key: "watsonxUrl",
+        key: "apiBase",
         label: "watsonx URL",
         placeholder: "e.g. http://us-south.dataplatform.cloud.ibm.com",
         required: true,
       },
       {
         inputType: "text",
-        key: "watsonxProjectId",
-        label: "watsonx Project ID",
+        key: "projectId",
+        label: "Project ID",
         placeholder: "Enter your project ID",
         required: true,
       },
       {
         inputType: "text",
-        key: "watsonxCreds",
-        label: "watsonx API key",
+        key: "apiKey",
+        label: "API key",
         placeholder: "Enter your API key (SaaS) or ZenApiKey (Software)",
         required: true,
       },
       {
         inputType: "text",
-        key: "watsonxApiVersion",
-        label: "watsonx API version",
+        key: "apiVersion",
+        label: "API version",
         placeholder: "Enter the API Version",
-        defaultValue: "2023-05-29",
+        defaultValue: "2024-03-14",
         required: true,
       },
       {
         inputType: "text",
-        key: "watsonxFullUrl",
-        label: "Full watsonx URL",
-        placeholder:
-          "http://us-south.dataplatform.cloud.ibm.com/m1/v1/text/generation_stream?version=2023-05-29",
+        key: "deploymentId",
+        label: "Deployment ID",
+        placeholder: "Enter model deployment ID",
         required: false,
       },
-      {
-        inputType: "text",
-        key: "watsonxStopToken",
-        label: "Stop Token",
-        placeholder: "<|im_end|>",
-      },
-
       ...completionParamsInputsConfigs,
     ],
-    icon: "watsonx.png",
+    apiKeyUrl:
+      "https://dataplatform.cloud.ibm.com/registration/stepone?context=wx",
+    icon: "WatsonX.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
-      models.graniteCode,
+      models.granite3Instruct8b,
+      models.granite3Instruct2b,
+      models.graniteCode3b,
+      models.graniteCode8b,
+      models.graniteCode20b,
+      models.graniteCode34b,
       models.graniteChat,
       models.MistralLarge,
       models.MetaLlama3,
@@ -572,7 +573,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     title: "SambaNova Cloud",
     provider: "sambanova",
     refPage: "sambanova",
-    description: "Use SambaNova Cloud for Llama3.1 fast inference performance",
+    description: "Use SambaNova Cloud for fast inference performance",
     icon: "sambanova.png",
     longDescription: `The SambaNova Cloud is a cloud platform for running large AI models with the world record Llama 3.1 70B/405B performance. You can sign up [here](https://cloud.sambanova.ai/)`,
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
@@ -601,8 +602,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     icon: "cerebras.png",
     description:
       "Cerebras Inference is a custom silicon for fast inference of LLM models.",
-    longDescription:
-      "Get your API key [here](https://cloud.cerebras.ai/).",
+    longDescription: "Get your API key [here](https://cloud.cerebras.ai/).",
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     collectInputFor: [
       {
@@ -625,5 +625,106 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     apiKeyUrl: "https://cloud.cerebras.ai/",
+  },
+  vertexai: {
+    title: "VertexAI",
+    provider: "vertexai",
+    description: "Use supported Vertex AI models",
+    longDescription:
+      "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
+    icon: "vertexai.png",
+    packages: [
+      models.VertexGemini15Pro,
+      models.VertexGemini15Flash,
+      models.mistralLarge
+
+    ],
+    collectInputFor: [
+      {
+        inputType: "project",
+        key: "projectId",
+        label: "Project Id",
+        placeholder: "Enter your Vertex AI project Id",
+        required: true,
+      },
+      {
+        inputType: "region",
+        key: "region",
+        label: "Region",
+        placeholder: "Enter your Vertex AI region",
+        required: true,
+      },
+
+      ...completionParamsInputsConfigs,
+    ],
+  },
+
+  askSage: {
+    title: "Ask Sage",
+    provider: "askSage",
+    icon: "ask-Sage.png",
+    description:
+      "The Ask Sage API provides seamless access to LLMs including OpenAI, Anthropic, Meta, Mistral, and more.",
+    longDescription: `To get access to the Ask Sage API, obtain your API key from the [Ask Sage platform](https://chat.asksage.ai/) for all other models.`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    params: {
+      apiKey: "",
+      apiBase: "https://api.asksage.ai/server/", // Default base URL
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Ask Sage API key",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "apiBase",
+        label: "API Base URL",
+        placeholder: "Enter the API Base URL",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.gpt4gov,
+      models.gpt4ogov,
+      models.gpt4o,
+      models.gpt4omini,
+      models.gpt35turbo,
+      models.claude35Sonnet,
+      models.claude3Opus,
+      models.claude3Sonnet,
+      models.mistralLarge,
+      models.llama370bChat,
+      models.gemini15Pro,
+    ],
+    apiKeyUrl: "https://chat.asksage.ai/",
+  },
+  nebius: {
+    title: "Nebius AI Studio",
+    provider: "nebius",
+    refPage: "nebiusllm",
+    description: "Use the Nebius API to run open-source models",
+    longDescription: `Nebius AI Studio is a cheap hosted service with $100 trial. To get started with Nebius AI Studio:\n1. Obtain an API key from [here](https://studio.nebius.ai)\n2. Paste below\n3. Select a model preset`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Nebius AI Studio API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "nebius.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [models.MetaLlama3Large, models.Qwen2Coder],
+    apiKeyUrl: "https://studio.nebius.ai/settings/api-keys",
   },
 };

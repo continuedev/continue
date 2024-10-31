@@ -416,11 +416,9 @@ export async function getComputeDeleteAddRemove(
 
 export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
-  private db: DatabaseConnection;
 
-  constructor(db: DatabaseConnection) {
-    this.db = db;
-  }
+  constructor(private db: DatabaseConnection) {}
+
   artifactId = "globalCache";
 
   static async create(): Promise<GlobalCacheCodeBaseIndex> {
@@ -470,4 +468,25 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
       tag.artifactId,
     );
   }
+}
+
+const SQLITE_MAX_LIKE_PATTERN_LENGTH = 50000;
+
+export function truncateToLastNBytes(input: string, maxBytes: number): string {
+  let bytes = 0;
+  let startIndex = 0;
+
+  for (let i = input.length - 1; i >= 0; i--) {
+    bytes += new TextEncoder().encode(input[i]).length;
+    if (bytes > maxBytes) {
+      startIndex = i + 1;
+      break;
+    }
+  }
+
+  return input.substring(startIndex, input.length);
+}
+
+export function truncateSqliteLikePattern(input: string) {
+  return truncateToLastNBytes(input, SQLITE_MAX_LIKE_PATTERN_LENGTH);
 }

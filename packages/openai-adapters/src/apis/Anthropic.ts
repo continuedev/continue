@@ -61,19 +61,25 @@ export class AnthropicApi implements BaseLlmApi {
       }
       return {
         ...message,
-        content: message.content.map((part) => {
-          if (part.type === "text") {
-            return part;
-          }
-          return {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: "image/jpeg",
-              data: part.image_url.url.split(",")[1],
-            },
-          };
-        }),
+        content: message.content
+          .map((part) => {
+            if (part.type === "text") {
+              if ((part.text?.trim() ?? "") === "") {
+                return null;
+              }
+              return part;
+            }
+            return {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                // @ts-ignore
+                data: part.image_url.url.split(",")[1],
+              },
+            };
+          })
+          .filter((x) => x !== null),
       };
     });
     return messages;
@@ -112,6 +118,7 @@ export class AnthropicApi implements BaseLlmApi {
           message: {
             role: "assistant",
             content: completion.content[0].text,
+            refusal: null,
           },
           index: 0,
         },
