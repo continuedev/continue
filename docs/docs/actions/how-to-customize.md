@@ -20,7 +20,7 @@ There are two ways to add custom slash commands:
 
 <!-- TODO: We need a config.ts reference -->
 <!-- :::tip[config.ts]
-Before adding a custom slash command, we recommend reading the [introduction to `config.ts`](../customize/config.md).
+Before adding a custom slash command, we recommend reading the [introduction to `config.ts`](../customize/deep-dives/ways-to-configure.md).
 ::: -->
 
 If you want to go a step further than writing custom commands with natural language, you can write a custom function that returns the response. This requires using `config.ts` instead of `config.json`.

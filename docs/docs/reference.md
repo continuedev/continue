@@ -71,7 +71,7 @@ Example
 ### `models`
 
 Your **chat** models are defined here, which are used for [Chat](../chat/how-to-use-it.md), [Edit](../edit/how-to-use-it.md), and [Actions](../actions/how-to-use-it.md).
-Each model has specific configuration options tailored to its provider and functionality, which can be seen with Intellisense.
+Each model has specific configuration options tailored to its provider and functionality, which can be seen as suggestions while editing the json.
 
 **Properties:**
 
