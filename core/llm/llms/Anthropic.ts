@@ -20,7 +20,7 @@ class Anthropic extends BaseLLM {
     apiBase: "https://api.anthropic.com/v1/",
   };
 
-  private _convertArgs(options: CompletionOptions) {
+  public convertArgs(options: CompletionOptions) { // should be public for use within VertexAI
     const finalOptions = {
       top_k: options.topK,
       top_p: options.topP,
@@ -34,7 +34,7 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
-  private _convertMessages(msgs: ChatMessage[]): any[] {
+  public convertMessages(msgs: ChatMessage[]): any[] { // should be public for use within VertexAI
     const filteredmessages = msgs.filter((m) => m.role !== "system")
     const lastTwoUserMsgIndices = filteredmessages 
       .map((msg, index) => (msg.role === "user" ? index : -1))
@@ -115,8 +115,8 @@ class Anthropic extends BaseLLM {
           : {}),
       },
       body: JSON.stringify({
-        ...this._convertArgs(options),
-        messages: this._convertMessages(messages),
+        ...this.convertArgs(options),
+        messages: this.convertMessages(messages),
         system: shouldCacheSystemMessage
           ? [
               {

@@ -26,14 +26,15 @@ function MorePage() {
   return (
     <div className="overflow-y-scroll">
       <div
-        onClick={() => navigate("/")}
-        className="sticky top-0 m-0 flex cursor-pointer items-center border-0 border-b border-solid border-b-zinc-700 bg-inherit p-0"
+        className="sticky top-0 m-0 flex items-center border-0 border-b border-solid border-b-zinc-700 bg-inherit p-0"
         style={{
           backgroundColor: vscBackground,
         }}
       >
-        <ArrowLeftIcon className="ml-3 inline-block h-3 w-3 cursor-pointer" />
-        <span className="m-2 inline-block text-base font-bold">Chat</span>
+        <div className="cursor-pointer hover:text-zinc-100 transition-colors duration-200" onClick={() => navigate("/")}>
+          <ArrowLeftIcon className="ml-3 inline-block h-3 w-3" />
+          <span className="m-2 inline-block text-base font-bold">Chat</span>
+        </div>
       </div>
 
       <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">

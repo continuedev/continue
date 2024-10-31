@@ -5,7 +5,7 @@
     {
       "label": "vscode-extension:build",
       "dependsOn": [
-        // To detect compile errors
+        // To detect compile errors and output extensions.js
         "vscode-extension:tsc",
         // To build the React app that is used in the extension
         "vscode-extension:continue-ui:build",
@@ -21,7 +21,10 @@
     },
     {
       "label": "vscode-extension:esbuild",
-      "dependsOn": ["vscode-extension:continue-ui:build"],
+      "dependsOn": [
+        "vscode-extension:continue-ui:build",
+        "vscode-extension:tsc"
+      ],
       "type": "npm",
       "script": "esbuild-watch",
       "path": "extensions/vscode",

@@ -20,15 +20,15 @@ import DocsService from "./indexing/docs/DocsService";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
+import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
-import { editConfigJson } from "./util/paths";
+import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
-import { ChatDescriber } from "./util/chatDescriber";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -79,6 +79,9 @@ export class Core {
     private readonly ide: IDE,
     private readonly onWrite: (text: string) => Promise<void> = async () => { },
   ) {
+    // Ensure .continue directory is created
+    setupInitialDotContinueDirectory();
+
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);

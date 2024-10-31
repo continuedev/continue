@@ -20,7 +20,8 @@
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/extension.js"],
       "preLaunchTask": "vscode-extension:build",
       "env": {
-        // "staging" for the preview deployment
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
+        // "staging" for the preview deployment	        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
         // "local" for entirely local development of control plane/proxy
         // "CONTROL_PLANE_ENV": "staging"
       }
@@ -38,7 +39,7 @@
       "cwd": "${workspaceFolder}/binary",
       "env": {
         "CONTINUE_DEVELOPMENT": "true",
-        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/binary/.continue"
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/extensions/.continue-debug"
       }
     },
     {

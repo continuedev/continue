@@ -242,6 +242,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [models.commandR, models.commandRPlus],
+    apiKeyUrl: "https://docs.cohere.com/v2/docs/rate-limits",
   },
   groq: {
     title: "Groq",
@@ -328,6 +329,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       p.params.contextLength = 4096;
       return p;
     }),
+    apiKeyUrl: "https://api.together.xyz/settings/api-keys",
   },
   gemini: {
     title: "Google Gemini API",
@@ -621,5 +623,82 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     apiKeyUrl: "https://cloud.cerebras.ai/",
+  },
+  vertexai: {
+    title: "VertexAI",
+    provider: "vertexai",
+    description: "Use supported Vertex AI models",
+    longDescription:
+      "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
+    icon: "vertexai.png",
+    packages: [
+      models.VertexGemini15Pro,
+      models.VertexGemini15Flash,
+      models.mistralLarge
+
+    ],
+    collectInputFor: [
+      {
+        inputType: "project",
+        key: "projectId",
+        label: "Project Id",
+        placeholder: "Enter your Vertex AI project Id",
+        required: true,
+      },
+      {
+        inputType: "region",
+        key: "region",
+        label: "Region",
+        placeholder: "Enter your Vertex AI region",
+        required: true,
+      },
+
+      ...completionParamsInputsConfigs,
+    ],
+  },
+
+  askSage: {
+    title: "Ask Sage",
+    provider: "askSage",
+    icon: "ask-Sage.png",
+    description:
+      "The Ask Sage API provides seamless access to LLMs including OpenAI, Anthropic, Meta, Mistral, and more.",
+    longDescription: `To get access to the Ask Sage API, obtain your API key from the [Ask Sage platform](https://chat.asksage.ai/) for all other models.`,
+    tags: [ModelProviderTags.RequiresApiKey],
+    params: {
+      apiKey: "",
+      apiBase: "https://api.asksage.ai/server/", // Default base URL
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Ask Sage API key",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "apiBase",
+        label: "API Base URL",
+        placeholder: "Enter the API Base URL",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [
+      models.gpt4gov,
+      models.gpt4ogov,
+      models.gpt4o,
+      models.gpt4omini,
+      models.gpt35turbo,
+      models.claude35Sonnet,
+      models.claude3Opus,
+      models.claude3Sonnet,
+      models.mistralLarge,
+      models.llama370bChat,
+      models.gemini15Pro,
+    ],
+    apiKeyUrl: "https://chat.asksage.ai/",
   },
 };

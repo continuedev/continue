@@ -15,10 +15,10 @@ export function validateConfig(config: SerializedContinueConfig) {
   const errors: ConfigValidationError[] = [];
 
   // Validate chat models
-  if (!Array.isArray(config.models) || config.models.length === 0) {
+  if (!Array.isArray(config.models)) {
     errors.push({
       fatal: true,
-      message: "The 'models' field should be a non-empty array.",
+      message: "The 'models' field should be an array.",
     });
   } else {
     config.models.forEach((model, index) => {

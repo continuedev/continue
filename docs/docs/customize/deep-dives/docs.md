@@ -77,7 +77,7 @@ As with [@Codebase context provider configuration](https://docs.continue.dev/cus
 {
   "contextProviders": [
     {
-      "name": "codebase",
+      "name": "docs",
       "params": {
         "nRetrieve": 25,
         "nFinal": 5,
