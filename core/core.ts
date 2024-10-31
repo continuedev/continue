@@ -29,6 +29,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
+import { walkDir } from "./indexing/walkDir";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -704,8 +705,12 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
-      recentlyEditedFilesCache.set(filepath, filepath);
+    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
+      const dirs = await this.ide.getWorkspaceDirs();
+      const paths = await walkDir(dirs[0], this.ide);
+      if (paths.includes(filepath)) {
+        recentlyEditedFilesCache.set(filepath, filepath);
+      }
     });
   }
 
