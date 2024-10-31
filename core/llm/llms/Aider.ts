@@ -197,13 +197,14 @@ class Aider extends BaseLLM {
           commandFound = true;
 
           switch (model) {
-            case model.includes("claude") && model:
+            case model && model.includes("claude"):
               command = [`${aiderCommand} --model ${model}`];
               break;
             case "gpt-4o":
               command = [`${aiderCommand} --model gpt-4o`];
               break;
-            case "pearai_model":
+            case model && model.includes("pearai"):
+            case model && model.includes("aider"):
             default:
               await this.credentials.checkAndUpdateCredentials();
               const accessToken = this.credentials.getAccessToken();
@@ -530,7 +531,7 @@ class Aider extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
-    return ["claude-3-5-sonnet-20240620", "pearai_model", "gpt-4o"];
+    return ["aider", "pearai_model", "claude-3-5-sonnet-20240620", "gpt-4o"];
   }
 
   supportsFim(): boolean {

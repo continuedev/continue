@@ -26,7 +26,6 @@ export function shouldSkipContextProviders(
   defaultModelTitle: string | undefined,
   description: { title: string },
 ): boolean {
-  // For integrations with specific context providers
   const matchingIntegrationKey = Object.keys(
     SPECIFIC_CONTEXT_PROVIDERS_INTEGRATIONS,
   ).find((key) => defaultModelTitle?.toLowerCase().includes(key));
@@ -43,6 +42,8 @@ export function shouldSkipContextProviders(
   // For all other models, only skip if "relativefilecontext"
   return description.title === "relativefilecontext";
 }
+
+// This is for the frontend, which context providers are provided
 export function getContextProviders() {
   let location = useLocation();
   let pathname = location.pathname;

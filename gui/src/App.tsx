@@ -114,7 +114,7 @@ const router = createMemoryRouter(
     },
   ],
   {
-    initialEntries: [window.isPearOverlay ? "/inventory" : window.initialRoute], 
+    initialEntries: [window.isPearOverlay ? "/inventory" : window.initialRoute],
   },
 );
 

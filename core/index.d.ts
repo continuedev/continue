@@ -714,6 +714,7 @@ export type ModelName =
   | "starcoder-3b"
   | "starcoder2-3b"
   | "stable-code-3b"
+  // PearAI
   | "pearai_model"
   | "aider"
   | "perplexity";
