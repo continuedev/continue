@@ -908,6 +908,47 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["watsonx"],
     isOpenSource: false,
   },
+  VertexGemini15Pro: {
+    title: "Gemini 1.5 Pro",
+    description: "A newer Gemini model with 1M token context length",
+    params: {
+      title: "Gemini 1.5 Pro",
+      model: "gemini-1.5-pro-002",
+      contextLength: 2_097_152,
+    },
+    icon: "gemini.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+  VertexGemini15Flash: {
+    title: "Gemini 1.5 Flash",
+    description:
+      "Fast and versatile multimodal model for scaling across diverse tasks",
+    params: {
+      title: "Gemini 1.5 Flash",
+      model: "gemini-1.5-flash-002",
+      contextLength: 1_048_576,
+    },
+    icon: "gemini.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+  vertexMistralLarge: {
+    title: "Mistral Large",
+    description:
+      "Mistral's flagship model that's ideal for complex tasks that require large reasoning capabilities or are highly specialized (Synthetic Text Generation, Code Generation, RAG, or Agents).",
+    params: {
+      title: "Mistral Large",
+      model: "mistral-large",
+      contextLength: 32000,
+    },
+    icon: "mistral.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+
+
+
   gpt4gov: {
     title: "GPT-4 gov",
     description:
@@ -919,7 +960,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
-    providerOptions: ["askSage"], 
+    providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -934,7 +975,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
-    providerOptions: ["askSage"], 
+    providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },

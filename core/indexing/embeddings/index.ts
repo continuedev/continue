@@ -39,6 +39,6 @@ export const allEmbeddingsProviders: Record<
   nvidia: NvidiaEmbeddingsProvider,
   voyage: VoyageEmbeddingsProvider,
   mistral: MistralEmbeddingsProvider,
-  vertex: VertexEmbeddingsProvider,
-  watsonx: WatsonxEmbeddingsProvider,
+  vertexai: VertexEmbeddingsProvider,
+  watsonx: WatsonxEmbeddingsProvider
 };

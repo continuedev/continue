@@ -242,6 +242,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [models.commandR, models.commandRPlus],
+    apiKeyUrl: "https://docs.cohere.com/v2/docs/rate-limits",
   },
   groq: {
     title: "Groq",
@@ -328,6 +329,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       p.params.contextLength = 4096;
       return p;
     }),
+    apiKeyUrl: "https://api.together.xyz/settings/api-keys",
   },
   gemini: {
     title: "Google Gemini API",
@@ -622,6 +624,39 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.cerebras.ai/",
   },
+  vertexai: {
+    title: "VertexAI",
+    provider: "vertexai",
+    description: "Use supported Vertex AI models",
+    longDescription:
+      "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
+    icon: "vertexai.png",
+    packages: [
+      models.VertexGemini15Pro,
+      models.VertexGemini15Flash,
+      models.mistralLarge
+
+    ],
+    collectInputFor: [
+      {
+        inputType: "project",
+        key: "projectId",
+        label: "Project Id",
+        placeholder: "Enter your Vertex AI project Id",
+        required: true,
+      },
+      {
+        inputType: "region",
+        key: "region",
+        label: "Region",
+        placeholder: "Enter your Vertex AI region",
+        required: true,
+      },
+
+      ...completionParamsInputsConfigs,
+    ],
+  },
+
   askSage: {
     title: "Ask Sage",
     provider: "askSage",

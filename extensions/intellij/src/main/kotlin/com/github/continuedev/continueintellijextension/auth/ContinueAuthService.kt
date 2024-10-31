@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.auth
 
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.intellij.credentialStore.Credentials
@@ -37,7 +38,10 @@ class ContinueAuthService {
     }
 
     init {
-        setupRefreshTokenInterval()
+        val settings = service<ContinueExtensionSettings>()
+        if (settings.continueState.enableContinueTeamsBeta) {
+            setupRefreshTokenInterval()
+        }
     }
 
     fun startAuthFlow(project: Project) {

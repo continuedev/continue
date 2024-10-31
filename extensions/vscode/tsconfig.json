@@ -16,6 +16,7 @@
   "exclude": [
     "../../core/dist/**/*",
     "../../core/**/*.test.ts",
+    "../../core/**/test/**/*",
     "../../core/**/*.skip.ts"
   ]
 }

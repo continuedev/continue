@@ -610,7 +610,6 @@ type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
-  | "anthropic-vertexai"
   | "cohere"
   | "together"
   | "ollama"
@@ -623,9 +622,7 @@ type ModelProvider =
   | "lmstudio"
   | "llamafile"
   | "gemini"
-  | "gemini-vertexai"
   | "mistral"
-  | "mistral-vertexai"
   | "bedrock"
   | "bedrockimport"
   | "sagemaker"
@@ -647,8 +644,8 @@ type ModelProvider =
   | "vllm"
   | "mock"
   | "cerebras"
+  | "vertexai"
   | "askSage";
-
 
 export type ModelName =
   | "AUTODETECT"
@@ -830,7 +827,7 @@ export type EmbeddingsProviderName =
   | "nvidia"
   | "voyage"
   | "mistral"
-  | "vertex"
+  | "vertexai"
   | "watsonx";
 
 export interface EmbedOptions {
@@ -890,6 +887,7 @@ export interface TabAutocompleteOptions {
   debounceDelay: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
+  transform?: boolean;
   template?: string;
   multilineCompletions: "always" | "never" | "auto";
   slidingWindowPrefixPercentage: number;
