@@ -282,6 +282,6 @@ const continueApi = continueExt?.exports;
 continueApi?.registerCustomContextProvider(customProvider);
 ```
 
-This will register `MyCustomProvider` provider with Continue
+This will register `MyCustomProvider` with Continue!
 
 ![alt text](./assets/image.png)
