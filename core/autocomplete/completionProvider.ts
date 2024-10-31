@@ -4,7 +4,7 @@ import path from "path";
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
-import { IDE, ILLM, ModelProvider, TabAutocompleteOptions } from "../index.js";
+import { IDE, ILLM, TabAutocompleteOptions } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
@@ -29,6 +29,7 @@ import Handlebars from "handlebars";
 import { getConfigJsonPath } from "../util/paths.js";
 import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
+import { decideMultilineEarly } from "./classification/shouldCompleteMultiline.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { stopAtStopTokens } from "./filtering/streamTransforms/charStream.js";
@@ -50,14 +51,6 @@ const autocompleteCache = AutocompleteLruCache.get();
 const ERRORS_TO_IGNORE = [
   // From Ollama
   "unexpected server status",
-];
-
-const LOCAL_PROVIDERS: ModelProvider[] = [
-  "ollama",
-  "lmstudio",
-  "llama.cpp",
-  "llamafile",
-  "text-gen-webui",
 ];
 
 export type GetLspDefinitionsFunction = (
@@ -130,7 +123,7 @@ export class CompletionProvider {
 
     if (this._outcomes.has(completionId)) {
       const outcome = this._outcomes.get(completionId)!;
-      this.logAcceptedCompletion(completionId, outcome);
+      this.logAutocompleteOutcome(outcome);
       this._outcomes.delete(completionId);
 
       this.bracketMatchingService.handleAcceptedCompletion(
@@ -140,20 +133,26 @@ export class CompletionProvider {
     }
   }
 
-  private logAcceptedCompletion(
-    completionId: string,
-    outcome: AutocompleteOutcome,
-  ) {
+  private logAutocompleteOutcome(outcome: AutocompleteOutcome) {
     outcome.accepted = true;
     logDevData("autocomplete", outcome);
+    const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
     void Telemetry.capture(
       "autocomplete",
       {
-        accepted: outcome.accepted,
-        modelName: outcome.modelName,
-        modelProvider: outcome.modelProvider,
-        time: outcome.time,
-        cacheHit: outcome.cacheHit,
+        accepted: restOfOutcome.accepted,
+        cacheHit: restOfOutcome.cacheHit,
+        completionId: restOfOutcome.completionId,
+        completionOptions: restOfOutcome.completionOptions,
+        debounceDelay: restOfOutcome.debounceDelay,
+        fileExtension: restOfOutcome.filepath.split(".")?.slice(-1)[0],
+        maxPromptTokens: restOfOutcome.maxPromptTokens,
+        modelName: restOfOutcome.modelName,
+        modelProvider: restOfOutcome.modelProvider,
+        multilineCompletions: restOfOutcome.multilineCompletions,
+        time: restOfOutcome.time,
+        useRecentlyEdited: restOfOutcome.useRecentlyEdited,
+        useRootPathContext: restOfOutcome.useRootPathContext,
       },
       true,
     );
@@ -170,16 +169,58 @@ export class CompletionProvider {
     }
   }
 
+  private async _getAutocompleteOptions() {
+    const config = await this.configHandler.loadConfig();
+    const options = {
+      ...DEFAULT_AUTOCOMPLETE_OPTS,
+      ...config.tabAutocompleteOptions,
+    };
+    return options;
+  }
+
+  private async _isDisabledForFile(
+    currentFilepath: string,
+    disableInFiles: string[] | undefined,
+  ) {
+    if (disableInFiles) {
+      // Relative path needed for `ignore`
+      const workspaceDirs = await this.ide.getWorkspaceDirs();
+      let filepath = currentFilepath;
+      for (const workspaceDir of workspaceDirs) {
+        const relativePath = path.relative(workspaceDir, filepath);
+        const relativePathBase = relativePath.split(path.sep).at(0);
+        const isInWorkspace =
+          !path.isAbsolute(relativePath) && relativePathBase !== "..";
+        if (isInWorkspace) {
+          filepath = path.relative(workspaceDir, filepath);
+          break;
+        }
+      }
+
+      // Worst case we can check filetype glob patterns
+      if (filepath === currentFilepath) {
+        filepath = getBasename(filepath);
+      }
+
+      // @ts-ignore
+      const pattern = ignore.default().add(options.disableInFiles);
+      if (pattern.ignores(filepath)) {
+        return true;
+      }
+    }
+  }
+
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
-      const config = await this.configHandler.loadConfig();
-      const options = {
-        ...DEFAULT_AUTOCOMPLETE_OPTS,
-        ...config.tabAutocompleteOptions,
-      };
+      const options = await this._getAutocompleteOptions();
+
+      // Allow disabling autocomplete from config.json
+      if (options.disable) {
+        return undefined;
+      }
 
       // Check whether we're in the continue config.json file
       if (input.filepath === getConfigJsonPath()) {
@@ -187,31 +228,10 @@ export class CompletionProvider {
       }
 
       // Check whether autocomplete is disabled for this file
-      if (options.disableInFiles) {
-        // Relative path needed for `ignore`
-        const workspaceDirs = await this.ide.getWorkspaceDirs();
-        let filepath = input.filepath;
-        for (const workspaceDir of workspaceDirs) {
-          const relativePath = path.relative(workspaceDir, filepath);
-          const relativePathBase = relativePath.split(path.sep).at(0);
-          const isInWorkspace =
-            !path.isAbsolute(relativePath) && relativePathBase !== "..";
-          if (isInWorkspace) {
-            filepath = path.relative(workspaceDir, filepath);
-            break;
-          }
-        }
-
-        // Worst case we can check filetype glob patterns
-        if (filepath === input.filepath) {
-          filepath = getBasename(filepath);
-        }
-
-        // @ts-ignore
-        const pattern = ignore.default().add(options.disableInFiles);
-        if (pattern.ignores(filepath)) {
-          return undefined;
-        }
+      if (
+        await this._isDisabledForFile(input.filepath, options.disableInFiles)
+      ) {
+        return undefined;
       }
 
       // Create abort signal if not given
@@ -221,11 +241,6 @@ export class CompletionProvider {
         this._abortControllers.set(input.completionId, controller);
       }
 
-      // Allow disabling autocomplete from config.json
-      if (options.disable) {
-        return undefined;
-      }
-
       // Debounce
       if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
@@ -233,7 +248,6 @@ export class CompletionProvider {
 
       // Get completion
       const llm = await this.getLlm();
-
       if (!llm) {
         return undefined;
       }
@@ -244,16 +258,9 @@ export class CompletionProvider {
         return undefined;
       }
 
-      // Set temperature (but don't overrride)
+      // Set temperature (but don't override)
       if (llm.completionOptions.temperature === undefined) {
         llm.completionOptions.temperature = 0.01;
-      }
-
-      if (
-        !config.tabAutocompleteOptions?.maxPromptTokens &&
-        LOCAL_PROVIDERS.includes(llm.providerName)
-      ) {
-        options.maxPromptTokens = 500;
       }
 
       const outcome = await this.getTabCompletion(token, options, llm, input);
@@ -285,27 +292,7 @@ export class CompletionProvider {
     const logRejectionTimeout = setTimeout(() => {
       // Wait 10 seconds, then assume it wasn't accepted
       outcome.accepted = false;
-      logDevData("autocomplete", outcome);
-      const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
-      void Telemetry.capture(
-        "autocomplete",
-        {
-          accepted: restOfOutcome.accepted,
-          cacheHit: restOfOutcome.cacheHit,
-          completionId: restOfOutcome.completionId,
-          completionOptions: restOfOutcome.completionOptions,
-          debounceDelay: restOfOutcome.debounceDelay,
-          fileExtension: restOfOutcome.filepath.split(".")?.slice(-1)[0],
-          maxPromptTokens: restOfOutcome.maxPromptTokens,
-          modelName: restOfOutcome.modelName,
-          modelProvider: restOfOutcome.modelProvider,
-          multilineCompletions: restOfOutcome.multilineCompletions,
-          time: restOfOutcome.time,
-          useRecentlyEdited: restOfOutcome.useRecentlyEdited,
-          useRootPathContext: restOfOutcome.useRootPathContext,
-        },
-        true,
-      );
+      this.logAutocompleteOutcome(outcome);
       this._logRejectionTimeouts.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);
     this._outcomes.set(completionId, outcome);
@@ -338,33 +325,6 @@ export class CompletionProvider {
       id: completionId,
       displayedAt: now,
     };
-  }
-
-  private isMultiline({
-    language,
-    prefix,
-    suffix,
-    selectedCompletionInfo,
-    multilineCompletions,
-    completeMultiline,
-  }: {
-    language: AutocompleteLanguageInfo;
-    prefix: string;
-    suffix: string;
-    selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"];
-    multilineCompletions: TabAutocompleteOptions["multilineCompletions"];
-    completeMultiline: boolean;
-  }) {
-    let langMultilineDecision = language.useMultiline?.({ prefix, suffix });
-    if (langMultilineDecision) {
-      return langMultilineDecision;
-    } else {
-      return (
-        !selectedCompletionInfo && // Only ever single-line if using intellisense selected value
-        multilineCompletions !== "never" &&
-        (multilineCompletions === "always" || completeMultiline)
-      );
-    }
   }
 
   async getTabCompletion(
@@ -579,7 +539,7 @@ export class CompletionProvider {
 
       const multiline =
         !options.transform ||
-        this.isMultiline({
+        decideMultilineEarly({
           multilineCompletions: options.multilineCompletions,
           language: lang,
           selectedCompletionInfo: input.selectedCompletionInfo,
