@@ -230,6 +230,14 @@ Here is an example:
 
 ```typescript
 import * as vscode from "vscode";
+import {
+  IContextProvider,
+  ContextProviderDescription,
+  ContextProviderExtras,
+  ContextItem,
+  LoadSubmenuItemsArgs,
+  ContextSubmenuItem,
+} from "@continuedev/core";
 
 class MyCustomProvider implements IContextProvider {
   get description(): ContextProviderDescription {
