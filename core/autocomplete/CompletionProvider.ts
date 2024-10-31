@@ -11,7 +11,6 @@ import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.j
 import { constructAutocompletePrompt } from "./constructPrompt.js";
 import { AutocompleteSnippet } from "./context/ranking/index.js";
 import { RootPathContextService } from "./context/RootPathContextService.js";
-import { GeneratorReuseManager } from "./generation/GeneratorReuseManager.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
 // @prettier-ignore
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
@@ -20,7 +19,7 @@ import { AutocompleteDebouncer } from "./AutocompleteDebouncer.js";
 import AutocompleteLruCache from "./AutocompleteLruCache.js";
 import { ImportDefinitionsService } from "./context/ImportDefinitionsService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
-import { StreamTransformPipeline } from "./filtering/streamTransforms/StreamTransformPipeline.js";
+import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { HelperVars } from "./HelperVars.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
 import { constructInitialPrefixSuffix } from "./templating/constructPrefixSuffix.js";
@@ -47,13 +46,11 @@ export type GetLspDefinitionsFunction = (
 export class CompletionProvider {
   private importDefinitionsService: ImportDefinitionsService;
   private rootPathContextService: RootPathContextService;
-  private generatorReuseManager: GeneratorReuseManager;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
   private debouncer = new AutocompleteDebouncer();
-  private streamTransformPipeline = new StreamTransformPipeline();
-  // private nearbyDefinitionsService = new NearbyDefinitionsService();
+  private completionStreamer: CompletionStreamer;
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -62,9 +59,7 @@ export class CompletionProvider {
     private readonly _onError: (e: any) => void,
     private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
   ) {
-    this.generatorReuseManager = new GeneratorReuseManager(
-      this.onError.bind(this),
-    );
+    this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.importDefinitionsService = new ImportDefinitionsService(this.ide);
     this.rootPathContextService = new RootPathContextService(
       this.importDefinitionsService,
@@ -103,7 +98,6 @@ export class CompletionProvider {
   }
 
   private onError(e: any) {
-    console.warn("Error generating autocompletion: ", e);
     if (
       ERRORS_TO_IGNORE.some((err) =>
         typeof e === "string" ? e.includes(err) : e?.message?.includes(err),
@@ -111,6 +105,8 @@ export class CompletionProvider {
     ) {
       return;
     }
+
+    console.warn("Error generating autocompletion: ", e);
     if (!this.errorsShown.has(e.message)) {
       this.errorsShown.add(e.message);
       this._onError(e);
@@ -197,6 +193,8 @@ export class CompletionProvider {
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     try {
+      const startTime = Date.now();
+
       const llm = await this._prepareLlm();
       if (!llm) {
         return undefined;
@@ -214,8 +212,6 @@ export class CompletionProvider {
         return undefined;
       }
 
-      // Get completion
-
       // Create abort signal if not given
       if (!token) {
         const controller = new AbortController();
@@ -223,11 +219,113 @@ export class CompletionProvider {
         this._abortControllers.set(input.completionId, controller);
       }
 
-      const outcome = await this.getTabCompletion(token, llm, helper);
+      //////////
 
-      if (!outcome?.completion) {
+      // Construct full prefix/suffix (a few edge cases handled in here)
+      const { prefix: fullPrefix, suffix: fullSuffix } =
+        await constructInitialPrefixSuffix(helper.input, this.ide);
+
+      // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
+      // or they might separately track recently edited ranges)
+      const extraSnippets = await this._getExtraSnippets(
+        helper,
+        fullPrefix,
+        fullSuffix,
+      );
+
+      let { prefix, suffix, completeMultiline, snippets } =
+        await constructAutocompletePrompt(
+          fullPrefix,
+          fullSuffix,
+          helper,
+          extraSnippets,
+          this.importDefinitionsService,
+          this.rootPathContextService,
+        );
+
+      // If prefix is manually passed
+      if (helper.input.manuallyPassPrefix) {
+        prefix = helper.input.manuallyPassPrefix;
+        suffix = "";
+      }
+
+      const [prompt, completionOptions, multiline] = renderPrompt(
+        prefix,
+        suffix,
+        snippets,
+        await this.ide.getWorkspaceDirs(),
+        completeMultiline,
+        helper,
+      );
+
+      // Completion
+      let completion: string | undefined = "";
+
+      const cache = await autocompleteCache;
+      const cachedCompletion = helper.options.useCache
+        ? await cache.get(prefix)
+        : undefined;
+      let cacheHit = false;
+      if (cachedCompletion) {
+        // Cache
+        cacheHit = true;
+        completion = cachedCompletion;
+      } else {
+        const completionStream =
+          this.completionStreamer.streamCompletionWithFilters(
+            token,
+            llm,
+            prefix,
+            suffix,
+            prompt,
+            multiline,
+            completionOptions,
+            helper,
+          );
+
+        for await (const update of completionStream) {
+          completion += update;
+        }
+
+        // Don't postprocess if aborted
+        if (token.aborted) {
+          return undefined;
+        }
+
+        const processedCompletion = helper.options.transform
+          ? postprocessCompletion({
+              completion,
+              prefix,
+              suffix,
+              llm,
+            })
+          : completion;
+
+        completion = processedCompletion;
+      }
+
+      if (!completion) {
         return undefined;
       }
+
+      const outcome: AutocompleteOutcome = {
+        time: Date.now() - startTime,
+        completion,
+        prefix,
+        suffix,
+        prompt,
+        modelProvider: llm.providerName,
+        modelName: llm.model,
+        completionOptions,
+        cacheHit,
+        filepath: helper.filepath,
+        completionId: helper.input.completionId,
+        gitRepo: await this.ide.getRepoName(helper.filepath),
+        uniqueId: await this.ide.getUniqueId(),
+        ...helper.options,
+      };
+
+      //////////
 
       // Do some stuff later so as not to block return. Latency matters
       const completionToCache = outcome.completion;
@@ -315,158 +413,5 @@ export class CompletionProvider {
     }
 
     return extraSnippets;
-  }
-
-  async getTabCompletion(
-    token: AbortSignal,
-    llm: ILLM,
-    helper: HelperVars,
-  ): Promise<AutocompleteOutcome | undefined> {
-    const startTime = Date.now();
-
-    // Construct full prefix/suffix (a few edge cases handled in here)
-    const { prefix: fullPrefix, suffix: fullSuffix } =
-      await constructInitialPrefixSuffix(helper.input, this.ide);
-
-    // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
-    // or they might separately track recently edited ranges)
-    const extraSnippets = await this._getExtraSnippets(
-      helper,
-      fullPrefix,
-      fullSuffix,
-    );
-
-    let { prefix, suffix, completeMultiline, snippets } =
-      await constructAutocompletePrompt(
-        fullPrefix,
-        fullSuffix,
-        helper,
-        extraSnippets,
-        this.importDefinitionsService,
-        this.rootPathContextService,
-      );
-
-    // If prefix is manually passed
-    if (helper.input.manuallyPassPrefix) {
-      prefix = helper.input.manuallyPassPrefix;
-      suffix = "";
-    }
-
-    const [prompt, completionOptions, multiline] = renderPrompt(
-      prefix,
-      suffix,
-      snippets,
-      await this.ide.getWorkspaceDirs(),
-      completeMultiline,
-      helper,
-    );
-
-    // Completion
-    let completion: string | undefined = "";
-
-    const cache = await autocompleteCache;
-    const cachedCompletion = helper.options.useCache
-      ? await cache.get(prefix)
-      : undefined;
-    let cacheHit = false;
-    if (cachedCompletion) {
-      // Cache
-      cacheHit = true;
-      completion = cachedCompletion;
-    } else {
-      // Try to reuse pending requests if what the user typed matches start of completion
-      const generator = this.generatorReuseManager.getGenerator(
-        prefix,
-        () =>
-          llm.supportsFim()
-            ? llm.streamFim(prefix, suffix, completionOptions)
-            : llm.streamComplete(prompt, {
-                ...completionOptions,
-                raw: true,
-              }),
-        multiline,
-      );
-
-      // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
-      const fullStop = () =>
-        this.generatorReuseManager.currentGenerator?.cancel();
-
-      // LLM
-      let cancelled = false;
-      const generatorWithCancellation = async function* () {
-        for await (const update of generator) {
-          if (token.aborted) {
-            cancelled = true;
-            return;
-          }
-          yield update;
-        }
-      };
-
-      const initialGenerator = generatorWithCancellation();
-      const finalGenerator = helper.options.transform
-        ? this.streamTransformPipeline.transform(
-            initialGenerator,
-            prefix,
-            suffix,
-            helper.filepath,
-            multiline,
-            helper.pos,
-            helper.fileLines,
-            completionOptions?.stop || [],
-            helper.lang,
-            fullStop,
-          )
-        : initialGenerator;
-
-      try {
-        for await (const update of finalGenerator) {
-          completion += update;
-        }
-      } catch (e: any) {
-        if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
-          return undefined;
-        }
-        throw e;
-      }
-
-      if (cancelled) {
-        return undefined;
-      }
-
-      const processedCompletion = helper.options.transform
-        ? postprocessCompletion({
-            completion,
-            prefix,
-            suffix,
-            llm,
-          })
-        : completion;
-
-      completion = processedCompletion;
-    }
-
-    const time = Date.now() - startTime;
-
-    if (!completion) {
-      return undefined;
-    }
-
-    return {
-      time,
-      completion,
-      prefix,
-      suffix,
-      prompt,
-      modelProvider: llm.providerName,
-      modelName: llm.model,
-      completionOptions,
-      cacheHit,
-      filepath: helper.filepath,
-      completionId: helper.input.completionId,
-      gitRepo: await this.ide.getRepoName(helper.filepath),
-      uniqueId: await this.ide.getUniqueId(),
-      ...helper.options,
-    };
   }
 }
