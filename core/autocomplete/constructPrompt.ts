@@ -88,7 +88,7 @@ export async function constructAutocompletePrompt(
   // Prune prefix/suffix based on token budgets
   const { prunedPrefix, prunedSuffix } = prunePrefixSuffix(helper);
 
-  let snippets = await contextRetrievalService.retrieve(
+  let snippets = await contextRetrievalService.retrieveCandidateSnippets(
     prunedPrefix,
     helper,
     extraSnippets,
