@@ -74,7 +74,7 @@ export class CompletionProvider {
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly getLlm: () => Promise<ILLM | undefined>,
+    private readonly _injectedGetLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
     private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
   ) {
@@ -86,6 +86,27 @@ export class CompletionProvider {
       this.importDefinitionsService,
       this.ide,
     );
+  }
+
+  private async _getLlm(): Promise<ILLM | undefined> {
+    const llm = await this._injectedGetLlm();
+
+    if (!llm) {
+      return undefined;
+    }
+
+    // Ignore empty API keys for Mistral since we currently write
+    // a template provider without one during onboarding
+    if (llm.providerName === "mistral" && llm.apiKey === "") {
+      return undefined;
+    }
+
+    // Set temperature (but don't override)
+    if (llm.completionOptions.temperature === undefined) {
+      llm.completionOptions.temperature = 0.01;
+    }
+
+    return llm;
   }
 
   private onError(e: any) {
@@ -210,6 +231,28 @@ export class CompletionProvider {
     }
   }
 
+  private async _shouldSkipCompletionForAnyReason(
+    input: AutocompleteInput,
+    options: TabAutocompleteOptions,
+  ): Promise<boolean> {
+    // Allow disabling autocomplete from config.json
+    if (options.disable) {
+      return true;
+    }
+
+    // Check whether we're in the continue config.json file
+    if (input.filepath === getConfigJsonPath()) {
+      return true;
+    }
+
+    // Check whether autocomplete is disabled for this file
+    if (await this._isDisabledForFile(input.filepath, options.disableInFiles)) {
+      return true;
+    }
+
+    return false;
+  }
+
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
@@ -217,20 +260,14 @@ export class CompletionProvider {
     try {
       const options = await this._getAutocompleteOptions();
 
-      // Allow disabling autocomplete from config.json
-      if (options.disable) {
+      // Debounce
+      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
         return undefined;
       }
 
-      // Check whether we're in the continue config.json file
-      if (input.filepath === getConfigJsonPath()) {
-        return undefined;
-      }
-
-      // Check whether autocomplete is disabled for this file
-      if (
-        await this._isDisabledForFile(input.filepath, options.disableInFiles)
-      ) {
+      // Get completion
+      const llm = await this._getLlm();
+      if (!llm) {
         return undefined;
       }
 
@@ -239,28 +276,6 @@ export class CompletionProvider {
         const controller = new AbortController();
         token = controller.signal;
         this._abortControllers.set(input.completionId, controller);
-      }
-
-      // Debounce
-      if (await this.debouncer.delayAndShouldDebounce(options.debounceDelay)) {
-        return undefined;
-      }
-
-      // Get completion
-      const llm = await this.getLlm();
-      if (!llm) {
-        return undefined;
-      }
-
-      // Ignore empty API keys for Mistral since we currently write
-      // a template provider without one during onboarding
-      if (llm.providerName === "mistral" && llm.apiKey === "") {
-        return undefined;
-      }
-
-      // Set temperature (but don't override)
-      if (llm.completionOptions.temperature === undefined) {
-        llm.completionOptions.temperature = 0.01;
       }
 
       const outcome = await this.getTabCompletion(token, options, llm, input);
