@@ -530,6 +530,8 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     icon: "WatsonX.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
+      models.granite3Instruct8b,
+      models.granite3Instruct2b,
       models.graniteCode3b,
       models.graniteCode8b,
       models.graniteCode20b,
@@ -700,5 +702,29 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.gemini15Pro,
     ],
     apiKeyUrl: "https://chat.asksage.ai/",
+  },
+  nebius: {
+    title: "Nebius AI Studio",
+    provider: "nebius",
+    refPage: "nebiusllm",
+    description: "Use the Nebius API to run open-source models",
+    longDescription: `Nebius AI Studio is a cheap hosted service with $100 trial. To get started with Nebius AI Studio:\n1. Obtain an API key from [here](https://studio.nebius.ai)\n2. Paste below\n3. Select a model preset`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Nebius AI Studio API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "nebius.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [models.MetaLlama3Large, models.Qwen2Coder],
+    apiKeyUrl: "https://studio.nebius.ai/settings/api-keys",
   },
 };

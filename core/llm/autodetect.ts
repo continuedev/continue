@@ -119,6 +119,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "replicate",
   "together",
   "sambanova",
+  "nebius",
   "vertexai"
 ];
 
