@@ -14,19 +14,19 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
-class ConfigJsonSchemaProviderFactory : JsonSchemaProviderFactory {
+class ConfigRcJsonSchemaProviderFactory : JsonSchemaProviderFactory {
     override fun getProviders(project: Project): MutableList<JsonSchemaFileProvider> {
-        return mutableListOf(ConfigJsonSchemaFileProvider())
+        return mutableListOf(ConfigRcJsonSchemaFileProvider())
     }
 }
 
-class ConfigJsonSchemaFileProvider : JsonSchemaFileProvider {
+class ConfigRcJsonSchemaFileProvider : JsonSchemaFileProvider {
     override fun isAvailable(file: VirtualFile): Boolean {
         return file.name == ".continuerc.json"
     }
 
     override fun getName(): String {
-        return "config.json"
+        return ".continuerc.json"
     }
 
     override fun getSchemaFile(): VirtualFile? {
