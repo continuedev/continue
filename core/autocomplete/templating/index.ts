@@ -23,7 +23,43 @@ export function formatExternalSnippet(
   ];
   return lines.join("\n");
 }
+function renderStringTemplate(
+  template: string,
+  prefix: string,
+  suffix: string,
+  snippets: AutocompleteSnippet[],
+  lang: AutocompleteLanguageInfo,
+  filepath: string,
+  reponame: string,
+) {
+  const filename = getBasename(filepath);
+  const compiledTemplate = Handlebars.compile(template);
 
+  // Format snippets as comments and prepend to prefix
+  const formattedSnippets = snippets
+    .map((snippet) =>
+      formatExternalSnippet(snippet.filepath, snippet.contents, lang),
+    )
+    .join("\n");
+  if (formattedSnippets.length > 0) {
+    prefix = `${formattedSnippets}\n\n${prefix}`;
+  } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
+    // If it's an empty file, include the file name as a comment
+    prefix = `${lang.singleLineComment} ${getLastNPathParts(
+      filepath,
+      2,
+    )}\n${prefix}`;
+  }
+
+  const prompt = compiledTemplate({
+    prefix,
+    suffix,
+    filename,
+    reponame,
+    language: lang.name,
+  });
+  return prompt;
+}
 export function renderPrompt(
   options: TabAutocompleteOptions,
   prefix: string,
@@ -37,7 +73,6 @@ export function renderPrompt(
   selectedCompletionInfo: AutocompleteInput["selectedCompletionInfo"],
   completeMultiline: boolean,
 ): [string, Partial<CompletionOptions> | undefined, boolean] {
-  // Template prompt
   let {
     template,
     completionOptions,
@@ -47,7 +82,6 @@ export function renderPrompt(
     : getTemplateForModel(model);
 
   let prompt: string;
-  const filename = getBasename(filepath);
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
 
   // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
@@ -62,34 +96,18 @@ export function renderPrompt(
     );
   }
 
+  // Templates can be passed as a Handlebars template string or a function
   if (typeof template === "string") {
-    const compiledTemplate = Handlebars.compile(template);
-
-    // Format snippets as comments and prepend to prefix
-    const formattedSnippets = snippets
-      .map((snippet) =>
-        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
-      )
-      .join("\n");
-    if (formattedSnippets.length > 0) {
-      prefix = `${formattedSnippets}\n\n${prefix}`;
-    } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
-      // If it's an empty file, include the file name as a comment
-      prefix = `${lang.singleLineComment} ${getLastNPathParts(
-        filepath,
-        2,
-      )}\n${prefix}`;
-    }
-
-    prompt = compiledTemplate({
+    prompt = renderStringTemplate(
+      template,
       prefix,
       suffix,
-      filename,
+      snippets,
+      lang,
+      filepath,
       reponame,
-      language: lang.name,
-    });
+    );
   } else {
-    // Let the template function format snippets
     prompt = template(prefix, suffix, filepath, reponame, lang.name, snippets);
   }
 
