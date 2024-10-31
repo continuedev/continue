@@ -78,13 +78,3 @@ To setup Bedrock using custom imported models, add the following to your `config
   ]
 }
 ```
-
-Authentication will be through temporary or long-term credentials in
-~/.aws/credentials under a configured profile (e.g. "bedrock").
-
-```title="~/.aws/credentials
-[bedrock]
-aws_access_key_id = abcdefg
-aws_secret_access_key = hijklmno
-aws_session_token = pqrstuvwxyz # Optional: means short term creds.
-```
