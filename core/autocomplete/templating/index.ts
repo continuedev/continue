@@ -5,6 +5,7 @@ import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo"
 import { AutocompleteSnippet } from "../context/ranking";
 import { AutocompleteInput } from "../types";
 import { getTemplateForModel } from "./AutocompleteTemplate";
+import { getStopTokens } from "./getStopTokens";
 
 export function formatExternalSnippet(
   filepath: string,
@@ -92,18 +93,6 @@ export function renderPrompt(
     prompt = template(prefix, suffix, filepath, reponame, lang.name, snippets);
   }
 
-  // Stop tokens
-  const stopTokens = [
-    ...(completionOptions?.stop || []),
-    // ...multilineStops,
-    ...commonStops,
-    ...(model.toLowerCase().includes("starcoder2")
-      ? STARCODER2_T_ARTIFACTS
-      : []),
-    ...(lang.stopWords ?? []),
-    // ...lang.topLevelKeywords.map((word) => `\n${word}`),
-  ];
-
   const multiline =
     !options.transform ||
     decideMultilineEarly({
@@ -114,6 +103,8 @@ export function renderPrompt(
       suffix,
       completeMultiline,
     });
+
+  const stopTokens = getStopTokens(completionOptions, lang, model);
 
   completionOptions = {
     ...completionOptions,
