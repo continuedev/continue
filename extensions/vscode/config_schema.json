@@ -1560,7 +1560,11 @@
                   "ibm/granite-3b-code-instruct",
                   "ibm/granite-8b-code-instruct",
                   "ibm/granite-20b-code-instruct",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
                   "ibm/granite-34b-code-instruct",
+                  "ibm/granite-3-8b-instruct",
+                  "ibm/granite-3-2b-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
