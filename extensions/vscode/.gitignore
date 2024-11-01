@@ -15,3 +15,5 @@ gui/*
 
 .devcontainer
 .github
+
+continue_rc_schema.json
