@@ -8,7 +8,7 @@
         // To detect compile errors
         "vscode-extension:tsc",
         // To build the React app that is used in the extension
-        // "vscode-extension:continue-ui:build",
+        "vscode-extension:continue-ui:build",
         // // To bundle the code the same way we do for publishing
         "vscode-extension:esbuild",
         // Start the React app that is used in the extension
