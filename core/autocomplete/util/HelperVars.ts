@@ -19,13 +19,13 @@ import { AutocompleteInput } from "./types";
 export class HelperVars {
   lang: AutocompleteLanguageInfo;
   treePath: AstPath | undefined;
-  prunedPrefix: string;
-  prunedSuffix: string;
 
   private _fileContents: string | undefined;
   private _fileLines: string[] | undefined;
   private _fullPrefix: string | undefined;
   private _fullSuffix: string | undefined;
+  private _prunedPrefix: string | undefined;
+  private _prunedSuffix: string | undefined;
 
   private constructor(
     public readonly input: AutocompleteInput,
@@ -34,9 +34,6 @@ export class HelperVars {
     private readonly ide: IDE,
   ) {
     this.lang = languageForFilepath(input.filepath);
-    const { prunedPrefix, prunedSuffix } = this.prunePrefixSuffix();
-    this.prunedPrefix = prunedPrefix;
-    this.prunedSuffix = prunedSuffix;
   }
 
   private async init() {
@@ -54,6 +51,10 @@ export class HelperVars {
       await constructInitialPrefixSuffix(this.input, this.ide);
     this._fullPrefix = fullPrefix;
     this._fullSuffix = fullSuffix;
+
+    const { prunedPrefix, prunedSuffix } = this.prunePrefixSuffix();
+    this._prunedPrefix = prunedPrefix;
+    this._prunedSuffix = prunedSuffix;
 
     try {
       const ast = await getAst(this.filepath, fullPrefix + fullSuffix);
@@ -152,5 +153,23 @@ export class HelperVars {
       );
     }
     return this._fullSuffix;
+  }
+
+  get prunedPrefix(): string {
+    if (this._prunedPrefix === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing prunedPrefix",
+      );
+    }
+    return this._prunedPrefix;
+  }
+
+  get prunedSuffix(): string {
+    if (this._prunedSuffix === undefined) {
+      throw new Error(
+        "HelperVars must be initialized before accessing prunedSuffix",
+      );
+    }
+    return this._prunedSuffix;
   }
 }
