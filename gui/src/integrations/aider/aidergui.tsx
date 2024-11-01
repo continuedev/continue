@@ -203,10 +203,12 @@ function AiderGUI() {
     if (aiderProcessState.state === "stopped") {
       msg = "PearAI Creator (Powered By aider) process is not running.";
     }
+    if (aiderProcessState.state === "crashed") {
+      msg = "PearAI Creator (Powered By aider) process has crashed.";
+    }
     if (aiderProcessState.state === "uninstalled") {
       return <AiderManualInstallation />;
     }
-
     if (aiderProcessState.state === "starting") {
       msg = "Spinning up PearAI Creator (Powered By aider), please give it a second...";
     }
@@ -217,6 +219,16 @@ function AiderGUI() {
           <div className="spinner-border text-white" role="status">
             <span className="visually-hidden">{msg}</span>
           </div>
+          {(aiderProcessState.state === "stopped" || aiderProcessState.state === "crashed") && (
+            <div className="flex justify-center">
+              <button
+                className="mt-4 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                onClick={() => ideMessenger.post("aiderResetSession", undefined)}
+              >
+                Restart
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
