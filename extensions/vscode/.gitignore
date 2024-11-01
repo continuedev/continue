@@ -10,7 +10,7 @@ exe
 bin
 assets
 
-gui/*
+gui/**
 !gui/onigasm.wasm
 
 .devcontainer
