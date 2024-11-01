@@ -500,7 +500,7 @@
     },
     "jsonValidation": [
       {
-        "fileMatch": "config.json",
+        "fileMatch": "**/.continue/config.json",
         "url": "./config_schema.json"
       },
       {
