@@ -1,10 +1,12 @@
 import { CompletionOptions } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
-import { shouldCompleteMultiline } from "../classification/shouldCompleteMultiline";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { AutocompleteSnippet } from "../context/ranking";
 import { HelperVars } from "../util/HelperVars";
-import { getTemplateForModel } from "./AutocompleteTemplate";
+import {
+  AutocompleteTemplate,
+  getTemplateForModel,
+} from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
 
 export function formatExternalSnippet(
@@ -61,23 +63,41 @@ function renderStringTemplate(
   return prompt;
 }
 
+function getTemplate(helper: HelperVars): AutocompleteTemplate {
+  if (helper.options.template) {
+    return {
+      template: helper.options.template,
+      completionOptions: {},
+      compilePrefixSuffix: undefined,
+    };
+  }
+  return getTemplateForModel(helper.modelName);
+}
+
 export function renderPrompt(
-  prefix: string,
-  suffix: string,
   snippets: AutocompleteSnippet[],
   workspaceDirs: string[],
   helper: HelperVars,
-): [string, Partial<CompletionOptions> | undefined, boolean] {
-  let {
-    template,
-    completionOptions,
-    compilePrefixSuffix = undefined,
-  } = helper.options.template
-    ? { template: helper.options.template, completionOptions: {} }
-    : getTemplateForModel(helper.modelName);
+): {
+  prompt: string;
+  prefix: string;
+  suffix: string;
+  completionOptions: Partial<CompletionOptions> | undefined;
+} {
+  // If prefix is manually passed
+  let prefix = helper.prunedPrefix;
+  let suffix = helper.prunedSuffix;
+
+  if (helper.input.manuallyPassPrefix) {
+    prefix = helper.input.manuallyPassPrefix;
+    suffix = "";
+  }
 
   let prompt: string;
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
+
+  let { template, compilePrefixSuffix, completionOptions } =
+    getTemplate(helper);
 
   // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
   // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
@@ -113,10 +133,6 @@ export function renderPrompt(
     );
   }
 
-  const multiline =
-    !helper.options.transform ||
-    shouldCompleteMultiline(helper, prefix, suffix);
-
   const stopTokens = getStopTokens(
     completionOptions,
     helper.lang,
@@ -128,5 +144,5 @@ export function renderPrompt(
     stop: stopTokens,
   };
 
-  return [prompt, completionOptions, multiline];
+  return { prompt, prefix, suffix, completionOptions };
 }

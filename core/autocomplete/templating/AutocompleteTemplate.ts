@@ -4,7 +4,7 @@ import { CompletionOptions } from "../../index.js";
 import { getLastNPathParts, shortestRelativePaths } from "../../util/index.js";
 import { AutocompleteSnippet } from "../context/ranking/index.js";
 
-interface AutocompleteTemplate {
+export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
     prefix: string,
     suffix: string,

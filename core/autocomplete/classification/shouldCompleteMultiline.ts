@@ -14,11 +14,7 @@ function shouldCompleteMultilineBasedOnLanguage(
   return langMultilineDecision;
 }
 
-export function shouldCompleteMultiline(
-  helper: HelperVars,
-  prefix: string,
-  suffix: string,
-) {
+export function shouldCompleteMultiline(helper: HelperVars) {
   switch (helper.options.multilineCompletions) {
     case "always":
       return true;
@@ -49,7 +45,13 @@ export function shouldCompleteMultiline(
     return false;
   }
 
-  if (shouldCompleteMultilineBasedOnLanguage(helper.lang, prefix, suffix)) {
+  if (
+    shouldCompleteMultilineBasedOnLanguage(
+      helper.lang,
+      helper.prunedPrefix,
+      helper.prunedSuffix,
+    )
+  ) {
     return true;
   }
 

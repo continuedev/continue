@@ -1,5 +1,10 @@
 import { IDE, TabAutocompleteOptions } from "../..";
 import {
+  countTokens,
+  pruneLinesFromBottom,
+  pruneLinesFromTop,
+} from "../../llm/countTokens";
+import {
   AutocompleteLanguageInfo,
   languageForFilepath,
 } from "../constants/AutocompleteLanguageInfo";
@@ -14,6 +19,8 @@ import { AutocompleteInput } from "./types";
 export class HelperVars {
   lang: AutocompleteLanguageInfo;
   treePath: AstPath | undefined;
+  prunedPrefix: string;
+  prunedSuffix: string;
 
   private _fileContents: string | undefined;
   private _fileLines: string[] | undefined;
@@ -27,6 +34,9 @@ export class HelperVars {
     private readonly ide: IDE,
   ) {
     this.lang = languageForFilepath(input.filepath);
+    const { prunedPrefix, prunedSuffix } = this.prunePrefixSuffix();
+    this.prunedPrefix = prunedPrefix;
+    this.prunedSuffix = prunedSuffix;
   }
 
   private async init() {
@@ -66,6 +76,33 @@ export class HelperVars {
     return instance;
   }
 
+  prunePrefixSuffix() {
+    // Construct basic prefix
+    const maxPrefixTokens =
+      this.options.maxPromptTokens * this.options.prefixPercentage;
+    const prunedPrefix = pruneLinesFromTop(
+      this.fullPrefix,
+      maxPrefixTokens,
+      this.modelName,
+    );
+
+    // Construct suffix
+    const maxSuffixTokens = Math.min(
+      this.options.maxPromptTokens - countTokens(prunedPrefix, this.modelName),
+      this.options.maxSuffixPercentage * this.options.maxPromptTokens,
+    );
+    const prunedSuffix = pruneLinesFromBottom(
+      this.fullSuffix,
+      maxSuffixTokens,
+      this.modelName,
+    );
+
+    return {
+      prunedPrefix,
+      prunedSuffix,
+    };
+  }
+
   // Fast access
   get filepath() {
     return this.input.filepath;
@@ -75,6 +112,9 @@ export class HelperVars {
   }
   get maxSnippetTokens() {
     return this.options.maxPromptTokens * this.options.maxSnippetPercentage;
+  }
+  get prunedCaretWindow() {
+    return this.prunedPrefix + this.prunedSuffix;
   }
 
   // Getters for lazy access

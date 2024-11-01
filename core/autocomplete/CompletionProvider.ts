@@ -8,6 +8,7 @@ import { postprocessCompletion } from "./postprocessing/index.js";
 // @prettier-ignore
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import OpenAI from "../llm/llms/OpenAI.js";
+import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
@@ -173,32 +174,25 @@ export class CompletionProvider {
       // or they might separately track recently edited ranges)
       const extraSnippets = await this._getExtraSnippets(helper);
 
-      let { prefix, suffix, snippets } = await constructAutocompletePrompt(
+      let snippets = await constructAutocompletePrompt(
         helper,
         extraSnippets,
         this.contextRetrievalService,
       );
 
-      // If prefix is manually passed
-      if (helper.input.manuallyPassPrefix) {
-        prefix = helper.input.manuallyPassPrefix;
-        suffix = "";
-      }
-
-      const [prompt, completionOptions, multiline] = renderPrompt(
-        prefix,
-        suffix,
-        snippets,
-        await this.ide.getWorkspaceDirs(),
-        helper,
-      );
+      const {
+        prompt,
+        prefix: finalPrefix,
+        suffix: finalSuffix,
+        completionOptions,
+      } = renderPrompt(snippets, await this.ide.getWorkspaceDirs(), helper);
 
       // Completion
       let completion: string | undefined = "";
 
       const cache = await autocompleteCache;
       const cachedCompletion = helper.options.useCache
-        ? await cache.get(prefix)
+        ? await cache.get(helper.prunedPrefix)
         : undefined;
       let cacheHit = false;
       if (cachedCompletion) {
@@ -206,12 +200,15 @@ export class CompletionProvider {
         cacheHit = true;
         completion = cachedCompletion;
       } else {
+        const multiline =
+          !helper.options.transform || shouldCompleteMultiline(helper);
+
         const completionStream =
           this.completionStreamer.streamCompletionWithFilters(
             token,
             llm,
-            prefix,
-            suffix,
+            finalPrefix,
+            finalSuffix,
             prompt,
             multiline,
             completionOptions,
@@ -230,8 +227,8 @@ export class CompletionProvider {
         const processedCompletion = helper.options.transform
           ? postprocessCompletion({
               completion,
-              prefix,
-              suffix,
+              prefix: helper.prunedPrefix,
+              suffix: helper.prunedSuffix,
               llm,
             })
           : completion;
@@ -246,8 +243,8 @@ export class CompletionProvider {
       const outcome: AutocompleteOutcome = {
         time: Date.now() - startTime,
         completion,
-        prefix,
-        suffix,
+        prefix: finalPrefix,
+        suffix: finalSuffix,
         prompt,
         modelProvider: llm.providerName,
         modelName: llm.model,

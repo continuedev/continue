@@ -1,9 +1,4 @@
 import { Position, Range } from "../index.js";
-import {
-  countTokens,
-  pruneLinesFromBottom,
-  pruneLinesFromTop,
-} from "../llm/countTokens.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import {
   fillPromptWithSnippets,
@@ -12,34 +7,6 @@ import {
   type AutocompleteSnippet,
 } from "./context/ranking/index.js";
 import { HelperVars } from "./util/HelperVars.js";
-
-function prunePrefixSuffix(helper: HelperVars) {
-  // Construct basic prefix
-  const maxPrefixTokens =
-    helper.options.maxPromptTokens * helper.options.prefixPercentage;
-  const prunedPrefix = pruneLinesFromTop(
-    helper.fullPrefix,
-    maxPrefixTokens,
-    helper.modelName,
-  );
-
-  // Construct suffix
-  const maxSuffixTokens = Math.min(
-    helper.options.maxPromptTokens -
-      countTokens(prunedPrefix, helper.modelName),
-    helper.options.maxSuffixPercentage * helper.options.maxPromptTokens,
-  );
-  const prunedSuffix = pruneLinesFromBottom(
-    helper.fullSuffix,
-    maxSuffixTokens,
-    helper.modelName,
-  );
-
-  return {
-    prunedPrefix,
-    prunedSuffix,
-  };
-}
 
 function filterSnippetsAlreadyInCaretWindow(
   snippets: AutocompleteSnippet[],
@@ -80,23 +47,15 @@ export async function constructAutocompletePrompt(
   helper: HelperVars,
   extraSnippets: AutocompleteSnippet[],
   contextRetrievalService: ContextRetrievalService,
-): Promise<{
-  prefix: string;
-  suffix: string;
-  snippets: AutocompleteSnippet[];
-}> {
-  // Prune prefix/suffix based on token budgets
-  const { prunedPrefix, prunedSuffix } = prunePrefixSuffix(helper);
-
+): Promise<AutocompleteSnippet[]> {
   let snippets = await contextRetrievalService.retrieveCandidateSnippets(
-    prunedPrefix,
     helper,
     extraSnippets,
   );
 
   snippets = filterSnippetsAlreadyInCaretWindow(
     snippets,
-    prunedPrefix + prunedSuffix,
+    helper.prunedCaretWindow,
   );
 
   const scoredSnippets = rankAndOrderSnippets(snippets, helper);
@@ -105,7 +64,11 @@ export async function constructAutocompletePrompt(
   let finalSnippets = removeRangeFromSnippets(
     scoredSnippets,
     helper.filepath.split("://").slice(-1)[0],
-    getRangeOfPrefixAndSuffixWithBuffer(prunedPrefix, prunedSuffix, helper.pos),
+    getRangeOfPrefixAndSuffixWithBuffer(
+      helper.prunedPrefix,
+      helper.prunedSuffix,
+      helper.pos,
+    ),
   );
 
   // Filter snippets below similarity threshold
@@ -120,11 +83,5 @@ export async function constructAutocompletePrompt(
     helper.modelName,
   );
 
-  snippets = finalSnippets;
-
-  return {
-    prefix: prunedPrefix,
-    suffix: prunedSuffix,
-    snippets,
-  };
+  return finalSnippets;
 }

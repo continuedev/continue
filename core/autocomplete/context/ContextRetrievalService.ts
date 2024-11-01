@@ -17,15 +17,49 @@ export class ContextRetrievalService {
     );
   }
 
+  public async retrieveCandidateSnippets(
+    helper: HelperVars,
+    extraSnippets: AutocompleteSnippet[],
+  ) {
+    if (helper.options.useOtherFiles === false) {
+      return [];
+    }
+
+    let snippets: AutocompleteSnippet[] = [];
+
+    // Snippets injected by the IDE for IDE-specific reasons
+    snippets.push(...extraSnippets);
+
+    // If a recently edited range has a line that is a perfect match with the start of the current line
+    snippets.push(...this.getSnippetsFromRecentlyEditedRanges(helper));
+
+    // Import definitions of any symbols in near range of the caret
+    snippets.push(...(await this.getSnippetsFromImportDefinitions(helper)));
+
+    // Root path context https://blog.continue.dev/root-path-context-the-secret-ingredient-in-continues-autocomplete-prompt/
+    if (helper.options.useRootPathContext && helper.treePath) {
+      snippets.push(
+        ...(await this.rootPathContextService.getContextForPath(
+          helper.filepath,
+          helper.treePath,
+        )),
+      );
+    }
+
+    return snippets;
+  }
+
   private getSnippetsFromRecentlyEditedRanges(
-    prunedPrefix: string,
     helper: HelperVars,
   ): AutocompleteSnippet[] {
     if (helper.options.useRecentlyEdited === false) {
       return [];
     }
 
-    const currentLinePrefix = prunedPrefix.trim().split("\n").slice(-1)[0];
+    const currentLinePrefix = helper.prunedPrefix
+      .trim()
+      .split("\n")
+      .slice(-1)[0];
     if (
       currentLinePrefix?.length > helper.options.recentLinePrefixMatchMinLength
     ) {
@@ -74,41 +108,6 @@ export class ContextRetrievalService {
       }
     }
     return importSnippets;
-  }
-
-  public async retrieveCandidateSnippets(
-    prunedPrefix: string,
-    helper: HelperVars,
-    extraSnippets: AutocompleteSnippet[],
-  ) {
-    if (helper.options.useOtherFiles === false) {
-      return [];
-    }
-
-    let snippets: AutocompleteSnippet[] = [];
-
-    // Snippets injected by the IDE for IDE-specific reasons
-    snippets.push(...extraSnippets);
-
-    // If a recently edited range has a line that is a perfect match with the start of the current line
-    snippets.push(
-      ...this.getSnippetsFromRecentlyEditedRanges(prunedPrefix, helper),
-    );
-
-    // Import definitions of any symbols in near range of the caret
-    snippets.push(...(await this.getSnippetsFromImportDefinitions(helper)));
-
-    // Root path context https://blog.continue.dev/root-path-context-the-secret-ingredient-in-continues-autocomplete-prompt/
-    if (helper.options.useRootPathContext && helper.treePath) {
-      snippets.push(
-        ...(await this.rootPathContextService.getContextForPath(
-          helper.filepath,
-          helper.treePath,
-        )),
-      );
-    }
-
-    return snippets;
   }
 
   findMatchingRange(
