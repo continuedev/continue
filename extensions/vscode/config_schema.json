@@ -199,8 +199,9 @@
             "nvidia",
             "vllm",
             "cerebras",
-            "vertexai",
-            "askSage"
+            "askSage",
+            "nebius",
+            "vertexai"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -413,9 +414,9 @@
           "description": "Azure OpenAI API version (e.g. 2023-07-01-preview)",
           "type": "string"
         },
-        "engine": {
-          "title": "Engine",
-          "description": "Azure OpenAI engine",
+        "deployment": {
+          "title": "Deployment",
+          "description": "Azure OpenAI deployment",
           "type": "string"
         },
         "capabilities": {
@@ -469,7 +470,8 @@
                   "replicate",
                   "together",
                   "cloudflare",
-                  "sambanova"
+                  "sambanova",
+                  "nebius"
                 ]
               }
             },
@@ -537,7 +539,7 @@
           },
           "then": {
             "properties": {
-              "engine": {
+              "deployment": {
                 "type": "string"
               },
               "apiType": {
@@ -1299,11 +1301,7 @@
             ]
           },
           "then": {
-            "required": [
-              "engine",
-              "apiVersion",
-              "apiBase"
-            ]
+            "required": ["deployment", "apiBase"]
           }
         },
         {
@@ -1539,28 +1537,32 @@
           },
           "then": {
             "properties": {
-              "watsonxUrl": {
+              "apiBase": {
                 "type": "string"
               },
-              "watsonxApiKey": {
+              "apiKey": {
                 "type": "string"
               },
-              "watsonxApiVersion": {
+              "apiVersion": {
                 "type": "string"
               },
-              "watsonxProjectId": {
+              "projectId": {
                 "type": "string"
               },
-              "watsonxStopToken": {
-                "type": "string"
-              },
-              "watsonxFullUrl": {
+              "deploymentId": {
                 "type": "string"
               },
               "model": {
                 "enum": [
                   "ibm/granite-13b-chat-v2",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
                   "ibm/granite-20b-code-instruct",
+                  "ibm/granite-3b-code-instruct",
+                  "ibm/granite-8b-code-instruct",
+                  "ibm/granite-34b-code-instruct",
+                  "ibm/granite-3-8b-instruct",
+                  "ibm/granite-3-2b-instruct",
                   "mistralai/mistral-large",
                   "meta-llama/llama-3-8b-instruct",
                   "meta-llama/llama-3-70b-instruct"
@@ -1568,8 +1570,9 @@
               }
             },
             "required": [
-              "watsonxUrl",
-              "watsonxProjectId"
+              "apiBase",
+              "apiKey",
+              "apiVersion"
             ]
           }
         },
@@ -2681,6 +2684,7 @@
                 "nvidia",
                 "bedrock",
                 "sagemaker",
+                "nebius",
                 "vertexai"
               ]
             },
@@ -3120,16 +3124,10 @@
           "properties": {
             "provider": {
               "type": "string",
-<<<<<<< HEAD
-              "enum": [
-                "posthog"
-              ],
-=======
               "enum": [
                 "posthog",
                 "logstash"
               ],
->>>>>>> 6e622157f1a727ba54d3bc22b337079e832c7556
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [

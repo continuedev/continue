@@ -21,10 +21,8 @@ We recommend configuring **GPT-4o** as your chat model.
     "provider": "azure",
     "model": "gpt-4o",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",
+    "apiKey": "<MY_API_KEY>" // If you use subscription key, try using Azure gateway to rename it apiKey
 }]
 ```
 
@@ -44,11 +42,10 @@ We recommend configuring **text-embedding-3-large** as your embeddings model.
 
 ```json title="config.json"
 "embeddingsProvider": {
-    "provider": "azure",
+    "provider": "openai",
     "model": "text-embedding-3-large",
     "apiBase": "<YOUR_DEPLOYMENT_BASE>",
-    "engine": "<YOUR_ENGINE>",
-    "apiVersion": "<YOUR_API_VERSION>",
+    "deployment": "<YOUR_DEPLOYMENT_NAME>",
     "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
 }
@@ -72,20 +69,19 @@ You need to apply for access to the Azure OpenAI service. Response times are typ
 
 ## General model configuration
 
-Azure OpenAI requires a handful of additional parameters to be configured, such as a model engine and API version.
+Azure OpenAI requires a handful of additional parameters to be configured, such as a deployment name and API base URL.
 
 To find this information in _Azure AI Studio_, first select the model that you would like to connect. Then visit _Endpoint_ > _Target URI_.
 
-For example, a Target URI of `<https://just-an-example.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2023-03-15-preview>` would map to the following:
+For example, a Target URI of `https://just-an-example.openai.azure.com/openai/deployments/gpt-4o-july/chat/completions?api-version=2023-03-15-preview` would map to the following:
 
 ```json
 {
   "title": "GPT-4o Azure",
   "model": "gpt-4o",
-  "provider": "azure",
+  "provider": "openai",
   "apiBase": "https://just-an-example.openai.azure.com",
-  "apiType": "azure",
-  "engine": "gpt-4o",
+  "deployment": "gpt-4o-july",
   "apiVersion": "2023-03-15-preview",
   "apiKey": "<MY_API_KEY>"
 }

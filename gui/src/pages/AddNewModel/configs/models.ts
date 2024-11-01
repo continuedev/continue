@@ -200,6 +200,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "nebius",
     ],
     isOpenSource: true,
   },
@@ -438,6 +439,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "nebius",
     ],
     isOpenSource: true,
   },
@@ -866,6 +868,30 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "WatsonX.png",
     isOpenSource: false,
   },
+  granite3Instruct8b: {
+    title: "Granite 3.0 8b Instruct",
+    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-8b-instruct",
+      contextLength: 8_000,
+      title: "Granite 3.0 8b Instruct"
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false
+  },
+  granite3Instruct2b: {
+    title: "Granite 3.0 2b Instruct",
+    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-2b-instruct",
+      contextLength: 2_000,
+      title: "Granite 3.0 2b Instruct"
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false
+  },
   MistralLarge: {
     title: "Mistral Large",
     description:
@@ -978,6 +1004,60 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
+  },
+  MetaLlama3Large: {
+    title: "Llama 3.1 405b",
+    description:
+      "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Llama 3.1 405b",
+      model: "meta-llama/Meta-Llama-3.1-405B-Instruct",
+      contextLength: 128_000,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "70b": {
+            model: "meta-llama/Meta-Llama-3.1-70B-Instruct",
+            title: "Llama 3.1 70b",
+          },
+          "405bb": {
+            model: "meta-llama/Meta-Llama-3.1-405B-Instruct",
+            title: "Llama 3.1 405b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["nebius"],
+    isOpenSource: true,
+  },
+  Qwen2Coder: {
+    title: "Qwen 2.5 Coder 7b",
+    description:
+      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Qwen 2.5 Coder 7b",
+      model: "Qwen/Qwen2.5-Coder-7B-Instruct",
+      contextLength: 32_000,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "7b": {
+            model: "Qwen/Qwen2.5-Coder-7B-Instruct",
+            title: "Qwen 2.5 Coder 7b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["nebius"],
+    isOpenSource: true,
   },
   AUTODETECT: {
     title: "Autodetect",

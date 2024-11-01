@@ -48,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-    history: ChatMessage[],
-    otherData: Record<string, string>,
-  ) => string | ChatMessage[]);
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+    ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -72,7 +72,7 @@ export interface ILLM extends LLMOptions {
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
 
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
   region?: string;
@@ -351,7 +351,7 @@ export interface LLMOptions {
   accountId?: string;
 
   // Azure options
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
 
@@ -644,8 +644,9 @@ type ModelProvider =
   | "vllm"
   | "mock"
   | "cerebras"
+  | "askSage"
   | "vertexai"
-  | "askSage";
+  | "nebius";
 
 export type ModelName =
   | "AUTODETECT"
@@ -827,6 +828,7 @@ export type EmbeddingsProviderName =
   | "nvidia"
   | "voyage"
   | "mistral"
+  | "nebius"
   | "vertexai"
   | "watsonx";
 
@@ -834,7 +836,7 @@ export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
-  engine?: string;
+  deployment?: string;
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
@@ -1051,9 +1053,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

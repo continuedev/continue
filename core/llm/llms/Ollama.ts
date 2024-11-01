@@ -228,7 +228,7 @@ class Ollama extends BaseLLM {
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
-      format: "json",
+      // format: options.format, // Not currently in base completion options
     };
   }
 
@@ -245,8 +245,7 @@ class Ollama extends BaseLLM {
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
-      format: "json"
-      // Not supported yet: context, images, system, template
+      // Not supported yet: context, images, system, template, format
     };
   }
 
