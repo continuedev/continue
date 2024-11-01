@@ -704,15 +704,40 @@ export class Core {
       const url = await getAuthUrlForTokenPage();
       return { url };
     });
-
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      const dirs = await this.ide.getWorkspaceDirs();
-      const paths = await walkDir(dirs[0], this.ide);
-      if (paths.includes(filepath)) {
+      let dirs = await this.ide.getWorkspaceDirs();
+      let memoizedFunction = await this.memoizedFunction(dirs);
+      if (memoizedFunction.includes(filepath)) {
+        console.log("yep running");
         recentlyEditedFilesCache.set(filepath, filepath);
       }
     });
   }
+
+  private memoize<T extends (...args: any[]) => Promise<any>>(
+    fn: T,
+  ): (...args: Parameters<T>) => Promise<ReturnType<T>> {
+    const cache = new Map<string, Promise<ReturnType<T>>>();
+
+    return async function (...args: Parameters<T>): Promise<ReturnType<T>> {
+      const key = JSON.stringify(args);
+      if (cache.has(key)) {
+        return cache.get(key) as Promise<ReturnType<T>>;
+      }
+      const result = await fn(...args);
+      cache.set(key, Promise.resolve(result));
+      return result;
+    };
+  }
+
+  private async checkIgnoredFiles(dirs: string[]): Promise<string[]> {
+    console.log("called");
+    const paths = await walkDir(dirs[0], this.ide);
+    return paths;
+  }
+
+  // Memoize the async checkIgnoredFiles function
+  memoizedFunction = this.memoize(this.checkIgnoredFiles.bind(this));
 
   private indexingCancellationController: AbortController | undefined;
 
