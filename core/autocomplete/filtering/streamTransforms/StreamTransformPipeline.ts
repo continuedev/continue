@@ -1,10 +1,10 @@
-import { Position } from "../../..";
 import { streamLines } from "../../../diff/util";
-import { AutocompleteLanguageInfo } from "../../constants/AutocompleteLanguageInfo";
+import { HelperVars } from "../../util/HelperVars";
 import { BracketMatchingService } from "../BracketMatchingService";
 import { stopAtStopTokens } from "./charStream";
 import {
   avoidPathLineAndEmptyComments,
+  showWhateverWeHaveAtXMs,
   skipPrefixes,
   stopAtLines,
   stopAtRepeatingLines,
@@ -19,13 +19,10 @@ export class StreamTransformPipeline {
     generator: AsyncGenerator<string>,
     prefix: string,
     suffix: string,
-    filepath: string,
     multiline: boolean,
-    pos: Position,
-    fileLines: string[],
     stopTokens: string[],
-    lang: AutocompleteLanguageInfo,
     fullStop: () => void,
+    helper: HelperVars,
   ): AsyncGenerator<string> {
     let charGenerator = generator;
 
@@ -40,7 +37,7 @@ export class StreamTransformPipeline {
       charGenerator,
       prefix,
       suffix,
-      filepath,
+      helper.filepath,
       multiline,
     );
 
@@ -51,9 +48,12 @@ export class StreamTransformPipeline {
     let i = 1;
     while (
       lineBelowCursor.trim() === "" &&
-      pos.line + i <= fileLines.length - 1
+      helper.pos.line + i <= helper.fileLines.length - 1
     ) {
-      lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
+      lineBelowCursor =
+        helper.fileLines[
+          Math.min(helper.pos.line + i, helper.fileLines.length - 1)
+        ];
       i++;
     }
 
@@ -61,7 +61,7 @@ export class StreamTransformPipeline {
     lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
     lineGenerator = avoidPathLineAndEmptyComments(
       lineGenerator,
-      lang.singleLineComment,
+      helper.lang.singleLineComment,
     );
     lineGenerator = skipPrefixes(lineGenerator);
 
@@ -70,11 +70,13 @@ export class StreamTransformPipeline {
     //   lang.topLevelKeywords,
     //   fullStop,
     // );
-    for (const lineFilter of lang.lineFilters ?? []) {
+    for (const lineFilter of helper.lang.lineFilters ?? []) {
       lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
     }
 
     lineGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor, fullStop);
+
+    lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, 250);
 
     const finalGenerator = streamWithNewLines(lineGenerator);
     for await (const update of finalGenerator) {

@@ -1,5 +1,5 @@
 import type { IDE } from "core";
-import { CompletionProvider } from "core/autocomplete/completionProvider";
+import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import {
   type AutocompleteInput,
   type AutocompleteOutcome,

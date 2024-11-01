@@ -510,3 +510,19 @@ export async function* logLines(
   }
   console.log(`${prefix}:\n${linesToLog.join("\n")}\n\n`);
 }
+
+export async function* showWhateverWeHaveAtXMs(
+  lines: LineStream,
+  ms: number,
+): LineStream {
+  const startTime = Date.now();
+  for await (const line of lines) {
+    // Always get at least one line
+    yield line;
+
+    // But after that, soft break at X ms
+    if (Date.now() - startTime > ms) {
+      break;
+    }
+  }
+}

@@ -22,6 +22,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useImports: true,
   useRootPathContext: true,
   transform: true,
+  showWhateverWeHaveAtXMs: 300,
 };
 
 export const COUNT_COMPLETION_REJECTED_AFTER = 10_000;

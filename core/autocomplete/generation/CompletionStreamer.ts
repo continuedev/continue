@@ -7,7 +7,7 @@ export class CompletionStreamer {
   private streamTransformPipeline = new StreamTransformPipeline();
   private generatorReuseManager: GeneratorReuseManager;
 
-  constructor(private readonly onError: (err: any) => void) {
+  constructor(onError: (err: any) => void) {
     this.generatorReuseManager = new GeneratorReuseManager(onError);
   }
 
@@ -49,22 +49,19 @@ export class CompletionStreamer {
     };
 
     const initialGenerator = generatorWithCancellation();
-    const finalGenerator = helper.options.transform
+    const transformedGenerator = helper.options.transform
       ? this.streamTransformPipeline.transform(
           initialGenerator,
           prefix,
           suffix,
-          helper.filepath,
           multiline,
-          helper.pos,
-          helper.fileLines,
           completionOptions?.stop || [],
-          helper.lang,
           fullStop,
+          helper,
         )
       : initialGenerator;
 
-    for await (const update of finalGenerator) {
+    for await (const update of transformedGenerator) {
       yield update;
     }
   }
