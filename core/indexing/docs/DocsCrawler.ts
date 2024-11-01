@@ -4,6 +4,7 @@ import { URL } from "node:url";
 import { ContinueConfig, IDE } from "../..";
 import CheerioCrawler from "./crawlers/CheerioCrawler";
 import { ChromiumCrawler, ChromiumInstaller } from "./crawlers/ChromiumCrawler";
+import { DefaultCrawler } from "./crawlers/DefaultCrawler";
 import GitHubCrawler from "./crawlers/GitHubCrawler";
 
 export type PageData = {
@@ -39,6 +40,8 @@ class DocsCrawler {
       yield* new GitHubCrawler(startUrl).crawl();
     } else if (this.shouldUseChromium()) {
       yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
+    } else if (true) {
+      yield* new DefaultCrawler(startUrl).crawl();
     } else {
       let didCrawlSinglePage = false;
 
