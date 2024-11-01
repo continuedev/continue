@@ -284,7 +284,7 @@ const commandsMap: (
     ) => {
       captureCommandTelemetry("quickFix");
 
-      const prompt = `How do I fix the following problem in the above code?: ${diagnosticMessage}`;
+      const prompt = `Please explain the cause of this error and how to solve it: ${diagnosticMessage}`;
 
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
@@ -480,10 +480,12 @@ const commandsMap: (
     "continue.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined);
     },
-    "continue.focusContinueSessionId": async (sessionId: string | undefined) => {
+    "continue.focusContinueSessionId": async (
+      sessionId: string | undefined,
+    ) => {
       if (!sessionId) {
         sessionId = await vscode.window.showInputBox({
-          prompt: "Enter the Session ID"
+          prompt: "Enter the Session ID",
         });
       }
       sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
