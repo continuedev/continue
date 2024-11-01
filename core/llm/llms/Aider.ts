@@ -345,7 +345,7 @@ class Aider extends BaseLLM {
             if (output.endsWith("udiff> ")) {
               // Aider's ready prompt
               console.log("Aider is ready!");
-              this.setAiderState("stopped");
+              this.setAiderState("ready");
               clearTimeout(timeout);
               resolve();
             }
