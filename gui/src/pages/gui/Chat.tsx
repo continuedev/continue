@@ -211,15 +211,15 @@ export function Chat() {
         if (u) {
           setLocalStorage("ftc", u + 1);
 
-          if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
-            onboardingCard.open("Best");
-            posthog?.capture("ftc_reached");
-            ideMessenger.ide.showToast(
-              "info",
-              "You've reached the free trial limit. Please configure a model to continue.",
-            );
-            return;
-          }
+          // if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
+          //   onboardingCard.open("Best");
+          //   posthog?.capture("ftc_reached");
+          //   ideMessenger.ide.showToast(
+          //     "info",
+          //     "You've reached the free trial limit. Please configure a model to continue.",
+          //   );
+          //   return;
+          // }
         } else {
           setLocalStorage("ftc", 1);
         }

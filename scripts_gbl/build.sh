@@ -3,4 +3,5 @@ export PATH=$JAVA_HOME/bin:$PATH
 sh scripts/install-dependencies.sh
 
 cd extensions/intellij
+./gradlew clean
 ./gradlew build
