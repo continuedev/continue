@@ -79,12 +79,25 @@ function Edit() {
 
   const [showCode, setShowCode] = useState(false);
 
+  // Reusing the applyState logic which was just the fastest way to get this working
   useEffect(() => {
     if (editModeState.editStatus === "done") {
       ideMessenger.request("edit/escape", undefined);
       navigate("/");
     }
   }, [editModeState.editStatus]);
+
+  const applyState = useSelector(
+    (store: RootState) =>
+      store.uiState.applyStates.find((state) => state.streamId === "edit")
+        ?.status ?? "closed",
+  );
+
+  useEffect(() => {
+    if (applyState === "closed" && editModeState.editStatus === "accepting") {
+      dispatch(dispatch(setEditDone()));
+    }
+  }, [applyState, editModeState.editStatus]);
 
   return (
     <>
@@ -178,6 +191,9 @@ function Edit() {
                   range: editModeState.highlightedCode,
                 });
                 dispatch(submitEdit(prompt));
+
+                // Move cursor to end of editor (it's already focused)
+                editor.commands.selectTextblockEnd();
               }}
             ></TipTapEditor>
           </div>

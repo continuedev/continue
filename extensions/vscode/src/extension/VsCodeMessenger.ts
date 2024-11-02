@@ -281,7 +281,7 @@ export class VsCodeMessenger {
       await verticalDiffManager.streamEdit(
         stripImages(prompt),
         modelTitle,
-        undefined,
+        "edit",
         undefined,
         undefined,
         new vscode.Range(
