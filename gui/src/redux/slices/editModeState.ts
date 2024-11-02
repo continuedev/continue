@@ -23,6 +23,10 @@ export const editModeStateSlice = createSlice({
       state.editStatus = "not-started";
       state.previousInputs = [];
     },
+    submitEdit: (state, { payload }: PayloadAction<MessageContent>) => {
+      state.previousInputs.push(payload);
+      state.editStatus = "streaming";
+    },
     setEditStatus: (state, { payload }: PayloadAction<EditStatus>) => {
       // Only allow valid transitions
       const currentStatus = state.editStatus;
@@ -46,6 +50,11 @@ export const editModeStateSlice = createSlice({
   },
 });
 
-export const { startEditMode, setEditStatus, addPreviousInput, setEditDone } =
-  editModeStateSlice.actions;
+export const {
+  startEditMode,
+  setEditStatus,
+  addPreviousInput,
+  setEditDone,
+  submitEdit,
+} = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

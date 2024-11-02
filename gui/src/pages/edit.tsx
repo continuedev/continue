@@ -7,13 +7,13 @@ import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { defaultBorderRadius, vscForeground } from "../components";
+import { defaultBorderRadius, lightGray, vscForeground } from "../components";
 import FileIcon from "../components/FileIcon";
 import { NewSessionButton } from "../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import TipTapEditor from "../components/mainInput/TipTapEditor";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { setEditDone, setEditStatus } from "../redux/slices/editModeState";
+import { setEditDone, submitEdit } from "../redux/slices/editModeState";
 import { RootState } from "../redux/store";
 import { getMetaKeyLabel } from "../util";
 
@@ -48,6 +48,22 @@ const AcceptRejectButton = styled.div<{
   }
 `;
 
+const EditHistoryDiv = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 16px;
+
+  cursor: pointer;
+
+  border: 1px solid ${lightGray}55;
+  border-radius: ${defaultBorderRadius};
+
+  &:hover {
+    background-color: ${lightGray}22;
+  }
+`;
+
 const EDIT_ALLOWS_CONTEXT_PROVIDERS = ["file", "code"];
 
 function Edit() {
@@ -74,11 +90,25 @@ function Edit() {
     <>
       <TopDiv>
         <div className="m-auto max-w-3xl">
+          {/* Edit session history */}
+          {/* {editModeState.previousInputs.length > 0 && (
+            <div className="mt-3 px-2">
+              {editModeState.previousInputs.map((input, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <EditHistoryDiv>
+                    <div className="text-gray-400">{stripImages(input)}</div>
+                    <EyeIcon className="ml-auto h-4 w-4" color={lightGray} />
+                  </EditHistoryDiv>
+                </div>
+              ))}
+            </div>
+          )} */}
+
           <div className="relative mb-1 mt-3 flex px-2">
             <TipTapEditor
               header={
                 <div
-                  className="p-1"
+                  className="select-none p-1"
                   style={{
                     backgroundColor: "#fff2",
                   }}
@@ -145,7 +175,7 @@ function Edit() {
                   prompt,
                   range: editModeState.highlightedCode,
                 });
-                dispatch(setEditStatus("streaming"));
+                dispatch(submitEdit(prompt));
               }}
             ></TipTapEditor>
           </div>
