@@ -29,7 +29,9 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
-import { walkDir } from "./indexing/walkDir";
+import ignore from "ignore";
+import { defaultIgnoreFile } from "./indexing/ignore.js";
+import path from "path";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -704,40 +706,16 @@ export class Core {
       const url = await getAuthUrlForTokenPage();
       return { url };
     });
+
     on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
-      let dirs = await this.ide.getWorkspaceDirs();
-      let memoizedFunction = await this.memoizedFunction(dirs);
-      if (memoizedFunction.includes(filepath)) {
-        console.log("yep running");
+      const ignoreInstance = ignore().add(defaultIgnoreFile);
+      let rootDirectory = await this.ide.getWorkspaceDirs();
+      const relativeFilePath = path.relative(rootDirectory[0], filepath);
+      if (!ignoreInstance.ignores(relativeFilePath)) {
         recentlyEditedFilesCache.set(filepath, filepath);
       }
     });
   }
-
-  private memoize<T extends (...args: any[]) => Promise<any>>(
-    fn: T,
-  ): (...args: Parameters<T>) => Promise<ReturnType<T>> {
-    const cache = new Map<string, Promise<ReturnType<T>>>();
-
-    return async function (...args: Parameters<T>): Promise<ReturnType<T>> {
-      const key = JSON.stringify(args);
-      if (cache.has(key)) {
-        return cache.get(key) as Promise<ReturnType<T>>;
-      }
-      const result = await fn(...args);
-      cache.set(key, Promise.resolve(result));
-      return result;
-    };
-  }
-
-  private async checkIgnoredFiles(dirs: string[]): Promise<string[]> {
-    console.log("called");
-    const paths = await walkDir(dirs[0], this.ide);
-    return paths;
-  }
-
-  // Memoize the async checkIgnoredFiles function
-  memoizedFunction = this.memoize(this.checkIgnoredFiles.bind(this));
 
   private indexingCancellationController: AbortController | undefined;
 
