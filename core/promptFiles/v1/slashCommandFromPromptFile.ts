@@ -1,10 +1,10 @@
-import { SlashCommand } from "..";
-import { stripImages } from "../llm/images";
+import * as YAML from "yaml";
+import { SlashCommand } from "../..";
+import { stripImages } from "../../llm/images";
+import { getBasename } from "../../util/index";
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
 import { updateChatHistory } from "./updateChatHistory";
-import * as YAML from "yaml";
-import { getBasename } from "../util/index";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getBasename(path).split(".prompt")[0];

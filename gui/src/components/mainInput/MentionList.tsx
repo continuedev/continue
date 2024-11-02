@@ -6,6 +6,7 @@ import {
   BookOpenIcon,
   CodeBracketIcon,
   CommandLineIcon,
+  DocumentTextIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
@@ -21,6 +22,7 @@ import {
 import { Editor } from "@tiptap/react";
 import {
   forwardRef,
+  useContext,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -36,6 +38,7 @@ import {
   vscListActiveForeground,
   vscQuickInputBackground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   setDialogMessage,
   setShowDialog,
@@ -61,6 +64,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   issue: ExclamationCircleIcon,
   trash: TrashIcon,
   web: GlobeAltIcon,
+  "prompt-files": DocumentTextIcon,
   "repo-map": FolderIcon,
   "/edit": PencilIcon,
   "/clear": TrashIcon,
@@ -177,6 +181,8 @@ interface MentionListProps {
 const MentionList = forwardRef((props: MentionListProps, ref) => {
   const dispatch = useDispatch();
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
@@ -207,6 +213,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           );
         },
         description: "Add a new documentation source",
+      });
+    } else if (subMenuTitle === ".prompt files") {
+      items.push({
+        title: "New .prompt file",
+        type: "action",
+        action: () => {
+          ideMessenger.request("config/newPromptFile", undefined);
+        },
+        description: "Create a new .prompt file",
       });
     }
 
@@ -375,7 +390,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                 onClick={() => selectItem(index)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
-                <span className="flex justify-between w-full items-center">
+                <span className="flex w-full items-center justify-between">
                   <div className="flex items-center justify-center">
                     {showFileIconForItem(item) && (
                       <FileIcon
@@ -400,7 +415,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                       opacity: index !== selectedIndex ? 0 : 1,
                       minWidth: "30px",
                     }}
-                    className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
+                    className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap"
                   >
                     {item.description}
                     {item.type === "contextProvider" &&

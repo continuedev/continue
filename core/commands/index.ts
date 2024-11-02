@@ -1,6 +1,6 @@
 import { CustomCommand, SlashCommand, SlashCommandDescription } from "../";
 import { stripImages } from "../llm/images";
-import { renderTemplatedString } from "../promptFiles/renderTemplatedString";
+import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
 import SlashCommands from "./slash";
 
 export function slashFromCustomCommand(
