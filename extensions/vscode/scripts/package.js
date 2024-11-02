@@ -16,7 +16,7 @@ const isPreRelease = args.includes("--pre-release");
 
 let command = isPreRelease
   ? "npx vsce package --out ./build patch --pre-release --no-dependencies" // --yarn"
-  : "npx vsce package --out ./build patch --no-dependencies"; // --yarn";
+  : "npx vsce package --out ./build --no-dependencies"; // --yarn";
 
 if (target) {
   command += ` --target ${target}`;
