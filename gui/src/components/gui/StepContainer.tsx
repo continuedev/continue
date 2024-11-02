@@ -17,6 +17,7 @@ import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton } from "../markdown/CopyButton";
+import { CopyChatHistoryItemButton } from "../markdown/CopyPromptLogsButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -117,9 +118,16 @@ function StepContainer(props: StepContainerProps) {
             </ButtonWithTooltip>
           )}
 
+          <CopyChatHistoryItemButton
+            tabIndex={-1}
+            chatHistoryItem={props.item}
+            logsIconClassName="h-3.5 w-3.5 text-gray-500"
+            checkIconClassName="h-3.5 w-3.5 text-green-400"
+          />
+
           {props.index !== 1 && (
             <ButtonWithTooltip
-              text="Delete"
+              text={"Delete"}
               tabIndex={-1}
               onClick={props.onDelete}
             >
@@ -131,6 +139,7 @@ function StepContainer(props: StepContainerProps) {
             tabIndex={-1}
             text={stripImages(props.item.message.content)}
             clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
+            checkIconClassName="h-3.5 w-3.5 text-green-400"
           />
 
           <ButtonWithTooltip
