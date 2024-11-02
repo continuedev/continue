@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
+import { RangeInFileWithContents } from "core/commands/util";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
@@ -27,6 +28,7 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalDiffManager } from "./diff/vertical/manager";
+import EditDecorationManager from "./quickEdit/EditDecorationManager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import { getFullyQualifiedPath } from "./util/util";
@@ -88,20 +90,20 @@ function addCodeToContextFromRange(
   });
 }
 
-async function addHighlightedCodeToContext(
-  webviewProtocol: VsCodeWebviewProtocol | undefined,
-) {
+function getCurrentlyHighlightedCode(
+  allowEmpty?: boolean,
+): RangeInFileWithContents | null {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const selection = editor.selection;
-    if (selection.isEmpty) {
-      return;
+    if (selection.isEmpty && !allowEmpty) {
+      return null;
     }
     // adjust starting position to include indentation
     const start = new vscode.Position(selection.start.line, 0);
     const range = new vscode.Range(start, selection.end);
     const contents = editor.document.getText(range);
-    const rangeInFileWithContents = {
+    return {
       filepath: editor.document.uri.fsPath,
       contents,
       range: {
@@ -115,7 +117,15 @@ async function addHighlightedCodeToContext(
         },
       },
     };
+  }
+  return null;
+}
 
+async function addHighlightedCodeToContext(
+  webviewProtocol: VsCodeWebviewProtocol | undefined,
+) {
+  const rangeInFileWithContents = getCurrentlyHighlightedCode();
+  if (rangeInFileWithContents) {
     webviewProtocol?.request("highlightedCode", {
       rangeInFileWithContents,
     });
@@ -188,6 +198,7 @@ const commandsMap: (
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
+  editDecorationManager: EditDecorationManager,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -199,6 +210,7 @@ const commandsMap: (
   battery,
   quickEdit,
   core,
+  editDecorationManager,
 ) => {
   /**
    * Streams an inline edit to the vertical diff manager.
@@ -255,6 +267,9 @@ const commandsMap: (
 
       verticalDiffManager.clearForFilepath(fullPath, true);
       await diffManager.acceptDiff(fullPath);
+      await sidebar.webviewProtocol.request("setEditStatus", {
+        status: "done",
+      });
     },
     "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("rejectDiff");
@@ -269,6 +284,9 @@ const commandsMap: (
 
       verticalDiffManager.clearForFilepath(fullPath, false);
       await diffManager.rejectDiff(fullPath);
+      await sidebar.webviewProtocol.request("setEditStatus", {
+        status: "done",
+      });
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
@@ -361,8 +379,54 @@ const commandsMap: (
         await addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
+    "continue.edit": async () => {
+      captureCommandTelemetry("edit");
+      const fullScreenTab = getFullScreenTab();
+      if (!fullScreenTab) {
+        // focus sidebar
+        vscode.commands.executeCommand("continue.continueGUIView.focus");
+      } else {
+        // focus fullscreen
+        fullScreenPanel?.reveal();
+      }
+
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return;
+      }
+
+      editDecorationManager.setDecoration(
+        editor,
+        new vscode.Range(editor.selection.start, editor.selection.end),
+      );
+
+      const highlightedCode = getCurrentlyHighlightedCode(true)!;
+      await sidebar.webviewProtocol?.request("startEditMode", {
+        highlightedCode,
+      });
+
+      // Un-select the current selection
+      editor.selection = new vscode.Selection(
+        editor.selection.anchor,
+        editor.selection.anchor,
+      );
+
+      setTimeout(() => {
+        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+      }, 30);
+    },
+    "continue.exitEditMode": async () => {
+      captureCommandTelemetry("exitEditMode");
+      await sidebar.webviewProtocol?.request("exitEditMode", undefined);
+    },
     "continue.quickEdit": async (args: QuickEditShowParams) => {
-      captureCommandTelemetry("quickEdit");
+      let linesOfCode = undefined;
+      if (args.range) {
+        linesOfCode = args.range.end.line - args.range.start.line;
+      }
+      captureCommandTelemetry("quickEdit", {
+        linesOfCode,
+      });
       quickEdit.show(args);
     },
     "continue.writeCommentsForCode": async () => {
@@ -753,6 +817,7 @@ export function registerAllCommands(
   battery: Battery,
   quickEdit: QuickEdit,
   core: Core,
+  editDecorationManager: EditDecorationManager,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -766,6 +831,7 @@ export function registerAllCommands(
       battery,
       quickEdit,
       core,
+      editDecorationManager,
     ),
   )) {
     context.subscriptions.push(

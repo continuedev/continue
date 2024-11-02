@@ -183,6 +183,18 @@
         "group": "Continue"
       },
       {
+        "command": "continue.edit",
+        "category": "Continue",
+        "title": "Edit code with natural language",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.exitEditMode",
+        "category": "Continue",
+        "title": "Exit Edit Mode",
+        "group": "Continue"
+      },
+      {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
         "title": "Toggle Full Screen",
@@ -339,8 +351,19 @@
       },
       {
         "command": "continue.quickEdit",
+        "mac": "cmd+shift+i",
+        "key": "ctrl+shift+i"
+      },
+      {
+        "command": "continue.edit",
         "mac": "cmd+i",
         "key": "ctrl+i"
+      },
+      {
+        "command": "continue.exitEditMode",
+        "mac": "escape",
+        "key": "escape",
+        "when": "continue.inEditMode && editorFocus"
       },
       {
         "command": "continue.debugTerminal",

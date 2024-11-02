@@ -55,7 +55,7 @@ import {
 import { handleMetaKeyPressJetBrains } from "../../util/handleMetaKeyPressJetBrains";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
-import InputToolbar from "./InputToolbar";
+import InputToolbar, { ToolbarOptions } from "./InputToolbar";
 import { Mention } from "./MentionExtension";
 import "./TipTapEditor.css";
 import {
@@ -64,18 +64,18 @@ import {
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
 
-const InputBoxDiv = styled.div`
+const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
-  padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
   margin: 0;
   height: auto;
-  width: calc(100% - 24px);
+  width: 100%;
   background-color: ${vscInputBackground};
   color: ${vscForeground};
-  border: 0.5px solid ${vscInputBorder};
+  border: ${(props) =>
+    props.border ? props.border : `0.5px solid ${vscInputBorder}`};
   outline: none;
   font-size: ${getFontSize()}px;
   &:focus {
@@ -90,6 +90,11 @@ const InputBoxDiv = styled.div`
 
   display: flex;
   flex-direction: column;
+`;
+
+const PaddingDiv = styled.div`
+  padding: 8px 12px;
+  padding-bottom: 4px;
 `;
 
 const HoverDiv = styled.div`
@@ -141,8 +146,17 @@ interface TipTapEditorProps {
   availableContextProviders: ContextProviderDescription[];
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
-  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
+  onEnter: (
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    editor: Editor,
+  ) => void;
   editorState?: JSONContent;
+  toolbarOptions?: ToolbarOptions;
+  border?: string;
+  placeholder?: string;
+  header?: React.ReactNode;
+  historyKey: string;
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
@@ -285,7 +299,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootState) => store.state.mainEditorContent,
   );
 
-  const { prevRef, nextRef, addRef } = useInputHistory();
+  const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
   function getPlaceholder() {
     if (!hasDefaultModel) {
@@ -337,7 +351,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Placeholder.configure({
-        placeholder: getPlaceholder,
+        placeholder:
+          props.placeholder ??
+          (historyLengthRef.current === 0
+            ? "Ask anything, '/' for slash commands, '@' to add context"
+            : "Ask a follow-up"),
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {
@@ -429,37 +447,41 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Text,
-      Mention.configure({
-        HTMLAttributes: {
-          class: "mention",
-        },
-        suggestion: getContextProviderDropdownOptions(
-          availableContextProvidersRef,
-          getSubmenuContextItemsRef,
-          enterSubmenu,
-          onClose,
-          onOpen,
-          inSubmenuRef,
-          ideMessenger,
-        ),
-        renderHTML: (props) => {
-          return `@${props.node.attrs.label || props.node.attrs.id}`;
-        },
-      }),
-      SlashCommand.configure({
-        HTMLAttributes: {
-          class: "mention",
-        },
-        suggestion: getSlashCommandDropdownOptions(
-          availableSlashCommandsRef,
-          onClose,
-          onOpen,
-          ideMessenger,
-        ),
-        renderText: (props) => {
-          return props.node.attrs.label;
-        },
-      }),
+      props.availableContextProviders.length
+        ? Mention.configure({
+            HTMLAttributes: {
+              class: "mention",
+            },
+            suggestion: getContextProviderDropdownOptions(
+              availableContextProvidersRef,
+              getSubmenuContextItemsRef,
+              enterSubmenu,
+              onClose,
+              onOpen,
+              inSubmenuRef,
+              ideMessenger,
+            ),
+            renderHTML: (props) => {
+              return `@${props.node.attrs.label || props.node.attrs.id}`;
+            },
+          })
+        : undefined,
+      props.availableSlashCommands.length
+        ? SlashCommand.configure({
+            HTMLAttributes: {
+              class: "mention",
+            },
+            suggestion: getSlashCommandDropdownOptions(
+              availableSlashCommandsRef,
+              onClose,
+              onOpen,
+              ideMessenger,
+            ),
+            renderText: (props) => {
+              return props.node.attrs.label;
+            },
+          })
+        : undefined,
       CodeBlockExtension,
     ],
     editorProps: {
@@ -639,12 +661,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      props.onEnter(json, modifiers);
+      props.onEnter(json, modifiers, editor);
 
       if (props.isMainInput) {
         const content = editor.state.toJSON().doc;
         addRef.current(content);
-        editor.commands.clearContent(true);
       }
     },
     [props.onEnter, editor, props.isMainInput],
@@ -859,6 +880,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   return (
     <InputBoxDiv
+      border={props.border}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       className="cursor-text"
@@ -903,31 +925,36 @@ function TipTapEditor(props: TipTapEditorProps) {
         event.preventDefault();
       }}
     >
-      <EditorContent
-        spellCheck={false}
-        editor={editor}
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
-      />
-      <InputToolbar
-        activeKey={activeKey}
-        hidden={shouldHideToolbar && !props.isMainInput}
-        onAddContextItem={() => insertCharacterWithWhitespace("@")}
-        onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
-        onEnter={onEnterRef.current}
-        onImageFileSelected={(file) => {
-          handleImageFile(file).then(([img, dataUrl]) => {
-            const { schema } = editor.state;
-            const node = schema.nodes.image.create({ src: dataUrl });
-            editor.commands.command(({ tr }) => {
-              tr.insert(0, node);
-              return true;
+      <div>{props.header}</div>
+
+      <PaddingDiv>
+        <EditorContent
+          spellCheck={false}
+          editor={editor}
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+        />
+        <InputToolbar
+          toolbarOptions={props.toolbarOptions}
+          activeKey={activeKey}
+          hidden={shouldHideToolbar && !props.isMainInput}
+          onAddContextItem={() => insertCharacterWithWhitespace("@")}
+          onAddSlashCommand={() => insertCharacterWithWhitespace("/")}
+          onEnter={onEnterRef.current}
+          onImageFileSelected={(file) => {
+            handleImageFile(file).then(([img, dataUrl]) => {
+              const { schema } = editor.state;
+              const node = schema.nodes.image.create({ src: dataUrl });
+              editor.commands.command(({ tr }) => {
+                tr.insert(0, node);
+                return true;
+              });
             });
-          });
-        }}
-        disabled={active}
-      />
+          }}
+          disabled={active}
+        />
+      </PaddingDiv>
 
       {showDragOverMsg &&
         modelSupportsImages(
