@@ -1,5 +1,5 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { JSONContent } from "@tiptap/core";
+import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
 import { getBasename } from "core/util";
 import { usePostHog } from "posthog-js/react";
@@ -162,6 +162,7 @@ function Edit() {
               onEnter={async function (
                 editorState: JSONContent,
                 modifiers: InputModifiers,
+                editor: Editor,
               ): Promise<void> {
                 const [_, __, prompt] = await resolveEditorContent(
                   editorState,

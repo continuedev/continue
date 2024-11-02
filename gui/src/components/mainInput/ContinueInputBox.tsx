@@ -1,4 +1,4 @@
-import { JSONContent } from "@tiptap/react";
+import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,7 +14,11 @@ import TipTapEditor from "./TipTapEditor";
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
-  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
+  onEnter: (
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    editor: Editor,
+  ) => void;
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
   hidden?: boolean;
@@ -116,7 +120,12 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         >
           <TipTapEditor
             editorState={props.editorState}
-            onEnter={props.onEnter}
+            onEnter={(...args) => {
+              props.onEnter(...args);
+              if (props.isMainInput) {
+                args[2].commands.clearContent(true);
+              }
+            }}
             isMainInput={props.isMainInput ?? false}
             availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}

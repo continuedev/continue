@@ -146,7 +146,11 @@ interface TipTapEditorProps {
   availableContextProviders: ContextProviderDescription[];
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
-  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
+  onEnter: (
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    editor: Editor,
+  ) => void;
   editorState?: JSONContent;
   toolbarOptions?: ToolbarOptions;
   border?: string;
@@ -657,12 +661,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
 
-      props.onEnter(json, modifiers);
+      props.onEnter(json, modifiers, editor);
 
       if (props.isMainInput) {
         const content = editor.state.toJSON().doc;
         addRef.current(content);
-        editor.commands.clearContent(true);
       }
     },
     [props.onEnter, editor, props.isMainInput],
