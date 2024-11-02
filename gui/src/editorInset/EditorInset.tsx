@@ -52,6 +52,7 @@ function EditorInset() {
         onEnter={(e, modifiers) => {
           console.log("Enter: ", e, modifiers);
         }}
+        historyKey="chat"
       ></TipTapEditor>
     </EditorInsetDiv>
   );
