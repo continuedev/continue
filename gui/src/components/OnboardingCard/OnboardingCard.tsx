@@ -26,10 +26,10 @@ export function OnboardingCard(props: OnboardingCardProps) {
 
   function renderTabContent() {
     switch (onboardingCard.activeTab) {
-      case "Quickstart":
-        return <Tabs.Quickstart />;
-      case "Best":
-        return <Tabs.Best />;
+      // case "Quickstart":
+      //   return <Tabs.Quickstart />;
+      // case "Best":
+      //   return <Tabs.Best />;
       case "Local":
         return <Tabs.Local />;
       default:

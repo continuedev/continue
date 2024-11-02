@@ -84,6 +84,8 @@ function OnboardingLocalTab() {
   }, []);
 
   return (
+    <div></div>
+/*
     <div className="flex flex-col gap-2">
       <div className="flex flex-col">
         <p className="mb-2 text-lg font-bold leading-tight">Install Ollama</p>
@@ -123,6 +125,7 @@ function OnboardingLocalTab() {
         <AddModelButtonSubtext />
       </div>
     </div>
+*/
   );
 }
 
