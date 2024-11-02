@@ -1,5 +1,6 @@
-import { JSONContent } from "@tiptap/react";
+import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
@@ -9,12 +10,15 @@ import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
-import { useState, useRef, useEffect } from "react";
 
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
-  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
+  onEnter: (
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    editor: Editor,
+  ) => void;
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
   hidden?: boolean;
@@ -105,8 +109,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   }, [isGatheringContextStore]);
 
   return (
-    <div className={`mt-3 mb-1 ${props.hidden ? "hidden" : ""}`}>
-      <div className={`flex px-2 relative`}>
+    <div className={`mb-1 mt-3 ${props.hidden ? "hidden" : ""}`}>
+      <div className={`relative flex px-2`}>
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}
           borderColor={
@@ -116,10 +120,16 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         >
           <TipTapEditor
             editorState={props.editorState}
-            onEnter={props.onEnter}
+            onEnter={(...args) => {
+              props.onEnter(...args);
+              if (props.isMainInput) {
+                args[2].commands.clearContent(true);
+              }
+            }}
             isMainInput={props.isMainInput ?? false}
             availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}
+            historyKey="chat"
           />
         </GradientBorder>
       </div>

@@ -23,13 +23,13 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-  vscForeground,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
+import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import {
   OnboardingCard,
@@ -84,11 +84,15 @@ const StopButton = styled.div`
   padding: 4px 8px;
   color: ${lightGray};
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.3s ease;
 
   &:hover {
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 6px 8px rgba(0, 0, 0, 0.15),
+      0 3px 6px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -103,26 +107,6 @@ const StepsDiv = styled.div`
   .thread-message {
     margin: 8px 4px 0 4px;
   }
-`;
-
-const NewSessionButton = styled.div`
-  width: fit-content;
-  margin-right: auto;
-  margin-left: 6px;
-  margin-top: 2px;
-  margin-bottom: 8px;
-  font-size: ${getFontSize() - 2}px;
-
-  border-radius: ${defaultBorderRadius};
-  padding: 2px 6px;
-  color: ${lightGray};
-
-  &:hover {
-    background-color: ${lightGray}33;
-    color: ${vscForeground};
-  }
-
-  cursor: pointer;
 `;
 
 function fallbackRender({ error, resetErrorBoundary }: any) {
@@ -234,7 +218,7 @@ export function Chat() {
         if (currentCount === 300) {
           dispatch(
             setDialogMessage(
-              <div className="text-center p-4">
+              <div className="p-4 text-center">
                 👋 Thanks for using Continue. We are always trying to improve
                 and love hearing from users. If you're interested in speaking,
                 enter your name and email. We won't use this information for
@@ -250,7 +234,7 @@ export function Chat() {
                     });
                     dispatch(
                       setDialogMessage(
-                        <div className="text-center p-4">
+                        <div className="p-4 text-center">
                           Thanks! We'll be in touch soon.
                         </div>,
                       ),
@@ -331,7 +315,7 @@ export function Chat() {
         onScroll={handleScroll}
         showScrollbar={state.config.ui?.showChatScrollbar || false}
       >
-        <div className="max-w-3xl m-auto">
+        <div className="m-auto max-w-3xl">
           <StepsDiv>
             {state.history.map((item, index: number) => (
               <Fragment key={item.message.id}>
@@ -447,14 +431,14 @@ export function Chat() {
               <br />
             </>
           ) : state.history.length > 0 ? (
-            <div className="mt-2 hidden xs:inline">
+            <div className="xs:inline mt-2 hidden">
               <NewSessionButton
                 onClick={() => {
                   saveSession();
                 }}
                 className="mr-auto"
               >
-                <span className="hidden xs:inline">
+                <span className="xs:inline hidden">
                   New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
                 </span>
               </NewSessionButton>{" "}
@@ -462,7 +446,7 @@ export function Chat() {
           ) : (
             <>
               {getLastSessionId() ? (
-                <div className="mt-2 hidden xs:inline">
+                <div className="xs:inline mt-2 hidden">
                   <NewSessionButton
                     onClick={async () => {
                       loadLastSession().catch((e) =>
@@ -471,20 +455,20 @@ export function Chat() {
                     }}
                     className="mr-auto flex items-center gap-2"
                   >
-                    <ArrowLeftIcon className="w-3 h-3" />
+                    <ArrowLeftIcon className="h-3 w-3" />
                     Last Session
                   </NewSessionButton>
                 </div>
               ) : null}
 
               {onboardingCard.show && (
-                <div className="mt-10 mx-2">
+                <div className="mx-2 mt-10">
                   <OnboardingCard activeTab={onboardingCard.activeTab} />
                 </div>
               )}
 
               {showTutorialCard !== false && !onboardingCard.open && (
-                <div className="flex justify-center w-full">
+                <div className="flex w-full justify-center">
                   <TutorialCard onClose={closeTutorialCard} />
                 </div>
               )}
@@ -501,7 +485,7 @@ export function Chat() {
 
       {ttsActive && (
         <StopButton
-          className="mt-2 mb-4"
+          className="mb-4 mt-2"
           onClick={() => {
             ideMessenger.post("tts/kill", undefined);
           }}
@@ -511,7 +495,7 @@ export function Chat() {
       )}
       {active && (
         <StopButton
-          className="mt-auto mb-4"
+          className="mb-4 mt-auto"
           onClick={() => {
             dispatch(setInactive());
             if (
