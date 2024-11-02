@@ -5,6 +5,7 @@ import { isJetBrains } from "../../../util";
 import ButtonWithTooltip from "../../ButtonWithTooltip";
 import { ChatHistoryItem } from "core";
 import { formattedChatHistoryItem } from "./format";
+import { usePostHog } from "posthog-js/react";
 
 interface CopyChatHistoryItemButtonProps {
   chatHistoryItem: ChatHistoryItem;
@@ -20,6 +21,7 @@ export function CopyChatHistoryItemButton({
   logsIconClassName = "h-4 w-4 text-gray-400",
 }: CopyChatHistoryItemButtonProps) {
   const [copied, setCopied] = useState<boolean>(false);
+  const posthog = usePostHog()
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -42,6 +44,8 @@ export function CopyChatHistoryItemButton({
 
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
+
+          posthog?.capture('clicked_copy_chat_history_logs')
         }}
       >
         {copied ? (
