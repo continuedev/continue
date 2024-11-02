@@ -360,6 +360,12 @@
         "key": "ctrl+i"
       },
       {
+        "command": "continue.exitEditMode",
+        "mac": "escape",
+        "key": "escape",
+        "when": "continue.inEditMode && editorFocus"
+      },
+      {
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
