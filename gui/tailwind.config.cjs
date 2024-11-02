@@ -8,6 +8,10 @@ module.exports = {
       "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
     },
     colors: {
+      progress: {
+        background: "var(--input-background)", // background of the progress bar
+        foreground: "var(--button-background)", // the actual progress indicator
+      },    
       background: "var(--background)",
       foreground: "var(--foreground)",
       button: {

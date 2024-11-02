@@ -34,6 +34,7 @@ export default function Inventory() {
     setActiveTab(tab);
   }, [location]);
 
+
   // listen for navigation change requests from vscode
   useWebviewListener(
     "navigateToCreator",

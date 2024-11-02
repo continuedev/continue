@@ -89,6 +89,15 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   authenticatePear: [undefined, void];
   getCurrentDirectory: [undefined, string];
 
+  // new welcome page
+  markNewOnboardingComplete: [undefined, void];
+  importUserSettingsFromVSCode: [undefined, void];
+  pearWelcomeOpenFolder: [undefined, void];
+  pearInstallCommandLine: [undefined, void];
+  
+  // overlay
+  lockOverlay: [undefined, void];
+  unlockOverlay: [undefined, void];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {

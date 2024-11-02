@@ -79,6 +79,26 @@ export class VsCodeMessenger {
     private readonly workOsAuthProvider: WorkOsAuthProvider,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
+    // welcome stuff
+    this.onWebview("markNewOnboardingComplete", (msg) => {
+      vscode.commands.executeCommand("pearai.welcome.markNewOnboardingComplete");
+    });
+    this.onWebview("lockOverlay", (msg) => {
+      vscode.commands.executeCommand("pearai.lockOverlay");
+    });
+    this.onWebview("unlockOverlay", (msg) => {
+      vscode.commands.executeCommand("pearai.unlockOverlay");
+    });
+    this.onWebview("importUserSettingsFromVSCode", (msg) => {
+      vscode.commands.executeCommand("pearai.welcome.importUserSettingsFromVSCode");
+    });
+    this.onWebview("pearWelcomeOpenFolder", (msg) => {
+      vscode.commands.executeCommand("workbench.action.files.openFolder");
+    });
+    this.onWebview("pearInstallCommandLine", (msg) => {
+      vscode.commands.executeCommand("workbench.action.installCommandLine");
+    });
+    // END welcome stuff
     this.onWebview("showFile", (msg) => {
       this.ide.openFile(msg.data.filepath);
     });

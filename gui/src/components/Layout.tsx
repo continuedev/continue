@@ -130,7 +130,8 @@ const HIDE_FOOTER_ON_PAGES = [
   "/aiderMode",
   "/inventory",
   "/inventory/aiderMode",
-  "/inventory/perplexityMode"
+  "/inventory/perplexityMode",
+  "/welcome"
 ];
 
 const SHOW_SHORTCUTS_ON_PAGES = ["/"];

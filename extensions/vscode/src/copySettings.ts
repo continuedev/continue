@@ -3,14 +3,22 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
+export const FIRST_LAUNCH_KEY = 'pearai.firstLaunch';
 const pearAISettingsDir = path.join(os.homedir(), '.pearai');
 const pearAIDevExtensionsDir = path.join(os.homedir(), '.pearai', 'extensions');
 
 const firstLaunchFlag = path.join(pearAISettingsDir, 'firstLaunch.flag');
-export const isFirstLaunch = !fs.existsSync(firstLaunchFlag);
 const firstPearAICreatorLaunchFlag = path.join(pearAISettingsDir, 'firstLaunchCreator.flag');
 export const isFirstPearAICreatorLaunch = !fs.existsSync(firstPearAICreatorLaunchFlag);
 
+// Removed file based flag migration, we show new onboarding to old users
+export function isFirstLaunch(context: vscode.ExtensionContext): boolean {
+    const stateExists = context.globalState.get<boolean>(FIRST_LAUNCH_KEY);
+    console.log("isFirstLaunch");
+    console.log(!stateExists);
+    // If state is set and is true, it's not first launch
+    return !stateExists;
+}
 
 
 function getPearAISettingsDir() {
@@ -109,18 +117,31 @@ function copyDirectoryRecursiveSync(source: string, destination: string, exclusi
     });
 }
 
-export function importUserSettingsFromVSCode() {
+
+export async function importUserSettingsFromVSCode() {
     // this function is synchronous and copying files takes time
     // thats why run it after 3 seconds, until which extension activates.
+    // todo: route to onboarding hello page
     setTimeout(() => {
-        if (!fs.existsSync(firstLaunchFlag)) {
+        try {
+            // TODO: THIS MSG SHOULD BE IN OVERLAY
             vscode.window.showInformationMessage('Copying your current VSCode settings and extensions over to PearAI!');
             copyVSCodeSettingsToPearAIDir();
-            fs.writeFileSync(firstLaunchFlag, 'This is the first launch flag file');
-            vscode.window.showInformationMessage('Your VSCode settings and extensions have been transferred over to PearAI! You may need to restart your editor for the changes to take effect.', 'Ok');
-        }
-    }, 3000);
+            // No longer write flag to a file, just set state
+            // fs.writeFileSync(firstLaunchFlag, 'This is the first launch flag file');
 
+            // TODO: THIS MSG SHOULD BE IN OVERLAY
+            vscode.window.showInformationMessage('Your VSCode settings and extensions have been transferred over to PearAI! You may need to restart your editor for the changes to take effect.', 'Ok');
+        } catch (error) {
+            // TODO: DISPLAY ERROR MSG IN OVERLAY
+            vscode.window.showErrorMessage(`Failed to copy settings: ${error}`);
+        }
+
+    }, 3000);
+}
+
+export async function markCreatorOnboardingCompleteFileBased() {
+    // todo: use global state for this as well
     setTimeout(() => {
         const flagFile = firstPearAICreatorLaunchFlag;
         const productName ='PearAI Creator';

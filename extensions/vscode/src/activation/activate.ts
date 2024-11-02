@@ -8,7 +8,7 @@ import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
-import { isFirstLaunch, importUserSettingsFromVSCode } from "../copySettings";
+import { isFirstLaunch } from "../copySettings";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
@@ -21,21 +21,30 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const vscodeExtension = new VsCodeExtension(context);
 
-  setupPearAppLayout();
+  setupPearAPPLayout(context);
 
-  migrate("showWelcome_1", () => {
-    vscode.commands.executeCommand(
-      "markdown.showPreview",
-      vscode.Uri.file(
-        path.join(getExtensionUri().fsPath, "media", "welcome.md"),
-      ),
-    );
+  // migrate("showWelcome_1", () => {
+  //   vscode.commands.executeCommand(
+  //     "markdown.showPreview",
+  //     vscode.Uri.file(
+  //       path.join(getExtensionUri().fsPath, "media", "welcome.md"),
+  //     ),
+  //   );
 
-    vscode.commands.executeCommand("pearai.focusContinueInput");
-  });
+  //   vscode.commands.executeCommand("pearai.focusContinueInput");
+  // });
 
-  vscode.commands.executeCommand("pearai.focusContinueInput");
-  importUserSettingsFromVSCode();
+
+  // for DEV'ing welcome page
+  // if (true || isFirstLaunch(context)) {
+  //   vscode.commands.executeCommand("pearai.startOnboarding");
+  // }
+  
+  if (isFirstLaunch(context)) {
+    vscode.commands.executeCommand("pearai.startOnboarding");
+  }
+  
+  // vscode.commands.executeCommand("pearai.focusContinueInput");
 
   // Load PearAI configuration
   if (!context.globalState.get("hasBeenInstalled")) {
@@ -65,7 +74,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 }
 
 // Custom Layout settings that we want default for PearAPP
-const setupPearAppLayout = () => {
+const setupPearAPPLayout = async (context: vscode.ExtensionContext) => {
   // * always * move pearai extension to auxiliary bar (secondary side bar)
   vscode.commands.executeCommand("workbench.action.movePearExtensionToAuxBar");
 
@@ -73,7 +82,7 @@ const setupPearAppLayout = () => {
   vscode.commands.executeCommand("workbench.action.activityBarLocation.top");
 
   // Apply the remaining layout settings only on the first launch
-  if (isFirstLaunch) {
+  if (isFirstLaunch(context)) {
     return;
   }
 

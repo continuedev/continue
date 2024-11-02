@@ -177,6 +177,12 @@
         "group": "PearAI"
       },
       {
+        "command": "pearai.developer.restFirstLaunch",
+        "category": "PearAI Developer",
+        "title": "Reset PearAI Onboarding",
+        "group": "PearAI"
+      },
+      {
         "command": "pearai.focusContinueInput",
         "category": "PearAI",
         "title": "Add Highlighted Code to Context",

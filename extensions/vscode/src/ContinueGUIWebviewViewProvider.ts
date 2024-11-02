@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { isFirstLaunch } from "./copySettings";
 
 // The overlay's webview title/id is defined in pearai-app's PearOverlayParts.ts
 // A unique identifier is needed for the messaging protocol to distinguish the webviews.
@@ -236,6 +237,7 @@ export class ContinueGUIWebviewViewProvider
             (folder) => folder.uri.fsPath,
           ) || [],
         )}</script>
+        <script>window.isFirstLaunch = ${isFirstLaunch(this.extensionContext)}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
         <script>window.isPearOverlay = ${isOverlay}</script>
         <script>window.initialRoute = "${initialRoute}"</script>

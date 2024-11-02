@@ -75,34 +75,6 @@ function ConfigureProvider() {
     }
   }, [providerName]);
 
-  // this runs when user successfully logins pearai
-  useWebviewListener(
-    "addPearAIModel",
-    async () => {
-      const pkg = modelInfo.packages[0];
-      const dimensionChoices =
-        pkg.dimensions?.map((d) => Object.keys(d.options)[0]) || [];
-      const model = {
-        ...pkg.params,
-        ...modelInfo.params,
-        ..._.merge(
-          {},
-          ...(pkg.dimensions?.map((dimension, i) => {
-            if (!dimensionChoices?.[i]) return {};
-            return {
-              ...dimension.options[dimensionChoices[i]],
-            };
-          }) || []),
-        ),
-        provider: modelInfo.provider,
-      };
-      // ideMessenger.post("config/addModel", { model });
-      dispatch(setDefaultModel({ title: model.title, force: true }));
-      navigate("/");
-    },
-    [modelInfo, providerName],
-  );
-
   const handleContinue = () => {
     if (!modelInfo) return;
 

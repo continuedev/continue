@@ -18,7 +18,7 @@ class ContinueQuickFixProvider implements vscode.CodeActionProvider {
     const diagnostic = context.diagnostics[0];
 
     const quickFix = new vscode.CodeAction(
-      "Ask PearAI",
+      "Fix with PearAI",
       vscode.CodeActionKind.QuickFix,
     );
 

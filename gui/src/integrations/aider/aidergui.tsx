@@ -259,18 +259,6 @@ function AiderGUI() {
                 your project. Creator will make and apply the changes to your
                 files directly.
               </p>
-              {state.aiderHistory.length > 0 && (
-                <div className="mt-2">
-                  <NewSessionButton
-                    onClick={() => {
-                      saveSession();
-                    }}
-                    className="mr-auto"
-                  >
-                    Clear chat
-                  </NewSessionButton>
-                </div>
-              )}
             </div>
           </div>
           <>
