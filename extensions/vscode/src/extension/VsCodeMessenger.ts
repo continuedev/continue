@@ -1,6 +1,7 @@
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
+import { stripImages } from "core/llm/images";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -20,6 +21,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
@@ -79,6 +81,7 @@ export class VsCodeMessenger {
     private readonly verticalDiffManagerPromise: Promise<VerticalDiffManager>,
     private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly workOsAuthProvider: WorkOsAuthProvider,
+    private readonly editDecorationManager: EditDecorationManager,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -160,7 +163,9 @@ export class VsCodeMessenger {
 
       // If document is empty, insert at 0,0 and finish
       if (!editor.document.getText().trim()) {
-        editor.edit(builder => builder.insert(new vscode.Position(0, 0), data.text));
+        editor.edit((builder) =>
+          builder.insert(new vscode.Position(0, 0), data.text),
+        );
         await webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
           status: "done",
@@ -175,7 +180,9 @@ export class VsCodeMessenger {
       let llm = getModelByRole(config, "applyCodeBlock");
 
       if (!llm) {
-        llm = config.models.find((model) => model.title === data.curSelectedModelTitle);
+        llm = config.models.find(
+          (model) => model.title === data.curSelectedModelTitle,
+        );
 
         if (!llm) {
           vscode.window.showErrorMessage(
@@ -262,6 +269,57 @@ export class VsCodeMessenger {
           msg.data.text,
         );
       });
+    });
+    this.onWebview("edit/sendPrompt", async (msg) => {
+      const prompt = msg.data.prompt;
+      const { start, end } = msg.data.range.range;
+      const verticalDiffManager = await verticalDiffManagerPromise;
+      const modelTitle = await this.webviewProtocol.request(
+        "getDefaultModelTitle",
+        undefined,
+      );
+      await verticalDiffManager.streamEdit(
+        stripImages(prompt),
+        modelTitle,
+        undefined,
+        undefined,
+        undefined,
+        new vscode.Range(
+          new vscode.Position(start.line, start.character),
+          new vscode.Position(end.line, end.character),
+        ),
+      );
+
+      this.webviewProtocol.request("setEditStatus", {
+        status: "accepting",
+      });
+    });
+    this.onWebview("edit/acceptReject", async (msg) => {
+      const { onlyFirst, accept, filepath } = msg.data;
+      if (accept && onlyFirst) {
+        // Accept first
+        vscode.commands.executeCommand(
+          "continue.acceptVerticalDiffBlock",
+          filepath,
+          0,
+        );
+      } else if (accept) {
+        vscode.commands.executeCommand("continue.acceptDiff", filepath);
+        // Accept all
+      } else if (onlyFirst) {
+        // Reject first
+        vscode.commands.executeCommand(
+          "continue.rejectVerticalDiffBlock",
+          filepath,
+          0,
+        );
+      } else {
+        // Reject all
+        vscode.commands.executeCommand("continue.rejectDiff", filepath);
+      }
+    });
+    this.onWebview("edit/escape", async (msg) => {
+      this.editDecorationManager.clear();
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

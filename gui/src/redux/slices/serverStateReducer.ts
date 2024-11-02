@@ -5,21 +5,6 @@ import {
   SlashCommandDescription,
 } from "core";
 
-const TEST_SLASH_COMMANDS = [
-  {
-    name: "edit",
-    description: "Edit the code",
-  },
-  {
-    name: "cmd",
-    description: "Generate a command",
-  },
-  {
-    name: "help",
-    description: "Get help using Continue",
-  },
-];
-
 type ServerState = {
   meilisearchUrl: string | undefined;
   slashCommands: SlashCommandDescription[];

@@ -201,7 +201,7 @@
             "cerebras",
             "askSage",
             "nebius",
-            "vertexai",
+            "vertexai"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -370,7 +370,7 @@
             "presencePenalty": null,
             "frequencyPenalty": null,
             "stop": null,
-            "maxTokens": 600
+            "maxTokens": 2048
           },
           "allOf": [
             {
@@ -414,9 +414,9 @@
           "description": "Azure OpenAI API version (e.g. 2023-07-01-preview)",
           "type": "string"
         },
-        "engine": {
-          "title": "Engine",
-          "description": "Azure OpenAI engine",
+        "deployment": {
+          "title": "Deployment",
+          "description": "Azure OpenAI deployment",
           "type": "string"
         },
         "capabilities": {
@@ -539,7 +539,7 @@
           },
           "then": {
             "properties": {
-              "engine": {
+              "deployment": {
                 "type": "string"
               },
               "apiType": {
@@ -1301,11 +1301,7 @@
             ]
           },
           "then": {
-            "required": [
-              "engine",
-              "apiVersion",
-              "apiBase"
-            ]
+            "required": ["deployment", "apiBase"]
           }
         },
         {
@@ -3135,8 +3131,7 @@
               "description": "The 3rd party analytics provider to use.",
               "default": "posthog",
               "markdownEnumDescriptions": [
-                "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field.",
-                "### Logstash\nContinue's Logstash integration uses the TCP input at the specified URL"
+                "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field."
               ]
             },
             "url": {
