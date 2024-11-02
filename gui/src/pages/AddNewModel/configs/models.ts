@@ -1,6 +1,6 @@
 import { ILLM, ModelProvider } from "core";
-import { InputDescriptor } from "./providers";
 import { ModelProviderTags } from "../../../components/modelSelection/utils";
+import { InputDescriptor } from "./providers";
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
 // You would set options to the field that should be changed for that option in the params field of ModelPackage
@@ -752,7 +752,7 @@ export const models: { [key: string]: ModelPackage } = {
     description:
       "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
     params: {
-      model: "claude-3-5-sonnet-20240620",
+      model: "claude-3-5-sonnet-latest",
       contextLength: 200_000,
       title: "Claude 3.5 Sonnet",
       apiKey: "",
@@ -870,27 +870,29 @@ export const models: { [key: string]: ModelPackage } = {
   },
   granite3Instruct8b: {
     title: "Granite 3.0 8b Instruct",
-    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
       model: "ibm/granite-3-8b-instruct",
       contextLength: 8_000,
-      title: "Granite 3.0 8b Instruct"
+      title: "Granite 3.0 8b Instruct",
     },
     providerOptions: ["watsonx"],
     icon: "WatsonX.png",
-    isOpenSource: false
+    isOpenSource: false,
   },
   granite3Instruct2b: {
     title: "Granite 3.0 2b Instruct",
-    description: "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
     params: {
       model: "ibm/granite-3-2b-instruct",
       contextLength: 2_000,
-      title: "Granite 3.0 2b Instruct"
+      title: "Granite 3.0 2b Instruct",
     },
     providerOptions: ["watsonx"],
     icon: "WatsonX.png",
-    isOpenSource: false
+    isOpenSource: false,
   },
   MistralLarge: {
     title: "Mistral Large",
@@ -972,8 +974,6 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["vertexai"],
     isOpenSource: false,
   },
-
-
 
   gpt4gov: {
     title: "GPT-4 gov",
