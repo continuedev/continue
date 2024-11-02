@@ -38,10 +38,18 @@ class DocsCrawler {
   ): AsyncGenerator<PageData> {
     if (startUrl.host === this.GITHUB_HOST) {
       yield* new GitHubCrawler(startUrl).crawl();
-    } else if (this.shouldUseChromium()) {
-      yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
-    } else if (true) {
+      return;
+    }
+
+    try {
       yield* new DefaultCrawler(startUrl).crawl();
+      return;
+    } catch (e) {
+      console.error("Default crawler failed, trying backup: ", e);
+    }
+
+    if (this.shouldUseChromium()) {
+      yield* new ChromiumCrawler(startUrl, maxRequestsPerCrawl).crawl();
     } else {
       let didCrawlSinglePage = false;
 
