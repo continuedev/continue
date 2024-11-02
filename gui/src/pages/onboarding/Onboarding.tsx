@@ -15,7 +15,6 @@ import { providers } from "../AddNewModel/configs/providers";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import _ from "lodash";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { setLocalStorage } from "@/util/localStorage";
 
 export const CustomModelButton = styled.div<{ disabled: boolean }>`
   border: 1px solid ${lightGray};
@@ -41,7 +40,6 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
 `;
 
 function Onboarding() {
-  const [session, setSession] = useState(false)
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);

@@ -40,6 +40,7 @@ import {
   deleteMessage,
   newSession,
   setInactive,
+  setShowInteractiveContinueTutorial,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import {
@@ -50,6 +51,7 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import OnboardingTutorial from "./onboarding/OnboardingTutorial";
 
 export const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -118,6 +120,16 @@ export const NewSessionButton = styled.div`
   cursor: pointer;
 `;
 
+const TutorialCardDiv = styled.header`
+  position: sticky;
+  top: 0px;
+  z-index: 500;
+  background-color: ${vscBackground}ee; // Added 'ee' for slight transparency
+  display: flex;
+
+  width: 100%;
+`
+
 export function fallbackRender({ error, resetErrorBoundary }) {
   return (
     <div
@@ -145,20 +157,23 @@ function GUI() {
   const defaultModel = useSelector(defaultModelSelector);
   const active = useSelector((state: RootState) => state.state.active);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
+  // If getting this from redux state, it is false. So need to get from localStorage directly.
+  // This is likely because it becomes true only after user onboards, upon which the local storage is updated.
+  const showTutorialCard = getLocalStorage("showTutorialCard");
+  useEffect(() => {
+    // Set the redux state to the updated localStorage value (true)
+    dispatch(setShowInteractiveContinueTutorial(showTutorialCard ?? false));
+  }, [])
+  const onCloseTutorialCard = useCallback(() => {
+      posthog.capture("closedTutorialCard");
+      setLocalStorage("showTutorialCard", false);
+      dispatch(setShowInteractiveContinueTutorial(false));
+  }, []);
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
-  const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
-    getLocalStorage("showTutorialCard"),
-  );
-
-  const onCloseTutorialCard = () => {
-    posthog.capture("closedTutorialCard");
-    setLocalStorage("showTutorialCard", false);
-    setShowTutorialCard(false);
-  };
 
   const handleScroll = () => {
     const OFFSET_HERUISTIC = 300;
@@ -270,6 +285,15 @@ function GUI() {
     [loadMostRecentChat],
   );
 
+  useWebviewListener(
+    "showInteractiveContinueTutorial",
+    async () => {
+      setLocalStorage("showTutorialCard", true);
+      dispatch(setShowInteractiveContinueTutorial(true));
+    },
+    [],
+  );
+
   const isLastUserInput = useCallback(
     (index: number): boolean => {
       let foundLaterUserInput = false;
@@ -286,6 +310,11 @@ function GUI() {
 
   return (
     <>
+      {!window.isPearOverlay && !!showTutorialCard && 
+        <TutorialCardDiv >
+            <OnboardingTutorial onClose={onCloseTutorialCard}/>
+        </TutorialCardDiv>
+      }
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
         <div className="mx-2">
           <StepsDiv>
@@ -424,11 +453,6 @@ function GUI() {
                   </NewSessionButton>
                 </div>
               ) : null}
-              {!!showTutorialCard && (
-                <div className="flex justify-center w-full">
-                  <TutorialCard onClose={onCloseTutorialCard} />
-                </div>
-              )}
             </>
           )}
         </div>

@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { PEAR_CONTINUE_VIEW_ID } from "../ContinueGUIWebviewViewProvider";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -243,6 +244,7 @@ export class DiffManager {
   }
 
   async acceptDiff(newFilepath?: string) {
+    this.webviewProtocol?.request("acceptedOrRejectedDiff", undefined, [PEAR_CONTINUE_VIEW_ID])
     // When coming from a keyboard shortcut, we have to infer the newFilepath from visible text editors
     if (!newFilepath) {
       newFilepath = this.inferNewFilepath();
@@ -274,6 +276,7 @@ export class DiffManager {
   }
 
   async rejectDiff(newFilepath?: string) {
+    this.webviewProtocol?.request("acceptedOrRejectedDiff", undefined, [PEAR_CONTINUE_VIEW_ID])
     // If no newFilepath is provided and there is only one in the dictionary, use that
     if (!newFilepath) {
       newFilepath = this.inferNewFilepath();

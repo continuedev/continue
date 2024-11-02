@@ -7,6 +7,7 @@ import HeaderButtonWithText from "../HeaderButtonWithText";
 interface CopyButtonProps {
   text: string | (() => string);
   color?: string;
+  inline?: boolean;
 }
 
 export function CopyButton(props: CopyButtonProps) {
@@ -15,7 +16,6 @@ export function CopyButton(props: CopyButtonProps) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   return (
-    <>
       <HeaderButtonWithText
         text={copied ? "Copied!" : "Copy"}
         onClick={(e) => {
@@ -30,6 +30,7 @@ export function CopyButton(props: CopyButtonProps) {
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         }}
+        className={props.inline ? "inline-flex" : ""}
       >
         {copied ? (
           <CheckIcon className="w-4 h-4 text-green-500" />
@@ -37,6 +38,5 @@ export function CopyButton(props: CopyButtonProps) {
           <ClipboardIcon className="w-4 h-4" color={props.color} />
         )}
       </HeaderButtonWithText>
-    </>
   );
 }

@@ -1,3 +1,4 @@
+import { ReactElement } from "react";
 import { getLocalStorage } from "./localStorage";
 import _ from "lodash";
 
@@ -42,6 +43,25 @@ export function getMetaKeyLabel(): string {
       return "^";
     default:
       return "^";
+  }
+}
+
+export function getMetaKeyAndShortcutLabel(): ReactElement {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return <span className="inline-flex gap-1">
+      <span>⌘</span>
+      <span>CMD</span>
+    </span>;
+    case "linux":
+    case "windows":
+      return <span className="inline-flex gap-1">
+      <span>^</span>
+      <span>CTRL</span>
+    </span>;
+    default:
+      return <span>^</span>;
   }
 }
 

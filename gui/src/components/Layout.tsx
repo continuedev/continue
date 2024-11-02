@@ -1,6 +1,6 @@
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -31,6 +31,8 @@ import ProgressBar from "./loaders/ProgressBar";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 import ShortcutContainer from "./ShortcutContainer";
+import OnboardingTutorial from "@/pages/onboarding/OnboardingTutorial";
+import posthog from "posthog-js";
 
 // check mac or window
 const platform = navigator.userAgent.toLowerCase();
@@ -88,10 +90,17 @@ const Header = styled.header`
   overflow: hidden;
 `;
 
-const GridDiv = styled.div<{ showHeader: boolean }>`
+const GridDiv = styled.div<{ showHeader: boolean, showTutorial: boolean }>`
   display: grid;
-  grid-template-rows: ${(props) =>
-    props.showHeader ? "auto 1fr auto" : "1fr auto"};
+  grid-template-rows: ${(props) => {
+    if (props.showHeader && props.showTutorial) {
+      return "auto auto 1fr auto";
+    } else if (props.showHeader || props.showTutorial) {
+      return "auto 1fr auto";
+    } else {
+      return "1fr auto";
+    }
+  }};
   min-height: 100vh;
   overflow-x: visible;
 `;
@@ -148,6 +157,8 @@ const Layout = () => {
   const displayBottomMessageOnBottom = useSelector(
     (state: RootState) => state.uiState.displayBottomMessageOnBottom,
   );
+
+  const showInteractiveContinueTutorial = useSelector((state: RootState) => state.state.showInteractiveContinueTutorial);
 
   const timeline = useSelector((state: RootState) => state.state.history);
 
@@ -281,6 +292,7 @@ const Layout = () => {
 
         <GridDiv
           showHeader={!window.isPearOverlay && SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname)}
+          showTutorial={!!showInteractiveContinueTutorial}
         >
           {SHOW_SHORTCUTS_ON_PAGES.includes(location.pathname) && !window.isPearOverlay && (
             <Header>
