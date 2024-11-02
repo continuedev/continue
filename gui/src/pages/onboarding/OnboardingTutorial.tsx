@@ -27,32 +27,6 @@ const TutorialCardDiv = styled.div`
     0 8px 16px rgba(0, 0, 0, 0.2),
     0 4px 4px rgba(0, 0, 0, 0.15),
     0 0 1px rgba(255, 255, 255, 0.1) inset;
-  animation: float 2s ease-in-out infinite;
-
-  @keyframes float {
-    0% {
-      transform: translateY(0px);
-      box-shadow: 
-        0 10px 20px rgba(0, 0, 0, 0.2),
-        0 6px 6px rgba(0, 0, 0, 0.15);
-    }
-    50% {
-      transform: translateY(-3px);
-      box-shadow: 
-        0 15px 25px rgba(0, 0, 0, 0.25),
-        0 8px 8px rgba(0, 0, 0, 0.2);
-    }
-    100% {
-      transform: translateY(0px);
-      box-shadow: 
-        0 10px 20px rgba(0, 0, 0, 0.2),
-        0 6px 6px rgba(0, 0, 0, 0.15);
-    }
-  }
-
-  &:hover {
-    animation-play-state: paused;
-  }
 `;
 
 const ContentWrapper = styled.div<{ direction: 'left' | 'right' }>`
