@@ -152,6 +152,7 @@ interface TipTapEditorProps {
   border?: string;
   placeholder?: string;
   header?: React.ReactNode;
+  historyKey: string;
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
@@ -294,7 +295,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootState) => store.state.mainEditorContent,
   );
 
-  const { prevRef, nextRef, addRef } = useInputHistory();
+  const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
   function getPlaceholder() {
     if (!hasDefaultModel) {

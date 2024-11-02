@@ -156,6 +156,7 @@ function Edit() {
                 (provider) =>
                   EDIT_ALLOWS_CONTEXT_PROVIDERS.includes(provider.title),
               )}
+              historyKey="edit"
               availableSlashCommands={[]}
               isMainInput={true}
               onEnter={async function (

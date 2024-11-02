@@ -10,9 +10,10 @@ const emptyJsonContent = () => ({
 
 const MAX_HISTORY_LENGTH = 100;
 
-export function useInputHistory() {
+export function useInputHistory(historyKey: string) {
   const [inputHistory, setInputHistory] = useState<JSONContent[]>(
-    getLocalStorage("inputHistory")?.slice(-MAX_HISTORY_LENGTH) ?? [],
+    getLocalStorage(`inputHistory_${historyKey}`)?.slice(-MAX_HISTORY_LENGTH) ??
+      [],
   );
   const [pendingInput, setPendingInput] =
     useState<JSONContent>(emptyJsonContent());
@@ -58,7 +59,7 @@ export function useInputHistory() {
       return [...prev, inputValue].slice(-MAX_HISTORY_LENGTH);
     });
     setLocalStorage(
-      "inputHistory",
+      `inputHistory_${historyKey}`,
       [...inputHistory, inputValue].slice(-MAX_HISTORY_LENGTH),
     );
   }
