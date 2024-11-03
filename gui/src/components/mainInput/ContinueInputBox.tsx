@@ -2,7 +2,7 @@ import { JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
-import { defaultBorderRadius, vscBackground } from "..";
+import { defaultBorderRadius, lightGray, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommands } from "../../redux/selectors";
 import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
@@ -12,6 +12,7 @@ import TipTapEditor from "./TipTapEditor";
 import { useMemo, memo, useState, useEffect, useCallback } from "react";
 import { isBareChatMode } from "../../util/bareChatMode";
 import { getContextProviders } from "../../integrations/util/integrationSpecificContextProviders";
+import { getFontSize } from "../../util";
 
 const gradient = keyframes`
   0% {
@@ -51,6 +52,54 @@ const GradientBorder = styled.div<{
   flex-direction: row;
   align-items: center;
   margin-top: 8px;
+`;
+
+const wave = keyframes`
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+`;
+
+const pulse = keyframes`
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.85); opacity: 0.5; }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: ${lightGray};
+  font-size: ${getFontSize() - 3}px;
+  padding: 0 0.6rem;
+  width: 100%;
+`;
+
+const DotsContainer = styled.div`
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top 8px;
+`;
+
+const Dot = styled.div<{ delay: number }>`
+  width: 3px;
+  height: 3px;
+  background-color: #4DA587;
+  border-radius: 50%;
+  animation: ${wave} 1.5s ease-in-out infinite;
+  animation-delay: ${props => props.delay}s;
+
+  &::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: inherit;
+    border-radius: inherit;
+    animation: ${pulse} 1.5s ease-in-out infinite;
+    animation-delay: ${props => props.delay}s;
+  }
 `;
 
 interface ContinueInputBoxProps {
@@ -93,7 +142,7 @@ const ContinueInputBox = memo(function ContinueInputBox({
     "newSessionWithPrompt",
     async (data) => {
       if (isMainInput) {
-        dispatch(newSession({session: undefined, source}));
+        dispatch(newSession({ session: undefined, source }));
         dispatch(
           setMessageAtIndex({
             message: { role: "user", content: data.prompt },
@@ -111,7 +160,7 @@ const ContinueInputBox = memo(function ContinueInputBox({
   // actually can get history here and check if last message of passed in source was a lastUserInput
   // Preserve editor state between renders
   const [preservedState, setPreservedState] = useState(editorState);
-  
+
   useEffect(() => {
     if (editorState) {
       setPreservedState(editorState);
@@ -147,6 +196,16 @@ const ContinueInputBox = memo(function ContinueInputBox({
           onChange={handleEditorChange}
         />
       </GradientBorder>
+      {active && isLastUserInput && (
+        <LoadingContainer>
+          <DotsContainer>
+            {[0, 1, 2].map((i) => (
+              <Dot key={i} delay={i * 0.2} />
+            ))}
+          </DotsContainer>
+          <span style={{ marginTop: "4px" }}>Responding...</span>
+        </LoadingContainer>
+      )}
       <ContextItemsPeek contextItems={contextItems}></ContextItemsPeek>
     </div>
   );
