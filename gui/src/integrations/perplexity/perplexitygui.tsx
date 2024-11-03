@@ -387,11 +387,11 @@ function PerplexityGUI() {
 }
 
 const tutorialContent = {
-  goodFor: "searching documentation, debugging errors, quick look-ups",
-  notGoodFor: "direct feature implementations (use PearAI chat instead)",
+  goodFor: "Searching documentation, debugging errors, quick look-ups",
+  notGoodFor: "Direct feature implementations (use PearAI chat instead)",
   example: {
-    text: '"what\'s new in the latest python version?"',
-    copyText: "what's new in the latest python version?",
+    text: '"What\'s new in the latest python version?"',
+    copyText: "What's new in the latest python version?",
   },
 };
 
