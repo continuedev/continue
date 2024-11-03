@@ -198,12 +198,26 @@ function AiderGUI() {
   );
 
   if (aiderProcessState.state !== "ready") {
-    let msg = "";
+    let msg: string | JSX.Element = "";
     if (aiderProcessState.state === "stopped") {
-      msg = "PearAI Creator (Powered By aider) process is not running.";
+      msg = (
+        <>
+          PearAI Creator (Powered By aider) process is not running. Please view troubleshooting{" "}
+          <a href="https://trypear.ai/creator-troubleshooting" target="_blank" rel="noopener noreferrer" className="underline text-blue-300">
+            here
+          </a>.
+        </>
+      );
     }
     if (aiderProcessState.state === "crashed") {
-      msg = "PearAI Creator (Powered By aider) process has crashed.";
+      msg = (
+        <>
+          PearAI Creator (Powered By aider) process has failed. Please ensure a folder is open, and view troubleshooting{" "}
+          <a href="https://trypear.ai/creator-troubleshooting" target="_blank" rel="noopener noreferrer" className="underline text-blue-300">
+            here
+          </a>.
+        </>
+      );
     }
     if (aiderProcessState.state === "uninstalled") {
       return <AiderManualInstallation />;

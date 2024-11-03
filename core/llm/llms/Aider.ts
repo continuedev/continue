@@ -79,7 +79,7 @@ class Aider extends BaseLLM {
     console.log("Aider constructor called");
     this.model = options.model;
     this.apiKey = options.apiKey;
-    this.command = []
+    this.command = [];
   }
 
   public async aiderResetSession(
@@ -266,10 +266,15 @@ class Aider extends BaseLLM {
       const userShell = this.getUserShell();
 
   const spawnAiderProcess = async () => {
-    if (IS_WINDOWS) {
-      return spawnAiderProcessWindows();
-    } else {
-      return spawnAiderProcessUnix();
+    try {
+      if (IS_WINDOWS) {
+        return spawnAiderProcessWindows();
+      } else {
+        return spawnAiderProcessUnix();
+      }
+    } catch (error) {
+      console.error('Error spawning Aider process:', error);
+      return null;
     }
   };
 
@@ -345,6 +350,11 @@ class Aider extends BaseLLM {
       const tryStartAider = async () => {
         console.log("Starting Aider...");
         this.aiderProcess = await spawnAiderProcess();
+
+        if (this.aiderProcess === null) {
+          this.setAiderState("crashed");
+          return;
+        }
 
         if (this.aiderProcess.stdout && this.aiderProcess.stderr) {
           const timeout = setTimeout(() => {
