@@ -61,6 +61,11 @@
           "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
           "type": "integer"
         },
+        "useMmap": {
+          "title": "Use Memory Map",
+          "description": "Allows the model to be mapped into memory. If disabled can enhance response time on low end devices. Only available for Ollama (this is the use_mmap parameter)",
+          "type": "boolean"
+        },
         "keepAlive": {
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",

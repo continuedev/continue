@@ -54,6 +54,7 @@ const modelDescriptionSchema = z.object({
       stop: z.array(z.string()).optional(),
       maxTokens: z.number().optional(),
       numThreads: z.number().optional(),
+      useMmap: z.boolean().optional(),
       keepAlive: z.number().optional(),
       raw: z.boolean().optional(),
       stream: z.boolean().optional(),
