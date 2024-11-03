@@ -192,10 +192,9 @@ class AutocompleteService(private val project: Project) {
 
         editor.caretModel.moveToOffset(offset + text.length)
 
-
         project.service<ContinuePluginService>().coreMessenger?.request(
             "autocomplete/accept",
-            completion.completionId,
+            hashMapOf("completionId" to completion.completionId),
             null,
             ({})
         )
