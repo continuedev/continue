@@ -89,6 +89,7 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   gitRepo?: string;
   completionId: string;
   uniqueId: string;
+  timestamp: number;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -367,6 +368,12 @@ export class CompletionProvider {
           (await this.autocompleteCache).put(outcome.prefix, completionToCache);
         }
       }, 100);
+
+      // When using the JetBrains extension, Mark as displayed
+      const ideType = (await this.ide.getIdeInfo()).ideType;
+      if (ideType === "jetbrains") {
+        this.markDisplayed(input.completionId, outcome);
+      }
 
       return outcome;
     } catch (e: any) {
@@ -759,6 +766,7 @@ export class CompletionProvider {
     }
 
     const time = Date.now() - startTime;
+    const timestamp = Date.now();
     return {
       time,
       completion,
@@ -773,6 +781,7 @@ export class CompletionProvider {
       completionId: input.completionId,
       gitRepo: await this.ide.getRepoName(input.filepath),
       uniqueId: await this.ide.getUniqueId(),
+      timestamp: timestamp,
       ...options,
     };
   }
