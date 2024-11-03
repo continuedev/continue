@@ -194,7 +194,7 @@ class Aider extends BaseLLM {
       }
 
       let aiderFlags =
-        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048"
+        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048 --subtree-only"
       if (UDIFF_FLAG) {
         aiderFlags += " --edit-format udiff";
       }

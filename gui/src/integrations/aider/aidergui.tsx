@@ -444,7 +444,7 @@ const tutorialContent = {
   },
   moreInfo: [
     "- Type '@' to add file context to your request.",
-    "- Ignore system <<< SEARCH REPLACE >>> messages. These are for the system when making edits for you automatically."
+    "- Please ignore system ```<<< SEARCH REPLACE >>>``` messages. These are for the system to make edits for you automatically."
   ]
 }
 
