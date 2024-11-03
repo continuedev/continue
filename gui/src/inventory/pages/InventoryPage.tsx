@@ -368,11 +368,16 @@ export default function AIToolInventory() {
                       <li key={index}>{strength}</li>
                     ))}
                   </ul>
-                  <ul className="list-disc mb-2 pl-4">
-                    {focusedTool.weaknesses.map((weakness, index) => (
-                      <li key={index}>{weakness}</li>
-                    ))}
-                  </ul>
+                  {focusedTool.weaknesses && (
+                    <>
+                      <h3 className="font-semibold mb-1">Weaknesses:</h3>
+                      <ul className="list-disc mb-2 pl-4">
+                        {focusedTool.weaknesses.map((weakness, index) => (
+                          <li key={index}>{weakness}</li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
                 </div>
                 {!focusedTool.comingSoon && (
                   <div className="mt-2 flex items-center sticky bottom-0 bg-background p-2">
