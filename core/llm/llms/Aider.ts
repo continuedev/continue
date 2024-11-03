@@ -22,6 +22,13 @@ const PLATFORM = process.platform;
 const IS_WINDOWS = PLATFORM === "win32";
 const IS_MAC = PLATFORM === "darwin";
 const IS_LINUX = PLATFORM === "linux";
+const EDIT_FORMAT:string = "normal"; // options ["normal", "udiff"]
+const UDIFF_FLAG = EDIT_FORMAT === "udiff"
+const AIDER_READY_FLAG = UDIFF_FLAG ? "udiff> " : "> ";
+const END_MARKER = IS_WINDOWS
+  ? (UDIFF_FLAG ? "\r\nudiff> " : "\r\n> ")
+  : (UDIFF_FLAG ? "\nudiff> " : "\n> ");
+
 
 export const AIDER_QUESTION_MARKER = "[Yes]\\:";
 export const AIDER_END_MARKER = "─────────────────────────────────────";
@@ -160,6 +167,7 @@ class Aider extends BaseLLM {
 
     const specialLoadingChars = /⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏/g;
     cleanOutput = cleanOutput.replace(specialLoadingChars, "");
+    cleanOutput = cleanOutput.replace(/Updating repo map/g, "Updating repo map...");
 
     // Preserve line breaks
     this.aiderOutput += cleanOutput;
@@ -185,9 +193,13 @@ class Aider extends BaseLLM {
         currentDir = "";
       }
 
-      const aiderFlags =
-        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048";
-      const aiderCommands = [
+      let aiderFlags =
+        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048"
+      if (UDIFF_FLAG) {
+        aiderFlags += " --edit-format udiff";
+      }
+
+        const aiderCommands = [
         `python -m aider ${aiderFlags}`,
         `python3 -m aider ${aiderFlags}`,
         `aider ${aiderFlags}`,
@@ -343,7 +355,7 @@ class Aider extends BaseLLM {
             this.captureAiderOutput(data);
             // Look for the prompt that indicates aider is ready
             const output = data.toString();
-            if (output.endsWith("> ")) {
+            if (output.endsWith(AIDER_READY_FLAG)) {
               // Aider's ready prompt
               console.log("Aider is ready!");
               this.setAiderState("ready");
@@ -486,8 +498,6 @@ class Aider extends BaseLLM {
     let lastProcessedIndex = 0;
     let responseComplete = false;
 
-    const END_MARKER = IS_WINDOWS ? "\r\n> " : "\n> ";
-
     const escapeDollarSigns = (text: string | undefined) => {
       if (!text) {return "Aider response over";}
       return text.replace(/([\\$])/g, "\\$1");
@@ -496,26 +506,48 @@ class Aider extends BaseLLM {
     while (!responseComplete) {
       await new Promise((resolve) => setTimeout(resolve, 100));
       const newOutput = this.aiderOutput.slice(lastProcessedIndex);
-      if (newOutput) {
-        // newOutput = escapeDollarSigns(newOutput);
-        lastProcessedIndex = this.aiderOutput.length;
-        yield {
-          role: "assistant",
-          content: escapeDollarSigns(newOutput),
-        };
 
-        if (newOutput.endsWith(END_MARKER)) {
-          responseComplete = true;
+      if (newOutput) {
+        if (UDIFF_FLAG) {
+          if (newOutput.endsWith(END_MARKER)) {
+              // Remove the END_MARKER from the output before yielding
+              const cleanOutput = newOutput.slice(0, -END_MARKER.length);
+              if (cleanOutput) {
+                  yield {
+                      role: "assistant",
+                      content: escapeDollarSigns(cleanOutput),
+                  };
+              }
+              responseComplete = true;
+              break;
+          }
+
+          lastProcessedIndex = this.aiderOutput.length;
+          yield {
+              role: "assistant",
+              content: escapeDollarSigns(newOutput),
+          };
+        } else {
+          lastProcessedIndex = this.aiderOutput.length;
+          yield {
+            role: "assistant",
+            content: escapeDollarSigns(newOutput),
+          };
+
+          if (newOutput.endsWith(END_MARKER)) {
+            responseComplete = true;
+            break;
+          }
+        }
+
+        // Safety check
+        if (this.aiderProcess?.killed) {
+          this.setAiderState("stopped");
           break;
         }
       }
-
-      // Safety check
-      if (this.aiderProcess?.killed) {
-        this.setAiderState("stopped");
-        break;
-      }
     }
+
 
     // Reset the output after capturing a complete response
     this.aiderOutput = "";
