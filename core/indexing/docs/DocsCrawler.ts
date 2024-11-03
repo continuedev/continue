@@ -42,8 +42,11 @@ class DocsCrawler {
     }
 
     try {
-      yield* new DefaultCrawler(startUrl).crawl();
-      return;
+      const pageData = await new DefaultCrawler(startUrl).crawl();
+      if (pageData.length > 0) {
+        yield* pageData;
+        return;
+      }
     } catch (e) {
       console.error("Default crawler failed, trying backup: ", e);
     }
