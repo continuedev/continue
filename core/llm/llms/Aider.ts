@@ -22,6 +22,13 @@ const PLATFORM = process.platform;
 const IS_WINDOWS = PLATFORM === "win32";
 const IS_MAC = PLATFORM === "darwin";
 const IS_LINUX = PLATFORM === "linux";
+const EDIT_FORMAT:string = "normal"; // options ["normal", "udiff"]
+const UDIFF_FLAG = EDIT_FORMAT === "udiff"
+const AIDER_READY_FLAG = UDIFF_FLAG ? "udiff> " : "> ";
+const END_MARKER = IS_WINDOWS
+  ? (UDIFF_FLAG ? "\r\nudiff> " : "\r\n> ")
+  : (UDIFF_FLAG ? "\nudiff> " : "\n> ");
+
 
 export const AIDER_QUESTION_MARKER = "[Yes]\\:";
 export const AIDER_END_MARKER = "─────────────────────────────────────";
@@ -79,14 +86,11 @@ class Aider extends BaseLLM {
     model: string,
     apiKey: string | undefined,
   ): Promise<void> {
-
     console.log("Resetting Aider process...");
-
-    // Kill the current process if it exists
-    this.killAiderProcess();
+    // Kill the current process if it exists, with reset flag
+    this.killAiderProcess(true);
     // Reset the output
     this.aiderOutput = "";
-    this.setAiderState("ready");
 
     // Restart the Aider chat with the provided model and API key
     try {
@@ -98,12 +102,14 @@ class Aider extends BaseLLM {
     }
   }
 
-  public killAiderProcess(): void {
+  public killAiderProcess(reset: boolean = false): void {
     if (this.aiderProcess && !this.aiderProcess.killed) {
       console.log("Killing Aider process...");
       this.aiderProcess.kill();
       this.aiderProcess = null;
-      this.setAiderState("stopped");
+      if (!reset) {
+        this.setAiderState("stopped");
+      }
     }
   }
 
@@ -154,10 +160,14 @@ class Aider extends BaseLLM {
 
   private captureAiderOutput(data: Buffer): void {
     const output = data.toString();
-    // console.log("Raw Aider output:");
+    console.log("Raw Aider output: ", JSON.stringify(output));
 
     // Remove ANSI escape codes
-    const cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, "");
+    let cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, "");
+
+    const specialLoadingChars = /⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏/g;
+    cleanOutput = cleanOutput.replace(specialLoadingChars, "");
+    cleanOutput = cleanOutput.replace(/Updating repo map/g, "Updating repo map...");
 
     // Preserve line breaks
     this.aiderOutput += cleanOutput;
@@ -183,9 +193,13 @@ class Aider extends BaseLLM {
         currentDir = "";
       }
 
-      const aiderFlags =
-        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048 --edit-format udiff";
-      const aiderCommands = [
+      let aiderFlags =
+        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048 --subtree-only"
+      if (UDIFF_FLAG) {
+        aiderFlags += " --edit-format udiff";
+      }
+
+        const aiderCommands = [
         `python -m aider ${aiderFlags}`,
         `python3 -m aider ${aiderFlags}`,
         `aider ${aiderFlags}`,
@@ -341,8 +355,7 @@ class Aider extends BaseLLM {
             this.captureAiderOutput(data);
             // Look for the prompt that indicates aider is ready
             const output = data.toString();
-            console.log("Output: ", output);
-            if (output.endsWith("udiff> ")) {
+            if (output.endsWith(AIDER_READY_FLAG)) {
               // Aider's ready prompt
               console.log("Aider is ready!");
               this.setAiderState("ready");
@@ -359,7 +372,6 @@ class Aider extends BaseLLM {
 
           this.aiderProcess.on("close", (code: number | null) => {
             console.log(`Aider process exited with code ${code}`);
-            this.setAiderState("stopped");
             clearTimeout(timeout);
             if (code !== 0) {
               reject(new Error(`Aider process exited with code ${code}`));
@@ -412,6 +424,7 @@ class Aider extends BaseLLM {
       this.aiderProcess.stdin.write(`${formattedMessage}\n`);
     } else {
       console.error("PearAI Creator (Powered by Aider) process is not running");
+      this.setAiderState("stopped");
       vscode.window.showErrorMessage(
         "PearAI Creator (Powered by Aider) process is not running. Please view PearAI Creator troubleshooting guide.",
         "View Troubleshooting"
@@ -485,8 +498,6 @@ class Aider extends BaseLLM {
     let lastProcessedIndex = 0;
     let responseComplete = false;
 
-    const END_MARKER = IS_WINDOWS ? "\r\nudiff> " : "\nudiff> ";
-
     const escapeDollarSigns = (text: string | undefined) => {
       if (!text) {return "Aider response over";}
       return text.replace(/([\\$])/g, "\\$1");
@@ -495,7 +506,9 @@ class Aider extends BaseLLM {
     while (!responseComplete) {
       await new Promise((resolve) => setTimeout(resolve, 100));
       const newOutput = this.aiderOutput.slice(lastProcessedIndex);
+
       if (newOutput) {
+        if (UDIFF_FLAG) {
           if (newOutput.endsWith(END_MARKER)) {
               // Remove the END_MARKER from the output before yielding
               const cleanOutput = newOutput.slice(0, -END_MARKER.length);
@@ -514,13 +527,27 @@ class Aider extends BaseLLM {
               role: "assistant",
               content: escapeDollarSigns(newOutput),
           };
-      }
+        } else {
+          lastProcessedIndex = this.aiderOutput.length;
+          yield {
+            role: "assistant",
+            content: escapeDollarSigns(newOutput),
+          };
 
-      // Safety check
-      if (this.aiderProcess?.killed) {
-        break;
+          if (newOutput.endsWith(END_MARKER)) {
+            responseComplete = true;
+            break;
+          }
+        }
+
+        // Safety check
+        if (this.aiderProcess?.killed) {
+          this.setAiderState("stopped");
+          break;
+        }
       }
     }
+
 
     // Reset the output after capturing a complete response
     this.aiderOutput = "";

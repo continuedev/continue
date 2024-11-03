@@ -306,7 +306,7 @@ const TipTapEditor = memo(function TipTapEditor({
 
   // Keep track of the last valid content
   const lastContentRef = useRef(editorState);
-  
+
   useEffect(() => {
     if (editorState) {
       lastContentRef.current = editorState;
@@ -861,18 +861,18 @@ const TipTapEditor = memo(function TipTapEditor({
         const newContent = editor.getJSON();
         lastContentRef.current = newContent;
         onChange?.(newContent);
-  
+
         // If /edit is typed and no context items are selected, select the first
-        
+
         if (contextItems.length > 0) {
           return;
         }
-  
+
         const codeBlock = newContent.content?.find((el) => el.type === "codeBlock");
         if (!codeBlock) {
           return;
         }
-  
+
         // Search for slashcommand type
         for (const p of newContent.content) {
           if (
