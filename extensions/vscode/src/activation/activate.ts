@@ -10,6 +10,24 @@ import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 import { isFirstLaunch } from "../copySettings";
 
+async function attemptInstallExtension(extensionId: string): Promise<void> {
+  // Check if extension is already installed
+  const extension = vscode.extensions.getExtension(extensionId);
+
+  if (extension) {
+      // vscode.window.showInformationMessage(`Extension ${extensionId} is already installed.`);
+      return;
+  }
+
+  try {
+      await vscode.commands.executeCommand('workbench.extensions.installExtension', extensionId);
+      // vscode.window.showInformationMessage(`Successfully installed extension: ${extensionId}`);
+  } catch (error) {
+      // vscode.window.showErrorMessage(`Failed to install extension: ${extensionId}`);
+      console.error(error);
+  }
+}
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
@@ -39,11 +57,12 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // if (true || isFirstLaunch(context)) {
   //   vscode.commands.executeCommand("pearai.startOnboarding");
   // }
-  
+
   if (isFirstLaunch(context)) {
     vscode.commands.executeCommand("pearai.startOnboarding");
+    attemptInstallExtension("supermaven.supermaven");
   }
-  
+
   // vscode.commands.executeCommand("pearai.focusContinueInput");
 
   // Load PearAI configuration
