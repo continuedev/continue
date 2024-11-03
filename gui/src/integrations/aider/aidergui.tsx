@@ -43,6 +43,7 @@ import {
   fallbackRender,
 } from "../../pages/gui";
 import { CustomTutorialCard } from "@/components/mainInput/CustomTutorialCard";
+import AiderManualInstallation from "./AiderManualInstallation";
 
 function AiderGUI() {
   const posthog = usePostHog();
@@ -62,8 +63,6 @@ function AiderGUI() {
   const aiderProcessState = useSelector(
     (state: RootState) => state.state.aiderProcessState,
   );
-
-  // console.dir(aiderProcessState.state);
 
   // TODO: Remove this later. This is supposed to be set in Onboarding, but
   // many users won't reach onboarding screen due to cache. So set it manually,
@@ -444,9 +443,8 @@ const tutorialContent = {
     copyText: "Make a new FAQ page for my website",
   },
   moreInfo: [
-    "Type '@' to add file context to your request.",
-    "Note that PearAI Creator will create files and make in-line changes for you automatically."
+    "- Type '@' to add file context to your request.",
+    "- Ignore system <<< SEARCH REPLACE >>> messages. These are for the system when making edits for you automatically."
   ]
-};
-import AiderManualInstallation from "./AiderManualInstallation";
+}
 

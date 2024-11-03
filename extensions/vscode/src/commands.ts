@@ -339,7 +339,6 @@ const commandsMap: (
       await handleIntegrationShortcutKey("navigateToInventory", "inventory", sidebar, PEAR_OVERLAY_VIEW_ID)
     },
     "pearai.startOnboarding": async () => {
-      console.log("FIRST PEARAI LAUNCH");
       await vscode.commands.executeCommand("pearai.showOverlay");
     },
     "pearai.developer.restFirstLaunch": async () => {

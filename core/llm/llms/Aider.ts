@@ -79,14 +79,11 @@ class Aider extends BaseLLM {
     model: string,
     apiKey: string | undefined,
   ): Promise<void> {
-
     console.log("Resetting Aider process...");
-
-    // Kill the current process if it exists
-    this.killAiderProcess();
+    // Kill the current process if it exists, with reset flag
+    this.killAiderProcess(true);
     // Reset the output
     this.aiderOutput = "";
-    this.setAiderState("ready");
 
     // Restart the Aider chat with the provided model and API key
     try {
@@ -98,12 +95,14 @@ class Aider extends BaseLLM {
     }
   }
 
-  public killAiderProcess(): void {
+  public killAiderProcess(reset: boolean = false): void {
     if (this.aiderProcess && !this.aiderProcess.killed) {
       console.log("Killing Aider process...");
       this.aiderProcess.kill();
       this.aiderProcess = null;
-      this.setAiderState("stopped");
+      if (!reset) {
+        this.setAiderState("stopped");
+      }
     }
   }
 
@@ -154,10 +153,13 @@ class Aider extends BaseLLM {
 
   private captureAiderOutput(data: Buffer): void {
     const output = data.toString();
-    // console.log("Raw Aider output:");
+    console.log("Raw Aider output: ", JSON.stringify(output));
 
     // Remove ANSI escape codes
-    const cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, "");
+    let cleanOutput = output.replace(/\x1B\[[0-9;]*[JKmsu]/g, "");
+
+    const specialLoadingChars = /⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏/g;
+    cleanOutput = cleanOutput.replace(specialLoadingChars, "");
 
     // Preserve line breaks
     this.aiderOutput += cleanOutput;
@@ -341,7 +343,6 @@ class Aider extends BaseLLM {
             this.captureAiderOutput(data);
             // Look for the prompt that indicates aider is ready
             const output = data.toString();
-            console.log("Output: ", output);
             if (output.endsWith("> ")) {
               // Aider's ready prompt
               console.log("Aider is ready!");
@@ -359,7 +360,6 @@ class Aider extends BaseLLM {
 
           this.aiderProcess.on("close", (code: number | null) => {
             console.log(`Aider process exited with code ${code}`);
-            this.setAiderState("stopped");
             clearTimeout(timeout);
             if (code !== 0) {
               reject(new Error(`Aider process exited with code ${code}`));
@@ -412,6 +412,7 @@ class Aider extends BaseLLM {
       this.aiderProcess.stdin.write(`${formattedMessage}\n`);
     } else {
       console.error("PearAI Creator (Powered by Aider) process is not running");
+      this.setAiderState("stopped");
       vscode.window.showErrorMessage(
         "PearAI Creator (Powered by Aider) process is not running. Please view PearAI Creator troubleshooting guide.",
         "View Troubleshooting"
@@ -511,6 +512,7 @@ class Aider extends BaseLLM {
 
       // Safety check
       if (this.aiderProcess?.killed) {
+        this.setAiderState("stopped");
         break;
       }
     }
