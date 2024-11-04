@@ -35,7 +35,7 @@ class DocsCrawler {
   async *crawl(
     startUrl: URL,
     maxRequestsPerCrawl: number = this.MAX_REQUESTS_PER_CRAWL,
-  ): AsyncGenerator<PageData> {
+  ): AsyncGenerator<PageData, undefined, undefined> {
     if (startUrl.host === this.GITHUB_HOST) {
       yield* new GitHubCrawler(startUrl).crawl();
       return;
