@@ -64,7 +64,7 @@ function ContinueButton(props: {
           ) : (
             <PlayIcon width="18px" height="18px" />
           )}
-          CONTINUE
+          JARVIS
         </>
       )}
     </StyledButton>
