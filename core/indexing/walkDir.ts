@@ -30,7 +30,8 @@ type WalkableEntry = {
 // helper struct used for the DFS walk
 type WalkContext = {
   walkableEntry: WalkableEntry;
-  ignoreContexts: IgnoreContext[];
+  gitIgnoreContexts: IgnoreContext[];
+  continueIgnoreContexts: IgnoreContext[];
 };
 
 type IgnoreContext = {
@@ -39,14 +40,17 @@ type IgnoreContext = {
 };
 
 class DFSWalker {
-  private readonly ignoreFileNames: Set<string>;
+  private readonly gitIgnoreFiles: Set<string>;
+  private readonly continueIgnoreFiles: Set<string>;
 
   constructor(
     private readonly path: string,
     private readonly ide: IDE,
     private readonly options: WalkerOptions,
   ) {
-    this.ignoreFileNames = new Set<string>(options.ignoreFiles);
+    // Split ignore files into git and continue ignores
+    this.gitIgnoreFiles = new Set([".gitignore"]);
+    this.continueIgnoreFiles = new Set([".continueignore"]);
   }
 
   // walk is a depth-first search implementation
@@ -55,22 +59,23 @@ class DFSWalker {
       this.options.returnRelativePaths ? "" : this.path,
       this.ide,
     );
-    const root = this.newRootWalkContext();
+    const root = await this.newRootWalkContext();
     const stack = [root];
+
     for (let cur = stack.pop(); cur; cur = stack.pop()) {
       const walkableEntries = await this.listDirForWalking(cur.walkableEntry);
-      const ignoreContexts = await this.getIgnoreToApplyInDir(
-        cur,
-        walkableEntries,
-      );
+      const [gitIgnoreContexts, continueIgnoreContexts] =
+        await this.getIgnoreToApplyInDir(cur, walkableEntries);
+
       for (const w of walkableEntries) {
-        if (!this.shouldInclude(w, ignoreContexts)) {
+        if (!this.shouldInclude(w, gitIgnoreContexts, continueIgnoreContexts)) {
           continue;
         }
         if (this.entryIsDirectory(w.entry)) {
           stack.push({
             walkableEntry: w,
-            ignoreContexts: ignoreContexts,
+            gitIgnoreContexts,
+            continueIgnoreContexts,
           });
           if (this.options.onlyDirs) {
             // when onlyDirs is enabled the walker will only return directory names
@@ -83,8 +88,10 @@ class DFSWalker {
     }
   }
 
-  private newRootWalkContext(): WalkContext {
-    const globalIgnoreFile = getGlobalContinueIgArray();
+  private async newRootWalkContext(): Promise<WalkContext> {
+    const globalIgnore = ignore().add(defaultIgnoreDir).add(defaultIgnoreFile);
+    const globalContinueIgnore = ignore().add(getGlobalContinueIgArray());
+
     return {
       walkableEntry: {
         relPath: "",
@@ -92,9 +99,15 @@ class DFSWalker {
         type: 2 as FileType.Directory,
         entry: ["", 2 as FileType.Directory],
       },
-      ignoreContexts: [
+      gitIgnoreContexts: [
         {
-          ignore: ignore().add(defaultIgnoreDir).add(defaultIgnoreFile).add(globalIgnoreFile),
+          ignore: globalIgnore,
+          dirname: "",
+        },
+      ],
+      continueIgnoreContexts: [
+        {
+          ignore: globalContinueIgnore,
           dirname: "",
         },
       ],
@@ -118,35 +131,90 @@ class DFSWalker {
   private async getIgnoreToApplyInDir(
     curDir: WalkContext,
     entriesInDir: WalkableEntry[],
-  ): Promise<IgnoreContext[]> {
+  ): Promise<[IgnoreContext[], IgnoreContext[]]> {
     const ignoreFilesInDir = await this.loadIgnoreFiles(entriesInDir);
-    if (ignoreFilesInDir.length === 0) {
-      return curDir.ignoreContexts;
+
+    if (
+      ignoreFilesInDir.git.length === 0 &&
+      ignoreFilesInDir.continue.length === 0
+    ) {
+      return [curDir.gitIgnoreContexts, curDir.continueIgnoreContexts];
     }
-    const patterns = ignoreFilesInDir.map((c) => gitIgArrayFromFile(c)).flat();
-    const newIgnoreContext = {
-      ignore: ignore().add(patterns),
-      dirname: curDir.walkableEntry.relPath,
+
+    const gitPatterns = ignoreFilesInDir.git
+      .map((c) => gitIgArrayFromFile(c))
+      .flat();
+    const continuePatterns = ignoreFilesInDir.continue
+      .map((c) => gitIgArrayFromFile(c))
+      .flat();
+
+    const newGitContext =
+      gitPatterns.length > 0
+        ? [
+            {
+              ignore: ignore().add(gitPatterns),
+              dirname: curDir.walkableEntry.relPath,
+            },
+          ]
+        : [];
+
+    const newContinueContext =
+      continuePatterns.length > 0
+        ? [
+            {
+              ignore: ignore().add(continuePatterns),
+              dirname: curDir.walkableEntry.relPath,
+            },
+          ]
+        : [];
+
+    return [
+      [...curDir.gitIgnoreContexts, ...newGitContext],
+      [...curDir.continueIgnoreContexts, ...newContinueContext],
+    ];
+  }
+
+  private async loadIgnoreFiles(entries: WalkableEntry[]): Promise<{
+    git: string[];
+    continue: string[];
+  }> {
+    const gitIgnoreEntries = entries.filter((w) =>
+      this.isGitIgnoreFile(w.entry),
+    );
+    const continueIgnoreEntries = entries.filter((w) =>
+      this.isContinueIgnoreFile(w.entry),
+    );
+
+    const gitPromises = gitIgnoreEntries.map((w) =>
+      this.ide.readFile(w.absPath),
+    );
+    const continuePromises = continueIgnoreEntries.map((w) =>
+      this.ide.readFile(w.absPath),
+    );
+
+    const [gitResults, continueResults] = await Promise.all([
+      Promise.all(gitPromises),
+      Promise.all(continuePromises),
+    ]);
+
+    return {
+      git: gitResults,
+      continue: continueResults,
     };
-    return [...curDir.ignoreContexts, newIgnoreContext];
   }
 
-  private async loadIgnoreFiles(entries: WalkableEntry[]): Promise<string[]> {
-    const ignoreEntries = entries.filter((w) => this.isIgnoreFile(w.entry));
-    const promises = ignoreEntries.map(async (w) => {
-      return await this.ide.readFile(w.absPath);
-    });
-    return Promise.all(promises);
+  private isGitIgnoreFile(e: Entry): boolean {
+    return this.gitIgnoreFiles.has(e[0]);
   }
 
-  private isIgnoreFile(e: Entry): boolean {
-    const p = e[0];
-    return this.ignoreFileNames.has(p);
+  private isContinueIgnoreFile(e: Entry): boolean {
+    return this.continueIgnoreFiles.has(e[0]);
   }
 
   private shouldInclude(
     walkableEntry: WalkableEntry,
-    ignoreContexts: IgnoreContext[],
+    gitIgnoreContexts: IgnoreContext[],
+    continueIgnoreContexts: IgnoreContext[],
   ) {
     if (this.entryIsSymlink(walkableEntry.entry)) {
       // If called from the root, a symlink either links to a real file in this repository,
@@ -154,6 +222,7 @@ class DFSWalker {
       // we do not want to index it
       return false;
     }
+
     let relPath = walkableEntry.relPath;
     if (this.entryIsDirectory(walkableEntry.entry)) {
       relPath = `${relPath}/`;
@@ -162,16 +231,28 @@ class DFSWalker {
         return false;
       }
     }
-    for (const ig of ignoreContexts) {
+
+    // First check gitignore rules
+    for (const ig of gitIgnoreContexts) {
       // remove the directory name and path seperator from the match path, unless this an ignore file
       // in the root directory
+
       const prefixLength = ig.dirname.length === 0 ? 0 : ig.dirname.length + 1;
-      // The ignore library expects a path relative to the ignore file location
       const matchPath = relPath.substring(prefixLength);
       if (ig.ignore.ignores(matchPath)) {
         return false;
       }
     }
+
+    // Then check continueignore rules (these take precedence)
+    for (const ig of continueIgnoreContexts) {
+      const prefixLength = ig.dirname.length === 0 ? 0 : ig.dirname.length + 1;
+      const matchPath = relPath.substring(prefixLength);
+      if (ig.ignore.ignores(matchPath)) {
+        return false;
+      }
+    }
+
     return true;
   }
 
