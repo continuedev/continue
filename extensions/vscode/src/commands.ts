@@ -817,6 +817,7 @@ const commandsMap: (
       core.invoke("llm/setPearAICredentials", { accessToken: data.accessToken, refreshToken: data.refreshToken });
       sidebar.webviewProtocol?.request("pearAISignedIn", undefined);
       vscode.window.showInformationMessage("PearAI: Successfully logged in!");
+      core.invoke("llm/startAiderProcess", undefined);
       if (isFirstLaunch(extensionContext)) {
         vscode.commands.executeCommand("pearai.welcome.markNewOnboardingComplete");
       }

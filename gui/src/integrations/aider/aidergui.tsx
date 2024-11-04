@@ -199,12 +199,35 @@ function AiderGUI() {
 
   if (aiderProcessState.state !== "ready") {
     let msg: string | JSX.Element = "";
+    if (aiderProcessState.state === "signedOut") {
+      msg = (
+        <>
+          Please{" "}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              ideMessenger.post("pearaiLogin", undefined);
+            }}
+            className="underline text-blue-300"
+          >
+            sign in
+          </a>{" "}
+          to use PearAI Creator.
+        </>
+      );
+    } 
     if (aiderProcessState.state === "stopped") {
       msg = (
         <>
-          PearAI Creator (Powered By aider) process is not running. Please view troubleshooting{" "}
-          <a href="https://trypear.ai/creator-troubleshooting" target="_blank" rel="noopener noreferrer" className="underline text-blue-300">
-            here
+          PearAI Creator (Powered By aider) process is not running. Please view{" "}
+          <a 
+            href="https://trypear.ai/creator-troubleshooting" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="underline text-blue-300"
+          >
+            troubleshooting
           </a>.
         </>
       );

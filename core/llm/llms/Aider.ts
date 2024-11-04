@@ -34,7 +34,7 @@ export const AIDER_QUESTION_MARKER = "[Yes]\\:";
 export const AIDER_END_MARKER = "─────────────────────────────────────";
 
 export interface AiderState {
-  state: "starting" | "uninstalled" | "ready" |  "stopped" |"crashed";
+  state: "starting" | "uninstalled" | "ready" |  "stopped" |"crashed" | "signedOut";
 }
 
 class Aider extends BaseLLM {
@@ -219,24 +219,7 @@ class Aider extends BaseLLM {
               await this.credentials.checkAndUpdateCredentials();
               const accessToken = this.credentials.getAccessToken();
               if (!accessToken) {
-                let message =
-                  "PearAI token invalid. Please try logging in or contact PearAI support.";
-                vscode.window
-                  .showErrorMessage(message, "Login To PearAI", "Show Logs")
-                  .then((selection: any) => {
-                    if (selection === "Login To PearAI") {
-                      // Redirect to auth login URL
-                      vscode.env.openExternal(
-                        vscode.Uri.parse(
-                          "https://trypear.ai/signin?callback=pearai://pearai.pearai/auth",
-                        ),
-                      );
-                    } else if (selection === "Show Logs") {
-                      vscode.commands.executeCommand(
-                        "workbench.action.toggleDevTools",
-                      );
-                    }
-                  });
+                this.setAiderState("signedOut");
                 throw new Error("User not logged in to PearAI.");
               }
               this.command = [
@@ -253,6 +236,9 @@ class Aider extends BaseLLM {
           console.log(
             `Command ${aiderCommand} not found or errored. Trying next...`,
           );
+          if (error instanceof Error && error.message === "User not logged in to PearAI.") {
+            throw error; // Re-throw auth errors
+          }
         }
       }
 
@@ -393,20 +379,33 @@ class Aider extends BaseLLM {
 
           this.aiderProcess.on("error", (error: Error) => {
             console.error(`Error starting Aider: ${error.message}`);
-            this.setAiderState("crashed");
+            
+            // Check if this is an authentication error for pearai_model
+            if (model === "pearai_model" && error.message.includes("authentication")) {
+              this.setAiderState("signedOut");  // Use new signedOut state
+            } else {
+              this.setAiderState("crashed");
+            }
+            
             clearTimeout(timeout);
             reject(error);
-            let message =
-              "PearAI Creator (Powered by aider) failed to start. Please contact PearAI support on Discord.";
+            
+            // Customize error message based on authentication state
+            let message = model === "pearai_model" && error.message.includes("authentication")
+              ? "Please sign in to use PearAI Creator with hosted servers. You can also opt to use your own API-Key."
+              : "PearAI Creator (Powered by aider) failed to start. Please contact PearAI support on Discord.";
+
             vscode.window
               .showErrorMessage(
                 message,
+                ...(model === "pearai_model" ? ["Sign In"] : []),
                 "PearAI Support (Discord)",
                 "Show Logs",
               )
               .then((selection: any) => {
-                if (selection === "PearAI Support (Discord)") {
-                  // Redirect to auth login URL
+                if (selection === "Sign In") {
+                  vscode.commands.executeCommand("pearai.login");
+                } else if (selection === "PearAI Support (Discord)") {
                   vscode.env.openExternal(
                     vscode.Uri.parse("https://discord.com/invite/7QMraJUsQt"),
                   );
