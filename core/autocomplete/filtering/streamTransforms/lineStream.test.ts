@@ -31,21 +31,34 @@ describe("lineStream", () => {
   });
 
   describe("avoidPathLine", () => {
-    it("should filter out path lines and empty comments", async () => {
+    it("should filter out path lines", async () => {
       const linesGenerator = await getLineGenerator([
         "// Path: src/index.ts",
         "const x = 5;",
         "//",
         "console.log(x);",
       ]);
-
-      const result = lineStream.avoidPathLineAndEmptyComments(
-        linesGenerator,
-        "//",
-      );
+      const result = lineStream.avoidPathLine(linesGenerator, "//");
       const filteredLines = await getFilteredLines(result);
+      expect(filteredLines).toEqual(["const x = 5;", "//", "console.log(x);"]);
+    });
+  });
 
-      expect(filteredLines).toEqual(["const x = 5;", "console.log(x);"]);
+  describe("avoidEmptyComments", () => {
+    it("should filter out empty comments", async () => {
+      const linesGenerator = await getLineGenerator([
+        "// Path: src/index.ts",
+        "const x = 5;",
+        "//",
+        "console.log(x);",
+      ]);
+      const result = lineStream.avoidEmptyComments(linesGenerator, "//");
+      const filteredLines = await getFilteredLines(result);
+      expect(filteredLines).toEqual([
+        "// Path: src/index.ts",
+        "const x = 5;",
+        "console.log(x);",
+      ]);
     });
   });
 

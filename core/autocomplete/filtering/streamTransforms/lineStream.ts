@@ -122,21 +122,40 @@ export async function* noTopLevelKeywordsMidline(
 }
 
 /**
- * Filters out unwanted lines from a LineStream, specifically those starting with '// Path: <PATH>' or empty comments.
+ * Filters out lines starting with '// Path: <PATH>' from a LineStream.
  *
  * @param {LineStream} stream - The input stream of lines to filter.
  * @param {string} comment - The comment syntax to filter (e.g., '//' for JavaScript-style comments).
- * @yields {string} The filtered lines, excluding unwanted path lines and empty comments.
+ * @yields {string} The filtered lines, excluding unwanted path lines.
  */
-export async function* avoidPathLineAndEmptyComments(
+export async function* avoidPathLine(
   stream: LineStream,
   comment: string,
 ): LineStream {
   // Snippets are inserted as comments with a line at the start '// Path: <PATH>'.
   // Sometimes the model with copy this pattern, which is unwanted
   for await (const line of stream) {
-    // Also filter lines that are empty comments
-    if (line.startsWith(`${comment} Path: `) || line.trim() === comment) {
+    if (line.startsWith(`${comment} Path: `)) {
+      continue;
+    }
+    yield line;
+  }
+}
+
+/**
+ * Filters out empty comment lines from a LineStream.
+ *
+ * @param {LineStream} stream - The input stream of lines to filter.
+ * @param {string} comment - The comment syntax to filter (e.g., '//' for JavaScript-style comments).
+ * @yields {string} The filtered lines, excluding empty comments.
+ */
+export async function* avoidEmptyComments(
+  stream: LineStream,
+  comment: string,
+): LineStream {
+  // Filter lines that are empty comments
+  for await (const line of stream) {
+    if (line.trim() === comment) {
       continue;
     }
     yield line;

@@ -3,7 +3,8 @@ import { HelperVars } from "../../util/HelperVars";
 import { BracketMatchingService } from "../BracketMatchingService";
 import { stopAtStopTokens } from "./charStream";
 import {
-  avoidPathLineAndEmptyComments,
+  avoidEmptyComments,
+  avoidPathLine,
   showWhateverWeHaveAtXMs,
   skipPrefixes,
   stopAtLines,
@@ -59,10 +60,11 @@ export class StreamTransformPipeline {
 
     lineGenerator = stopAtLines(lineGenerator, fullStop);
     lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-    lineGenerator = avoidPathLineAndEmptyComments(
+    lineGenerator = avoidEmptyComments(
       lineGenerator,
       helper.lang.singleLineComment,
     );
+    lineGenerator = avoidPathLine(lineGenerator, helper.lang.singleLineComment);
     lineGenerator = skipPrefixes(lineGenerator);
 
     // lineGenerator = noTopLevelKeywordsMidline(
