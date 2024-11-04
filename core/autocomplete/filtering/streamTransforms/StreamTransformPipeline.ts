@@ -27,12 +27,6 @@ export class StreamTransformPipeline {
   ): AsyncGenerator<string> {
     let charGenerator = generator;
 
-    // charGenerator = noFirstCharNewline(charGenerator);
-    // charGenerator = onlyWhitespaceAfterEndOfLine(
-    //   charGenerator,
-    //   lang.endOfLine,
-    //   fullStop,
-    // );
     charGenerator = stopAtStopTokens(generator, stopTokens);
     charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
       charGenerator,
@@ -44,7 +38,34 @@ export class StreamTransformPipeline {
 
     let lineGenerator = streamLines(charGenerator);
 
-    // First non-whitespace line below the cursor
+    lineGenerator = stopAtLines(lineGenerator, fullStop);
+    lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
+    lineGenerator = avoidEmptyComments(
+      lineGenerator,
+      helper.lang.singleLineComment,
+    );
+    lineGenerator = avoidPathLine(lineGenerator, helper.lang.singleLineComment);
+    lineGenerator = skipPrefixes(lineGenerator);
+
+    for (const lineFilter of helper.lang.lineFilters ?? []) {
+      lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
+    }
+
+    lineGenerator = stopAtSimilarLine(
+      lineGenerator,
+      this.getLineBelowCursor(helper),
+      fullStop,
+    );
+
+    lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, 250);
+
+    const finalGenerator = streamWithNewLines(lineGenerator);
+    for await (const update of finalGenerator) {
+      yield update;
+    }
+  }
+
+  private getLineBelowCursor(helper: HelperVars): string {
     let lineBelowCursor = "";
     let i = 1;
     while (
@@ -57,32 +78,6 @@ export class StreamTransformPipeline {
         ];
       i++;
     }
-
-    lineGenerator = stopAtLines(lineGenerator, fullStop);
-    lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-    lineGenerator = avoidEmptyComments(
-      lineGenerator,
-      helper.lang.singleLineComment,
-    );
-    lineGenerator = avoidPathLine(lineGenerator, helper.lang.singleLineComment);
-    lineGenerator = skipPrefixes(lineGenerator);
-
-    // lineGenerator = noTopLevelKeywordsMidline(
-    //   lineGenerator,
-    //   lang.topLevelKeywords,
-    //   fullStop,
-    // );
-    for (const lineFilter of helper.lang.lineFilters ?? []) {
-      lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
-    }
-
-    lineGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor, fullStop);
-
-    lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, 250);
-
-    const finalGenerator = streamWithNewLines(lineGenerator);
-    for await (const update of finalGenerator) {
-      yield update;
-    }
+    return lineBelowCursor;
   }
 }
