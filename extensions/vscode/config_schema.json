@@ -2637,6 +2637,9 @@
                         "type": "string",
                         "default": "http://localhost:8080"
                       },
+                      "apiKey": {
+                        "type": "string"
+                      },
                       "truncate": {
                         "type": "boolean",
                         "description": "Whether to truncate long sequences to the maximum allowed context length.",
