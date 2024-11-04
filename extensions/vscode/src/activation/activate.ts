@@ -10,7 +10,7 @@ import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 import { isFirstLaunch } from "../copySettings";
 
-async function attemptInstallExtension(extensionId: string): Promise<void> {
+export async function attemptInstallExtension(extensionId: string): Promise<void> {
   // Check if extension is already installed
   const extension = vscode.extensions.getExtension(extensionId);
 
@@ -60,7 +60,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   if (isFirstLaunch(context)) {
     vscode.commands.executeCommand("pearai.startOnboarding");
-    attemptInstallExtension("supermaven.supermaven");
   }
 
   // vscode.commands.executeCommand("pearai.focusContinueInput");

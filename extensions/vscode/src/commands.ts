@@ -34,6 +34,7 @@ import { handlePerplexityMode } from "./integrations/perplexity/perplexity";
 import { PEAR_CONTINUE_VIEW_ID } from "./ContinueGUIWebviewViewProvider";
 import { handleIntegrationShortcutKey } from "./util/integrationUtils";
 import { FIRST_LAUNCH_KEY, importUserSettingsFromVSCode, isFirstLaunch } from "./copySettings";
+import { attemptInstallExtension } from "./activation/activate";
 
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -252,6 +253,7 @@ const commandsMap: (
     "pearai.welcome.markNewOnboardingComplete": async () => {
       vscode.window.showInformationMessage("Marking New onboarding complete");
       await extensionContext.globalState.update(FIRST_LAUNCH_KEY, true);
+      attemptInstallExtension("supermaven.supermaven");
     },
     "pearai.resetInteractiveContinueTutorial": async () => {
       sidebar.webviewProtocol?.request("resetInteractiveContinueTutorial", undefined, [PEAR_CONTINUE_VIEW_ID]);
@@ -342,6 +344,15 @@ const commandsMap: (
       await handleIntegrationShortcutKey("navigateToInventory", "inventory", sidebar, PEAR_OVERLAY_VIEW_ID)
     },
     "pearai.startOnboarding": async () => {
+      if (isFirstLaunch(extensionContext)) {  
+        setTimeout(() => {
+          core.invoke("index/setPaused", true);
+        }, 200);
+        setTimeout(async () => {
+          core.invoke("index/setPaused", false);
+        }, 6000);
+      }
+      
       await vscode.commands.executeCommand("pearai.showOverlay");
       await vscode.commands.executeCommand("pearai.showInteractiveContinueTutorial");
     },
