@@ -251,7 +251,7 @@ const commandsMap: (
       importUserSettingsFromVSCode();
     },
     "pearai.welcome.markNewOnboardingComplete": async () => {
-      vscode.window.showInformationMessage("Marking New onboarding complete");
+      // vscode.window.showInformationMessage("Marking onboarding complete.");
       await extensionContext.globalState.update(FIRST_LAUNCH_KEY, true);
       attemptInstallExtension("supermaven.supermaven");
     },
@@ -344,7 +344,7 @@ const commandsMap: (
       await handleIntegrationShortcutKey("navigateToInventory", "inventory", sidebar, PEAR_OVERLAY_VIEW_ID)
     },
     "pearai.startOnboarding": async () => {
-      if (isFirstLaunch(extensionContext)) {  
+      if (isFirstLaunch(extensionContext)) {
         setTimeout(() => {
           core.invoke("index/setPaused", true);
         }, 200);
@@ -352,7 +352,7 @@ const commandsMap: (
           core.invoke("index/setPaused", false);
         }, 6000);
       }
-      
+
       await vscode.commands.executeCommand("pearai.showOverlay");
       await vscode.commands.executeCommand("pearai.showInteractiveContinueTutorial");
     },
