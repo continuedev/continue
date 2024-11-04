@@ -85,8 +85,8 @@ export class QuickEdit {
   private _curModelTitle?: string;
 
   private BLOCKED_MODELS = [
-    'PearAI Creator (Powered by aider)',
-    'PearAI Search (Powered by Perplexity)',
+    'aider',
+    'perplexity',
   ];
 
   private DEFAULT_MODEL = 'PearAI Model';
@@ -135,9 +135,7 @@ export class QuickEdit {
     const config = await this.configHandler.loadConfig();
 
     // If there's a currently selected model and it's not blocked, use it
-    if (this._curModelTitle && !this.BLOCKED_MODELS.some(blocked => 
-            blocked.toLowerCase().includes(this._curModelTitle!.toLowerCase()))
-          ) {
+    if (this._curModelTitle && !this.BLOCKED_MODELS.some(blocked => this._curModelTitle!.toLowerCase().includes(blocked.toLowerCase()))) {
       return this._curModelTitle;
     }
 
@@ -147,8 +145,7 @@ export class QuickEdit {
         (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
 
     // If default model is the blocked one or not set, use fallback
-    if (!defaultModelTitle || !this.BLOCKED_MODELS.some(blocked => 
-      blocked.toLowerCase().includes(defaultModelTitle.toLowerCase()))
+    if (!defaultModelTitle || !this.BLOCKED_MODELS.some(blocked => this._curModelTitle!.toLowerCase().includes(blocked.toLowerCase()))
     ) {
       defaultModelTitle = this.DEFAULT_MODEL;
    }
@@ -185,7 +182,7 @@ export class QuickEdit {
     const quickPick = vscode.window.createQuickPick();
     quickPick.ignoreFocusOut = true;
     quickPick.value = prompt;
-    
+
     try {
         quickPick.items = [{
             label: "$(sync~spin) Processing edit...",
@@ -471,13 +468,11 @@ export class QuickEdit {
         const curModelTitle = await this._getCurModelTitle();
         const filteredConfig = {
           ...config,
-          models: config.models.filter((model: any) => 
-              !this.BLOCKED_MODELS.some(blocked => 
-                blocked.toLowerCase().includes(model.title.toLowerCase())
-              )
+          models: config.models.filter((model: any) =>
+              !this.BLOCKED_MODELS.some(blocked => this._curModelTitle!.toLowerCase().includes(blocked.toLowerCase()))
           )
       };
-        
+
         const selectedModelTitle = await getModelQuickPickVal(
           curModelTitle,
           filteredConfig,

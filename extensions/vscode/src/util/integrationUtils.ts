@@ -29,3 +29,4 @@ export async function handleIntegrationShortcutKey(protocol: keyof ToWebviewProt
   // Navigate to creator tab via webview protocol
   await sidebar.webviewProtocol?.request(protocol, undefined, [webview]);
 }
+

@@ -76,7 +76,7 @@ function copyVSCodeSettingsToPearAIDir() {
     }
 
     // EXCLUDE CONFLICTING EXTENSIONS
-    exclusions.push('codium');
+    exclusions.push('codeium');
     exclusions.push('github.copilot');
     exclusions.push('continue');
 

@@ -24,22 +24,22 @@ export default function Features({ onNext }: { onNext: () => void }) {
   const features = [
     {
       icon: <Sparkles className="h-6 w-6" />,
-      title: "PearAI Assistant",
+      title: "PearAI Chat",
       description:
-        "Ask Assistant to help you understand code and make changes, powered by Continue.",
-      video: getAssetPath("high-def.png"),
+        "Ask the Chat in sidebar to help you understand code and make changes. Powered by Continue.",
+      video: getAssetPath("pearai-chat-welcome.mp4"),
     },
     {
       icon: <Bot className="h-6 w-6" />,
-      title: "PearAI Create",
-      description: "Generate code and solutions with AI assistance.",
-      video: getAssetPath("pearai-@file.gif"),
+      title: "PearAI Creator",
+      description: "Ask for a new feature, a refactor, or to fix a bug. Creator will make and apply the changes to your files automatically. Powered by aider.",
+      video: getAssetPath("pearai-creator-welcome.mp4"),
     },
     {
       icon: <Search className="h-6 w-6" />,
       title: "PearAI Search",
-      description: "Search through your codebase intelligently.",
-      video: getAssetPath("pearai-CMD+I.gif"),
+      description: "Search the web with AI. Never have out-of-date documentation for requests again. Powered by Perplexity.",
+      video: getAssetPath("pearai-search-welcome.mp4"),
     },
   ];
 
@@ -105,14 +105,25 @@ export default function Features({ onNext }: { onNext: () => void }) {
     }
   };
 
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Enter') {
+        handleNextClick();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentFeature]);
+
   return (
-    <div className="flex w-full overflow-hidden bg-background text-foreground">
+    <div className="flex w-full overflow-hidden text-foreground">
       <div className="w-[35%] min-w-[320px] max-w-[420px] flex flex-col h-screen">
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 pt-8">
             <div>
               <h2 className="text-xl lg:text-2xl font-bold text-foreground mb-2">
-                Welcome to PearAI.
+                Welcome to PearAI
               </h2>
               <p className="text-sm text-muted-foreground">
                 Speed up your development process by seamlessly integrating AI
@@ -166,15 +177,15 @@ export default function Features({ onNext }: { onNext: () => void }) {
 
         <div className="p-6 border-t border-input shrink-0">
           <Button
-            className="w-full text-button-foreground bg-button hover:bg-button-hover p-3 text-sm cursor-pointer"
+            className="w-full text-button-foreground bg-button hover:bg-button-hover p-3 text-sm cursor-pointer relative"
             onClick={handleNextClick}
           >
-            Next
+            <span className="absolute left-1/2 -translate-x-1/2">Next</span>
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 relative bg-[var(--vscode-input-background)]">
+      <div className="flex-1 relative bg-background">
         {features.map((feature, index) => (
           <div
             key={index}
@@ -183,18 +194,16 @@ export default function Features({ onNext }: { onNext: () => void }) {
             }`}
           >
             {currentFeature === index && (
-              <img
-                key={`${feature.title}-${timestamp}`}
-                src={`${feature.video}?t=${timestamp}`}
-                alt={`${feature.title} demonstration`}
-                className={`w-full h-full object-cover transition-opacity duration-300 ${
-                  isLoading ? "opacity-0" : "opacity-100"
-                }`}
-                loading="eager"
-                style={{
-                  willChange: "transform, opacity",
-                }}
-              />
+              <div className="flex items-center justify-center h-full w-full">
+                <video
+                src={`${feature.video}`}
+                  className="rounded-lg max-h-[90%] max-w-[90%] object-contain"
+                  muted
+                  autoPlay
+                  playsInline
+                  loop
+                />
+              </div>
             )}
           </div>
         ))}

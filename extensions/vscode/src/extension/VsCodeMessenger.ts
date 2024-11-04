@@ -122,6 +122,7 @@ export class VsCodeMessenger {
     });
     this.onWebview("addPerplexityContext", (msg) => {
       vscode.commands.executeCommand("pearai.addPerplexityContext", msg);
+      vscode.commands.executeCommand("pearai.hideOverlay");
     });
     this.onWebview("aiderMode", (msg) => {
       vscode.commands.executeCommand("pearai.aiderMode");

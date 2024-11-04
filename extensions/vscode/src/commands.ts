@@ -253,6 +253,9 @@ const commandsMap: (
       vscode.window.showInformationMessage("Marking New onboarding complete");
       await extensionContext.globalState.update(FIRST_LAUNCH_KEY, true);
     },
+    "pearai.resetInteractiveContinueTutorial": async () => {
+      sidebar.webviewProtocol?.request("resetInteractiveContinueTutorial", undefined, [PEAR_CONTINUE_VIEW_ID]);
+    },
     "pearai.showInteractiveContinueTutorial": async () => {
       sidebar.webviewProtocol?.request("showInteractiveContinueTutorial", undefined, [PEAR_CONTINUE_VIEW_ID]);
     },
@@ -340,8 +343,10 @@ const commandsMap: (
     },
     "pearai.startOnboarding": async () => {
       await vscode.commands.executeCommand("pearai.showOverlay");
+      await vscode.commands.executeCommand("pearai.showInteractiveContinueTutorial");
     },
     "pearai.developer.restFirstLaunch": async () => {
+      vscode.commands.executeCommand("pearai.resetInteractiveContinueTutorial");
       extensionContext.globalState.update(FIRST_LAUNCH_KEY, false);
       vscode.window.showInformationMessage("Successfully reset PearAI first launch flag, RELOAD WINDOW TO SEE WELCOME PAGE", 'Reload Window')
         .then(selection => {

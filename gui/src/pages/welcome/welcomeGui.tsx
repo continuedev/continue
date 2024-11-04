@@ -1,9 +1,9 @@
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Features from "./Features";
-import ImportExtensions from "./ImportExtensions";
-import AddToPath from "./AddToPath";
 import FinalStep from "./FinalStep";
+import SetupPage from "./SetupPage";
 import { IdeMessengerContext } from "@/context/IdeMessenger";
+import { WelcomeHeader } from "./WelcomeHeader";
 
 export default function Welcome() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -44,7 +44,8 @@ export default function Welcome() {
   }, [ideMessenger]); // Dependency array ensures this runs once when the component mounts
 
   const handleNextStep = () => {
-    setStep((prevStep) => Math.min(prevStep + 1, 4));
+    setStep((prevStep) => Math.min(prevStep + 1, 2));
+    console.dir(`step: ${step}`);
   };
 
   const handleBackStep = () => {
@@ -56,23 +57,18 @@ export default function Welcome() {
       case 0:
         return <Features onNext={handleNextStep} />;
       case 1:
-        return (
-          <ImportExtensions onNext={handleNextStep} onBack={handleBackStep} />
-        );
+          return <SetupPage onNext={handleNextStep} />;
       case 2:
-        return <AddToPath onNext={handleNextStep} onBack={handleBackStep} />;
-      case 3:
-        if (!isUserSignedIn) {
-          return <SignIn onNext={handleNextStep} onBack={handleBackStep} />;
-        }
-        return <FinalStep onBack={handleBackStep} />;
-      case 4:
         return <FinalStep onBack={handleBackStep} />;
       default:
         return null;
     }
   };
 
-  return <div className="flex flex-col space-y-4">{renderStep()}</div>;
-}
-import SignIn from "./SignIn";
+  return (
+    <div className="flex flex-col">
+      <WelcomeHeader onBack={handleBackStep} showBack={step > 0}/>
+      {renderStep()}
+    </div>
+  );}
+
