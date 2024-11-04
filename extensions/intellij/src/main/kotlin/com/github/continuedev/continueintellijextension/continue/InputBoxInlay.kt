@@ -11,10 +11,10 @@ class InputBoxInlayProvider : InlayHintsProvider<NoSettings> {
     override val key: SettingsKey<NoSettings>
         get() = SettingsKey<NoSettings>("InputBoxInlayProviderSettingsKey")
     override val name: String
-        get() = "Continue Quick Input"
+        get() = "Jarvis Quick Input"
 
     override val previewText: String?
-        get() = "Continue Quick Input"
+        get() = "Jarvis Quick Input"
 
     override fun createSettings() = NoSettings()
 

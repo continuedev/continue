@@ -1,7 +1,7 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.continuedev.continueintellijextension</id>
-    <name>Continue</name>
+    <name>Jarvis</name>
     <vendor>continue-dev</vendor>
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.json</depends>
@@ -42,7 +42,7 @@
                 parentId="tools"
                 instance="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
                 id="com.github.continuedev.continueintellijextension.services.ContinueExtensionConfigurable"
-                displayName="Continue"/>
+                displayName="Jarvis"/>
         <applicationService
                 serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings"/>
     </extensions>
@@ -56,7 +56,7 @@
                                first-keystroke="ctrl I"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta I"/>
-            <override-text place="GoToAction" text="Continue: Edit Code"/>
+            <override-text place="GoToAction" text="Jarvis: Edit Code"/>
         </action>
 
         <action id="continue.acceptDiff"
@@ -66,7 +66,7 @@
                                first-keystroke="shift ctrl ENTER"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="shift meta ENTER"/>
-            <override-text place="GoToAction" text="Continue: Accept Diff"/>
+            <override-text place="GoToAction" text="Jarvis: Accept Diff"/>
         </action>
 
         <action id="continue.rejectDiff"
@@ -76,7 +76,7 @@
                                first-keystroke="shift ctrl DELETE"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="shift meta DELETE"/>
-            <override-text place="GoToAction" text="Continue: Reject Diff"/>
+            <override-text place="GoToAction" text="Jarvis: Reject Diff"/>
         </action>
 
         <action id="continue.acceptVerticalDiffBlock"
@@ -86,7 +86,7 @@
                                first-keystroke="alt shift Y"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift Y"/>
-            <override-text place="GoToAction" text="Continue: Accept Vertical Diff Block"/>
+            <override-text place="GoToAction" text="Jarvis: Accept Vertical Diff Block"/>
         </action>
 
         <action id="continue.rejectVerticalDiffBlock"
@@ -96,27 +96,27 @@
                                first-keystroke="alt shift N"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="alt shift N"/>
-            <override-text place="GoToAction" text="Continue: Reject Vertical Diff Block"/>
+            <override-text place="GoToAction" text="Jarvis: Reject Vertical Diff Block"/>
         </action>
 
         <action id="continue.focusContinueInputWithoutClear"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"
-                description="Focus Continue Input With Edit">
+                description="Focus Jarvis Input With Edit">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl shift J"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta shift J"/>
-            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context"/>
+            <override-text place="GoToAction" text="Jarvis: Add Highlighted Code to Context"/>
         </action>
 
         <action id="continue.newContinueSession"
                 icon="AllIcons.General.Add"
                 class="com.github.continuedev.continueintellijextension.actions.NewContinueSessionAction"
-                text="Start New Continue Session"
-                description="Start New Continue Session">
+                text="Start New Jarvis Session"
+                description="Start New Jarvis Session">
 
-            <override-text place="GoToAction" text="Continue: New Session"/>
+            <override-text place="GoToAction" text="Jarvis: New Session"/>
         </action>
 
         <action id="continue.viewHistory"
@@ -124,19 +124,19 @@
                 class="com.github.continuedev.continueintellijextension.actions.ViewHistoryAction"
                 text="View History"
                 description="View History">
-            <override-text place="GoToAction" text="Continue: View History"/>
+            <override-text place="GoToAction" text="Jarvis: View History"/>
         </action>
 
         <action id="continue.focusContinueInput"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputAction"
                 text="Add selected code to context"
-                description="Focus Continue Input">
+                description="Focus Jarvis Input">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl J"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta J"/>
             <add-to-group group-id="EditorPopupMenu"/>
-            <override-text place="GoToAction" text="Continue: Add Highlighted Code to Context and Clear Chat"/>
+            <override-text place="GoToAction" text="Jarvis: Add Highlighted Code to Context and Clear Chat"/>
         </action>
 
         <group id="ContinueSidebarActionsGroup">

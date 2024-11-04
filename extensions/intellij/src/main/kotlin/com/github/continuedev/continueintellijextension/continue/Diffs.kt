@@ -127,7 +127,7 @@ class DiffManager(private val project: Project) : DumbAware {
         val content2: DiffContent = DiffContentFactory.getInstance().create(File(file2).readText())
 
         // Create a SimpleDiffRequest and populate it with the DiffContents and titles
-        val diffRequest = SimpleDiffRequest("Continue Diff", content1, content2, "Old", "New")
+        val diffRequest = SimpleDiffRequest("Jarvis Diff", content1, content2, "Old", "New")
         
         // Get a DiffRequestPanel from the DiffManager and set the DiffRequest to it
         val diffInfo = diffInfoMap[file2]
@@ -158,7 +158,7 @@ class DiffManager(private val project: Project) : DumbAware {
                     ?: object : DialogWrapper(project, true, IdeModalityType.MODELESS) {
                         init {
                             init()
-                            title = "Continue Diff"
+                            title = "Jarvis Diff"
                         }
 
                         override fun createCenterPanel(): JComponent? {
