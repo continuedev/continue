@@ -134,8 +134,8 @@ export const defaultConfig: SerializedContinueConfig = {
       isDefault: true,
     },
     {
-      model: "claude-3-haiku",
-      title: "Claude 3 Haiku (PearAI)",
+      model: "claude-3-5-haiku",
+      title: "Claude 3.5 Haiku (PearAI)",
       provider: "pearai_server",
       isDefault: true,
     },
