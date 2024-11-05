@@ -1,5 +1,4 @@
 import {
-  ArrowPathIcon,
   BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
@@ -14,7 +13,7 @@ import { vscBackground, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
-import { getFontSize } from "../../util";
+import { getFontSize, getMetaKeyLabel } from "../../util";
 import ButtonWithTooltip from "../ButtonWithTooltip";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
@@ -50,7 +49,7 @@ function StepContainer(props: StepContainerProps) {
 
   const isUserInput = props.item.message.role === "user";
   const uiConfig = useUIConfig();
-  const shouldRenderActions = !props.isLast || (props.isLast && !active);
+  const shouldRenderActions = !active || !props.isLast;
 
   useEffect(() => {
     if (!active) {
@@ -84,7 +83,7 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div className="relative pb-3"
+    <div className="relative"
       style={{
         minHeight: props.isLast ? "50vh" : 0
       }}
@@ -108,7 +107,6 @@ function StepContainer(props: StepContainerProps) {
           />
         )}
       </ContentDiv>
-
       {shouldRenderActions && (
         // Height of this should be the same as height of "Cancel" div to prevent jump
         <div className="h-7 mb-2 flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 pb-0 cursor-default">
