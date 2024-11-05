@@ -84,7 +84,7 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative pb-3">
       <ContentDiv
         hidden={!props.open}
         isUserInput={isUserInput}
@@ -131,6 +131,7 @@ function StepContainer(props: StepContainerProps) {
             tabIndex={-1}
             text={stripImages(props.item.message.content)}
             clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
+            checkIconClassName="h-3.5 w-3.5 text-green-400"
           />
 
           <ButtonWithTooltip
@@ -138,7 +139,7 @@ function StepContainer(props: StepContainerProps) {
             tabIndex={-1}
             onClick={() => sendFeedback(true)}
           >
-            <HandThumbUpIcon className="h-3.5 w-3.5 text-gray-500 mx-0.5" />
+            <HandThumbUpIcon className={`h-3.5 w-3.5 mx-0.5 ${feedback === true ? 'text-green-400' : 'text-gray-500'}`} />
           </ButtonWithTooltip>
 
           <ButtonWithTooltip
@@ -146,7 +147,7 @@ function StepContainer(props: StepContainerProps) {
             tabIndex={-1}
             onClick={() => sendFeedback(false)}
           >
-            <HandThumbDownIcon className="h-3.5 w-3.5 text-gray-500" />
+            <HandThumbDownIcon className={`h-3.5 w-3.5 ${feedback === false ? 'text-red-400' : 'text-gray-500'}`} />
           </ButtonWithTooltip>
         </div>
       )}
