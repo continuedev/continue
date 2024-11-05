@@ -25,7 +25,6 @@ import {
   lightGray,
   vscBackground,
 } from "../../components";
-import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
@@ -96,20 +95,6 @@ const StopButton = styled.div`
   }
 `;
 
-const StepsDiv = styled.div`
-  margin-top: 8px;
-  position: relative;
-  background-color: transparent;
-
-  & > * {
-    position: relative;
-  }
-
-  .thread-message {
-    margin: 8px 4px 0 4px;
-  }
-`;
-
 function fallbackRender({ error, resetErrorBoundary }: any) {
   // Call resetErrorBoundary() to reset the error boundary and retry the render.
 
@@ -143,20 +128,55 @@ export function Chat() {
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
-  const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
-  useEffect(() => {
-    if (!active || !topGuiDivRef.current) return
-    const scrollAreaElement = topGuiDivRef.current;
-
-    scrollAreaElement.scrollTop =
-      scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
-
+  // SCROLLING
+  const [isAtBottom, setIsAtBottom] = useState<boolean>(true);
+  const scrollToBottom = useCallback(() => {
+    if (!topGuiDivRef.current) return
+    const elem = topGuiDivRef.current;
+    elem.scrollTop = elem.scrollHeight - elem.clientHeight;
     setIsAtBottom(true);
-  }, [topGuiDivRef, active, setIsAtBottom])
+  }, [topGuiDivRef])
+
+  const checkBottom = useCallback(() => {
+    if (!topGuiDivRef.current) return
+    const elem = topGuiDivRef.current;
+    const atBottom = elem.scrollHeight - elem.clientHeight <= elem.scrollTop;
+    setIsAtBottom(atBottom);
+  }, [topGuiDivRef, setIsAtBottom])
+
+  useEffect(() => {
+    if (active) scrollToBottom()
+  }, [active, scrollToBottom])
+
+  // useEffect(() => {
+  //   if (isAtBottom && trackVisibility && !inView) {
+  //     if (!scrollAreaRef.current) return;
+
+  //     const scrollAreaElement = scrollAreaRef.current;
+
+  //     scrollAreaElement.scrollTop =
+  //       scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
+  //   }
+  // }, [inView, entry, isAtBottom]);
+  // const handleResize = () => {
+  //   if (active && isAtBottom) scrollToBottom();
+  // }
+  // const handleScroll = () => {
+  //   console.log('scrolling')
+  //   // Temporary fix to account for additional height when code blocks are added
+  //   // const OFFSET_HERUISTIC = 0;
+  //   if (!topGuiDivRef.current) return;
+
+  //   const { scrollTop, scrollHeight, clientHeight } = topGuiDivRef.current;
+  //   const atBottom =
+  //     scrollHeight - clientHeight <= scrollTop; // + OFFSET_HERUISTIC;
+
+  //   setIsAtBottom(atBottom);
+  // };
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -175,18 +195,6 @@ export function Chat() {
       window.removeEventListener("keydown", listener);
     };
   }, [active]);
-
-  const handleScroll = () => {
-    // Temporary fix to account for additional height when code blocks are added
-    const OFFSET_HERUISTIC = 300;
-    if (!topGuiDivRef.current) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = topGuiDivRef.current;
-    const atBottom =
-      scrollHeight - clientHeight <= scrollTop + OFFSET_HERUISTIC;
-
-    setIsAtBottom(atBottom);
-  };
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
@@ -308,135 +316,148 @@ export function Chat() {
     [state.history],
   );
 
+  const reverseHistory = useMemo(() => {
+    return [...state.history].reverse();
+  }, [state.history]);
   return (
     <>
       <TopGuiDiv
-        className={`${state.history.length > 0 ? 'h-full' : ''}`}
+        className={`flex flex-col-reverse ${state.history.length > 0 ? 'flex-1' : ''}`}
         ref={topGuiDivRef}
-        onScroll={handleScroll}
+        onScroll={checkBottom}
+        onResize={checkBottom}
         showScrollbar={state.config.ui?.showChatScrollbar || false}
       >
-        <div className="m-auto max-w-3xl">
-          <StepsDiv>
-            {state.history.map((item, index: number) => (
-              <Fragment key={item.message.id}>
-                <ErrorBoundary
-                  FallbackComponent={fallbackRender}
-                  onReset={() => {
-                    dispatch(newSession());
-                  }}
-                >
-                  {item.message.role === "user" ? (
-                    <ContinueInputBox
-                      onEnter={async (editorState, modifiers) => {
-                        streamResponse(
-                          editorState,
-                          modifiers,
-                          ideMessenger,
-                          index,
-                        );
-                      }}
-                      isLastUserInput={isLastUserInput(index)}
-                      isMainInput={false}
-                      editorState={item.editorState}
-                      contextItems={item.contextItems}
-                    />
-                  ) : (
-                    <div className="thread-message">
-                      <TimelineItem
-                        item={item}
-                        iconElement={
-                          false ? (
-                            <CodeBracketSquareIcon width="16px" height="16px" />
-                          ) : false ? (
-                            <ExclamationTriangleIcon
-                              width="16px"
-                              height="16px"
-                              color="red"
-                            />
-                          ) : (
-                            <ChatBubbleOvalLeftIcon
-                              width="16px"
-                              height="16px"
-                            />
-                          )
-                        }
+        {/* <StepsDiv> */}
+        {reverseHistory.map((item, reverseIndex: number) => {
+          const index = state.history.length - 1 - reverseIndex;
+          const isLast = index === sessionState.history.length - 1;
+          const isFirst = index === 0;
+          return (
+            <Fragment key={item.message.id}>
+              <ErrorBoundary
+                FallbackComponent={fallbackRender}
+                onReset={() => {
+                  dispatch(newSession());
+                }}
+              >
+                {item.message.role === "user" ? (
+                  <ContinueInputBox
+                    onEnter={async (editorState, modifiers) => {
+                      streamResponse(
+                        editorState,
+                        modifiers,
+                        ideMessenger,
+                        index,
+                      );
+                    }}
+                    isLastUserInput={isLastUserInput(index)}
+                    isMainInput={false}
+                    editorState={item.editorState}
+                    contextItems={item.contextItems}
+                  />
+                ) : (
+                  <div className="flex mt-[8px] mr-[4px] mb-0 ml-[4px]"
+                    style={{
+                      flex: sessionState.history.length === 2 ? 1 : undefined
+                    }}
+                  >
+                    <TimelineItem
+                      item={item}
+                      iconElement={
+                        false ? (
+                          <CodeBracketSquareIcon width="16px" height="16px" />
+                        ) : false ? (
+                          <ExclamationTriangleIcon
+                            width="16px"
+                            height="16px"
+                            color="red"
+                          />
+                        ) : (
+                          <ChatBubbleOvalLeftIcon
+                            width="16px"
+                            height="16px"
+                          />
+                        )
+                      }
+                      open={
+                        typeof stepsOpen[index] === "undefined"
+                          ? false
+                            ? false
+                            : true
+                          : stepsOpen[index]!
+                      }
+                      onToggle={() => { }}
+                    >
+                      <StepContainer
+                        index={index}
+                        isLast={isLast}
+                        isFirst={isFirst}
                         open={
                           typeof stepsOpen[index] === "undefined"
-                            ? false
-                              ? false
-                              : true
+                            ? true
                             : stepsOpen[index]!
                         }
-                        onToggle={() => { }}
-                      >
-                        <StepContainer
-                          index={index}
-                          isLast={index === sessionState.history.length - 1}
-                          isFirst={index === 0}
-                          open={
-                            typeof stepsOpen[index] === "undefined"
-                              ? true
-                              : stepsOpen[index]!
-                          }
-                          key={index}
-                          onUserInput={(input: string) => { }}
-                          item={item}
-                          onReverse={() => { }}
-                          onRetry={() => {
-                            streamResponse(
-                              state.history[index - 1].editorState,
-                              state.history[index - 1].modifiers ??
-                              defaultInputModifiers,
-                              ideMessenger,
-                              index - 1,
-                            );
-                          }}
-                          onContinueGeneration={() => {
-                            window.postMessage(
-                              {
-                                messageType: "userInput",
-                                data: {
-                                  input:
-                                    "Continue your response exactly where you left off:",
-                                },
+                        key={index}
+                        onUserInput={(input: string) => { }}
+                        item={item}
+                        onReverse={() => { }}
+                        onRetry={() => {
+                          streamResponse(
+                            state.history[index - 1].editorState,
+                            state.history[index - 1].modifiers ??
+                            defaultInputModifiers,
+                            ideMessenger,
+                            index - 1,
+                          );
+                        }}
+                        onContinueGeneration={() => {
+                          window.postMessage(
+                            {
+                              messageType: "userInput",
+                              data: {
+                                input:
+                                  "Continue your response exactly where you left off:",
                               },
-                              "*",
-                            );
-                          }}
-                          onDelete={() => {
-                            dispatch(deleteMessage(index));
-                          }}
-                          modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
-                        />
-                      </TimelineItem>
-                    </div>
-                  )}
-                </ErrorBoundary>
-              </Fragment>
-            ))}
-          </StepsDiv>
-        </div>
-        <ChatScrollAnchor
+                            },
+                            "*",
+                          );
+                        }}
+                        onDelete={() => {
+                          dispatch(deleteMessage(index));
+                        }}
+                        modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
+                      />
+                    </TimelineItem>
+                  </div>
+                )}
+              </ErrorBoundary>
+            </Fragment>
+          )
+        })}
+        {/* </StepsDiv> */}
+        {/* <ChatScrollAnchor
           scrollAreaRef={topGuiDivRef}
-          isAtBottom={isAtBottom}
+          isAtBottom={true}
           trackVisibility={active}
-        />
+        /> */}
       </TopGuiDiv>
 
-      {ttsActive && (
-        <StopButton
-          className="mb-4 mt-2"
-          onClick={() => {
-            ideMessenger.post("tts/kill", undefined);
-          }}
-        >
-          ■ Stop TTS
-        </StopButton>
-      )}
-      {active && (
-        <div className="h-7 mb-2">
-          <StopButton
+
+
+      <div className={`relative z-100 ${state.history.length > 0 ? 'border-0 border-t border-solid' : ''} ${isAtBottom ? 'border-transparent' : 'border-t-zinc-700'}`}>
+        <div className="z-100 absolute -top-7 -translate-y-1/2 left-1/2 -translate-x-1/2">
+          {ttsActive && (
+            <StopButton
+              className="mb-4 mt-2"
+              onClick={() => {
+                ideMessenger.post("tts/kill", undefined);
+              }}
+            >
+              ■ Stop TTS
+            </StopButton>
+          )}
+          {active && <StopButton
             onClick={() => {
               dispatch(setInactive());
               if (
@@ -448,10 +469,8 @@ export function Chat() {
             }}
           >
             {getMetaKeyLabel()} ⌫ Cancel
-          </StopButton>
+          </StopButton>}
         </div>
-      )}
-      <div className={`${state.history.length > 0 ? 'pt-1 border-0 border-t border-solid border-t-zinc-700' : ''}`}>
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}
@@ -460,7 +479,6 @@ export function Chat() {
           }}
         />
         <div style={{
-          opacity: active ? 0 : 1,
           pointerEvents: active ? 'none' : 'auto',
         }}>
           {state.history.length > 0 ? (

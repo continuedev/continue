@@ -83,9 +83,9 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div className="relative"
+    <div className="flex-1 relative"
       style={{
-        minHeight: props.isLast ? "50vh" : 0
+        minHeight: props.isLast ? "50vh" : 0,
       }}
     >
       <ContentDiv
@@ -109,7 +109,7 @@ function StepContainer(props: StepContainerProps) {
       </ContentDiv>
       {shouldRenderActions && (
         // Height of this should be the same as height of "Cancel" div to prevent jump
-        <div className="h-7 mb-2 flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 pb-0 cursor-default">
+        <div className="h-7 mb-2 mx-2 flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 pb-0 cursor-default">
           {truncatedEarly && (
             <ButtonWithTooltip
               tabIndex={-1}
