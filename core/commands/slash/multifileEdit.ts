@@ -1,13 +1,43 @@
 import { SlashCommand } from "../..";
+import { getFullyQualifiedPath } from "../../../extensions/vscode/src/util/util";
 import { stripImages } from "../../llm/images";
 
 const MultiFileEditSlashCommand: SlashCommand = {
   name: "multifile-edit",
   description: "Edit multiple files in the codebase at once",
-  run: async function* ({ llm, contextItems, input }) {
-    const filesToEditStr = contextItems.map((item) => item.content).join("\n");
+  run: async function* ({ llm, contextItems, selectedCode, input, ide }) {
+    const selectedCodeStr = (
+      await Promise.all(
+        selectedCode.map(async (item) => {
+          // Split the range string from the filename, e.g. `filename.ts (1-2) -> [filename.ts, (1-2)]`
+          const [filepath, rangeStr] = item.filepath.split(" ");
+          const fullPath = getFullyQualifiedPath(filepath);
 
-    const content = createPrompt(filesToEditStr, input);
+          if (!fullPath) {
+            return "";
+          }
+
+          const codeStr = await ide.readRangeInFile(fullPath, item.range);
+
+          // Include the filepath so the model can map it correctly with codeblock outputs
+          return `\`\`\`${fullPath} ${rangeStr}\n${codeStr}\`\`\``;
+        }),
+      )
+    ).join("\n");
+
+    const fileContextItemsStr = contextItems
+      .filter((item) => item.uri?.type === "file")
+      .map((item) => item.content)
+      .join("\n");
+
+    const filesToEditStr = fileContextItemsStr + "\n" + selectedCodeStr;
+
+    const additionalContextStr = contextItems
+      .filter((item) => item.uri?.type !== "file")
+      .map((item) => `${item.description}: ${item.content}`)
+      .join("\n");
+
+    const content = createPrompt(filesToEditStr, additionalContextStr, input);
 
     for await (const chunk of llm.streamChat([{ role: "user", content }])) {
       yield stripImages(chunk.content);
@@ -15,7 +45,11 @@ const MultiFileEditSlashCommand: SlashCommand = {
   },
 };
 
-function createPrompt(filesToEditStr: string, input: string): string {
+function createPrompt(
+  filesToEditStr: string,
+  additionalContextStr: string,
+  input: string,
+): string {
   return `
 You are an AI assistant designed to help software engineers make multi-file edits in their codebase. Your task is to generate the necessary code changes for multiple files based on the engineer's request. Follow these guidelines:
 
@@ -54,11 +88,17 @@ Now, let's make the changes based on the engineer's request:
 ${input}
 </input>
 
-Here are the files to edit:
+Here are the files to base your edits on:
 
 <files>
 ${filesToEditStr}
 </files>
+
+And here is any additional context the engineer has provided:
+
+<context>
+${additionalContextStr}
+</context>
 
 Please provide the multi-file edit details based on the engineer's request.
   `;
