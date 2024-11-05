@@ -135,8 +135,13 @@ export class QuickEdit {
     const config = await this.configHandler.loadConfig();
 
     // If there's a currently selected model and it's not blocked, use it
-    if (this._curModelTitle && !this.BLOCKED_MODELS.some(blocked => this._curModelTitle!.toLowerCase().includes(blocked.toLowerCase()))) {
-      return this._curModelTitle;
+    if (this._curModelTitle) {
+      const isBlocked = this.BLOCKED_MODELS.some(blocked => 
+        this._curModelTitle?.toLowerCase().includes(blocked.toLowerCase())
+      );
+      if (!isBlocked) {
+        return this._curModelTitle;
+      }
     }
 
     // Get default model from config
@@ -145,8 +150,7 @@ export class QuickEdit {
         (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
 
     // If default model is the blocked one or not set, use fallback
-    if (!defaultModelTitle || !this.BLOCKED_MODELS.some(blocked => this._curModelTitle!.toLowerCase().includes(blocked.toLowerCase()))
-    ) {
+    if (!defaultModelTitle || !this.BLOCKED_MODELS.some(blocked => this._curModelTitle?.toLowerCase().includes(blocked.toLowerCase()))) {
       defaultModelTitle = this.DEFAULT_MODEL;
    }
    return defaultModelTitle;
@@ -469,7 +473,7 @@ export class QuickEdit {
         const filteredConfig = {
           ...config,
           models: config.models.filter((model: any) =>
-              !this.BLOCKED_MODELS.some(blocked => this._curModelTitle!.toLowerCase().includes(blocked.toLowerCase()))
+              !this.BLOCKED_MODELS.some(blocked => this._curModelTitle?.toLowerCase().includes(blocked.toLowerCase()))
           )
       };
 
