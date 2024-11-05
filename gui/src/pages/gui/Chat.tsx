@@ -12,7 +12,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -150,16 +149,16 @@ export function Chat() {
     useHistory(dispatch);
 
   const scrollToBottom = useCallback(() => {
-    if (!topGuiDivRef.current) return
+    if (!topGuiDivRef.current) return;
     const elem = topGuiDivRef.current;
     elem.scrollTop = elem.scrollHeight - elem.clientHeight;
 
     setIsAtBottom(true);
-  }, [topGuiDivRef, setIsAtBottom])
+  }, [topGuiDivRef, setIsAtBottom]);
 
   useEffect(() => {
-    if (active) scrollToBottom()
-  }, [active, scrollToBottom])
+    if (active) scrollToBottom();
+  }, [active, scrollToBottom]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -314,7 +313,7 @@ export function Chat() {
   return (
     <>
       <TopGuiDiv
-        className={`${state.history.length > 0 ? 'h-full' : ''}`}
+        className={`${state.history.length > 0 ? "h-full" : ""}`}
         ref={topGuiDivRef}
         onScroll={handleScroll}
         showScrollbar={state.config.ui?.showChatScrollbar || false}
@@ -371,7 +370,7 @@ export function Chat() {
                               : true
                             : stepsOpen[index]!
                         }
-                        onToggle={() => { }}
+                        onToggle={() => {}}
                       >
                         <StepContainer
                           index={index}
@@ -383,14 +382,14 @@ export function Chat() {
                               : stepsOpen[index]!
                           }
                           key={index}
-                          onUserInput={(input: string) => { }}
+                          onUserInput={(input: string) => {}}
                           item={item}
-                          onReverse={() => { }}
+                          onReverse={() => {}}
                           onRetry={() => {
                             streamResponse(
                               state.history[index - 1].editorState,
                               state.history[index - 1].modifiers ??
-                              defaultInputModifiers,
+                                defaultInputModifiers,
                               ideMessenger,
                               index - 1,
                             );
@@ -427,8 +426,7 @@ export function Chat() {
         />
       </TopGuiDiv>
 
-
-      <div className={`relative ${state.history.length > 0 ? 'pt-1 border-0 border-t border-solid border-t-zinc-700' : ''}`}>
+      <div className={`relative`}>
         <div className="absolute -top-8 right-2 z-30">
           {ttsActive && (
             <StopButton
@@ -463,10 +461,12 @@ export function Chat() {
             sendInput(editorContent, modifiers);
           }}
         />
-        <div style={{
-          // opacity: active ? 0 : 1,
-          pointerEvents: active ? 'none' : 'auto',
-        }}>
+        <div
+          style={{
+            // opacity: active ? 0 : 1,
+            pointerEvents: active ? "none" : "auto",
+          }}
+        >
           {state.history.length > 0 ? (
             <div className="xs:inline mt-2 hidden">
               <NewSessionButton
@@ -516,4 +516,3 @@ export function Chat() {
     </>
   );
 }
-
