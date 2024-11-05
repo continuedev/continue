@@ -175,9 +175,6 @@ export const stateSlice = createSlice({
   name: "state",
   initialState,
   reducers: {
-    setContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
-      state.contextItems = action.payload;
-    },
     setConfig: (
       state,
       { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
@@ -275,6 +272,7 @@ export const stateSlice = createSlice({
           : [{ ...item, editing: true }];
         return;
       }
+      // TODO
     },
     addContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
       state.contextItems = state.contextItems.concat(action.payload);
@@ -690,7 +688,6 @@ export const {
   consumeMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
-  setContextItems,
   setShowInteractiveContinueTutorial,
 } = stateSlice.actions;
 export default stateSlice.reducer;

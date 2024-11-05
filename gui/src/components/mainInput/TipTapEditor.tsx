@@ -13,9 +13,9 @@ import {
   RangeInFile,
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { getBasename, getRelativePath, isValidFilePath } from "core/util";
+import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
-import { memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState, memo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -24,6 +24,7 @@ import {
   vscBadgeBackground,
   vscForeground,
   vscInputBackground,
+  vscInputBorder,
   vscInputBorderFocus,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -36,8 +37,6 @@ import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   consumeMainEditorContent,
-  newSession,
-  setContextItems,
   setEditingContextItemAtIndex,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
@@ -45,7 +44,7 @@ import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
-  isWebEnvironment
+  isWebEnvironment,
 } from "../../util";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
@@ -59,8 +58,10 @@ import {
 import { ComboBoxItem } from "./types";
 import { useLocation } from "react-router-dom";
 
+
 const InputBoxDiv = styled.div`
   resize: none;
+
   padding: 8px 12px;
   padding-bottom: 4px;
   font-family: inherit;
@@ -73,9 +74,9 @@ const InputBoxDiv = styled.div`
   z-index: 1;
   outline: none;
   font-size: ${getFontSize()}px;
-
   &:focus {
     outline: none;
+
     border: 0.5px solid ${vscInputBorderFocus};
   }
 
@@ -150,8 +151,6 @@ function getDataUrlForFile(file: File, img): string {
   return downsizedDataUrl;
 }
 
-interface ShowFileEvent extends CustomEvent<{ filepath: string }> {}
-
 interface TipTapEditorProps {
   availableContextProviders: ContextProviderDescription[];
   availableSlashCommands: ComboBoxItem[];
@@ -159,8 +158,9 @@ interface TipTapEditorProps {
   onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
   editorState?: JSONContent;
   source?: 'perplexity' | 'aider' | 'continue';
-  onContentChange?: (newState: JSONContent) => void;
+  onChange?: (newState: JSONContent) => void;
 }
+
 const TipTapEditor = memo(function TipTapEditor({
   availableContextProviders,
   availableSlashCommands,
@@ -168,7 +168,7 @@ const TipTapEditor = memo(function TipTapEditor({
   onEnter,
   editorState,
   source = 'continue',
-  onContentChange,
+  onChange,
 }: TipTapEditorProps) {
   const dispatch = useDispatch();
 
@@ -188,11 +188,15 @@ const TipTapEditor = memo(function TipTapEditor({
     }
   );
 
+  // Create a unique key for each editor instance
+  const editorKey = useMemo(() => `${(source || 'continue')}-editor`, [source]);
+
   const useActiveFile = useSelector(selectUseActiveFile);
 
   const { saveSession } = useHistory(dispatch, source);
 
   const posthog = usePostHog();
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -457,7 +461,7 @@ const TipTapEditor = memo(function TipTapEditor({
           ideMessenger,
         ),
         renderHTML: (props) => {
-          return `@${props.node.attrs.label || props.node.attrs.id} `;
+          return `@${props.node.attrs.label || props.node.attrs.id}`;
         },
       }),
       SlashCommand.configure({
@@ -484,180 +488,28 @@ const TipTapEditor = memo(function TipTapEditor({
     },
     content: lastContentRef.current,
     editable: true,
-    onFocus: () => editorFocusedRef.current = true,
-    onBlur: () => editorFocusedRef.current = true,
-    onUpdate: ({ editor, transaction }) => {
-      if (contextItems.length > 0) {
-        return;
-      }
-
-      const json = editor.getJSON();
-      const codeBlock = json.content?.find((el) => el.type === "codeBlock");
-
-      if (!codeBlock) {
-        return;
-      }
-
-      // Search for slashcommand type
-      for (const p of json.content) {
-        if (
-          p.type !== "paragraph" ||
-          !p.content ||
-          typeof p.content === "string"
-        ) {
-          continue;
-        }
-        for (const node of p.content) {
-          if (
-            node.type === "slashcommand" &&
-            ["/edit", "/comment"].includes(node.attrs.label)
-          ) {
-            // Update context items
-            dispatch(
-              setEditingContextItemAtIndex({ item: codeBlock.attrs.item }),
-            );
-            return;
-          }
-        }
-      }
-    },
+    onFocus: () => setIsEditorFocused(true),
+    onBlur: () => setIsEditorFocused(false),
     onCreate({ editor }) {
       if (lastContentRef.current) {
         editor.commands.setContent(lastContentRef.current);
       }
     }
-  }, [historyLength]);
-
-  const handleShowFile = useCallback((event: ShowFileEvent) => {
-    if (!ideMessenger) return;
-    
-    try {
-      const { filepath } = event.detail;
-      if (!isValidFilePath(filepath)) {
-        console.warn('Invalid file path received:', filepath);
-        
-        return;
-      }
-      
-      ideMessenger.post("showFile", { filepath });
-    } catch (error) {
-      console.error('Error handling show file event:', error);
-    }
-  }, [ideMessenger]);
+  }, []);  // Remove dependencies to prevent recreation
 
   const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 
-  const isEditorEmpty = useCallback((editor: Editor) => {
-    const content = editor.getJSON();
-  
-    // Counting number of "@" mentions, if more than 1 return false
-    // Else, check if there's also text, if so, then is not empty.
-    // If only one "@" mention with no text, then switch the mention
-    // With new current file's mention.
-    const mentionCount = content.content?.reduce((count, node) => {
-      return count + (node.content?.filter(child => child.type === "mention").length || 0);
-    }, 0) || 0;
-  
-    if (mentionCount > 1) return false;
-  
-    return !content.content?.some(node => 
-      (node.type === "paragraph" && 
-        node.content?.some(child => 
-          (child.type === "text" && child.text.trim().length > 0)
-        )
-      ) ||
-      node.type === "slashcommand" ||
-      node.type === "codeBlock"
-    );
-  }, []);
-
-  const createContextItem = useCallback((filepath: string): ContextItemWithId => ({
-      name: `@${filepath.split(/[\\/]/).pop()}`,
-      description: filepath,
-      id: {
-        providerTitle: "file",
-        itemId: filepath,
-      },
-      content: "",
-      editable: false
-  }), []);
-
-  const updateEditorContent = useCallback((editor: Editor, contextItem: ContextItemWithId) => {
-    editor.commands.clearContent();
-    editor.commands.setContent({
-      type: 'doc',
-      content: [{
-        type: 'paragraph',
-        content: [{
-          type: 'mention',
-          attrs: {
-            id: contextItem.id.itemId,
-            label: contextItem.name.replace(/^@/, ''),
-            renderInlineAs: null,
-            query: contextItem.id.itemId,
-            itemType: "file"
-          }
-        },
-        {
-          type: 'text',
-          text: ' '
-        }]
-      }]
-    });
-  }, []);
-
-  const createAndSetContext = useCallback(
-    async (filepath: string) => {
-      if (isValidFilePath(filepath) && editor && isEditorEmpty(editor)) {
-        const contextItem = createContextItem(filepath);
-        dispatch(setContextItems([contextItem]));
-        updateEditorContent(editor, contextItem);
-        editor.commands.focus("end");
-      }
-    },
-    [editor, createContextItem, dispatch, updateEditorContent]
-  );
-  
   useEffect(() => {
-    if (isMainInput && editor && historyLength === 0) {
-      ideMessenger.ide.getCurrentFile().then(
-        filepath => filepath && createAndSetContext(filepath)
-      ).catch(console.error);
-    }
-  }, [editor, isMainInput, historyLength, createAndSetContext]);
-  
-  const handleEditorChange = useCallback(
-    async (data: { filepath: string | null }) => {
-      if (isMainInput && historyLength === 0 && data.filepath) {
-        await createAndSetContext(data.filepath);
-      }
-    },
-    [isMainInput, historyLength, createAndSetContext]
-  );
-  
-  useWebviewListener(
-    "activeEditorChange",
-    handleEditorChange,
-    [handleEditorChange]
-  );
-
-  useEffect(() => {
-    if (!ideMessenger) return;
-  
-    const listener = (event: ShowFileEvent) => {
-      try {
-        handleShowFile(event);
-      } catch (error) {
-        console.error('Error in show file handler:', error);
-      }
+    const handleShowFile = (event: CustomEvent) => {
+      const filepath = event.detail.filepath;
+      ideMessenger.post("showFile", { filepath });
     };
-  
-    window.addEventListener('showFile', listener as EventListener);
-    
+
+    window.addEventListener('showFile', handleShowFile as EventListener);
     return () => {
-      window.removeEventListener('showFile', listener as EventListener);
+      window.removeEventListener('showFile', handleShowFile as EventListener);
     };
-  }, [handleShowFile, ideMessenger]);
+  }, [ideMessenger]);
 
   useEffect(() => {
     if (isJetBrains()) {
@@ -676,7 +528,6 @@ const TipTapEditor = memo(function TipTapEditor({
             editor.state.selection.from,
             editor.state.selection.to,
           );
-
           navigator.clipboard.writeText(selectedText);
           editor.commands.deleteSelection();
           event.preventDefault();
@@ -686,15 +537,12 @@ const TipTapEditor = memo(function TipTapEditor({
             editor.state.selection.from,
             editor.state.selection.to,
           );
-
           navigator.clipboard.writeText(selectedText);
           event.preventDefault();
         } else if ((event.metaKey || event.ctrlKey) && event.key === "v") {
           // Paste
           event.preventDefault(); // Prevent default paste behavior
-
           const clipboardText = await navigator.clipboard.readText();
-
           editor.commands.insertContent(clipboardText);
         }
       };
@@ -739,7 +587,7 @@ const TipTapEditor = memo(function TipTapEditor({
       dispatch(consumeMainEditorContent());
     }
   }, [mainEditorContent, editor]);
-  
+
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
       const json = editor.getJSON();
@@ -748,40 +596,16 @@ const TipTapEditor = memo(function TipTapEditor({
       if (!json.content?.some((c) => c.content)) {
         return;
       }
-  
-      const mentions = json.content?.reduce((acc, node) => {
-        if (node.content) {
-          const mentionNodes = node.content.filter(child => child.type === "mention");
 
-          acc.push(...mentionNodes);
-        }
-        return acc;
-      }, []);
-  
-      const newContextItems = mentions.map(mention => ({
-        name: mention.attrs.label || mention.attrs.id,
-        description: mention.attrs.id,
-        id: {
-          providerTitle: "file",
-          itemId: mention.attrs.id
-        },
-        content: "",
-        editable: false
-      }));
-  
-      requestAnimationFrame(() => {
-        dispatch(setContextItems(newContextItems));
-        
-        if (isMainInput) {
-          const content = editor.state.toJSON().doc;
-
-          addRef.current(content);
-        }
-      });
-  
       onEnter(json, modifiers);
+
+      if (isMainInput) {
+        const content = editor.state.toJSON().doc;
+        addRef.current(content);
+        editor.commands.clearContent(true);
+      }
     },
-    [onEnter, editor, isMainInput]
+    [onEnter, editor, isMainInput],
   );
 
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
@@ -1029,6 +853,52 @@ const TipTapEditor = memo(function TipTapEditor({
   }, []);
 
   const [optionKeyHeld, setOptionKeyHeld] = useState(false);
+
+  // Use onTransaction to track content changes
+  useEffect(() => {
+    if (editor) {
+      editor.on('transaction', () => {
+        const newContent = editor.getJSON();
+        lastContentRef.current = newContent;
+        onChange?.(newContent);
+
+        // If /edit is typed and no context items are selected, select the first
+
+        if (contextItems.length > 0) {
+          return;
+        }
+
+        const codeBlock = newContent.content?.find((el) => el.type === "codeBlock");
+        if (!codeBlock) {
+          return;
+        }
+
+        // Search for slashcommand type
+        for (const p of newContent.content) {
+          if (
+            p.type !== "paragraph" ||
+            !p.content ||
+            typeof p.content === "string"
+          ) {
+            continue;
+          }
+          for (const node of p.content) {
+            if (
+              node.type === "slashcommand" &&
+              ["/edit", "/comment"].includes(node.attrs.label)
+            ) {
+              // Update context items
+              dispatch(
+                setEditingContextItemAtIndex({ item: codeBlock.attrs.item }),
+              );
+              return;
+            }
+          }
+        }
+      });
+    }
+  }, [editor, onChange, contextItems, dispatch]);
+
   // Prevent content flash during streaming
   useEffect(() => {
     if (editor && lastContentRef.current) {
@@ -1038,13 +908,6 @@ const TipTapEditor = memo(function TipTapEditor({
       }
     }
   }, [editor, source]);
-
-  // clear editor content after response
-  useEffect(() => {
-    if (isMainInput && !active && editor) {
-      editor.commands.clearContent();
-    }
-  }, [isMainInput, active, editor]);
 
   return (
     <InputBoxDiv
