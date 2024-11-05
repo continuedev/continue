@@ -94,6 +94,11 @@ export class VsCodeMessenger {
     });
     this.onWebview("pearWelcomeOpenFolder", (msg) => {
       vscode.commands.executeCommand("workbench.action.files.openFolder");
+        // force close overlay if a folder is already open
+      if (vscode.workspace.workspaceFolders?.length) {
+        vscode.commands.executeCommand("pearai.unlockOverlay");
+        vscode.commands.executeCommand("pearai.hideOverlay");
+      }
     });
     this.onWebview("pearInstallCommandLine", (msg) => {
       vscode.commands.executeCommand("workbench.action.installCommandLine");
@@ -253,7 +258,7 @@ export class VsCodeMessenger {
       );
       await vscode.window.showTextDocument(doc);
     });
-
+    
     this.onWebview("openUrl", (msg) => {
       vscode.env.openExternal(vscode.Uri.parse(msg.data));
     });

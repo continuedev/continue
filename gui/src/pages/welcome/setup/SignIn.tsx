@@ -15,6 +15,7 @@ export default function SignIn({
   const ideMessenger = useContext(IdeMessengerContext);
 
   useWebviewListener("pearAISignedIn", async () => {
+    ideMessenger.post("markNewOnboardingComplete", undefined);
     onNext();
     return Promise.resolve();
   });
