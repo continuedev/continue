@@ -10,8 +10,7 @@ function shouldCompleteMultilineBasedOnLanguage(
   prefix: string,
   suffix: string,
 ) {
-  let langMultilineDecision = language.useMultiline?.({ prefix, suffix });
-  return langMultilineDecision;
+  return language.useMultiline?.({ prefix, suffix }) ?? true;
 }
 
 export function shouldCompleteMultiline(helper: HelperVars) {
@@ -29,13 +28,14 @@ export function shouldCompleteMultiline(helper: HelperVars) {
     return true;
   }
 
-  // Don't complete multi-line if you are mid-line
-  if (isMidlineCompletion(helper.fullPrefix, helper.fullSuffix)) {
-    return false;
-  }
+  // // Don't complete multi-line if you are mid-line
+  // if (isMidlineCompletion(helper.fullPrefix, helper.fullSuffix)) {
+  //   return false;
+  // }
 
   // Don't complete multi-line for single-line comments
   if (
+    helper.lang.singleLineComment &&
     helper.fullPrefix
       .split("\n")
       .slice(-1)[0]
@@ -45,15 +45,9 @@ export function shouldCompleteMultiline(helper: HelperVars) {
     return false;
   }
 
-  if (
-    shouldCompleteMultilineBasedOnLanguage(
-      helper.lang,
-      helper.prunedPrefix,
-      helper.prunedSuffix,
-    )
-  ) {
-    return true;
-  }
-
-  return false;
+  return shouldCompleteMultilineBasedOnLanguage(
+    helper.lang,
+    helper.prunedPrefix,
+    helper.prunedSuffix,
+  );
 }

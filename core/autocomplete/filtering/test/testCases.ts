@@ -1,7 +1,180 @@
 import { dedent } from "../../../util";
 import { AutocompleteFileringTestInput } from "./util";
 
-export const TEST_CASES: AutocompleteFileringTestInput[] = [
+export const TEST_CASES_WITH_DIFF: AutocompleteFileringTestInput[] = [
+  {
+    description: "Should handle python multi-line string",
+    filename: "test.py",
+    input: `def create_greeting(name):
+  greeting = """Hello, """ + name + """!
+Welcome to our community. We hope you have a great time here.
+If you have any questions, feel free to reach out."""
+  return greeting
+
+message = create_greeting("Alice")
+print(message)
+
+multi_line_message = """<|fim|>
+print(multi_line_message)
+`,
+    llmOutput: `This is a multi-line message.
+It continues across multiple lines,
+which allows for easy reading and formatting.
+"""
+`,
+    expectedCompletion: `This is a multi-line message.
+It continues across multiple lines,
+which allows for easy reading and formatting.
+"""`,
+  },
+  {
+    description: "Should autocomplete Rust match arms",
+    filename: "main.rs",
+    input: `
+fn get_status_code_description(code: u16) -> &'static str {
+    match code {
+        200 => "OK",
+        404 => "Not Found",
+        500 => "Internal Server Error",
+        <|fim|>
+    }
+}
+`,
+    llmOutput: `403 => "Forbidden",
+        401 => "Unauthorized",
+        _ => "Unknown Status",
+`,
+    expectedCompletion: `403 => "Forbidden",
+        401 => "Unauthorized",
+        _ => "Unknown Status",`,
+  },
+  {
+    description: "Should complete a Markdown code block",
+    filename: "test.md",
+    input: `
+Here is a sample JavaScript function:
+
+\`\`\`javascript
+function sayHello() {
+  console.log("Hello, <|fim|>
+}
+\`\`\`
+`,
+    llmOutput: `world!");
+`,
+    expectedCompletion: `world!");`,
+  },
+  {
+    description: "Should autocomplete Java when inside a block",
+    filename: "Main.java",
+    input: `
+public class Main {
+    public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
+            if (i % 2 == 0) {
+                System.out.println("Even: " + i);
+            } else {
+<|fim|>
+            }
+        }
+    }
+}`,
+    llmOutput: `
+                System.out.println("Odd: " + i);
+`,
+    expectedCompletion: `
+                System.out.println("Odd: " + i);`,
+  },
+  {
+    description:
+      "Should autocomplete a Markdown heading and preserve formatting",
+    filename: "test.md",
+    input: `# My Document
+
+## Introduction
+This is a sample document for testing.
+
+## <|fim|>
+### Conclusion
+Thank you for reading.
+`,
+    llmOutput: `Features
+Here is a list of features:
+- Feature 1
+- Feature 2
+`,
+    expectedCompletion: `Features
+Here is a list of features:
+- Feature 1
+- Feature 2`,
+  },
+  {
+    description: "Should autocomplete a Java method within a class",
+    filename: "Calculator.java",
+    input: `
+public class Calculator {
+    private double result;
+
+    public Calculator() {
+        this.result = 0.0;
+    }
+
+    public void add(double number) {
+        result += number;
+<|fim|>`,
+    llmOutput: `
+    }
+
+    public void subtract(double number) {
+        result -= number;
+    }
+`,
+    expectedCompletion: `
+    }
+
+    public void subtract(double number) {
+        result -= number;
+    }`,
+  },
+  {
+    description: "Should filter out consecutive, repeated YAML keys",
+    filename: "test.yaml",
+    input: `
+      version: '3'
+      services:
+        db:
+          image: postgres
+          environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: pass<|fim|>
+    `,
+    llmOutput: `
+            POSTGRES_DB: mydb
+            POSTGRES_DB: mydb
+    `,
+    expectedCompletion: `
+            POSTGRES_DB: mydb
+    `,
+  },
+  {
+    description: "Should autocomplete a Markdown list with nested items",
+    filename: "test.md",
+    input: `
+- Item 1
+- Item 2
+  - Subitem 1
+  <|fim|>
+- Item 3
+`,
+    llmOutput: `  - Subitem 2
+  - Subitem 3
+`,
+    expectedCompletion: `  - Subitem 2
+  - Subitem 3`,
+  },
+];
+
+export const TEST_CASES_WITHOUT_DIFF: AutocompleteFileringTestInput[] = [
   {
     description: "should pass",
     filename: "test.js",
@@ -413,32 +586,6 @@ print(odd_squares)
     expectedCompletion: `x for x in squares if x % 2 != 0`,
   },
   {
-    description: "Should handle python multi-line string",
-    filename: "test.py",
-    input: `def create_greeting(name):
-    greeting = """Hello, """ + name + """!
-Welcome to our community. We hope you have a great time here.
-If you have any questions, feel free to reach out."""
-    return greeting
-
-message = create_greeting("Alice")
-print(message)
-
-multi_line_message = """<|fim|>
-print(multi_line_message)
-`,
-    llmOutput: `This is a multi-line message.
-It continues across multiple lines,
-which allows for easy reading and formatting.
-"""
-`,
-    expectedCompletion: `This is a multi-line message.
-It continues across multiple lines,
-which allows for easy reading and formatting.
-"""
-`,
-  },
-  {
     description: "Should autocomplete a simple Go function declaration",
     filename: "simpleFunction.go",
     input: `package main
@@ -513,19 +660,6 @@ func main() {
   },
   {
     description:
-      "Should autocomplete SQL query with subquery and alias in SELECT clause",
-    filename: "complex_query.sql",
-    input: `SELECT u.id, 
-                  u.name, 
-                  (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count
-           FROM users u
-           WHERE u.active = 1
-           <|fim|>`,
-    llmOutput: ` AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)`,
-    expectedCompletion: ` AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)`,
-  },
-  {
-    description:
       "Should autocomplete SQL query with nested functions and missing bracket",
     filename: "_nested_function.sql",
     input: `SELECT name, ROUND(AVG(rating), 2) as avg_rating
@@ -535,6 +669,19 @@ func main() {
            HAVING avg_rating > <|fim|>`,
     llmOutput: `8.5)`,
     expectedCompletion: `8.5)`,
+  },
+  {
+    description:
+      "Should autocomplete SQL query with subquery and alias in SELECT clause",
+    filename: "complex_query.sql",
+    input: `SELECT u.id, 
+                  u.name, 
+                  (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count
+          FROM users u
+          WHERE u.active = 1
+          <|fim|>`,
+    llmOutput: ` AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)`,
+    expectedCompletion: ` AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)`,
   },
   {
     description:
@@ -638,57 +785,6 @@ squared_numbers = numbers.<|fim|>
     filename: "array_methods.rb",
   },
   {
-    description: "Should autocomplete a Java method within a class",
-    filename: "Calculator.java",
-    input: `
-public class Calculator {
-    private double result;
-
-    public Calculator() {
-        this.result = 0.0;
-    }
-
-    public void add(double number) {
-        result += number;
-<|fim|>`,
-    llmOutput: `
-    }
-
-    public void subtract(double number) {
-        result -= number;
-    }
-`,
-    expectedCompletion: `
-    }
-
-    public void subtract(double number) {
-        result -= number;
-    }
-`,
-  },
-  {
-    description: "Should autocomplete Java when inside a block",
-    filename: "Main.java",
-    input: `
-public class Main {
-    public static void main(String[] args) {
-        for (int i = 0; i < 10; i++) {
-            if (i % 2 == 0) {
-                System.out.println("Even: " + i);
-            } else {
-<|fim|>
-            }
-        }
-    }
-}`,
-    llmOutput: `
-                System.out.println("Odd: " + i);
-`,
-    expectedCompletion: `
-                System.out.println("Odd: " + i);
-`,
-  },
-  {
     description: "Should autocomplete Java within a string",
     filename: "App.java",
     input: `
@@ -717,7 +813,6 @@ public class App {
     llmOutput: " int multiply(int a, int b);",
     expectedCompletion: " int multiply(int a, int b);",
   },
-
   {
     description: "Should autocomplete C++ for loop syntax",
     filename: "test.cpp",
@@ -729,64 +824,6 @@ public class App {
     `,
     llmOutput: "i++",
     expectedCompletion: "i++",
-  },
-  {
-    description: "Should autocomplete a Markdown list with nested items",
-    filename: "test.md",
-    input: `
-- Item 1
-- Item 2
-  - Subitem 1
-  <|fim|>
-- Item 3
-`,
-    llmOutput: `  - Subitem 2
-  - Subitem 3
-`,
-    expectedCompletion: `  - Subitem 2
-  - Subitem 3
-`,
-  },
-  {
-    description:
-      "Should autocomplete a Markdown heading and preserve formatting",
-    filename: "test.md",
-    input: `# My Document
-
-## Introduction
-This is a sample document for testing.
-
-## <|fim|>
-### Conclusion
-Thank you for reading.
-`,
-    llmOutput: `Features
-Here is a list of features:
-- Feature 1
-- Feature 2
-`,
-    expectedCompletion: `Features
-Here is a list of features:
-- Feature 1
-- Feature 2
-`,
-  },
-  {
-    description: "Should complete a Markdown code block",
-    filename: "test.md",
-    input: `
-Here is a sample JavaScript function:
-
-\`\`\`javascript
-function sayHello() {
-  console.log("Hello, <|fim|>
-}
-\`\`\`
-`,
-    llmOutput: `world!");
-`,
-    expectedCompletion: `world!");
-`,
   },
   {
     description: "Should autocomplete JSON object inside an array",
@@ -986,28 +1023,6 @@ impl Calculator {
         println!("Cannot divide by zero.");
     }
 }`,
-  },
-  {
-    description: "Should autocomplete Rust match arms",
-    filename: "main.rs",
-    input: `
-fn get_status_code_description(code: u16) -> &'static str {
-    match code {
-        200 => "OK",
-        404 => "Not Found",
-        500 => "Internal Server Error",
-        <|fim|>
-    }
-}
-`,
-    llmOutput: `403 => "Forbidden",
-        401 => "Unauthorized",
-        _ => "Unknown Status",
-`,
-    expectedCompletion: `403 => "Forbidden",
-        401 => "Unauthorized",
-        _ => "Unknown Status",
-`,
   },
   {
     description: "Should autocomplete Rust struct definition",
@@ -1753,17 +1768,15 @@ let oddSquares = [<|fim|>]`,
     llmOutput: ` for x in squares do if x % 2 <> 0 then yield x ]`,
     expectedCompletion: ` for x in squares do if x % 2 <> 0 then yield x ]`,
   },
-
   {
     description: "Should complete an F# recursive function",
     filename: "recursiveFunctions.fs",
     input: `let rec factorial n =
     if n <= 1 then 1
     else n <|fim|> factorial (n - 1)`,
-    llmOutput: ` * `,
-    expectedCompletion: ` * `,
+    llmOutput: `*`,
+    expectedCompletion: `*`,
   },
-
   {
     description: "Should complete F# member method inside a class type",
     filename: "bankAccount.fs",

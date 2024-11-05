@@ -180,12 +180,11 @@ export class CompletionProvider {
         this.contextRetrievalService,
       );
 
-      const {
-        prompt,
-        prefix: finalPrefix,
-        suffix: finalSuffix,
-        completionOptions,
-      } = renderPrompt(snippets, await this.ide.getWorkspaceDirs(), helper);
+      const { prompt, prefix, suffix, completionOptions } = renderPrompt(
+        snippets,
+        await this.ide.getWorkspaceDirs(),
+        helper,
+      );
 
       // Completion
       let completion: string | undefined = "";
@@ -207,8 +206,8 @@ export class CompletionProvider {
           this.completionStreamer.streamCompletionWithFilters(
             token,
             llm,
-            finalPrefix,
-            finalSuffix,
+            prefix,
+            suffix,
             prompt,
             multiline,
             completionOptions,
@@ -243,8 +242,8 @@ export class CompletionProvider {
       const outcome: AutocompleteOutcome = {
         time: Date.now() - startTime,
         completion,
-        prefix: finalPrefix,
-        suffix: finalSuffix,
+        prefix,
+        suffix,
         prompt,
         modelProvider: llm.providerName,
         modelName: llm.model,

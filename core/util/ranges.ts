@@ -7,7 +7,7 @@ export function getRangeInString(content: string, range: Range): string {
     return (
       lines[range.start.line]?.substring(
         range.start.character,
-        range.end.character + 1,
+        range.end.character,
       ) ?? ""
     );
   }

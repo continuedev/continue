@@ -14,14 +14,6 @@ function isBracketEnding(line: string): boolean {
     .some((char) => BRACKET_ENDING_CHARS.includes(char));
 }
 
-function commonPrefixLength(a: string, b: string): number {
-  let i = 0;
-  while (i < a.length && i < b.length && a[i] === b[i]) {
-    i++;
-  }
-  return i;
-}
-
 function isEnglishFirstLine(line: string) {
   line = line.trim().toLowerCase();
 
@@ -130,7 +122,7 @@ export async function* noTopLevelKeywordsMidline(
  */
 export async function* avoidPathLine(
   stream: LineStream,
-  comment: string,
+  comment?: string,
 ): LineStream {
   // Snippets are inserted as comments with a line at the start '// Path: <PATH>'.
   // Sometimes the model with copy this pattern, which is unwanted
@@ -151,14 +143,13 @@ export async function* avoidPathLine(
  */
 export async function* avoidEmptyComments(
   stream: LineStream,
-  comment: string,
+  comment?: string,
 ): LineStream {
   // Filter lines that are empty comments
   for await (const line of stream) {
-    if (line.trim() === comment) {
-      continue;
+    if (!comment || line.trim() !== comment) {
+      yield line;
     }
-    yield line;
   }
 }
 
@@ -187,9 +178,7 @@ export async function* streamWithNewLines(stream: LineStream): LineStream {
  * @returns {boolean} True if the lines are considered repeated, false otherwise.
  *
  * @description
- * This function checks if two lines are repeated or very similar based on two criteria:
- * 1. They have a common prefix longer than 12 characters.
- * 2. The Levenshtein distance between them is less than 10% of the length of the second line.
+ * This function checks if the Levenshtein distance between them is less than 10% of the length of the second line.
  * Lines shorter than 5 characters are never considered repeated.
  */
 export function lineIsRepeated(a: string, b: string): boolean {
@@ -199,10 +188,7 @@ export function lineIsRepeated(a: string, b: string): boolean {
 
   const aTrim = a.trim();
   const bTrim = b.trim();
-  return (
-    commonPrefixLength(aTrim, bTrim) > 12 ||
-    distance(aTrim, bTrim) / bTrim.length < 0.1
-  );
+  return distance(aTrim, bTrim) / bTrim.length < 0.05;
 }
 
 /**
@@ -229,14 +215,19 @@ export async function* stopAtSimilarLine(
   const lineIsBracketEnding = isBracketEnding(trimmedLine);
 
   for await (const nextLine of stream) {
-    if (nextLine === line) {
-      fullStop();
-      break;
+    if (trimmedLine === "") {
+      yield nextLine;
+      continue;
     }
 
     if (lineIsBracketEnding && trimmedLine.trim() === nextLine.trim()) {
       yield nextLine;
       continue;
+    }
+
+    if (nextLine === line) {
+      fullStop();
+      break;
     }
 
     if (lineIsRepeated(nextLine, trimmedLine)) {

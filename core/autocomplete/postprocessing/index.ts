@@ -73,9 +73,6 @@ export function postprocessCompletion({
     return undefined;
   }
 
-  // Remove trailing whitespace
-  completion = completion.trimEnd();
-
   if (llm.model.includes("codestral")) {
     // Codestral sometimes starts with an extra space
     if (completion[0] === " " && completion[1] !== " ") {
@@ -85,19 +82,23 @@ export function postprocessCompletion({
     }
   }
 
-  // If completion starts with multiple whitespaces, but the cursor is at the end of the line
-  // then it should probably be on a new line
-  if (
-    (completion.startsWith("  ") || completion.startsWith("\t")) &&
-    !prefix.endsWith("\n") &&
-    (suffix.startsWith("\n") || suffix.trim().length === 0)
-  ) {
-    // completion = "\n" + completion;
-    return undefined;
-  }
+  // // If completion starts with multiple whitespaces, but the cursor is at the end of the line
+  // // then it should probably be on a new line
+  // if (
+  //   (completion.startsWith("  ") || completion.startsWith("\t")) &&
+  //   !prefix.endsWith("\n") &&
+  //   (suffix.startsWith("\n") || suffix.trim().length === 0)
+  // ) {
+  //   completion = "\n" + completion;
+  // }
 
   // If prefix ends with space and so does completion, then remove the space from completion
-  if (prefix.endsWith(" ") && completion.startsWith(" ")) {
+  if (
+    prefix.split("\n").pop()?.trim() !== "" &&
+    prefix.endsWith(" ") &&
+    completion.startsWith(" ")
+  ) {
+    const test = prefix.split("\n").pop()?.trim() !== "";
     completion = completion.slice(1);
   }
 

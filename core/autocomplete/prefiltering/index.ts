@@ -67,12 +67,12 @@ export async function shouldPrefilter(
     return true;
   }
 
-  if (
-    helper.options.transform &&
-    (await shouldLanguageSpecificPrefilter(helper))
-  ) {
-    return true;
-  }
+  // if (
+  //   helper.options.transform &&
+  //   (await shouldLanguageSpecificPrefilter(helper))
+  // ) {
+  //   return true;
+  // }
 
   return false;
 }

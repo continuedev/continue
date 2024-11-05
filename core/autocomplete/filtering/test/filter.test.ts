@@ -2,7 +2,7 @@ import {
   AutocompleteFileringTestInput,
   testAutocompleteFiltering,
 } from "./util";
-import { TEST_CASES } from "./testCases";
+import { TEST_CASES_WITH_DIFF, TEST_CASES_WITHOUT_DIFF } from "./testCases";
 import { setUpTestDir, tearDownTestDir } from "../../../test/util/testDir";
 
 const filterTestCases = (tests: AutocompleteFileringTestInput[]) => {
@@ -29,12 +29,21 @@ describe("llms/Mock", () => {
     });
 
     describe("Should return unmodified LLM output", () => {
-      it.each(filterTestCases(TEST_CASES))("$description", async (testCase) => {
-        await testAutocompleteFiltering(testCase);
-      });
+      it.each(filterTestCases(TEST_CASES_WITHOUT_DIFF))(
+        "$description",
+        async (testCase) => {
+          await testAutocompleteFiltering(testCase);
+        },
+      );
     });
 
-    // TODO: Add test cases where modifying LLM output is desirable
-    describe.skip("Should return modified LLM output", () => {});
+    describe("Should return modified LLM output", () => {
+      it.each(filterTestCases(TEST_CASES_WITH_DIFF))(
+        "$description",
+        async (testCase) => {
+          await testAutocompleteFiltering(testCase);
+        },
+      );
+    });
   });
 });

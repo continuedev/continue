@@ -28,13 +28,13 @@ export class StreamTransformPipeline {
     let charGenerator = generator;
 
     charGenerator = stopAtStopTokens(generator, stopTokens);
-    charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
-      charGenerator,
-      prefix,
-      suffix,
-      helper.filepath,
-      multiline,
-    );
+    // charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
+    //   charGenerator,
+    //   prefix,
+    //   suffix,
+    //   helper.filepath,
+    //   multiline,
+    // );
 
     let lineGenerator = streamLines(charGenerator);
 

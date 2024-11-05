@@ -3,14 +3,11 @@ import { LineFilter } from "../filtering/streamTransforms/lineStream";
 export interface AutocompleteLanguageInfo {
   name: string;
   topLevelKeywords: string[];
-  singleLineComment: string;
+  singleLineComment?: string;
   endOfLine: string[];
   stopWords?: string[];
   lineFilters?: LineFilter[];
-  useMultiline?: (args: {
-    prefix: string;
-    suffix: string;
-  }) => boolean | undefined;
+  useMultiline?: (args: { prefix: string; suffix: string }) => boolean;
 }
 
 // TypeScript
@@ -256,10 +253,8 @@ export const YAML: AutocompleteLanguageInfo = {
           } else {
             seenListItem = true;
           }
-          yield line;
-        } else {
-          yield line;
         }
+        yield line;
       }
     },
     // Don't allow consecutive lines of same key
@@ -268,12 +263,14 @@ export const YAML: AutocompleteLanguageInfo = {
       for await (const line of lines) {
         if (line.includes(":")) {
           const key = line.split(":")[0];
-          if (key !== lastKey) {
+          if (key === lastKey) {
+            break;
+          } else {
             yield line;
             lastKey = key;
-          } else {
-            break;
           }
+        } else {
+          yield line;
         }
       }
     },
@@ -289,7 +286,7 @@ export const Markdown: AutocompleteLanguageInfo = {
     const singleLineStarters = ["- ", "* ", /^\d+\. /, "> ", "```", /^#{1,6} /];
     let currentLine = prefix.split("\n").pop();
     if (!currentLine) {
-      return undefined;
+      return true;
     }
     currentLine = currentLine.trim();
     for (const starter of singleLineStarters) {
@@ -301,7 +298,7 @@ export const Markdown: AutocompleteLanguageInfo = {
         return false;
       }
     }
-    return undefined;
+    return true;
   },
 };
 
