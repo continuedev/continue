@@ -84,11 +84,16 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div className="relative pb-3">
+    <div className="relative pb-3"
+      style={{
+        minHeight: props.isLast ? "50vh" : 0
+      }}
+    >
       <ContentDiv
         hidden={!props.open}
         isUserInput={isUserInput}
         fontSize={getFontSize()}
+
       >
         {uiConfig?.displayRawMarkdown ? (
           <pre
