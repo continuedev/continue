@@ -435,9 +435,7 @@ export function Chat() {
         </StopButton>
       )}
       {active && (
-        <div
-          className="mb-4 h-9"
-        >
+        <div className="h-7 mb-2">
           <StopButton
             onClick={() => {
               dispatch(setInactive());
