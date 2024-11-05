@@ -64,18 +64,17 @@ function copyVSCodeSettingsToPearAIDir() {
     });
 
 
-    const exclusions = ['pearai.pearai', 'continue.continue']
-    const platform = process.platform;
-    const arch = process.arch;
+    // Built-in extensions
+    // const platform = process.platform;
+    // const arch = process.arch;
+    const exclusions = ['pearai.pearai'];
+    exclusions.push('ms-python.vscode-pylance');
+    exclusions.push('ms-python.python');
 
-     // Built-in extensions
+    // Recommendeded install extensions
     exclusions.push('supermaven');
-    if (platform === "darwin" && arch === "arm64") {
-        exclusions.push('ms-python.vscode-pylance');
-        exclusions.push('ms-python.python');
-    }
 
-    // EXCLUDE CONFLICTING EXTENSIONS
+    // Exclude conflicting extensions
     exclusions.push('codeium');
     exclusions.push('github.copilot');
     exclusions.push('continue');
