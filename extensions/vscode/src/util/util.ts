@@ -124,14 +124,16 @@ export function getExtensionVersion(): string {
 }
 
 export function getFullyQualifiedPath(filepath?: string) {
-  if (filepath && !path.isAbsolute(filepath)) {
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (workspaceFolders && workspaceFolders.length > 0) {
-      return path.join(workspaceFolders[0].uri.fsPath, filepath);
-    } else {
-      vscode.window.showErrorMessage(
-        "Unable to resolve filepath: no workspace folder found",
-      );
-    }
+  if (!filepath) return;
+  if (path.isAbsolute(filepath)) return filepath;
+
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+
+  if (workspaceFolders && workspaceFolders.length > 0) {
+    return path.join(workspaceFolders[0].uri.fsPath, filepath);
+  } else {
+    vscode.window.showErrorMessage(
+      "Unable to resolve filepath: no workspace folder found",
+    );
   }
 }

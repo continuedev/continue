@@ -176,19 +176,24 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
 
     if (isTerminal) {
       await ideMessenger.ide.runCommand(getTerminalCommand(props.text));
-    } else {
-      ideMessenger.post("applyToCurrentFile", {
-        curSelectedModelTitle: defaultModel.title,
-        text: props.text,
-        streamId: streamIdRef.current,
-      });
-      dispatch(
-        updateApplyState({
-          streamId: streamIdRef.current,
-          status: "streaming",
-        }),
-      );
+      return;
     }
+
+    if (!props.filepath) return;
+
+    dispatch(
+      updateApplyState({
+        streamId: streamIdRef.current,
+        status: "streaming",
+      }),
+    );
+
+    ideMessenger.post("applyToFile", {
+      curSelectedModelTitle: defaultModel.title,
+      text: props.text,
+      streamId: streamIdRef.current,
+      filepath: props.filepath,
+    });
   }
 
   function onClickHeader() {

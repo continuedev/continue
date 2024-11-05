@@ -29,6 +29,7 @@ import {
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { getFullyQualifiedPath } from "../util/util";
 
 /**
  * A shared messenger class between Core and Webview
@@ -85,7 +86,11 @@ export class VsCodeMessenger {
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
-      this.ide.openFile(msg.data.filepath);
+      const fullPath = getFullyQualifiedPath(msg.data.filepath);
+
+      if (fullPath) {
+        this.ide.openFile(fullPath);
+      }
     });
 
     this.onWebview("vscode/openMoveRightMarkdown", (msg) => {
@@ -153,9 +158,33 @@ export class VsCodeMessenger {
       await vscode.commands.executeCommand("continue.rejectDiff", filepath);
     });
 
-    this.onWebview("applyToCurrentFile", async ({ data }) => {
+    this.onWebview("applyToFile", async ({ data }) => {
+      const fullPath = getFullyQualifiedPath(data.filepath);
+
+      if (!fullPath) {
+        return;
+      }
+
+      const fileExists = await this.ide.fileExists(fullPath);
+
+      // If it's a new file, no need to apply, just write directly
+      if (!fileExists) {
+        await this.ide.writeFile(fullPath, data.text);
+        await this.ide.openFile(fullPath);
+
+        await webviewProtocol.request("updateApplyState", {
+          streamId: data.streamId,
+          status: "done",
+        });
+
+        return;
+      }
+
+      await this.ide.openFile(fullPath);
+
       // Get active text editor
       const editor = vscode.window.activeTextEditor;
+
       if (!editor) {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
