@@ -3,6 +3,7 @@ import {
   testAutocompleteFiltering,
 } from "./util";
 import { TEST_CASES } from "./testCases";
+import { setUpTestDir, tearDownTestDir } from "../../../test/util/testDir";
 
 const filterTestCases = (tests: AutocompleteFileringTestInput[]) => {
   if (tests.some((test) => test.options?.only)) {
@@ -13,6 +14,15 @@ const filterTestCases = (tests: AutocompleteFileringTestInput[]) => {
 };
 
 describe("llms/Mock", () => {
+  beforeAll(async () => {
+    tearDownTestDir();
+    setUpTestDir();
+  });
+
+  afterAll(async () => {
+    tearDownTestDir();
+  });
+
   describe("Autocomplete Filtering Tests", () => {
     beforeEach(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
