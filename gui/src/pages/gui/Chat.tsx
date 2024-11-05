@@ -74,6 +74,7 @@ const TopGuiDiv = styled.div<{
 `;
 
 const StopButton = styled.div`
+  background-color: ${vscBackground};
   width: fit-content;
   margin-right: auto;
   margin-left: auto;
@@ -141,12 +142,12 @@ export function Chat() {
     setIsAtBottom(true);
   }, [topGuiDivRef])
 
-  const checkBottom = useCallback(() => {
-    if (!topGuiDivRef.current) return
-    const elem = topGuiDivRef.current;
-    const atBottom = elem.scrollHeight - elem.clientHeight <= elem.scrollTop;
-    setIsAtBottom(atBottom);
-  }, [topGuiDivRef, setIsAtBottom])
+  // const checkBottom = useCallback(() => {
+  //   if (!topGuiDivRef.current) return
+  //   const elem = topGuiDivRef.current;
+  //   const atBottom = elem.scrollHeight - elem.clientHeight <= elem.scrollTop;
+  //   setIsAtBottom(atBottom);
+  // }, [topGuiDivRef, setIsAtBottom])
 
   useEffect(() => {
     if (active) scrollToBottom()
@@ -324,8 +325,8 @@ export function Chat() {
       <TopGuiDiv
         className={`flex flex-col-reverse ${state.history.length > 0 ? 'flex-1' : ''}`}
         ref={topGuiDivRef}
-        onScroll={checkBottom}
-        onResize={checkBottom}
+        // onScroll={checkBottom}
+        // onResize={checkBottom}
         showScrollbar={state.config.ui?.showChatScrollbar || false}
       >
         {/* <StepsDiv> */}
@@ -445,8 +446,8 @@ export function Chat() {
 
 
 
-      <div className={`relative z-100 ${state.history.length > 0 ? 'border-0 border-t border-solid' : ''} ${isAtBottom ? 'border-transparent' : 'border-t-zinc-700'}`}>
-        <div className="z-100 absolute -top-7 -translate-y-1/2 left-1/2 -translate-x-1/2">
+      <div className={`relative z-50 ${state.history.length > 0 ? 'border-0 border-t border-solid' : ''} ${isAtBottom ? 'border-transparent' : 'border-t-zinc-700'}`}>
+        <div className="z-50 absolute -top-6 -translate-y-1/2 right-2">
           {ttsActive && (
             <StopButton
               className="mb-4 mt-2"

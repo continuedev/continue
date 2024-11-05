@@ -34,6 +34,7 @@ interface StepContainerProps {
 
 const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
   padding-top: 4px;
+  padding-bottom: 4px;
   background-color: ${(props) =>
     props.isUserInput ? vscInputBackground : vscBackground};
   font-size: ${(props) => props.fontSize || getFontSize()}px;
@@ -83,7 +84,7 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div className="flex-1 relative"
+    <div className="flex-1 relative z-10"
       style={{
         minHeight: props.isLast ? "50vh" : 0,
       }}
