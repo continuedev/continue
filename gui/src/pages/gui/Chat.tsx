@@ -149,15 +149,14 @@ export function Chat() {
     useHistory(dispatch);
 
   useEffect(() => {
-    if (!active || !topGuiDivRef.current) return;
-
+    if (!active || !topGuiDivRef.current) return
     const scrollAreaElement = topGuiDivRef.current;
 
     scrollAreaElement.scrollTop =
       scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
 
     setIsAtBottom(true);
-  }, [active]);
+  }, [topGuiDivRef, active, setIsAtBottom])
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -436,20 +435,23 @@ export function Chat() {
         </StopButton>
       )}
       {active && (
-        <StopButton
-          className="mb-4 mt-auto"
-          onClick={() => {
-            dispatch(setInactive());
-            if (
-              state.history[state.history.length - 1]?.message.content
-                .length === 0
-            ) {
-              dispatch(clearLastResponse());
-            }
-          }}
+        <div
+          className="mb-4 h-9"
         >
-          {getMetaKeyLabel()} ⌫ Cancel
-        </StopButton>
+          <StopButton
+            onClick={() => {
+              dispatch(setInactive());
+              if (
+                state.history[state.history.length - 1]?.message.content
+                  .length === 0
+              ) {
+                dispatch(clearLastResponse());
+              }
+            }}
+          >
+            {getMetaKeyLabel()} ⌫ Cancel
+          </StopButton>
+        </div>
       )}
       <div className={`${state.history.length > 0 ? 'pt-1 border-0 border-t border-solid border-t-zinc-700' : ''}`}>
         <ContinueInputBox
@@ -461,6 +463,7 @@ export function Chat() {
         />
         <div style={{
           opacity: active ? 0 : 1,
+          pointerEvents: active ? 'none' : 'auto',
         }}>
           {state.history.length > 0 ? (
             <div className="xs:inline mt-2 hidden">

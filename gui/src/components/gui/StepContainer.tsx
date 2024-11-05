@@ -93,7 +93,7 @@ function StepContainer(props: StepContainerProps) {
         hidden={!props.open}
         isUserInput={isUserInput}
         fontSize={getFontSize()}
-
+      // className="pb-2"
       >
         {uiConfig?.displayRawMarkdown ? (
           <pre
@@ -111,7 +111,8 @@ function StepContainer(props: StepContainerProps) {
       </ContentDiv>
 
       {shouldRenderActions && (
-        <div className="flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 p-2 pb-0 cursor-default">
+        // Height of this should be the same as height of "Cancel" div to prevent jump
+        <div className="h-9 mb-4 flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 pb-0 cursor-default">
           {truncatedEarly && (
             <ButtonWithTooltip
               tabIndex={-1}
