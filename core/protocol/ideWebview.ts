@@ -86,4 +86,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   navigateToSearch: [undefined, void];
   navigateToInventory: [undefined, void];
   getCurrentTab: [undefined, string];
+  activeEditorChange: [{ filepath: string | null }, void];
 };

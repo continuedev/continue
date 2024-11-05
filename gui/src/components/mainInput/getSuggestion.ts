@@ -21,37 +21,48 @@ function getSuggestion(
       let popup;
 
       const onExit = () => {
-        popup?.[0]?.destroy();
-        component?.destroy();
-        onClose();
+        requestAnimationFrame(() => {
+          popup?.[0]?.destroy();
+          component?.destroy();
+          onClose();
+        });
       };
 
       return {
         onStart: (props) => {
-          component = new ReactRenderer(MentionList, {
-            props: { ...props, enterSubmenu, onClose: onExit },
-            editor: props.editor,
+          requestAnimationFrame(() => {
+            component = new ReactRenderer(MentionList, {
+              props: { 
+                ...props, 
+                enterSubmenu: (editor: Editor, providerId: string) => {
+                  requestAnimationFrame(() => {
+                    enterSubmenu(editor, providerId);
+                  });
+                }, 
+                onClose: onExit 
+              },
+              editor: props.editor,
+            });
+
+            if (!props.clientRect) {
+              console.log("no client rect");
+              return;
+            }
+
+            popup = tippy("body", {
+              getReferenceClientRect: props.clientRect,
+              appendTo: () => document.body,
+              content: component.element,
+              showOnCreate: true,
+              interactive: true,
+              trigger: "manual",
+              placement: "bottom-start",
+              maxWidth: `${window.innerWidth - 24}px`,
+            });
+
+            onOpen();
           });
-
-          if (!props.clientRect) {
-            console.log("no client rect");
-            return;
-          }
-
-          popup = tippy("body", {
-            getReferenceClientRect: props.clientRect,
-            appendTo: () => document.body,
-            content: component.element,
-            showOnCreate: true,
-            interactive: true,
-            trigger: "manual",
-            placement: "bottom-start",
-            maxWidth: `${window.innerWidth - 24}px`,
-          });
-
-          onOpen();
         },
-
         onUpdate(props) {
           component.updateProps({ ...props, enterSubmenu });
 
@@ -63,7 +74,6 @@ function getSuggestion(
             getReferenceClientRect: props.clientRect,
           });
         },
-
         onKeyDown(props) {
           if (props.event.key === "Escape") {
             popup[0].hide();
@@ -73,7 +83,6 @@ function getSuggestion(
 
           return component.ref?.onKeyDown(props);
         },
-
         onExit,
       };
     },
