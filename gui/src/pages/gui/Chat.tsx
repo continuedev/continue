@@ -75,6 +75,7 @@ const TopGuiDiv = styled.div<{
 `;
 
 const StopButton = styled.div`
+  background-color: ${vscBackground};
   width: fit-content;
   margin-right: auto;
   margin-left: auto;
@@ -148,15 +149,17 @@ export function Chat() {
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
-  useEffect(() => {
-    if (!active || !topGuiDivRef.current) return
-    const scrollAreaElement = topGuiDivRef.current;
-
-    scrollAreaElement.scrollTop =
-      scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
+  const scrollToBottom = useCallback(() => {
+    if (!topGuiDivRef.current) return
+    const elem = topGuiDivRef.current;
+    elem.scrollTop = elem.scrollHeight - elem.clientHeight;
 
     setIsAtBottom(true);
-  }, [topGuiDivRef, active, setIsAtBottom])
+  }, [topGuiDivRef, setIsAtBottom])
+
+  useEffect(() => {
+    if (active) scrollToBottom()
+  }, [active, scrollToBottom])
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -424,34 +427,35 @@ export function Chat() {
         />
       </TopGuiDiv>
 
-      {ttsActive && (
-        <StopButton
-          className="mb-4 mt-2"
-          onClick={() => {
-            ideMessenger.post("tts/kill", undefined);
-          }}
-        >
-          ■ Stop TTS
-        </StopButton>
-      )}
-      {active && (
-        <div className="h-7 mb-2">
-          <StopButton
-            onClick={() => {
-              dispatch(setInactive());
-              if (
-                state.history[state.history.length - 1]?.message.content
-                  .length === 0
-              ) {
-                dispatch(clearLastResponse());
-              }
-            }}
-          >
-            {getMetaKeyLabel()} ⌫ Cancel
-          </StopButton>
+
+      <div className={`relative ${state.history.length > 0 ? 'pt-1 border-0 border-t border-solid border-t-zinc-700' : ''}`}>
+        <div className="absolute -top-8 right-2 z-30">
+          {ttsActive && (
+            <StopButton
+              className=""
+              onClick={() => {
+                ideMessenger.post("tts/kill", undefined);
+              }}
+            >
+              ■ Stop TTS
+            </StopButton>
+          )}
+          {active && (
+            <StopButton
+              onClick={() => {
+                dispatch(setInactive());
+                if (
+                  state.history[state.history.length - 1]?.message.content
+                    .length === 0
+                ) {
+                  dispatch(clearLastResponse());
+                }
+              }}
+            >
+              {getMetaKeyLabel()} ⌫ Cancel
+            </StopButton>
+          )}
         </div>
-      )}
-      <div className={`${state.history.length > 0 ? 'pt-1 border-0 border-t border-solid border-t-zinc-700' : ''}`}>
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}
@@ -460,7 +464,7 @@ export function Chat() {
           }}
         />
         <div style={{
-          opacity: active ? 0 : 1,
+          // opacity: active ? 0 : 1,
           pointerEvents: active ? 'none' : 'auto',
         }}>
           {state.history.length > 0 ? (
