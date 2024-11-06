@@ -1,5 +1,5 @@
 import type { IDE, Range, RangeInFile } from "core";
-import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider";
+import { GetLspDefinitionsFunction } from "core/autocomplete/CompletionProvider";
 import { AutocompleteLanguageInfo } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 import { AutocompleteSnippet } from "core/autocomplete/context/ranking";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/util/ast";
