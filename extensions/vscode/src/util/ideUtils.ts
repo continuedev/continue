@@ -136,9 +136,7 @@ export class VsCodeIdeUtils {
     );
   }
 
-  private async resolveAbsFilepathInWorkspace(
-    filepath: string,
-  ): Promise<string> {
+  async resolveAbsFilepathInWorkspace(filepath: string): Promise<string> {
     // If the filepath is already absolute, return it as is
     if (this.path.isAbsolute(filepath)) {
       return filepath;

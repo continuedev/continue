@@ -49,7 +49,8 @@ class VsCodeIde implements IDE {
     return Promise.resolve(this.ideUtils.path.sep);
   }
   async fileExists(filepath: string): Promise<boolean> {
-    return vscode.workspace.fs.stat(uriFromFilePath(filepath)).then(
+    const absPath = await this.ideUtils.resolveAbsFilepathInWorkspace(filepath);
+    return vscode.workspace.fs.stat(uriFromFilePath(absPath)).then(
       () => true,
       () => false,
     );

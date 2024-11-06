@@ -24,7 +24,7 @@ class PromptFilesContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     const rawContent = await extras.ide.readFile(query);
     const preamble = parsePreamble(query, rawContent);
-    const rendered = await renderPromptFileV2(rawContent);
+    const rendered = await renderPromptFileV2(rawContent, extras);
     return [
       {
         content: rendered,
