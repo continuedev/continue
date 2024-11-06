@@ -109,7 +109,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   }, [isGatheringContextStore]);
 
   return (
-    <div className={`mb-1 mt-3 ${props.hidden ? "hidden" : ""}`}>
+    <div className={`mb-1 ${props.hidden ? "hidden" : ""}`}>
       <div className={`relative flex px-2`}>
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}

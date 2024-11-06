@@ -404,12 +404,15 @@ export default class DocsService {
 
   async getFavicon(startUrl: string) {
     const db = await this.getOrCreateSqliteDb();
-    const { favicon } = await db.get(
+    const result = await db.get(
       `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
       startUrl,
     );
 
-    return favicon;
+    if (!result) {
+      return;
+    }
+    return result.favicon;
   }
 
   private async init(configHandler: ConfigHandler) {
