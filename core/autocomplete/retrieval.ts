@@ -10,13 +10,11 @@ export async function fullTextRetrieve(
   const searchStrings = prefix.split("\n").slice(-3);
   const results: Chunk[] = [];
   searchStrings.forEach(async (searchString) => {
-    const chunks = await index.retrieve(
-      [indexTag],
-      searchString,
-      3,
-      undefined,
-      undefined,
-    );
+    const chunks = await index.retrieve({
+      tags: [indexTag],
+      text: searchString,
+      n: 3,
+    });
     results.push(...chunks);
   });
   return results;

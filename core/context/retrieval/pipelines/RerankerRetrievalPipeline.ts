@@ -1,17 +1,22 @@
-import { Chunk } from "../../../index.js";
-import { RETRIEVAL_PARAMS } from "../../../util/parameters.js";
-import { requestFilesFromRepoMap } from "../repoMapRequest.js";
-import { deduplicateChunks } from "../util.js";
-import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
+import { Chunk } from "../../..";
+import { RETRIEVAL_PARAMS } from "../../../util/parameters";
+import { requestFilesFromRepoMap } from "../repoMapRequest";
+import { deduplicateChunks } from "../util";
+
+import BaseRetrievalPipeline, {
+  RetrievalPipelineRunArguments,
+} from "./BaseRetrievalPipeline";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
-  private async _retrieveInitial(): Promise<Chunk[]> {
+  private async _retrieveInitial(
+    args: RetrievalPipelineRunArguments,
+  ): Promise<Chunk[]> {
     const { input, nRetrieve, filterDirectory, includeEmbeddings } =
       this.options;
 
     let retrievalResults: Chunk[] = [];
 
-    const ftsChunks = await this.retrieveFts(input, nRetrieve);
+    const ftsChunks = await this.retrieveFts(args, nRetrieve);
     const embeddingsChunks = includeEmbeddings
       ? await this.retrieveEmbeddings(input, nRetrieve)
       : [];
@@ -104,9 +109,9 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     return results;
   }
 
-  async run(): Promise<Chunk[]> {
-    const intialResults = await this._retrieveInitial();
-    const rankedResults = await this._rerank(this.options.input, intialResults);
+  async run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
+    let results = await this._retrieveInitial(args);
+    results = await this._rerank(args.query, results);
 
     // // // Expand top reranked results
     // const expanded = await this._expandRankedResults(results);
@@ -120,7 +125,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     // TODO: stitch together results
 
-    return rankedResults;
+    return results;
   }
 }
 
