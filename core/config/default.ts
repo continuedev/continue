@@ -6,17 +6,19 @@ import {
 } from "../";
 
 export const DEFAULT_CHAT_MODEL_CONFIG: ModelDescription = {
-  model: "claude-3-5-sonnet-20240620",
-  provider: "anthropic",
-  apiKey: "",
-  title: "Claude 3.5 Sonnet",
+  title: "Jarvis Go",
+  model: "sammcj/llama-3-1-8b-smcleod-golang-coder-v3:Q8_0",
+  provider: "ollama",
+  apiBase: "http://localhost:11434",
+  contextLength: 8192
 };
 
 export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
-  title: "Codestral",
-  provider: "mistral",
-  model: "codestral-latest",
-  apiKey: "",
+  title: "Jarvis Go",
+  model: "sammcj/llama-3-1-8b-smcleod-golang-coder-v3:Q8_0",
+  provider: "ollama",
+  apiBase: "http://localhost:11434",
+  contextLength: 8192
 };
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
@@ -51,19 +53,17 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
 ];
 
 export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
-  { name: "code", params: {} },
-  { name: "docs", params: {} },
   { name: "diff", params: {} },
-  { name: "terminal", params: {} },
-  { name: "problems", params: {} },
   { name: "folder", params: {} },
   { name: "codebase", params: {} },
+  { name: "open", params: {} },
 ];
 
 export const defaultContextProvidersJetBrains: ContextProviderWithParams[] = [
   { name: "diff", params: {} },
   { name: "folder", params: {} },
   { name: "codebase", params: {} },
+  { name: "open", params: {} },
 ];
 
 export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
@@ -76,16 +76,8 @@ export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
     description: "Write comments for the selected code",
   },
   {
-    name: "share",
-    description: "Export the current chat session to markdown",
-  },
-  {
-    name: "cmd",
-    description: "Generate a shell command",
-  },
-  {
-    name: "commit",
-    description: "Generate a git commit message",
+    name: "review",
+    description: "Review my code",
   },
 ];
 
@@ -99,12 +91,8 @@ export const defaultSlashCommandsJetBrains = [
     description: "Write comments for the selected code",
   },
   {
-    name: "share",
-    description: "Export the current chat session to markdown",
-  },
-  {
-    name: "commit",
-    description: "Generate a git commit message",
+    name: "review",
+    description: "Review my code",
   },
 ];
 
