@@ -130,6 +130,9 @@ export class VsCodeMessenger {
     this.onWebview("toggleFullScreen", (msg) => {
       vscode.commands.executeCommand("continue.toggleFullScreen");
     });
+    this.onWebview("hideGUI", (msg) => {
+      vscode.commands.executeCommand("continue.hideGUI");
+    });
     // History
     this.onWebview("saveFile", async (msg) => {
       return await ide.saveFile(msg.data.filepath);

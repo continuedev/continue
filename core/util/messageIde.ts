@@ -27,7 +27,7 @@ export class MessageIde implements IDE {
       messageType: T,
       callback: (data: FromIdeProtocol[T][0]) => FromIdeProtocol[T][1],
     ) => void,
-  ) {}
+  ) { }
 
   pathSep(): Promise<string> {
     return this.request("pathSep", undefined);
@@ -199,5 +199,9 @@ export class MessageIde implements IDE {
 
   async getBranch(dir: string): Promise<string> {
     return this.request("getBranch", { dir });
+  }
+
+  async hideGUI(): Promise<void> {
+    await this.request("hideGUI", undefined);
   }
 }
