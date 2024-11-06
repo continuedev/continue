@@ -50,9 +50,11 @@ import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
-  isWebEnvironment,
 } from "../../util";
-import { handleMetaKeyPressJetBrains } from "../../util/handleMetaKeyPressJetBrains";
+import {
+  handleJetBrainsMetaKeyPress,
+  handleMetaKeyPress,
+} from "./handleMetaKeyPress";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
@@ -78,6 +80,7 @@ const InputBoxDiv = styled.div<{ border?: string }>`
     props.border ? props.border : `0.5px solid ${vscInputBorder}`};
   outline: none;
   font-size: ${getFontSize()}px;
+
   &:focus {
     outline: none;
 
@@ -561,7 +564,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   /**
    * This handles various issues with meta key actions
-   * - In JetBrains, when using "off screen rendering", there is a bug where using the meta key to
+   * - In JetBrains, when using OSR in JCEF, there is a bug where using the meta key to
    *   highlight code using arrow keys is not working
    * - In VS Code, while working with .ipynb files there is a problem where copy/paste/cut will affect
    *   the actual notebook cells, even when performing them in our GUI
@@ -571,77 +574,33 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     setActiveKey(e.key);
 
-    if (isMetaEquivalentKeyPressed(e)) {
-      const { key, code } = e;
-      const isWebEnv = isWebEnvironment();
-      const text = editor.state.doc.textBetween(
-        editor.state.selection.from,
-        editor.state.selection.to,
-      );
-
-      if (isJetBrains()) {
-        if (code === "KeyJ") {
-          e.stopPropagation();
-          e.preventDefault();
-          setIgnoreHighlightedCode(true);
-          setTimeout(() => {
-            setIgnoreHighlightedCode(false);
-          }, 100);
-        }
-
-        if (isMetaEquivalentKeyPressed(e)) {
-          e.stopPropagation();
-          e.preventDefault();
-          handleMetaKeyPressJetBrains(e, text, editor.commands.setContent);
-        }
-      } else {
-        if (code === "KeyL") {
-          e.stopPropagation();
-          e.preventDefault();
-          setIgnoreHighlightedCode(true);
-          setTimeout(() => {
-            setIgnoreHighlightedCode(false);
-          }, 100);
-          return;
-        }
-
-        switch (key) {
-          case "x":
-            e.stopPropagation();
-            e.preventDefault();
-            if (isWebEnv) {
-              await navigator.clipboard.writeText(text);
-              editor.commands.deleteSelection();
-            } else {
-              document.execCommand("cut");
-            }
-            break;
-          case "c":
-            e.stopPropagation();
-            e.preventDefault();
-            if (isWebEnv) {
-              await navigator.clipboard.writeText(text);
-            } else {
-              document.execCommand("copy");
-            }
-            break;
-          case "v":
-            e.stopPropagation();
-            e.preventDefault();
-            if (isWebEnv) {
-              const clipboardText = await navigator.clipboard.readText();
-              editor.commands.insertContent(clipboardText);
-            } else {
-              document.execCommand("paste");
-            }
-            break;
-        }
-      }
-    } else if (e.key === "Escape") {
+    if (e.key === "Escape") {
       e.stopPropagation();
       e.preventDefault();
       ideMessenger.post("focusEditor", undefined);
+      return;
     }
+
+    if (!isMetaEquivalentKeyPressed(e)) {
+      return;
+    }
+
+    if (isJetBrains()) {
+      if (e.code === "KeyJ") {
+        setTemporaryIgnoreHighlightedCode();
+      } else {
+        handleJetBrainsMetaKeyPress(e, editor);
+      }
+    }
+
+    await handleMetaKeyPress(e, editor);
+  };
+
+  const setTemporaryIgnoreHighlightedCode = () => {
+    setIgnoreHighlightedCode(true);
+    setTimeout(() => {
+      setIgnoreHighlightedCode(false);
+    }, 100);
   };
 
   const handleKeyUp = () => {
