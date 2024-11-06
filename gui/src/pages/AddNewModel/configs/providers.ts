@@ -371,7 +371,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [
       models.grokBeta,
     ],
-    apiKeyUrl: "https://console.groq.com/keys",
+    apiKeyUrl: "https://console.x.ai/",
   },
   lmstudio: {
     title: "LM Studio",
