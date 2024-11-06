@@ -908,7 +908,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   return (
     <InputBoxDiv
       border={props.border}
-      // onKeyDown={handleKeyDown}
+      onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       className="cursor-text"
       onClick={() => {
