@@ -99,7 +99,6 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                   : "Apply to current file"
             }
             disabled={applying}
-            style={{ backgroundColor: vscEditorBackground }}
             onClick={() => {
               if (isTerminalCodeBlock(props.language, props.text)) {
                 let text = props.text;
@@ -127,7 +126,6 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         )}
         {!isPerplexityMode() && <HeaderButtonWithText
           text="Insert at cursor"
-          style={{ backgroundColor: vscEditorBackground }}
           onClick={() => {
             ideMessenger.post("insertAtCursor", { text: props.text });
           }}
