@@ -7,6 +7,14 @@ export type LineFilter = (args: {
   fullStop: () => void;
 }) => LineStream;
 
+export type CharacterFilter = (args: {
+  chars: AsyncGenerator<string>;
+  prefix: string;
+  suffix: string;
+  filepath: string;
+  multiline: boolean;
+}) => AsyncGenerator<string>;
+
 function isBracketEnding(line: string): boolean {
   return line
     .trim()

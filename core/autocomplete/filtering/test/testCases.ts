@@ -172,6 +172,69 @@ public class Calculator {
     expectedCompletion: `  - Subitem 2
   - Subitem 3`,
   },
+  {
+    description: "Should enforce bracket matching in JSON files",
+    filename: "test.json",
+    input: `{
+  "active": true,
+  "department": "Product Development",
+  "location": {
+    "country": "USA",
+    "state": "California",
+    "city": "San BERNARDINO",
+    "coordinates": {
+      <FIM>
+    }
+  },
+  "employees": [
+    {
+      "name": "John Doe",
+      "age": 30,
+      "position": "Developer",
+      "skills": ["JavaScript", "React", "Node.js"],
+      "remote": false,
+      "salary": {
+        "currency": "USD",
+        "amount": 95000
+      }
+    },
+    {
+      "name": "Jane Smith",
+      "age": 25,
+      "position": "Designer",
+      "skills": ["Photoshop", "Illustrator"],
+      "remote": true,
+      "salary": {
+        "currency": "USD",
+        "amount": 70000
+      }
+    },
+    {
+      "name": "Emily Johnson",
+      "age": 35,
+      "position": "Manager",
+      "teamSize": 8,
+      "remote": true,
+      "skills": ["Leadership", "Project Management"],`,
+    llmOutput: `"latitude": 34.10834,
+      "longitude": -117.28977
+    }
+  },
+  "employeeCount": 2,
+  "averageAge": 30,
+  "remoteFriendly": true,
+  "salaryRange": {
+    "min": 70000,
+    "max": 95000,
+    "currency": "USD"
+  },
+  "skills": {
+    "required": ["JavaScript", "React", "Node.js", "Leadership", "Project Management"],
+    "optional": ["Photoshop", "Illustrator"]`,
+    expectedCompletion: `"latitude": 34.10834,
+      "longitude": -117.28977
+    `,
+  },
 ];
 
 export const TEST_CASES_WITHOUT_DIFF: AutocompleteFileringTestInput[] = [
@@ -672,6 +735,36 @@ func main() {
   },
   {
     description:
+      "Should autocomplete SQL script with employee and product tables",
+    filename: "database.sql",
+    input: `
+  CREATE TABLE employees (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    age INT NOT NULL,
+    position VARCHAR(100)
+  );
+  
+  CREATE TABLE products (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    price DECIMAL(8,2) NOT NULL<FIM> '0.00',
+    quantity INT NOT NULL DEFAULT '0'
+  );
+  
+  INSERT INTO employees (name, age, position) VALUES ('John Doe', 30, 'Developer');
+  INSERT INTO products (name, price, quantity) VALUES ('Apple', '1.99', '47');
+  
+  SELECT * FROM products ORDER BY name DESC LIMIT 3;
+  SELECT * FROM products WHERE price > '0';
+  SELECT * FROM products WHERE quantity > '100';
+  SELECT * FROM employees WHERE age > 25;
+  `,
+    llmOutput: " DEFAULT",
+    expectedCompletion: " DEFAULT",
+  },
+  {
+    description:
       "Should autocomplete SQL query with subquery and alias in SELECT clause",
     filename: "complex_query.sql",
     input: `SELECT u.id, 
@@ -837,40 +930,6 @@ public class App {
 }`,
     llmOutput: `, { "id": 3, "name": "Charlie" }`,
     expectedCompletion: `, { "id": 3, "name": "Charlie" }`,
-  },
-  {
-    description: "Should autocomplete nested JSON objects",
-    filename: "config.json",
-    input: `{
-  "server": {
-    "host": "localhost",
-    "port": 8080,
-    "features": {
-      "enableLogging": true,
-      "maxConnections": 100
-    <|fim|>
-  }
-}`,
-    llmOutput: `,
-    "timeout": 5000
-  }`,
-    expectedCompletion: `,
-    "timeout": 5000
-  }`,
-  },
-  {
-    description: "Should autocomplete JSON object with missing bracket",
-    filename: "settings.json",
-    input: `{
-    "theme": "dark",
-    "language": "en"<|fim|>
-  `,
-    llmOutput: `,
-    "notifications": true
-  }`,
-    expectedCompletion: `,
-    "notifications": true
-  }`,
   },
   {
     description: "Should autocomplete within a CSV record",

@@ -1,6 +1,5 @@
 import { streamLines } from "../../../diff/util";
 import { HelperVars } from "../../util/HelperVars";
-import { BracketMatchingService } from "../BracketMatchingService";
 import { stopAtStopTokens } from "./charStream";
 import {
   avoidEmptyComments,
@@ -14,8 +13,6 @@ import {
 } from "./lineStream";
 
 export class StreamTransformPipeline {
-  private bracketMatchingService = new BracketMatchingService();
-
   async *transform(
     generator: AsyncGenerator<string>,
     prefix: string,
@@ -28,13 +25,16 @@ export class StreamTransformPipeline {
     let charGenerator = generator;
 
     charGenerator = stopAtStopTokens(generator, stopTokens);
-    // charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
-    //   charGenerator,
-    //   prefix,
-    //   suffix,
-    //   helper.filepath,
-    //   multiline,
-    // );
+    for (const charFilter of helper.lang.charFilters ?? []) {
+      debugger;
+      charGenerator = charFilter({
+        chars: charGenerator,
+        prefix,
+        suffix,
+        filepath: helper.filepath,
+        multiline,
+      });
+    }
 
     let lineGenerator = streamLines(charGenerator);
 

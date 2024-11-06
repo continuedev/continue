@@ -1,4 +1,8 @@
-import { LineFilter } from "../filtering/streamTransforms/lineStream";
+import { BracketMatchingService } from "../filtering/BracketMatchingService";
+import {
+  CharacterFilter,
+  LineFilter,
+} from "../filtering/streamTransforms/lineStream";
 
 export interface AutocompleteLanguageInfo {
   name: string;
@@ -7,6 +11,7 @@ export interface AutocompleteLanguageInfo {
   endOfLine: string[];
   stopWords?: string[];
   lineFilters?: LineFilter[];
+  charFilters?: CharacterFilter[];
   useMultiline?: (args: { prefix: string; suffix: string }) => boolean;
 }
 
@@ -277,6 +282,25 @@ export const YAML: AutocompleteLanguageInfo = {
   ],
 };
 
+export const Json: AutocompleteLanguageInfo = {
+  name: "JSON",
+  topLevelKeywords: [],
+  singleLineComment: "//",
+  endOfLine: [",", "}", "]"],
+  charFilters: [
+    function matchBrackets({ chars, prefix, suffix, filepath, multiline }) {
+      const bracketMatchingService = new BracketMatchingService();
+      return bracketMatchingService.stopOnUnmatchedClosingBracket(
+        chars,
+        prefix,
+        suffix,
+        filepath,
+        multiline,
+      );
+    },
+  ],
+};
+
 export const Markdown: AutocompleteLanguageInfo = {
   name: "Markdown",
   topLevelKeywords: [],
@@ -306,6 +330,7 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   ts: Typescript,
   js: Typescript,
   tsx: Typescript,
+  json: Json,
   jsx: Typescript,
   ipynb: Python,
   py: Python,
