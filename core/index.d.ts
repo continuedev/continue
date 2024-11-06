@@ -979,11 +979,6 @@ interface ExperimentalConfig {
   readResponseTTS?: boolean;
 
   /**
-   * Prompt the user's LLM for a title given the current chat content
-   */
-  getChatTitles?: boolean;
-
-  /**
    * If set to true, we will attempt to pull down and install an instance of Chromium
    * that is compatible with the current version of Puppeteer.
    * This is needed to crawl a large number of documentation sites that are dynamically rendered.
@@ -1019,6 +1014,7 @@ export interface SerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  getChatTitles?: boolean;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1093,6 +1089,7 @@ export interface ContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  getChatTitles?: boolean;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1111,4 +1108,5 @@ export interface BrowserSerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  getChatTitles?: boolean;
 }

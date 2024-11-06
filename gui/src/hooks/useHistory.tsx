@@ -54,16 +54,13 @@ function useHistory(dispatch: Dispatch) {
     if (state.history.length === 0) return;
 
     const stateCopy = { ...state };
-    if (open_new_session){
+    if (open_new_session) {
       dispatch(newSession());
       updateLastSessionId(stateCopy.sessionId);
     }
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    if (
-      state.config?.experimental?.getChatTitles &&
-      stateCopy.title === "New Session"
-    ) {
+    if (state.config?.getChatTitles && stateCopy.title === "New Session") {
       try {
         // Check if we have first assistant response
         let assistantResponse = stateCopy.history
@@ -89,8 +86,8 @@ function useHistory(dispatch: Dispatch) {
             MAX_TITLE_LENGTH,
           )
         : stateCopy.title?.length > 0
-        ? stateCopy.title
-        : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
+          ? stateCopy.title
+          : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
 
     const sessionInfo: PersistedSessionInfo = {
       history: stateCopy.history,

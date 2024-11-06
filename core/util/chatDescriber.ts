@@ -40,7 +40,7 @@ export class ChatDescriber {
       return;
     }
 
-    completionOptions.maxTokens = 24;
+    completionOptions.maxTokens = 6;
 
     // Prompt the user's current LLM for the title
     const titleResponse = await model.chat(

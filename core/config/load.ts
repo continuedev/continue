@@ -134,6 +134,10 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
+  if (config.getChatTitles === undefined) {
+    config.getChatTitles = true;
+  }
+
   if (ideSettings.remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
@@ -511,6 +515,7 @@ function finalToBrowserConfig(
     embeddingsProvider: final.embeddingsProvider?.id,
     ui: final.ui,
     experimental: final.experimental,
+    getChatTitles: final.getChatTitles,
   };
 }
 
