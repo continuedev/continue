@@ -3,6 +3,7 @@ import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
+import { registerPromptFilesCompletionProvider } from "../lang-server/promptFileCompletions";
 import { getExtensionVersion } from "../util/util";
 import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
@@ -14,6 +15,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   // Register commands and providers
   registerQuickFixProvider();
+  registerPromptFilesCompletionProvider(context);
   setupInlineTips(context);
 
   const vscodeExtension = new VsCodeExtension(context);

@@ -64,6 +64,16 @@
           ".continuerc.json"
         ],
         "id": "jsonc"
+      },
+      {
+        "id": "promptLanguage",
+        "extensions": [
+          ".prompt"
+        ],
+        "aliases": [
+          "Prompt Language"
+        ],
+        "configuration": "./prompt-file-language-configuration.json"
       }
     ],
     "configuration": {
