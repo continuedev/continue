@@ -275,7 +275,11 @@ class ContinueBrowser(val project: Project, url: String) {
     }
 
     /**
-     * This function checks if the pluginSinceBuild is greater than or equal to 233, which corresponds
+     * This function checks if off-screen rendering (OSR) should be used.
+     * 
+     * If ui.useOSR is set in config.json, that value is used.
+     * 
+     * Otherwise, we check if the pluginSinceBuild is greater than or equal to 233, which corresponds
      * to IntelliJ platform version 2023.3 and later.
      *
      * Setting `setOffScreenRendering` to `false` causes a number of issues such as a white screen flash when loading
@@ -293,6 +297,18 @@ class ContinueBrowser(val project: Project, url: String) {
      * it's a simple integer without dot notation, making it easier to compare.
      */
     private fun shouldRenderOffScreen(): Boolean {
+        val continuePluginService = ServiceManager.getService(
+            project,
+            ContinuePluginService::class.java
+        )
+        
+        // Check if useOSR is explicitly set in config
+        val useOSR = continuePluginService.coreMessenger?.config?.ui?.useOSR
+        if (useOSR != null) {
+            return useOSR
+        }
+
+        // Fall back to version check
         val minBuildNumber = 233
         val applicationInfo = ApplicationInfo.getInstance()
         val currentBuildNumber = applicationInfo.build.baselineVersion
