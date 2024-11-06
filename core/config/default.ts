@@ -6,17 +6,28 @@ import {
 } from "../";
 
 export const DEFAULT_CHAT_MODEL_CONFIG: ModelDescription = {
-  model: "claude-3-5-sonnet-latest",
-  provider: "anthropic",
-  apiKey: "",
-  title: "Claude 3.5 Sonnet",
+  title: "DeepSeek Coder",
+  model: "deepseek-coder",
+  contextLength: 128000,
+  provider: "deepseek",
+  apiBase: "http://api.lingxi.eastcom-sw.com/openai",
+  apiKey: "sk-d810c9d813834c6dad30dc759f375716"
 };
 
 export const DEFAULT_AUTOCOMPLETE_MODEL_CONFIG: ModelDescription = {
-  title: "Codestral",
-  provider: "mistral",
-  model: "codestral-latest",
-  apiKey: "",
+  title: "DeepSeek-V2",
+  model: "deepseek-coder",
+  apiKey: "sk-d810c9d813834c6dad30dc759f375716",
+  contextLength: 8192,
+  apiBase: "http://api.lingxi.eastcom-sw.com/openai",
+  completionOptions: {
+    maxTokens: 4096,
+    temperature: 0,
+    topP: 1,
+    presencePenalty: 0,
+    frequencyPenalty: 0
+  },
+  provider: "openai"
 };
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
@@ -110,6 +121,9 @@ export const defaultSlashCommandsJetBrains = [
 
 export const defaultConfig: SerializedContinueConfig = {
   models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteOptions: {
+    maxPromptTokens: 4096
+  },
   tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {
