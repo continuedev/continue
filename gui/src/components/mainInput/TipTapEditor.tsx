@@ -568,6 +568,11 @@ function TipTapEditor(props: TipTapEditorProps) {
    *   highlight code using arrow keys is not working
    * - In VS Code, while working with .ipynb files there is a problem where copy/paste/cut will affect
    *   the actual notebook cells, even when performing them in our GUI
+   *
+   *  Currently keydown events for a number of keys are not registering if the
+   *  meta/shift key is pressed, for example "x", "c", "v", "z", etc.
+   *  Until this is resolved we can't turn on OSR for non-Mac users due to issues
+   *  with those key actions.
    */
   const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
     if (!editor || !editorFocusedRef.current) return;
