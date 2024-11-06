@@ -2777,11 +2777,6 @@
               "x-intellij-html-description": "If set to <code>true</code>, a scrollbar will be displayed in the chat window to navigate through messages.",
               "default": false,
               "type": "boolean"
-            },
-            "useOSR": {
-              "type": "boolean",
-              "description": "Whether to use off-screen rendering in JetBrains IDEs. By default, Continue will automatically determine whether to use OSR based on your IDE version. Set this to true to force OSR on, or false to force it off.",
-              "default": null
             }
           }
         },

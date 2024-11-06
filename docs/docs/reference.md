@@ -369,7 +369,6 @@ Customizable UI settings to control interface appearance and behavior.
 - `fontSize`: Specifies font size for UI elements.
 - `displayRawMarkdown`: If `true`, shows raw markdown in responses.
 - `showChatScrollbar`: If `true`, enables a scrollbar in the chat window.
-- `useOSR`: Controls off-screen rendering in JetBrains IDEs. By default, Continue will automatically determine whether to use OSR based on your IDE version. Set this to `true` to force OSR on, or `false` to force it off. Only applies to JetBrains IDEs.
 
 Example:
 
@@ -378,8 +377,7 @@ Example:
   "ui": {
     "codeBlockToolbarPosition": "bottom",
     "fontSize": 14,
-    "displayRawMarkdown": false,
-    "useOSR": true
+    "displayRawMarkdown": false
   }
 }
 ```
