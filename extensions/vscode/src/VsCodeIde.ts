@@ -384,7 +384,7 @@ class VsCodeIde implements IDE {
   }
 
   async openFile(path: string): Promise<void> {
-    this.ideUtils.openFile(path);
+    await this.ideUtils.openFile(path);
   }
 
   async showLines(
