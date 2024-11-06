@@ -245,8 +245,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     const timer = setTimeout(() => {
       setHasDefaultModel(
         !!defaultModel &&
-          defaultModel.apiKey !== undefined &&
-          defaultModel.apiKey !== "",
+        defaultModel.apiKey !== undefined &&
+        defaultModel.apiKey !== "",
       );
     }, 3500);
 
@@ -310,6 +310,10 @@ function TipTapEditor(props: TipTapEditorProps) {
       ? "Ask anything, '/' for slash commands, '@' to add context"
       : "Ask a follow-up";
   }
+
+  const hideGUI = useCallback(() => {
+    ideMessenger.post("hideGUI", undefined);
+  }, [ideMessenger]);
 
   const editor: Editor = useEditor({
     extensions: [
@@ -397,6 +401,29 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return true;
               }
             },
+            "Mod-L": () => {
+              if (!editorFocusedRef.current) {
+                if (historyLength === 0) {
+                  hideGUI();
+                } else {
+                  saveSession();
+
+                  setTimeout(() => {
+                    editor?.commands.blur();
+                    editor?.commands.focus("end");
+                  }, 20);
+                }
+                return true;
+              }
+              return false;
+            },
+            "Mod-Shift-L": () => {
+              if (!editorFocusedRef.current) {
+                hideGUI();
+                return true;
+              }
+              return false;
+            },
             "Shift-Enter": () =>
               this.editor.commands.first(({ commands }) => [
                 () => commands.newlineInCode(),
@@ -449,38 +476,38 @@ function TipTapEditor(props: TipTapEditorProps) {
       Text,
       props.availableContextProviders.length
         ? Mention.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getContextProviderDropdownOptions(
-              availableContextProvidersRef,
-              getSubmenuContextItemsRef,
-              enterSubmenu,
-              onClose,
-              onOpen,
-              inSubmenuRef,
-              ideMessenger,
-            ),
-            renderHTML: (props) => {
-              return `@${props.node.attrs.label || props.node.attrs.id}`;
-            },
-          })
+          HTMLAttributes: {
+            class: "mention",
+          },
+          suggestion: getContextProviderDropdownOptions(
+            availableContextProvidersRef,
+            getSubmenuContextItemsRef,
+            enterSubmenu,
+            onClose,
+            onOpen,
+            inSubmenuRef,
+            ideMessenger,
+          ),
+          renderHTML: (props) => {
+            return `@${props.node.attrs.label || props.node.attrs.id}`;
+          },
+        })
         : undefined,
       props.availableSlashCommands.length
         ? SlashCommand.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getSlashCommandDropdownOptions(
-              availableSlashCommandsRef,
-              onClose,
-              onOpen,
-              ideMessenger,
-            ),
-            renderText: (props) => {
-              return props.node.attrs.label;
-            },
-          })
+          HTMLAttributes: {
+            class: "mention",
+          },
+          suggestion: getSlashCommandDropdownOptions(
+            availableSlashCommandsRef,
+            onClose,
+            onOpen,
+            ideMessenger,
+          ),
+          renderText: (props) => {
+            return props.node.attrs.label;
+          },
+        })
         : undefined,
       CodeBlockExtension,
     ],
@@ -573,6 +600,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (isMetaEquivalentKeyPressed(e)) {
       const { key, code } = e;
+
       const isWebEnv = isWebEnvironment();
       const text = editor.state.doc.textBetween(
         editor.state.selection.from,
@@ -705,7 +733,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       if (historyLength > 0) {
-        saveSession();
+        await saveSession();
       }
       setTimeout(() => {
         editor?.commands.blur();
@@ -734,12 +762,12 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      saveSession();
+      await saveSession();
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput],
+    [editor, props.isMainInput, saveSession],
   );
 
   useWebviewListener(
@@ -756,9 +784,8 @@ function TipTapEditor(props: TipTapEditorProps) {
           rif.filepath,
           await ideMessenger.ide.getWorkspaceDirs(),
         );
-        const rangeStr = `(${rif.range.start.line + 1}-${
-          rif.range.end.line + 1
-        })`;
+        const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1
+          })`;
         const item: ContextItemWithId = {
           content: rif.contents,
           name: `${basename} ${rangeStr}`,
@@ -881,7 +908,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   return (
     <InputBoxDiv
       border={props.border}
-      onKeyDown={handleKeyDown}
+      // onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
       className="cursor-text"
       onClick={() => {
