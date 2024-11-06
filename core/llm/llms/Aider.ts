@@ -28,7 +28,7 @@ const AIDER_READY_FLAG = UDIFF_FLAG ? "udiff> " : "> ";
 const END_MARKER = IS_WINDOWS
   ? (UDIFF_FLAG ? "\r\nudiff> " : "\r\n> ")
   : (UDIFF_FLAG ? "\nudiff> " : "\n> ");
-
+const READY_PROMPT_REGEX = />[^\S\r\n]*(?:[\r\n]|\s)*(?:\s+)(?:[\r\n]|\s)*$/;
 
 export const AIDER_QUESTION_MARKER = "[Yes]\\:";
 export const AIDER_END_MARKER = "─────────────────────────────────────";
@@ -134,7 +134,8 @@ class Aider extends BaseLLM {
     if (IS_WINDOWS) {
       return process.env.COMSPEC || "cmd.exe";
     }
-    return process.env.SHELL || "/bin/sh";
+    // return process.env.SHELL || "/bin/sh";
+    return "/bin/sh";
   }
 
   private getUserPath(): string {
@@ -194,7 +195,7 @@ class Aider extends BaseLLM {
       }
 
       let aiderFlags =
-        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-auto-lint --map-tokens 2048 --subtree-only"
+        "--no-pretty --yes-always --no-auto-commits --no-suggest-shell-commands --no-check-update --no-auto-lint --map-tokens 2048 --subtree-only"
       if (UDIFF_FLAG) {
         aiderFlags += " --edit-format udiff";
       }
@@ -208,6 +209,8 @@ class Aider extends BaseLLM {
 
       for (const aiderCommand of aiderCommands) {
         try {
+          console.dir("Running aider command: ")
+          console.dir(aiderCommand)
           await execSync(`${aiderCommand} --version`, { stdio: "ignore" });
           commandFound = true;
 
@@ -320,7 +323,8 @@ class Aider extends BaseLLM {
       const accessToken = this.credentials.getAccessToken();
       this.command.unshift(`export OPENAI_API_KEY=${accessToken};`);
     }
-
+    console.dir("RUNNING AIDER COMMMAND:")
+    console.dir(this.command.join(" "))
     return cp.spawn(userShell, ["-c", this.command.join(" ")], {
       stdio: ["pipe", "pipe", "pipe"],
       cwd: currentDir,
@@ -351,7 +355,8 @@ class Aider extends BaseLLM {
             this.captureAiderOutput(data);
             // Look for the prompt that indicates aider is ready
             const output = data.toString();
-            if (output.endsWith(AIDER_READY_FLAG)) {
+            //if (output.endsWith(AIDER_READY_FLAG)) {
+            if (READY_PROMPT_REGEX.test(output)) {
               // Aider's ready prompt
               console.log("Aider is ready!");
               this.setAiderState("ready");
@@ -379,17 +384,17 @@ class Aider extends BaseLLM {
 
           this.aiderProcess.on("error", (error: Error) => {
             console.error(`Error starting Aider: ${error.message}`);
-            
+
             // Check if this is an authentication error for pearai_model
             if (model === "pearai_model" && error.message.includes("authentication")) {
               this.setAiderState("signedOut");  // Use new signedOut state
             } else {
               this.setAiderState("crashed");
             }
-            
+
             clearTimeout(timeout);
             reject(error);
-            
+
             // Customize error message based on authentication state
             let message = model === "pearai_model" && error.message.includes("authentication")
               ? "Please sign in to use PearAI Creator with hosted servers. You can also opt to use your own API-Key."
@@ -518,7 +523,8 @@ class Aider extends BaseLLM {
 
       if (newOutput) {
         if (UDIFF_FLAG) {
-          if (newOutput.endsWith(END_MARKER)) {
+          //if (newOutput.endsWith(END_MARKER)) {
+          if (READY_PROMPT_REGEX.test(newOutput)) {
               // Remove the END_MARKER from the output before yielding
               const cleanOutput = newOutput.slice(0, -END_MARKER.length);
               if (cleanOutput) {
@@ -543,7 +549,8 @@ class Aider extends BaseLLM {
             content: escapeDollarSigns(newOutput),
           };
 
-          if (newOutput.endsWith(END_MARKER)) {
+          //if (newOutput.endsWith(END_MARKER)) {
+          if (READY_PROMPT_REGEX.test(newOutput)) {
             responseComplete = true;
             break;
           }
