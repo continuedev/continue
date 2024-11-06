@@ -41,6 +41,8 @@ const CHAT_ONLY_MODELS = [
   "o1-mini",
 ];
 
+const deepseekApi = "http://api.lingxi.eastcom-sw.com/openai/"
+
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
 
@@ -96,7 +98,7 @@ class OpenAI extends BaseLLM {
   }
 
   protected _convertArgs(options: any, messages: ChatMessage[]) {
-    const url = new URL(this.apiBase!);
+    const url = new URL(options.model == "deepseek-coder" ? deepseekApi : this.apiBase!);
     const finalOptions: any = {
       messages: messages.map(this._convertMessage),
       model: this._convertModelName(options.model),
@@ -170,6 +172,9 @@ class OpenAI extends BaseLLM {
         this.apiBase,
       );
     }
+    if(this.model == "deepseek-coder") {
+      return new URL(endpoint, deepseekApi);
+    }
     if (!this.apiBase) {
       throw new Error(
         "No API base URL provided. Please set the 'apiBase' option in config.json",
@@ -198,8 +203,9 @@ class OpenAI extends BaseLLM {
     const args: any = this._convertArgs(options, []);
     args.prompt = prompt;
     args.messages = undefined;
-
-    const response = await this.fetch(this._getEndpoint("completions"), {
+    const url = this._getEndpoint("completions")
+    console.log('%c [ url-completions ]-207', 'font-size:13px; background:#612202; color:#a56646;', url)
+    const response = await this.fetch(url, {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({
@@ -207,6 +213,7 @@ class OpenAI extends BaseLLM {
         stream: true,
       }),
     });
+    console.log('%c [ response ]-218', 'font-size:13px; background:#9d0f38; color:#e1537c;', response)
 
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.text && value.finish_reason !== "eos") {
@@ -244,7 +251,9 @@ class OpenAI extends BaseLLM {
       ...m,
       content: m.content === "" ? " " : m.content,
     })) as any;
-    const response = await this.fetch(this._getEndpoint("chat/completions"), {
+    const url = this._getEndpoint("chat/completions")
+    console.log('%c [ url-chat ]-254', 'font-size:13px; background:#aeaea4; color:#f2f2e8;', url)
+    const response = await this.fetch(url, {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify(body),
@@ -297,7 +306,9 @@ class OpenAI extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
-    const response = await this.fetch(this._getEndpoint("models"), {
+    const url = this._getEndpoint("models")
+    console.log('%c [ url-models ]-309', 'font-size:13px; background:#8723c2; color:#cb67ff;', url)
+    const response = await this.fetch(url, {
       method: "GET",
       headers: this._getHeaders(),
     });
