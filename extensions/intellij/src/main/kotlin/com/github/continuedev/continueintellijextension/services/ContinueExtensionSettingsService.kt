@@ -7,6 +7,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.*
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.util.concurrency.AppExecutorUtil
 import com.intellij.util.messages.Topic
 import kotlinx.serialization.Serializable
@@ -270,6 +271,12 @@ class ContinueExtensionConfigurable : Configurable {
  * it's a simple integer without dot notation, making it easier to compare.
  */
 private fun shouldRenderOffScreen(): Boolean {
+    // With the 0.0.77 release, non-Mac users have been reporting issues with paste functionality
+    // in the browser. Disabling OSR for all non-Mac users for now.
+    if (!SystemInfo.isMac) {
+        return false
+    }
+
     val minBuildNumber = 233
     val applicationInfo = ApplicationInfo.getInstance()
     val currentBuildNumber = applicationInfo.build.baselineVersion

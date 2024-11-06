@@ -81,9 +81,6 @@ export const handleJetBrainsMetaBackspace = (editor: Editor) => {
 };
 
 export const handleCutOperation = async (text: string, editor: Editor) => {
-  const selection = window.getSelection();
-  selection.deleteFromDocument();
-
   if (isWebEnv) {
     await navigator.clipboard.writeText(text);
     editor.commands.deleteSelection();
