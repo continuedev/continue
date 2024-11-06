@@ -280,7 +280,7 @@ class ContinueBrowser(val project: Project, url: String) {
      *
      * Setting `setOffScreenRendering` to `false` causes a number of issues such as a white screen flash when loading
      * the GUI and the inability to set `cursor: pointer`. However, setting `setOffScreenRendering` to `true` on
-     * platform versions prior to 2023.3.4 causes larger issues such as an inability to type input for certain langauges,
+     * platform versions prior to 2023.3.4 causes larger issues such as an inability to type input for certain languages,
      * e.g. Korean.
      *
      * References:
@@ -293,12 +293,6 @@ class ContinueBrowser(val project: Project, url: String) {
      * it's a simple integer without dot notation, making it easier to compare.
      */
     private fun shouldRenderOffScreen(): Boolean {
-        // With the 0.0.77 release, non-Mac users have been reporting issues with paste functionality
-        // in the browser. Disabling OSR for all non-Mac users for now.
-        if (!SystemInfo.isMac) {
-            return false
-        }
-
         val minBuildNumber = 233
         val applicationInfo = ApplicationInfo.getInstance()
         val currentBuildNumber = applicationInfo.build.baselineVersion
