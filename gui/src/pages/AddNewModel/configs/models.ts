@@ -1059,6 +1059,19 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["nebius"],
     isOpenSource: true,
   },
+  grokBeta: {
+    title: "Grok Beta",
+    description: "Generative artificial intelligence chatbot developed by xAI.",
+    refUrl: "",
+    params: {
+      title: "Grok Beta",
+      model: "grok-beta",
+      contextLength: 128_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
+    isOpenSource: false,
+  },
   AUTODETECT: {
     title: "Autodetect",
     description:

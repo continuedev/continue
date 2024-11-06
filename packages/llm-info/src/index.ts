@@ -8,6 +8,7 @@ import { Ollama } from "./providers/ollama.js";
 import { OpenAi } from "./providers/openai.js";
 import { Vllm } from "./providers/vllm.js";
 import { Voyage } from "./providers/voyage.js";
+import { xAI } from "./providers/xAI.js";
 import { LlmInfo, ModelProvider, UseCase } from "./types.js";
 
 export const allModelProviders: ModelProvider[] = [
@@ -21,6 +22,7 @@ export const allModelProviders: ModelProvider[] = [
   Vllm,
   Bedrock,
   Cohere,
+  xAI
 ];
 
 export const allLlms: LlmInfo[] = allModelProviders.flatMap((provider) =>

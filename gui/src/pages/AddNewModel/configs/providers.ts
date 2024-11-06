@@ -352,6 +352,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.gemini15Pro, models.geminiPro, models.gemini15Flash],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
+  xAI: {
+    title: "xAI",
+    provider: "xAI",
+    icon: "xAI.png",
+    description: "xAI is a company working on building artificial intelligence to accelerate human scientific discovery",
+    longDescription: "To get started with xAI, obtain an API key from their [console](https://console.x.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your xAI API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.grokBeta,
+    ],
+    apiKeyUrl: "https://console.x.ai/",
+  },
   lmstudio: {
     title: "LM Studio",
     provider: "lmstudio",
