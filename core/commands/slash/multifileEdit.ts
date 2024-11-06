@@ -1,5 +1,6 @@
 import { SlashCommand } from "../..";
 import { getFullyQualifiedPath } from "../../../extensions/vscode/src/util/util";
+import { VsCodeIde } from "../../../extensions/vscode/src/VsCodeIde";
 import { stripImages } from "../../llm/images";
 
 const MultiFileEditSlashCommand: SlashCommand = {
@@ -11,7 +12,7 @@ const MultiFileEditSlashCommand: SlashCommand = {
         selectedCode.map(async (item) => {
           // Split the range string from the filename, e.g. `filename.ts (1-2) -> [filename.ts, (1-2)]`
           const [filepath, rangeStr] = item.filepath.split(" ");
-          const fullPath = getFullyQualifiedPath(filepath);
+          const fullPath = getFullyQualifiedPath(ide as VsCodeIde, filepath);
 
           if (!fullPath) {
             return "";

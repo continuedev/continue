@@ -86,7 +86,7 @@ export class VsCodeMessenger {
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
-      const fullPath = getFullyQualifiedPath(msg.data.filepath);
+      const fullPath = getFullyQualifiedPath(this.ide, msg.data.filepath);
 
       if (fullPath) {
         this.ide.openFile(fullPath);
@@ -159,7 +159,7 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("applyToFile", async ({ data }) => {
-      const fullPath = getFullyQualifiedPath(data.filepath);
+      const fullPath = getFullyQualifiedPath(ide, data.filepath);
 
       if (!fullPath) {
         return;
