@@ -46,6 +46,11 @@ export const handleJetBrainsMetaKeyPress = (
   }
 };
 
+// Note that this currently doesn't seem to be working because the key of the events
+// are not being registered. For example, when pressing the meta key followed by
+// a period, both keys are registered, by pressing meta followed by "x", "c", or "v"
+// are not registering. Until this is resolved we can't enable OSR for non
+// Mac users.
 export const handleMetaKeyPress = async (e: KeyboardEvent, editor: Editor) => {
   const text = editor.state.doc.textBetween(
     editor.state.selection.from,
@@ -81,9 +86,6 @@ export const handleJetBrainsMetaBackspace = (editor: Editor) => {
 };
 
 export const handleCutOperation = async (text: string, editor: Editor) => {
-  const selection = window.getSelection();
-  selection.deleteFromDocument();
-
   if (isWebEnv) {
     await navigator.clipboard.writeText(text);
     editor.commands.deleteSelection();

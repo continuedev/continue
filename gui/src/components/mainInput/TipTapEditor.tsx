@@ -574,6 +574,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     setActiveKey(e.key);
 
+    // Allow users to use the escape key to jump back to the editor
     if (e.key === "Escape") {
       e.stopPropagation();
       e.preventDefault();
@@ -581,26 +582,14 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
 
-    if (!isMetaEquivalentKeyPressed(e)) {
-      return;
-    }
-
-    if (isJetBrains()) {
-      if (e.code === "KeyJ") {
-        setTemporaryIgnoreHighlightedCode();
-      } else {
+    // Handle meta key issues
+    if (isMetaEquivalentKeyPressed(e)) {
+      if (isJetBrains()) {
         handleJetBrainsMetaKeyPress(e, editor);
       }
+
+      await handleMetaKeyPress(e, editor);
     }
-
-    await handleMetaKeyPress(e, editor);
-  };
-
-  const setTemporaryIgnoreHighlightedCode = () => {
-    setIgnoreHighlightedCode(true);
-    setTimeout(() => {
-      setIgnoreHighlightedCode(false);
-    }, 100);
   };
 
   const handleKeyUp = () => {
@@ -629,9 +618,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
     [props.onEnter, editor, props.isMainInput],
   );
-
-  // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
-  const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
 
   // Re-focus main input after done generating
   useEffect(() => {
@@ -707,71 +693,68 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput || !editor) {
         return;
       }
-      if (!ignoreHighlightedCode) {
-        const rif: RangeInFile & { contents: string } =
-          data.rangeInFileWithContents;
-        const basename = getBasename(rif.filepath);
-        const relativePath = getRelativePath(
-          rif.filepath,
-          await ideMessenger.ide.getWorkspaceDirs(),
-        );
-        const rangeStr = `(${rif.range.start.line + 1}-${
-          rif.range.end.line + 1
-        })`;
-        const item: ContextItemWithId = {
-          content: rif.contents,
-          name: `${basename} ${rangeStr}`,
-          // Description is passed on to the LLM to give more context on file path
-          description: `${relativePath} ${rangeStr}`,
-          id: {
-            providerTitle: "code",
-            itemId: v4(),
-          },
-          uri: {
-            type: "file",
-            value: rif.filepath,
-          },
-        };
 
-        let index = 0;
-        for (const el of editor.getJSON().content) {
-          if (el.type === "codeBlock") {
-            index += 2;
-          } else {
-            break;
-          }
+      const rif: RangeInFile & { contents: string } =
+        data.rangeInFileWithContents;
+      const basename = getBasename(rif.filepath);
+      const relativePath = getRelativePath(
+        rif.filepath,
+        await ideMessenger.ide.getWorkspaceDirs(),
+      );
+      const rangeStr = `(${rif.range.start.line + 1}-${
+        rif.range.end.line + 1
+      })`;
+      const item: ContextItemWithId = {
+        content: rif.contents,
+        name: `${basename} ${rangeStr}`,
+        // Description is passed on to the LLM to give more context on file path
+        description: `${relativePath} ${rangeStr}`,
+        id: {
+          providerTitle: "code",
+          itemId: v4(),
+        },
+        uri: {
+          type: "file",
+          value: rif.filepath,
+        },
+      };
+
+      let index = 0;
+      for (const el of editor.getJSON().content) {
+        if (el.type === "codeBlock") {
+          index += 2;
+        } else {
+          break;
         }
-        editor
-          .chain()
-          .insertContentAt(index, {
-            type: "codeBlock",
-            attrs: {
-              item,
-            },
-          })
-          .run();
-
-        if (data.prompt) {
-          editor.commands.focus("end");
-          editor.commands.insertContent(data.prompt);
-        }
-
-        if (data.shouldRun) {
-          onEnterRef.current({ useCodebase: false, noContext: true });
-        }
-
-        setTimeout(() => {
-          editor.commands.blur();
-          editor.commands.focus("end");
-        }, 20);
       }
-      setIgnoreHighlightedCode(false);
+      editor
+        .chain()
+        .insertContentAt(index, {
+          type: "codeBlock",
+          attrs: {
+            item,
+          },
+        })
+        .run();
+
+      if (data.prompt) {
+        editor.commands.focus("end");
+        editor.commands.insertContent(data.prompt);
+      }
+
+      if (data.shouldRun) {
+        onEnterRef.current({ useCodebase: false, noContext: true });
+      }
+
+      setTimeout(() => {
+        editor.commands.blur();
+        editor.commands.focus("end");
+      }, 20);
     },
     [
       editor,
       props.isMainInput,
       historyLength,
-      ignoreHighlightedCode,
       props.isMainInput,
       onEnterRef.current,
     ],
