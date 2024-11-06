@@ -1,8 +1,12 @@
+import { IDE } from "core";
 import { getBasename, getLastNPathParts } from "core/util";
 import vscode from "vscode";
+import { FileSearch } from "../util/FileSearch";
 
 export function registerPromptFilesCompletionProvider(
   context: vscode.ExtensionContext,
+  fileSearch: FileSearch,
+  ide: IDE,
 ) {
   let provider = vscode.languages.registerCompletionItemProvider(
     "promptLanguage",
@@ -13,16 +17,27 @@ export function registerPromptFilesCompletionProvider(
         token: vscode.CancellationToken,
         context: vscode.CompletionContext,
       ) {
-        const linePrefix = document
-          .lineAt(position)
-          .text.substr(0, position.character);
+        const linePrefix =
+          document
+            .lineAt(position)
+            .text.substr(0, position.character)
+            .split(" ")
+            .pop() || "";
 
         // Check if the last character typed is '@'
-        if (!linePrefix.endsWith("@")) {
+        if (!linePrefix.includes("@")) {
           return undefined;
         }
 
-        const files = await vscode.workspace.findFiles("**/*");
+        const searchText = linePrefix.split("@").pop() || "";
+        const files = fileSearch.search(searchText).map(({ filename }) => {
+          return filename;
+        });
+
+        if (files.length === 0) {
+          const openFiles = await ide.getOpenFiles();
+          files.push(...openFiles);
+        }
 
         // Provide completion items
         return [
@@ -62,10 +77,17 @@ export function registerPromptFilesCompletionProvider(
             sortText: "...",
           },
           ...files.map((file) => {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(
+              vscode.Uri.file(file),
+            );
+            const relativePath = workspaceFolder
+              ? vscode.workspace.asRelativePath(file)
+              : file;
+
             return {
-              label: getBasename(file.path),
-              detail: getLastNPathParts(file.path, 2),
-              insertText: file.path,
+              label: getBasename(file),
+              detail: getLastNPathParts(file, 2),
+              insertText: relativePath,
               kind: vscode.CompletionItemKind.File,
             };
           }),

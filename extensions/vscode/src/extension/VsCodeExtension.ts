@@ -19,6 +19,7 @@ import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvide
 import { DiffManager } from "../diff/horizontal";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { registerPromptFilesCompletionProvider } from "../lang-server/promptFileCompletions";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
@@ -28,6 +29,7 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { arePathsEqual } from "../util/arePathsEqual";
 import { Battery } from "../util/battery";
+import { FileSearch } from "../util/FileSearch";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -49,6 +51,7 @@ export class VsCodeExtension {
   private core: Core;
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
+  private fileSearch: FileSearch;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -206,12 +209,17 @@ export class VsCodeExtension {
     context.subscriptions.push(this.battery);
     context.subscriptions.push(monitorBatteryChanges(this.battery));
 
+    // FileSearch
+    this.fileSearch = new FileSearch(this.ide);
+    registerPromptFilesCompletionProvider(context, this.fileSearch, this.ide);
+
     const quickEdit = new QuickEdit(
       this.verticalDiffManager,
       this.configHandler,
       this.sidebar.webviewProtocol,
       this.ide,
       context,
+      this.fileSearch,
     );
 
     // Commands
