@@ -1,4 +1,5 @@
 import { ContextProviderExtras } from "../..";
+import URLContextProvider from "../../context/providers/URLContextProvider";
 import { getPreambleAndBody } from "./parse";
 
 async function resolveAttachment(
@@ -22,11 +23,11 @@ async function resolveAttachment(
 
   // URLs
   if (name.startsWith("http")) {
-    const response = await extras.fetch(name);
-    if (response.status !== 200) {
-      return `Error fetching ${name}: HTTP ${response.status}`;
-    }
-    return response.text();
+    const items = await new URLContextProvider({}).getContextItems(
+      name,
+      extras,
+    );
+    return items.map((item) => item.content).join("\n\n");
   }
 
   return null;
