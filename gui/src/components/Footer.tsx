@@ -76,14 +76,6 @@ function Footer() {
         >
           <EllipsisHorizontalCircleIcon className="h-4 w-4" />
         </ButtonWithTooltip>
-
-        <ButtonWithTooltip
-          tooltipPlacement="top-end"
-          onClick={onClickSettings}
-          text="Configure Continue"
-        >
-          <Cog6ToothIcon className="h-4 w-4" />
-        </ButtonWithTooltip>
       </div>
     </footer>
   );
