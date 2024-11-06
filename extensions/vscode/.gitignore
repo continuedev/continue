@@ -10,8 +10,10 @@ exe
 bin
 assets
 
-gui/*
+gui/**
 !gui/onigasm.wasm
 
 .devcontainer
 .github
+
+continue_rc_schema.json

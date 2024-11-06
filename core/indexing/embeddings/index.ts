@@ -16,6 +16,7 @@ import NvidiaEmbeddingsProvider from "./NvidiaEmbeddingsProvider.js";
 import VoyageEmbeddingsProvider from "./VoyageEmbeddingsProvider.js";
 import VertexEmbeddingsProvider from "./VertexEmbeddingsProvider.js";
 import WatsonxEmbeddingsProvider from "./WatsonxEmbeddingsProvider.js";
+import NebiusEmbeddingsProvider from "./NebiusEmbeddingsProvider.js";
 
 type EmbeddingsProviderConstructor = new (
   ...args: any[]
@@ -39,6 +40,7 @@ export const allEmbeddingsProviders: Record<
   nvidia: NvidiaEmbeddingsProvider,
   voyage: VoyageEmbeddingsProvider,
   mistral: MistralEmbeddingsProvider,
-  vertex: VertexEmbeddingsProvider,
-  watsonx: WatsonxEmbeddingsProvider,
+  nebius: NebiusEmbeddingsProvider,
+  vertexai: VertexEmbeddingsProvider,
+  watsonx: WatsonxEmbeddingsProvider
 };

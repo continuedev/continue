@@ -30,3 +30,10 @@ fun getAltKeyLabel(): String {
         Os.LINUX -> "Alt"
     }
 }
+
+fun getShiftKeyLabel(): String {
+    return when (getOs()) {
+        Os.MAC -> "⇧"
+        Os.WINDOWS, Os.LINUX -> "↑"
+    }
+}

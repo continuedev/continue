@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
+import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
-import { ModelProviderTags } from "../../../components/modelSelection/utils";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -132,7 +132,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.gpt4o],
     params: {
       apiKey: "",
-      engine: "",
+      deployment: "",
       apiBase: "",
       apiVersion: "",
       apiType: "azure",
@@ -147,9 +147,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
       {
         inputType: "text",
-        key: "engine",
-        label: "Engine",
-        placeholder: "Enter the engine name",
+        key: "deployment",
+        label: "Deployment",
+        placeholder: "Enter the deployment name",
         required: true,
       },
       { ...apiBaseInput, required: true },
@@ -352,6 +352,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     packages: [models.gemini15Pro, models.geminiPro, models.gemini15Flash],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
+  xAI: {
+    title: "xAI",
+    provider: "xAI",
+    icon: "xAI.png",
+    description: "xAI is a company working on building artificial intelligence to accelerate human scientific discovery",
+    longDescription: "To get started with xAI, obtain an API key from their [console](https://console.x.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your xAI API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.grokBeta,
+    ],
+    apiKeyUrl: "https://console.x.ai/",
+  },
   lmstudio: {
     title: "LM Studio",
     provider: "lmstudio",
@@ -530,6 +551,8 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     icon: "WatsonX.png",
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
+      models.granite3Instruct8b,
+      models.granite3Instruct2b,
       models.graniteCode3b,
       models.graniteCode8b,
       models.graniteCode20b,
@@ -624,6 +647,39 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     apiKeyUrl: "https://cloud.cerebras.ai/",
   },
+  vertexai: {
+    title: "VertexAI",
+    provider: "vertexai",
+    description: "Use supported Vertex AI models",
+    longDescription:
+      "Use the supported Vertex AI models - see [here](https://cloud.google.com/docs/authentication/provide-credentials-adc) to authenticate",
+    icon: "vertexai.png",
+    packages: [
+      models.VertexGemini15Pro,
+      models.VertexGemini15Flash,
+      models.mistralLarge
+
+    ],
+    collectInputFor: [
+      {
+        inputType: "project",
+        key: "projectId",
+        label: "Project Id",
+        placeholder: "Enter your Vertex AI project Id",
+        required: true,
+      },
+      {
+        inputType: "region",
+        key: "region",
+        label: "Region",
+        placeholder: "Enter your Vertex AI region",
+        required: true,
+      },
+
+      ...completionParamsInputsConfigs,
+    ],
+  },
+
   askSage: {
     title: "Ask Sage",
     provider: "askSage",
@@ -667,5 +723,29 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.gemini15Pro,
     ],
     apiKeyUrl: "https://chat.asksage.ai/",
+  },
+  nebius: {
+    title: "Nebius AI Studio",
+    provider: "nebius",
+    refPage: "nebiusllm",
+    description: "Use the Nebius API to run open-source models",
+    longDescription: `Nebius AI Studio is a cheap hosted service with $100 trial. To get started with Nebius AI Studio:\n1. Obtain an API key from [here](https://studio.nebius.ai)\n2. Paste below\n3. Select a model preset`,
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Nebius AI Studio API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "nebius.png",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    packages: [models.MetaLlama3Large, models.Qwen2Coder],
+    apiKeyUrl: "https://studio.nebius.ai/settings/api-keys",
   },
 };

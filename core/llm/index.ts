@@ -106,7 +106,7 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
 
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
   region?: string;
@@ -190,7 +190,7 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
 
-    this.engine = options.engine;
+    this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
     this.apiType = options.apiType;
     this.region = options.region;
@@ -501,15 +501,20 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
-    for await (const chunk of this._streamComplete(prompt, completionOptions)) {
-      completion += chunk;
-      yield chunk;
-    }
+    try {
+      for await (const chunk of this._streamComplete(
+        prompt,
+        completionOptions,
+      )) {
+        completion += chunk;
+        yield chunk;
+      }
+    } finally {
+      this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-    this._logTokensGenerated(completionOptions.model, prompt, completion);
-
-    if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      if (log && this.writeLog) {
+        await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      }
     }
 
     return {

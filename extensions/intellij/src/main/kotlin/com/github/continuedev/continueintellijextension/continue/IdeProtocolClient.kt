@@ -582,7 +582,9 @@ class IdeProtocolClient(
                         val folders = mutableListOf<String>()
                         fun findNestedFolders(dirPath: String) {
                             val dir = File(dirPath)
-                            val nestedFolders = dir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath } ?: emptyList()
+                            val nestedFolders =
+                                dir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath }
+                                    ?: emptyList()
                             folders.addAll(nestedFolders);
                             nestedFolders.forEach { folder -> findNestedFolders(folder) }
                         }
@@ -642,10 +644,10 @@ class IdeProtocolClient(
                             respond(null)
                             return@launch
                         }
-                       
+
                         if (editor.document.text.trim().isEmpty()) {
                             WriteCommandAction.runWriteCommandAction(project) {
-                                document.insertString(0, text)
+                                editor.document.insertString(0, text)
                             }
                             respond(null)
                             return@launch

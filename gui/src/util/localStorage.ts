@@ -10,7 +10,7 @@ type LocalStorageTypes = {
   ftc: number;
   fontSize: number;
   lastSessionId: string | undefined;
-  inputHistory: JSONContent[];
+  [key: `inputHistory_${string}`]: JSONContent[];
   extensionVersion: string;
   indexingState: IndexingProgressUpdate;
   showTutorialCard: boolean;

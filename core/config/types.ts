@@ -49,7 +49,7 @@ declare global {
     apiBase?: string;
     cacheBehavior?: CacheBehavior;
 
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
     region?: string;
@@ -322,7 +322,7 @@ declare global {
     accountId?: string;
 
     // Azure options
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
 
@@ -598,7 +598,8 @@ declare global {
     | "watsonx"
     | "openrouter"
     | "sambanova"
-    | "nvidia";
+    | "nvidia"
+    | "nebius";
 
   export type ModelName =
     | "AUTODETECT"
@@ -647,6 +648,7 @@ declare global {
     | "gemma-7b-it"
     | "gemma2-9b-it"
     // Anthropic
+    | "claude-3-5-sonnet-latest"
     | "claude-3-5-sonnet-20240620"
     | "claude-3-opus-20240229"
     | "claude-3-sonnet-20240229"
@@ -765,13 +767,14 @@ declare global {
     | "continue-proxy"
     | "deepinfra"
     | "voyage"
-    | "watsonx";
+    | "watsonx"
+    | "nebius";
 
   export interface EmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;
-    engine?: string;
+    deployment?: string;
     apiType?: string;
     apiVersion?: string;
     requestOptions?: RequestOptions;

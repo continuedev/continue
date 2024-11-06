@@ -72,6 +72,7 @@ The `"modelTitle"` field must match one of the models in your "models" array in 
     "name": "huggingface-tei",
     "params": {
       "apiBase": "http://localhost:8080",
+      "apiKey": "<TEI_API_KEY>",
       "truncate": true,
       "truncation_direction": "Right"
     }

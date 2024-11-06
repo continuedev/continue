@@ -85,7 +85,7 @@ function isWin() {
 async function package(target, os, arch, exe) {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config_schema.json to config.json in intellij
+  // Copy config_schema to intellij
   copyConfigSchema();
 
   // Install node_modules

@@ -72,7 +72,7 @@ export interface ILLM extends LLMOptions {
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
 
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
   region?: string;
@@ -351,7 +351,7 @@ export interface LLMOptions {
   accountId?: string;
 
   // Azure options
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
 
@@ -610,7 +610,6 @@ type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
-  | "anthropic-vertexai"
   | "cohere"
   | "together"
   | "ollama"
@@ -623,9 +622,7 @@ type ModelProvider =
   | "lmstudio"
   | "llamafile"
   | "gemini"
-  | "gemini-vertexai"
   | "mistral"
-  | "mistral-vertexai"
   | "bedrock"
   | "bedrockimport"
   | "sagemaker"
@@ -647,7 +644,10 @@ type ModelProvider =
   | "vllm"
   | "mock"
   | "cerebras"
-  | "askSage";
+  | "askSage"
+  | "vertexai"
+  | "nebius"
+  | "xAI";
 
 export type ModelName =
   | "AUTODETECT"
@@ -697,6 +697,8 @@ export type ModelName =
   | "llama3.2-3b"
   | "llama3.2-11b"
   | "llama3.2-90b"
+  // xAI
+  | "grok-beta"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -711,6 +713,7 @@ export type ModelName =
   | "gemma-7b-it"
   | "gemma2-9b-it"
   // Anthropic
+  | "claude-3-5-sonnet-latest"
   | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"
   | "claude-3-sonnet-20240229"
@@ -829,14 +832,15 @@ export type EmbeddingsProviderName =
   | "nvidia"
   | "voyage"
   | "mistral"
-  | "vertex"
+  | "nebius"
+  | "vertexai"
   | "watsonx";
 
 export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
-  engine?: string;
+  deployment?: string;
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;

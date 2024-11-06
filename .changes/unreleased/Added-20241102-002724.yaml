@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: New Edit mode in sidebar (cmd/ctrl+I)
+time: 2024-11-02T00:27:24.40964-07:00

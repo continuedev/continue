@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
+import com.github.continuedev.continueintellijextension.utils.getShiftKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Editor
@@ -131,10 +132,12 @@ class VerticalDiffBlock(
         refreshEditor()
     }
 
-
     private fun createButtons(): Pair<JButton, JButton> {
         val rejectBtn =
-            createButton("${getAltKeyLabel()}↑N", JBColor(0x99FF0000.toInt(), 0x99FF0000.toInt())).apply {
+            createButton(
+                "${getAltKeyLabel()}${getShiftKeyLabel()}N",
+                JBColor(0x99FF0000.toInt(), 0x99FF0000.toInt())
+            ).apply {
                 addActionListener {
                     handleReject();
                     onAcceptReject(this@VerticalDiffBlock, false)
@@ -143,7 +146,11 @@ class VerticalDiffBlock(
             }
 
         val acceptBtn =
-            createButton("${getAltKeyLabel()}↑Y", JBColor(0x9900FF00.toInt(), 0x9900FF00.toInt())).apply {
+            createButton(
+                "${getAltKeyLabel()}${
+                    getShiftKeyLabel()
+                }Y", JBColor(0x7700BB00.toInt(), 0x7700BB00.toInt())
+            ).apply {
                 addActionListener {
                     handleAccept();
                     onAcceptReject(this@VerticalDiffBlock, true)

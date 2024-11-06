@@ -6,7 +6,7 @@ toc_max_heading_level: 5
 
 # @Docs
 
-The [`@Docs` context provider](http://localhost:3000/customization/context-providers#documentation) allows you to interact with your documentation directly within Continue. This feature enables you to index any static site or GitHub markdown pages, making it easier to access and utilize your documentation while coding.
+The [`@Docs` context provider](customize/context-providers.md#docs) allows you to interact with your documentation directly within Continue. This feature enables you to index any static site or GitHub markdown pages, making it easier to access and utilize your documentation while coding.
 
 ## Enabling the `@Docs` context provider
 
@@ -77,7 +77,7 @@ As with [@Codebase context provider configuration](https://docs.continue.dev/cus
 {
   "contextProviders": [
     {
-      "name": "codebase",
+      "name": "docs",
       "params": {
         "nRetrieve": 25,
         "nFinal": 5,

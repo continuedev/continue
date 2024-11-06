@@ -1,6 +1,6 @@
 import { ILLM, ModelProvider } from "core";
-import { InputDescriptor } from "./providers";
 import { ModelProviderTags } from "../../../components/modelSelection/utils";
+import { InputDescriptor } from "./providers";
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
 // You would set options to the field that should be changed for that option in the params field of ModelPackage
@@ -200,6 +200,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "nebius",
     ],
     isOpenSource: true,
   },
@@ -438,6 +439,7 @@ export const models: { [key: string]: ModelPackage } = {
       "together",
       "llama.cpp",
       "replicate",
+      "nebius",
     ],
     isOpenSource: true,
   },
@@ -750,7 +752,7 @@ export const models: { [key: string]: ModelPackage } = {
     description:
       "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
     params: {
-      model: "claude-3-5-sonnet-20240620",
+      model: "claude-3-5-sonnet-latest",
       contextLength: 200_000,
       title: "Claude 3.5 Sonnet",
       apiKey: "",
@@ -866,6 +868,32 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "WatsonX.png",
     isOpenSource: false,
   },
+  granite3Instruct8b: {
+    title: "Granite 3.0 8b Instruct",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-8b-instruct",
+      contextLength: 8_000,
+      title: "Granite 3.0 8b Instruct",
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
+  granite3Instruct2b: {
+    title: "Granite 3.0 2b Instruct",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-3-2b-instruct",
+      contextLength: 2_000,
+      title: "Granite 3.0 2b Instruct",
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
   MistralLarge: {
     title: "Mistral Large",
     description:
@@ -908,6 +936,45 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["watsonx"],
     isOpenSource: false,
   },
+  VertexGemini15Pro: {
+    title: "Gemini 1.5 Pro",
+    description: "A newer Gemini model with 1M token context length",
+    params: {
+      title: "Gemini 1.5 Pro",
+      model: "gemini-1.5-pro-002",
+      contextLength: 2_097_152,
+    },
+    icon: "gemini.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+  VertexGemini15Flash: {
+    title: "Gemini 1.5 Flash",
+    description:
+      "Fast and versatile multimodal model for scaling across diverse tasks",
+    params: {
+      title: "Gemini 1.5 Flash",
+      model: "gemini-1.5-flash-002",
+      contextLength: 1_048_576,
+    },
+    icon: "gemini.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+  vertexMistralLarge: {
+    title: "Mistral Large",
+    description:
+      "Mistral's flagship model that's ideal for complex tasks that require large reasoning capabilities or are highly specialized (Synthetic Text Generation, Code Generation, RAG, or Agents).",
+    params: {
+      title: "Mistral Large",
+      model: "mistral-large",
+      contextLength: 32000,
+    },
+    icon: "mistral.png",
+    providerOptions: ["vertexai"],
+    isOpenSource: false,
+  },
+
   gpt4gov: {
     title: "GPT-4 gov",
     description:
@@ -919,7 +986,7 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
-    providerOptions: ["askSage"], 
+    providerOptions: ["askSage"],
     icon: "openai.png",
     isOpenSource: false,
   },
@@ -934,8 +1001,75 @@ export const models: { [key: string]: ModelPackage } = {
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.", // Need to set this on the Ask Sage side or just configure it in here to be discussed
     },
-    providerOptions: ["askSage"], 
+    providerOptions: ["askSage"],
     icon: "openai.png",
+    isOpenSource: false,
+  },
+  MetaLlama3Large: {
+    title: "Llama 3.1 405b",
+    description:
+      "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Llama 3.1 405b",
+      model: "meta-llama/Meta-Llama-3.1-405B-Instruct",
+      contextLength: 128_000,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "70b": {
+            model: "meta-llama/Meta-Llama-3.1-70B-Instruct",
+            title: "Llama 3.1 70b",
+          },
+          "405bb": {
+            model: "meta-llama/Meta-Llama-3.1-405B-Instruct",
+            title: "Llama 3.1 405b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["nebius"],
+    isOpenSource: true,
+  },
+  Qwen2Coder: {
+    title: "Qwen 2.5 Coder 7b",
+    description:
+      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Qwen 2.5 Coder 7b",
+      model: "Qwen/Qwen2.5-Coder-7B-Instruct",
+      contextLength: 32_000,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "7b": {
+            model: "Qwen/Qwen2.5-Coder-7B-Instruct",
+            title: "Qwen 2.5 Coder 7b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["nebius"],
+    isOpenSource: true,
+  },
+  grokBeta: {
+    title: "Grok Beta",
+    description: "Generative artificial intelligence chatbot developed by xAI.",
+    refUrl: "",
+    params: {
+      title: "Grok Beta",
+      model: "grok-beta",
+      contextLength: 128_000,
+    },
+    icon: "xAI.png",
+    providerOptions: ["xAI"],
     isOpenSource: false,
   },
   AUTODETECT: {

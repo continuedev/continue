@@ -8,7 +8,6 @@ import {
 import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
 import { BaseLLM } from "../index";
 import Anthropic from "./Anthropic";
-import AnthropicVertexAI from "./AnthropicVertexAI";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
@@ -21,7 +20,6 @@ import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
-import GeminiVertexAI from "./GeminiVertexAI";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
@@ -30,9 +28,9 @@ import LMStudio from "./LMStudio";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import Mistral from "./Mistral";
-import MistralVertexAI from "./MistralVertexAI";
 import Mock from "./Mock";
 import Msty from "./Msty";
+import Nebius from "./Nebius";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -45,15 +43,15 @@ import Together from "./Together";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
+import VertexAI from "./VertexAI";
 import Asksage from "./Asksage";
+import xAI from "./xAI";
 
 const LLMs = [
   Anthropic,
-  AnthropicVertexAI,
   Cohere,
   FreeTrial,
   Gemini,
-  GeminiVertexAI,
   Llamafile,
   Ollama,
   Replicate,
@@ -66,7 +64,6 @@ const LLMs = [
   OpenAI,
   LMStudio,
   Mistral,
-  MistralVertexAI,
   Bedrock,
   BedrockImport,
   SageMaker,
@@ -87,6 +84,9 @@ const LLMs = [
   Mock,
   Cerebras,
   Asksage,
+  Nebius,
+  VertexAI,
+  xAI
 ];
 
 export async function llmFromDescription(

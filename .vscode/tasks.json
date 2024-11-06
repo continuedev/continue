@@ -5,11 +5,11 @@
     {
       "label": "vscode-extension:build",
       "dependsOn": [
-        // To detect compile errors and output extensions.js
+        // To detect compile errors
         "vscode-extension:tsc",
         // To build the React app that is used in the extension
         "vscode-extension:continue-ui:build",
-        // To bundle the code the same way we do for publishing
+        // // To bundle the code the same way we do for publishing
         "vscode-extension:esbuild",
         // Start the React app that is used in the extension
         "gui:dev"
@@ -21,10 +21,7 @@
     },
     {
       "label": "vscode-extension:esbuild",
-      "dependsOn": [
-        "vscode-extension:continue-ui:build",
-        "vscode-extension:tsc"
-      ],
+      "dependsOn": ["vscode-extension:continue-ui:build"],
       "type": "npm",
       "script": "esbuild-watch",
       "path": "extensions/vscode",
@@ -44,7 +41,7 @@
           "background": {
             "activeOnStart": true,
             "beginsPattern": ">",
-            "endsPattern": ">"
+            "endsPattern": "VS Code Extension esbuild complete"
           }
         }
       ]
