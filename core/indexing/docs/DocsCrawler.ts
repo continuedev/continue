@@ -35,15 +35,18 @@ class DocsCrawler {
   async *crawl(
     startUrl: URL,
     maxRequestsPerCrawl: number = this.MAX_REQUESTS_PER_CRAWL,
-  ): AsyncGenerator<PageData> {
+  ): AsyncGenerator<PageData, undefined, undefined> {
     if (startUrl.host === this.GITHUB_HOST) {
       yield* new GitHubCrawler(startUrl).crawl();
       return;
     }
 
     try {
-      yield* new DefaultCrawler(startUrl).crawl();
-      return;
+      const pageData = await new DefaultCrawler(startUrl).crawl();
+      if (pageData.length > 0) {
+        yield* pageData;
+        return;
+      }
     } catch (e) {
       console.error("Default crawler failed, trying backup: ", e);
     }

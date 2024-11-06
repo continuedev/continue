@@ -30,4 +30,5 @@ const esbuildConfig = {
   } else {
     await esbuild.build(esbuildConfig);
   }
+  console.log("VS Code Extension esbuild complete"); // Used in task endpattern to signal completion
 })();

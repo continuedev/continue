@@ -6,7 +6,7 @@ import { PageData } from "../DocsCrawler";
 export class DefaultCrawler {
   constructor(private readonly startUrl: URL) {}
 
-  async *crawl(): AsyncGenerator<PageData> {
+  async crawl(): Promise<PageData[]> {
     const resp = await fetch(new URL("crawl", TRIAL_PROXY_URL).toString(), {
       method: "POST",
       headers: {
@@ -20,8 +20,6 @@ export class DefaultCrawler {
       throw new Error(`Failed to crawl site: ${text}`);
     }
     const json = (await resp.json()) as PageData[];
-    for (const pageData of json) {
-      yield pageData;
-    }
+    return json;
   }
 }

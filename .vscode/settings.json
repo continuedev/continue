@@ -14,11 +14,26 @@
     }
   },
   "search.exclude": {
-    "**/core/vendor/**": true,
-    "**/gui/dist": true,
-    "**/extensions/vscode/gui/**": true,
-    "**/extensions/vscode/out/**": true,
-    "**/extensions/intellij/build/**": true
+    "**/package-lock.json": true,
+    "binary/bin/**": true,
+    "binary/build/**": true,
+    "binary/out/**": true,
+    "binary/tmp/**": true,
+    "core/llm/llamaTokenizer.js": true,
+    "core/llm/llamaTokenizer.mjs": true,
+    "core/vendor/**": true,
+    "docs/.docusaurus/**": true,
+    "extensions/intellij/build/**": true,
+    "extensions/vscode/bin/**": true,
+    "extensions/vscode/build/**": true,
+    "extensions/vscode/gui/**": true,
+    "extensions/vscode/models/all-MiniLM-L6-v2/**": true,
+    "extensions/vscode/out/**": true,
+    "extensions/vscode/tag-qry/**": true,
+    "extensions/vscode/textmate-syntaxes/**": true,
+    "extensions/vscode/tree-sitter/**": true,
+    "gui/dist/**": true
+    // "sync/**": true
   },
   "eslint.workingDirectories": ["./core"]
 }
