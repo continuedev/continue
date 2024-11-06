@@ -177,12 +177,25 @@ async function addEntireFileToContext(
 
 function focusGUI() {
   const fullScreenTab = getFullScreenTab();
-  if (!fullScreenTab) {
-    // focus sidebar
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-  } else {
+  if (fullScreenTab) {
     // focus fullscreen
     fullScreenPanel?.reveal();
+  } else {
+    // focus sidebar
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    // vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
+  }
+}
+
+function hideGUI() {
+  const fullScreenTab = getFullScreenTab();
+  if (fullScreenTab) {
+    // focus fullscreen
+    fullScreenPanel?.dispose();
+  } else {
+    // focus sidebar
+    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+    // vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   }
 }
 
@@ -344,35 +357,33 @@ const commandsMap: (
         core.invoke("context/indexDocs", { reIndex: true });
       },
       "continue.focusContinueInput": async () => {
-        focusGUI();
-        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-        await addHighlightedCodeToContext(sidebar.webviewProtocol);
-      },
-      "continue.focusContinueInputWithoutClear": async () => {
-        const isContinueInputFocused = await sidebar.webviewProtocol.request(
-          "isContinueInputFocused",
-          undefined,
-        );
+        const historyLength = await sidebar.webviewProtocol.request("getWebviewHistoryLength", undefined);
+        const isContinueInputFocused = await sidebar.webviewProtocol.request("isContinueInputFocused", undefined);
 
         if (isContinueInputFocused) {
-          // Handle closing the GUI only if we are focused on the input
-          const fullScreenTab = getFullScreenTab();
-          if (fullScreenTab) {
-            fullScreenPanel?.dispose();
+          if (historyLength === 0) {
+            hideGUI();
+          } else {
+            sidebar.webviewProtocol?.request("focusContinueInput", undefined);
           }
         } else {
           focusGUI();
-
-          sidebar.webviewProtocol?.request(
-            "focusContinueInputWithoutClear",
-            undefined,
-          );
-
+          sidebar.webviewProtocol?.request("focusContinueInput", undefined);
           await addHighlightedCodeToContext(sidebar.webviewProtocol);
         }
       },
-      "continue.hideGUI": async () => {
-        vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+      "continue.focusContinueInputWithoutClear": async () => {
+        const isContinueInputFocused = await sidebar.webviewProtocol.request("isContinueInputFocused", undefined);
+
+        if (isContinueInputFocused) {
+          hideGUI();
+        } else {
+          focusGUI();
+
+          sidebar.webviewProtocol?.request("focusContinueInputWithoutClear", undefined);
+
+          await addHighlightedCodeToContext(sidebar.webviewProtocol);
+        }
       },
       "continue.edit": async () => {
         captureCommandTelemetry("edit");

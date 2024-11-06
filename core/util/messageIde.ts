@@ -200,8 +200,4 @@ export class MessageIde implements IDE {
   async getBranch(dir: string): Promise<string> {
     return this.request("getBranch", { dir });
   }
-
-  async hideGUI(): Promise<void> {
-    await this.request("hideGUI", undefined);
-  }
 }

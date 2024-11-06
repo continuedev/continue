@@ -146,7 +146,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("command") ||
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
-    lower.includes("gemini")
+    lower.includes("gemini") ||
+    lower.includes("grok")
   ) {
     return undefined;
   }
