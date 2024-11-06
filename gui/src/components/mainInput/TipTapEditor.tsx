@@ -863,7 +863,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         event.preventDefault();
       }}
     >
-      <p>{`${editorFocusedRef.current}`}</p>
       <div>{props.header}</div>
 
       <PaddingDiv>
