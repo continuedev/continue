@@ -19,6 +19,7 @@ import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvide
 import { DiffManager } from "../diff/horizontal";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import {
@@ -42,6 +43,7 @@ export class VsCodeExtension {
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private diffManager: DiffManager;
+  private editDecorationManager: EditDecorationManager;
   private verticalDiffManager: VerticalDiffManager;
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
@@ -53,6 +55,8 @@ export class VsCodeExtension {
     this.workOsAuthProvider = new WorkOsAuthProvider(context);
     this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
+
+    this.editDecorationManager = new EditDecorationManager(context);
 
     let resolveWebviewProtocol: any = undefined;
     this.webviewProtocolPromise = new Promise<VsCodeWebviewProtocol>(
@@ -110,6 +114,7 @@ export class VsCodeExtension {
       verticalDiffManagerPromise,
       configHandlerPromise,
       this.workOsAuthProvider,
+      this.editDecorationManager,
     );
 
     this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
@@ -128,6 +133,7 @@ export class VsCodeExtension {
     this.verticalDiffManager = new VerticalDiffManager(
       this.configHandler,
       this.sidebar.webviewProtocol,
+      this.editDecorationManager,
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
@@ -221,6 +227,7 @@ export class VsCodeExtension {
       this.battery,
       quickEdit,
       this.core,
+      this.editDecorationManager,
     );
 
     // Disabled due to performance issues

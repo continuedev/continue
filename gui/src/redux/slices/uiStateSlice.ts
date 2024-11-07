@@ -11,6 +11,10 @@ type UiState = {
   dialogEntryOn: boolean;
   nextCodeBlockToApplyIndex: number;
   onboardingCard: OnboardingCardState;
+
+  /**
+   * Syncs the sidebar with the accepted/rejected blocks in the editor. Reused for Edit as well.
+   */
   applyStates: ApplyState[];
 };
 

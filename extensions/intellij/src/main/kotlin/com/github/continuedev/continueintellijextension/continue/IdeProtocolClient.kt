@@ -632,7 +632,7 @@ class IdeProtocolClient(
                         }
                     }
 
-                    "applyToCurrentFile" -> {
+                    "applyToFile" -> {
                         val msg = data as Map<String, String>;
                         val text = msg["text"] as String
                         val curSelectedModelTitle = msg["curSelectedModelTitle"] as String

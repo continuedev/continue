@@ -48,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+  ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -646,7 +646,8 @@ type ModelProvider =
   | "cerebras"
   | "askSage"
   | "vertexai"
-  | "nebius";
+  | "nebius"
+  | "xAI";
 
 export type ModelName =
   | "AUTODETECT"
@@ -696,6 +697,8 @@ export type ModelName =
   | "llama3.2-3b"
   | "llama3.2-11b"
   | "llama3.2-90b"
+  // xAI
+  | "grok-beta"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -710,6 +713,7 @@ export type ModelName =
   | "gemma-7b-it"
   | "gemma2-9b-it"
   // Anthropic
+  | "claude-3-5-sonnet-latest"
   | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"
   | "claude-3-sonnet-20240229"
@@ -1053,9 +1057,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

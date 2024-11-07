@@ -201,7 +201,8 @@
             "cerebras",
             "askSage",
             "nebius",
-            "vertexai"
+            "vertexai",
+            "xAI"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -236,7 +237,8 @@
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
-            "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)"
+            "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
+            "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)"
           ],
           "type": "string"
         },
@@ -471,7 +473,8 @@
                   "together",
                   "cloudflare",
                   "sambanova",
-                  "nebius"
+                  "nebius",
+                  "xAI"
                 ]
               }
             },
@@ -660,6 +663,37 @@
             "properties": {
               "provider": {
                 "enum": [
+                  "xAI"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "grok-beta",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
                   "replicate"
                 ]
               }
@@ -719,7 +753,7 @@
                   "llama3.1-405b",
                   "gpt-3.5-turbo",
                   "gemini-pro",
-                  "claude-3-5-sonnet-20240620",
+                  "claude-3-5-sonnet-latest",
                   "claude-3-haiku-20240307",
                   "AUTODETECT"
                 ]
@@ -834,7 +868,7 @@
                     "enum": [
                       "claude-2",
                       "claude-instant-1",
-                      "claude-3-5-sonnet-20240620",
+                      "claude-3-5-sonnet-latest",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
@@ -1301,7 +1335,10 @@
             ]
           },
           "then": {
-            "required": ["deployment", "apiBase"]
+            "required": [
+              "deployment",
+              "apiBase"
+            ]
           }
         },
         {
@@ -1491,6 +1528,7 @@
                       "deepseek-33b",
                       "claude-2",
                       "claude-instant-1",
+                      "claude-3-5-sonnet-latest",
                       "claude-3-5-sonnet-20240620",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
@@ -2962,6 +3000,9 @@
                         "type": "string",
                         "default": "http://localhost:8080"
                       },
+                      "apiKey": {
+                        "type": "string"
+                      },
                       "truncate": {
                         "type": "boolean",
                         "description": "Whether to truncate long sequences to the maximum allowed context length.",
@@ -3279,6 +3320,11 @@
                   "default": "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
                 }
               }
+            },
+            "useChromiumForDocsCrawling": {
+              "type": "boolean",
+              "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`.",
+              "default": false
             }
           }
         }

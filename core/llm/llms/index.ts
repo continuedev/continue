@@ -45,6 +45,7 @@ import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
 import VertexAI from "./VertexAI";
 import Asksage from "./Asksage";
+import xAI from "./xAI";
 
 const LLMs = [
   Anthropic,
@@ -84,7 +85,8 @@ const LLMs = [
   Cerebras,
   Asksage,
   Nebius,
-  VertexAI
+  VertexAI,
+  xAI
 ];
 
 export async function llmFromDescription(

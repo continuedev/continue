@@ -29,6 +29,9 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
+import ignore from "ignore";
+import { defaultIgnoreFile } from "./indexing/ignore.js";
+import path from "path";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -704,8 +707,13 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
-      recentlyEditedFilesCache.set(filepath, filepath);
+    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
+      const ignoreInstance = ignore().add(defaultIgnoreFile);
+      let rootDirectory = await this.ide.getWorkspaceDirs();
+      const relativeFilePath = path.relative(rootDirectory[0], filepath);
+      if (!ignoreInstance.ignores(relativeFilePath)) {
+        recentlyEditedFilesCache.set(filepath, filepath);
+      }
     });
   }
 
