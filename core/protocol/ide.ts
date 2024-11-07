@@ -89,7 +89,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   logoutOfControlPlane: [undefined, void];
   pathSep: [undefined, string];
-  hideGUI: [undefined, void];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {
