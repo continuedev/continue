@@ -494,7 +494,11 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
-  getCurrentFile(): Promise<string | undefined>;
+  getCurrentFile(): Promise<undefined | {
+    isUntitled: boolean
+    path: string
+    contents: string
+  }>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string, cwd?: string): Promise<[string, string]>;

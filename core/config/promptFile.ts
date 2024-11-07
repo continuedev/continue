@@ -152,15 +152,12 @@ async function renderPrompt(prompt: string, context: any, userInput: string) {
 
   // A few context providers that don't need to be in config.json to work in .prompt files
   const diff = await context.ide.getDiff(false);
-  const currentFilePath = await context.ide.getCurrentFile();
-  const currentFile = currentFilePath
-    ? await context.ide.readFile(currentFilePath)
-    : undefined;
+  const currentFile = await context.ide.getCurrentFile();
 
   return renderTemplatedString(
     prompt,
     context.ide.readFile.bind(context.ide),
-    { diff, currentFile, input: userInput },
+    { diff, currentFile: currentFile?.contents, input: userInput },
     helpers,
   );
 }

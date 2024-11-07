@@ -38,12 +38,8 @@ export function extractUserInput(input: string, commandName: string): string {
 }
 
 export async function getDefaultVariables(context: any, userInput: string) {
-  const currentFilePath = await context.ide.getCurrentFile();
-  const currentFile = currentFilePath
-    ? await context.ide.readFile(currentFilePath)
-    : undefined;
-
-  return { currentFile, input: userInput };
+  const currentFile = await context.ide.getCurrentFile();
+  return { currentFile: currentFile?.contents, input: userInput };
 }
 
 export async function renderPrompt(

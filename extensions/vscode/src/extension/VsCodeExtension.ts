@@ -278,7 +278,7 @@ export class VsCodeExtension {
         // Reindex the workspaces
         this.core.invoke("index/forceReIndex", undefined);
       } else {
-        // Reindex the file
+        // Reindex the filex
         const indexer = await this.core.codebaseIndexerPromise;
         indexer.refreshFile(filepath);
       }
@@ -329,8 +329,7 @@ export class VsCodeExtension {
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider
-    {
+      implements vscode.TextDocumentContentProvider {
       // emitter and its event
       onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
       onDidChange = this.onDidChangeEmitter.event;

@@ -255,6 +255,7 @@ class VsCodeIde implements IDE {
 
     return tags;
   }
+
   getIdeInfo(): Promise<IdeInfo> {
     return Promise.resolve({
       ideType: "vscode",
@@ -266,6 +267,7 @@ class VsCodeIde implements IDE {
           .version,
     });
   }
+
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return this.ideUtils.readRangeInFile(
       filepath,
@@ -342,7 +344,7 @@ class VsCodeIde implements IDE {
             type === vscode.FileType.SymbolicLink) &&
           filename === ".continuerc.json"
         ) {
-          const contents = await this.ideUtils.readFile(
+          const contents = await this.readFile(
             vscode.Uri.joinPath(workspaceDir, filename).fsPath,
           );
           configs.push(JSON.parse(contents));
@@ -421,8 +423,66 @@ class VsCodeIde implements IDE {
   async saveFile(filepath: string): Promise<void> {
     await this.ideUtils.saveFile(filepath);
   }
+
+  private static MAX_BYTES = 100000;
+
   async readFile(filepath: string): Promise<string> {
-    return await this.ideUtils.readFile(filepath);
+    try {
+      filepath = this.ideUtils.getAbsolutePath(filepath);
+      const uri = uriFromFilePath(filepath);
+
+      // First, check whether it's a notebook document
+      // Need to iterate over the cells to get full contents
+      const notebook =
+        vscode.workspace.notebookDocuments.find(
+          (doc) => doc.uri.toString() === uri.toString(),
+        ) ??
+        (uri.fsPath.endsWith("ipynb")
+          ? await vscode.workspace.openNotebookDocument(uri)
+          : undefined);
+      if (notebook) {
+        return notebook
+          .getCells()
+          .map((cell) => cell.document.getText())
+          .join("\n\n");
+      }
+
+      // Check if the document is an untitled (new and unsaved) document
+      const untitledDocs = vscode.workspace.textDocuments.filter(
+        (doc) => doc.isUntitled && doc,
+      );
+      const untitledDoc = vscode.workspace.textDocuments.find(
+        (doc) => doc.isUntitled && doc.uri.fsPath === uri.fsPath
+      );
+      if (untitledDoc) {
+        return untitledDoc.getText();
+      }
+
+      // Check whether it's an open document
+      const openTextDocument = vscode.workspace.textDocuments.find(
+        (doc) => doc.uri.fsPath === uri.fsPath,
+      );
+      if (openTextDocument !== undefined) {
+        return openTextDocument.getText();
+      }
+
+      const fileStats = await vscode.workspace.fs.stat(
+        uriFromFilePath(filepath),
+      );
+      if (fileStats.size > 10 * VsCodeIde.MAX_BYTES) {
+        return "";
+      }
+
+      const bytes = await vscode.workspace.fs.readFile(uri);
+
+      // Truncate the buffer to the first MAX_BYTES
+      const truncatedBytes = bytes.slice(0, VsCodeIde.MAX_BYTES);
+      const contents = new TextDecoder().decode(truncatedBytes);
+      return contents;
+    } catch (e) {
+      console.warn("Error reading file", e);
+      return "";
+    }
   }
   async showDiff(
     filepath: string,
@@ -436,8 +496,13 @@ class VsCodeIde implements IDE {
     return await this.ideUtils.getOpenFiles();
   }
 
-  async getCurrentFile(): Promise<string | undefined> {
-    return vscode.window.activeTextEditor?.document.uri.fsPath;
+  async getCurrentFile() {
+    if (!vscode.window.activeTextEditor) return undefined
+    return {
+      isUntitled: vscode.window.activeTextEditor.document.isUntitled,
+      path: vscode.window.activeTextEditor.document.uri.fsPath,
+      contents: vscode.window.activeTextEditor.document.getText()
+    }
   }
 
   async getPinnedFiles(): Promise<string[]> {
@@ -572,3 +637,4 @@ class VsCodeIde implements IDE {
 }
 
 export { VsCodeIde };
+
