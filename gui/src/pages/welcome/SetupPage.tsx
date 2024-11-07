@@ -53,7 +53,7 @@ export default function SetupPage({ onNext }: { onNext: () => void }) {
     {
       icon: <Search className="h-6 w-6" />,
       title: "Sign in",
-      description: "Have PearAI work for free out oof the box by signing in.",
+      description: "Have PearAI work for free out of the box by signing in.",
       component: <SignIn onNext={handleNextClick} />,
     },
   ];
