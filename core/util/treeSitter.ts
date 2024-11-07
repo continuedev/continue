@@ -115,6 +115,7 @@ export async function getLanguageForFile(
       return undefined;
     }
     let language = nameToLanguage.get(languageName);
+
     if (!language) {
       language = await loadLanguageForFileExt(extension);
       nameToLanguage.set(languageName, language);
@@ -149,7 +150,9 @@ export async function getQueryForFile(
   const sourcePath = path.join(
     __dirname,
     "..",
-    "tree-sitter",
+    ...(process.env.NODE_ENV === "test"
+      ? ["extensions", "vscode", "tree-sitter"]
+      : ["tree-sitter"]),
     queryType,
     `${fullLangName}.scm`,
   );
