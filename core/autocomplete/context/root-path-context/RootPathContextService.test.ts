@@ -74,7 +74,7 @@ export async function testRootPathContext(
     throw new Error("AST is undefined");
   }
 
-  const treePath = await getTreePathAtCursor(ast, rangeToFill.start.character);
+  const treePath = await getTreePathAtCursor(ast, prefix.length);
   const snippets = await service.getContextForPath(startPath, treePath);
 
   expectedSnippets.forEach((expectedSnippet) => {
