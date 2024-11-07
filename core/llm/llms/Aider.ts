@@ -358,10 +358,12 @@ class Aider extends BaseLLM {
             //if (output.endsWith(AIDER_READY_FLAG)) {
             if (READY_PROMPT_REGEX.test(output)) {
               // Aider's ready prompt
-              console.log("Aider is ready!");
-              this.setAiderState("ready");
-              clearTimeout(timeout);
-              resolve();
+                if (this.aiderState !== "ready") {
+                  console.log("Aider is ready!");
+                  this.setAiderState("ready");
+                  clearTimeout(timeout);
+                  resolve();
+              }
             }
           });
 
@@ -525,16 +527,16 @@ class Aider extends BaseLLM {
         if (UDIFF_FLAG) {
           //if (newOutput.endsWith(END_MARKER)) {
           if (READY_PROMPT_REGEX.test(newOutput)) {
-              // Remove the END_MARKER from the output before yielding
-              const cleanOutput = newOutput.slice(0, -END_MARKER.length);
-              if (cleanOutput) {
-                  yield {
-                      role: "assistant",
-                      content: escapeDollarSigns(cleanOutput),
-                  };
-              }
-              responseComplete = true;
-              break;
+            // Remove the prompt pattern from the end using regex
+            const cleanOutput = newOutput.replace(READY_PROMPT_REGEX, "");
+            if (cleanOutput) {
+                yield {
+                    role: "assistant",
+                    content: escapeDollarSigns(cleanOutput),
+                };
+            }
+            responseComplete = true;
+            break;
           }
 
           lastProcessedIndex = this.aiderOutput.length;
@@ -543,17 +545,18 @@ class Aider extends BaseLLM {
               content: escapeDollarSigns(newOutput),
           };
         } else {
+          //if (newOutput.endsWith(END_MARKER)) {
+          if (READY_PROMPT_REGEX.test(newOutput)) {
+            console.log("Marked aider response as complete")
+            responseComplete = true;
+            break;
+          }
           lastProcessedIndex = this.aiderOutput.length;
+
           yield {
             role: "assistant",
             content: escapeDollarSigns(newOutput),
           };
-
-          //if (newOutput.endsWith(END_MARKER)) {
-          if (READY_PROMPT_REGEX.test(newOutput)) {
-            responseComplete = true;
-            break;
-          }
         }
 
         // Safety check
