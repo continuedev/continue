@@ -261,6 +261,12 @@ const commandsMap: (
     "pearai.showInteractiveContinueTutorial": async () => {
       sidebar.webviewProtocol?.request("showInteractiveContinueTutorial", undefined, [PEAR_CONTINUE_VIEW_ID]);
     },
+    "pearai.highlightElement": async (msg) => {
+      vscode.commands.executeCommand("pearai.highlightElements", msg.data.elementSelectors);
+    },
+    "pearai.unhighlightElement": async (msg) => {
+      vscode.commands.executeCommand("pearai.removeHighlight", msg.data.elementSelectors);
+    },
     "pearai.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("acceptDiff");
 

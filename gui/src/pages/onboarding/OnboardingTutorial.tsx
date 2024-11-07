@@ -120,18 +120,18 @@ const OnboardingTutorial: React.FC<OnboardingTutorialProps> = ({ onClose, onExam
     },
     {
       title: <h3>Inline Code Editing (<kbd>{getMetaKeyAndShortcutLabel()}</kbd>+<kbd>I</kbd>)</h3>,
-      description: <p>Now let's try inline editing... Highlight a function in full, and press <b><kbd className="text-base">{getMetaKeyAndShortcutLabel()}</kbd>+<kbd>I</kbd></b>.</p>,
-    },
-    {
-      title: <h3>Inline Code Editing (<kbd>{getMetaKeyAndShortcutLabel()}</kbd>+<kbd>I</kbd>)</h3>,
-  description: <p>Ask it to edit your code. Then after the changes appear, you can:<ul className="list-disc marker:text-foreground" >
-                                                                  <li><b>accept all changes with <kbd>{getMetaKeyAndShortcutLabel()}+SHIFT+ENTER</kbd></b>,</li>
-                                                                  <li>or <b>reject all changes with <kbd>{getMetaKeyAndShortcutLabel()}+SHIFT+BACKSPACE</kbd></b></li>
-                                                                </ul></p>,
+      description: <p>Now let's try inline editing... Try the below examples by first highlighting a function in full, and pressing <b><kbd className="text-base">{getMetaKeyAndShortcutLabel()}</kbd>+<kbd>I</kbd></b>.</p>,
       examples: [
         "Add error handling",
         "Improve this code",
       ]
+    },
+    {
+      title: <h3>Inline Code Editing (<kbd>{getMetaKeyAndShortcutLabel()}</kbd>+<kbd>I</kbd>)</h3>,
+  description: <p>After the changes appear, you can:<ul className="list-disc marker:text-foreground" >
+                                                                  <li><b>accept all changes with <kbd>{getMetaKeyAndShortcutLabel()}+SHIFT+ENTER</kbd></b>,</li>
+                                                                  <li>or <b>reject all changes with <kbd>{getMetaKeyAndShortcutLabel()}+SHIFT+BACKSPACE</kbd></b></li>
+                                                                </ul></p>,
     },
     {
       title: <h3>Codebase Context (<kbd>{getMetaKeyAndShortcutLabel()}</kbd>+<kbd>ENTER</kbd>)</h3>,
@@ -182,11 +182,15 @@ const OnboardingTutorial: React.FC<OnboardingTutorialProps> = ({ onClose, onExam
     [currentPage],
   );
 
+  // activate highlighting
   useWebviewListener(
     "quickEdit",
     async () => {
       if (currentPage === 2) {
-        nextPage()
+        // Wait 100ms for quick input widget to appear
+        await new Promise(resolve => setTimeout(resolve, 100));
+        ideMessenger.post("highlightElement", {elementSelectors: ['.quick-input-widget']});
+        nextPage();
       }
     },
     [currentPage],
@@ -202,8 +206,28 @@ const OnboardingTutorial: React.FC<OnboardingTutorialProps> = ({ onClose, onExam
   )
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    if (currentPage === 3) {
+      const handleEnterKey = (event: KeyboardEvent) => {
+        if (event.key === 'Enter') {
+          nextPage();
+        }
+        if (['Enter', 'ArrowLeft', 'ArrowRight', 'Escape'].includes(event.key)) {
+          ideMessenger.post("unhighlightElement", {elementSelectors: ['.quick-input-widget']});
+        }
+      };
+  
+      window.addEventListener('keydown', handleEnterKey);
+  
+      // Cleanup function
+      return () => {
+        ideMessenger.post("unhighlightElement", {elementSelectors: ['.quick-input-widget']});
+      };
+    }
+  }, [currentPage]); // Include all dependencies
+
+  useEffect(() => {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentPage]);
   
   return (

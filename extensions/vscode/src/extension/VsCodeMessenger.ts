@@ -122,6 +122,12 @@ export class VsCodeMessenger {
           return contents;
         });
     });
+    this.onWebview("highlightElement", (msg) => {
+      vscode.commands.executeCommand("pearai.highlightElement", msg);
+    });
+    this.onWebview("unhighlightElement", (msg) => {
+      vscode.commands.executeCommand("pearai.unhighlightElement", msg);
+    });
     this.onWebview("perplexityMode", (msg) => {
       vscode.commands.executeCommand("pearai.perplexityMode");
     });

@@ -20,6 +20,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
+  highlightElement: [{elementSelectors: string[]}, void];
+  unhighlightElement: [{elementSelectors: string[]}, void];
   perplexityMode: [undefined, void];
   addPerplexityContext: [{text: string, language: string}, void]
   addPerplexityContextinChat: [{ text: string, language: string }, void];
