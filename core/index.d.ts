@@ -794,6 +794,7 @@ interface BaseCompletionOptions {
   keepAlive?: number;
   raw?: boolean;
   stream?: boolean;
+  predictionContent?: string;
 }
 
 export interface ModelCapability {

@@ -65,6 +65,11 @@
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
           "type": "integer"
+        },
+        "predictionContent": {
+          "title": "Prediction",
+          "description": "(gpt-4o/gpt-4o-mini only) Prediction output which can greatly improve response times when large parts of the model response are known ahead of time. This is most common when you are regenerating a file with only minor changes to most of the content.",
+          "type": "string"
         }
       }
     },

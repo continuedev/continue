@@ -95,7 +95,14 @@ class OpenAI extends BaseLLM {
     );
   }
 
-  protected _convertArgs(options: any, messages: ChatMessage[]) {
+  private supportsPrediction(model: string): boolean {
+    return [
+      "gpt-4o-mini",
+      "gpt-4o"
+    ].includes(model);
+  }
+
+  protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
     const url = new URL(this.apiBase!);
     const finalOptions: any = {
       messages: messages.map(this._convertMessage),
@@ -133,6 +140,21 @@ class OpenAI extends BaseLLM {
       finalOptions.messages = finalOptions.messages?.filter(
         (message: any) => message?.role !== "system",
       );
+    }
+
+    if (options.predictionContent && this.supportsPrediction(options.model)) {
+      if (finalOptions.presence_penalty) { // prediction doesn't support > 0
+        finalOptions.presence_penalty = undefined;
+      }
+      if (finalOptions.frequency_penalty) { // prediction doesn't support > 0
+        finalOptions.frequency_penalty = undefined;
+      }
+      finalOptions.max_completion_tokens = undefined;
+
+      finalOptions.prediction = {
+        "type": "content",
+        "content": options.predictionContent
+      };
     }
 
     return finalOptions;
