@@ -98,6 +98,8 @@ export class VsCodeMessenger {
       if (vscode.workspace.workspaceFolders?.length) {
         vscode.commands.executeCommand("pearai.unlockOverlay");
         vscode.commands.executeCommand("pearai.hideOverlay");
+        // force reload to update overlay with new global state
+        vscode.commands.executeCommand("workbench.action.reloadWindow");
       }
     });
     this.onWebview("pearInstallCommandLine", (msg) => {
