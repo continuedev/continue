@@ -463,7 +463,7 @@ declare global {
       stepIndex: number,
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
-    getCurrentFile(): Promise<string | {
+    getCurrentFile(): Promise<undefined | {
       isUntitled: boolean
       path: string
       contents: string
