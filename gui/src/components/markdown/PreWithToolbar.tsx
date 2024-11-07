@@ -42,6 +42,7 @@ function PreWithToolbar(props: {
 
   const [hovering, setHovering] = useState(false);
   const [copyValue, setCopyValue] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const nextCodeBlockIndex = useSelector(
     (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
@@ -76,6 +77,8 @@ function PreWithToolbar(props: {
           bottom={toolbarBottom}
           language={props.language}
           filepath={props.filepath}
+          isExpanded={isExpanded}
+          onToggleExpand={() => setIsExpanded(!isExpanded)}
         />
       ) : (
         hovering && (
@@ -84,11 +87,19 @@ function PreWithToolbar(props: {
             text={copyValue}
             bottom={toolbarBottom}
             language={props.language}
+            isExpanded={isExpanded}
+            onToggleExpand={() => setIsExpanded(!isExpanded)}
           />
         )
       )}
 
-      {props.children}
+      <div
+        className={`overflow-hidden ${
+          isExpanded ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        {props.children}
+      </div>
     </TopDiv>
   );
 }

@@ -5,6 +5,7 @@ import {
   CommandLineIcon,
   PlayIcon,
   XMarkIcon,
+  ChevronDownIcon,
 } from "@heroicons/react/24/outline";
 import { getBasename } from "core/util";
 import { useContext, useRef, useState } from "react";
@@ -87,6 +88,8 @@ interface CodeBlockToolBarProps {
   language: string | undefined;
   isNextCodeBlock: boolean;
   filepath?: string;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 const terminalLanguages = ["bash", "sh"];
@@ -260,12 +263,27 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
 
   return (
     <ToolbarDiv>
-      <div
-        className="flex max-w-[50%] cursor-pointer items-center gap-1"
-        onClick={onClickHeader}
-      >
-        <FileIcon height="20px" width="20px" filename={props.filepath} />
-        <span className="truncate">{getBasename(props.filepath)}</span>
+      <div className="flex max-w-[50%] items-center">
+        <div
+          onClick={props.onToggleExpand}
+          className="flex cursor-pointer items-center justify-center"
+        >
+          <ChevronDownIcon
+            className={`h-4 w-4 text-gray-400 ${
+              props.isExpanded ? "rotate-0" : "-rotate-90"
+            }`}
+          />
+        </div>
+
+        {props.filepath && (
+          <div
+            className="flex cursor-pointer items-center gap-1"
+            onClick={onClickHeader}
+          >
+            <FileIcon height="20px" width="20px" filename={props.filepath} />
+            <span className="truncate">{getBasename(props.filepath)}</span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-1">
