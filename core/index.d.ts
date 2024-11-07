@@ -780,6 +780,14 @@ export interface CustomCommand {
   description: string;
 }
 
+interface Prediction {
+  type: "content"
+  content: string | {
+    type: "text"
+    text: string
+  }[]
+}
+
 interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -794,7 +802,7 @@ interface BaseCompletionOptions {
   keepAlive?: number;
   raw?: boolean;
   stream?: boolean;
-  predictionContent?: string;
+  prediction?: Prediction;
 }
 
 export interface ModelCapability {

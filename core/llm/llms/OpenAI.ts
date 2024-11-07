@@ -142,7 +142,7 @@ class OpenAI extends BaseLLM {
       );
     }
 
-    if (options.predictionContent && this.supportsPrediction(options.model)) {
+    if (options.prediction && this.supportsPrediction(options.model)) {
       if (finalOptions.presence_penalty) { // prediction doesn't support > 0
         finalOptions.presence_penalty = undefined;
       }
@@ -151,10 +151,7 @@ class OpenAI extends BaseLLM {
       }
       finalOptions.max_completion_tokens = undefined;
 
-      finalOptions.prediction = {
-        "type": "content",
-        "content": options.predictionContent
-      };
+      finalOptions.prediction = options.prediction;
     }
 
     return finalOptions;
