@@ -280,7 +280,7 @@ export class VsCodeExtension {
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
       this.core.invoke("index/forceReIndex", {
-        dirs: event.files.map((file) => file.fsPath)
+        dirs: event.files.map((file) => file.fsPath.split("/").slice(0, -1).join("/"))
       })
     })
 
