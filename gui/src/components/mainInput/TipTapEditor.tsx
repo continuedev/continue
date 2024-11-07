@@ -248,8 +248,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     const timer = setTimeout(() => {
       setHasDefaultModel(
         !!defaultModel &&
-          defaultModel.apiKey !== undefined &&
-          defaultModel.apiKey !== "",
+        defaultModel.apiKey !== undefined &&
+        defaultModel.apiKey !== "",
       );
     }, 3500);
 
@@ -452,38 +452,38 @@ function TipTapEditor(props: TipTapEditorProps) {
       Text,
       props.availableContextProviders.length
         ? Mention.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getContextProviderDropdownOptions(
-              availableContextProvidersRef,
-              getSubmenuContextItemsRef,
-              enterSubmenu,
-              onClose,
-              onOpen,
-              inSubmenuRef,
-              ideMessenger,
-            ),
-            renderHTML: (props) => {
-              return `@${props.node.attrs.label || props.node.attrs.id}`;
-            },
-          })
+          HTMLAttributes: {
+            class: "mention",
+          },
+          suggestion: getContextProviderDropdownOptions(
+            availableContextProvidersRef,
+            getSubmenuContextItemsRef,
+            enterSubmenu,
+            onClose,
+            onOpen,
+            inSubmenuRef,
+            ideMessenger,
+          ),
+          renderHTML: (props) => {
+            return `@${props.node.attrs.label || props.node.attrs.id}`;
+          },
+        })
         : undefined,
       props.availableSlashCommands.length
         ? SlashCommand.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getSlashCommandDropdownOptions(
-              availableSlashCommandsRef,
-              onClose,
-              onOpen,
-              ideMessenger,
-            ),
-            renderText: (props) => {
-              return props.node.attrs.label;
-            },
-          })
+          HTMLAttributes: {
+            class: "mention",
+          },
+          suggestion: getSlashCommandDropdownOptions(
+            availableSlashCommandsRef,
+            onClose,
+            onOpen,
+            ideMessenger,
+          ),
+          renderText: (props) => {
+            return props.node.attrs.label;
+          },
+        })
         : undefined,
       CodeBlockExtension,
     ],
@@ -575,17 +575,9 @@ function TipTapEditor(props: TipTapEditorProps) {
    *  with those key actions.
    */
   const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!editor || !editorFocusedRef.current) return;
+    if (!editorFocusedRef?.current) return;
 
     setActiveKey(e.key);
-
-    // Allow users to use the escape key to jump back to the editor
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      e.preventDefault();
-      ideMessenger.post("focusEditor", undefined);
-      return;
-    }
 
     // Handle meta key issues
     if (isMetaEquivalentKeyPressed(e)) {
@@ -655,7 +647,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       if (historyLength > 0) {
-        saveSession();
+        await saveSession();
       }
       setTimeout(() => {
         editor?.commands.blur();
@@ -684,12 +676,12 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      saveSession();
+      await saveSession();
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput],
+    [editor, props.isMainInput, saveSession],
   );
 
   useWebviewListener(
@@ -706,9 +698,8 @@ function TipTapEditor(props: TipTapEditorProps) {
         rif.filepath,
         await ideMessenger.ide.getWorkspaceDirs(),
       );
-      const rangeStr = `(${rif.range.start.line + 1}-${
-        rif.range.end.line + 1
-      })`;
+      const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1
+        })`;
       const item: ContextItemWithId = {
         content: rif.contents,
         name: `${basename} ${rangeStr}`,

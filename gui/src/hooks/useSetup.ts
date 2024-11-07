@@ -87,6 +87,11 @@ function useSetup(dispatch: Dispatch<any>) {
   );
 
   // IDE event listeners
+  const history = useSelector((store: RootState) => store.state.history);
+  useWebviewListener("getWebviewHistoryLength", async () => {
+    return history.length;
+  }, [history]);
+
   useWebviewListener("setInactive", async () => {
     dispatch(setInactive());
   });
