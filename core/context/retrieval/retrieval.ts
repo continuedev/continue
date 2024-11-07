@@ -93,7 +93,11 @@ export async function retrieveContextItemsFromEmbeddings(
   };
 
   const pipeline = new pipelineType(pipelineOptions);
-  const results = await pipeline.run();
+  const results = await pipeline.run({
+    tags,
+    filterDirectory,
+    query: extras.fullInput,
+  });
 
   if (results.length === 0) {
     throw new Error(

@@ -34,6 +34,7 @@ import { Battery } from "./util/battery";
 import { getFullyQualifiedPath } from "./util/util";
 import { uriFromFilePath } from "./util/vscode";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { VsCodeIde } from "./VsCodeIde";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -201,7 +202,7 @@ function hideGUI() {
 
 // Copy everything over from extension.ts
 const commandsMap: (
-  ide: IDE,
+  ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
@@ -274,8 +275,10 @@ const commandsMap: (
 
         if (fullPath instanceof vscode.Uri) {
           fullPath = fullPath.fsPath;
+        } else if (fullPath) {
+          fullPath = getFullyQualifiedPath(ide, fullPath);
         } else {
-          fullPath = getFullyQualifiedPath(fullPath);
+          console.warn(`Unable to resolve filepath: ${newFilepath}`);
         }
 
         verticalDiffManager.clearForFilepath(fullPath, true);
@@ -291,8 +294,11 @@ const commandsMap: (
 
         if (fullPath instanceof vscode.Uri) {
           fullPath = fullPath.fsPath;
+        } else if (fullPath) {
+          fullPath = getFullyQualifiedPath(ide, fullPath);
         } else {
-          fullPath = getFullyQualifiedPath(fullPath);
+          console.warn(`Unable to resolve filepath: ${newFilepath}`);
+          return;
         }
 
         verticalDiffManager.clearForFilepath(fullPath, false);
@@ -806,7 +812,7 @@ const commandsMap: (
 
 export function registerAllCommands(
   context: vscode.ExtensionContext,
-  ide: IDE,
+  ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,

@@ -136,9 +136,7 @@ export class VsCodeIdeUtils {
     );
   }
 
-  private async resolveAbsFilepathInWorkspace(
-    filepath: string,
-  ): Promise<string> {
+  async resolveAbsFilepathInWorkspace(filepath: string): Promise<string> {
     // If the filepath is already absolute, return it as is
     if (this.path.isAbsolute(filepath)) {
       return filepath;
@@ -158,7 +156,7 @@ export class VsCodeIdeUtils {
 
   async openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    return openEditorAndRevealRange(
+    return await openEditorAndRevealRange(
       await this.resolveAbsFilepathInWorkspace(filepath),
       range,
       vscode.ViewColumn.One,

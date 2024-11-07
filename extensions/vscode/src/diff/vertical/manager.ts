@@ -257,30 +257,6 @@ export class VerticalDiffManager {
     }
   }
 
-  /**
-   * Streams an edit to the current document based on user input and model output.
-   *
-   * @param input - The user's input or instruction for the edit.
-   * @param modelTitle - The title of the language model to be used.
-   * @param [onlyOneInsertion] - Optional flag to limit the edit to a single insertion.
-   * @param [quickEdit] - Optional string indicating if this is a quick edit.
-   * @param [range] - Optional range to use instead of the highlighted text. Note that the `quickEdit`
-   *                  property currently can't be passed with `range` since it assumes there is an
-   *                  active selection.
-   *
-   * This method performs the following steps:
-   * 1. Sets up the editor context for the diff.
-   * 2. Determines the range of text to be edited.
-   * 3. Clears any existing diff handlers for the file.
-   * 4. Creates a new vertical diff handler.
-   * 5. Prepares the context (prefix and suffix) for the language model.
-   * 6. Streams the diff lines from the language model.
-   * 7. Applies the changes to the document.
-   * 8. Sets up a listener for subsequent user edits.
-   *
-   * The method handles various edge cases, such as quick edits and existing diffs,
-   * and manages the lifecycle of diff handlers and document change listeners.
-   */
   async streamEdit(
     input: string,
     modelTitle: string | undefined,
