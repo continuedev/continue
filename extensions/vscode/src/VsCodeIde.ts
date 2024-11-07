@@ -447,17 +447,6 @@ class VsCodeIde implements IDE {
           .join("\n\n");
       }
 
-      // Check if the document is an untitled (new and unsaved) document
-      const untitledDocs = vscode.workspace.textDocuments.filter(
-        (doc) => doc.isUntitled && doc,
-      );
-      const untitledDoc = vscode.workspace.textDocuments.find(
-        (doc) => doc.isUntitled && doc.uri.fsPath === uri.fsPath
-      );
-      if (untitledDoc) {
-        return untitledDoc.getText();
-      }
-
       // Check whether it's an open document
       const openTextDocument = vscode.workspace.textDocuments.find(
         (doc) => doc.uri.fsPath === uri.fsPath,
