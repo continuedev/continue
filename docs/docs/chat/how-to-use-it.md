@@ -20,7 +20,7 @@ You send it a question, and it replies with an answer. You tell it to solve a pr
 
 ## Highlight a code section to include as context
 
-You select a code section with your mouse, press `cmd/ctrl + L` (VS Code) or `cmd/ctrl + J` (JetBrains) to send it to the LLM, and then ask for it to be explained to you or request it to be refactored in some way.
+You select a code section with your mouse, press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) to send it to the LLM, and then ask for it to be explained to you or request it to be refactored in some way.
 
 ## Reference context with the @ symbol
 
@@ -32,8 +32,8 @@ When the LLM replies with edits to a file, you can click the “Apply” button.
 
 ## Start a fresh session for a new task
 
-Once you complete a task and want to start a new one, press `cmd/ctrl + L` (VS Code) or `cmd/ctrl + J` (JetBrains) to begin a new session, ensuring only relevant context for the next task is provided to the LLM.
+Once you complete a task and want to start a new one, press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains) to begin a new session, ensuring only relevant context for the next task is provided to the LLM.
 
 ## Switch between different models
 
-If you have configured multiple models, you can switch between models using the dropdown or by pressing `cmd/ctrl + ’`
+If you have configured multiple models, you can switch between models using the dropdown or by pressing <kbd>cmd/ctrl</kbd> + <kbd>’</kbd>
