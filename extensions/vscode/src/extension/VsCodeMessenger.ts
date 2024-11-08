@@ -124,6 +124,9 @@ export class VsCodeMessenger {
           return contents;
         });
     });
+    this.onWebview("closePearAIOverlay", (msg) => {
+      vscode.commands.executeCommand("pearai.hideOverlay");
+    });
     this.onWebview("highlightElement", (msg) => {
       vscode.commands.executeCommand("pearai.highlightElement", msg);
     });

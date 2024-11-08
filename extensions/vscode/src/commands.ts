@@ -248,7 +248,7 @@ const commandsMap: (
         console.dir("Extension launch detected as a subsequent launch. Skipping user settings import.");
         return;
       }
-      importUserSettingsFromVSCode();
+      await importUserSettingsFromVSCode();
     },
     "pearai.welcome.markNewOnboardingComplete": async () => {
       // vscode.window.showInformationMessage("Marking onboarding complete.");

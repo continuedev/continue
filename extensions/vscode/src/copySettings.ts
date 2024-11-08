@@ -37,49 +37,45 @@ function getVSCodeExtensionsDir() {
 }
 
 
-function copyVSCodeSettingsToPearAIDir() {
+async function copyVSCodeSettingsToPearAIDir() {
     const vscodeSettingsDir = getVSCodeSettingsDir();
     const pearAIDevSettingsDir = getPearAISettingsDir();
     const vscodeExtensionsDir = getVSCodeExtensionsDir();
 
-    if (!fs.existsSync(pearAIDevSettingsDir)) {
-        fs.mkdirSync(pearAIDevSettingsDir, { recursive: true });
-    }
-
-    if (!fs.existsSync(pearAIDevExtensionsDir)) {
-        fs.mkdirSync(pearAIDevExtensionsDir, { recursive: true });
-    }
+    await fs.promises.mkdir(pearAIDevSettingsDir, { recursive: true });
+    await fs.promises.mkdir(pearAIDevExtensionsDir, { recursive: true });
 
     const itemsToCopy = ['settings.json', 'keybindings.json', 'snippets', 'sync', 'globalStorage/state.vscdb', 'globalStorage/state.vscdb.backup'];
-    itemsToCopy.forEach(item => {
+    
+    for (const item of itemsToCopy) {
         const source = path.join(vscodeSettingsDir, item);
         const destination = path.join(pearAIDevSettingsDir, item);
-        if (fs.existsSync(source)) {
-            if (fs.lstatSync(source).isDirectory()) {
-                copyDirectoryRecursiveSync(source, destination);
-            } else {
-                fs.copyFileSync(source, destination);
+        
+        try {
+            if (await fs.promises.access(source).then(() => true).catch(() => false)) {
+                const stats = await fs.promises.lstat(source);
+                if (stats.isDirectory()) {
+                    await copyDirectoryRecursiveSync(source, destination);
+                } else {
+                    await fs.promises.copyFile(source, destination);
+                }
             }
+        } catch (error) {
+            console.error(`Error copying ${item}: ${error}`);
         }
-    });
+    }
 
+    const exclusions = [
+        'pearai.pearai',
+        'ms-python.vscode-pylance',
+        'ms-python.python',
+        'supermaven',
+        'codeium',
+        'github.copilot',
+        'continue'
+    ];
 
-    // Built-in extensions
-    // const platform = process.platform;
-    // const arch = process.arch;
-    const exclusions = ['pearai.pearai'];
-    exclusions.push('ms-python.vscode-pylance');
-    exclusions.push('ms-python.python');
-
-    // Recommendeded install extensions
-    exclusions.push('supermaven');
-
-    // Exclude conflicting extensions
-    exclusions.push('codeium');
-    exclusions.push('github.copilot');
-    exclusions.push('continue');
-
-    copyDirectoryRecursiveSync(vscodeExtensionsDir, pearAIDevExtensionsDir, exclusions);
+    await copyDirectoryRecursiveSync(vscodeExtensionsDir, pearAIDevExtensionsDir, exclusions);
 }
 
 function getVSCodeSettingsDir() {
@@ -93,59 +89,59 @@ function getVSCodeSettingsDir() {
     }
 }
 
-function copyDirectoryRecursiveSync(source: string, destination: string, exclusions: string[] = []) {
-    if (!fs.existsSync(destination)) {
-        fs.mkdirSync(destination, { recursive: true });
-    }
-    fs.readdirSync(source).forEach(item => {
+async function copyDirectoryRecursiveSync(source: string, destination: string, exclusions: string[] = []) {
+    await fs.promises.mkdir(destination, { recursive: true });
+    
+    const items = await fs.promises.readdir(source);
+    for (const item of items) {
         const sourcePath = path.join(source, item);
         const destinationPath = path.join(destination, item);
 
-        // Check if the current item should be excluded
         const shouldExclude = exclusions.some(exclusion =>
             sourcePath.toLowerCase().includes(exclusion.toLowerCase())
+            
         );
 
         if (!shouldExclude) {
-            if (fs.lstatSync(sourcePath).isDirectory()) {
-                copyDirectoryRecursiveSync(sourcePath, destinationPath, exclusions);
+            const stats = await fs.promises.lstat(sourcePath);
+            if (stats.isDirectory()) {
+                await copyDirectoryRecursiveSync(sourcePath, destinationPath, exclusions);
             } else {
-                fs.copyFileSync(sourcePath, destinationPath);
+                await fs.promises.copyFile(sourcePath, destinationPath);
             }
         }
-    });
+    }
 }
 
 
 export async function importUserSettingsFromVSCode() {
-    // this function is synchronous and copying files takes time
-    // thats why run it after 3 seconds, until which extension activates.
-    // todo: route to onboarding hello page
-    setTimeout(() => {
-        try {
-            // TODO: THIS MSG SHOULD BE IN OVERLAY
-            vscode.window.showInformationMessage('Copying your current VSCode settings and extensions over to PearAI!');
-            copyVSCodeSettingsToPearAIDir();
-            // No longer write flag to a file, just set state
-            // fs.writeFileSync(firstLaunchFlag, 'This is the first launch flag file');
-
-            // TODO: THIS MSG SHOULD BE IN OVERLAY
-            vscode.window.showInformationMessage('Your VSCode settings and extensions have been transferred over to PearAI! You may need to restart your editor for the changes to take effect.', 'Ok');
-        } catch (error) {
-            // TODO: DISPLAY ERROR MSG IN OVERLAY
-            vscode.window.showErrorMessage(`Failed to copy settings: ${error}`);
-        }
-
-    }, 3000);
+    try {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        vscode.window.showInformationMessage('Copying your current VSCode settings and extensions over to PearAI!');
+        await copyVSCodeSettingsToPearAIDir();
+        
+        vscode.window.showInformationMessage(
+            'Your VSCode settings and extensions have been transferred over to PearAI! You may need to restart your editor for the changes to take effect.',
+            'Ok'
+        );
+    } catch (error) {
+        vscode.window.showErrorMessage(`Failed to copy settings: ${error}`);
+    }
 }
 
 export async function markCreatorOnboardingCompleteFileBased() {
-    // todo: use global state for this as well
-    setTimeout(() => {
+    try {
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
         const flagFile = firstPearAICreatorLaunchFlag;
-        const productName ='PearAI Creator';
-        if (!fs.existsSync(flagFile)) {
-            fs.writeFileSync(flagFile, `This is the first launch flag file for ${productName}`);
+        const productName = 'PearAI Creator';
+        
+        const exists = await fs.promises.access(flagFile).then(() => true).catch(() => false);
+        if (!exists) {
+            await fs.promises.writeFile(flagFile, `This is the first launch flag file for ${productName}`);
         }
-    }, 3000);
+    } catch (error) {
+        console.error('Error marking creator onboarding complete:', error);
+    }
 }

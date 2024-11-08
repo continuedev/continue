@@ -44,6 +44,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openHistory: [undefined, void];
   appendSelected: [undefined, void];
   pearaiLogin: [undefined, void];
+  closePearAIOverlay: [undefined, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
