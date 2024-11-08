@@ -153,7 +153,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         clearInterval(checkActiveInterval);
       }
     }, 100);
-
+    debugger
     for await (const update of ideMessenger.streamRequest(
       "command/run",
       {

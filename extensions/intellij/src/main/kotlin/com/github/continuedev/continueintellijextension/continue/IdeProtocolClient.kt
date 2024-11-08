@@ -1012,8 +1012,8 @@ class IdeProtocolClient(
         val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
         return virtualFile?.let {
             mapOf(
-                "filePath" to it.path,
-                "fileContents" to editor.document.text,
+                "path" to it.path,
+                "contents" to editor.document.text,
                 "isUntitled" to false
             )
         }
