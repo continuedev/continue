@@ -1,3 +1,5 @@
+import ignore from "ignore";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
@@ -17,6 +19,7 @@ import { ControlPlaneClient } from "./control-plane/client";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
+import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
@@ -398,6 +401,7 @@ export class Core {
           });
           break;
         }
+        // @ts-ignore
         yield { content: next.value.content };
         next = await gen.next();
       }
@@ -704,8 +708,13 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
-      recentlyEditedFilesCache.set(filepath, filepath);
+    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
+      const ignoreInstance = ignore().add(defaultIgnoreFile);
+      let rootDirectory = await this.ide.getWorkspaceDirs();
+      const relativeFilePath = path.relative(rootDirectory[0], filepath);
+      if (!ignoreInstance.ignores(relativeFilePath)) {
+        recentlyEditedFilesCache.set(filepath, filepath);
+      }
     });
   }
 

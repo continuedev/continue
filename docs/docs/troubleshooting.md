@@ -24,7 +24,7 @@ To solve many problems, the first step is reading the logs to find the relevant 
 In order to view debug logs, which contain extra information, click the dropdown at the top that says "Default levels" and select "Verbose".
 :::
 
-1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
+1. <kbd>cmd</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> for MacOS or <kbd>ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> for Windows
 2. Search for and then select "Developer: Toggle Developer Tools"
 3. This will open the [Chrome DevTools window](https://developer.chrome.com/docs/devtools/)
 4. Select the `Console` tab
@@ -56,7 +56,7 @@ We are constantly making fixes and improvements to Continue, but the latest chan
 
 On JetBrains, the "pre-release" happens through their Early Access Program (EAP) channel. To download the latest EAP version, enable the EAP channel:
 
-1. Open JetBrains settings (`cmd/ctrl + ,`) and go to "Plugins"
+1. Open JetBrains settings (<kbd>cmd/ctrl</kbd> + <kbd>,</kbd>) and go to "Plugins"
 2. Click the gear icon at the top
 3. Select "Manage Plugin Repositories..."
 4. Add "[https://plugins.jetbrains.com/plugins/eap/list](https://plugins.jetbrains.com/plugins/eap/list)" to the list
@@ -104,7 +104,7 @@ You may also set `requestOptions.caBundlePath` to an array of paths to multiple 
 
 #### VS Code Proxy Settings
 
-If you are using VS Code and require requests to be made through a proxy, you are likely already set up through VS Code's [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support). To double-check that this is enabled, use cmd/ctrl+, to open settings and search for "Proxy Support". Unless it is set to "off", then VS Code is responsible for making the request to the proxy.
+If you are using VS Code and require requests to be made through a proxy, you are likely already set up through VS Code's [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support). To double-check that this is enabled, use <kbd>cmd/ctrl</kbd> + <kbd>,</kbd> to open settings and search for "Proxy Support". Unless it is set to "off", then VS Code is responsible for making the request to the proxy.
 
 #### code-server
 

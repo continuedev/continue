@@ -1,10 +1,13 @@
-import { Chunk } from "../../../index.js";
-import { requestFilesFromRepoMap } from "../repoMapRequest.js";
-import { deduplicateChunks } from "../util.js";
-import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
+import { Chunk } from "../../../";
+import { requestFilesFromRepoMap } from "../repoMapRequest";
+import { deduplicateChunks } from "../util";
+
+import BaseRetrievalPipeline, {
+  RetrievalPipelineRunArguments,
+} from "./BaseRetrievalPipeline";
 
 export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
-  async run(): Promise<Chunk[]> {
+  async run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
     const { input, nFinal, filterDirectory, includeEmbeddings } = this.options;
 
     // We give 1/4 weight to recently edited files, 1/4 to full text search,
@@ -15,7 +18,7 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     let retrievalResults: Chunk[] = [];
 
-    const ftsChunks = await this.retrieveFts(input, ftsNFinal);
+    const ftsChunks = await this.retrieveFts(args, ftsNFinal);
 
     const embeddingsChunks = includeEmbeddings
       ? await this.retrieveEmbeddings(input, embeddingsNFinal)

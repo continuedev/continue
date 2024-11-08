@@ -780,6 +780,14 @@ export interface CustomCommand {
   description: string;
 }
 
+interface Prediction {
+  type: "content"
+  content: string | {
+    type: "text"
+    text: string
+  }[]
+}
+
 interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -794,6 +802,7 @@ interface BaseCompletionOptions {
   keepAlive?: number;
   raw?: boolean;
   stream?: boolean;
+  prediction?: Prediction;
 }
 
 export interface ModelCapability {
@@ -825,6 +834,7 @@ export type EmbeddingsProviderName =
   | "ollama"
   | "openai"
   | "cohere"
+  | "lmstudio"
   | "free-trial"
   | "gemini"
   | "continue-proxy"

@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Improve codebase retrieval with BM25
+time: 2024-11-08T11:41:00.002716-08:00

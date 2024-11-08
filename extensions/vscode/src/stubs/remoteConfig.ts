@@ -67,6 +67,18 @@ export class RemoteConfigSync {
     };
   }
 
+  private canParse(url: string): boolean {
+    if ((URL as any).canParse) {
+      return (URL as any).canParse(url);
+    }
+    try {
+      new URL(url);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async setup() {
     if (
       this.userToken === null ||
@@ -75,7 +87,7 @@ export class RemoteConfigSync {
     ) {
       return;
     }
-    if (!URL.canParse(this.remoteConfigServerUrl)) {
+    if (!this.canParse(this.remoteConfigServerUrl)) {
       vscode.window.showErrorMessage(
         "The value set for 'remoteConfigServerUrl' is not valid: ",
         this.remoteConfigServerUrl,
@@ -92,6 +104,7 @@ export class RemoteConfigSync {
 
   private setInterval() {
     if (this.syncInterval !== undefined) {
+      // @ts-ignore
       clearInterval(this.syncInterval);
     }
     this.syncInterval = setInterval(

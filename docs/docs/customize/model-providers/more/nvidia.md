@@ -37,13 +37,11 @@ We recommend configuring **NVIDIA Retrieval QA Mistral 7B** as your embeddings m
 
 ```json title="config.json"
 {
-  "embeddingsProvider": [
-    {
-      "provider": "nvidia",
-      "model": "nvidia/nv-embedqa-mistral-7b-v2",
-      "apiKey": "[API_KEY]"
-    }
-  ]
+  "embeddingsProvider": {
+    "provider": "nvidia",
+    "model": "nvidia/nv-embedqa-mistral-7b-v2",
+    "apiKey": "[API_KEY]"
+  }
 }
 ```
 

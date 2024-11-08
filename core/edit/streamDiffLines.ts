@@ -8,7 +8,7 @@ import {
 } from "../autocomplete/filtering/streamTransforms/lineStream.js";
 import { streamDiff } from "../diff/streamDiff.js";
 import { streamLines } from "../diff/util.js";
-import { ChatMessage, DiffLine, ILLM } from "../index.js";
+import { ChatMessage, DiffLine, ILLM, Prediction } from "../index.js";
 import { gptEditPrompt } from "../llm/templates/edit.js";
 import { Telemetry } from "../util/posthog.js";
 
@@ -89,10 +89,17 @@ export async function* streamDiffLines(
   );
   const inept = modelIsInept(llm.model);
 
+  const prediction: Prediction = {
+    type: "content",
+    content: highlighted,
+  };
+
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt, { raw: true })
-      : llm.streamChat(prompt);
+      ? llm.streamComplete(prompt, { raw: true, prediction })
+      : llm.streamChat(prompt, {
+          prediction,
+        });
 
   let lines = streamLines(completion);
 
