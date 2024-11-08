@@ -39,8 +39,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const vscodeExtension = new VsCodeExtension(context);
 
-  setupPearAPPLayout(context);
-
   // migrate("showWelcome_1", () => {
   //   vscode.commands.executeCommand(
   //     "markdown.showPreview",
@@ -60,6 +58,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   if (isFirstLaunch(context)) {
     vscode.commands.executeCommand("pearai.startOnboarding");
+    setupPearAPPLayout(context);
   }
 
   // vscode.commands.executeCommand("pearai.focusContinueInput");
@@ -93,16 +92,12 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
 // Custom Layout settings that we want default for PearAPP
 const setupPearAPPLayout = async (context: vscode.ExtensionContext) => {
-  // * always * move pearai extension to auxiliary bar (secondary side bar)
-  vscode.commands.executeCommand("workbench.action.movePearExtensionToAuxBar");
-
+  // move pearai extension to auxiliary bar (secondary side bar) if there is a folder open
+  if(vscode.workspace.workspaceFolders){
+    vscode.commands.executeCommand("workbench.action.movePearExtensionToAuxBar");
+  }
   // set activity bar position to top
   vscode.commands.executeCommand("workbench.action.activityBarLocation.top");
-
-  // Apply the remaining layout settings only on the first launch
-  if (isFirstLaunch(context)) {
-    return;
-  }
-
-  // first launch layout settings here.
+  // enable wrapped tabs
+  vscode.workspace.getConfiguration().update('workbench.editor.wrapTabs', true, true);
 };
