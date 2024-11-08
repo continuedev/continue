@@ -26,7 +26,6 @@ export class StreamTransformPipeline {
 
     charGenerator = stopAtStopTokens(generator, stopTokens);
     for (const charFilter of helper.lang.charFilters ?? []) {
-      debugger;
       charGenerator = charFilter({
         chars: charGenerator,
         prefix,
