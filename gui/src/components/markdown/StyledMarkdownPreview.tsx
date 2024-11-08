@@ -13,13 +13,13 @@ import {
 } from "..";
 import { getFontSize } from "../../util";
 import "./katex.css";
-import FilenameLink from "./FilenameLink";
 import "./markdown.css";
-import PreWithToolbar from "./PreWithToolbar";
-import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { useSelector } from "react-redux";
 import { memoizedContextItemsSelector } from "../../redux/slices/stateSlice";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import FilenameLink from "./FilenameLink";
+import StepContainerPreToolbar from "./StepContainerPreToolbar";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -53,9 +53,19 @@ const StyledMarkdown = styled.div<{
   }
 
   background-color: ${vscBackground};
-  font-family: var(--vscode-font-family), system-ui, -apple-system,
-    BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-    "Open Sans", "Helvetica Neue", sans-serif;
+  font-family:
+    var(--vscode-font-family),
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   padding-left: 8px;
   padding-right: 8px;
@@ -80,7 +90,7 @@ const StyledMarkdown = styled.div<{
 interface StyledMarkdownPreviewProps {
   source?: string;
   className?: string;
-  showCodeBorder?: boolean;
+  isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
   scrollLocked?: boolean;
 }
 
@@ -122,17 +132,27 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     remarkPlugins: [
       remarkMath,
       () => {
-        return (tree) => {
+        return (tree: any) => {
+          const lastNode = tree.children[tree.children.length - 1];
+          const lastCodeNode = lastNode.type === "code" ? lastNode : null;
+
           visit(tree, "code", (node: any) => {
             if (!node.lang) {
-              node.lang === "javascript";
+              node.lang = "javascript";
             } else if (node.lang.includes(".")) {
               node.lang = node.lang.split(".").slice(-1)[0];
             }
 
+            node.data = node.data || {};
+            node.data.hProperties = node.data.hProperties || {};
+
+            if (lastCodeNode === node) {
+              node.data.hProperties.isGenerating = true;
+            } else {
+              node.data.hProperties.isGenerating = false;
+            }
+
             if (node.meta) {
-              node.data = node.data || {};
-              node.data.hProperties = node.data.hProperties || {};
               node.data.hProperties.filepath = node.meta;
             }
           });
@@ -164,26 +184,31 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     ],
     rehypeReactOptions: {
       components: {
-        a: ({ node, ...props }) => {
+        a: ({ node, ...aProps }) => {
           return (
-            <a {...props} target="_blank">
-              {props.children}
+            <a {...aProps} target="_blank">
+              {aProps.children}
             </a>
           );
         },
         pre: ({ node, ...preProps }) => {
-          const { className, filepath } = preProps?.children?.[0]?.props;
+          const { className, filepath, isGenerating } =
+            preProps?.children?.[0]?.props;
 
-          return props.showCodeBorder ? (
-            <PreWithToolbar
+          if (!filepath || !props.isRenderingInStepContainer) {
+            return <SyntaxHighlightedPre {...preProps} />;
+          }
+
+          // We use a custom toolbar for codeblocks in the step container
+          return (
+            <StepContainerPreToolbar
               codeBlockIndex={preProps.codeBlockIndex}
               language={getLanuageFromClassName(className)}
               filepath={filepath}
+              isGenerating={isGenerating}
             >
-              <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
-            </PreWithToolbar>
-          ) : (
-            <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+              <SyntaxHighlightedPre {...preProps} />
+            </StepContainerPreToolbar>
           );
         },
         code: ({ node, ...codeProps }) => {

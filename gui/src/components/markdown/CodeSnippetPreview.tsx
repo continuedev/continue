@@ -83,7 +83,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       borderColor={props.borderColor}
     >
       <PreviewMarkdownHeader
-        className="flex justify-between cursor-pointer"
+        className="flex cursor-pointer justify-between"
         onClick={() => {
           if (props.item.id.providerTitle === "file") {
             ideMessenger.post("showFile", {
@@ -139,7 +139,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       <div
         contentEditable={false}
         className={
-          collapsed ? "max-h-[33vh] overflow-hidden m-0" : "overflow-auto m-0"
+          collapsed ? "m-0 max-h-[33vh] overflow-hidden" : "m-0 overflow-auto"
         }
         ref={codeBlockRef}
       >
@@ -147,13 +147,12 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description,
           )}\n${content}\n${fence}`}
-          showCodeBorder={false}
         />
       </div>
 
       {(codeBlockRef.current?.scrollHeight ?? 0) > MAX_PREVIEW_HEIGHT && (
         <ButtonWithTooltip
-          className="bottom-1 right-2 absolute"
+          className="absolute bottom-1 right-2"
           text={collapsed ? "Expand" : "Collapse"}
         >
           {collapsed ? (

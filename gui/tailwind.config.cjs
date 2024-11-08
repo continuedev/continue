@@ -22,7 +22,7 @@ module.exports = {
     },
     extend: {
       animation: {
-        "spin-slow": "spin 10s linear infinite",
+        "spin-slow": "spin 6s linear infinite",
       },
       colors: {
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",

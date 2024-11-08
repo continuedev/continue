@@ -2,10 +2,10 @@ import { debounce } from "lodash";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, vscEditorBackground } from "..";
-import useUIConfig from "../../hooks/useUIConfig";
-import { RootState } from "../../redux/store";
-import CodeBlockToolBar from "./CodeBlockToolbar";
+import { defaultBorderRadius, vscEditorBackground } from "../..";
+import useUIConfig from "../../../hooks/useUIConfig";
+import { RootState } from "../../../redux/store";
+import CodeBlockWithToolBar from "./CodeBlockToolbar(OLD)";
 
 const TopDiv = styled.div`
   outline: 0.5px solid rgba(153, 153, 152);
@@ -36,6 +36,7 @@ function PreWithToolbar(props: {
   language: string | null;
   codeBlockIndex: number;
   filepath?: string | undefined;
+  isGenerating?: boolean;
 }) {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
@@ -71,7 +72,7 @@ function PreWithToolbar(props: {
       onMouseLeave={() => setHovering(false)}
     >
       {!!props.filepath ? (
-        <CodeBlockToolBar
+        <CodeBlockWithToolBar
           isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
           text={copyValue}
           bottom={toolbarBottom}
@@ -79,16 +80,18 @@ function PreWithToolbar(props: {
           filepath={props.filepath}
           isExpanded={isExpanded}
           onToggleExpand={() => setIsExpanded(!isExpanded)}
+          isGenerating={props.isGenerating}
         />
       ) : (
         hovering && (
-          <CodeBlockToolBar
+          <CodeBlockWithToolBar
             isNextCodeBlock={nextCodeBlockIndex === props.codeBlockIndex}
             text={copyValue}
             bottom={toolbarBottom}
             language={props.language}
             isExpanded={isExpanded}
             onToggleExpand={() => setIsExpanded(!isExpanded)}
+            isGenerating={props.isGenerating}
           />
         )
       )}

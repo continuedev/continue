@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { ToolbarButton } from "./CodeBlockToolbar";
+import { ToolbarButton } from "./CodeBlockToolbar(OLD)";
 import { Tooltip } from "react-tooltip";
-import { lightGray } from "..";
+import { lightGray } from "../..";
 
 export function ToolbarButtonWithTooltip({
   onClick,

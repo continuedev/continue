@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { table } from "table";
 import { lightGray, vscBackground, vscInputBackground } from "../components";
-import { CopyButton } from "../components/markdown/CopyButton";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
+import { CopyButton } from "../components/gui/CopyButton";
 
 const Th = styled.th`
   padding: 0.5rem;
