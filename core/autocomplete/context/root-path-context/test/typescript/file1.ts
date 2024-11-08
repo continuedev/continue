@@ -10,4 +10,8 @@ class Group {
   constructor(people: Person[]) {
     this.people = people;
   }
+
+  getPersonAddress(person: Person): Address {
+    return getAddress(person);
+  }
 }

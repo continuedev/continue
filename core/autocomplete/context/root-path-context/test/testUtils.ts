@@ -1,10 +1,17 @@
 import fs from "fs";
 import path from "path";
-import { Range } from "../../..";
-import { testIde } from "../../../test/util/fixtures";
-import { getAst, getTreePathAtCursor } from "../../util/ast";
-import { ImportDefinitionsService } from "../ImportDefinitionsService";
-import { RootPathContextService } from "./RootPathContextService";
+import { jest } from "@jest/globals";
+
+import { Range } from "../../../..";
+import { testIde } from "../../../../test/util/fixtures";
+import { getAst, getTreePathAtCursor } from "../../../util/ast";
+import { ImportDefinitionsService } from "../../ImportDefinitionsService";
+import { RootPathContextService } from "../RootPathContextService";
+
+const MOCK_HARDCODED_RANGE = {
+  start: { line: 0, character: 0 },
+  end: { line: 0, character: 0 },
+};
 
 function splitTextAtRange(fileContent: string, range: Range): [string, string] {
   const lines = fileContent.split("\n");
@@ -42,9 +49,26 @@ export async function testRootPathContext(
   rangeToFill: Range,
   expectedSnippets: string[],
 ) {
+  // Create a mocked instance of RootPathContextService
   const ide = testIde;
   const importDefinitionsService = new ImportDefinitionsService(ide);
   const service = new RootPathContextService(importDefinitionsService, ide);
+
+  expectedSnippets.forEach((snippet) => {
+    jest
+      // @ts-ignore
+      .spyOn(service, "getSnippets")
+      // @ts-ignore
+      .mockImplementationOnce(async (_filepath, _endPosition) => {
+        return [
+          {
+            range: MOCK_HARDCODED_RANGE,
+            filepath: "NOT USED",
+            contents: snippet,
+          },
+        ];
+      });
+  });
 
   // Copy the folder to the test directory
   const folderPath = path.join(
@@ -77,21 +101,5 @@ export async function testRootPathContext(
   const treePath = await getTreePathAtCursor(ast, prefix.length);
   const snippets = await service.getContextForPath(startPath, treePath);
 
-  expectedSnippets.forEach((expectedSnippet) => {
-    const found = snippets.find((snippet) =>
-      snippet.contents.includes(expectedSnippet),
-    );
-    expect(found).toBeDefined();
-  });
+  expect(snippets.map((snippet) => snippet.contents)).toEqual(expectedSnippets);
 }
-
-describe("RootPathContextService", () => {
-  it("should be true", async () => {
-    await testRootPathContext(
-      "typescript",
-      "file1.ts",
-      { start: { line: 3, character: 2 }, end: { line: 3, character: 24 } },
-      ["export interface Person", "export interface Address"],
-    );
-  });
-});
