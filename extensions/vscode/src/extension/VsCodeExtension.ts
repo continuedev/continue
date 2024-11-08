@@ -278,7 +278,7 @@ export class VsCodeExtension {
         // Reindex the workspaces
         this.core.invoke("index/forceReIndex", undefined);
       } else {
-        // Reindex the filex
+        // Reindex the file
         const indexer = await this.core.codebaseIndexerPromise;
         indexer.refreshFile(filepath);
       }
