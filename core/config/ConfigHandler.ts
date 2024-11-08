@@ -68,6 +68,11 @@ export class ConfigHandler {
     this.fetchControlPlaneProfiles();
   }
 
+
+  public logMessage(message: string) {
+    this.writeLog(message);
+  }
+
   // This will be the local profile
   private get fallbackProfile() {
     return this.profiles[0];

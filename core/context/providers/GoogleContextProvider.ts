@@ -15,8 +15,8 @@ class GoogleContextProvider extends BaseContextProvider {
 
   private _serperApiKey: string;
 
-  constructor(options: { serperApiKey: string }) {
-    super(options);
+  constructor(options: { serperApiKey: string },writeLog: (log: string) => Promise<void>) {
+    super(options,writeLog);
     this._serperApiKey = options.serperApiKey;
   }
 

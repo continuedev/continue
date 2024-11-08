@@ -83,6 +83,11 @@ class OpenAI extends BaseLLM {
     };
   }
 
+
+
+  // supportsFim(): boolean {
+  //   return true;
+  // }
   protected _convertModelName(model: string): string {
     return model;
   }
@@ -267,13 +272,19 @@ class OpenAI extends BaseLLM {
     suffix: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const endpoint = new URL("fim/completions", this.apiBase);
+    const endpoint = new URL("completions", this.apiBase);
+    // if (this.writeLog){
+    //   await this.writeLog(
+    //     "文件路径：/ai4math/users/xmlu/continue_env/continue/core/llm/llms/OpenAI.ts\n"+
+    //     "OpenAI接口调用"+options.model+"模型进行_streamFim\n"
+    //   )
+    // }
+    const prompt="<fim_prefix>"+prefix+"<fim_suffix>"+suffix+"<fim_middle>";
     const resp = await this.fetch(endpoint, {
       method: "POST",
       body: JSON.stringify({
         model: options.model,
-        prompt: prefix,
-        suffix,
+        prompt: prompt,
         max_tokens: options.maxTokens,
         temperature: options.temperature,
         top_p: options.topP,
@@ -290,7 +301,32 @@ class OpenAI extends BaseLLM {
       },
     });
     for await (const chunk of streamSse(resp)) {
-      yield chunk.choices[0].delta.content;
+      // chunk 格式
+      // chunk: {
+      //   "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
+      //   "object": "text_completion",
+      //   "created": 1730795368,
+      //   "model": "/models/AI-ModelScope/starcoder2-3b",
+      //   "choices": [
+      //     {
+      //       "index": 0,
+      //       "text": ")\n# merge sort", text就是模型回复的补全结果
+      //       "logprobs": null,
+      //       "finish_reason": "stop",
+      //       "stop_reason": "\ndef"
+      //     }
+      //   ],
+      //   "usage": null
+      // }
+
+
+      // if (this.writeLog){
+      //   await this.writeLog(
+      //     "response: "+JSON.stringify({...resp},null,2)+"\n"
+      //     +"chunk: "+JSON.stringify({...chunk},null,2)+"\n"
+      //   );
+      // }
+      yield chunk.choices[0].text;
     }
   }
 

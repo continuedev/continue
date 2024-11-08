@@ -1,3 +1,4 @@
+
 /**
  * Asynchronous generator that yields characters from the input stream until it encounters
  * an end-of-line character followed by a non-whitespace character.
@@ -42,15 +43,19 @@ export async function* onlyWhitespaceAfterEndOfLine(
 
 /**
  * Yields characters from the stream, stopping if the first character is a newline.
+ * 如果第一个字符是\n则停止输出
  * @param {AsyncGenerator<string>} stream - The input character stream.
  * @yields {string} Characters from the stream.
  */
 export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
   let first = true;
+
+
   for await (const char of stream) {
     if (first) {
       first = false;
       if (char.startsWith("\n") || char.startsWith("\r")) {
+        // continue;
         return;
       }
     }
@@ -87,7 +92,7 @@ export async function* stopAtStopTokens(
     ...stopTokens.map((token) => token.length),
   );
   let buffer = "";
-
+  
   for await (const chunk of stream) {
     buffer += chunk;
 

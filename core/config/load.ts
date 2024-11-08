@@ -242,6 +242,15 @@ async function intermediateToFinalConfig(
 ): Promise<ContinueConfig> {
   // Auto-detect models
   let models: BaseLLM[] = [];
+
+  // writeLog(
+  //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/config/load.ts\n"+
+  //   "identify: intermediateToFinalConfig-config\n"+
+  //   JSON.stringify({
+  //     ...config
+  //   },null,2,)
+  // )
+  
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
@@ -277,6 +286,7 @@ async function intermediateToFinalConfig(
               );
             }),
           );
+          
           models.push(
             ...(detectedModels.filter(
               (x) => typeof x !== "undefined",
@@ -387,8 +397,8 @@ async function intermediateToFinalConfig(
         | undefined
     )?.params || {};
   const DEFAULT_CONTEXT_PROVIDERS = [
-    new FileContextProvider({}),
-    new CodebaseContextProvider(codebaseContextParams),
+    new FileContextProvider({},writeLog),
+    new CodebaseContextProvider(codebaseContextParams,writeLog),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
@@ -408,7 +418,7 @@ async function intermediateToFinalConfig(
 
         continue;
       }
-      const instance: IContextProvider = new cls(provider.params);
+      const instance: IContextProvider = new cls(provider.params,writeLog);
 
       // Handle continue-proxy
       if (instance.description.title === "continue-proxy") {

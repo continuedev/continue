@@ -41,7 +41,8 @@ function parseDataLine(line: string): any {
   try {
     const data = JSON.parse(json);
     if (data.error) {
-      throw new Error(`Error streaming response: ${data.error}`);
+      throw new Error(
+        `Error streaming response: ${data.error}`);
     }
 
     return data;

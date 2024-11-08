@@ -292,7 +292,7 @@ export class Core {
       await this.docsService.indexAllDocs(msg.data.reIndex);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
-
+    
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
       const items = await config.contextProviders
@@ -316,7 +316,11 @@ export class Core {
       if (!provider) {
         return [];
       }
-
+      // this.configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "context/getContextItems\n"+
+      //   "msg: " + JSON.stringify({...msg},null,2)+"\n"
+      // )
       try {
         const id: ContextItemId = {
           providerTitle: provider.description.title,
@@ -368,6 +372,10 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
+      // configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "llm/llmStreamChat\n")
+
       const config = await configHandler.loadConfig();
 
       // Stop TTS on new StreamChat
@@ -412,9 +420,11 @@ export class Core {
     async function* llmStreamComplete(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
-
       msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
     ) {
+      // configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "llm/streamComplete\n")
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
         msg.data.prompt,
@@ -435,6 +445,7 @@ export class Core {
           });
           break;
         }
+
         yield { content: next.value };
         next = await gen.next();
       }
@@ -570,10 +581,14 @@ export class Core {
 
     // Autocomplete
     on("autocomplete/complete", async (msg) => {
+      // this.configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "autocomplete/complete\n")
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           msg.data,
           undefined,
+          this.selectedModelTitle,
         );
       return outcome ? [outcome.completion] : [];
     });
@@ -589,6 +604,9 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
     ) {
+      // configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "streamDiffLines\n")
       const data = msg.data;
       const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
       for await (const diffLine of streamDiffLines(
@@ -616,13 +634,10 @@ export class Core {
 
     on("completeOnboarding", (msg) => {
       const mode = msg.data.mode;
-
       if (mode === "Custom") {
         return;
       }
-
       let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
-
       switch (mode) {
         case "Local":
           editConfigJsonCallback = setupLocalConfig;
@@ -646,7 +661,6 @@ export class Core {
       }
 
       editConfigJson(editConfigJsonCallback);
-
       void this.configHandler.reloadConfig();
     });
 
@@ -675,6 +689,7 @@ export class Core {
       }
 
       const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
+
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
@@ -707,7 +722,6 @@ export class Core {
   }
 
   private indexingCancellationController: AbortController | undefined;
-
   private async refreshCodebaseIndex(dirs: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
@@ -726,7 +740,7 @@ export class Core {
 
       void this.messenger.request("indexProgress", updateToSend);
       this.indexingState = updateToSend;
-
+      
       if (update.status === "failed") {
         console.debug(
           "Indexing failed with error: ",

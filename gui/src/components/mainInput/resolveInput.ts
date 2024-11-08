@@ -37,19 +37,16 @@ async function resolveEditorContent(
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
-
       // Only take the first slash command
 
       if (foundSlashCommand && typeof slashCommand === "undefined") {
         slashCommand = foundSlashCommand;
       }
-
       contextItemAttrs.push(...ctxItems);
 
       if (text === "") {
         continue;
       }
-
       if (parts[parts.length - 1]?.type === "text") {
         parts[parts.length - 1].text += "\n" + text;
       } else {
@@ -72,12 +69,10 @@ async function resolveEditorContent(
           });
         }
       }
-
       const name: string = p.attrs.item.name;
       let lines = name.substring(name.lastIndexOf("(") + 1);
       lines = lines.substring(0, lines.lastIndexOf(")"));
       const [start, end] = lines.split("-");
-
       selectedCode.push({
         filepath: p.attrs.item.description,
         range: {
@@ -96,7 +91,6 @@ async function resolveEditorContent(
       console.warn("Unexpected content type", p.type);
     }
   }
-
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
@@ -115,7 +109,6 @@ async function resolveEditorContent(
       }
     }
   }
-
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {
     const result = await ideMessenger.request("context/getContextItems", {
@@ -124,7 +117,6 @@ async function resolveEditorContent(
       fullInput: stripImages(parts),
       selectedCode,
     });
-
     if (result.status === "success") {
       const codebaseItems = result.content;
       contextItems.push(...codebaseItems);
@@ -133,7 +125,6 @@ async function resolveEditorContent(
       }
     }
   }
-
   // Include default context providers
   const defaultContextItems = await Promise.all(
     defaultContextProviders.map(async (provider) => {
@@ -151,7 +142,6 @@ async function resolveEditorContent(
     }),
   );
   contextItems.push(...defaultContextItems.flat());
-
   if (contextItemsText !== "") {
     contextItemsText += "\n";
   }
@@ -165,7 +155,6 @@ async function resolveEditorContent(
       parts = [{ type: "text", text: lastPart }];
     }
   }
-
   return [contextItems, selectedCode, parts];
 }
 

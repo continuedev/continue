@@ -182,7 +182,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       } else {
         dispatch(initNewActiveMessage({ editorState }));
       }
-
       // Reset current code block index
       dispatch(resetNextCodeBlockToApplyIndex());
 
@@ -192,7 +191,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       if (shouldGatherContext) {
         dispatch(setIsGatheringContext(true));
       }
-
       // Resolve context providers and construct new history
       const [selectedContextItems, selectedCode, content] =
         await resolveEditorContent(
@@ -201,9 +199,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           ideMessenger,
           defaultContextProviders,
         );
-
       dispatch(setIsGatheringContext(false));
-
       // Automatically use currently open file
       if (!modifiers.noContext) {
         const usingFreeTrial = defaultModel?.provider === "free-trial";
@@ -237,20 +233,16 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           });
         }
       }
-
       dispatch(addContextItems(contextItems));
-
       const message: ChatMessage = {
         role: "user",
         content,
       };
-
       const historyItem: ChatHistoryItem = {
         message,
         contextItems: selectedContextItems,
         editorState,
       };
-
       let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
       const historyIndex = index || newHistory.length - 1;
       dispatch(
@@ -260,7 +252,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           contextItems: selectedContextItems,
         }),
       );
-
       // TODO: hacky way to allow rerender
       await new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -270,11 +261,22 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       });
       posthog.capture("userInput", {});
 
-      const messages = constructMessages(newHistory, defaultModel.model);
+      // Error streaming response: Cannot read properties of undefined (reading 'includes')
+      // console.debug(
+      //   "/ai4math/users/xmlu/continue_env/continue/core/llm/constructMessages.ts\n"
+      //   +"defaultModel: "+JSON.stringify({...defaultModel},null,2) +"\n"
+      //   +"defaultModel.model: "+defaultModel.model+"\n"
+      // );
+      let messages: ReturnType<typeof constructMessages>; // 声明 messages，类型根据构造函数来推导
 
+      if (defaultModel.model !== undefined) {
+        messages = constructMessages(newHistory, defaultModel.model);
+      } else {
+        messages = constructMessages(newHistory, defaultModel.completionOptions.model);
+      }
+      
       // Determine if the input is a slash command
       let commandAndInput = getSlashCommandForInput(content);
-
       if (!commandAndInput) {
         await _streamNormalInput(messages);
       } else {
@@ -284,14 +286,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           step_name: slashCommand.name,
           params: {},
         });
-
         // For edit and comment slash commands, including the selected code in the context from store and for other commands, including the selected context alone
         if (slashCommand.name === "edit" || slashCommand.name === "comment") {
           updatedContextItems = [...contextItems];
         } else {
           updatedContextItems = [...selectedContextItems];
         }
-
         await _streamSlashCommand(
           messages,
           slashCommand,

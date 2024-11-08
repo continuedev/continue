@@ -13,6 +13,7 @@ export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
   options: any | undefined,
   filterDirectory: string | undefined,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContextItem[]> {
   if (!extras.embeddingsProvider) {
     return [];
@@ -41,14 +42,16 @@ export async function retrieveContextItemsFromEmbeddings(
   }
 
   // Fill half of the context length, up to a max of 100 snippets
-  const contextLength = extras.llm.contextLength;
+  // const contextLength = extras.llm.contextLength;
+  const contextLength=8096;
   const tokensPerSnippet = 512;
   const nFinal =
     options?.nFinal ??
     Math.min(DEFAULT_N_FINAL, contextLength / tokensPerSnippet / 2);
   const useReranking = !!extras.reranker;
   const nRetrieve = useReranking ? options?.nRetrieve || 2 * nFinal : nFinal;
-
+  // nRetrieve = 10;
+  
   const branches = (await Promise.race([
     Promise.all(workspaceDirs.map((dir) => extras.ide.getBranch(dir))),
     new Promise((resolve) => {
@@ -87,9 +90,27 @@ export async function retrieveContextItemsFromEmbeddings(
     config: extras.config,
   };
 
-  const pipeline = new pipelineType(pipelineOptions);
-  const results = await pipeline.run();
 
+  const pipeline = new pipelineType(pipelineOptions,writeLog);
+
+  const startTime = Date.now();
+  const results = await pipeline.run();
+  const time = Date.now() - startTime;
+  // writeLog(
+  //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/retrieval.ts\n"+
+  //   "pipline耗时："+time/1000+"s\n"
+  // );
+  // if (writeLog) {
+  //   await writeLog(
+  //     "文件路径：/ai4math/users/xmlu/continue_env/continue/core/context/retrieval/retrieval.ts\n"+
+  //     "contextLength: "+contextLength+"\n"+
+  //     "tokensPerSnippet: "+tokensPerSnippet+"\n"+
+  //     "nFinal: "+nFinal+"\n"+
+  //     "useReranking: "+useReranking+"\n"+
+  //     "nRetrieve: "+nRetrieve+"\n"+
+  //     "results: "+JSON.stringify({...results},null,2)+"\n"
+  //   );
+  // } 
   if (results.length === 0) {
     throw new Error(
       "Warning: No results found for @codebase context provider.",

@@ -15,7 +15,7 @@ export class ListenableGenerator<T> {
   public cancel() {
     this._isEnded = true;
   }
-
+  
   private async _start() {
     try {
       for await (const value of this._source) {
@@ -78,7 +78,7 @@ export class GeneratorReuseManager {
   currentGenerator: ListenableGenerator<string> | undefined;
   pendingGeneratorPrefix: string | undefined;
   pendingCompletion = "";
-
+  
   constructor(private readonly onError: (err: any) => void) {}
 
   private _createListenableGenerator(
@@ -86,10 +86,8 @@ export class GeneratorReuseManager {
     prefix: string,
   ) {
     this.currentGenerator?.cancel();
-
     const listenableGen = new ListenableGenerator(gen, this.onError);
     listenableGen.listen((chunk) => (this.pendingCompletion += chunk ?? ""));
-
     this.pendingGeneratorPrefix = prefix;
     this.pendingCompletion = "";
     this.currentGenerator = listenableGen;
@@ -99,6 +97,7 @@ export class GeneratorReuseManager {
     prefix: string,
     newGenerator: () => AsyncGenerator<string>,
     multiline: boolean,
+    configHandler:any
   ): AsyncGenerator<string> {
     // Check if current can be reused
     if (
@@ -117,13 +116,16 @@ export class GeneratorReuseManager {
     }
 
     let alreadyTyped = prefix.slice(this.pendingGeneratorPrefix?.length) || "";
+    let completion = "";
     for await (let chunk of this.currentGenerator?.tee() ?? []) {
       if (!chunk) {
         continue;
       }
+      
       while (chunk.length && alreadyTyped.length) {
         if (chunk[0] === alreadyTyped[0]) {
           alreadyTyped = alreadyTyped.slice(1);
+          
           chunk = chunk.slice(1);
         } else {
           break;
@@ -132,9 +134,25 @@ export class GeneratorReuseManager {
 
       const newLineIndex = chunk.indexOf("\n");
       if (multiline || newLineIndex === -1) {
+        completion += chunk;
         yield chunk;
       } else {
+        completion += chunk.slice(0, newLineIndex);
         yield chunk.slice(0, newLineIndex);
+        // 新增后处理
+        // 如果只是重复上面的一行，则生成两行
+        const lineAbove = prefix
+          .split("\n")
+          .filter((line) => line.trim().length > 0)
+          .slice(-1)[0];
+        const firstLineOfCompletion = completion
+          .split("\n")
+          .find((line) => line.trim().length > 0);
+        if (firstLineOfCompletion!=undefined && lineAbove!=undefined && firstLineOfCompletion.trim() === lineAbove.trim()){
+          completion = "";
+          yield chunk.slice(newLineIndex);
+          continue;
+        }
         break;
       }
     }

@@ -23,6 +23,7 @@ class CodeContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+
     // Assume the query is the id as returned by loadSubmenuItems
     return [
       await CodeSnippetsCodebaseIndex.getForId(Number.parseInt(query, 10)),

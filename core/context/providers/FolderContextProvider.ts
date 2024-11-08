@@ -28,7 +28,7 @@ class FolderContextProvider extends BaseContextProvider {
     const { retrieveContextItemsFromEmbeddings } = await import(
       "../retrieval/retrieval.js"
     );
-    return retrieveContextItemsFromEmbeddings(extras, this.options, query);
+    return retrieveContextItemsFromEmbeddings(extras, this.options, query,this.writeLog);
   }
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,

@@ -90,6 +90,7 @@ export class ContinueCompletionProvider
     token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
+    const startTime = Date.now();
     const enableTabAutocomplete =
       getStatusBarStatus() === StatusBarStatus.Enabled;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
@@ -215,8 +216,14 @@ export class ContinueCompletionProvider
         await this.completionProvider.provideInlineCompletionItems(
           input,
           signal,
+          undefined
         );
 
+      const time = Date.now() - startTime;
+      await console.log(
+        `ContinueCompletionProvider - time：`+time/1000 + `s\n`+
+        `ContinueCompletionProvider - completion：`+outcome?.completion + `\n`
+      );
       if (!outcome || !outcome.completion) {
         return null;
       }

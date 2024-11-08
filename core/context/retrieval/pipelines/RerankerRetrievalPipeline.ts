@@ -10,11 +10,31 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     let retrievalResults: Chunk[] = [];
 
+    // const ftsstartTime = Date.now();
     const ftsChunks = await this.retrieveFts(input, nRetrieve);
-    const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
-    const recentlyEditedFilesChunks =
-      await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    // const ftstime = Date.now() - ftsstartTime;
+    // this.writeLog(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "retrieve ftsChunks 耗时："+ftstime/1000+"s\n"
+    // );
 
+    // const embeddingsstartTime = Date.now();
+    const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
+    // const embeddingstime = Date.now() - embeddingsstartTime;
+    // this.writeLog(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "retrieve embeddingsChunks 耗时："+embeddingstime/1000+"s\n"
+    // );
+
+    // const recentlyEditedFilesstartTime = Date.now();
+    const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    // const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
+    // this.writeLog(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "retrieve recentlyEditedFilesChunks 耗时："+recentlyEditedFilestime/1000+"s\n"
+    // );
+
+    // const repoMapstartTime = Date.now();
     const repoMapChunks = await requestFilesFromRepoMap(
       this.options.llm,
       this.options.config,
@@ -22,6 +42,11 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       input,
       filterDirectory,
     );
+    // const repoMapTime = Date.now() - repoMapstartTime;
+    // this.writeLog(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "retrieve repoMapChunks 耗时："+repoMapTime/1000+"s\n"
+    // );
 
     retrievalResults.push(
       ...recentlyEditedFilesChunks,
@@ -29,7 +54,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       ...embeddingsChunks,
       ...repoMapChunks,
     );
-
+    
     if (filterDirectory) {
       // Backup if the individual retrieval methods don't listen
       retrievalResults = retrievalResults.filter((chunk) =>
@@ -40,7 +65,17 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     const deduplicatedRetrievalResults: Chunk[] =
       deduplicateChunks(retrievalResults);
 
-    return deduplicatedRetrievalResults;
+    // this.writeLog(
+    //   "文件路径：/ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"
+    //   + "ftsChunks: " + JSON.stringify({...ftsChunks},null,2) +"\n" 
+    //   + "embeddingsChunks: "+JSON.stringify({...embeddingsChunks},null,2)+"\n"
+    //   + "recentlyEditedFilesChunks: "+JSON.stringify({...recentlyEditedFilesChunks},null,2)+"\n"
+    //   + "repoMapChunks: "+JSON.stringify({...repoMapChunks},null,2)+"\n"
+    //   + "retrievalResults: "+JSON.stringify({...retrievalResults},null,2)+"\n"
+    //   + "deduplicatedRetrievalResults: "+JSON.stringify({...deduplicatedRetrievalResults},null,2)+"\n"
+    // );
+    
+    return deduplicatedRetrievalResults.slice(0, 32);
   }
 
   private async _rerank(input: string, chunks: Chunk[]): Promise<Chunk[]> {
@@ -55,6 +90,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       input,
       chunks,
     );
+    
 
     // Filter out low-scoring results
     let results = chunks;
@@ -102,8 +138,22 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   }
 
   async run(): Promise<Chunk[]> {
+    const retrievestartTime = Date.now();
     const intialResults = await this._retrieveInitial();
+    const retrievetime = Date.now() - retrievestartTime;
+    // this.writeLog(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "检索 耗时："+retrievetime/1000+"s\n"
+    // );
+
+    const rerankstartTime = Date.now();
     const rankedResults = await this._rerank(this.options.input, intialResults);
+    const reranktime = Date.now() - rerankstartTime;
+    // this.writeLog(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "rerank 耗时："+reranktime/1000+"s\n"
+    // );
+    
 
     // // // Expand top reranked results
     // const expanded = await this._expandRankedResults(results);

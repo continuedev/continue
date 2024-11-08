@@ -29,12 +29,14 @@ export interface IRetrievalPipeline {
 
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   private lanceDbIndex: LanceDbIndex;
-  constructor(protected readonly options: RetrievalPipelineOptions) {
+  public writeLog: (log: string) => Promise<void>;
+  constructor(protected readonly options: RetrievalPipelineOptions,writeLog: (log: string) => Promise<void>,) {
     this.lanceDbIndex = new LanceDbIndex(
       options.config.embeddingsProvider,
       (path) => options.ide.readFile(path),
       options.pathSep,
     );
+    this.writeLog = writeLog;
   }
 
   protected async retrieveAndChunkRecentlyEditedFiles(
@@ -43,7 +45,6 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     const recentlyEditedFilesSlice = Array.from(
       recentlyEditedFilesCache.keys(),
     ).slice(0, n);
-
     // If the number of recently edited files is less than the retrieval limit,
     // include additional open files. This is useful in the case where a user
     // has many tabs open and reloads their IDE. They now have 0 recently edited files,
@@ -54,9 +55,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
         ...openFiles.slice(0, n - recentlyEditedFilesSlice.length),
       );
     }
-
     const chunks: Chunk[] = [];
-
     for (const filepath of recentlyEditedFilesSlice) {
       const contents = await this.options.ide.readFile(filepath);
       const fileChunks = chunkDocument({
@@ -70,8 +69,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
         chunks.push(chunk);
       }
     }
-
-    return chunks;
+    return chunks.slice(0, n);
   }
 
   protected async retrieveFts(input: string, n: number): Promise<Chunk[]> {

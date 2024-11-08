@@ -56,6 +56,9 @@ import {
   stopAtStopTokens,
 } from "./streamTransforms/charStream.js";
 
+// RAG 需要的代码库
+import type { ContextItemId, ContextItemWithId, IndexingProgressUpdate } from "../";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 export interface AutocompleteInput {
   completionId: string;
   filepath: string;
@@ -246,12 +249,13 @@ export class CompletionProvider {
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
+    selectedModelTitle: string | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
+    const startTime = Date.now();
     try {
       // Debounce
       const uuid = uuidv4();
       CompletionProvider.lastUUID = uuid;
-
       const config = await this.configHandler.loadConfig();
       const options = {
         ...DEFAULT_AUTOCOMPLETE_OPTS,
@@ -350,8 +354,15 @@ export class CompletionProvider {
         options.maxPromptTokens = 500;
       }
 
-      const outcome = await this.getTabCompletion(token, options, llm, input);
+      const outcome = await this.getTabCompletion(token, options, llm, input,selectedModelTitle);
 
+      const time = Date.now() - startTime;
+      // console.log()
+      // await this.configHandler.logMessage(
+      //   "Document Path: /continue/core/autocomplete/completionProvider.ts\n"+
+      //   "provideInlineCompletionItems - time："+time/1000+"s\n"
+      // );
+      // "provideInlineCompletionItems 补全结果："+outcome?.completion+"\n"
       if (!outcome?.completion) {
         return undefined;
       }
@@ -383,6 +394,7 @@ export class CompletionProvider {
     } catch (e: any) {
       this.onError(e);
     } finally {
+
       this._abortControllers.delete(input.completionId);
     }
   }
@@ -442,6 +454,7 @@ export class CompletionProvider {
     options: TabAutocompleteOptions,
     llm: ILLM,
     input: AutocompleteInput,
+    selectedModelTitle: string | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     const startTime = Date.now();
 
@@ -545,7 +558,6 @@ export class CompletionProvider {
         return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
       });
     }
-
     let { prefix, suffix, completeMultiline, snippets } =
       await constructAutocompletePrompt(
         filepath,
@@ -562,7 +574,6 @@ export class CompletionProvider {
         this.importDefinitionsService,
         this.rootPathContextService,
       );
-
     // If prefix is manually passed
     if (manuallyPassPrefix) {
       prefix = manuallyPassPrefix;
@@ -644,6 +655,25 @@ export class CompletionProvider {
       // Cache
       cacheHit = true;
       completion = cachedCompletion;
+      
+      const processedCompletion = postprocessCompletion({
+        completion,
+        prefix,
+        suffix,
+        llm,
+        configHandler: this.configHandler
+      });
+
+      if (!processedCompletion) {
+        return undefined;
+      }
+
+      completion = processedCompletion
+      // await this.configHandler.logMessage(
+      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+      //   "使用缓存：getTabCompletion-cachedCompletion\n"+
+      //   completion+"\n"
+      // );
     } else {
       const stop = [
         ...(completionOptions?.stop || []),
@@ -666,6 +696,17 @@ export class CompletionProvider {
           options.multilineCompletions !== "never" &&
           (options.multilineCompletions === "always" || completeMultiline);
       }
+      
+      // // 调用 RAG 
+      // const RAGstartTime = Date.now();
+      // const CodebaseContext = await this.resolveCodebase(prompt,selectedModelTitle);
+      // prefix = CodebaseContext + "```" + filepath + "```" + prefix;
+      // const RAGtime = Date.now() - RAGstartTime;
+      // await this.configHandler.logMessage(
+      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+      //   "获取codebasecontext耗时："+RAGtime/1000+"s\n"
+      // );
+
 
       // Try to reuse pending requests if what the user typed matches start of completion
       const generator = this.generatorReuseManager.getGenerator(
@@ -682,7 +723,15 @@ export class CompletionProvider {
                 stop,
               }),
         multiline,
+        this.configHandler
       );
+
+
+      // const streamCompleteGenerator = llm.streamComplete(prompt, {
+      //   ...completionOptions,
+      //   raw: true,
+      //   stop,
+      // });
 
       // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
       const fullStop = () =>
@@ -715,6 +764,7 @@ export class CompletionProvider {
         multiline,
       );
 
+
       let lineGenerator = streamLines(charGenerator);
       lineGenerator = stopAtLines(lineGenerator, fullStop);
       lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
@@ -728,23 +778,37 @@ export class CompletionProvider {
         lang.topLevelKeywords,
         fullStop,
       );
-
       for (const lineFilter of lang.lineFilters ?? []) {
         lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
       }
-
       lineGenerator = streamWithNewLines(lineGenerator);
-
       const finalGenerator = stopAtSimilarLine(
         lineGenerator,
         lineBelowCursor,
         fullStop,
       );
 
+
+
       try {
+        // await this.configHandler.logMessage(
+        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+        //   "步骤1-不使用缓存：getTabCompletion生成\n"
+        // );
+        
         for await (const update of finalGenerator) {
           completion += update;
+          // await this.configHandler.logMessage(
+          //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+          //   "步骤1-不使用缓存：getTabCompletion生成中。。。。\n"+
+          //   completion +"\n"
+          // );
         }
+        // await this.configHandler.logMessage(
+        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+        //   "不使用缓存：finalGenerator\n"+
+        //   completion+"\n"
+        // );
       } catch (e: any) {
         if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
           return undefined;
@@ -753,15 +817,23 @@ export class CompletionProvider {
       }
 
       if (cancelled) {
+        
         return undefined;
       }
-
+      
       const processedCompletion = postprocessCompletion({
         completion,
         prefix,
         suffix,
         llm,
+        configHandler: this.configHandler
       });
+      
+      // await this.configHandler.logMessage(
+      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+      //   "步骤1-不使用缓存-后处理：getTabCompletion-processedCompletion\n"+
+      //   processedCompletion+"\n"
+      // );
 
       if (!processedCompletion) {
         return undefined;
@@ -788,5 +860,89 @@ export class CompletionProvider {
       timestamp: timestamp,
       ...options,
     };
+  }
+
+  // 新增 RAG 功能
+
+  // 调用 getContextItems 获取检索结果，进行后处理
+  async resolveCodebase(
+    fullInput: string,
+    selectedModelTitle: string | undefined,
+  ): Promise<string>{
+    const result = await this.getContextItems("codebase", "", fullInput, "",selectedModelTitle)
+    let contextItemsText = "";
+    let contextItems: ContextItemWithId[] = [];
+    const codebaseItems = result;
+    contextItems.push(...codebaseItems);
+    for (const codebaseItem of codebaseItems) {
+      contextItemsText += codebaseItem.content + "\n\n";
+      
+    }
+
+    // await this.configHandler.logMessage(
+    //   `文件路径: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n` +
+    //   ` RAG \n` +
+    //   `fullInput: ${fullInput}\n` +
+    //   `contextItemsCount: ${contextItems.length}\n` +  // 记录上下文项的数量
+    //   `contextItemsText (preview): ${contextItemsText.slice(0, 500)}\n`  // 只记录前500个字符以防内容过多
+    // );
+    return contextItemsText;
+  }
+
+  async getContextItems(
+    name:string,
+    query:string,
+    fullInput:string,
+    selectedCode:any,
+    selectedModelTitle:string | undefined,
+  ){
+    const config = await this.configHandler.loadConfig();
+    // llm 用的是配置文件中 models 的第一个
+    const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
+    const provider = config.contextProviders?.find(
+      (provider) => provider.description.title === name,
+    );
+    if (!provider) {
+      return [];
+    }
+    try {
+      const id: ContextItemId = {
+        providerTitle: provider.description.title,
+        itemId: uuidv4(),
+      };
+
+      if (!llm) {
+        return [];
+      }
+      const items = await provider.getContextItems(query, {
+        config,
+        llm,
+        embeddingsProvider: config.embeddingsProvider,
+        fullInput,
+        ide:this.ide,
+        selectedCode,
+        reranker: config.reranker,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
+      });
+
+      void Telemetry.capture(
+        "useContextProvider",
+        {
+          name: provider.description.title,
+        },
+        true,
+      );
+      return items.map((item) => ({
+        ...item,
+        id,
+      }));
+    } catch (e) {
+      void this.ide.showToast(
+        "error",
+        `Error getting context items from ${name}: ${e}`,
+      );
+      return [];
+    }
   }
 }

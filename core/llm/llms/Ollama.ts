@@ -260,6 +260,7 @@ class Ollama extends BaseLLM {
   }
 
   supportsFim(): boolean {
+    // return false;
     return this.fimSupported;
   }
 

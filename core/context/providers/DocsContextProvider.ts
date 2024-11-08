@@ -22,8 +22,8 @@ class DocsContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
-  constructor(options: any) {
-    super(options);
+  constructor(options: any,writeLog: (log: string) => Promise<void>) {
+    super(options,writeLog);
   }
 
   private async _rerankChunks(

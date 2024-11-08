@@ -785,6 +785,8 @@ interface BaseCompletionOptions {
   keepAlive?: number;
   raw?: boolean;
   stream?: boolean;
+  // 添加 model 属性
+  model: string;  // 确保添加了 model 属性
 }
 
 export interface ModelCapability {

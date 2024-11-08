@@ -74,7 +74,6 @@ export function constructMessages(
   model: string,
 ): ChatMessage[] {
   const msgs = [];
-
   // Only using this system message with Sonnet right now
   if (
     // hasCodeBlockWithFilename(history[0].message.content) &&

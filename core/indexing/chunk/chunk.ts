@@ -55,6 +55,7 @@ export async function* chunkDocument({
     contents,
     maxChunkSize,
   )) {
+    // 过滤超大块
     chunkPromises.push(
       new Promise(async (resolve) => {
         if ((await countTokensAsync(chunkWithoutId.content)) > maxChunkSize) {

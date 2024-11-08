@@ -86,7 +86,7 @@ export abstract class BaseLLM implements ILLM {
   supportsPrefill(): boolean {
     return ["ollama", "anthropic", "mistral"].includes(this.providerName);
   }
-
+  
   uniqueId: string;
   model: string;
 
@@ -276,13 +276,14 @@ export abstract class BaseLLM implements ILLM {
     }
 
     return (
-      "##### Completion options #####\n" +
+      "##### Completion options (modified!) #####\n" +
       completionOptionsLog +
       (requestOptionsLog
         ? "\n\n##### Request options #####\n" + requestOptionsLog
         : "") +
       "\n\n##### Prompt #####\n" +
       prompt
+      +"\n\n"
     );
   }
 
@@ -436,18 +437,20 @@ export abstract class BaseLLM implements ILLM {
   ): AsyncGenerator<string, PromptLog> {
     throw new Error("Not implemented");
   }
-
+  
   async *streamFim(
     prefix: string,
     suffix: string,
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<string> {
+    const startTime = Date.now();
     const { completionOptions, log } = this._parseCompletionOptions(options);
 
-    const madeUpFimPrompt = `${prefix}<FIM>${suffix}`;
+    const madeUpFimPrompt = `<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
     if (log) {
       if (this.writeLog) {
         await this.writeLog(
+          "---------------------streamFim--------------------------\n"+
           this._compileLogMessage(madeUpFimPrompt, completionOptions),
         );
       }
@@ -462,6 +465,11 @@ export abstract class BaseLLM implements ILLM {
       suffix,
       completionOptions,
     )) {
+      // 新增
+      // 如果是连续空行不返回
+      if (chunk.trim() === "" && completion[completion.length - 1] === "\n") {
+        continue;
+      }
       completion += chunk;
       yield chunk;
     }
@@ -471,11 +479,21 @@ export abstract class BaseLLM implements ILLM {
       madeUpFimPrompt,
       completion,
     );
+    const time = Date.now() - startTime;
+
+    const prefixLines = prefix.split('\n').filter(line => line.trim() !== "");
+    const lastNonEmptyLine = prefixLines[prefixLines.length - 1];
 
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      // await this.writeLog(
+      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"
+      //   + "streamFim - time："+time/1000+"s\n"
+      //   + "streamFim - completion: \n"+completion+"\n"
+      // );
+      await this.writeLog(
+        "streamFim - completion: \n"+completion+"\n"
+      );
     }
-
     return {
       prompt: madeUpFimPrompt,
       completion,
@@ -487,6 +505,8 @@ export abstract class BaseLLM implements ILLM {
     _prompt: string,
     options: LLMFullCompletionOptions = {},
   ) {
+    const startTime = Date.now();
+
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -503,12 +523,17 @@ export abstract class BaseLLM implements ILLM {
 
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          "---------------------streamComplete--------------------------\n"+
+          this._compileLogMessage(prompt, completionOptions)
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
       }
     }
+
+
 
     let completion = "";
     for await (const chunk of this._streamComplete(prompt, completionOptions)) {
@@ -517,9 +542,16 @@ export abstract class BaseLLM implements ILLM {
     }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
-
+    const time = Date.now() - startTime;
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      // await this.writeLog(
+      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+      //   "streamComplete - time: "+time/1000+"s\n"
+      //   + "streamComplete - completion: \n"+completion+"\n"
+      // );
+      await this.writeLog(
+        "streamComplete - completion: \n"+completion+"\n"
+      );
     }
 
     return {
@@ -531,6 +563,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   async complete(_prompt: string, options: LLMFullCompletionOptions = {}) {
+    const startTime = Date.now();
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -547,7 +580,9 @@ export abstract class BaseLLM implements ILLM {
 
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+        "---------------------complete--------------------------\n"+
+        this._compileLogMessage(prompt, completionOptions));
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -558,8 +593,16 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
+    const time = Date.now() - startTime;
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      // await this.writeLog(
+      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+      //   "complete - time: "+time/1000+"s\n"
+      //   +"complete - completion: \n"+completion+"\n"
+      // );
+      await this.writeLog(
+        "complete - completion: \n"+completion+"\n"
+      );
     }
 
     return completion;
@@ -577,6 +620,7 @@ export abstract class BaseLLM implements ILLM {
     _messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
+    const startTime = Date.now();
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -587,7 +631,10 @@ export abstract class BaseLLM implements ILLM {
       : this._formatChatMessages(messages);
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        await this.writeLog(
+          "---------------------streamChat--------------------------\n"+
+          this._compileLogMessage(prompt, completionOptions)
+        );
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -621,8 +668,16 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
+    const time = Date.now() - startTime;
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      // await this.writeLog(
+      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+      //   "streamChat - time: "+time/1000 + "s\n"+
+      //   "streamChat - completion: \n"+completion+"\n"
+      // );
+      await this.writeLog(
+        "streamChat - completion: \n"+completion+"\n"
+      );
     }
 
     return {

@@ -9,9 +9,10 @@ import type {
 
 export abstract class BaseContextProvider implements IContextProvider {
   options: { [key: string]: any };
-
-  constructor(options: { [key: string]: any }) {
+  writeLog: (log: string) => Promise<void>; 
+  constructor(options: { [key: string]: any },writeLog: (log: string) => Promise<void>) {
     this.options = options;
+    this.writeLog = writeLog;
   }
 
   static description: ContextProviderDescription;
