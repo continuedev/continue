@@ -834,6 +834,7 @@ export type EmbeddingsProviderName =
   | "ollama"
   | "openai"
   | "cohere"
+  | "lmstudio"
   | "free-trial"
   | "gemini"
   | "continue-proxy"
