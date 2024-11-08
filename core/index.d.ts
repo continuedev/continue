@@ -916,6 +916,7 @@ export interface ContinueUIConfig {
   fontSize?: number;
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
+  getChatTitles?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -1014,7 +1015,6 @@ export interface SerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  getChatTitles?: boolean;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -1089,7 +1089,6 @@ export interface ContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
-  getChatTitles?: boolean;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1108,5 +1107,4 @@ export interface BrowserSerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
-  getChatTitles?: boolean;
 }

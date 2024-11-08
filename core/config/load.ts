@@ -1,16 +1,9 @@
+import { execSync } from "child_process";
 import * as JSONC from "comment-json";
 import * as fs from "fs";
+import os from "os";
 import path from "path";
 import * as tar from "tar";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands/index.js";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import FileContextProvider from "../context/providers/FileContextProvider";
-import { contextProviderClassFromName } from "../context/providers/index";
-import { AllRerankers } from "../context/rerankers/index";
-import { LLMReranker } from "../context/rerankers/llm";
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -30,18 +23,25 @@ import {
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { allEmbeddingsProviders } from "../indexing/embeddings";
-import { BaseLLM } from "../llm";
-import CustomLLMClass from "../llm/llms/CustomLLM";
-import FreeTrial from "../llm/llms/FreeTrial";
-import { llmFromDescription } from "../llm/llms";
-import os from "os";
-import { execSync } from "child_process";
+import {
+  slashCommandFromDescription,
+  slashFromCustomCommand,
+} from "../commands/index.js";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+import FileContextProvider from "../context/providers/FileContextProvider";
+import { contextProviderClassFromName } from "../context/providers/index";
+import { AllRerankers } from "../context/rerankers/index";
+import { LLMReranker } from "../context/rerankers/llm";
+import { allEmbeddingsProviders } from "../indexing/embeddings";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { BaseLLM } from "../llm";
+import { llmFromDescription } from "../llm/llms";
+import CustomLLMClass from "../llm/llms/CustomLLM";
+import FreeTrial from "../llm/llms/FreeTrial";
 import { copyOf } from "../util";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import mergeJson from "../util/merge";
 import {
   DEFAULT_CONFIG_TS_CONTENTS,
@@ -65,7 +65,7 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-import { validateConfig, ConfigValidationError } from "./validation.js";
+import { ConfigValidationError, validateConfig } from "./validation.js";
 
 import { GlobalContext } from "../util/GlobalContext";
 
@@ -134,8 +134,11 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  if (config.getChatTitles === undefined) {
-    config.getChatTitles = true;
+  if (config.ui?.getChatTitles === undefined) {
+    config.ui = {
+      ...config.ui,
+      getChatTitles: true,
+    };
   }
 
   if (ideSettings.remoteConfigServerUrl) {
@@ -515,7 +518,6 @@ function finalToBrowserConfig(
     embeddingsProvider: final.embeddingsProvider?.id,
     ui: final.ui,
     experimental: final.experimental,
-    getChatTitles: final.getChatTitles,
   };
 }
 
