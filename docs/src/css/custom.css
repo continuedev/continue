@@ -47,6 +47,7 @@
 kbd {
   display: inline-block;
   padding: 0.3em 0.4em;
+  margin: 0.1em .4em;
   font-family: var(--ifm-font-family-monospace);
   font-size: .8rem;
   font-weight: 500;

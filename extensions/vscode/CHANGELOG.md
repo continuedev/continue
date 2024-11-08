@@ -9,6 +9,21 @@ Pre-release Changes
 ### Added
 * New Edit mode in sidebar (cmd/ctrl+I)
 * Significantly faster and more accurate docs crawler by default
+* OpenAI predicted outputs support
+* Improve codebase retrieval with BM25
+* Support for Grok from xAI
+* Chat enhancements including sticking input to bottom
+* New UI for cmd+I in sidebar
+* Support for Nebius LLM provider
+* Support for Ask Sage LLM provider
+* Improved reference for config.json
+* New @web context provider
+* Updates for llama3.2
+### Changed
+* Improved @docs crawler
+* Many improvements to make autocomplete more eager
+### Fixed
+* Brought back the Apply button for all code blocks
 
 ## 0.8.55 - 2024-10-25
 ### Added

@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: OpenAI predicted outputs support
+time: 2024-11-08T11:39:42.277047-08:00

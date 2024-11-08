@@ -14,6 +14,19 @@
 }
 ```
 
+### Embeddings model
+
+LMStudio supports embeddings endpoints, and comes with the `nomic-ai/nomic-embed-text-v1.5-GGUF` model (as of Nov 2024, check your models)
+
+```json title="config.json"
+{
+  "embeddingsProvider": {
+    "provider": "lmstudio",
+    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+  }
+}
+```
+
 ## Setting up a remote instance
 
 To configure a remote instance of LM Studio, add the `"apiBase"` property to your model in config.json:
