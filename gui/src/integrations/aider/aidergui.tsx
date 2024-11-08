@@ -216,15 +216,15 @@ function AiderGUI() {
           to use PearAI Creator.
         </>
       );
-    } 
+    }
     if (aiderProcessState.state === "stopped") {
       msg = (
         <>
           PearAI Creator (Powered By aider) process is not running. Please view{" "}
-          <a 
-            href="https://trypear.ai/creator-troubleshooting" 
-            target="_blank" 
-            rel="noopener noreferrer" 
+          <a
+            href="https://trypear.ai/creator-troubleshooting"
+            target="_blank"
+            rel="noopener noreferrer"
             className="underline text-blue-300"
           >
             troubleshooting
@@ -480,7 +480,6 @@ const tutorialContent = {
     copyText: "Make a new FAQ page for my website",
   },
   moreInfo: [
-    "- Type '@' to add file context to your request.",
     "- Ignore system ```<<< SEARCH REPLACE >>>``` messages. These are for the system to make edits for you automatically."
   ]
 }
