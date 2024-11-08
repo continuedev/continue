@@ -8,7 +8,7 @@ import {
 export async function renderTemplatedString(
   template: string,
   readFile: (filepath: string) => Promise<string>,
-  inputData: any,
+  inputData: Record<string, string>,
   availableHelpers?: Array<[string, Handlebars.HelperDelegate]>,
 ): Promise<string> {
   const helperPromises = availableHelpers

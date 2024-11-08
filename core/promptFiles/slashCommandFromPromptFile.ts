@@ -1,4 +1,4 @@
-import { SlashCommand } from "..";
+import { ContinueSDK, SlashCommand } from "..";
 import { stripImages } from "../llm/images";
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
@@ -37,18 +37,18 @@ export function extractUserInput(input: string, commandName: string): string {
   return input;
 }
 
-export async function getDefaultVariables(context: any, userInput: string) {
-  const currentFilePath = await context.ide.getCurrentFile();
-  const currentFile = currentFilePath
-    ? await context.ide.readFile(currentFilePath)
-    : undefined;
-
-  return { currentFile, input: userInput };
+export async function getDefaultVariables(context: ContinueSDK, userInput: string): Promise<Record<string, string>> {
+  const currentFile = await context.ide.getCurrentFile();
+  const vars: Record<string, string> = { input: userInput };
+  if (currentFile) {
+    vars.currentFile = currentFile.path;
+  }
+  return vars;
 }
 
 export async function renderPrompt(
   prompt: string,
-  context: any,
+  context: ContinueSDK,
   userInput: string,
 ) {
   const helpers = getContextProviderHelpers(context);
