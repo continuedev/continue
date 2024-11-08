@@ -261,6 +261,27 @@ const commandsMap: (
     "pearai.showInteractiveContinueTutorial": async () => {
       sidebar.webviewProtocol?.request("showInteractiveContinueTutorial", undefined, [PEAR_CONTINUE_VIEW_ID]);
     },
+    "pearai.openAiderChanges": async () => {
+      // Close overlay
+      await vscode.commands.executeCommand('pearai.hideOverlay');
+      // Open source control
+      await vscode.commands.executeCommand('workbench.view.scm');
+      
+      // Get Git extension
+      const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
+      const repository = gitExtension?.getAPI(1).repositories[0];
+      if (repository) {
+          // Get unstaged changes
+          const unstagedChanges = repository.state.workingTreeChanges;
+          if (unstagedChanges.length > 0) {
+              // Open the diff view of the first staged change
+              await vscode.commands.executeCommand(
+                  'git.openChange',
+                  unstagedChanges[0].uri
+              );
+          }
+      }
+    },
     "pearai.highlightElement": async (msg) => {
       vscode.commands.executeCommand("pearai.highlightElements", msg.data.elementSelectors);
     },

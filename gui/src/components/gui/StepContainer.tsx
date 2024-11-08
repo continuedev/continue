@@ -23,11 +23,11 @@ import {
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
-import { getAltKeyLabel, getFontSize } from "../../util";
+import { getMetaKeyLabel, getFontSize } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { isBareChatMode, isPerplexityMode } from "../../util/bareChatMode";
+import { isAiderMode, isBareChatMode, isPerplexityMode } from "../../util/bareChatMode";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -81,6 +81,9 @@ function StepContainer({
   const ideMessenger = useContext(IdeMessengerContext);
   const bareChatMode = isBareChatMode();
   const isPerplexity = isPerplexityMode();
+  const isAider = isAiderMode();
+
+  const [numChanges, setNumChanges] = useState<number | null>(null);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -97,6 +100,24 @@ function StepContainer({
       }
     }
   };
+
+  const fetchNumberOfChanges = async () => {
+    try {
+      const response = await ideMessenger.request("getNumberOfChanges", undefined);
+      if(typeof response === 'number') {
+        setNumChanges(response);
+      }
+    } catch (error) {
+      console.error("Failed to fetch number of changes:", error);
+    }
+  };
+  
+  useEffect(() => {
+    if (!active && isAider) {
+      fetchNumberOfChanges();
+    }
+  }, [active, isAider]);
+  
 
   const [truncatedEarly, setTruncatedEarly] = useState(false);
 
@@ -124,11 +145,15 @@ function StepContainer({
   // Add effect to handle keyboard shortcut
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if ((e.altKey || e.metaKey) && e.key.toLowerCase() === 'l' && isLast && !active && isPerplexity) {
-        ideMessenger.post("addPerplexityContext", {
-          text: stripImages(item.message.content),
-          language: "",
-        });
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'g' && isLast && !active) {
+        if (isPerplexity) {
+          ideMessenger.post("addPerplexityContext", {
+            text: stripImages(item.message.content),
+            language: "",
+          });
+        } else if (isAider) {
+          ideMessenger.post("openAiderChanges", undefined);
+        }
       }
     };
 
@@ -172,9 +197,21 @@ function StepContainer({
             }}
           >
             <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
-            Add to PearAI chat context {isLast && <span className="ml-1 text-xs opacity-60"><kbd className="font-mono">{getAltKeyLabel()}</kbd> <kbd className="font-mono bg-vscButtonBackground/10 px-1">L</kbd></span>}
+            Add to PearAI chat context {isLast && <span className="ml-1 text-xs opacity-60"><kbd className="font-mono">{getMetaKeyLabel()}</kbd> <kbd className="font-mono bg-vscButtonBackground/10 px-1">G</kbd></span>}
           </HeaderButtonWithText>
         )}
+        {
+          !active && isAider && numChanges && (
+            <HeaderButtonWithText
+              onClick={() => {
+                ideMessenger.post("openAiderChanges", undefined);
+              }}
+            >
+              <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+              See {numChanges} changed file{numChanges === 1 ? '' : 's'} {isLast && <span className="ml-1 text-xs opacity-60"><kbd className="font-mono">{getMetaKeyLabel()}</kbd> <kbd className="font-mono bg-vscButtonBackground/10 px-1">G</kbd></span>}
+            </HeaderButtonWithText>
+          )
+        }
         {!active && (
           <div
             className="flex gap-1 absolute -bottom-2 right-0"
