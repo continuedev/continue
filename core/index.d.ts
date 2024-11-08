@@ -48,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-    history: ChatMessage[],
-    otherData: Record<string, string>,
-  ) => string | ChatMessage[]);
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+    ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -918,6 +918,7 @@ export interface TabAutocompleteOptions {
   disableInFiles?: string[];
   useImports?: boolean;
   useRootPathContext?: boolean;
+  showWhateverWeHaveAtXMs?: number;
 }
 
 export interface ContinueUIConfig {
@@ -1067,9 +1068,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
