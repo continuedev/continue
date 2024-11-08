@@ -6,7 +6,7 @@ class LMStudioEmbeddingsProvider extends OpenAIEmbeddingsProvider {
 
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "http://localhost:1234/v1",
-    model: "BAAI/bge-en-icl",
+    model: "nomic-ai/nomic-embed-text-v1.5-GGUF",
   };
 }
 

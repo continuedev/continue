@@ -2717,13 +2717,18 @@
                 "openai",
                 "cohere",
                 "free-trial",
+                "continue-proxy",
                 "gemini",
                 "voyage",
                 "nvidia",
                 "bedrock",
                 "sagemaker",
                 "nebius",
-                "vertexai"
+                "vertexai",
+                "deepinfra",
+                "mistral",
+                "watsonx",
+                "lmstudio"
               ]
             },
             "model": {

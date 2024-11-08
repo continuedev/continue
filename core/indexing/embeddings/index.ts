@@ -17,6 +17,7 @@ import VoyageEmbeddingsProvider from "./VoyageEmbeddingsProvider.js";
 import VertexEmbeddingsProvider from "./VertexEmbeddingsProvider.js";
 import WatsonxEmbeddingsProvider from "./WatsonxEmbeddingsProvider.js";
 import NebiusEmbeddingsProvider from "./NebiusEmbeddingsProvider.js";
+import LMStudioEmbeddingsProvider from "./LMStudio.js";
 
 type EmbeddingsProviderConstructor = new (
   ...args: any[]
@@ -42,5 +43,6 @@ export const allEmbeddingsProviders: Record<
   mistral: MistralEmbeddingsProvider,
   nebius: NebiusEmbeddingsProvider,
   vertexai: VertexEmbeddingsProvider,
-  watsonx: WatsonxEmbeddingsProvider
+  watsonx: WatsonxEmbeddingsProvider,
+  lmstudio: LMStudioEmbeddingsProvider
 };
