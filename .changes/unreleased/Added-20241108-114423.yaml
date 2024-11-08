@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Support for Grok from xAI
+time: 2024-11-08T11:44:23.761084-08:00
