@@ -1,4 +1,5 @@
 import { streamLines } from "../../../diff/util";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../../util/parameters";
 import { HelperVars } from "../../util/HelperVars";
 import { stopAtStopTokens } from "./charStream";
 import {
@@ -56,7 +57,11 @@ export class StreamTransformPipeline {
       fullStop,
     );
 
-    lineGenerator = showWhateverWeHaveAtXMs(lineGenerator, 250);
+    lineGenerator = showWhateverWeHaveAtXMs(
+      lineGenerator,
+      helper.options.showWhateverWeHaveAtXMs ??
+        (DEFAULT_AUTOCOMPLETE_OPTS.showWhateverWeHaveAtXMs as number),
+    );
 
     const finalGenerator = streamWithNewLines(lineGenerator);
     for await (const update of finalGenerator) {
