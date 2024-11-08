@@ -5,7 +5,7 @@ export const Anthropic: ModelProvider = {
   displayName: "Anthropic",
   models: [
     {
-      model: "claude-3-5-sonnet-20240620",
+      model: "claude-3-5-sonnet-latest",
       displayName: "Claude 3.5 Sonnet",
       contextLength: 200000,
       maxCompletionTokens: 8192,

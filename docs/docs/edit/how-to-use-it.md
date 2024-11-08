@@ -24,7 +24,7 @@ Highlight the block of code you would like to modify, and press `cmd/ctrl + i` t
 
 ## Describe code changes
 
-Describe the changes you would like the model to make to your highlighted code. For edits, a good prompt should be relatively short and concise. For longer, more complex tasks, we recommend using [Chat](chat/how-to-use-it.md).
+Describe the changes you would like the model to make to your highlighted code. For edits, a good prompt should be relatively short and concise. For longer, more complex tasks, we recommend using [Chat](../chat/how-to-use-it.md).
 
 ## Accept or reject changes
 

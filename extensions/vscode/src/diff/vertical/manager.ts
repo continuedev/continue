@@ -1,9 +1,10 @@
+import { DiffLine } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
-import { DiffLine } from "core";
-import { streamDiffLines } from "core/edit/streamDiffLines";
 import * as vscode from "vscode";
+import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
@@ -22,9 +23,12 @@ export class VerticalDiffManager {
 
   private userChangeListener: vscode.Disposable | undefined;
 
+  logDiffs: DiffLine[] | undefined;
+
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
+    private readonly editDecorationManager: EditDecorationManager,
   ) {
     this.userChangeListener = undefined;
   }
@@ -237,7 +241,7 @@ export class VerticalDiffManager {
     );
 
     try {
-      await diffHandler.run(diffStream);
+      this.logDiffs = await diffHandler.run(diffStream);
 
       // enable a listener for user edits to file while diff is open
       this.enableDocumentChangeListener();
@@ -409,8 +413,10 @@ export class VerticalDiffManager {
       true,
     );
 
+    this.editDecorationManager.clear();
+
     try {
-      await diffHandler.run(
+      this.logDiffs = await diffHandler.run(
         streamDiffLines(
           prefix,
           rangeContent,

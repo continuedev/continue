@@ -18,6 +18,7 @@ import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
 import com.intellij.openapi.application.ApplicationInfo
+import com.intellij.openapi.util.SystemInfo
 
 class ContinueBrowser(val project: Project, url: String) {
     private val coroutineScope = CoroutineScope(
@@ -292,6 +293,12 @@ class ContinueBrowser(val project: Project, url: String) {
      * it's a simple integer without dot notation, making it easier to compare.
      */
     private fun shouldRenderOffScreen(): Boolean {
+        // With the 0.0.77 release, non-Mac users have been reporting issues with paste functionality
+        // in the browser. Disabling OSR for all non-Mac users for now.
+        if (!SystemInfo.isMac) {
+            return false
+        }
+
         val minBuildNumber = 233
         val applicationInfo = ApplicationInfo.getInstance()
         val currentBuildNumber = applicationInfo.build.baselineVersion

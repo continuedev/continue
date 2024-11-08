@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.8.55",
+  "version": "0.9.225",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -183,6 +183,18 @@
         "group": "Continue"
       },
       {
+        "command": "continue.edit",
+        "category": "Continue",
+        "title": "Edit code with natural language",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.exitEditMode",
+        "category": "Continue",
+        "title": "Exit Edit Mode",
+        "group": "Continue"
+      },
+      {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
         "title": "Toggle Full Screen",
@@ -280,6 +292,12 @@
         "category": "Continue",
         "title": "Docs Force Re-Index",
         "group": "Continue"
+      },
+      {
+        "command": "continue.focusContinueSessionId",
+        "category": "Continue",
+        "title": "Focus Continue Chat",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -333,8 +351,19 @@
       },
       {
         "command": "continue.quickEdit",
+        "mac": "cmd+shift+i",
+        "key": "ctrl+shift+i"
+      },
+      {
+        "command": "continue.edit",
         "mac": "cmd+i",
         "key": "ctrl+i"
+      },
+      {
+        "command": "continue.exitEditMode",
+        "mac": "escape",
+        "key": "escape",
+        "when": "continue.inEditMode && editorFocus"
       },
       {
         "command": "continue.debugTerminal",
@@ -494,7 +523,7 @@
     },
     "jsonValidation": [
       {
-        "fileMatch": "config.json",
+        "fileMatch": "**/.continue/config.json",
         "url": "./config_schema.json"
       },
       {
@@ -539,7 +568,6 @@
     "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
     "esbuild": "0.17.19",

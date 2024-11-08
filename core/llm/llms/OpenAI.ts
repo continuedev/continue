@@ -37,6 +37,8 @@ const CHAT_ONLY_MODELS = [
   "gpt-4-0125-preview",
   "gpt-4-1106-preview",
   "gpt-4o-mini",
+  "o1-preview",
+  "o1-mini",
 ];
 
 class OpenAI extends BaseLLM {
@@ -111,9 +113,9 @@ class OpenAI extends BaseLLM {
           : url.host === "api.deepseek.com"
             ? options.stop?.slice(0, 16)
             : url.port === "1337" ||
-                url.host === "api.openai.com" ||
-                url.host === "api.groq.com" ||
-                this.apiType === "azure"
+              url.host === "api.openai.com" ||
+              url.host === "api.groq.com" ||
+              this.apiType === "azure"
               ? options.stop?.slice(0, 4)
               : options.stop,
     };
@@ -164,7 +166,7 @@ class OpenAI extends BaseLLM {
   ) {
     if (this.apiType === "azure") {
       return new URL(
-        `openai/deployments/${this.engine}/${endpoint}?api-version=${this.apiVersion}`,
+        `openai/deployments/${this.deployment}/${endpoint}?api-version=${this.apiVersion}`,
         this.apiBase,
       );
     }

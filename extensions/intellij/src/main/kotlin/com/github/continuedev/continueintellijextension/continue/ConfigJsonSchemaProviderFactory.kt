@@ -22,7 +22,7 @@ class ConfigJsonSchemaProviderFactory : JsonSchemaProviderFactory {
 
 class ConfigJsonSchemaFileProvider : JsonSchemaFileProvider {
     override fun isAvailable(file: VirtualFile): Boolean {
-        return file.name == "config.json" || file.name == ".continuerc.json"
+        return path.endsWith("/.continue/config.json")
     }
 
     override fun getName(): String {

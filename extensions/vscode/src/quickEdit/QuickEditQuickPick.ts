@@ -15,6 +15,7 @@ import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 // @ts-ignore
 import MiniSearch from "minisearch";
+import { logDevData } from "core/util/devdata";
 
 /**
  * Used to track what action to take after a user interacts
@@ -236,7 +237,8 @@ export class QuickEdit {
         default:
           break;
       }
-
+      let model = await this.getCurModelTitle();
+      logDevData('quickEdit', {prompt, path, label, diffs: this.verticalDiffManager.logDiffs, model});
       quickPick.dispose();
     });
   }
@@ -319,9 +321,8 @@ export class QuickEdit {
 
     return isSelectionEmpty
       ? `Edit ${fileName}`
-      : `Edit ${fileName}:${start.line}${
-          end.line > start.line ? `-${end.line}` : ""
-        }`;
+      : `Edit ${fileName}:${start.line}${end.line > start.line ? `-${end.line}` : ""
+      }`;
   };
 
   private async _streamEditWithInputAndContext(
@@ -385,7 +386,7 @@ export class QuickEdit {
     const modelTitle = await this.getCurModelTitle();
 
     if (!modelTitle) {
-      this.ide.showToast("info", "Please configure a model to use Quick Edit");
+      this.ide.showToast("error", "Please configure a model to use Quick Edit");
       return { label: undefined, value: undefined };
     }
 

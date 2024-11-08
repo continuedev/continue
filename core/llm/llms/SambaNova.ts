@@ -12,6 +12,8 @@ class SambaNova extends OpenAI {
     "llama3.1-8b": "Meta-Llama-3.1-8B-Instruct",
     "llama3.1-70b": "Meta-Llama-3.1-70B-Instruct",
     "llama3.1-405b": "Meta-Llama-3.1-405B-Instruct",
+    "llama3.1-1b": "Meta-Llama-3.2-1B-Instruct",
+    "llama3.1-3b": "Meta-Llama-3.2-3B-Instruct",
   };
 
   protected _convertModelName(model: string) {

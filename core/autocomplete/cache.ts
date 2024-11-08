@@ -1,18 +1,14 @@
 import { Mutex } from "async-mutex";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { DatabaseConnection } from "../indexing/refreshIndex.js";
+import { DatabaseConnection, truncateSqliteLikePattern } from "../indexing/refreshIndex.js";
 import { getTabAutocompleteCacheSqlitePath } from "../util/paths.js";
 
 export class AutocompleteLruCache {
   private static capacity = 1000;
   private mutex = new Mutex();
 
-  db: DatabaseConnection;
-
-  constructor(db: DatabaseConnection) {
-    this.db = db;
-  }
+  constructor(private db: DatabaseConnection) { }
 
   static async get(): Promise<AutocompleteLruCache> {
     const db = await open({
@@ -41,7 +37,7 @@ export class AutocompleteLruCache {
     // Have to make sure we take the key with shortest length
     const result = await this.db.get(
       "SELECT key, value FROM cache WHERE ? LIKE key || '%' ORDER BY LENGTH(key) DESC LIMIT 1",
-      prefix,
+      truncateSqliteLikePattern(prefix),
     );
 
     // Validate that the cached compeltion is a valid completion for the prefix

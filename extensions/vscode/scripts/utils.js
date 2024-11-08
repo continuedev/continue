@@ -11,21 +11,6 @@ const {
 const continueDir = path.join(__dirname, "..", "..", "..");
 
 function copyConfigSchema() {
-  fs.copyFileSync(
-    "config_schema.json",
-    path.join("..", "..", "docs", "static", "schemas", "config.json"),
-  );
-  fs.copyFileSync(
-    "config_schema.json",
-    path.join(
-      "..",
-      "intellij",
-      "src",
-      "main",
-      "resources",
-      "config_schema.json",
-    ),
-  );
   // Modify and copy for .continuerc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
   schema.definitions.SerializedContinueConfig.properties.mergeBehavior = {
@@ -37,6 +22,30 @@ function copyConfigSchema() {
       "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
   };
   fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
+
+  // Copy config schemas to intellij
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join(
+      "..",
+      "intellij",
+      "src",
+      "main",
+      "resources",
+      "config_schema.json",
+    ),
+  );
+  fs.copyFileSync(
+    "continue_rc_schema.json",
+    path.join(
+      "..",
+      "intellij",
+      "src",
+      "main",
+      "resources",
+      "continue_rc_schema.json",
+    ),
+  );
 }
 
 function copyTokenizers() {

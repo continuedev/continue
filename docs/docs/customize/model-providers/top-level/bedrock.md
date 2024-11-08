@@ -3,6 +3,8 @@ title: Amazon Bedrock
 slug: ../bedrock
 ---
 
+Amazon Bedrock is a fully managed service on AWS that provides access to foundation models from various AI companies through a single API.
+
 ## Chat model
 
 We recommend configuring **Claude 3.5 Sonnet** as your chat model.

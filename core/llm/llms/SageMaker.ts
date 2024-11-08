@@ -59,10 +59,10 @@ class SageMaker extends BaseLLM {
             const data = JSON.parse(line.replace(/^data:/, ''));
             let text = undefined;
             if ("choices" in data) {
-              if ("delta" in data.choices[0]){
+              if ("delta" in data.choices[0]) {
                 text = data.choices[0].delta.content;
               }
-              else{
+              else {
                 text = data.choices[0].text;
               }
             }
@@ -110,10 +110,10 @@ class SageMaker extends BaseLLM {
             const data = JSON.parse(line.replace(/^data:/, ''));
             let text = undefined;
             if ("choices" in data) {
-              if ("delta" in data.choices[0]){
+              if ("delta" in data.choices[0]) {
                 text = data.choices[0].delta.content;
               }
-              else{
+              else {
                 text = data.choices[0].text;
               }
             }

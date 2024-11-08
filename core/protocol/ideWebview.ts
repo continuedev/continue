@@ -1,5 +1,5 @@
 import type { RangeInFileWithContents } from "../commands/util.js";
-import type { ContextSubmenuItem } from "../index.js";
+import type { ContextSubmenuItem, MessageContent } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
@@ -15,7 +15,12 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
   ];
   openUrl: [string, void];
-  applyToCurrentFile: [{ text: string; streamId: string }, void];
+  // We pass the `curSelectedModel` because we currently cannot access the
+  // default model title in the GUI from JB
+  applyToCurrentFile: [
+    { text: string; streamId: string; curSelectedModelTitle: string },
+    void,
+  ];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
@@ -30,7 +35,22 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   setGitHubAuthToken: [{ token: string }, void];
   acceptDiff: [{ filepath: string }, void];
   rejectDiff: [{ filepath: string }, void];
+  "edit/sendPrompt": [
+    { prompt: MessageContent; range: RangeInFileWithContents },
+    void,
+  ];
+  "edit/acceptReject": [
+    { accept: boolean; onlyFirst: boolean; filepath: string },
+    void,
+  ];
+  "edit/escape": [undefined, void];
 };
+
+export interface EditModeArgs {
+  highlightedCode: RangeInFileWithContents;
+}
+
+export type EditStatus = "not-started" | "streaming" | "accepting" | "done";
 
 export interface ApplyState {
   streamId: string;
@@ -66,6 +86,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
    * @deprecated Use navigateTo with a path instead.
    */
   viewHistory: [undefined, void];
+  focusContinueSessionId: [{ sessionId: string | undefined }, void];
   newSession: [undefined, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
@@ -76,4 +97,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   openOnboardingCard: [undefined, void];
   applyCodeFromChat: [undefined, void];
   updateApplyState: [ApplyState, void];
+  startEditMode: [EditModeArgs, void];
+  setEditStatus: [{ status: EditStatus }, void];
+  exitEditMode: [undefined, void];
 };

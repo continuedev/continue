@@ -255,11 +255,3 @@ jobs:
       #   with:
       #     github_token: ${{ secrets.GITHUB_TOKEN }}
       #     branch: ${{ github.ref }}
-
-      # 5 Send to Discord Webhook
-      - name: Discord Commits
-        uses: Sniddl/discord-commits@1.7
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
-          template: "avatar-with-link"
-          include-extras: true

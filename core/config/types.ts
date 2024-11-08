@@ -49,7 +49,7 @@ declare global {
     apiBase?: string;
     cacheBehavior?: CacheBehavior;
 
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
     region?: string;
@@ -322,7 +322,7 @@ declare global {
     accountId?: string;
 
     // Azure options
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
 
@@ -338,11 +338,7 @@ declare global {
     capabilities?: ModelCapability;
 
     // IBM watsonx options
-    watsonxUrl?: string;
-    watsonxCreds?: string;
-    watsonxProjectId?: string;
-    watsonxStopToken?: string;
-    watsonxApiVersion?: string;
+    deploymentId?: string;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,
@@ -602,7 +598,8 @@ declare global {
     | "watsonx"
     | "openrouter"
     | "sambanova"
-    | "nvidia";
+    | "nvidia"
+    | "nebius";
 
   export type ModelName =
     | "AUTODETECT"
@@ -768,17 +765,20 @@ declare global {
     | "gemini"
     | "continue-proxy"
     | "deepinfra"
-    | "voyage";
+    | "voyage"
+    | "watsonx"
+    | "nebius";
 
   export interface EmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;
-    engine?: string;
+    deployment?: string;
     apiType?: string;
     apiVersion?: string;
     requestOptions?: RequestOptions;
     maxChunkSize?: number;
+    projectId?: string;
   }
 
   export interface EmbeddingsProviderDescription extends EmbedOptions {
