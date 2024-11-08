@@ -609,6 +609,7 @@ type TemplateType =
   | "llama3";
 
 type ModelProvider =
+  | "nova"
   | "openai"
   | "free-trial"
   | "anthropic"
@@ -653,6 +654,9 @@ type ModelProvider =
 
 export type ModelName =
   | "AUTODETECT"
+  // Nova
+  | "NovaChat-v3"
+  | "NovaCompletion-v3"
   // OpenAI
   | "gpt-3.5-turbo"
   | "gpt-3.5-turbo-16k"

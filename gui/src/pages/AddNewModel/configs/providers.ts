@@ -51,6 +51,27 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
+  nova: {
+    title: "Nova",
+    provider: "nova",
+    description: "Use ai-infra models",
+    longDescription:
+      "Use ai-infra models. See [here](https://nova.oasis.mountainxplorer.ai/token) to obtain an API key.",
+    icon: "nova.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [models.novaChatV3, models.novaCompletionV2],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Nova API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    apiKeyUrl: "https://nova.oasis.mountainxplorer.ai/token",
+  },
   openai: {
     title: "OpenAI",
     provider: "openai",

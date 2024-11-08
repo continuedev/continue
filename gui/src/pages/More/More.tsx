@@ -47,7 +47,7 @@ function MorePage() {
           <IndexingProgress />
         </div>
 
-        <div className="py-5">
+        <div className="py-5 hidden">
           <h3 className="text-xl mb-4 mt-0">Help center</h3>
           <div className="flex flex-col gap-5">
             <MoreHelpRow

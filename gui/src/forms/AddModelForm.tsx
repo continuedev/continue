@@ -25,7 +25,7 @@ function AddModelForm({
   hideFreeTrialLimitMessage,
 }: QuickModelSetupProps) {
   const [selectedProvider, setSelectedProvider] = useState<ProviderInfo>(
-    providers["openai"]!,
+    providers["nova"]!,
   );
 
   const [selectedModel, setSelectedModel] = useState(
@@ -128,12 +128,13 @@ function AddModelForm({
                 selectedProvider={selectedProvider}
                 setSelectedProvider={setSelectedProvider}
                 options={Object.entries(providers)
+                  .filter(([, provider]) => provider.provider == "nova")
                   .filter(
                     ([key]) => !["freetrial", "openai-aiohttp"].includes(key),
                   )
                   .map(([, provider]) => provider)}
               ></ModelSelectionListbox>
-              <InputSubtext className="mb-0">
+              <InputSubtext className="mb-0 hidden">
                 Don't see your provider?{" "}
                 <a
                   href="https://docs.continue.dev/customize/model-providers"
@@ -211,7 +212,7 @@ function AddModelForm({
                 </>
               </div>
             )}
-            
+
             {selectedProvider.collectInputFor &&
               selectedProvider.collectInputFor
                 .filter(

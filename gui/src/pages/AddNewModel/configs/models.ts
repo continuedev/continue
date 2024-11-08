@@ -31,6 +31,32 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  novaChatV3: {
+    title: "NovaChat-v3",
+    description: "The latest chat model from ai-infra",
+    refUrl: "",
+    params: {
+      title: "NovaChat-v3",
+      model: "NovaChat-v3",
+      contextLength: 16384,
+    },
+    icon: "nova.png",
+    providerOptions: ["nova", "openai", "vllm"],
+    isOpenSource: false,
+  },
+  novaCompletionV2: {
+    title: "NovaCompletion-v3",
+    description: "The latest code model from ai-infra",
+    refUrl: "",
+    params: {
+      title: "NovaCompletion-v3",
+      model: "NovaCompletion-v3",
+      contextLength: 16384,
+    },
+    icon: "nova.png",
+    providerOptions: ["nova", "openai", "vllm"],
+    isOpenSource: false,
+  },
   llama31Chat: {
     title: "Llama3.1 Chat",
     description: "The latest model from Meta, fine-tuned for chat",

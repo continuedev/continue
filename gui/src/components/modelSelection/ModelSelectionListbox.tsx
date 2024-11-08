@@ -141,7 +141,7 @@ function ModelSelectionListbox({
               <StyledListboxOption
                 selected={selectedProvider.title === option.title}
                 key={index}
-                className="relative cursor-default select-none py-2 pl-10 pr-4 text-gray-900"
+                className="relative cursor-default select-none py-2 pl-10 pr-4"
                 value={option}
               >
                 {({ selected }) => (

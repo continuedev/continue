@@ -166,6 +166,7 @@
           "title": "Provider",
           "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
           "enum": [
+            "nova",
             "openai",
             "free-trial",
             "anthropic",
@@ -201,6 +202,7 @@
             "cerebras"
           ],
           "markdownEnumDescriptions": [
+            "### Nova\nUse ai-infra models.\n\n>",
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
             "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/anthropicllm)",

@@ -150,6 +150,7 @@ export function Chat() {
   const ideMessenger = useContext(IdeMessengerContext);
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const onboardingCard = useOnboardingCard();
+  onboardingCard.show = false; // not show onboardingCard
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);

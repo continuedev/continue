@@ -33,6 +33,7 @@ import Mistral from "./Mistral";
 import MistralVertexAI from "./MistralVertexAI";
 import Mock from "./Mock";
 import Msty from "./Msty";
+import Nova from "./Nova";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -47,6 +48,7 @@ import WatsonX from "./WatsonX";
 import ContinueProxy from "./stubs/ContinueProxy";
 
 const LLMs = [
+  Nova,
   Anthropic,
   AnthropicVertexAI,
   Cohere,
