@@ -1,7 +1,7 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { defaultBorderRadius, lightGray } from "../../components";
+import { lightGray } from "../../components";
 import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
@@ -11,32 +11,25 @@ import {
 import { StyledButton } from "./components";
 import { useOnboarding } from "./utils";
 import styled from "styled-components";
-import { providers } from "../AddNewModel/configs/providers";
-import { setDefaultModel } from "../../redux/slices/stateSlice";
 import _ from "lodash";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { Button } from "@/components/ui/button";
 
-export const CustomModelButton = styled.div<{ disabled: boolean }>`
-  border: 1px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  padding: 4px 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.5s;
-
-  ${(props) =>
-    props.disabled
-      ? `
-    opacity: 0.5;
-    `
-      : `
-  &:hover {
-    border: 1px solid #be1b55;
-    background-color: #be1b5522;
-    cursor: pointer;
+const EllipsisContainer = styled.span`
+  display: inline-block;
+  text-align: left;
+  &::after {
+    content: '';
+    position: absolute;
+    animation: ellipsis 1.5s steps(4, end) infinite;
   }
-  `}
+
+  @keyframes ellipsis {
+    0%, 20% { content: ''; }
+    40% { content: '.'; }
+    60% { content: '..'; }
+    80%, 100% { content: '...'; }
+  }
 `;
 
 function Onboarding() {
@@ -52,27 +45,33 @@ function Onboarding() {
     }
   }, [])
 
-  const modelInfo = providers["pearai_server"];
+  useWebviewListener("pearAISignedIn", async () => {
+    completeOnboarding()
+  });
 
   return (
-    <div className="max-w-96  mx-auto leading-normal">
+    <div className="max-w-96 mx-auto flex flex-col items-center justify-between pt-8">
+      <div className="flex flex-col items-center justify-center">
+      <img
+          src={`${window.vscMediaUrl}/logos/pearai-green.svg`}
+          height="24px"
+          style={{ marginRight: "5px" }}
+        />
       <h1 className="text-center">Welcome to PearAI!</h1>
-      <h3 className="mx-3 text-center">Begin your journey by logging in!</h3>
-      <CustomModelButton
-        className="m-5"
-        disabled={false}
+      <h3 className="mx-3 text-center flex">Begin your journey by logging in<EllipsisContainer /></h3>
+      <Button 
+        variant="animated"
+        size="lg"
+        className="m-5 flex flex-col justify-center items-center bg-button text-button-foreground"
         onClick={() => {
           ideMessenger.post("pearaiLogin", undefined);
         }}
       >
-        <h3 className="text-center my-2">Sign Up / Log In</h3>
-        <img
-          src={`${window.vscMediaUrl}/logos/${modelInfo?.icon}`}
-          height="24px"
-          style={{ marginRight: "5px" }}
-        />
-      </CustomModelButton>
-      <p style={{ color: lightGray }} className="mx-3">
+        <h3 className="font-medium">Log in</h3>
+
+      </Button>
+
+      <p className="mx-3">
         After login, the website should redirect you back here.
       </p>
       <small
@@ -112,6 +111,8 @@ function Onboarding() {
           Skip
         </StyledButton>
       </div>
+      </div>
+      <div></div>
     </div>
   );
 }

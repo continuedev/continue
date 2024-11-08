@@ -13,6 +13,7 @@ import { useMemo, memo, useState, useEffect, useCallback } from "react";
 import { isBareChatMode } from "../../util/bareChatMode";
 import { getContextProviders } from "../../integrations/util/integrationSpecificContextProviders";
 import { getFontSize } from "../../util";
+import { cn } from "@/lib/utils";
 
 const gradient = keyframes`
   0% {
@@ -110,6 +111,7 @@ interface ContinueInputBoxProps {
   contextItems?: ContextItemWithId[];
   hidden?: boolean;
   source?: "perplexity" | "aider" | "continue";
+  className?: string;
 }
 
 const ContinueInputBox = memo(function ContinueInputBox({
@@ -120,6 +122,7 @@ const ContinueInputBox = memo(function ContinueInputBox({
   contextItems,
   hidden,
   source = "continue",
+  className,
 }: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
@@ -173,6 +176,7 @@ const ContinueInputBox = memo(function ContinueInputBox({
 
   return (
     <div
+      className={cn(className)}
       style={{
         display: hidden ? "none" : "inherit",
       }}

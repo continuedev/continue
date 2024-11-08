@@ -356,9 +356,14 @@
     ],
     "keybindings": [
       {
-        "command": "pearai.toggleInventory",
+        "command": "pearai.toggleInventoryHome",
         "mac": "cmd+1",
         "key": "ctrl+1"
+      },
+      {
+        "command": "pearai.toggleInventory",
+        "mac": "cmd+shift+1",
+        "key": "ctrl+shift+1"
       },
       {
         "command": "pearai.toggleCreator",

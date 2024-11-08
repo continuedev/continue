@@ -18,7 +18,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "bg-input hover:bg-input text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        animated: "bg-input hover:bg-input text-foreground transition-all duration-200 text-[0.9rem] hover:-translate-y-[1px]",
+        animated: "bg-input text-foreground transition-all duration-200 text-[0.9rem] hover:-translate-y-[1px]",
       },
       size: {
         default: "h-9 px-4 py-2",

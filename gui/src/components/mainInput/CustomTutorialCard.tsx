@@ -91,7 +91,7 @@ export function CustomTutorialCard({
         <XMarkIcon width="1.2em" height="1.2em" />
       </div> */}
 
-      <ul className="text-gray-300 space-y-4 pl-0">
+      <ul className="text-foreground space-y-4 pl-0">
         <AnimatedListItem>
           <div className="flex">
             <div className="flex items-center gap-2 min-w-[160px]">

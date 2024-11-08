@@ -18,7 +18,6 @@ import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
-import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useChatHandler from "../../hooks/useChatHandler";
 import useHistory from "../../hooks/useHistory";
@@ -34,7 +33,6 @@ import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import { isBareChatMode } from "../../util/bareChatMode";
 import { Badge } from "../../components/ui/badge";
 import {
   TopGuiDiv,
@@ -44,6 +42,7 @@ import {
   fallbackRender,
 } from "../../pages/gui";
 import { CustomTutorialCard } from "@/components/mainInput/CustomTutorialCard";
+import { cn } from "@/lib/utils";
 
 function PerplexityGUI() {
   const posthog = usePostHog();
@@ -117,6 +116,13 @@ function PerplexityGUI() {
         !e.shiftKey
       ) {
         dispatch(setPerplexityInactive());
+      } else if (
+        e.key === "." && 
+        isMetaEquivalentKeyPressed(e) &&
+        !e.shiftKey
+      ) {
+        saveSession();
+        ideMessenger.post("aiderResetSession", undefined);
       }
     };
     window.addEventListener("keydown", listener);
@@ -205,22 +211,53 @@ function PerplexityGUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
-        <div className="mx-2">
-          <div className="pl-2 border-b border-gray-700">
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold mb-2">PearAI Search</h1>{" "}
-              <Badge variant="outline" className="pl-0">
-                Beta (Powered by Perplexity)
-              </Badge>
-            </div>
-            <div className="flex items-center mt-0 justify-between pr-1">
-              <p className="text-sm text-gray-400 m-0">
+        <div className={cn(
+          "mx-2",
+          state.perplexityHistory.length === 0 && "h-full flex flex-col justify-center"
+        )}>
+          {state.perplexityHistory.length === 0 ? (
+            <div className="max-w-2xl mx-auto w-full text-center mb-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <h1 className="text-2xl font-bold">PearAI Search</h1>
+                <Badge variant="outline" className="pl-0">
+                  Beta (Powered by Perplexity)
+                </Badge>
+              </div>
+              <p className="text-sm text-foreground">
                 Ask for anything. We'll retrieve up-to-date information in
                 real-time on the web. Search uses less credits than PearAI Chat,
                 and is perfect for documentation lookups.
               </p>
             </div>
-          </div>
+          ) : (
+            <div className="pl-2">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold mb-2">PearAI Search</h1>
+                <Badge variant="outline" className="pl-0">
+                  Beta (Powered by Perplexity)
+                </Badge>
+              </div>
+              <div className="flex items-center mt-0 justify-between pr-1">
+                <p className="text-sm text-foreground m-0">
+                  Ask for anything. We'll retrieve up-to-date information in
+                  real-time on the web. Search uses less credits than PearAI Chat,
+                  and is perfect for documentation lookups.
+                </p>
+                <div>
+                  <NewSessionButton
+                    onClick={() => {
+                      saveSession();
+                      ideMessenger.post("aiderResetSession", undefined);
+                    }}
+                    className="mr-auto"
+                  >
+                    Clear chat (<kbd>{getMetaKeyLabel()}</kbd> <kbd>.</kbd>)
+                  </NewSessionButton>
+                </div>
+              </div>
+            </div>
+          )}
+
           <StepsDiv>
             {state.perplexityHistory.map((item, index: number) => (
               <Fragment key={index}>
@@ -319,15 +356,26 @@ function PerplexityGUI() {
               </Fragment>
             ))}
           </StepsDiv>
-          <ContinueInputBox
-            onEnter={(editorContent, modifiers) => {
-              sendInput(editorContent, modifiers);
-            }}
-            isLastUserInput={false}
-            isMainInput={true}
-            hidden={active}
-            source="perplexity"
-          ></ContinueInputBox>
+
+          <div className={cn(
+            state.perplexityHistory.length === 0 
+              ? "max-w-2xl mx-auto w-full" 
+              : "w-full"
+          )}>
+            <ContinueInputBox
+              onEnter={(editorContent, modifiers) => {
+                sendInput(editorContent, modifiers);
+              }}
+              isLastUserInput={false}
+              isMainInput={true}
+              hidden={active}
+              source="perplexity"
+              className={cn(
+                state.perplexityHistory.length === 0 && "shadow-lg"
+              )}
+            />
+          </div>
+
           {active ? (
             <>
               <br />
@@ -341,7 +389,7 @@ function PerplexityGUI() {
                 }}
                 className="mr-auto"
               >
-                Clear chat
+                Clear chat (<kbd>{getMetaKeyLabel()}</kbd> <kbd>.</kbd>)
               </NewSessionButton>
             </div>
           ) : (
@@ -388,7 +436,7 @@ function PerplexityGUI() {
 
 const tutorialContent = {
   goodFor: "Searching documentation, debugging errors, quick look-ups",
-  notGoodFor: "Direct feature implementations (use PearAI chat instead)",
+  notGoodFor: "Direct feature implementations (use PearAI Creator instead)",
   example: {
     text: '"What\'s new in the latest python version?"',
     copyText: "What's new in the latest python version?",

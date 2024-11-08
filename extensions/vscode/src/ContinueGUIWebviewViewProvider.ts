@@ -249,6 +249,35 @@ export class ContinueGUIWebviewViewProvider
         }
         ${page ? `<script>window.location.pathname = "${page}"</script>` : ""}
       </body>
+      ${isOverlay ? `
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              background-color: transparent;
+              width: 100vw;
+              height: 100vh;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              position: fixed;
+              top: 0;
+              left: 0;
+            }
+            
+            #root {
+              width: 80%;
+              height: 80%;
+            }
+          </style>
+          <script>
+            document.body.addEventListener('click', function(e) {
+                if (e.target === document.body) {
+                    vscode.postMessage({ messageType: 'closeOverlay', messageId: "closeOverlay" });
+                }
+            });
+          </script>
+      `: ""}
     </html>`;
   }
 }

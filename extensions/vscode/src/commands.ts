@@ -349,6 +349,9 @@ const commandsMap: (
     "pearai.toggleInventory": async () => {
       await handleIntegrationShortcutKey("navigateToInventory", "inventory", sidebar, PEAR_OVERLAY_VIEW_ID);
     },
+    "pearai.toggleInventoryHome": async () => {
+      await handleIntegrationShortcutKey("navigateToInventoryHome", "inventory", sidebar, PEAR_OVERLAY_VIEW_ID);
+    },
     "pearai.startOnboarding": async () => {
       if (isFirstLaunch(extensionContext)) {
         setTimeout(() => {

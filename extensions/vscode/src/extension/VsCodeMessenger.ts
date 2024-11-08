@@ -83,6 +83,9 @@ export class VsCodeMessenger {
     this.onWebview("markNewOnboardingComplete", (msg) => {
       vscode.commands.executeCommand("pearai.welcome.markNewOnboardingComplete");
     });
+    this.onWebview("closeOverlay", (msg) => {
+      vscode.commands.executeCommand("pearai.hideOverlay");
+    });
     this.onWebview("lockOverlay", (msg) => {
       vscode.commands.executeCommand("pearai.lockOverlay");
     });

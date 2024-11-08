@@ -117,8 +117,8 @@ export default function Features({ onNext }: { onNext: () => void }) {
   }, [currentFeature]);
 
   return (
-    <div className="flex w-full overflow-hidden text-foreground">
-      <div className="w-[35%] min-w-[320px] max-w-[420px] flex flex-col h-screen">
+    <div className="flex w-full overflow-hidden text-foreground h-full">
+      <div className="w-[35%] flex flex-col">
         <div className="flex-1 overflow-y-auto">
           <div className="p-6 space-y-6 pt-8">
             <div>
@@ -185,7 +185,7 @@ export default function Features({ onNext }: { onNext: () => void }) {
         </div>
       </div>
 
-      <div className="flex-1 relative bg-background">
+      <div className="w-[65%] flex flex-col h-full relative bg-background">
         {features.map((feature, index) => (
           <div
             key={index}
@@ -196,7 +196,7 @@ export default function Features({ onNext }: { onNext: () => void }) {
             {currentFeature === index && (
               <div className="flex items-center justify-center h-full w-full">
                 <video
-                src={`${feature.video}`}
+                  src={`${feature.video}`}
                   className="rounded-lg max-h-[90%] max-w-[90%] object-contain"
                   muted
                   autoPlay

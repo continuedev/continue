@@ -55,14 +55,11 @@ import OnboardingTutorial from "./onboarding/OnboardingTutorial";
 
 export const TopGuiDiv = styled.div`
   overflow-y: scroll;
-
   scrollbar-width: none; /* Firefox */
-
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {
     display: none;
   }
-
   height: 100%;
 `;
 

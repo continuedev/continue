@@ -18,7 +18,6 @@ html,
 body,
 #root {
   height: 100%;
-  background-color: var(--vscode-editor-background);
   font-family:
     system-ui,
     -apple-system,
@@ -120,6 +119,7 @@ a:focus {
       @apply border-input;
       }
     body {
+      /* If using overlay, the background is transparent and set in ContinueGUIWebviewViewProvider.ts's HTML directly */
       @apply bg-background text-foreground;
       }
   }

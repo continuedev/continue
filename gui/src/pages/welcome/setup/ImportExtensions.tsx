@@ -1,12 +1,11 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLongRightIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { ArrowLongRightIcon } from "@heroicons/react/24/outline";
 import { useContext, useState, useEffect } from "react";
 import { IdeMessengerContext } from "@/context/IdeMessenger";
-import { getMetaKeyLabel } from "@/util";
 
-const getLogoPath = (assetName: string) => {
+export const getLogoPath = (assetName: string) => {
   return `${window.vscMediaUrl}/logos/${assetName}`;
 };
 

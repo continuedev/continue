@@ -66,7 +66,7 @@ export default function Welcome() {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full w-full">
       <WelcomeHeader onBack={handleBackStep} showBack={step > 0}/>
       {renderStep()}
     </div>

@@ -96,6 +96,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   pearInstallCommandLine: [undefined, void];
   
   // overlay
+  closeOverlay: [undefined, void];
   lockOverlay: [undefined, void];
   unlockOverlay: [undefined, void];
 };
