@@ -20,12 +20,10 @@ LMStudio supports embeddings endpoints, and comes with the `nomic-ai/nomic-embed
 
 ```json title="config.json"
 {
-  "embeddingsProvider": [
-    {
-      "provider": "lmstudio",
-      "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
-    }
-  ]
+  "embeddingsProvider": {
+    "provider": "lmstudio",
+    "model": "nomic-ai/nomic-embed-text-v1.5-GGUF"
+  }
 }
 ```
 
