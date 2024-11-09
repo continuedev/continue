@@ -19,7 +19,7 @@ import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvide
 import { DiffManager } from "../diff/horizontal";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import { registerPromptFilesCompletionProvider } from "../lang-server/promptFileCompletions";
+import { registerAllPromptFilesCompletionProviders } from "../lang-server/promptFileCompletions";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
@@ -211,7 +211,11 @@ export class VsCodeExtension {
 
     // FileSearch
     this.fileSearch = new FileSearch(this.ide);
-    registerPromptFilesCompletionProvider(context, this.fileSearch, this.ide);
+    registerAllPromptFilesCompletionProviders(
+      context,
+      this.fileSearch,
+      this.ide,
+    );
 
     const quickEdit = new QuickEdit(
       this.verticalDiffManager,
