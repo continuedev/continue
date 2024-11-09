@@ -216,6 +216,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
         type: "action",
         action: () => {
           ideMessenger.request("config/newPromptFile", undefined);
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          if (start !== -1) {
+            props.editor.view.dispatch(
+              tr.delete(start, tr.selection.from).scrollIntoView(),
+            );
+          }
+          props.onClose(); // Escape the mention list after creating a new prompt file
         },
         description: "Create a new .prompt file",
       });
