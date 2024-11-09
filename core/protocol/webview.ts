@@ -16,4 +16,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     void,
   ];
   setTTSActive: [boolean, void];
+  getWebviewHistoryLength: [undefined, number];
 };

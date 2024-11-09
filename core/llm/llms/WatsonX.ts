@@ -7,27 +7,26 @@ import {
 import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
-const watsonxConfig = {
-  accessToken: {
-    expiration: 0,
-    token: "",
-  },
-};
+
+let watsonxToken = {
+          expiration: 0,
+          token: ""
+}
+
 class WatsonX extends BaseLLM {
-  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);
   }
+
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
     if (
-      this.watsonxFullUrl?.includes("cloud.ibm.com") ||
-      this.watsonxUrl?.includes("cloud.ibm.com")
+      this.apiBase?.includes("cloud.ibm.com")
     ) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
-          `https://iam.cloud.ibm.com/identity/token?apikey=${this.watsonxCreds}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
+          `https://iam.cloud.ibm.com/identity/token?apikey=${this.apiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
           {
             method: "POST",
             headers: {
@@ -43,17 +42,17 @@ class WatsonX extends BaseLLM {
       };
     } else {
       // watsonx Software
-      if (!this.watsonxCreds?.includes(":")) {
+      if (!this.apiKey?.includes(":")) {
         // Using ZenApiKey auth
         return {
-          token: this.watsonxCreds ?? "",
+          token: this.apiKey ?? "",
           expiration: -1,
         };
       } else {
         // Using username/password auth
-        const userPass = this.watsonxCreds?.split(":");
+        const userPass = this.apiKey?.split(":");
         const wxToken = await (
-          await fetch(`${this.watsonxUrl}/icp4d-api/v1/authorize`, {
+          await fetch(`${this.apiBase}/icp4d-api/v1/authorize`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -66,7 +65,7 @@ class WatsonX extends BaseLLM {
           })
         ).json();
         const wxTokenExpiry = await (
-          await fetch(`${this.watsonxUrl}/usermgmt/v1/user/tokenExpiry`, {
+          await fetch(`${this.apiBase}/usermgmt/v1/user/tokenExpiry`, {
             method: "GET",
             headers: {
               Accept: "application/json",
@@ -84,8 +83,9 @@ class WatsonX extends BaseLLM {
 
   getWatsonxEndpoint(): string {
     return (
-      this.watsonxFullUrl ??
-      `${this.watsonxUrl}/ml/v1/text/generation_stream?version=${this.watsonxApiVersion}`
+      this.deploymentId ?
+      `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`:
+      `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`
     );
   }
 
@@ -133,8 +133,8 @@ class WatsonX extends BaseLLM {
   protected _getHeaders() {
     return {
       "Content-Type": "application/json",
-      Authorization: `${watsonxConfig.accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-        } ${watsonxConfig.accessToken.token}`,
+      Authorization: `${watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+        } ${watsonxToken.token}`,
     };
   }
 
@@ -171,24 +171,22 @@ class WatsonX extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     var now = new Date().getTime() / 1000;
     if (
-      watsonxConfig.accessToken === undefined ||
-      now > watsonxConfig.accessToken.expiration ||
-      watsonxConfig.accessToken.token === undefined
+      watsonxToken === undefined ||
+      now > watsonxToken.expiration ||
+      watsonxToken.token === undefined
     ) {
-      watsonxConfig.accessToken = await this.getBearerToken();
+      watsonxToken = await this.getBearerToken();
     } else {
       console.log(
-        `Reusing token (expires in ${(watsonxConfig.accessToken.expiration - now) / 60
+        `Reusing token (expires in ${(watsonxToken.expiration - now) / 60
         } mins)`,
       );
     }
-    if (watsonxConfig.accessToken.token === undefined) {
+    if (watsonxToken.token === undefined) {
       throw new Error("Something went wrong. Check your credentials, please.");
     }
-
-    const stopToken =
-      this.watsonxStopToken ??
-      (options.model?.includes("granite") ? "<|im_end|>" : undefined);
+    const stopSequences =
+      options.stop?.slice(0,6) ?? (options.model?.includes("granite") ? ["Question:"] : []);
     const url = this.getWatsonxEndpoint();
     const headers = this._getHeaders();
 
@@ -196,24 +194,25 @@ class WatsonX extends BaseLLM {
       decoding_method: "greedy",
       max_new_tokens: options.maxTokens ?? 1024,
       min_new_tokens: 1,
-      stop_sequences: stopToken ? [stopToken] : [],
+      stop_sequences: stopSequences,
       include_stop_sequence: false,
-      repetition_penalty: 1,
+      truncate_input_tokens: this.contextLength - (options.maxTokens ?? 1024),
+      repetition_penalty: options.frequencyPenalty || 1,
     };
     if (!!options.temperature) {
       parameters.decoding_method = "sample";
       parameters.temperature = options.temperature;
       parameters.top_p = options.topP || 1.0;
-      parameters.top_k = options.topK;
+      parameters.top_k = options.topK || 100;
     }
 
     const payload: any = {
       input: messages[messages.length - 1].content,
       parameters: parameters,
     };
-    if (!this.watsonxFullUrl) {
+    if (!this.deploymentId) {
       payload.model_id = options.model;
-      payload.project_id = this.watsonxProjectId;
+      payload.project_id = this.projectId;
     }
 
     var response = await this.fetch(url, {
@@ -246,7 +245,8 @@ class WatsonX extends BaseLLM {
                 generatedChunk += result.generated_text || "";
               });
             } catch (e) {
-              console.error(`Error parsing JSON string: ${dataStr}`, e);
+              // parsing error is expected with streaming response
+              // console.error(`Error parsing JSON string: ${dataStr}`, e);
             }
           }
         });

@@ -46,6 +46,6 @@ To opt out, change the value of `allowAnonymousTelemetry` to `false`. Alternativ
 ### Steps to Disable Telemetry via VS Code Settings
 
 1. Open VS Code.
-2. Navigate to `File` > `Preferences` > `Settings` (or use the keyboard shortcut `Ctrl + ,` on Windows/Linux or `Cmd + ,` on macOS).
+2. Navigate to `File` > `Preferences` > `Settings` (or use the keyboard shortcut <kbd>ctrl</kbd> + <kbd>,</kbd> on Windows/Linux or <kbd>cmd</kbd> + <kbd>,</kbd> on macOS).
 3. In the search bar, type "Continue: Telemetry Enabled".
 4. Uncheck the "Continue: Telemetry Enabled" checkbox.

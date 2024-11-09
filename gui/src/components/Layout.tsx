@@ -7,6 +7,11 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useConfigError } from "../redux/hooks";
+import {
+  setEditDone,
+  setEditStatus,
+  startEditMode,
+} from "../redux/slices/editModeState";
 import { setShowDialog, updateApplyState } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
@@ -173,6 +178,24 @@ const Layout = () => {
     },
     [],
   );
+
+  useWebviewListener(
+    "startEditMode",
+    async (args) => {
+      dispatch(startEditMode(args));
+      navigate("/edit");
+    },
+    [navigate],
+  );
+
+  useWebviewListener("setEditStatus", async ({ status }) => {
+    dispatch(setEditStatus(status));
+  });
+
+  useWebviewListener("exitEditMode", async () => {
+    dispatch(setEditDone());
+    navigate("/");
+  });
 
   useEffect(() => {
     if (

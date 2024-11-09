@@ -36,16 +36,10 @@ export const belowIndexDecorationType =
   });
 
 export class DecorationTypeRangeManager {
-  private decorationType: vscode.TextEditorDecorationType;
-  private editor: vscode.TextEditor;
-
   constructor(
-    decorationType: vscode.TextEditorDecorationType,
-    editor: vscode.TextEditor,
-  ) {
-    this.decorationType = decorationType;
-    this.editor = editor;
-  }
+    private decorationType: vscode.TextEditorDecorationType,
+    private editor: vscode.TextEditor,
+  ) {}
 
   private ranges: vscode.Range[] = [];
 

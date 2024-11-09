@@ -1,7 +1,7 @@
 import type { FileEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
-import { EXTENSION_NAME } from "./util/constants";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
@@ -58,6 +58,7 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
   ): void | Thenable<void> {
+    this._webviewView = webviewView;
     this._webview = webviewView.webview;
     this._webview.onDidReceiveMessage((message) =>
       this.handleWebviewMessage(message),

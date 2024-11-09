@@ -1,5 +1,6 @@
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
@@ -18,6 +19,7 @@ import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvide
 import { DiffManager } from "../diff/horizontal";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import {
@@ -26,7 +28,6 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { arePathsEqual } from "../util/arePathsEqual";
 import { Battery } from "../util/battery";
-import { AUTH_TYPE, EXTENSION_NAME } from "../util/constants";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -42,6 +43,7 @@ export class VsCodeExtension {
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
   private diffManager: DiffManager;
+  private editDecorationManager: EditDecorationManager;
   private verticalDiffManager: VerticalDiffManager;
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
@@ -53,6 +55,8 @@ export class VsCodeExtension {
     this.workOsAuthProvider = new WorkOsAuthProvider(context);
     this.workOsAuthProvider.refreshSessions();
     context.subscriptions.push(this.workOsAuthProvider);
+
+    this.editDecorationManager = new EditDecorationManager(context);
 
     let resolveWebviewProtocol: any = undefined;
     this.webviewProtocolPromise = new Promise<VsCodeWebviewProtocol>(
@@ -110,6 +114,7 @@ export class VsCodeExtension {
       verticalDiffManagerPromise,
       configHandlerPromise,
       this.workOsAuthProvider,
+      this.editDecorationManager,
     );
 
     this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
@@ -128,6 +133,7 @@ export class VsCodeExtension {
     this.verticalDiffManager = new VerticalDiffManager(
       this.configHandler,
       this.sidebar.webviewProtocol,
+      this.editDecorationManager,
     );
     resolveVerticalDiffManager?.(this.verticalDiffManager);
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
@@ -221,6 +227,7 @@ export class VsCodeExtension {
       this.battery,
       quickEdit,
       this.core,
+      this.editDecorationManager,
     );
 
     // Disabled due to performance issues
@@ -281,7 +288,7 @@ export class VsCodeExtension {
     vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
-      } else if (e.provider.id === AUTH_TYPE) {
+      } else if (e.provider.id === controlPlaneEnv.AUTH_TYPE) {
         const sessionInfo = await getControlPlaneSessionInfo(true);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
           webviewProtocol.request("didChangeControlPlaneSessionInfo", {
@@ -322,8 +329,7 @@ export class VsCodeExtension {
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider
-    {
+      implements vscode.TextDocumentContentProvider {
       // emitter and its event
       onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
       onDidChange = this.onDidChangeEmitter.event;

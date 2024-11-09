@@ -7,8 +7,12 @@
                                  Chat, Edit, and Autocomplete tutorial
 """
 
-# ———————————————————— Chat [Cmd/Ctrl + J]: Ask "what sorting algorithm is this?" ————————————————————
 
+# —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— #
+
+## Highlight the code below
+## Press [Cmd/Ctrl + J] to add to Chat
+## Try asking Continue "what sorting algorithm is this?"
 def sorting_algorithm(x):
     for i in range(len(x)):
         for j in range(len(x) - 1):
@@ -16,8 +20,12 @@ def sorting_algorithm(x):
                 x[j], x[j + 1] = x[j + 1], x[j]
     return x
 
-# —————————————————— Edit [Cmd/Ctrl + I]: Tell Continue to "make this more readable" —————————————————
 
+# —————————————————————————————————————————————————     Edit      ————————————————————————————————————————————————— #
+
+## Highlight the code below
+## Press [Cmd/Ctrl + I] to Edit
+## Try asking Continue to "make this more readable"
 def sorting_algorithm(x):
     for i in range(len(x)):
         for j in range(len(x) - 1):
@@ -25,9 +33,12 @@ def sorting_algorithm(x):
                 x[j], x[j + 1] = x[j + 1], x[j]
     return x
 
-# ——————————————— Autocomplete [Tab]: Place cursor after `:` below and press [Enter] —————————————————
+# —————————————————————————————————————————————     Autocomplete     —————————————————————————————————————————————— #
 
-# Basic assertion for sorting_algorithm:
+## Place cursor after `sorting_algorithm...` below and press [Enter]
+## Press [Tab] to accept the Autocomplete suggestion
+
+# Basic assertion for sorting_algorithm...
 
 
-"—————————————————— Learn more at https://docs.continue.dev/getting-started/overview ————————————————"
+# ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ——————————————————— #

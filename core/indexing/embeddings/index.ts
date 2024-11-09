@@ -14,6 +14,10 @@ import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider.js";
 import NvidiaEmbeddingsProvider from "./NvidiaEmbeddingsProvider.js";
 import VoyageEmbeddingsProvider from "./VoyageEmbeddingsProvider.js";
+import VertexEmbeddingsProvider from "./VertexEmbeddingsProvider.js";
+import WatsonxEmbeddingsProvider from "./WatsonxEmbeddingsProvider.js";
+import NebiusEmbeddingsProvider from "./NebiusEmbeddingsProvider.js";
+import LMStudioEmbeddingsProvider from "./LMStudio.js";
 
 type EmbeddingsProviderConstructor = new (
   ...args: any[]
@@ -37,4 +41,8 @@ export const allEmbeddingsProviders: Record<
   nvidia: NvidiaEmbeddingsProvider,
   voyage: VoyageEmbeddingsProvider,
   mistral: MistralEmbeddingsProvider,
+  nebius: NebiusEmbeddingsProvider,
+  vertexai: VertexEmbeddingsProvider,
+  watsonx: WatsonxEmbeddingsProvider,
+  lmstudio: LMStudioEmbeddingsProvider
 };

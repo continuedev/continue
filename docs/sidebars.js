@@ -131,7 +131,6 @@ const sidebars = {
         },
       ],
     },
-    "customize/config",
     "customize/changelog",
   ],
 };

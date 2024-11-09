@@ -1,6 +1,8 @@
+import ignore from "ignore";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
-import { CompletionProvider } from "./autocomplete/completionProvider";
+import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import {
   setupBestConfig,
@@ -17,18 +19,19 @@ import { ControlPlaneClient } from "./control-plane/client";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
+import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
+import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
-import { editConfigJson } from "./util/paths";
+import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
-import { ChatDescriber } from "./util/chatDescriber";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -79,6 +82,9 @@ export class Core {
     private readonly ide: IDE,
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
+    // Ensure .continue directory is created
+    setupInitialDotContinueDirectory();
+
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
@@ -395,6 +401,7 @@ export class Core {
           });
           break;
         }
+        // @ts-ignore
         yield { content: next.value.content };
         next = await gen.next();
       }
@@ -483,7 +490,7 @@ export class Core {
     on("tts/kill", async () => {
       void TTS.kill();
     });
-    
+
     on("chatDescriber/describe", async (msg) => {
       const currentModel = await this.getSelectedModel();
       return await ChatDescriber.describe(currentModel, {}, msg.data);
@@ -701,8 +708,13 @@ export class Core {
       return { url };
     });
 
-    on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
-      recentlyEditedFilesCache.set(filepath, filepath);
+    on("didChangeActiveTextEditor", async ({ data: { filepath } }) => {
+      const ignoreInstance = ignore().add(defaultIgnoreFile);
+      let rootDirectory = await this.ide.getWorkspaceDirs();
+      const relativeFilePath = path.relative(rootDirectory[0], filepath);
+      if (!ignoreInstance.ignores(relativeFilePath)) {
+        recentlyEditedFilesCache.set(filepath, filepath);
+      }
     });
   }
 

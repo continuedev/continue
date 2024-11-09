@@ -9,6 +9,7 @@ import { createTransform, persistReducer, persistStore } from "redux-persist";
 import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
+import editModeStateReducer from "./slices/editModeState";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -21,6 +22,7 @@ const rootReducer = combineReducers({
   misc: miscReducer,
   uiState: uiStateReducer,
   serverState: serverStateReducer,
+  editModeState: editModeStateReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

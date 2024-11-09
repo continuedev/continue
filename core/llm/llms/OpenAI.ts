@@ -37,12 +37,12 @@ const CHAT_ONLY_MODELS = [
   "gpt-4-0125-preview",
   "gpt-4-1106-preview",
   "gpt-4o-mini",
+  "o1-preview",
+  "o1-mini",
 ];
 
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
-
-  maxStopWords: number | undefined = undefined;
 
   constructor(options: LLMOptions) {
     super(options);
@@ -95,7 +95,14 @@ class OpenAI extends BaseLLM {
     );
   }
 
-  protected _convertArgs(options: any, messages: ChatMessage[]) {
+  private supportsPrediction(model: string): boolean {
+    return [
+      "gpt-4o-mini",
+      "gpt-4o"
+    ].includes(model);
+  }
+
+  protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
     const url = new URL(this.apiBase!);
     const finalOptions: any = {
       messages: messages.map(this._convertMessage),
@@ -113,9 +120,9 @@ class OpenAI extends BaseLLM {
           : url.host === "api.deepseek.com"
             ? options.stop?.slice(0, 16)
             : url.port === "1337" ||
-                url.host === "api.openai.com" ||
-                url.host === "api.groq.com" ||
-                this.apiType === "azure"
+              url.host === "api.openai.com" ||
+              url.host === "api.groq.com" ||
+              this.apiType === "azure"
               ? options.stop?.slice(0, 4)
               : options.stop,
     };
@@ -133,6 +140,18 @@ class OpenAI extends BaseLLM {
       finalOptions.messages = finalOptions.messages?.filter(
         (message: any) => message?.role !== "system",
       );
+    }
+
+    if (options.prediction && this.supportsPrediction(options.model)) {
+      if (finalOptions.presence_penalty) { // prediction doesn't support > 0
+        finalOptions.presence_penalty = undefined;
+      }
+      if (finalOptions.frequency_penalty) { // prediction doesn't support > 0
+        finalOptions.frequency_penalty = undefined;
+      }
+      finalOptions.max_completion_tokens = undefined;
+
+      finalOptions.prediction = options.prediction;
     }
 
     return finalOptions;
@@ -166,7 +185,7 @@ class OpenAI extends BaseLLM {
   ) {
     if (this.apiType === "azure") {
       return new URL(
-        `openai/deployments/${this.engine}/${endpoint}?api-version=${this.apiVersion}`,
+        `openai/deployments/${this.deployment}/${endpoint}?api-version=${this.apiVersion}`,
         this.apiBase,
       );
     }

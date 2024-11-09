@@ -44,7 +44,7 @@ All of the configuration options available for chat models are available to use 
 }
 ```
 
-If you aren't yet familiar with the available options, you can find the full reference [here](../config.mdx).
+If you aren't yet familiar with the available options, you can find the full reference [here](./ways-to-configure.md).
 
 ## Configuration Options
 
@@ -93,7 +93,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 
 ### I want better completions, should I use GPT-4?
 
-Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/d2bc6359e8ebf647892ec953e418042dc7f8a685/core/autocomplete/templates.ts)). Some of the best commercial models like GPT-4 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
+Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/main/core/autocomplete/templates.ts)). Some of the best commercial models like GPT-4 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
 
 ### I'm not seeing any completions
 
@@ -103,8 +103,8 @@ Follow these steps to ensure that everything is set up correctly:
 2. Make sure you have downloaded Ollama.
 3. Run `ollama run starcoder2:3b` to verify that the model is downloaded.
 4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
-5. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains).
-6. Check VS Code settings to make sure that `"editor.inlineSuggest.enabled"` is set to `true` (use cmd/ctrl+, then search for this and check the box)
+5. Check the output of the logs to find any potential errors: <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains.
+6. Check VS Code settings to make sure that `"editor.inlineSuggest.enabled"` is set to `true` (use <kbd>cmd/ctrl</kbd> + <kbd>,</kbd> then search for this and check the box)
 7. If you are still having issues, please let us know in our [Discord](https://discord.gg/vapESyrFmJ) and we'll help as soon as possible.
 
 ### Completions are slow
@@ -122,8 +122,8 @@ Yes, in VS Code, if you don't want to be shown suggestions automatically you can
 1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disable automatic suggestions
 2. Open "Keyboard Shortcuts" (cmd/ctrl+k, cmd/ctrl+s) and search for `editor.action.inlineSuggest.trigger`
 3. Click the "+" icon to add a new keybinding
-4. Press the key combination you want to use to trigger suggestions (e.g. `ctrl+space`)
-5. Now whenever you want to see a suggestion, you can press your key binding (e.g. `ctrl+space`) to trigger suggestions manually
+4. Press the key combination you want to use to trigger suggestions (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>)
+5. Now whenever you want to see a suggestion, you can press your key binding (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>) to trigger suggestions manually
 
 ### Is there a shortcut to accept one line at a time?
 
@@ -137,7 +137,7 @@ Click the "Continue" button in the status panel at the bottom right of the scree
 
 Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
 
-You can also use the default shortcut to disable autocomplete directly: press `ctrl/cmd + K`, `ctrl/cmd + A`. This will turn off autocomplete without navigating through settings.
+You can also use the default shortcut to disable autocomplete directly using a chord: press and hold <kbd>ctrl/cmd</kbd> + <kbd>K</kbd> (continue holding <kbd>ctrl/cmd</kbd>) and press <kbd>ctrl/cmd</kbd> + <kbd>A</kbd>. This will turn off autocomplete without navigating through settings.
 
 #### JetBrains
 
