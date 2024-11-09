@@ -79,8 +79,20 @@ export default function AddToPath({
               </div>
             </div>
           </div>
-
           <div className="flex flex-col items-center gap-4">
+            {pathAdded && (
+              <div className="text-sm text-muted-foreground text-center">
+                <span>
+                  PearAI added to PATH
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-8 right-8 flex items-center gap-4">
+          {!pathAdded && (
+              <div onClick={onNext} className="flex items-center gap-2 cursor-pointer">
+                <span className="text-center w-full">Skip</span>
+              </div>)}
             <Button
               className="w-[250px] text-button-foreground bg-button hover:bg-button-hover p-4 lg:py-6 lg:px-2 text-sm md:text-base cursor-pointer"
               onClick={handleAddToPath}
@@ -116,19 +128,6 @@ export default function AddToPath({
                 )}
               </div>
             </Button>
-
-            {!pathAdded ? (
-              <div onClick={onNext} className="flex items-center gap-2 cursor-pointer">
-                <span className="text-center w-full">Skip</span>
-              </div>
-            ):
-            (
-              <div className="text-sm text-muted-foreground text-center">
-                <span>
-                  PearAI added to PATH
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </div>

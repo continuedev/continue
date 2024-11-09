@@ -62,26 +62,7 @@ export default function SignIn({
             workflow
           </p>
 
-          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-6 mb-12">
-            <Button
-              className="w-[250px] md:w-[280px] text-button-foreground bg-button hover:bg-button-hover py-5 px-2 md:py-6 text-base md:text-lg cursor-pointer relative"
-              onClick={handleSignIn}
-            >
-              <div className="flex items-center justify-between w-full gap-2">
-                <span className="text-center w-full">Sign In</span>
-              </div>
-            </Button>
-
-            <Button
-              className="w-[250px] md:w-[280px] bg-input text-foreground border border-input py-5 px-2 md:py-6 text-base md:text-lg cursor-pointer relative"
-              onClick={handleSignUp}
-            >
-              <div className="flex items-center justify-between w-full gap-2">
-                <span className="text-center w-full">Sign Up</span>
-              </div>
-            </Button>
-          </div>
-
+          <div className="absolute bottom-8 right-8 flex items-center gap-4">
           <div
             onClick={() => {
               ideMessenger.post("markNewOnboardingComplete", undefined);
@@ -90,6 +71,24 @@ export default function SignIn({
             className="flex items-center gap-2 cursor-pointer"
           >
             <span className="text-center w-full">Skip</span>
+          </div>
+            <Button
+              className="w-[200px] md:w-[200px] bg-input text-foreground border border-input py-5 px-2 md:py-6 text-base md:text-lg cursor-pointer relative"
+              onClick={handleSignIn}
+            >
+              <div className="flex items-center justify-between w-full gap-2">
+                <span className="text-center w-full">Sign In</span>
+              </div>
+            </Button>
+
+            <Button
+              className="w-[100px] md:w-[200px] text-button-foreground bg-button hover:bg-button-hover py-5 px-2 md:py-6 text-base md:text-lg cursor-pointer relative"
+              onClick={handleSignUp}
+            >
+              <div className="flex items-center justify-between w-full gap-2">
+                <span className="text-center w-full">Sign Up</span>
+              </div>
+            </Button>
           </div>
         </div>
       </div>

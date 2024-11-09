@@ -50,7 +50,10 @@ export default function ImportExtensions({
           </div>
 
             {!isImporting ? 
-                      <div className="flex flex-col items-center gap-4">
+          <div className="absolute bottom-8 right-8 flex items-center gap-4">
+              <div onClick={onNext} className="flex items-center gap-2 cursor-pointer">
+                <span className="text-center w-full">Skip</span>
+              </div>
               <Button
               disabled={isImporting}
               className="w-[250px] text-button-foreground bg-button hover:bg-button-hover p-4 lg:py-6 lg:px-2 text-sm md:text-base cursor-pointer transition-all duration-300"
@@ -87,9 +90,6 @@ export default function ImportExtensions({
                 )}
               </div>
             </Button> 
-            <div onClick={onNext} className="flex items-center gap-2 cursor-pointer">
-                <span className="text-center w-full">Skip</span>
-              </div>
             </div>
             : 
             <div className="flex flex-col items-center gap-4 mb-24">

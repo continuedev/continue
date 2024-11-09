@@ -178,29 +178,29 @@ export default function InstallTools({
                                     checked={checkedTools[tool.id] || false}
                                     onChange={() => handleCheckboxChange(tool.id)}
                                     disabled={tool.preInstalled || attemptedInstalls.includes(tool.id)}
-                                    className="w-4 h-4 cursor-pointer rounded border-gray-300 text-primary focus:ring-primary"
+                                    className="h-5 w-5 rounded-sm cursor-pointer focus:outline-none"
                                     style={{
-                                        accentColor: 'var(--button)',
+                                        accentColor: 'var(--button-background)',
                                     }}
                                 />
                             </div>
                         </Card>
                     ))}
                 </div>
-    
+                <div className="absolute bottom-8 right-8 flex items-center gap-4">
+                <div
+                    onClick={onNext}
+                    className="flex items-center gap-2 cursor-pointer"
+                >
+                    Skip
+                </div>
                 <Button
-                    className="w-[250px] mb-2 text-button-foreground bg-button hover:bg-button-hover p-4 lg:py-6 lg:px-2 text-sm md:text-base cursor-pointer"
-                    onClick={handleInstallChecked}
+              className="w-[250px] text-button-foreground bg-button hover:bg-button-hover p-4 lg:py-6 lg:px-2 text-sm md:text-base cursor-pointer"
+              onClick={handleInstallChecked}
                     disabled={isInstallingAll || !areAnyToolsSelected() || areAllToolsAttempted()}
                 >
                     {getButtonText()}
                 </Button>
-    
-                <div
-                    onClick={onNext}
-                    className="mt-4 text-center text-sm cursor-pointer hover:text-muted-foreground transition-colors"
-                >
-                    Skip
                 </div>
             </div>
         </div>
