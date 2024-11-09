@@ -77,6 +77,7 @@ function PreWithToolbar(props: {
           bottom={toolbarBottom}
           language={props.language}
           filepath={props.filepath}
+          range={props.range}
         />
       ) : (
         hovering && (
@@ -85,6 +86,7 @@ function PreWithToolbar(props: {
             text={copyValue}
             bottom={toolbarBottom}
             language={props.language}
+            range={props.range}
           />
         )
       )}

@@ -19,6 +19,7 @@ import {
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   incrementNextCodeBlockToApplyIndex,
   updateApplyState,
@@ -29,7 +30,6 @@ import ButtonWithTooltip from "../ButtonWithTooltip";
 import FileIcon from "../FileIcon";
 import { CopyButton as CopyButtonHeader } from "./CopyButton";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 
 const ToolbarDiv = styled.div`
   display: flex;
@@ -266,7 +266,10 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         onClick={onClickHeader}
       >
         <FileIcon height="20px" width="20px" filename={props.filepath} />
-        <span className="truncate">{getBasename(props.filepath)}</span>
+        <span className="truncate">
+          {getBasename(props.filepath)}
+          {props.range && ` ${props.range}`}
+        </span>
       </div>
 
       <div className="flex items-center gap-1">
