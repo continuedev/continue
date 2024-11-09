@@ -29,7 +29,7 @@ import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { getExtensionUri } from "./util/vscode";
-import { aiderCtrlC, aiderResetSession, openAiderPanel, refreshAiderProcessState } from './integrations/aider/aider';
+import { aiderCtrlC, aiderResetSession, openAiderPanel, refreshAiderProcessState } from './integrations/aider/aiderUtil';
 import { handlePerplexityMode } from "./integrations/perplexity/perplexity";
 import { PEAR_CONTINUE_VIEW_ID } from "./ContinueGUIWebviewViewProvider";
 import { handleIntegrationShortcutKey } from "./util/integrationUtils";
@@ -266,7 +266,7 @@ const commandsMap: (
       await vscode.commands.executeCommand('pearai.hideOverlay');
       // Open source control
       await vscode.commands.executeCommand('workbench.view.scm');
-      
+
       // Get Git extension
       const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
       const repository = gitExtension?.getAPI(1).repositories[0];
@@ -630,6 +630,9 @@ const commandsMap: (
     },
     "pearai.refreshAiderProcessState": async () => {
       await refreshAiderProcessState(core);
+    },
+    "pearai.setAiderProcessState": async (state) => {
+      core.send("setAiderProcessStateInGUI", { state: state });
     },
     "pearai.perplexityMode": async () => {
       // handlePerplexityMode(sidebar, extensionContext);

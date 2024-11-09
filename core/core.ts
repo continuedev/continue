@@ -29,11 +29,11 @@ import { editConfigJson } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
 import PearAIServer from "./llm/llms/PearAIServer";
-import Aider from "./llm/llms/Aider";
+import Aider from "./llm/llms/AiderLLM";
 import {
   startAiderProcess,
   killAiderProcess,
-} from "../extensions/vscode/src/integrations/aider/aider";
+} from "../extensions/vscode/src/integrations/aider/aiderUtil";
 
 
 export class Core {

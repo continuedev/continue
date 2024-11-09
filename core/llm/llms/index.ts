@@ -37,7 +37,7 @@ import Together from "./Together.js";
 import WatsonX from "./WatsonX.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
 import PearAIServer from "./PearAIServer.js";
-import Aider from "./Aider.js";
+import Aider from "./AiderLLM.js";
 
 
 function convertToLetter(num: number): string {

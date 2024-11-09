@@ -36,8 +36,6 @@ class HistoryManager {
       const offset = options.offset || 0;
       sessions = sessions.slice(offset, offset + options.limit);
     }
-    console.dir('IN LIST METHOD');
-    console.dir(sessions);
     return sessions;
   }
 

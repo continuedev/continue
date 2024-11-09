@@ -17,6 +17,7 @@ import { getHeaders } from "../../pearaiServer/stubs/headers.js";
 import { execSync } from "child_process";
 import * as os from "os";
 import * as vscode from "vscode";
+import type { AiderState } from "../../../extensions/vscode/src/integrations/aider/types/aiderTypes";
 
 const PLATFORM = process.platform;
 const IS_WINDOWS = PLATFORM === "win32";
@@ -32,10 +33,6 @@ const READY_PROMPT_REGEX = />[^\S\r\n]*(?:[\r\n]|\s)*(?:\s+)(?:[\r\n]|\s)*$/;
 
 export const AIDER_QUESTION_MARKER = "[Yes]\\:";
 export const AIDER_END_MARKER = "─────────────────────────────────────";
-
-export interface AiderState {
-  state: "starting" | "uninstalled" | "ready" |  "stopped" |"crashed" | "signedOut";
-}
 
 class Aider extends BaseLLM {
   getCurrentDirectory: (() => Promise<string>) | null = null;
@@ -61,9 +58,10 @@ class Aider extends BaseLLM {
   }
 
   public setAiderState(state: AiderState["state"]): void {
+    console.dir(`Setting PearAI Creator state from ${this.aiderState} to ${state}`);
     this.aiderState = state;
     // Send an update to the UI
-    vscode.commands.executeCommand("pearai.refreshAiderProcessState");
+    vscode.commands.executeCommand("pearai.setAiderProcessState", state);
   }
 
 
@@ -323,8 +321,6 @@ class Aider extends BaseLLM {
       const accessToken = this.credentials.getAccessToken();
       this.command.unshift(`export OPENAI_API_KEY=${accessToken};`);
     }
-    console.dir("RUNNING AIDER COMMMAND:")
-    console.dir(this.command.join(" "))
     return cp.spawn(userShell, ["-c", this.command.join(" ")], {
       stdio: ["pipe", "pipe", "pipe"],
       cwd: currentDir,
@@ -508,6 +504,8 @@ class Aider extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     console.log("Inside Aider _streamChat");
     const lastMessage = messages[messages.length - 1].content.toString();
+    console.dir("Sending to PearAI Creator:");
+    console.dir(lastMessage);
     this.sendToAiderChat(lastMessage);
 
     this.aiderOutput = "";

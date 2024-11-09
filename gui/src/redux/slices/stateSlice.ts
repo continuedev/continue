@@ -15,7 +15,7 @@ import { createSelector } from "reselect";
 import { v4 } from "uuid";
 import { RootState } from "../store";
 import { getLocalStorage } from "@/util/localStorage";
-import { AiderState } from "core/llm/llms/Aider";
+
 
 export const memoizedContextItemsSelector = createSelector(
   [(state: RootState) => state.state.history],
@@ -128,7 +128,6 @@ type State = {
   selectedProfileId: string;
   directoryItems: string;
   showInteractiveContinueTutorial: boolean;
-  aiderProcessState: AiderState;
 };
 
 const initialState: State = {
@@ -137,7 +136,6 @@ const initialState: State = {
   aiderHistory: [],
   contextItems: [],
   active: false,
-  aiderProcessState: { state: "starting" },
   perplexityActive: false,
   aiderActive: false,
   config: {
@@ -205,9 +203,6 @@ export const stateSlice = createSlice({
     },
     setActive: (state) => {
       state.active = true;
-    },
-    updateAiderProcessState: (state, action: PayloadAction<AiderState>) => {
-      state.aiderProcessState = action.payload;
     },
     setPerplexityActive: (state) => {
       state.perplexityActive = true;
@@ -676,7 +671,6 @@ export const {
   setConfig,
   addPromptCompletionPair,
   setActive,
-  updateAiderProcessState,
   setPerplexityActive,
   setAiderActive,
   setEditingContextItemAtIndex,

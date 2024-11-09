@@ -26,6 +26,8 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { attemptInstallExtension } from "../activation/activate";
+import { checkAiderInstallation } from "../integrations/aider/aiderUtil";
 
 /**
  * A shared messenger class between Core and Webview
@@ -133,7 +135,7 @@ export class VsCodeMessenger {
     this.onWebview("getNumberOfChanges", (msg) => {
       const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
       const repository = gitExtension?.getAPI(1).repositories[0];
-    
+
       if (repository) {
           const unstagedChanges = repository.state.workingTreeChanges;
           return unstagedChanges.length;
@@ -285,7 +287,7 @@ export class VsCodeMessenger {
       );
       await vscode.window.showTextDocument(doc);
     });
-    
+
     this.onWebview("openUrl", (msg) => {
       vscode.env.openExternal(vscode.Uri.parse(msg.data));
     });
