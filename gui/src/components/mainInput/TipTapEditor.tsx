@@ -51,10 +51,6 @@ import {
   isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../../util";
-import {
-  handleJetBrainsMetaKeyPress,
-  handleMetaKeyPress,
-} from "./handleMetaKeyPress";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
@@ -64,6 +60,10 @@ import {
   getContextProviderDropdownOptions,
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
+import {
+  handleJetBrainsMetaKeyPress,
+  handleMetaKeyPress,
+} from "./handleMetaKeyPress";
 import { ComboBoxItem } from "./types";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
@@ -248,8 +248,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     const timer = setTimeout(() => {
       setHasDefaultModel(
         !!defaultModel &&
-        defaultModel.apiKey !== undefined &&
-        defaultModel.apiKey !== "",
+          defaultModel.apiKey !== undefined &&
+          defaultModel.apiKey !== "",
       );
     }, 3500);
 
@@ -452,38 +452,38 @@ function TipTapEditor(props: TipTapEditorProps) {
       Text,
       props.availableContextProviders.length
         ? Mention.configure({
-          HTMLAttributes: {
-            class: "mention",
-          },
-          suggestion: getContextProviderDropdownOptions(
-            availableContextProvidersRef,
-            getSubmenuContextItemsRef,
-            enterSubmenu,
-            onClose,
-            onOpen,
-            inSubmenuRef,
-            ideMessenger,
-          ),
-          renderHTML: (props) => {
-            return `@${props.node.attrs.label || props.node.attrs.id}`;
-          },
-        })
+            HTMLAttributes: {
+              class: "mention",
+            },
+            suggestion: getContextProviderDropdownOptions(
+              availableContextProvidersRef,
+              getSubmenuContextItemsRef,
+              enterSubmenu,
+              onClose,
+              onOpen,
+              inSubmenuRef,
+              ideMessenger,
+            ),
+            renderHTML: (props) => {
+              return `@${props.node.attrs.label || props.node.attrs.id}`;
+            },
+          })
         : undefined,
       props.availableSlashCommands.length
         ? SlashCommand.configure({
-          HTMLAttributes: {
-            class: "mention",
-          },
-          suggestion: getSlashCommandDropdownOptions(
-            availableSlashCommandsRef,
-            onClose,
-            onOpen,
-            ideMessenger,
-          ),
-          renderText: (props) => {
-            return props.node.attrs.label;
-          },
-        })
+            HTMLAttributes: {
+              class: "mention",
+            },
+            suggestion: getSlashCommandDropdownOptions(
+              availableSlashCommandsRef,
+              onClose,
+              onOpen,
+              ideMessenger,
+            ),
+            renderText: (props) => {
+              return props.node.attrs.label;
+            },
+          })
         : undefined,
       CodeBlockExtension,
     ],
@@ -532,7 +532,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         }
       }
     },
-    editable: !active,
+    editable: !active || props.isMainInput,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
@@ -698,8 +698,9 @@ function TipTapEditor(props: TipTapEditorProps) {
         rif.filepath,
         await ideMessenger.ide.getWorkspaceDirs(),
       );
-      const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1
-        })`;
+      const rangeStr = `(${rif.range.start.line + 1}-${
+        rif.range.end.line + 1
+      })`;
       const item: ContextItemWithId = {
         content: rif.contents,
         name: `${basename} ${rangeStr}`,
