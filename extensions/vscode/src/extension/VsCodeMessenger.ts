@@ -26,7 +26,7 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { attemptInstallExtension } from "../activation/activate";
+import { attemptInstallExtension, attemptUninstallExtension, isVSCodeExtensionInstalled } from "../activation/activate";
 import { checkAiderInstallation } from "../integrations/aider/aiderUtil";
 
 /**
@@ -96,6 +96,29 @@ export class VsCodeMessenger {
     });
     this.onWebview("importUserSettingsFromVSCode", (msg) => {
       vscode.commands.executeCommand("pearai.welcome.importUserSettingsFromVSCode");
+    });
+    this.onWebview("installVscodeExtension", (msg) => {
+      attemptInstallExtension(msg.data.extensionId);
+    });
+    this.onWebview("uninstallVscodeExtension", (msg) => {
+      attemptUninstallExtension(msg.data.extensionId);
+    });
+    this.onWebview("installAider", (msg) => {
+      vscode.commands.executeCommand("pearai.installAider");
+    });
+    this.onWebview("uninstallAider", (msg) => {
+      vscode.commands.executeCommand("pearai.uninstallAider");
+    });
+    this.onWebview("isAiderInstalled", async (msg) => {
+      console.log("Checking Aider installation...");
+      const isAiderInstalled = await checkAiderInstallation();
+      console.log("Aider installation status:", isAiderInstalled);
+      return isAiderInstalled;
+    });
+    this.onWebview("is_vscode_extension_installed", async (msg) => {
+      const isInstalled = await isVSCodeExtensionInstalled(msg.data.extensionId);
+      console.log("VSCode extension installation status:", isInstalled);
+      return isInstalled;
     });
     this.onWebview("pearWelcomeOpenFolder", (msg) => {
       vscode.commands.executeCommand("workbench.action.files.openFolder");

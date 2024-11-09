@@ -10,6 +10,10 @@ import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 import { isFirstLaunch } from "../copySettings";
 
+export async function isVSCodeExtensionInstalled(extensionId: string): Promise<boolean> {
+  return vscode.extensions.getExtension(extensionId) !== undefined;
+};
+
 export async function attemptInstallExtension(extensionId: string): Promise<void> {
   // Check if extension is already installed
   const extension = vscode.extensions.getExtension(extensionId);
@@ -27,6 +31,25 @@ export async function attemptInstallExtension(extensionId: string): Promise<void
       console.error(error);
   }
 }
+
+export async function attemptUninstallExtension(extensionId: string): Promise<void> {
+  // Check if extension is installed
+  const extension = vscode.extensions.getExtension(extensionId);
+
+  if (!extension) {
+      // Extension is not installed
+      return;
+  }
+
+  try {
+      await vscode.commands.executeCommand('workbench.extensions.uninstallExtension', extensionId);
+      // vscode.window.showInformationMessage(`Successfully uninstalled extension: ${extensionId}`);
+  } catch (error) {
+      // vscode.window.showErrorMessage(`Failed to uninstall extension: ${extensionId}`);
+      console.error(error);
+  }
+}
+
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files

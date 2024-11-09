@@ -20,11 +20,6 @@ export default function ImportExtensions({
   const handleImport = () => {
     setIsImporting(true);
     ideMessenger.post("importUserSettingsFromVSCode", undefined);
-
-    // Wait 2 seconds before proceeding
-    setTimeout(() => {
-      onNext();
-    }, 3000);
   };
 
   useEffect(() => {

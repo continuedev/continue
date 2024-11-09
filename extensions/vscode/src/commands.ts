@@ -29,7 +29,7 @@ import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { getExtensionUri } from "./util/vscode";
-import { aiderCtrlC, aiderResetSession, openAiderPanel, refreshAiderProcessState } from './integrations/aider/aiderUtil';
+import { aiderCtrlC, aiderResetSession, openAiderPanel, refreshAiderProcessState, installAider, uninstallAider } from './integrations/aider/aiderUtil';
 import { handlePerplexityMode } from "./integrations/perplexity/perplexity";
 import { PEAR_CONTINUE_VIEW_ID } from "./ContinueGUIWebviewViewProvider";
 import { handleIntegrationShortcutKey } from "./util/integrationUtils";
@@ -253,7 +253,6 @@ const commandsMap: (
     "pearai.welcome.markNewOnboardingComplete": async () => {
       // vscode.window.showInformationMessage("Marking onboarding complete.");
       await extensionContext.globalState.update(FIRST_LAUNCH_KEY, true);
-      attemptInstallExtension("supermaven.supermaven");
     },
     "pearai.resetInteractiveContinueTutorial": async () => {
       sidebar.webviewProtocol?.request("resetInteractiveContinueTutorial", undefined, [PEAR_CONTINUE_VIEW_ID]);
@@ -619,6 +618,12 @@ const commandsMap: (
         null,
         extensionContext.subscriptions,
       );
+    },
+    "pearai.installAider": async () => {
+      await installAider(core);
+    },
+    "pearai.uninstallAider": async () => {
+      await uninstallAider(core);
     },
     "pearai.aiderMode": async () => {
       //await openAiderPanel(core, sidebar, extensionContext);

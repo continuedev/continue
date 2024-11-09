@@ -47,6 +47,11 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   closePearAIOverlay: [undefined, void];
   openAiderChanges: [undefined, void];
   getNumberOfChanges: [undefined, number];
+  isAiderInstalled: [undefined, boolean];
+  installAider: [undefined, void];
+  uninstallAider: [undefined, void];
+  isSupermavenInstalled: [undefined, boolean];
+  uninstallVscodeExtension: [{ extensionId: string }, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
