@@ -1,24 +1,25 @@
-import { ContextProviderExtras } from "../..";
+import { ContextItem, ContextProviderExtras } from "../..";
 import URLContextProvider from "../../context/providers/URLContextProvider";
+import { getBasename } from "../../util";
 import { getPreambleAndBody } from "./parse";
 
 async function resolveAttachment(
   name: string,
   extras: ContextProviderExtras,
-): Promise<string | null> {
+): Promise<ContextItem[]> {
   // Context providers
   const contextProvider = extras.config.contextProviders?.find(
     (provider) => provider.description.title === name,
   );
   if (contextProvider) {
     const items = await contextProvider.getContextItems("", extras);
-    return items.map((item) => item.content).join("\n\n");
+    return items;
   }
 
   // Files
   if (await extras.ide.fileExists(name)) {
-    const content = await extras.ide.readFile(name);
-    return `\`\`\`${name}\n${content}\n\`\`\``;
+    const content = `\`\`\`${name}\n${await extras.ide.readFile(name)}\n\`\`\``;
+    return [{ name: getBasename(name), content, description: name }];
   }
 
   // URLs
@@ -27,28 +28,25 @@ async function resolveAttachment(
       name,
       extras,
     );
-    return items.map((item) => item.content).join("\n\n");
+    return items;
   }
 
-  return null;
+  return [];
 }
 
 export async function renderPromptFileV2(
   rawContent: string,
   extras: ContextProviderExtras,
-): Promise<string> {
+): Promise<[ContextItem[], string]> {
   const [preamble, body] = getPreambleAndBody(rawContent);
 
-  const attachmentPromises: Promise<string | null>[] = [];
+  const contextItemsPromises: Promise<ContextItem[]>[] = [];
   const renderedBody = body.replace(/@([^\s]+)/g, (match, name) => {
-    attachmentPromises.push(resolveAttachment(name, extras));
+    contextItemsPromises.push(resolveAttachment(name, extras));
     return match;
   });
-  const attachments = (await Promise.all(attachmentPromises)).filter(Boolean);
 
-  if (!attachments.length) {
-    return renderedBody;
-  }
+  const contextItems = (await Promise.all(contextItemsPromises)).flat();
 
-  return attachments.join("\n\n") + "\n\n" + renderedBody;
+  return [contextItems, renderedBody];
 }
