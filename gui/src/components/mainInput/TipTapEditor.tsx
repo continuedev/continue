@@ -701,9 +701,11 @@ function TipTapEditor(props: TipTapEditorProps) {
       const rangeStr = `(${rif.range.start.line + 1}-${
         rif.range.end.line + 1
       })`;
+
+      const itemName = `${basename} ${rangeStr}`;
       const item: ContextItemWithId = {
         content: rif.contents,
-        name: `${basename} ${rangeStr}`,
+        name: itemName,
         // Description is passed on to the LLM to give more context on file path
         description: `${relativePath} ${rangeStr}`,
         id: {
@@ -718,6 +720,9 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       let index = 0;
       for (const el of editor.getJSON().content) {
+        if (el.attrs?.item?.name === itemName) {
+          return; // Prevent duplicate code blocks
+        }
         if (el.type === "codeBlock") {
           index += 2;
         } else {
