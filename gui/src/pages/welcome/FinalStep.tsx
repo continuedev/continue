@@ -15,12 +15,12 @@ export default function FinalStep({ onBack }: { onBack: () => void }) {
   };
 
   const handleClose = () => {
-    ideMessenger.post("unlockOverlay", undefined);
-    // ideMessenger.post("closePearAIOverlay", undefined);
-    navigate("/inventory/home");
+    ideMessenger.post("completeWelcome", undefined);
   };
 
   useEffect(() => {
+    // unlock overlay when we get to last page
+    ideMessenger.post("unlockOverlay", undefined);
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         handleOpenFolder();

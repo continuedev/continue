@@ -165,8 +165,11 @@ export class VsCodeMessenger {
       }
       return 0;
     });
-    this.onWebview("closePearAIOverlay", (msg) => {
+    this.onWebview("completeWelcome", (msg) => {
+      vscode.commands.executeCommand("pearai.unlockOverlay");
       vscode.commands.executeCommand("pearai.hideOverlay");
+      // force reload to update overlay with new global state
+      vscode.commands.executeCommand("workbench.action.reloadWindow");
     });
     this.onWebview("highlightElement", (msg) => {
       vscode.commands.executeCommand("pearai.highlightElement", msg);
