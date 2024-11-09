@@ -1,4 +1,13 @@
 import { ReactElement, useContext, useState, useEffect } from "react";
+
+enum AIToolID {
+  SEARCH = "1",
+  CHAT = "2",
+  AUTOCOMPLETE = "3",
+  CREATOR = "4",
+  PAINTER = "5",
+  MEMORY = "6",
+}
 import { Search, Star } from "lucide-react";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { Input } from "@/components/ui/input";
@@ -35,7 +44,12 @@ interface AITool {
   note?: string;
 }
 
-const suggestedBuild = ["1", "2", "4", "6"]; // IDs of suggested tools
+const suggestedBuild = [
+  AIToolID.SEARCH,
+  AIToolID.CHAT,
+  AIToolID.CREATOR,
+  AIToolID.MEMORY,
+]; // IDs of suggested tools
 
 function AIToolCard({
   tool,
@@ -147,18 +161,18 @@ export default function AIToolInventory() {
   const [isAiderInstalled, setIsAiderInstalled] = useState(false);
 
   useEffect(() => {
-    setTools(prevTools => 
+    setTools(prevTools =>
       prevTools.map(tool => {
-        if (tool.id === "4") { // Aider's ID
+        if (tool.id === AIToolID.CREATOR) { // Aider's ID
           return { ...tool, isInstalled: isAiderInstalled }
-        } else if (tool.id === "3") { // Supermaven's ID
+        } else if (tool.id === AIToolID.AUTOCOMPLETE) { // Supermaven's ID
           return { ...tool, isInstalled: isSuperMavenInstalled }
         } else {
           return tool
         }
       })
     );
-  }, [isSuperMavenInstalled, isAiderInstalled]);  
+  }, [isSuperMavenInstalled, isAiderInstalled]);
 
   // Fetch installation status once when component mounts
   useEffect(() => {
@@ -180,17 +194,16 @@ export default function AIToolInventory() {
       console.dir(isInstalled)
       setIsAiderInstalled(isInstalled);
     }
-    // todo: CHECK AIDER INSTALLATION
 
     checkAiderInstallation();
     checkInstallations();
   }, []);
 
-  
+
 
   const [tools, setTools] = useState<AITool[]>([
     {
-      id: "1",
+      id: AIToolID.SEARCH,
       name: "Search",
       description: (
         <span>
@@ -216,7 +229,7 @@ export default function AIToolInventory() {
       enabled: true,
     },
     {
-      id: "2",
+      id: AIToolID.CHAT,
       name: "Chat",
       description: <span>AI pair programmer for flexible coding assistance</span>,
       icon: "inventory-chat.svg",
@@ -243,7 +256,7 @@ export default function AIToolInventory() {
       enabled: true,
     },
     {
-      id: "3",
+      id: AIToolID.AUTOCOMPLETE,
       name: "Autocomplete",
       description: <span>Fast code autocomplete suggestions. Recommended as a standalone extension</span>,
       icon: "inventory-autocomplete.svg",
@@ -273,7 +286,7 @@ export default function AIToolInventory() {
       note: "While we develop our own autocomplete service, we recommend Supermaven's autocomplete as an alternate standalone extension. They offer a great service and a free tier (requires separate login)."
     },
     {
-      id: "4",
+      id: AIToolID.CREATOR,
       name: "Creator",
       description: <span>"No-code" assistant; complete features directly</span>,
       icon: "inventory-creator.svg",
@@ -290,7 +303,7 @@ export default function AIToolInventory() {
         <span>Lower level of human intervention needed</span>,
       ],
       installNeeded: true,
-      isInstalled: false, //todo: add logic @ nang
+      isInstalled: false, // Initially set to false
       installCommand: async () => {
         if (isAiderInstalled) {
           ideMessenger.post("uninstallAider", undefined);
@@ -302,7 +315,7 @@ export default function AIToolInventory() {
       enabled: true,
     },
     {
-      id: "5",
+      id: AIToolID.PAINTER,
       name: "Painter",
       description: <span>AI image generation from textual descriptions</span>,
       icon: "🎨",
@@ -322,7 +335,7 @@ export default function AIToolInventory() {
       installNeeded: false,
     },
     {
-      id: "6",
+      id: AIToolID.MEMORY,
       name: "Memory",
       description: (
         <span>
