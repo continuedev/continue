@@ -42,7 +42,7 @@ export default function InstallTools({
         {
             id: "supermaven",
             name: "PearAI Predict",
-            description: "PearAI Predict is an AI powered code-completion tool. It is currently recommended by PearAI as a standalone extension.",
+            description: "PearAI Predict is an AI powered code-completion tool. It is currently recommended by PearAI as a standalone Supermaven extension.",
             icon: "autocomplete.svg",
             installCommand: () => handleVSCExtensionInstall("supermaven.supermaven"),
             preInstalled: false
