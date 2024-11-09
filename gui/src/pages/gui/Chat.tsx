@@ -61,6 +61,7 @@ import {
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import FindWidget from "../../components/find/FindWidget";
 
 const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
@@ -143,6 +144,7 @@ export function Chat() {
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
   const { saveSession, getLastSessionId, loadLastSession } =
@@ -189,6 +191,7 @@ export function Chat() {
 
     setIsAtBottom(atBottom);
   };
+
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
@@ -313,13 +316,14 @@ export function Chat() {
   return (
     <>
       <TopGuiDiv
-        className={`${state.history.length > 0 ? "h-full" : ""}`}
+        className={`relative ${state.history.length > 0 ? "h-full" : ""}`}
         ref={topGuiDivRef}
         onScroll={handleScroll}
         showScrollbar={state.config.ui?.showChatScrollbar || false}
       >
+        <FindWidget searchRef={searchRef} />
         <div className="m-auto max-w-3xl">
-          <StepsDiv>
+          <StepsDiv ref={searchRef}>
             {state.history.map((item, index: number) => (
               <Fragment key={item.message.id}>
                 <ErrorBoundary
@@ -370,7 +374,7 @@ export function Chat() {
                               : true
                             : stepsOpen[index]!
                         }
-                        onToggle={() => {}}
+                        onToggle={() => { }}
                       >
                         <StepContainer
                           index={index}
@@ -382,14 +386,14 @@ export function Chat() {
                               : stepsOpen[index]!
                           }
                           key={index}
-                          onUserInput={(input: string) => {}}
+                          onUserInput={(input: string) => { }}
                           item={item}
-                          onReverse={() => {}}
+                          onReverse={() => { }}
                           onRetry={() => {
                             streamResponse(
                               state.history[index - 1].editorState,
                               state.history[index - 1].modifiers ??
-                                defaultInputModifiers,
+                              defaultInputModifiers,
                               ideMessenger,
                               index - 1,
                             );
