@@ -36,7 +36,7 @@ function PreWithToolbar(props: {
   language: string | null;
   codeBlockIndex: number;
   filepath?: string | undefined;
-  isGenerating?: boolean;
+  isGeneratingCodeBlock?: boolean;
 }) {
   const uiConfig = useUIConfig();
   const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
@@ -80,7 +80,7 @@ function PreWithToolbar(props: {
           filepath={props.filepath}
           isExpanded={isExpanded}
           onToggleExpand={() => setIsExpanded(!isExpanded)}
-          isGenerating={props.isGenerating}
+          isGeneratingCodeBlock={props.isGeneratingCodeBlock}
         />
       ) : (
         hovering && (
@@ -91,7 +91,7 @@ function PreWithToolbar(props: {
             language={props.language}
             isExpanded={isExpanded}
             onToggleExpand={() => setIsExpanded(!isExpanded)}
-            isGenerating={props.isGenerating}
+            isGeneratingCodeBlock={props.isGeneratingCodeBlock}
           />
         )
       )}

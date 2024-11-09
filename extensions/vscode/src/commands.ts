@@ -270,6 +270,7 @@ const commandsMap: (
 
       verticalDiffManager.clearForFilepath(fullPath, true);
       await diffManager.acceptDiff(fullPath);
+
       await sidebar.webviewProtocol.request("setEditStatus", {
         status: "done",
       });

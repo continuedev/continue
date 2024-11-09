@@ -3,40 +3,30 @@ import { useContext, useState } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
 import ButtonWithTooltip from "../ButtonWithTooltip";
+import useCopy from "../../hooks/useCopy";
 
-interface CopyButtonProps {
+interface CopyIconButtonProps {
   text: string | (() => string);
   tabIndex?: number;
   checkIconClassName?: string;
   clipboardIconClassName?: string;
 }
 
-export function CopyButton({
+export function CopyIconButton({
   text,
   tabIndex,
   checkIconClassName = "h-4 w-4 text-green-400",
   clipboardIconClassName = "h-4 w-4 text-gray-400",
-}: CopyButtonProps) {
-  const [copied, setCopied] = useState<boolean>(false);
-
-  const ideMessenger = useContext(IdeMessengerContext);
+}: CopyIconButtonProps) {
+  const { copyText, copied } = useCopy(text);
 
   return (
     <>
       <ButtonWithTooltip
+        tooltipPlacement="top"
         tabIndex={tabIndex}
-        text={copied ? "Copied!" : "Copy"}
-        onClick={(e) => {
-          const textVal = typeof text === "string" ? text : text();
-          if (isJetBrains()) {
-            ideMessenger.request("copyText", { text: textVal });
-          } else {
-            navigator.clipboard.writeText(textVal);
-          }
-
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }}
+        text={copied ? "Copied" : "Copy"}
+        onClick={copyText}
       >
         {copied ? (
           <CheckIcon className={checkIconClassName} />

@@ -1,12 +1,10 @@
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
-import AutoApplyStatusIndicators from "./AutoApplyStatusIndicators";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import {
   incrementNextCodeBlockToApplyIndex,
   updateApplyState,
 } from "../../../redux/slices/uiStateSlice";
-import CodeBlockActions from "./CodeBlockActions";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -21,32 +19,37 @@ import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { getFontSize } from "../../../util";
 import FileInfo from "./FileInfo";
 import styled from "styled-components";
+import Spinner from "./Spinner";
+import ApplyActions from "./ApplyActions";
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
+import CopyButton from "./CopyButton";
+import { ApplyState } from "core/protocol/ideWebview";
 
 const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
-  margin-bottom: 8px;
+  margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
 `;
 
-const ToolbarDiv = styled.div`
+const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: inherit;
   font-size: ${getFontSize() - 2}px;
-  padding: 3px;
-  padding-left: 4px;
-  padding-right: 4px;
-  border-bottom: 0.5px solid ${lightGray}80;
+  padding: 4px 6px;
   margin: 0;
+  border-bottom: ${({ isExpanded }) =>
+    isExpanded ? `0.5px solid ${lightGray}80` : "inherit"};
 `;
 
 export interface StepContainerPreToolbarProps {
+  codeBlockContent: string;
   language: string;
   filepath: string;
-  isGenerating: boolean;
+  isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
   children: any;
 }
@@ -57,25 +60,44 @@ export default function StepContainerPreToolbar(
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string | null>(null);
+  const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const defaultModel = useSelector(defaultModelSelector);
   const [isExpanded, setIsExpanded] = useState(false);
   const [codeBlockContent, setCodeBlockContent] = useState("");
+  const isChatActive = useSelector((state: RootState) => state.state.active);
   const nextCodeBlockIndex = useSelector(
     (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
   );
-  const applyStateStatus = useSelector(
-    (store: RootState) =>
-      store.uiState.applyStates.find(
-        (state) => state.streamId === streamIdRef.current,
-      )?.status ?? "closed",
+
+  const applyState = useSelector((store: RootState) =>
+    store.uiState.applyStates.find(
+      (state) => state.streamId === streamIdRef.current,
+    ),
   );
 
-  const isMultifileEdit = true; // TODO: Pull from Redux state
-  const numLinesGenerated = 10; // TODO: Calculate from codeBlockContent
+  // console.log(
+  //   `[StepContainerPreToolbar] streamId: ${applyState && applyState.streamId} numDiffs: ${applyState && applyState.numDiffs}`,
+  // );
 
-  const isTerminal = isTerminalCodeBlock(props.language, codeBlockContent);
+  const isMultifileEdit = true; // TODO: Pull from Redux state
+  const numLinesCodeBlock = props.codeBlockContent.split("\n").length;
+
+  // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
+  // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
+  // we are done generating based on whether the next node in the tree is not a codeblock.
+  // The tree parsing logic for Remark is defined on page load, so we can't access state
+  // during the actual tree parsing.
+  const isGeneratingCodeBlock = !isChatActive
+    ? false
+    : props.isGeneratingCodeBlock;
+
+  // const isTerminal = isTerminalCodeBlock(props.language, codeBlockContent);
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
+  const linesGeneratedText =
+    numLinesCodeBlock === 1
+      ? `1 line generated`
+      : `${numLinesCodeBlock} lines generated`;
 
   if (streamIdRef.current === null) {
     streamIdRef.current = uuidv4();
@@ -84,7 +106,7 @@ export default function StepContainerPreToolbar(
   // Handle apply keyboard shortcut
   useWebviewListener(
     "applyCodeFromChat",
-    handleApply,
+    onClickApply,
     [isNextCodeBlock, codeBlockContent],
     !isNextCodeBlock,
   );
@@ -105,28 +127,50 @@ export default function StepContainerPreToolbar(
     }
   }, [props.children, codeBlockContent]);
 
-  async function handleApply() {
-    if (applyStateStatus === "streaming") return;
-
-    if (isTerminal) {
-      ideMessenger.ide.runCommand(getTerminalCommand(codeBlockContent));
-    } else {
-      await ideMessenger.request("applyToFile", {
-        text: codeBlockContent,
-        streamId: streamIdRef.current,
-        curSelectedModelTitle: defaultModel.title,
-        filepath: props.filepath,
-      });
-
-      dispatch(
-        updateApplyState({
-          streamId: streamIdRef.current,
-          status: "streaming",
-        }),
-      );
+  useEffect(() => {
+    if (wasGeneratingRef.current && !isGeneratingCodeBlock) {
+      onClickApply();
     }
 
+    wasGeneratingRef.current = isGeneratingCodeBlock;
+  }, [isGeneratingCodeBlock]);
+
+  async function onClickApply() {
+    dispatch(
+      updateApplyState({
+        streamId: streamIdRef.current,
+        status: "streaming",
+      }),
+    );
+
+    await ideMessenger.request("applyToFile", {
+      text: codeBlockContent,
+      streamId: streamIdRef.current,
+      curSelectedModelTitle: defaultModel.title,
+      filepath: props.filepath,
+    });
+
     dispatch(incrementNextCodeBlockToApplyIndex({}));
+  }
+
+  function onClickAcceptApply() {
+    ideMessenger.post("acceptDiff", { filepath: props.filepath });
+    dispatch(
+      updateApplyState({
+        streamId: streamIdRef.current,
+        status: "closed",
+      }),
+    );
+  }
+
+  function onClickRejectApply() {
+    ideMessenger.post("rejectDiff", { filepath: props.filepath });
+    dispatch(
+      updateApplyState({
+        streamId: streamIdRef.current,
+        status: "closed",
+      }),
+    );
   }
 
   function onClickExpand() {
@@ -140,29 +184,36 @@ export default function StepContainerPreToolbar(
 
   return (
     <TopDiv>
-      <ToolbarDiv>
-        <FileInfo
-          filepath={props.filepath}
-          onClickExpand={onClickExpand}
-          isExpanded={isExpanded}
-          numLines={numLinesGenerated}
-        />
-
-        {isMultifileEdit ? (
-          <AutoApplyStatusIndicators
-            isGenerating={props.isGenerating}
-            applyStateStatus={applyStateStatus}
-            onGeneratingComplete={handleApply}
-            codeBlockContent={codeBlockContent}
+      <ToolbarDiv isExpanded={isExpanded}>
+        <div className="flex items-center">
+          <ChevronDownIcon
+            onClick={onClickExpand}
+            className={`h-4 w-4 cursor-pointer text-gray-400 hover:bg-gray-800 hover:brightness-125 ${
+              isExpanded ? "rotate-0" : "-rotate-90"
+            }`}
           />
-        ) : (
-          <CodeBlockActions
-            {...props}
-            handleApply={handleApply}
-            codeBlockContent={codeBlockContent}
+          <FileInfo filepath={props.filepath} />
+        </div>
+
+        {!isMultifileEdit && <CopyButton text={props.codeBlockContent} />}
+
+        {isGeneratingCodeBlock && isMultifileEdit && (
+          <span className="inline-flex items-center gap-2 text-gray-400">
+            {linesGeneratedText}
+            <Spinner />
+          </span>
+        )}
+
+        {!isGeneratingCodeBlock && (
+          <ApplyActions
+            applyState={applyState}
+            onClickApply={onClickApply}
+            onClickAccept={onClickAcceptApply}
+            onClickReject={onClickRejectApply}
           />
         )}
       </ToolbarDiv>
+
       {isExpanded && (
         <div
           className={`overflow-hidden overflow-y-auto ${

@@ -27,7 +27,7 @@ const StyledPre = styled.pre<{ theme: any }>`
   ${(props) => generateThemeStyles(props.theme)}
 `;
 
-export const SyntaxHighlightedPre = () => {
+export const SyntaxHighlightedPre = (props: any) => {
   const currentTheme = useContext(VscThemeContext);
-  return <StyledPre theme={currentTheme} />;
+  return <StyledPre {...props} theme={currentTheme} />;
 };

@@ -115,12 +115,36 @@ function getCodeChildrenContent(children: any) {
   } else if (
     Array.isArray(children) &&
     children.length > 0 &&
-    typeof children[0] === "string"
+    typeof children[0] === "string" &&
+    children[0] !== ""
   ) {
     return children[0];
   }
 
   return undefined;
+}
+
+function processCodeBlocks(tree: any) {
+  const lastNode = tree.children[tree.children.length - 1];
+  const lastCodeNode = lastNode.type === "code" ? lastNode : null;
+
+  visit(tree, "code", (node: any) => {
+    if (!node.lang) {
+      node.lang = "javascript";
+    } else if (node.lang.includes(".")) {
+      node.lang = node.lang.split(".").slice(-1)[0];
+    }
+
+    node.data = node.data || {};
+    node.data.hProperties = node.data.hProperties || {};
+
+    node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
+    node.data.hProperties.codeBlockContent = node.value;
+
+    if (node.meta) {
+      node.data.hProperties.filepath = node.meta;
+    }
+  });
 }
 
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
@@ -129,36 +153,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const contextItems = useSelector(memoizedContextItemsSelector);
 
   const [reactContent, setMarkdownSource] = useRemark({
-    remarkPlugins: [
-      remarkMath,
-      () => {
-        return (tree: any) => {
-          const lastNode = tree.children[tree.children.length - 1];
-          const lastCodeNode = lastNode.type === "code" ? lastNode : null;
-
-          visit(tree, "code", (node: any) => {
-            if (!node.lang) {
-              node.lang = "javascript";
-            } else if (node.lang.includes(".")) {
-              node.lang = node.lang.split(".").slice(-1)[0];
-            }
-
-            node.data = node.data || {};
-            node.data.hProperties = node.data.hProperties || {};
-
-            if (lastCodeNode === node) {
-              node.data.hProperties.isGenerating = true;
-            } else {
-              node.data.hProperties.isGenerating = false;
-            }
-
-            if (node.meta) {
-              node.data.hProperties.filepath = node.meta;
-            }
-          });
-        };
-      },
-    ],
+    remarkPlugins: [remarkMath, () => processCodeBlocks],
     rehypePlugins: [
       rehypeKatex as any,
       {},
@@ -192,8 +187,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const { className, filepath, isGenerating } =
-            preProps?.children?.[0]?.props;
+          const {
+            className,
+            filepath,
+            isGeneratingCodeBlock,
+            codeBlockContent,
+          } = preProps?.children?.[0]?.props;
 
           if (!filepath || !props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;
@@ -202,10 +201,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           // We use a custom toolbar for codeblocks in the step container
           return (
             <StepContainerPreToolbar
+              codeBlockContent={codeBlockContent}
               codeBlockIndex={preProps.codeBlockIndex}
               language={getLanuageFromClassName(className)}
               filepath={filepath}
-              isGenerating={isGenerating}
+              isGeneratingCodeBlock={isGeneratingCodeBlock}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>

@@ -175,6 +175,7 @@ export class VsCodeMessenger {
         await webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
           status: "done",
+          numDiffs: 0,
         });
 
         return;
@@ -198,6 +199,7 @@ export class VsCodeMessenger {
         await webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
           status: "done",
+          numDiffs: 0,
         });
         return;
       }

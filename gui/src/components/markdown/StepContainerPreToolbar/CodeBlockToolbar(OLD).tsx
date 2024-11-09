@@ -8,7 +8,7 @@ import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 import { updateApplyState } from "../../../redux/slices/uiStateSlice";
 import { RootState } from "../../../redux/store";
 import { getFontSize, isJetBrains } from "../../../util";
-import ApplyStateControls from "./ApplyButton";
+import ApplyStateControls from "./ApplyActions";
 import FileInfo from "./FileInfo";
 import { isTerminalCodeBlock } from "./utils";
 
@@ -20,7 +20,7 @@ interface CodeBlockWithToolBarProps {
   filepath?: string;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  isGenerating: boolean;
+  isGeneratingCodeBlock: boolean;
 }
 
 const CodeBlockWithToolBar = ({
@@ -29,7 +29,7 @@ const CodeBlockWithToolBar = ({
   text,
   language,
   onToggleExpand,
-  isGenerating,
+  isGeneratingCodeBlock,
   isExpanded,
 }: CodeBlockWithToolBarProps) => {
   return "";
@@ -105,7 +105,7 @@ const CodeBlockWithToolBar = ({
 
   //     <ApplyStateControls
   //       applyState={applyState}
-  //       isGenerating={isGenerating}
+  //       isGeneratingCodeBlock={isGeneratingCodeBlock}
   //       isCopied={isCopied}
   //       onClickCopy={onClickCopy}
   //       onClickApply={onClickApply}

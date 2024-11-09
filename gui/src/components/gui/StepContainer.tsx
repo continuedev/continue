@@ -16,7 +16,7 @@ import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import ButtonWithTooltip from "../ButtonWithTooltip";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { CopyButton } from "./CopyButton";
+import { CopyIconButton } from "./CopyIconButton";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -135,7 +135,7 @@ function StepContainer(props: StepContainerProps) {
           </ButtonWithTooltip>
         )}
 
-        <CopyButton
+        <CopyIconButton
           tabIndex={-1}
           text={stripImages(props.item.message.content)}
           clipboardIconClassName="h-3.5 w-3.5 text-gray-500"

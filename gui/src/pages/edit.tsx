@@ -200,7 +200,7 @@ function Edit() {
         </div>
 
         {["accepting", "streaming"].includes(editModeState.editStatus) && (
-          <div className="my-2 flex w-full">
+          <div className="my-2 flex w-full cursor-pointer">
             <AcceptRejectButton
               disabled={editModeState.editStatus !== "accepting"}
               backgroundColor="#dc354588"
@@ -213,7 +213,7 @@ function Edit() {
                 dispatch(setEditDone());
               }}
             >
-              {getMetaKeyLabel()}⇧⌫ Reject all
+              <code>{getMetaKeyLabel()}⇧⌫</code> Reject all
             </AcceptRejectButton>
             <AcceptRejectButton
               disabled={editModeState.editStatus !== "accepting"}
@@ -227,7 +227,7 @@ function Edit() {
                 dispatch(setEditDone());
               }}
             >
-              {getMetaKeyLabel()}⇧⏎ Accept all
+              <code>{getMetaKeyLabel()}⇧⏎</code> Accept all
             </AcceptRejectButton>
           </div>
         )}

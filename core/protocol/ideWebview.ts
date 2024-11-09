@@ -60,7 +60,8 @@ export type EditStatus = "not-started" | "streaming" | "accepting" | "done";
 
 export interface ApplyState {
   streamId: string;
-  status: "streaming" | "done" | "closed";
+  status?: "streaming" | "done" | "closed";
+  numDiffs?: number;
 }
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

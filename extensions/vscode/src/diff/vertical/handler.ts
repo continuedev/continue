@@ -13,20 +13,24 @@ import type { VerticalDiffCodeLens } from "./manager";
 export interface VerticalDiffHandlerOptions {
   input?: string;
   instant?: boolean;
-  onStatusUpdate: (status: ApplyState["status"]) => void;
+  onStatusUpdate: (
+    status?: ApplyState["status"],
+    numDiffs?: ApplyState["numDiffs"],
+  ) => void;
 }
 
 export class VerticalDiffHandler implements vscode.Disposable {
   private currentLineIndex: number;
   private cancelled = false;
-
+  private newLinesAdded = 0;
+  private get diffBlocks() {
+    return this.editorToVerticalDiffCodeLens.get(this.filepath) || [];
+  }
   public get range(): vscode.Range {
     const startLine = Math.min(this.startLine, this.endLine);
     const endLine = Math.max(this.startLine, this.endLine);
     return new vscode.Range(startLine, 0, endLine, Number.MAX_SAFE_INTEGER);
   }
-
-  private newLinesAdded = 0;
 
   constructor(
     private startLine: number,
@@ -92,15 +96,13 @@ export class VerticalDiffHandler implements vscode.Disposable {
     }
 
     if (this.deletionBuffer.length || this.insertedInCurrentBlock > 0) {
-      const blocks = this.editorToVerticalDiffCodeLens.get(this.filepath) || [];
-
-      blocks.push({
+      this.diffBlocks.push({
         start: this.currentLineIndex - this.insertedInCurrentBlock,
         numRed: this.deletionBuffer.length,
         numGreen: this.insertedInCurrentBlock,
       });
 
-      this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
+      this.editorToVerticalDiffCodeLens.set(this.filepath, this.diffBlocks);
     }
 
     if (this.deletionBuffer.length === 0) {
@@ -267,7 +269,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       },
     );
 
-    this.options.onStatusUpdate("closed");
+    this.options.onStatusUpdate("closed", this.diffBlocks.length);
 
     this.cancelled = true;
     this.refreshCodeLens();
@@ -336,7 +338,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
-    let diffLines = []
+    let diffLines = [];
     try {
       // As an indicator of loading
       this.updateIndexLineDecorations();
@@ -345,7 +347,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
         if (this.isCancelled) {
           return;
         }
-        diffLines.push(diffLine)
+        diffLines.push(diffLine);
         await this.queueDiffLine(diffLine);
       }
 
@@ -355,7 +357,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
       this.refreshCodeLens();
 
-      this.options.onStatusUpdate("done");
+      this.options.onStatusUpdate("done", this.diffBlocks.length);
 
       // Reject on user typing
       // const listener = vscode.workspace.onDidChangeTextDocument((e) => {
@@ -368,7 +370,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.clearForFilepath(this.filepath, false);
       throw e;
     }
-    return diffLines
+    return diffLines;
   }
 
   async acceptRejectBlock(
@@ -404,6 +406,9 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
     // Shift the codelens objects
     this.shiftCodeLensObjects(startLine, offset);
+
+    const status = this.diffBlocks.length === 0 ? "closed" : undefined;
+    this.options.onStatusUpdate(status, this.diffBlocks.length);
   }
 
   private shiftCodeLensObjects(startLine: number, offset: number) {
@@ -443,7 +448,6 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   public hasDiffForCurrentFile(): boolean {
-    const diffBlocks = this.editorToVerticalDiffCodeLens.get(this.filepath);
-    return diffBlocks !== undefined && diffBlocks.length > 0;
+    return this.diffBlocks.length > 0;
   }
 }
