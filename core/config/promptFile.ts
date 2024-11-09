@@ -1,11 +1,12 @@
 import Handlebars from "handlebars";
 import path from "path";
 import * as YAML from "yaml";
-import type { IDE, SlashCommand } from "..";
+import type { ChatHistory, ChatHistoryItem, ChatMessage, ContextItem, ContinueSDK, IContextProvider, IDE, SlashCommand } from "..";
 import { walkDir } from "../indexing/walkDir";
 import { stripImages } from "../llm/images";
 import { renderTemplatedString } from "../promptFiles/renderTemplatedString";
 import { getBasename } from "../util/index";
+import { BaseContextProvider } from "../context";
 
 export const DEFAULT_PROMPTS_FOLDER = ".prompts";
 
@@ -147,28 +148,32 @@ function extractUserInput(input: string, commandName: string): string {
   return input;
 }
 
-async function renderPrompt(prompt: string, context: any, userInput: string) {
+async function renderPrompt(prompt: string, context: ContinueSDK, userInput: string) {
   const helpers = getContextProviderHelpers(context);
 
   // A few context providers that don't need to be in config.json to work in .prompt files
   const diff = await context.ide.getDiff(false);
-  const currentFilePath = await context.ide.getCurrentFile();
-  const currentFile = currentFilePath
-    ? await context.ide.readFile(currentFilePath)
-    : undefined;
+  const currentFile = await context.ide.getCurrentFile();
+  const inputData: Record<string, string> = {
+    diff,
+    input: userInput,
+  };
+  if (currentFile) {
+    inputData.currentFile = currentFile.path;
+  }
 
   return renderTemplatedString(
     prompt,
     context.ide.readFile.bind(context.ide),
-    { diff, currentFile, input: userInput },
+    inputData,
     helpers,
   );
 }
 
 function getContextProviderHelpers(
-  context: any,
+  context: ContinueSDK,
 ): Array<[string, Handlebars.HelperDelegate]> | undefined {
-  return context.config.contextProviders?.map((provider: any) => [
+  return context.config.contextProviders?.map((provider: IContextProvider) => [
     provider.description.title,
     async (helperContext: any) => {
       const items = await provider.getContextItems(helperContext, {
@@ -182,16 +187,16 @@ function getContextProviderHelpers(
         selectedCode: context.selectedCode,
       });
 
-      items.forEach((item: any) =>
+      items.forEach((item) =>
         context.addContextItem(createContextItem(item, provider)),
       );
 
-      return items.map((item: any) => item.content).join("\n\n");
+      return items.map((item) => item.content).join("\n\n");
     },
   ]);
 }
 
-function createContextItem(item: any, provider: any) {
+function createContextItem(item: ContextItem, provider: IContextProvider) {
   return {
     ...item,
     id: {
@@ -202,7 +207,7 @@ function createContextItem(item: any, provider: any) {
 }
 
 function updateChatHistory(
-  history: any[],
+  history: ChatMessage[],
   commandName: string,
   renderedPrompt: string,
   systemMessage?: string,

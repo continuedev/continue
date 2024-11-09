@@ -19,7 +19,7 @@ import { GetGhTokenArgs } from "../protocol/ide.js";
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
-  constructor(private readonly workspaceDir: string) {}
+  constructor(private readonly workspaceDir: string) { }
   showToast(
     type: ToastType,
     message: string,
@@ -205,6 +205,10 @@ class FileSystemIde implements IDE {
     });
   }
 
+  getCurrentFile(): Promise<undefined> {
+    return Promise.resolve(undefined);
+  }
+
   showDiff(
     filepath: string,
     newContents: string,
@@ -219,10 +223,6 @@ class FileSystemIde implements IDE {
 
   getOpenFiles(): Promise<string[]> {
     return Promise.resolve([]);
-  }
-
-  getCurrentFile(): Promise<string | undefined> {
-    return Promise.resolve("");
   }
 
   getPinnedFiles(): Promise<string[]> {

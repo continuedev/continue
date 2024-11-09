@@ -13,6 +13,10 @@ In Continue, embeddings are generated during indexing and then used by [@Codebas
 `transformers.js` is used as a default embeddings model in VS Code. In JetBrains, there currently is no default.
 :::
 
+:::info[Free Trial]
+The free trial supports embeddings (provider: `free-trial`)
+:::
+
 ## Recommended embedding models
 
 If you have the ability to use any model, we recommend `voyage-code-2`, which is listed below along with the rest of the options for embeddings models.
@@ -77,3 +81,23 @@ See [here](../model-providers/top-level/gemini.md#embeddings-model) for instruct
 ### Vertex
 
 See [here](../model-providers/top-level/vertexai.md#embeddings-model) for instructions on how to use Vertex for embeddings.
+
+### Mistral
+
+See [here](../model-providers/top-level/mistral.md#embeddings-model) for instructions on how to use Mistral for embeddings.
+
+### NVIDIA
+
+See [here](../model-providers/more/nvidia.md#embeddings-model) for instructions on how to use NVIDIA for embeddings.
+
+### Bedrock
+
+See [here](../model-providers/top-level/bedrock.md#embeddings-model) for instructions on how to use Bedrock for embeddings.
+
+### WatsonX
+
+See [here](../model-providers/more/watsonx.md#embeddings-model) for instructions on how to use WatsonX for embeddings.
+
+### LMStudio
+
+See [here](../model-providers/more/lmstudio.md#embeddings-model) for instructions on how to use LMStudio for embeddings.

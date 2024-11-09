@@ -177,7 +177,7 @@ export class MessageIde implements IDE {
     return this.request("getOpenFiles", undefined);
   }
 
-  getCurrentFile(): Promise<string | undefined> {
+  getCurrentFile() {
     return this.request("getCurrentFile", undefined);
   }
 

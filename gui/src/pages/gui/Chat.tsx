@@ -137,7 +137,6 @@ export function Chat() {
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
   const active = useSelector((state: RootState) => state.state.active);
@@ -150,7 +149,7 @@ export function Chat() {
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
-  const scrollToBottom = useCallback(() => {
+  const snapToBottom = useCallback(() => {
     if (!topGuiDivRef.current) return;
     const elem = topGuiDivRef.current;
     elem.scrollTop = elem.scrollHeight - elem.clientHeight;
@@ -158,9 +157,26 @@ export function Chat() {
     setIsAtBottom(true);
   }, [topGuiDivRef, setIsAtBottom]);
 
+  const smoothScrollToBottom = useCallback(async () => {
+    if (!topGuiDivRef.current) return;
+    const elem = topGuiDivRef.current
+    elem.scrollTo({
+      top: elem.scrollHeight - elem.clientHeight,
+      behavior: 'smooth'
+    })
+
+    setIsAtBottom(true);
+  }, [topGuiDivRef, setIsAtBottom]);
+
   useEffect(() => {
-    if (active) scrollToBottom();
-  }, [active, scrollToBottom]);
+    if (active) snapToBottom();
+  }, [active, snapToBottom]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      smoothScrollToBottom();
+    }, 250)
+  }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -287,8 +303,8 @@ export function Chat() {
       }
     },
     [
-      sessionState.history,
-      sessionState.contextItems,
+      state.history,
+      state.contextItems,
       defaultModel,
       state,
       streamResponse,
@@ -378,7 +394,7 @@ export function Chat() {
                       >
                         <StepContainer
                           index={index}
-                          isLast={index === sessionState.history.length - 1}
+                          isLast={index === state.history.length - 1}
                           isFirst={index === 0}
                           open={
                             typeof stepsOpen[index] === "undefined"

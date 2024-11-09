@@ -1,5 +1,5 @@
 import { Chunk, IDE } from "core";
-import { languageForFilepath } from "core/autocomplete/constructPrompt";
+import { languageForFilepath } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 import { DEFAULT_IGNORE_DIRS } from "core/indexing/ignore";
 import { deduplicateArray } from "core/util";
 import { getParserForFile } from "core/util/treeSitter";
