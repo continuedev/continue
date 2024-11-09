@@ -45,36 +45,43 @@ export function registerPromptFilesCompletionProvider(
             label: "terminal",
             detail: "Contents of terminal",
             sortText: "...",
+            kind: vscode.CompletionItemKind.Field,
           },
           {
             label: "tree",
             detail: "File tree of workspace",
             sortText: "...",
+            kind: vscode.CompletionItemKind.Field,
           },
           {
             label: "open",
             detail: "All open files",
             sortText: "...",
+            kind: vscode.CompletionItemKind.Field,
           },
           {
             label: "os",
             detail: "Operating system information",
             sortText: "...",
+            kind: vscode.CompletionItemKind.Field,
           },
           {
             label: "problems",
             detail: "Problems in the current file",
             sortText: "...",
+            kind: vscode.CompletionItemKind.Field,
           },
           {
             label: "currentFile",
             detail: "Current file",
             sortText: "...",
+            kind: vscode.CompletionItemKind.Field,
           },
           {
             label: "repo-map",
             detail: "Map of files in your repo",
             sortText: "...",
+            kind: vscode.CompletionItemKind.Field,
           },
           ...files.map((file) => {
             const workspaceFolder = vscode.workspace.getWorkspaceFolder(
