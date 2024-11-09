@@ -23,6 +23,7 @@ import SearchContextProvider from "./SearchContextProvider.js";
 import TerminalContextProvider from "./TerminalContextProvider.js";
 import URLContextProvider from "./URLContextProvider.js";
 import RelativeFileContextProvider from "./RelativeFileContextProvider.js";
+import RelativeGitFileContextProvider from "./RelativeGitFileContextProvider.js";
 import FileContextProvider from "./FileContextProvider.js";
 
 
@@ -57,6 +58,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   URLContextProvider,
   ContinueProxyContextProvider,
   RelativeFileContextProvider,
+  RelativeGitFileContextProvider,
   CodebaseContextProvider
 ];
 

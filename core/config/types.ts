@@ -542,7 +542,8 @@ declare global {
     | "docs"
     | "gitlab-mr"
     | "os"
-    | "relativefilecontext";
+    | "relativefilecontext"
+    | "relativegitfilecontext";
 
 
   type TemplateType =

@@ -42,7 +42,8 @@ export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
   { name: "terminal", params: {} },
   { name: "problems", params: {} },
   { name: "folder", params: {} },
-  { name: "relativefilecontext", params: {} },
+  // { name: "relativefilecontext", params: {} }, // This is unused currently
+  { name: "relativegitfilecontext", params: {} },
    // TODO: Known bug v.1.3.0. codebase works on its own, but doesnt send a message if there is text in the same message as the @Codebase
   { name: "codebase", params: {} },
 
