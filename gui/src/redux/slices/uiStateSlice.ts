@@ -6,6 +6,7 @@ type UiState = {
   showDialog: boolean;
   dialogMessage: string | JSX.Element;
   dialogEntryOn: boolean;
+  activeFilePath: string | undefined;
 };
 
 export const uiStateSlice = createSlice({
@@ -17,6 +18,7 @@ export const uiStateSlice = createSlice({
     dialogMessage: "",
     dialogEntryOn: false,
     displayBottomMessageOnBottom: true,
+    activeFilePath: undefined,
   } as UiState,
   reducers: {
     setBottomMessage: (
@@ -55,6 +57,9 @@ export const uiStateSlice = createSlice({
     ) => {
       state.displayBottomMessageOnBottom = action.payload;
     },
+    setActiveFilePath: (state, action: PayloadAction<UiState["activeFilePath"]>) => {
+      state.activeFilePath = action.payload;
+    },
   },
 });
 
@@ -65,5 +70,6 @@ export const {
   setDialogEntryOn,
   setShowDialog,
   setDisplayBottomMessageOnBottom,
+  setActiveFilePath,
 } = uiStateSlice.actions;
 export default uiStateSlice.reducer;

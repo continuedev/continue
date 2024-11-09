@@ -41,6 +41,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source:
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
+  const useActiveFile = !!(useSelector((state: RootState) => state.uiState.activeFilePath));
 
   const slashCommands = useSelector(
     (store: RootState) => store.state.config.slashCommands || [],
@@ -183,7 +184,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger, source:
       );
 
       // Automatically use currently open file
-      if (!modifiers.noContext && (history.length === 0 || index === 0)) {
+      if (source === 'continue' && (!modifiers.noContext || useActiveFile) && (history.length === 0 || index === 0)) {
         const usingFreeTrial = defaultModel.provider === "free-trial";
 
         const currentFilePath = await ideMessenger.ide.getCurrentFile();

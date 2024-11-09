@@ -555,8 +555,10 @@ const commandsMap: (
       captureCommandTelemetry("sendToTerminal");
       ide.runCommand(text);
     },
-    "pearai.newSession": () => {
+    "pearai.newSession": async () => {
       sidebar.webviewProtocol?.request("newSession", undefined);
+      const currentFile = await ide.getCurrentFile();
+      sidebar.webviewProtocol?.request("setActiveFilePath", currentFile, [PEAR_CONTINUE_VIEW_ID]);
     },
     "pearai.viewHistory": () => {
       sidebar.webviewProtocol?.request("viewHistory", undefined, [
