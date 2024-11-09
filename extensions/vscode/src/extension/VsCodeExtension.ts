@@ -372,6 +372,7 @@ export class VsCodeExtension {
       this.sidebar.webviewProtocol.request("setActiveFilePath", filepath, [PEAR_CONTINUE_VIEW_ID]);
     });
 
+    this.updateNewWindowActiveFilePath()
     startAiderProcess(this.core);
   }
 
@@ -382,6 +383,11 @@ export class VsCodeExtension {
 
   private async refreshContextProviders() {
     this.sidebar.webviewProtocol.request("refreshSubmenuItems", undefined); // Refresh all context providers
+  }
+
+  private async updateNewWindowActiveFilePath() {
+    const currentFile = await this.ide.getCurrentFile();
+    this.sidebar.webviewProtocol?.request("setActiveFilePath", currentFile, [PEAR_CONTINUE_VIEW_ID]);
   }
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
