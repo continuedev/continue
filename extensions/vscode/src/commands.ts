@@ -603,7 +603,6 @@ const commandsMap: (
           vscode.ViewColumn.One,
           {
             retainContextWhenHidden: true,
-            enableFindWidget: true
           },
         );
         fullScreenPanel = panel;

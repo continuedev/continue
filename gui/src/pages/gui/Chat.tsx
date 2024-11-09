@@ -196,9 +196,11 @@ export function Chat() {
     setIsAtBottom(atBottom);
   };
 
+  const { widget, highlights, setOpen: setFindWidgetOpen } = useFindWidget(stepsDivRef)
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
+      setFindWidgetOpen(false)
       if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
         if (u) {
@@ -296,6 +298,7 @@ export function Chat() {
       defaultModel,
       state,
       streamResponse,
+      setFindWidgetOpen
     ],
   );
 
@@ -317,19 +320,17 @@ export function Chat() {
     [state.history],
   );
 
-  // const { widget, highlights } = useFindWidget(stepsDivRef)
-
   const showScrollbar = state.config.ui?.showChatScrollbar || false
 
   return (
     <>
-      {/* {widget} */}
+      {widget}
       <StepsDiv
         ref={stepsDivRef}
         className={`pt-[8px] overflow-y-scroll ${showScrollbar ? 'thin-scrollbar' : 'no-scrollbar'} ${state.history.length > 0 ? "h-full" : ""}`}
         onScroll={handleScroll}
       >
-        {/* {highlights}  */}
+        {highlights}
         {state.history.map((item, index: number) => (
           <Fragment key={item.message.id}>
             <ErrorBoundary
