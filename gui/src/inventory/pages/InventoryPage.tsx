@@ -105,7 +105,7 @@ const initialTools: AITool[] = [
     installNeeded: true,
     poweredBy: "Supermaven",
     enabled: true,
-    note: "While we develop our own autocomplete service, we recommend Supermaven's autocomplete as an alternate standalone extension. They offer a great service and a free tier (requires separate login)." 
+    note: "While we develop our own autocomplete service, we recommend Supermaven's autocomplete as an alternate standalone extension. They offer a great service and a free tier (requires separate login)."
   },
   {
     id: "4",
@@ -218,12 +218,12 @@ function AIToolCard({
           <h3
             className={`flex items-center gap-2 text-base font-semibold ${tool.enabled ? "text-foreground" : ""} transition-colors`}
           >
-            {!tool.icon.endsWith(".svg") ? 
+            {!tool.icon.endsWith(".svg") ?
               <div className="text-2xl">
                 {tool.icon}
               </div> : (
-              <img 
-                src={getLogoPath(tool.icon)} 
+              <img
+                src={getLogoPath(tool.icon)}
                 className="w-6 h-6"
               />
             )}
@@ -386,12 +386,12 @@ export default function AIToolInventory() {
                 <div className="flex-grow text-foreground">
                   <h2 className="text-lg text-font-bold mb-2 flex items-start gap-1">
                     <div className="flex items-center gap-2">
-                      {!focusedTool.icon.endsWith(".svg") ? 
+                      {!focusedTool.icon.endsWith(".svg") ?
                         <div className="text-2xl">
                           {focusedTool.icon}
                         </div> : (
-                          <img 
-                          src={getLogoPath(focusedTool.icon)} 
+                          <img
+                          src={getLogoPath(focusedTool.icon)}
                           className="w-5 h-5"
                         />
                       )}
@@ -412,12 +412,12 @@ export default function AIToolInventory() {
                 {focusedTool.installNeeded && (
                 <div className="mt-2 flex flex-col items-start gap-2 sticky bottom-0 bg-background p-2">
                 {focusedTool?.note && <p className="text-sm text-muted-foreground">Note: {focusedTool.note}</p>}
-                <Button
+                {/* <Button
                   onClick={() => handleInstall(focusedTool)}
                   disabled={!focusedTool.installNeeded}
                 >
                   Click to install
-                </Button>
+                </Button> */}
                 {/* TODO: not used for now {quickSlots.every((slot) => slot !== null) && (
                   <p className="text-destructive mt-1 text-xs">
                     Quick slots are full
@@ -434,7 +434,7 @@ export default function AIToolInventory() {
             )}
           </div>
         </main>
-        
+
         {/* TODO: quick action slots are removed for now since now fully finished */}
         {/* <footer className="flex-none mt-2 mb-2 p-2">
           <h3 className="flex items-center gap-1 font-semibold text-sm mb-2">
