@@ -30,6 +30,11 @@ import javax.swing.*
 import com.intellij.openapi.components.service
 import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.roots.ModuleRootManager
+import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.openapi.vfs.newvfs.BulkFileListener
+import com.intellij.openapi.vfs.newvfs.events.VFileEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileDeleteEvent
+import com.intellij.openapi.vfs.newvfs.events.VFileContentChangeEvent
 
 fun showTutorial(project: Project) {
     val tutorialFileName = getTutorialFileName()
@@ -145,6 +150,28 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                             )
                         )
                     )
+                }
+            })
+
+            // Handle file changes and deletions - reindex
+            connection.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
+                override fun after(events: List<VFileEvent>) {
+                    // Collect all relevant paths for deletions
+                    val deletedPaths = events.filterIsInstance<VFileDeleteEvent>()
+                        .map { event -> event.file.path.split("/").dropLast(1).joinToString("/") }
+
+                    // Collect all relevant paths for content changes
+                    val changedPaths = events.filterIsInstance<VFileContentChangeEvent>()
+                        .map { event -> event.file.path.split("/").dropLast(1).joinToString("/") }
+
+                    // Combine both lists of paths for re-indexing
+                    val allPaths = deletedPaths + changedPaths
+
+                    // Create a data map if there are any paths to re-index
+                    if (allPaths.isNotEmpty()) {
+                        val data = mapOf("dirs" to allPaths)
+                        continuePluginService.coreMessenger?.request("index/forceReIndex", data, null) { _ -> }
+                    }
                 }
             })
 
