@@ -1,20 +1,12 @@
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import {
-  incrementNextCodeBlockToApplyIndex,
-  updateApplyState,
-} from "../../../redux/slices/uiStateSlice";
+import { updateApplyState } from "../../../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../redux/store";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import {
-  childrenToText,
-  getTerminalCommand,
-  isTerminalCodeBlock,
-} from "./utils";
+import { childrenToText } from "../utils";
 import { v4 as uuidv4 } from "uuid";
-import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { getFontSize } from "../../../util";
 import FileInfo from "./FileInfo";
@@ -23,7 +15,7 @@ import Spinner from "./Spinner";
 import ApplyActions from "./ApplyActions";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import CopyButton from "./CopyButton";
-import { ApplyState } from "core/protocol/ideWebview";
+import { useApplyCodeBlock } from "../utils/useApplyCodeBlock";
 
 const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
@@ -61,10 +53,14 @@ export default function StepContainerPreToolbar(
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string | null>(null);
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
-  const defaultModel = useSelector(defaultModelSelector);
   const [isExpanded, setIsExpanded] = useState(false);
   const [codeBlockContent, setCodeBlockContent] = useState("");
   const isChatActive = useSelector((state: RootState) => state.state.active);
+  const onClickApply = useApplyCodeBlock({
+    streamId: streamIdRef.current,
+    filepath: props.filepath,
+    codeBlockContent: props.codeBlockContent,
+  });
   const nextCodeBlockIndex = useSelector(
     (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
   );
@@ -74,10 +70,6 @@ export default function StepContainerPreToolbar(
       (state) => state.streamId === streamIdRef.current,
     ),
   );
-
-  // console.log(
-  //   `[StepContainerPreToolbar] streamId: ${applyState && applyState.streamId} numDiffs: ${applyState && applyState.numDiffs}`,
-  // );
 
   const isMultifileEdit = true; // TODO: Pull from Redux state
   const numLinesCodeBlock = props.codeBlockContent.split("\n").length;
@@ -135,24 +127,6 @@ export default function StepContainerPreToolbar(
     wasGeneratingRef.current = isGeneratingCodeBlock;
   }, [isGeneratingCodeBlock]);
 
-  async function onClickApply() {
-    dispatch(
-      updateApplyState({
-        streamId: streamIdRef.current,
-        status: "streaming",
-      }),
-    );
-
-    await ideMessenger.request("applyToFile", {
-      text: codeBlockContent,
-      streamId: streamIdRef.current,
-      curSelectedModelTitle: defaultModel.title,
-      filepath: props.filepath,
-    });
-
-    dispatch(incrementNextCodeBlockToApplyIndex({}));
-  }
-
   function onClickAcceptApply() {
     ideMessenger.post("acceptDiff", { filepath: props.filepath });
     dispatch(
@@ -177,7 +151,8 @@ export default function StepContainerPreToolbar(
     setIsExpanded(!isExpanded);
   }
 
-  // If we don't have a file extension, we don't render any toolbar
+  // We want until there is an extension in the filepath to avoid rendering
+  // an incomplete filepath
   if (!hasFileExtension) {
     return props.children;
   }

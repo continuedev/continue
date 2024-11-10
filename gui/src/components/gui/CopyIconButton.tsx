@@ -2,7 +2,7 @@ import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
-import ButtonWithTooltip from "../ButtonWithTooltip";
+import HeaderButtonWithToolTip from "./HeaderButtonWithToolTip";
 import useCopy from "../../hooks/useCopy";
 
 interface CopyIconButtonProps {
@@ -22,7 +22,7 @@ export function CopyIconButton({
 
   return (
     <>
-      <ButtonWithTooltip
+      <HeaderButtonWithToolTip
         tooltipPlacement="top"
         tabIndex={tabIndex}
         text={copied ? "Copied" : "Copy"}
@@ -33,7 +33,7 @@ export function CopyIconButton({
         ) : (
           <ClipboardIcon className={clipboardIconClassName} />
         )}
-      </ButtonWithTooltip>
+      </HeaderButtonWithToolTip>
     </>
   );
 }

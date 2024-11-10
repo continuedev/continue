@@ -40,7 +40,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import ButtonWithTooltip from "../ButtonWithTooltip";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
@@ -375,7 +375,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                 onClick={() => selectItem(index)}
                 onMouseEnter={() => setSelectedIndex(index)}
               >
-                <span className="flex justify-between w-full items-center">
+                <span className="flex w-full items-center justify-between">
                   <div className="flex items-center justify-center">
                     {showFileIconForItem(item) && (
                       <FileIcon
@@ -400,7 +400,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                       opacity: index !== selectedIndex ? 0 : 1,
                       minWidth: "30px",
                     }}
-                    className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
+                    className="ml-2 flex items-center overflow-hidden overflow-ellipsis whitespace-nowrap"
                   >
                     {item.description}
                     {item.type === "contextProvider" &&
@@ -414,7 +414,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     {item.subActions?.map((subAction) => {
                       const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
                       return (
-                        <ButtonWithTooltip
+                        <HeaderButtonWithToolTip
                           onClick={(e) => {
                             subAction.action(item);
                             e.stopPropagation();
@@ -424,7 +424,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                           text={undefined}
                         >
                           <Icon width="1.2em" height="1.2em" />
-                        </ButtonWithTooltip>
+                        </HeaderButtonWithToolTip>
                       );
                     })}
                   </span>

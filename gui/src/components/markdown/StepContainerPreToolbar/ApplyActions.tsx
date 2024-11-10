@@ -52,8 +52,6 @@ export default function ApplyActions(props: ApplyActionsProps) {
         </div>
       );
     case "closed":
-      // We show a codeblock as being "applied" whenever all individual diffs
-      // have been accepted/rejected, or when a user has explicitly accepted the entire block.
       if (!hasRejected && props.applyState.numDiffs === 0) {
         return (
           <span className="flex items-center rounded bg-zinc-700 pl-2 pr-1 text-slate-400">

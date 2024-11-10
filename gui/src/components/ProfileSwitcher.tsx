@@ -24,7 +24,7 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
-import ButtonWithTooltip from "./ButtonWithTooltip";
+import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -247,7 +247,7 @@ function ProfileSwitcher() {
 
       {controlServerBetaEnabled &&
         (session?.account ? (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             tooltipPlacement="top-end"
             text={
               session.account.label === ""
@@ -257,15 +257,15 @@ function ProfileSwitcher() {
             onClick={logout}
           >
             <UserCircleIconSolid className="h-4 w-4" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         ) : (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             tooltipPlacement="top-end"
             text="Click to login to Continue"
             onClick={login}
           >
             <UserCircleIconOutline className="h-4 w-4" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         ))}
     </>
   );

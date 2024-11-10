@@ -10,7 +10,7 @@ import { RootState } from "../../../redux/store";
 import { getFontSize, isJetBrains } from "../../../util";
 import ApplyStateControls from "./ApplyActions";
 import FileInfo from "./FileInfo";
-import { isTerminalCodeBlock } from "./utils";
+import { isTerminalCodeBlock } from "../utils";
 
 interface CodeBlockWithToolBarProps {
   text: string;

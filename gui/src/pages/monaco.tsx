@@ -3,7 +3,7 @@ import { DiffEditor } from "@monaco-editor/react";
 import React, { useContext, useEffect } from "react";
 import { v4 } from "uuid";
 import { vscInputBackground } from "../components";
-import ButtonWithTooltip from "../components/ButtonWithTooltip";
+import HeaderButtonWithToolTip from "../components/gui/HeaderButtonWithToolTip";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 
 interface EditorFrameProps {
@@ -37,7 +37,7 @@ function EditorFrame(props: EditorFrameProps) {
   return (
     <div>
       <div
-        className="my-2 px-2 py-1 flex justify-between items-center"
+        className="my-2 flex items-center justify-between px-2 py-1"
         style={{
           backgroundColor: vscInputBackground,
         }}
@@ -53,12 +53,12 @@ function EditorFrame(props: EditorFrameProps) {
           {props.filename.split("/").pop()}
         </code>
         <div className="flex items-center">
-          <ButtonWithTooltip text="Reject" onClick={() => {}}>
+          <HeaderButtonWithToolTip text="Reject" onClick={() => {}}>
             <XMarkIcon width="1.3em" height="1.3em" color="red" />
-          </ButtonWithTooltip>
-          <ButtonWithTooltip text="Accept" onClick={() => {}}>
+          </HeaderButtonWithToolTip>
+          <HeaderButtonWithToolTip text="Accept" onClick={() => {}}>
             <CheckIcon width="1.3em" height="1.3em" color="lightgreen" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         </div>
       </div>
       {/* <Editor

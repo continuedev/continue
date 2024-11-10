@@ -11,7 +11,7 @@ import {
   vscEditorBackground,
   vscForeground,
 } from "..";
-import { getFontSize } from "../../util";
+import { getFontSize, isJetBrains } from "../../util";
 import "./katex.css";
 import "./markdown.css";
 import { useSelector } from "react-redux";
@@ -20,6 +20,7 @@ import { ctxItemToRifWithContents } from "core/commands/util";
 import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -194,22 +195,47 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             codeBlockContent,
           } = preProps?.children?.[0]?.props;
 
-          if (!filepath || !props.isRenderingInStepContainer) {
+          if (!props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;
           }
 
-          // We use a custom toolbar for codeblocks in the step container
+          const language = getLanuageFromClassName(className);
+
           return (
-            <StepContainerPreToolbar
+            <StepContainerPreActionButtons
+              language={language}
               codeBlockContent={codeBlockContent}
-              codeBlockIndex={preProps.codeBlockIndex}
-              language={getLanuageFromClassName(className)}
               filepath={filepath}
-              isGeneratingCodeBlock={isGeneratingCodeBlock}
             >
               <SyntaxHighlightedPre {...preProps} />
-            </StepContainerPreToolbar>
+            </StepContainerPreActionButtons>
           );
+
+          // // We don't support "lazy" applies in JB yet
+          // if (!filepath || isJetBrains()) {
+          // return (
+          //   <StepContainerPreActionButtons
+          //     language={language}
+          //     codeBlockContent={codeBlockContent}
+          //     filepath={filepath}
+          //   >
+          //     <SyntaxHighlightedPre {...preProps} />
+          //   </StepContainerPreActionButtons>
+          // );
+          // }
+
+          // // We use a custom toolbar for codeblocks in the step container
+          // return (
+          //   <StepContainerPreToolbar
+          //     codeBlockContent={codeBlockContent}
+          //     codeBlockIndex={preProps.codeBlockIndex}
+          //     language={language}
+          //     filepath={filepath}
+          //     isGeneratingCodeBlock={isGeneratingCodeBlock}
+          //   >
+          //     <SyntaxHighlightedPre {...preProps} />
+          //   </StepContainerPreToolbar>
+          // );
         },
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
