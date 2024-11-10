@@ -175,6 +175,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         };
         const query = caseSensitive ? _query : _query.toLowerCase()
 
+        // First grab all text nodes, skipping any elements with the 'find-widget-skip' class
         const textNodes: Text[] = [];
         const walker = document.createTreeWalker(
             searchRef.current,
@@ -199,14 +200,15 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
             textNodes.push(walker.currentNode as Text);
         }
 
-        const newMatches: SearchMatch[] = [];
-        let index = 0;
-
-        // For finding closest match
+        // Keep track of the match closest to the middle of the screen
         const verticalMiddle = searchRef.current.scrollTop + searchRef.current.clientHeight / 2
         let closestDist = Infinity
         let closestMatchToMiddle: SearchMatch | null = null
 
+        // Now walk through each node match and extract search results
+        // One node can have several matches
+        let index = 0;
+        const newMatches: SearchMatch[] = [];
         textNodes.forEach(textNode => {
             let nodeTextValue = caseSensitive ? textNode.nodeValue : textNode.nodeValue.toLowerCase();
             let startIndex = 0;
