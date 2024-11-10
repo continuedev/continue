@@ -735,6 +735,7 @@ declare global {
     stop?: string[];
     maxTokens?: number;
     numThreads?: number;
+    useMmap?: boolean;
     keepAlive?: number;
     raw?: boolean;
     stream?: boolean;
