@@ -20,7 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { getLogoPath } from "@/pages/welcome/setup/ImportExtensions";
 import { IdeMessengerContext } from "@/context/IdeMessenger";
@@ -90,14 +90,10 @@ function AIToolCard({
           <h3
             className={`flex items-center gap-2 text-base font-semibold ${tool.enabled ? "text-foreground" : ""} transition-colors`}
           >
-            {!tool.icon.endsWith(".svg") ?
-              <div className="text-2xl">
-                {tool.icon}
-              </div> : (
-              <img
-                src={getLogoPath(tool.icon)}
-                className="w-6 h-6"
-              />
+            {!tool.icon.endsWith(".svg") ? (
+              <div className="text-2xl">{tool.icon}</div>
+            ) : (
+              <img src={getLogoPath(tool.icon)} className="w-6 h-6" />
             )}
             {tool.name}
           </h3>
@@ -161,16 +157,18 @@ export default function AIToolInventory() {
   const [isAiderInstalled, setIsAiderInstalled] = useState(false);
 
   useEffect(() => {
-    setTools(prevTools =>
-      prevTools.map(tool => {
-        if (tool.id === AIToolID.CREATOR) { // Aider's ID
-          return { ...tool, isInstalled: isAiderInstalled }
-        } else if (tool.id === AIToolID.AUTOCOMPLETE) { // Supermaven's ID
-          return { ...tool, isInstalled: isSuperMavenInstalled }
+    setTools((prevTools) =>
+      prevTools.map((tool) => {
+        if (tool.id === AIToolID.CREATOR) {
+          // Aider's ID
+          return { ...tool, isInstalled: isAiderInstalled };
+        } else if (tool.id === AIToolID.AUTOCOMPLETE) {
+          // Supermaven's ID
+          return { ...tool, isInstalled: isSuperMavenInstalled };
         } else {
-          return tool
+          return tool;
         }
-      })
+      }),
     );
   }, [isSuperMavenInstalled, isAiderInstalled]);
 
@@ -178,28 +176,32 @@ export default function AIToolInventory() {
   useEffect(() => {
     const checkInstallations = async () => {
       try {
-        const isSuperMavenInstalled = await ideMessenger.request("is_vscode_extension_installed", { extensionId: "supermaven.supermaven" });
+        const isSuperMavenInstalled = await ideMessenger.request(
+          "is_vscode_extension_installed",
+          { extensionId: "supermaven.supermaven" },
+        );
         setIsSuperMavenInstalled(isSuperMavenInstalled);
-        console.dir("CHECKING SUPERMAVEN INSTALLED")
-        console.dir(isSuperMavenInstalled)
+        console.dir("CHECKING SUPERMAVEN INSTALLED");
+        console.dir(isSuperMavenInstalled);
       } catch (error) {
         console.error("Error checking installation status:", error);
       }
     };
 
     const checkAiderInstallation = async () => {
-      const response = await ideMessenger.request("isAiderInstalled", undefined);
-      const isInstalled = typeof response === 'boolean' ? response : false;
-      console.dir("INVENTORY AIDER INSTALLED ")
-      console.dir(isInstalled)
+      const response = await ideMessenger.request(
+        "isAiderInstalled",
+        undefined,
+      );
+      const isInstalled = typeof response === "boolean" ? response : false;
+      console.dir("INVENTORY AIDER INSTALLED ");
+      console.dir(isInstalled);
       setIsAiderInstalled(isInstalled);
-    }
+    };
 
     checkAiderInstallation();
     checkInstallations();
   }, []);
-
-
 
   const [tools, setTools] = useState<AITool[]>([
     {
@@ -215,8 +217,8 @@ export default function AIToolInventory() {
       whenToUse: (
         <span>
           When you need to find information where recency is important. Regular
-          LLMs' knowledge are outdated by several months, whereas PearAI Search is
-          able to search the web for latest data
+          LLMs' knowledge are outdated by several months, whereas PearAI Search
+          is able to search the web for latest data
         </span>
       ),
       strengths: [
@@ -231,12 +233,14 @@ export default function AIToolInventory() {
     {
       id: AIToolID.CHAT,
       name: "Chat",
-      description: <span>AI pair programmer for flexible coding assistance</span>,
+      description: (
+        <span>AI pair programmer for flexible coding assistance.</span>
+      ),
       icon: "inventory-chat.svg",
       whenToUse: (
         <span>
-          When you need fragmented coding assistance and suggestions. Ask the chat
-          any question, it can generate code and also create files.
+          When you need fragmented coding assistance and suggestions. Ask the
+          chat any question, it can generate code and also create files.
           Requires human intervention to apply and review changes.
         </span>
       ),
@@ -258,37 +262,48 @@ export default function AIToolInventory() {
     {
       id: AIToolID.AUTOCOMPLETE,
       name: "Autocomplete",
-      description: <span>Fast code autocomplete suggestions. Recommended as a standalone extension</span>,
+      description: (
+        <span>
+          Fast code autocomplete suggestions. Recommended as a standalone
+          extension.
+        </span>
+      ),
       icon: "inventory-autocomplete.svg",
       whenToUse: (
         <span>
-          When you need instant code completions while typing. Autocomplete offers
-          real-time suggestions and completes your code with minimal latency,
-          perfect for maintaining flow while coding
+          When you need instant code completions while typing. Autocomplete
+          offers real-time suggestions and completes your code with minimal
+          latency, perfect for maintaining flow while coding.
         </span>
       ),
       strengths: [
         <span>Lightning-fast completions</span>,
         <span>Context-aware suggestions</span>,
         <span>Low latency response times</span>,
-        <span>Predicts where your cursor should go next</span>
+        <span>Predicts where your cursor should go next</span>,
       ],
       installNeeded: true,
       isInstalled: isSuperMavenInstalled,
       installCommand: async () => {
         if (isSuperMavenInstalled) {
-          return ideMessenger.post("uninstallVscodeExtension", { extensionId: "supermaven.supermaven" });
+          return ideMessenger.post("uninstallVscodeExtension", {
+            extensionId: "supermaven.supermaven",
+          });
         }
-        ideMessenger.post("installVscodeExtension", { extensionId: "supermaven.supermaven" });
+        ideMessenger.post("installVscodeExtension", {
+          extensionId: "supermaven.supermaven",
+        });
       },
       poweredBy: "Supermaven",
       enabled: true,
-      note: "While we develop our own autocomplete service, we recommend Supermaven's autocomplete as an alternate standalone extension. They offer a great service and a free tier (requires separate login)."
+      note: "While we develop our own autocomplete service, we recommend Supermaven's autocomplete as an alternate standalone extension. They offer a great service and a free tier (requires separate login).",
     },
     {
       id: AIToolID.CREATOR,
       name: "Creator",
-      description: <span>"No-code" assistant; complete features directly</span>,
+      description: (
+        <span>"No-code" assistant; complete features directly.</span>
+      ),
       icon: "inventory-creator.svg",
       whenToUse: (
         <span>
@@ -300,7 +315,7 @@ export default function AIToolInventory() {
       strengths: [
         <span>Full feature completions</span>,
         <span>Automated refactoring</span>,
-        <span>Lower level of human intervention needed</span>,
+        <span>Less human intervention needed</span>,
       ],
       installNeeded: true,
       isInstalled: false, // Initially set to false
@@ -345,10 +360,10 @@ export default function AIToolInventory() {
       icon: "inventory-mem0.svg",
       whenToUse: (
         <span>
-          When you want the AI to remember insights from past prompts you've given
-          it. It can automatically remember details like what version of for e.g.
-          Python you're using, or other specific details of your codebase, like
-          your coding styles, or your expertise level
+          When you want the AI to remember insights from past prompts you've
+          given it. It can automatically remember details like what version of
+          for e.g. Python you're using, or other specific details of your
+          codebase, like your coding styles, or your expertise level
         </span>
       ),
       strengths: [
@@ -360,9 +375,7 @@ export default function AIToolInventory() {
       poweredBy: "Mem0",
       installNeeded: false,
     },
-
   ]);
-
 
   const [searchQuery, setSearchQuery] = useState("");
   const [focusedTool, setFocusedTool] = useState<AITool | null>(null);
@@ -407,7 +420,7 @@ export default function AIToolInventory() {
 
   const handleInstall = (tool: AITool) => {
     // TODO: implement install
-  }
+  };
 
   return (
     <TooltipProvider>
@@ -470,18 +483,19 @@ export default function AIToolInventory() {
                 <div className="flex-grow text-foreground">
                   <h2 className="text-lg text-font-bold mb-2 flex items-start gap-1">
                     <div className="flex items-center gap-2">
-                      {!focusedTool.icon.endsWith(".svg") ?
-                        <div className="text-2xl">
-                          {focusedTool.icon}
-                        </div> : (
-                          <img
+                      {!focusedTool.icon.endsWith(".svg") ? (
+                        <div className="text-2xl">{focusedTool.icon}</div>
+                      ) : (
+                        <img
                           src={getLogoPath(focusedTool.icon)}
                           className="w-5 h-5"
                         />
                       )}
-                    {focusedTool.name}
+                      {focusedTool.name}
                     </div>
-                    <Badge variant="outline" className="pl-0">Powered by {focusedTool.poweredBy}</Badge>
+                    <Badge variant="outline" className="pl-0">
+                      Powered by {focusedTool.poweredBy}*
+                    </Badge>
                   </h2>
                   <p className="mb-2">{focusedTool.description}</p>{" "}
                   <h3 className="font-semibold mb-1">When to use:</h3>
@@ -495,16 +509,33 @@ export default function AIToolInventory() {
                 </div>
                 {focusedTool.installNeeded && (
                   <div className="mt-2 flex flex-col items-start gap-2 sticky bottom-0 bg-background p-2">
-                    {focusedTool?.note && <p className="text-sm text-muted-foreground">Note: {focusedTool.note}</p>}
+                    {focusedTool?.note && (
+                      <p className="text-sm text-muted-foreground">
+                        Note: {focusedTool.note}
+                      </p>
+                    )}
                     <Button
                       onClick={() => focusedTool.installCommand()}
                       disabled={!focusedTool.installNeeded}
                       // variant={focusedTool.isInstalled ? "destructive" : "default"}
                     >
-                      {focusedTool.isInstalled ? "Uninstall" : "Click to install"}
+                      {focusedTool.isInstalled
+                        ? "Uninstall"
+                        : "Click to install"}
                     </Button>
                   </div>
                 )}
+                <div className="text-[10px] text-muted-foreground mt-4">
+                  *View PearAI Disclaimer page{" "}
+                  <Link
+                    to="https://trypear.ai/disclaimer/"
+                    target="_blank"
+                    className="text-muted-foreground no-underline hover:no-underline"
+                  >
+                    here
+                  </Link>
+                  .
+                </div>
               </>
             ) : (
               <div className="flex flex-col items-center justify-center text-foreground opacity-60 mt-4 flex-grow">
