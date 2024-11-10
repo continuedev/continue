@@ -1,8 +1,7 @@
-import React, { useRef, useEffect, useState, RefObject, useCallback } from 'react';
+import React, { useRef, useEffect, useState, RefObject, useCallback, useMemo } from 'react';
 import { RootState } from '../../redux/store';
 import { useSelector } from 'react-redux';
 import { Button, HeaderButton, Input } from '..';
-import useWindowSize from '../../hooks/useWindowSize';
 import ButtonWithTooltip from '../ButtonWithTooltip';
 import { ArrowDownIcon, ArrowUpIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
@@ -13,6 +12,7 @@ interface SearchMatch {
 }
 
 const SEARCH_DEBOUNCE = 500
+const RESIZE_DEBOUNCE = 200
 
 interface Rectangle {
     top: number;
@@ -43,85 +43,22 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
     )
 }
 
+/*
+    useFindWidget takes a container ref and returns
+    1. A widget that can be placed anywhere to search the contents of that container
+    2. Search results and state
+    3. Highlight components to be overlayed over the container
+
+    Container must have relative positioning
+*/
 export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
-    // Search input
-    const [currentMatch, setCurrentMatch] = useState<SearchMatch>();
+    // Used to disable search when chat is loading
+    const active = useSelector((state: RootState) => state.state.active);
 
-
-
-
-    // Handle container resizing
-    const [isResizing, setIsResizing] = useState(false);
-    useEffect(() => {
-        let timeoutId: NodeJS.Timeout | null = null;
-        const handleResize = () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-            setIsResizing(true);
-            timeoutId = setTimeout(() => {
-                setIsResizing(false)
-            }, 200);
-        };
-
-        window.addEventListener('resize', handleResize);
-        return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-            window.removeEventListener('resize', handleResize);
-        };
-    }, [200]);
-
-    // useEffect(() => {
-    //     if (!searchRef.current) return
-    //     let timeoutId: NodeJS.Timeout | null = null;
-
-    //     // const handleResize = () => {
-    //     //     if (timeoutId) {
-    //     //         clearTimeout(timeoutId);
-    //     //     }
-    //     //     setIsMutating(true);
-
-    //     //     timeoutId = setTimeout(() => {
-    //     //         setIsMutating(false)
-    //     //     }, 200);
-    //     // };
-    //     const observer = new MutationObserver(mutations => {
-    //         if (timeoutId) {
-    //             clearTimeout(timeoutId);
-    //         }
-    //         setIsMutating(true);
-
-    //         timeoutId = setTimeout(() => {
-    //             setIsMutating(false)
-    //         }, 200);
-    //         // mutations.forEach(mutation => {
-
-    //         // });
-    //     });
-    //     observer.observe(searchRef.current, {
-    //         // characterData: true,
-    //         // childList: true, 
-    //         attributes: true
-    //     })
-    //     return () => {
-    //         if (timeoutId) {
-    //             clearTimeout(timeoutId);
-    //         }
-    //         observer.disconnect();
-    //     };
-    // }, [searchRef.current]);
-
-
-
-
-
-
-    const inputRef = useRef(null) as RefObject<HTMLInputElement>;
+    // Search input, debounced
     const [input, setInput] = useState<string>("");
-
     const [debouncedInput, setDebouncedInput] = useState<string>("");
+    const inputRef = useRef(null) as RefObject<HTMLInputElement>;
     const lastUpdateRef = useRef(0);
 
     useEffect(() => {
@@ -140,15 +77,22 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         }
     }, [input]);
 
-
+    // Widget open/closed state
     const [open, setOpen] = useState<boolean>(false);
+    const openWidget = useCallback(() => {
+        setOpen(true);
+        inputRef?.current.select()
+    }, [setOpen, inputRef])
+
+    // Search settings and results
     const [caseSensitive, setCaseSensitive] = useState<boolean>(false);
     const [useRegex, setUseRegex] = useState<boolean>(false);
 
-    const active = useSelector((state: RootState) => state.state.active);
-
     const [matches, setMatches] = useState<SearchMatch[]>([]);
+    const [currentMatch, setCurrentMatch] = useState<SearchMatch>();
 
+    // Navigating between search results
+    // The "current" search result is highlighted a different color
     const scrollToMatch = useCallback((match: SearchMatch) => {
         setCurrentMatch(match)
         searchRef.current.scrollTo({
@@ -158,6 +102,72 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         })
     }, [searchRef.current])
 
+    const nextMatch = useCallback(() => {
+        if (matches.length === 0) return
+        const newIndex = (currentMatch.index + 1) % matches.length;
+        const newMatch = matches[newIndex]
+        scrollToMatch(newMatch)
+    }, [scrollToMatch, currentMatch, matches])
+
+    const previousMatch = useCallback(() => {
+        if (matches.length === 0) return
+        const newIndex = currentMatch.index === 0 ? matches.length - 1 : currentMatch.index - 1
+        const newMatch = matches[newIndex]
+        scrollToMatch(newMatch)
+    }, [scrollToMatch, currentMatch, matches])
+
+    // Handle keyboard shortcuts for navigation
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.metaKey && event.key.toLowerCase() === 'f') {
+                event.preventDefault();
+                event.stopPropagation();
+                openWidget();
+            } else if (document.activeElement === inputRef.current) {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setOpen(false);
+                } else if (event.key === 'Enter') {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    if (event.shiftKey) previousMatch()
+                    else nextMatch()
+                }
+            }
+        }
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [inputRef, matches, nextMatch]);
+
+    // Handle container resize changes - highlight positions must adjust
+    const [isResizing, setIsResizing] = useState(false);
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout | null = null;
+        const handleResize = () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            setIsResizing(true);
+            timeoutId = setTimeout(() => {
+                setIsResizing(false)
+            }, RESIZE_DEBOUNCE);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
+    // The bread and butter: 
+    // 
     const loadHighlights = useCallback((_query: string | undefined, scrollTo: 'first' | 'closest' | 'none' = 'none') => {
         if (!searchRef.current || !_query) {
             setMatches([]);
@@ -166,7 +176,6 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         const query = caseSensitive ? _query : _query.toLowerCase()
 
         const textNodes: Text[] = [];
-        const start = Date.now()
         const walker = document.createTreeWalker(
             searchRef.current,
             NodeFilter.SHOW_ALL,
@@ -233,11 +242,11 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                 }
 
                 index++;
-                startIndex += query.length; // Move past this match
+                startIndex += query.length;
                 range.detach();
             }
         });
-        console.log(`Found ${textNodes.length} nodes in ${Date.now() - start}ms`);
+
         setMatches(newMatches);
         if (query.length > 1 && newMatches.length) {
             if (scrollTo === 'first') {
@@ -249,124 +258,74 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         }
     }, [searchRef.current, caseSensitive, useRegex, scrollToMatch])
 
+    // Trigger searches or clearing results on state changes
     useEffect(() => {
         if (active || !open || isResizing) setMatches([])
         else loadHighlights(debouncedInput, 'closest');
     }, [debouncedInput, loadHighlights, active, open, isResizing]);
 
-
-    // Widget settings
-
-
-    // Manage widget opened/close state
-    const openWidget = useCallback(() => {
-        setOpen(true);
-        inputRef?.current.select()
-    }, [setOpen, inputRef])
-
-    const nextMatch = useCallback(() => {
-        if (matches.length === 0) return
-        const newIndex = (currentMatch.index + 1) % matches.length;
-        const newMatch = matches[newIndex]
-        scrollToMatch(newMatch)
-    }, [scrollToMatch, currentMatch, matches])
-
-    const previousMatch = useCallback(() => {
-        if (matches.length === 0) return
-        const newIndex = currentMatch.index === 0 ? matches.length - 1 : currentMatch.index - 1
-        const newMatch = matches[newIndex]
-        scrollToMatch(newMatch)
-    }, [scrollToMatch, currentMatch, matches])
-
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.metaKey && event.key.toLowerCase() === 'f') {
-                event.preventDefault();
-                event.stopPropagation();
-                openWidget();
-            } else if (document.activeElement === inputRef.current) {
-                if (event.key === 'Escape') {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setOpen(false);
-                } else if (event.key === 'Enter') {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    if (event.shiftKey) previousMatch()
-                    else nextMatch()
-                }
-            }
-        }
-
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-        };
-    }, [inputRef, matches, nextMatch]);
-
-    const widget = (
-        <div
-            className={`z-50 fixed transition-all top-0 ${open ? '' : '-translate-y-full'} right-0 pr-3 flex flex-row items-center gap-2 rounded-bl-lg border-b border-solid border-0 border-l border-zinc-700 bg-vsc-background py-0.5 px-1`}
-        >
-            <Input
-                type="text"
-                ref={inputRef}
-                value={input}
-                onChange={(e) => {
-                    setInput(e.target.value);
-                }}
-                placeholder="Search..."
-            />
-            <p className='whitespace-nowrap text-xs min-w-14 px-1 text-center'>
-                {matches.length === 0 ? "No results" : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
-            </p>
-            <div className='flex flex-row gap-0.5'>
+    // Find widget component
+    const widget = useMemo(() => {
+        return (
+            <div
+                className={`z-50 fixed transition-all top-0 ${open ? '' : '-translate-y-full'} right-0 pr-3 flex flex-row items-center gap-2 rounded-bl-lg border-b border-solid border-0 border-l border-zinc-700 bg-vsc-background py-0.5 px-1`}
+            >
+                <Input
+                    type="text"
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => {
+                        setInput(e.target.value);
+                    }}
+                    placeholder="Search..."
+                />
+                <p className='whitespace-nowrap text-xs min-w-14 px-1 text-center'>
+                    {matches.length === 0 ? "No results" : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
+                </p>
+                <div className='flex flex-row gap-0.5'>
+                    <ButtonWithTooltip
+                        tooltipPlacement="top-end"
+                        text={"Previous Match"}
+                        onClick={previousMatch}
+                        className='h-4 w-4'
+                        disabled={matches.length < 2}
+                    >
+                        <ArrowUpIcon className='h-4 w-4' />
+                    </ButtonWithTooltip>
+                    <ButtonWithTooltip
+                        tooltipPlacement="top-end"
+                        text={"Next Match"}
+                        onClick={nextMatch}
+                        className='h-4 w-4'
+                        disabled={matches.length < 2}
+                    >
+                        <ArrowDownIcon className='h-4 w-4' />
+                    </ButtonWithTooltip>
+                </div>
                 <ButtonWithTooltip
+                    inverted={caseSensitive}
                     tooltipPlacement="top-end"
-                    text={"Previous Match"}
-                    onClick={previousMatch}
-                    className='h-4 w-4'
-                    disabled={matches.length < 2}
+                    text={caseSensitive ? "Turn off case sensitivity" : "Turn on case sensitivity"}
+                    onClick={() => setCaseSensitive(curr => !curr)}
+                    className='h-4 w-4 text-xs'
                 >
-                    <ArrowUpIcon className='h-4 w-4' />
+                    Aa
                 </ButtonWithTooltip>
-                <ButtonWithTooltip
-                    tooltipPlacement="top-end"
-                    text={"Next Match"}
-                    onClick={nextMatch}
-                    className='h-4 w-4'
-                    disabled={matches.length < 2}
+                {/* TODO - add useRegex functionality */}
+                <HeaderButton
+                    inverted={false}
+                    onClick={() => setOpen(false)}
                 >
-                    <ArrowDownIcon className='h-4 w-4' />
-                </ButtonWithTooltip>
+                    <XMarkIcon className='h-4 w-4' />
+                </HeaderButton>
             </div>
-            <ButtonWithTooltip
-                inverted={caseSensitive}
-                tooltipPlacement="top-end"
-                text={caseSensitive ? "Turn off case sensitivity" : "Turn on case sensitivity"}
-                onClick={() => setCaseSensitive(curr => !curr)}
-                className='h-4 w-4 text-xs'
-            >
+        )
+    }, [open, input, inputRef, caseSensitive, matches, currentMatch, previousMatch, nextMatch])
 
-                Aa
-            </ButtonWithTooltip>
-
-            {/* <button
-                onClick={() => setUseRegex(curr => !curr)}
-                className={`p-2 ${useRegex ? 'bg-blue-300' : 'bg-gray-300'} rounded hover:bg-blue-400`}
-            >
-                .*
-            </button> */}
-            <HeaderButton
-                inverted={false}
-                onClick={() => setOpen(false)}
-            >
-                <XMarkIcon className='h-4 w-4' />
-            </HeaderButton>
-        </div>
-    )
-
-    const highlights = matches.map(match => <HighlightOverlay {...match.overlayRectangle} isCurrent={currentMatch.index === match.index} />)
+    // Generate the highlight overlay elements
+    const highlights = useMemo(() => {
+        return matches.map(match => <HighlightOverlay {...match.overlayRectangle} isCurrent={currentMatch.index === match.index} />)
+    }, [matches, currentMatch])
 
     return {
         matches,
