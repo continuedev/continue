@@ -12,7 +12,7 @@ import {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
@@ -117,7 +117,7 @@ function PerplexityGUI() {
       ) {
         dispatch(setPerplexityInactive());
       } else if (
-        e.key === "." && 
+        e.key === "." &&
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
@@ -155,7 +155,13 @@ function PerplexityGUI() {
         }
       }
 
-      streamResponse(editorState, modifiers, ideMessenger, undefined, "perplexity");
+      streamResponse(
+        editorState,
+        modifiers,
+        ideMessenger,
+        undefined,
+        "perplexity",
+      );
 
       const currentCount = getLocalStorage("mainTextEntryCounter");
       if (currentCount) {
@@ -211,16 +217,19 @@ function PerplexityGUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
-        <div className={cn(
-          "mx-2",
-          state.perplexityHistory.length === 0 && "h-full flex flex-col justify-center"
-        )}>
+        <div
+          className={cn(
+            "mx-2",
+            state.perplexityHistory.length === 0 &&
+              "h-full flex flex-col justify-center",
+          )}
+        >
           {state.perplexityHistory.length === 0 ? (
             <div className="max-w-2xl mx-auto w-full text-center mb-4">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <h1 className="text-2xl font-bold">PearAI Search</h1>
                 <Badge variant="outline" className="pl-0">
-                  Beta (Powered by Perplexity)
+                  Beta (Powered by Perplexity*)
                 </Badge>
               </div>
               <p className="text-sm text-foreground">
@@ -234,14 +243,14 @@ function PerplexityGUI() {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold mb-2">PearAI Search</h1>
                 <Badge variant="outline" className="pl-0">
-                  Beta (Powered by Perplexity)
+                  Beta (Powered by Perplexity*)
                 </Badge>
               </div>
               <div className="flex items-center mt-0 justify-between pr-1">
                 <p className="text-sm text-foreground m-0">
                   Ask for anything. We'll retrieve up-to-date information in
-                  real-time on the web. Search uses less credits than PearAI Chat,
-                  and is perfect for documentation lookups.
+                  real-time on the web. Search uses less credits than PearAI
+                  Chat, and is perfect for documentation lookups.
                 </p>
                 <div>
                   <NewSessionButton
@@ -357,11 +366,13 @@ function PerplexityGUI() {
             ))}
           </StepsDiv>
 
-          <div className={cn(
-            state.perplexityHistory.length === 0 
-              ? "max-w-2xl mx-auto w-full" 
-              : "w-full"
-          )}>
+          <div
+            className={cn(
+              state.perplexityHistory.length === 0
+                ? "max-w-2xl mx-auto w-full"
+                : "w-full",
+            )}
+          >
             <ContinueInputBox
               onEnter={(editorContent, modifiers) => {
                 sendInput(editorContent, modifiers);
@@ -371,7 +382,7 @@ function PerplexityGUI() {
               hidden={active}
               source="perplexity"
               className={cn(
-                state.perplexityHistory.length === 0 && "shadow-lg"
+                state.perplexityHistory.length === 0 && "shadow-lg",
               )}
             />
           </div>
@@ -430,6 +441,18 @@ function PerplexityGUI() {
           {getMetaKeyLabel()} ⌫ Cancel
         </StopButton>
       )}
+
+      <div className="text-[10px] text-muted-foreground mt-4 flex justify-end pr-2 pb-2">
+        *View PearAI Disclaimer page{" "}
+        <Link
+          to="https://trypear.ai/disclaimer/"
+          target="_blank"
+          className="text-muted-foreground no-underline hover:no-underline ml-1"
+        >
+          here
+        </Link>
+        .
+      </div>
     </>
   );
 }

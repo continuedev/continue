@@ -12,7 +12,7 @@ import {
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
@@ -46,7 +46,6 @@ import AiderManualInstallation from "./AiderManualInstallation";
 import { cn } from "@/lib/utils";
 import type { AiderState } from "../../../../extensions/vscode/src/integrations/aider/types/aiderTypes";
 
-
 function AiderGUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
@@ -63,7 +62,7 @@ function AiderGUI() {
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
   const [aiderProcessState, setAiderProcessState] = useState<AiderState>({
-    state: "starting"
+    state: "starting",
   });
 
   // TODO: Remove this later. This is supposed to be set in Onboarding, but
@@ -184,15 +183,11 @@ function AiderGUI() {
     ideMessenger.request("refreshAiderProcessState", undefined);
   }, []);
 
-  useWebviewListener(
-    "setAiderProcessStateInGUI",
-    async (data) => {
-      if (data) {
-        setAiderProcessState(data);
-      }
+  useWebviewListener("setAiderProcessStateInGUI", async (data) => {
+    if (data) {
+      setAiderProcessState(data);
     }
-  );
-
+  });
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
@@ -239,17 +234,25 @@ function AiderGUI() {
             className="underline text-foreground"
           >
             troubleshooting
-          </a>.
+          </a>
+          .
         </>
       );
     }
     if (aiderProcessState.state === "crashed") {
       msg = (
         <>
-          PearAI Creator (Powered By aider) process has failed. Please ensure a folder is open, and view troubleshooting{" "}
-          <a href="https://trypear.ai/creator-troubleshooting" target="_blank" rel="noopener noreferrer" className="underline text-foreground">
+          PearAI Creator (Powered By aider) process has failed. Please ensure a
+          folder is open, and view troubleshooting{" "}
+          <a
+            href="https://trypear.ai/creator-troubleshooting"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-foreground"
+          >
             here
-          </a>.
+          </a>
+          .
         </>
       );
     }
@@ -257,7 +260,8 @@ function AiderGUI() {
       return <AiderManualInstallation />;
     }
     if (aiderProcessState.state === "starting") {
-      msg = "Spinning up PearAI Creator (Powered By aider), please give it a second...";
+      msg =
+        "Spinning up PearAI Creator (Powered By aider), please give it a second...";
     }
 
     return (
@@ -266,11 +270,14 @@ function AiderGUI() {
           <div className="spinner" role="status">
             <span>{msg}</span>
           </div>
-          {(aiderProcessState.state === "stopped" || aiderProcessState.state === "crashed") && (
+          {(aiderProcessState.state === "stopped" ||
+            aiderProcessState.state === "crashed") && (
             <div className="flex justify-center">
               <button
                 className="mt-4 font-bold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-                onClick={() => ideMessenger.post("aiderResetSession", undefined)}
+                onClick={() =>
+                  ideMessenger.post("aiderResetSession", undefined)
+                }
               >
                 Restart
               </button>
@@ -284,16 +291,19 @@ function AiderGUI() {
   return (
     <>
       <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
-        <div className={cn(
-          "mx-2",
-          state.aiderHistory.length === 0 && "h-full flex flex-col justify-center"
-        )}>
+        <div
+          className={cn(
+            "mx-2",
+            state.aiderHistory.length === 0 &&
+              "h-full flex flex-col justify-center",
+          )}
+        >
           {state.aiderHistory.length === 0 ? (
             <div className="max-w-2xl mx-auto w-full text-center mb-4">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <h1 className="text-2xl font-bold">PearAI Creator</h1>
                 <Badge variant="outline" className="pl-0">
-                  Beta (Powered by aider)
+                  Beta (Powered by aider*)
                 </Badge>
               </div>
               <p className="text-sm text-foreground">
@@ -307,16 +317,16 @@ function AiderGUI() {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold mb-2">PearAI Creator</h1>
                 <Badge variant="outline" className="pl-0">
-                  Beta (Powered by aider)
+                  Beta (Powered by aider*)
                 </Badge>
               </div>
               <div className="flex items-center mt-0 justify-between pr-1">
                 <p className="text-sm text-foreground m-0">
-                  Ask for a feature, describe a bug to fix, or ask for a change to
-                  your project. Creator will make and apply the changes to your
-                  files directly.
+                  Ask for a feature, describe a bug to fix, or ask for a change
+                  to your project. Creator will make and apply the changes to
+                  your files directly.
                 </p>
-                {state.aiderHistory.length > 0 &&
+                {state.aiderHistory.length > 0 && (
                   <div>
                     <NewSessionButton
                       onClick={() => {
@@ -328,7 +338,7 @@ function AiderGUI() {
                       Clear chat (<kbd>{getMetaKeyLabel()}</kbd> <kbd>.</kbd>)
                     </NewSessionButton>
                   </div>
-                }
+                )}
               </div>
             </div>
           )}
@@ -437,12 +447,14 @@ function AiderGUI() {
               ))}
             </StepsDiv>
 
-            <div className={cn(
-              "transition-all duration-300",
-              state.aiderHistory.length === 0
-                ? "max-w-2xl mx-auto w-full"
-                : "w-full"
-            )}>
+            <div
+              className={cn(
+                "transition-all duration-300",
+                state.aiderHistory.length === 0
+                  ? "max-w-2xl mx-auto w-full"
+                  : "w-full",
+              )}
+            >
               <ContinueInputBox
                 onEnter={(editorContent, modifiers) => {
                   sendInput(editorContent, modifiers);
@@ -453,7 +465,7 @@ function AiderGUI() {
                 source="aider"
                 className={cn(
                   "transition-all duration-300",
-                  state.aiderHistory.length === 0 && "shadow-lg"
+                  state.aiderHistory.length === 0 && "shadow-lg",
                 )}
               />
             </div>
@@ -514,6 +526,17 @@ function AiderGUI() {
           {getMetaKeyLabel()} ⌫ Cancel
         </StopButton>
       )}
+      <div className="text-[10px] text-muted-foreground mt-4 flex justify-end pr-2 pb-2">
+        *View PearAI Disclaimer page{" "}
+        <Link
+          to="https://trypear.ai/disclaimer/"
+          target="_blank"
+          className="text-muted-foreground no-underline hover:no-underline ml-1"
+        >
+          here
+        </Link>
+        .
+      </div>
     </>
   );
 }
@@ -529,7 +552,6 @@ const tutorialContent = {
     copyText: "Make a new FAQ page for my website",
   },
   moreInfo: [
-    "- Ignore system ```<<< SEARCH REPLACE >>>``` messages. These are for the system to make edits for you automatically."
-  ]
-}
-
+    "- Ignore system ```<<< SEARCH REPLACE >>>``` messages. These are for the system to make edits for you automatically.",
+  ],
+};
