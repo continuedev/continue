@@ -1,5 +1,4 @@
 const os = require("node:os");
-import path from "node:path";
 import * as vscode from "vscode";
 import { VsCodeIde } from "../VsCodeIde";
 
