@@ -268,7 +268,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     const widget = useMemo(() => {
         return (
             <div
-                className={`z-50 fixed transition-all top-0 ${open ? '' : '-translate-y-full'} right-0 pr-3 flex flex-row items-center gap-2 rounded-bl-lg border-b border-solid border-0 border-l border-zinc-700 bg-vsc-background py-0.5 px-1`}
+                className={`z-50 fixed transition-all top-0 ${open ? '' : '-translate-y-full'} right-0 pr-3 flex flex-row items-center gap-1.5 sm:gap-2 rounded-bl-lg border-b border-solid border-0 border-l border-zinc-700 bg-vsc-background pl-[3px]`}
             >
                 <Input
                     type="text"
@@ -279,10 +279,10 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                     }}
                     placeholder="Search..."
                 />
-                <p className='whitespace-nowrap text-xs min-w-14 px-1 text-center'>
+                <p className='hidden xs:block whitespace-nowrap text-xs min-w-14 px-1 text-center'>
                     {matches.length === 0 ? "No results" : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
                 </p>
-                <div className='flex flex-row gap-0.5'>
+                <div className='hidden sm:flex flex-row gap-0.5'>
                     <ButtonWithTooltip
                         tooltipPlacement="top-end"
                         text={"Previous Match"}
