@@ -33,7 +33,10 @@ import {
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
+import {
+  resetNextCodeBlockToApplyIndex,
+  setIsInMultifileEdit,
+} from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
 
@@ -57,13 +60,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const active = useSelector((store: RootState) => store.state.active);
   const activeRef = useRef(active);
 
-  const {saveSession} = useHistory(dispatch);
+  const { saveSession } = useHistory(dispatch);
   const [save, triggerSave] = useState(false);
 
   useEffect(() => {
     saveSession(false);
   }, [save]);
-  
 
   useEffect(() => {
     activeRef.current = active;
@@ -219,9 +221,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
         const currentFilePath = await ideMessenger.ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
-          let currentFileContents = await ideMessenger.ide.readFile(
-            currentFilePath,
-          );
+          let currentFileContents =
+            await ideMessenger.ide.readFile(currentFilePath);
           if (usingFreeTrial) {
             currentFileContents = currentFileContents
               .split("\n")
@@ -297,6 +298,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         // For edit and comment slash commands, including the selected code in the context from store and for other commands, including the selected context alone
         if (slashCommand.name === "edit" || slashCommand.name === "comment") {
           updatedContextItems = [...contextItems];
+        } else if (slashCommand.name === "multifile-edit") {
+          dispatch(setIsInMultifileEdit(true));
         } else {
           updatedContextItems = [...selectedContextItems];
         }

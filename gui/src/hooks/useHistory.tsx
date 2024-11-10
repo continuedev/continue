@@ -10,6 +10,7 @@ import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { useLastSessionContext } from "../context/LastSessionContext";
+import { setIsInMultifileEdit } from "../redux/slices/uiStateSlice";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -54,7 +55,7 @@ function useHistory(dispatch: Dispatch) {
     if (state.history.length === 0) return;
 
     const stateCopy = { ...state };
-    if (open_new_session){
+    if (open_new_session) {
       dispatch(newSession());
       updateLastSessionId(stateCopy.sessionId);
     }
@@ -89,8 +90,8 @@ function useHistory(dispatch: Dispatch) {
             MAX_TITLE_LENGTH,
           )
         : stateCopy.title?.length > 0
-        ? stateCopy.title
-        : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
+          ? stateCopy.title
+          : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
 
     const sessionInfo: PersistedSessionInfo = {
       history: stateCopy.history,
@@ -98,6 +99,9 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
+
+    dispatch(setIsInMultifileEdit(false));
+
     return await ideMessenger.request("history/save", sessionInfo);
   }
 

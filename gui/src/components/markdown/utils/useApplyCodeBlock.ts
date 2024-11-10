@@ -9,7 +9,7 @@ import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 
 export interface useApplyCodeBlock {
   streamId: string;
-  filepath: string;
+  filepath?: string;
   codeBlockContent: string;
 }
 

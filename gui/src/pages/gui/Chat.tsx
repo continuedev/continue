@@ -463,7 +463,6 @@ export function Chat() {
         />
         <div
           style={{
-            // opacity: active ? 0 : 1,
             pointerEvents: active ? "none" : "auto",
           }}
         >
@@ -478,7 +477,7 @@ export function Chat() {
                 <span className="xs:inline hidden">
                   New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
                 </span>
-              </NewSessionButton>{" "}
+              </NewSessionButton>
             </div>
           ) : (
             <>

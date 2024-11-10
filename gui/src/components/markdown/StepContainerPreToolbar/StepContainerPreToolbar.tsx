@@ -16,6 +16,7 @@ import ApplyActions from "./ApplyActions";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import CopyButton from "./CopyButton";
 import { useApplyCodeBlock } from "../utils/useApplyCodeBlock";
+import GeneratingCodeLoader from "./GeneratingCodeLoader";
 
 const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
@@ -53,7 +54,10 @@ export default function StepContainerPreToolbar(
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string | null>(null);
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isMultifileEdit = useSelector(
+    (state: RootState) => state.uiState.isInMultifileEdit,
+  );
+  const [isExpanded, setIsExpanded] = useState(isMultifileEdit ? false : true);
   const [codeBlockContent, setCodeBlockContent] = useState("");
   const isChatActive = useSelector((state: RootState) => state.state.active);
   const onClickApply = useApplyCodeBlock({
@@ -71,9 +75,6 @@ export default function StepContainerPreToolbar(
     ),
   );
 
-  const isMultifileEdit = true; // TODO: Pull from Redux state
-  const numLinesCodeBlock = props.codeBlockContent.split("\n").length;
-
   // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
   // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
   // we are done generating based on whether the next node in the tree is not a codeblock.
@@ -83,13 +84,8 @@ export default function StepContainerPreToolbar(
     ? false
     : props.isGeneratingCodeBlock;
 
-  // const isTerminal = isTerminalCodeBlock(props.language, codeBlockContent);
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
-  const linesGeneratedText =
-    numLinesCodeBlock === 1
-      ? `1 line generated`
-      : `${numLinesCodeBlock} lines generated`;
 
   if (streamIdRef.current === null) {
     streamIdRef.current = uuidv4();
@@ -120,7 +116,11 @@ export default function StepContainerPreToolbar(
   }, [props.children, codeBlockContent]);
 
   useEffect(() => {
-    if (wasGeneratingRef.current && !isGeneratingCodeBlock) {
+    const hasCompletedGenerating =
+      wasGeneratingRef.current && !isGeneratingCodeBlock;
+    const shouldAutoApply = hasCompletedGenerating && isMultifileEdit;
+
+    if (shouldAutoApply) {
       onClickApply();
     }
 
@@ -170,23 +170,26 @@ export default function StepContainerPreToolbar(
           <FileInfo filepath={props.filepath} />
         </div>
 
-        {!isMultifileEdit && <CopyButton text={props.codeBlockContent} />}
+        <div className="flex items-center gap-3">
+          {isGeneratingCodeBlock && (
+            <GeneratingCodeLoader
+              showLineCount={!isExpanded}
+              codeBlockContent={codeBlockContent}
+            />
+          )}
 
-        {isGeneratingCodeBlock && isMultifileEdit && (
-          <span className="inline-flex items-center gap-2 text-gray-400">
-            {linesGeneratedText}
-            <Spinner />
-          </span>
-        )}
-
-        {!isGeneratingCodeBlock && (
-          <ApplyActions
-            applyState={applyState}
-            onClickApply={onClickApply}
-            onClickAccept={onClickAcceptApply}
-            onClickReject={onClickRejectApply}
-          />
-        )}
+          {!isGeneratingCodeBlock && (
+            <>
+              <CopyButton text={props.codeBlockContent} />
+              <ApplyActions
+                applyState={applyState}
+                onClickApply={onClickApply}
+                onClickAccept={onClickAcceptApply}
+                onClickReject={onClickRejectApply}
+              />
+            </>
+          )}
+        </div>
       </ToolbarDiv>
 
       {isExpanded && (

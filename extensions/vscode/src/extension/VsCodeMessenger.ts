@@ -159,29 +159,34 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("applyToFile", async ({ data }) => {
-      const fullPath = getFullyQualifiedPath(ide, data.filepath);
+      let filepath = data.filepath;
 
-      if (!fullPath) {
-        return;
-      }
+      // If there is a filepath, verify it exists and then open the file
+      if (filepath) {
+        const fullPath = getFullyQualifiedPath(ide, filepath);
 
-      const fileExists = await this.ide.fileExists(fullPath);
+        if (!fullPath) {
+          return;
+        }
 
-      // If it's a new file, no need to apply, just write directly
-      if (!fileExists) {
-        await this.ide.writeFile(fullPath, data.text);
+        const fileExists = await this.ide.fileExists(fullPath);
+
+        // If it's a new file, no need to apply, just write directly
+        if (!fileExists) {
+          await this.ide.writeFile(fullPath, data.text);
+          await this.ide.openFile(fullPath);
+
+          await webviewProtocol.request("updateApplyState", {
+            streamId: data.streamId,
+            status: "done",
+            numDiffs: 0,
+          });
+
+          return;
+        }
+
         await this.ide.openFile(fullPath);
-
-        await webviewProtocol.request("updateApplyState", {
-          streamId: data.streamId,
-          status: "done",
-          numDiffs: 0,
-        });
-
-        return;
       }
-
-      await this.ide.openFile(fullPath);
 
       // Get active text editor
       const editor = vscode.window.activeTextEditor;

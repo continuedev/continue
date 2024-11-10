@@ -11,7 +11,7 @@ export default function CopyButton({ text }: CopyButtonProps) {
 
   return (
     <div
-      className={`flex items-center border-none bg-transparent text-xs text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
+      className={`flex items-center border-none bg-transparent text-xs text-gray-400 text-[${vscForeground}] cursor-pointer outline-none hover:brightness-125`}
       onClick={copyText}
     >
       <div
@@ -26,7 +26,7 @@ export default function CopyButton({ text }: CopyButtonProps) {
         ) : (
           <>
             <ClipboardIcon className="h-3 w-3 hover:brightness-125" />
-            <span className="xs:inline hidden">Copy</span>
+            <span className="xs:inline hidden text-gray-400">Copy</span>
           </>
         )}
       </div>

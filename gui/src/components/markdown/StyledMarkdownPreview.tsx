@@ -201,41 +201,34 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanuageFromClassName(className);
 
+          // If we don't have a filepath show the more basic toolbar
+          // that is just action buttons on hover.
+          // We also use this in JB since we haven't yet implemented
+          // the logic for lazy apply.
+          if (!filepath || isJetBrains()) {
+            return (
+              <StepContainerPreActionButtons
+                language={language}
+                codeBlockContent={codeBlockContent}
+                codeBlockIndex={preProps.codeBlockIndex}
+              >
+                <SyntaxHighlightedPre {...preProps} />
+              </StepContainerPreActionButtons>
+            );
+          }
+
+          // We use a custom toolbar for codeblocks in the step container
           return (
-            <StepContainerPreActionButtons
-              language={language}
+            <StepContainerPreToolbar
               codeBlockContent={codeBlockContent}
+              codeBlockIndex={preProps.codeBlockIndex}
+              language={language}
               filepath={filepath}
+              isGeneratingCodeBlock={isGeneratingCodeBlock}
             >
               <SyntaxHighlightedPre {...preProps} />
-            </StepContainerPreActionButtons>
+            </StepContainerPreToolbar>
           );
-
-          // // We don't support "lazy" applies in JB yet
-          // if (!filepath || isJetBrains()) {
-          // return (
-          //   <StepContainerPreActionButtons
-          //     language={language}
-          //     codeBlockContent={codeBlockContent}
-          //     filepath={filepath}
-          //   >
-          //     <SyntaxHighlightedPre {...preProps} />
-          //   </StepContainerPreActionButtons>
-          // );
-          // }
-
-          // // We use a custom toolbar for codeblocks in the step container
-          // return (
-          //   <StepContainerPreToolbar
-          //     codeBlockContent={codeBlockContent}
-          //     codeBlockIndex={preProps.codeBlockIndex}
-          //     language={language}
-          //     filepath={filepath}
-          //     isGeneratingCodeBlock={isGeneratingCodeBlock}
-          //   >
-          //     <SyntaxHighlightedPre {...preProps} />
-          //   </StepContainerPreToolbar>
-          // );
         },
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);

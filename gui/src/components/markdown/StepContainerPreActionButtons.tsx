@@ -14,6 +14,9 @@ import { CopyIconButton } from "../gui/CopyIconButton";
 import useUIConfig from "../../hooks/useUIConfig";
 import { v4 as uuidv4 } from "uuid";
 import { useApplyCodeBlock } from "./utils/useApplyCodeBlock";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
 
 const TopDiv = styled.div`
   outline: 0.5px solid rgba(153, 153, 152);
@@ -48,33 +51,45 @@ const InnerHoverDiv = styled.div<{ isBottomToolbarPosition: boolean }>`
 interface StepContainerPreActionButtonsProps {
   language: string;
   codeBlockContent: string;
-  filepath: string;
+  codeBlockIndex: number;
   children: any;
 }
 
 export default function StepContainerPreActionButtons({
   language,
   codeBlockContent,
-  filepath,
+  codeBlockIndex,
   children,
 }: StepContainerPreActionButtonsProps) {
   const [hovering, setHovering] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
   const uiConfig = useUIConfig();
   const streamIdRef = useRef<string | null>(null);
+  const nextCodeBlockIndex = useSelector(
+    (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
+  );
   const onClickApply = useApplyCodeBlock({
-    filepath,
     codeBlockContent,
     streamId: streamIdRef.current,
   });
 
   const isBottomToolbarPosition =
     uiConfig?.codeBlockToolbarPosition == "bottom";
-  const isTerminal = isTerminalCodeBlock(language, codeBlockContent);
+  const shouldRunTerminalCmd =
+    !isJetBrains() && isTerminalCodeBlock(language, codeBlockContent);
+  const isNextCodeBlock = nextCodeBlockIndex === codeBlockIndex;
 
   if (streamIdRef.current === null) {
     streamIdRef.current = uuidv4();
   }
+
+  // Handle apply keyboard shortcut
+  useWebviewListener(
+    "applyCodeFromChat",
+    onClickApply,
+    [isNextCodeBlock, codeBlockContent],
+    !isNextCodeBlock,
+  );
 
   if (!hovering) {
     return (
@@ -96,7 +111,7 @@ export default function StepContainerPreActionButtons({
     >
       <HoverDiv>
         <InnerHoverDiv isBottomToolbarPosition={isBottomToolbarPosition}>
-          {!isJetBrains() && isTerminal && (
+          {shouldRunTerminalCmd && (
             <HeaderButtonWithToolTip
               text="Run in terminal"
               style={{ backgroundColor: vscEditorBackground }}
