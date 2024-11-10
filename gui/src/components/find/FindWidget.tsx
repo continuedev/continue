@@ -89,7 +89,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     const [useRegex, setUseRegex] = useState<boolean>(false);
 
     const [matches, setMatches] = useState<SearchMatch[]>([]);
-    const [currentMatch, setCurrentMatch] = useState<SearchMatch>();
+    const [currentMatch, setCurrentMatch] = useState<SearchMatch | undefined>(undefined);
 
     // Navigating between search results
     // The "current" search result is highlighted a different color
@@ -103,14 +103,14 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     }, [searchRef.current])
 
     const nextMatch = useCallback(() => {
-        if (matches.length === 0) return
+        if (!currentMatch || (matches.length === 0)) return
         const newIndex = (currentMatch.index + 1) % matches.length;
         const newMatch = matches[newIndex]
         scrollToMatch(newMatch)
     }, [scrollToMatch, currentMatch, matches])
 
     const previousMatch = useCallback(() => {
-        if (matches.length === 0) return
+        if (!currentMatch || (matches.length === 0)) return
         const newIndex = currentMatch.index === 0 ? matches.length - 1 : currentMatch.index - 1
         const newMatch = matches[newIndex]
         scrollToMatch(newMatch)
@@ -326,7 +326,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
 
     // Generate the highlight overlay elements
     const highlights = useMemo(() => {
-        return matches.map(match => <HighlightOverlay {...match.overlayRectangle} isCurrent={currentMatch.index === match.index} />)
+        return matches.map(match => <HighlightOverlay {...match.overlayRectangle} isCurrent={currentMatch?.index === match.index} />)
     }, [matches, currentMatch])
 
     return {
