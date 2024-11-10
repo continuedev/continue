@@ -508,7 +508,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
     },
-    editable: !active,
+    editable: !active || props.isMainInput,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
@@ -551,17 +551,9 @@ function TipTapEditor(props: TipTapEditorProps) {
    *  with those key actions.
    */
   const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!editor || !editorFocusedRef.current) return;
+    if (!editorFocusedRef?.current) return;
 
     setActiveKey(e.key);
-
-    // Allow users to use the escape key to jump back to the editor
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      e.preventDefault();
-      ideMessenger.post("focusEditor", undefined);
-      return;
-    }
 
     // Handle meta key issues
     if (isMetaEquivalentKeyPressed(e)) {
@@ -631,7 +623,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       if (historyLength > 0) {
-        saveSession();
+        await saveSession();
       }
       setTimeout(() => {
         editor?.commands.blur();
@@ -660,12 +652,12 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      saveSession();
+      await saveSession();
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput],
+    [editor, props.isMainInput, saveSession],
   );
 
   useWebviewListener(
@@ -685,9 +677,11 @@ function TipTapEditor(props: TipTapEditorProps) {
       const rangeStr = `(${rif.range.start.line + 1}-${
         rif.range.end.line + 1
       })`;
+
+      const itemName = `${basename} ${rangeStr}`;
       const item: ContextItemWithId = {
         content: rif.contents,
-        name: `${basename} ${rangeStr}`,
+        name: itemName,
         // Description is passed on to the LLM to give more context on file path
         description: `${relativePath} ${rangeStr}`,
         id: {
@@ -702,6 +696,9 @@ function TipTapEditor(props: TipTapEditorProps) {
 
       let index = 0;
       for (const el of editor.getJSON().content) {
+        if (el.attrs?.item?.name === itemName) {
+          return; // Prevent duplicate code blocks
+        }
         if (el.type === "codeBlock") {
           index += 2;
         } else {

@@ -1,6 +1,7 @@
 import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "../";
 import { getBasename } from "../util/index";
 import { RETRIEVAL_PARAMS } from "../util/parameters";
+
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
@@ -10,10 +11,20 @@ import {
   type CodebaseIndex,
 } from "./types";
 
+export interface RetrieveConfig {
+  tags: BranchAndDir[];
+  text: string;
+  n: number;
+  directory?: string;
+  filterPaths?: string[];
+  bm25Threshold?: number;
+}
+
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 0.2;
   static artifactId = "sqliteFts";
   artifactId: string = FullTextSearchCodebaseIndex.artifactId;
+  pathWeightMultiplier = 10.0;
 
   private async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
@@ -71,17 +82,17 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
         desc: `Indexing ${getBasename(item.path)}`,
         status: "indexing",
       };
-      markComplete([item], IndexResultType.Compute);
+      await markComplete([item], IndexResultType.Compute);
     }
 
     // Add tag
     for (const item of results.addTag) {
-      markComplete([item], IndexResultType.AddTag);
+      await markComplete([item], IndexResultType.AddTag);
     }
 
     // Remove tag
     for (const item of results.removeTag) {
-      markComplete([item], IndexResultType.RemoveTag);
+      await markComplete([item], IndexResultType.RemoveTag);
     }
 
     // Delete
@@ -93,63 +104,81 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
       await db.run("DELETE FROM fts WHERE path = ?", [item.path]);
 
-      markComplete([item], IndexResultType.Delete);
+      await markComplete([item], IndexResultType.Delete);
     }
   }
 
-  async retrieve(
-    tags: BranchAndDir[],
-    text: string,
-    n: number,
-    directory: string | undefined,
-    filterPaths: string[] | undefined,
-    bm25Threshold: number = RETRIEVAL_PARAMS.bm25Threshold,
-  ): Promise<Chunk[]> {
+  async retrieve(config: RetrieveConfig): Promise<Chunk[]> {
     const db = await SqliteDb.get();
 
-    // Notice that the "chunks" artifactId is used because of linking between tables
-    const tagStrings = tags.map((tag) => {
-      return tagToString({ ...tag, artifactId: ChunkCodebaseIndex.artifactId });
-    });
+    const query = this.buildRetrieveQuery(config);
+    const parameters = this.getRetrieveQueryParameters(config);
 
-    const query = `SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
-    FROM fts
-    JOIN fts_metadata ON fts.rowid = fts_metadata.id
-    JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
-    WHERE fts MATCH '${text.replace(
-      /\?/g,
-      "",
-    )}' AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})
-      ${
-        filterPaths
-          ? `AND fts_metadata.path IN (${filterPaths.map(() => "?").join(",")})`
-          : ""
-      }
-    ORDER BY rank
-    LIMIT ?`;
+    let results = await db.all(query, parameters);
 
-    let results = await db.all(query, [
-      ...tagStrings,
-      ...(filterPaths || []),
-      Math.ceil(n),
-    ]);
-
-    results = results.filter((result) => result.rank <= bm25Threshold);
+    results = results.filter(
+      (result) =>
+        result.rank <= (config.bm25Threshold ?? RETRIEVAL_PARAMS.bm25Threshold),
+    );
 
     const chunks = await db.all(
       `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,
       results.map((result) => result.chunkId),
     );
 
-    return chunks.map((chunk) => {
-      return {
-        filepath: chunk.path,
-        index: chunk.index,
-        startLine: chunk.startLine,
-        endLine: chunk.endLine,
-        content: chunk.content,
-        digest: chunk.cacheKey,
-      };
-    });
+    return chunks.map((chunk) => ({
+      filepath: chunk.path,
+      index: chunk.index,
+      startLine: chunk.startLine,
+      endLine: chunk.endLine,
+      content: chunk.content,
+      digest: chunk.cacheKey,
+    }));
+  }
+
+  private buildTagFilter(tags: BranchAndDir[]): string {
+    const tagStrings = this.convertTags(tags);
+
+    return `AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})`;
+  }
+
+  private buildPathFilter(filterPaths: string[] | undefined): string {
+    if (!filterPaths || filterPaths.length === 0) {
+      return "";
+    }
+    return `AND fts_metadata.path IN (${filterPaths.map(() => "?").join(",")})`;
+  }
+
+  private buildRetrieveQuery(config: RetrieveConfig): string {
+    return `
+      SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
+      FROM fts
+      JOIN fts_metadata ON fts.rowid = fts_metadata.id
+      JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
+      WHERE fts MATCH ?
+      ${this.buildTagFilter(config.tags)}
+      ${this.buildPathFilter(config.filterPaths)}
+      ORDER BY bm25(fts, ${this.pathWeightMultiplier})
+      LIMIT ?
+    `;
+  }
+
+  private getRetrieveQueryParameters(config: RetrieveConfig) {
+    const { text, tags, filterPaths, n } = config;
+    const tagStrings = this.convertTags(tags);
+
+    return [
+      text.replace(/\?/g, ""),
+      ...tagStrings,
+      ...(filterPaths || []),
+      Math.ceil(n),
+    ];
+  }
+
+  private convertTags(tags: BranchAndDir[]): string[] {
+    // Notice that the "chunks" artifactId is used because of linking between tables
+    return tags.map((tag) =>
+      tagToString({ ...tag, artifactId: ChunkCodebaseIndex.artifactId }),
+    );
   }
 }

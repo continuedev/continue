@@ -2,7 +2,7 @@ import {
   filterLeadingAndTrailingNewLineInsertion,
   filterLeadingNewline,
   stopAtLines,
-} from "../../autocomplete/streamTransforms/lineStream";
+} from "../../autocomplete/filtering/streamTransforms/lineStream.js";
 import { streamDiff } from "../../diff/streamDiff.js";
 import { LineStream, streamLines } from "../../diff/util.js";
 import { DiffLine, ILLM } from "../../index.js";
@@ -43,7 +43,7 @@ export async function* streamLazyApply(
   let lazyCompletionLines = streamLines(lazyCompletion, true);
   // Process line output
   // lazyCompletionLines = filterEnglishLinesAtStart(lazyCompletionLines);
-  lazyCompletionLines = stopAtLines(lazyCompletionLines, () => { }, ["```"]);
+  lazyCompletionLines = stopAtLines(lazyCompletionLines, () => {}, ["```"]);
   lazyCompletionLines = filterLeadingNewline(lazyCompletionLines);
 
   // Fill in unchanged code

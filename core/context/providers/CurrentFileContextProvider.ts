@@ -24,17 +24,15 @@ class CurrentFileContextProvider extends BaseContextProvider {
     if (!currentFile) {
       return [];
     }
-    const contents = await ide.readFile(currentFile);
+    const baseName = getBasename(currentFile.path);
     return [
       {
-        description: currentFile,
-        content: `This is the currently open file:\n\n\`\`\`${getBasename(
-          currentFile,
-        )}\n${contents}\n\`\`\``,
-        name: getBasename(currentFile),
+        description: currentFile.path,
+        content: `This is the currently open file:\n\n\`\`\`${baseName}\n${currentFile.contents}\n\`\`\``,
+        name: baseName,
         uri: {
           type: "file",
-          value: currentFile,
+          value: currentFile.path,
         },
       },
     ];

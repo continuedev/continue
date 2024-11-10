@@ -48,9 +48,9 @@ export interface IndexingProgressUpdate {
 export type PromptTemplate =
   | string
   | ((
-    history: ChatMessage[],
-    otherData: Record<string, string>,
-  ) => string | ChatMessage[]);
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+    ) => string | ChatMessage[]);
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -494,7 +494,11 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
-  getCurrentFile(): Promise<string | undefined>;
+  getCurrentFile(): Promise<undefined | {
+    isUntitled: boolean
+    path: string
+    contents: string
+  }>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
@@ -780,6 +784,14 @@ export interface CustomCommand {
   description: string;
 }
 
+interface Prediction {
+  type: "content"
+  content: string | {
+    type: "text"
+    text: string
+  }[]
+}
+
 interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -791,9 +803,11 @@ interface BaseCompletionOptions {
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;
+  useMmap?: boolean;
   keepAlive?: number;
   raw?: boolean;
   stream?: boolean;
+  prediction?: Prediction;
 }
 
 export interface ModelCapability {
@@ -825,6 +839,7 @@ export type EmbeddingsProviderName =
   | "ollama"
   | "openai"
   | "cohere"
+  | "lmstudio"
   | "free-trial"
   | "gemini"
   | "continue-proxy"
@@ -908,6 +923,7 @@ export interface TabAutocompleteOptions {
   disableInFiles?: string[];
   useImports?: boolean;
   useRootPathContext?: boolean;
+  showWhateverWeHaveAtXMs?: number;
 }
 
 export interface ContinueUIConfig {
@@ -1057,9 +1073,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-  | CustomLLM
-  | ModelDescription
-  | (CustomLLM | ModelDescription)[];
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

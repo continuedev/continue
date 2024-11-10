@@ -463,7 +463,11 @@ declare global {
       stepIndex: number,
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
-    getCurrentFile(): Promise<string | undefined>;
+    getCurrentFile(): Promise<undefined | {
+      isUntitled: boolean
+      path: string
+      contents: string
+    }>;
     getPinnedFiles(): Promise<string[]>;
     getSearchResults(query: string): Promise<string>;
     subprocess(command: string): Promise<[string, string]>;
@@ -538,6 +542,7 @@ declare global {
     | "folder"
     | "jira"
     | "postgres"
+    | "mssql"
     | "database"
     | "code"
     | "docs"
@@ -730,6 +735,7 @@ declare global {
     stop?: string[];
     maxTokens?: number;
     numThreads?: number;
+    useMmap?: boolean;
     keepAlive?: number;
     raw?: boolean;
     stream?: boolean;

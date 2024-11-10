@@ -86,7 +86,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               .split(")")[0]
               .split("-");
             ideMessenger.ide.showLines(
-              props.item.description,
+              props.item.description.split(" ")[0],
               parseInt(lines[0]) - 1,
               parseInt(lines[1]) - 1,
             );
@@ -123,8 +123,8 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
-            props.item.description,
-          )}\n${content}\n${fence}`}
+            props.item.description.split(" ")[0],
+          )} ${props.item.description}\n${content}\n${fence}`}
           showCodeBorder={false}
         />
       </div>

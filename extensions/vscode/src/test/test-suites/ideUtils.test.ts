@@ -59,13 +59,6 @@ describe("IDE Utils", () => {
     assert(regex.test(uniqueId));
   });
 
-  test("readFile", async () => {
-    const testPyContents = await utils.readFile(testPyPath);
-    assert(testPyContents === "print('Hello World!')");
-    const testJsContents = await utils.readFile(testJsPath);
-    assert(testJsContents === "console.log('Hello World!')");
-  });
-
   test.skip("getTerminalContents", async () => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const terminal = vscode.window.createTerminal();
