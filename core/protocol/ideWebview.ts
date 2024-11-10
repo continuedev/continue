@@ -62,6 +62,7 @@ export interface ApplyState {
   streamId: string;
   status?: "streaming" | "done" | "closed";
   numDiffs?: number;
+  filepath?: string;
 }
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

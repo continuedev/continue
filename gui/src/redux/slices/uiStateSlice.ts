@@ -16,8 +16,6 @@ type UiState = {
    * Syncs the sidebar with the accepted/rejected blocks in the editor. Reused for Edit as well.
    */
   applyStates: ApplyState[];
-
-  isInMultifileEdit: boolean;
 };
 
 export const uiStateSlice = createSlice({
@@ -29,7 +27,6 @@ export const uiStateSlice = createSlice({
     nextCodeBlockToApplyIndex: 0,
     onboardingCard: defaultOnboardingCardState,
     applyStates: [],
-    isInMultifileEdit: false,
   } as UiState,
   reducers: {
     setOnboardingCard: (
@@ -77,10 +74,8 @@ export const uiStateSlice = createSlice({
       } else {
         curApplyState.status = payload.status ?? curApplyState.status;
         curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
+        curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
       }
-    },
-    setIsInMultifileEdit: (state, action: PayloadAction<boolean>) => {
-      state.isInMultifileEdit = action.payload;
     },
   },
 });
@@ -93,7 +88,6 @@ export const {
   resetNextCodeBlockToApplyIndex,
   incrementNextCodeBlockToApplyIndex,
   updateApplyState,
-  setIsInMultifileEdit,
 } = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;

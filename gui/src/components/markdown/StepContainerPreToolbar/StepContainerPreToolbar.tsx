@@ -55,7 +55,7 @@ export default function StepContainerPreToolbar(
   const streamIdRef = useRef<string | null>(null);
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const isMultifileEdit = useSelector(
-    (state: RootState) => state.uiState.isInMultifileEdit,
+    (state: RootState) => state.state.isInMultifileEdit,
   );
   const [isExpanded, setIsExpanded] = useState(isMultifileEdit ? false : true);
   const [codeBlockContent, setCodeBlockContent] = useState("");

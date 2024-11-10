@@ -10,7 +10,6 @@ import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { useLastSessionContext } from "../context/LastSessionContext";
-import { setIsInMultifileEdit } from "../redux/slices/uiStateSlice";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -99,8 +98,6 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-
-    dispatch(setIsInMultifileEdit(false));
 
     return await ideMessenger.request("history/save", sessionInfo);
   }

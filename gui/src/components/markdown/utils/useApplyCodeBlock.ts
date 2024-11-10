@@ -26,6 +26,7 @@ export function useApplyCodeBlock({
     dispatch(
       updateApplyState({
         streamId,
+        filepath,
         status: "streaming",
       }),
     );

@@ -30,13 +30,11 @@ import {
   resubmitAtIndex,
   setInactive,
   setIsGatheringContext,
+  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import {
-  resetNextCodeBlockToApplyIndex,
-  setIsInMultifileEdit,
-} from "../redux/slices/uiStateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
 
