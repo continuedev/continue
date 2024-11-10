@@ -10,7 +10,6 @@ import {
   setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { createNewPromptFile } from "./config/promptFile";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
@@ -21,6 +20,7 @@ import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
+import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
 import { ChatDescriber } from "./util/chatDescriber";
@@ -248,11 +248,11 @@ export class Core {
     });
 
     on("config/newPromptFile", async (msg) => {
-      void createNewPromptFile(
+      await createNewPromptFileV2(
         this.ide,
         (await this.config()).experimental?.promptPath,
       );
-      void this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig();
     });
 
     on("config/reload", (msg) => {

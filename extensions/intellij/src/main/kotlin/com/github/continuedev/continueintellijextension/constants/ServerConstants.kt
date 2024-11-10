@@ -49,14 +49,6 @@ const val DEFAULT_CONFIG =
   ],
   "slashCommands": [
     {
-      "name": "edit",
-      "description": "Edit selected code"
-    },
-    {
-      "name": "comment",
-      "description": "Write comments for the selected code"
-    },
-    {
       "name": "share",
       "description": "Export the current chat session to markdown"
     },

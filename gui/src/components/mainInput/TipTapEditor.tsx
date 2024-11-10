@@ -44,7 +44,6 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
@@ -507,29 +506,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       let codeBlock = json.content?.find((el) => el.type === "codeBlock");
       if (!codeBlock) {
         return;
-      }
-
-      // Search for slashcommand type
-      for (const p of json.content) {
-        if (
-          p.type !== "paragraph" ||
-          !p.content ||
-          typeof p.content === "string"
-        ) {
-          continue;
-        }
-        for (const node of p.content) {
-          if (
-            node.type === "slashcommand" &&
-            ["/edit", "/comment"].includes(node.attrs.label)
-          ) {
-            // Update context items
-            dispatch(
-              setEditingContextItemAtIndex({ item: codeBlock.attrs.item }),
-            );
-            return;
-          }
-        }
       }
     },
     editable: !active || props.isMainInput,

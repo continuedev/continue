@@ -268,7 +268,7 @@ Custom commands initiated by typing "/" in the sidebar. Commands include predefi
 
 **Properties:**
 
-- `name`: The command name. Options include "issue", "share", "cmd", "edit", "comment", "http", "commit", and "review".
+- `name`: The command name. Options include "issue", "share", "cmd", "http", "commit", and "review".
 - `description`: Brief description of the command.
 - `step`: (Deprecated) Used for built-in commands; set the name for pre-configured options.
 - `params`: Additional parameters to configure command behavior (command-specific - see code for command)
@@ -281,10 +281,6 @@ Example:
     {
       "name": "commit",
       "description": "Generate a commit message"
-    },
-    {
-      "name": "comment",
-      "description": "Write comments for the selected code"
     },
     {
       "name": "share",

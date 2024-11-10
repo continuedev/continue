@@ -64,7 +64,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     saveSession(false);
   }, [save]);
 
-
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
@@ -219,7 +218,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
         const currentFile = await ideMessenger.ide.getCurrentFile();
         if (currentFile) {
-          let currentFileContents = currentFile.contents
+          let currentFileContents = currentFile.contents;
           if (usingFreeTrial) {
             currentFileContents = currentFile.contents
               .split("\n")
@@ -291,13 +290,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           step_name: slashCommand.name,
           params: {},
         });
-
-        // For edit and comment slash commands, including the selected code in the context from store and for other commands, including the selected context alone
-        if (slashCommand.name === "edit" || slashCommand.name === "comment") {
-          updatedContextItems = [...contextItems];
-        } else {
-          updatedContextItems = [...selectedContextItems];
-        }
 
         await _streamSlashCommand(
           messages,

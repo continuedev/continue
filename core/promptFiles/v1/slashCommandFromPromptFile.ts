@@ -1,10 +1,10 @@
-import { ContinueSDK, SlashCommand } from "..";
-import { stripImages } from "../llm/images";
+import * as YAML from "yaml";
+import { ContinueSDK, SlashCommand } from "../..";
+import { stripImages } from "../../llm/images";
+import { getBasename } from "../../util/index";
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
 import { updateChatHistory } from "./updateChatHistory";
-import * as YAML from "yaml";
-import { getBasename } from "../util/index";
 
 export function extractName(preamble: { name?: string }, path: string): string {
   return preamble.name ?? getBasename(path).split(".prompt")[0];
@@ -37,7 +37,10 @@ export function extractUserInput(input: string, commandName: string): string {
   return input;
 }
 
-export async function getDefaultVariables(context: ContinueSDK, userInput: string): Promise<Record<string, string>> {
+export async function getDefaultVariables(
+  context: ContinueSDK,
+  userInput: string,
+): Promise<Record<string, string>> {
   const currentFile = await context.ide.getCurrentFile();
   const vars: Record<string, string> = { input: userInput };
   if (currentFile) {
