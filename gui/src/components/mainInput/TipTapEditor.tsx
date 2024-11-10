@@ -59,7 +59,7 @@ import { ComboBoxItem } from "./types";
 import { useLocation } from "react-router-dom";
 import ActiveFileIndicator from "./ActiveFileIndicator";
 import { setActiveFilePath } from "@/redux/slices/uiStateSlice";
-
+import TopBar from "./TopBarIndicators";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -964,8 +964,8 @@ const TipTapEditor = memo(function TipTapEditor({
         });
         event.preventDefault();
       }}
-    >
-      {historyLength === 0 && <ActiveFileIndicator />}
+    > 
+      <TopBar />
       <EditorContent
         spellCheck={false}
         editor={editor}

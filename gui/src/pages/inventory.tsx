@@ -10,7 +10,7 @@ import { useWebviewListener } from "@/hooks/useWebviewListener";
 const tabs = [
   { 
     id: "home", 
-    name: "Home", 
+    name: "Inventory", 
     component: <HomePage />, 
     shortcut: <kbd className="ml-[1.5px]">1</kbd> 
   },
@@ -28,7 +28,7 @@ const tabs = [
   },
   { 
     id: "inventory", 
-    name: "Inventory", 
+    name: "Inventory Settings", 
     component: <InventoryPage />, 
     shortcut: <><kbd className="ml-[1.5px]">SHIFT</kbd><kbd className="ml-[1.5px]">1</kbd></> 
   },

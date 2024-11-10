@@ -367,6 +367,14 @@ export class VsCodeExtension {
       ),
     );
 
+    vscode.workspace.onDidCloseTextDocument(async () => {
+      const openFiles = vscode.workspace.textDocuments;
+      if (openFiles.length === 1) {
+        // the count is amount of last open files
+        this.sidebar.webviewProtocol.request("setActiveFilePath", "", [PEAR_CONTINUE_VIEW_ID]);
+      }
+    });
+
     this.ide.onDidChangeActiveTextEditor((filepath) => {
       this.core.invoke("didChangeActiveTextEditor", { filepath });
       this.sidebar.webviewProtocol.request("setActiveFilePath", filepath, [PEAR_CONTINUE_VIEW_ID]);
