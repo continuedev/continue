@@ -1,8 +1,8 @@
 import type { IDE, Range, RangeInFile } from "core";
-import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
-import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider";
-import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
-import { AutocompleteSnippet } from "core/autocomplete/ranking";
+import { GetLspDefinitionsFunction } from "core/autocomplete/CompletionProvider";
+import { AutocompleteLanguageInfo } from "core/autocomplete/constants/AutocompleteLanguageInfo";
+import { AutocompleteSnippet } from "core/autocomplete/context/ranking";
+import { getAst, getTreePathAtCursor } from "core/autocomplete/util/ast";
 import { RangeInFileWithContents } from "core/commands/util";
 import {
   FUNCTION_BLOCK_NODE_TYPES,

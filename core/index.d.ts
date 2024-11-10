@@ -494,7 +494,11 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
-  getCurrentFile(): Promise<string | undefined>;
+  getCurrentFile(): Promise<undefined | {
+    isUntitled: boolean
+    path: string
+    contents: string
+  }>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
@@ -646,7 +650,8 @@ type ModelProvider =
   | "cerebras"
   | "askSage"
   | "vertexai"
-  | "nebius";
+  | "nebius"
+  | "xAI";
 
 export type ModelName =
   | "AUTODETECT"
@@ -696,6 +701,8 @@ export type ModelName =
   | "llama3.2-3b"
   | "llama3.2-11b"
   | "llama3.2-90b"
+  // xAI
+  | "grok-beta"
   // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
@@ -710,6 +717,7 @@ export type ModelName =
   | "gemma-7b-it"
   | "gemma2-9b-it"
   // Anthropic
+  | "claude-3-5-sonnet-latest"
   | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"
   | "claude-3-sonnet-20240229"
@@ -776,6 +784,14 @@ export interface CustomCommand {
   description: string;
 }
 
+interface Prediction {
+  type: "content"
+  content: string | {
+    type: "text"
+    text: string
+  }[]
+}
+
 interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -787,9 +803,11 @@ interface BaseCompletionOptions {
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;
+  useMmap?: boolean;
   keepAlive?: number;
   raw?: boolean;
   stream?: boolean;
+  prediction?: Prediction;
 }
 
 export interface ModelCapability {
@@ -821,6 +839,7 @@ export type EmbeddingsProviderName =
   | "ollama"
   | "openai"
   | "cohere"
+  | "lmstudio"
   | "free-trial"
   | "gemini"
   | "continue-proxy"
@@ -904,6 +923,7 @@ export interface TabAutocompleteOptions {
   disableInFiles?: string[];
   useImports?: boolean;
   useRootPathContext?: boolean;
+  showWhateverWeHaveAtXMs?: number;
 }
 
 export interface ContinueUIConfig {

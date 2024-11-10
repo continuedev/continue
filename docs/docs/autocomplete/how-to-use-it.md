@@ -14,12 +14,12 @@ Autocomplete provides inline code suggestions as you type. To enable it, simply 
 
 ### Accepting a full suggestion
 
-Accept a full suggestion by pressing `Tab`
+Accept a full suggestion by pressing <kbd>Tab</kbd>
 
 ### Rejecting a full suggestion
 
-Reject a full suggestion with `Esc`
+Reject a full suggestion with <kbd>Esc</kbd>
 
 ### Partially accepting a suggestion
 
-For more granular control, use `cmd/ctrl + →` to accept parts of the suggestion word-by-word.
+For more granular control, use <kbd>cmd/ctrl</kbd> + <kbd>→</kbd> to accept parts of the suggestion word-by-word.

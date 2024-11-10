@@ -24,6 +24,7 @@ In addition to the model type, you can also configure some of the parameters tha
 - top_k: options.topK - This parameter limits the number of unique tokens to consider when generating the next token in the sequence. Higher values increase the variety of generated sequences, while lower values lead to more focused outputs.
 - num_predict: options.maxTokens - This determines the maximum number of tokens (words or characters) to generate for the given input prompt.
 - num_thread: options.numThreads - This is the multi-threading configuration option that controls how many threads the model uses for parallel processing. Higher values may lead to faster generation times but could also increase memory usage and complexity. Set this to one or two lower than the number of threads your CPU can handle to leave some for your GUI when running the model locally.
+- use_mmap: options.useMmap - For Ollama, this parameter allows the model to be mapped into memory. If disabled can enhance response time on low end devices but will slow down the stream.
 
 ## Authentication
 

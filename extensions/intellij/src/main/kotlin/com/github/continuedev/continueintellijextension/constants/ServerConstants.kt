@@ -14,7 +14,7 @@ const val DEFAULT_CONFIG =
 {
   "models": [
     {
-      "model": "claude-3-5-sonnet-20240620",
+      "model": "claude-3-5-sonnet-latest",
       "provider": "anthropic",
       "apiKey": "",
       "title": "Claude 3.5 Sonnet"
@@ -48,14 +48,6 @@ const val DEFAULT_CONFIG =
     }
   ],
   "slashCommands": [
-    {
-      "name": "edit",
-      "description": "Edit selected code"
-    },
-    {
-      "name": "comment",
-      "description": "Write comments for the selected code"
-    },
     {
       "name": "share",
       "description": "Export the current chat session to markdown"

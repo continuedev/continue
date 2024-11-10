@@ -19,6 +19,7 @@ import {
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   incrementNextCodeBlockToApplyIndex,
   updateApplyState,
@@ -29,7 +30,6 @@ import ButtonWithTooltip from "../ButtonWithTooltip";
 import FileIcon from "../FileIcon";
 import { CopyButton as CopyButtonHeader } from "./CopyButton";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 
 const ToolbarDiv = styled.div`
   display: flex;
@@ -87,6 +87,7 @@ interface CodeBlockToolBarProps {
   language: string | undefined;
   isNextCodeBlock: boolean;
   filepath?: string;
+  range?: string;
 }
 
 const terminalLanguages = ["bash", "sh"];
@@ -131,7 +132,6 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const defaultModel = useSelector(defaultModelSelector);
   const isTerminal = isTerminalCodeBlock(props.language, props.text);
   const [isCopied, setIsCopied] = useState(false);
-  const [isApplying, setIsApplying] = useState(false);
 
   const streamIdRef = useRef<string | null>(null);
   if (streamIdRef.current === null) {
@@ -149,10 +149,11 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   useWebviewListener(
     "applyCodeFromChat",
     async () => {
-      await ideMessenger.request("applyToCurrentFile", {
+      await ideMessenger.request("applyToFile", {
         curSelectedModelTitle: defaultModel.title,
         text: props.text,
         streamId: streamIdRef.current,
+        filepath: props.filepath,
       });
       dispatch(incrementNextCodeBlockToApplyIndex({}));
     },
@@ -172,23 +173,26 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   }
 
   async function onClickApply() {
-    if (isApplying) return;
-
     if (isTerminal) {
       await ideMessenger.ide.runCommand(getTerminalCommand(props.text));
-    } else {
-      ideMessenger.post("applyToCurrentFile", {
-        curSelectedModelTitle: defaultModel.title,
-        text: props.text,
-        streamId: streamIdRef.current,
-      });
-      dispatch(
-        updateApplyState({
-          streamId: streamIdRef.current,
-          status: "streaming",
-        }),
-      );
+      return;
     }
+
+    if (!props.filepath) return;
+
+    dispatch(
+      updateApplyState({
+        streamId: streamIdRef.current,
+        status: "streaming",
+      }),
+    );
+
+    ideMessenger.post("applyToFile", {
+      curSelectedModelTitle: defaultModel.title,
+      text: props.text,
+      streamId: streamIdRef.current,
+      filepath: props.filepath,
+    });
   }
 
   function onClickHeader() {
@@ -227,7 +231,6 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           {!isJetBrains() && isTerminal && (
             <ButtonWithTooltip
               text="Run in terminal"
-              disabled={isApplying}
               style={{ backgroundColor: vscEditorBackground }}
               onClick={onClickApply}
             >
@@ -235,15 +238,11 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             </ButtonWithTooltip>
           )}
           <ButtonWithTooltip
-            text={isApplying ? "Applying..." : "Apply"}
+            text="Apply"
             style={{ backgroundColor: vscEditorBackground }}
             onClick={onClickApply}
           >
-            {isApplying ? (
-              <CheckIcon className="h-4 w-4 text-green-400" />
-            ) : (
-              <PlayIcon className="h-4 w-4 text-gray-400" />
-            )}
+            <PlayIcon className="h-4 w-4 text-gray-400" />
           </ButtonWithTooltip>
           <ButtonWithTooltip
             text="Insert at cursor"
@@ -267,7 +266,10 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         onClick={onClickHeader}
       >
         <FileIcon height="20px" width="20px" filename={props.filepath} />
-        <span className="truncate">{getBasename(props.filepath)}</span>
+        <span className="truncate">
+          {getBasename(props.filepath)}
+          {props.range && ` ${props.range}`}
+        </span>
       </div>
 
       <div className="flex items-center gap-1">

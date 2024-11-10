@@ -158,6 +158,7 @@ Parameters that control the behavior of text generation and completion settings.
 - `maxTokens`: The maximum number of tokens to generate in a completion (default: `2048`).
 - `numThreads`: The number of threads used during the generation process. Available only for Ollama as `num_thread`.
 - `keepAlive`: For Ollama, this parameter sets the number of seconds to keep the model loaded after the last request, unloading it from memory if inactive (default: `1800` seconds, or 30 minutes).
+- `useMmap`: For Ollama, this parameter allows the model to be mapped into memory. If disabled can enhance response time on low end devices but will slow down the stream.
 
 Example
 
@@ -267,7 +268,7 @@ Custom commands initiated by typing "/" in the sidebar. Commands include predefi
 
 **Properties:**
 
-- `name`: The command name. Options include "issue", "share", "cmd", "edit", "comment", "http", "commit", and "review".
+- `name`: The command name. Options include "issue", "share", "cmd", "http", "commit", and "review".
 - `description`: Brief description of the command.
 - `step`: (Deprecated) Used for built-in commands; set the name for pre-configured options.
 - `params`: Additional parameters to configure command behavior (command-specific - see code for command)
@@ -280,10 +281,6 @@ Example:
     {
       "name": "commit",
       "description": "Generate a commit message"
-    },
-    {
-      "name": "comment",
-      "description": "Write comments for the selected code"
     },
     {
       "name": "share",
@@ -421,7 +418,7 @@ Several experimental config parameters are available, as described below:
   - `fix`: Prompt for fixing code.
   - `optimize`: Prompt for optimizing code.
   - `fixGrammar`: Prompt for fixing grammar or spelling.
-- `useChromiumForDocsCrawling`: Use chromium to crawl docs instead of default lighter-weight tool that can't render sites. Downloads and installs Chromium to `~/.continue/.utils`.
+- `useChromiumForDocsCrawling`: Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`..
 
 Example
 

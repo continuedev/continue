@@ -66,7 +66,6 @@ const TopGuiDiv = styled.div<{
   showScrollbar?: boolean;
 }>`
   overflow-y: auto;
-  height: 100%;
   scrollbar-width: ${(props) => (props.showScrollbar ? "thin" : "none")};
 
   &::-webkit-scrollbar {
@@ -75,6 +74,7 @@ const TopGuiDiv = styled.div<{
 `;
 
 const StopButton = styled.div`
+  background-color: ${vscBackground};
   width: fit-content;
   margin-right: auto;
   margin-left: auto;
@@ -97,6 +97,7 @@ const StopButton = styled.div`
 `;
 
 const StepsDiv = styled.div`
+  margin-top: 8px;
   position: relative;
   background-color: transparent;
 
@@ -135,7 +136,6 @@ export function Chat() {
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
   const active = useSelector((state: RootState) => state.state.active);
@@ -147,16 +147,34 @@ export function Chat() {
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
-  useEffect(() => {
-    if (!active || !topGuiDivRef.current) return;
-
-    const scrollAreaElement = topGuiDivRef.current;
-
-    scrollAreaElement.scrollTop =
-      scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
+  const snapToBottom = useCallback(() => {
+    if (!topGuiDivRef.current) return;
+    const elem = topGuiDivRef.current;
+    elem.scrollTop = elem.scrollHeight - elem.clientHeight;
 
     setIsAtBottom(true);
-  }, [active]);
+  }, [topGuiDivRef, setIsAtBottom]);
+
+  const smoothScrollToBottom = useCallback(async () => {
+    if (!topGuiDivRef.current) return;
+    const elem = topGuiDivRef.current
+    elem.scrollTo({
+      top: elem.scrollHeight - elem.clientHeight,
+      behavior: 'smooth'
+    })
+
+    setIsAtBottom(true);
+  }, [topGuiDivRef, setIsAtBottom]);
+
+  useEffect(() => {
+    if (active) snapToBottom();
+  }, [active, snapToBottom]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      smoothScrollToBottom();
+    }, 250)
+  }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -282,8 +300,8 @@ export function Chat() {
       }
     },
     [
-      sessionState.history,
-      sessionState.contextItems,
+      state.history,
+      state.contextItems,
       defaultModel,
       state,
       streamResponse,
@@ -311,6 +329,7 @@ export function Chat() {
   return (
     <>
       <TopGuiDiv
+        className={`${state.history.length > 0 ? "h-full" : ""}`}
         ref={topGuiDivRef}
         onScroll={handleScroll}
         showScrollbar={state.config.ui?.showChatScrollbar || false}
@@ -367,11 +386,11 @@ export function Chat() {
                               : true
                             : stepsOpen[index]!
                         }
-                        onToggle={() => {}}
+                        onToggle={() => { }}
                       >
                         <StepContainer
                           index={index}
-                          isLast={index === sessionState.history.length - 1}
+                          isLast={index === state.history.length - 1}
                           isFirst={index === 0}
                           open={
                             typeof stepsOpen[index] === "undefined"
@@ -379,14 +398,14 @@ export function Chat() {
                               : stepsOpen[index]!
                           }
                           key={index}
-                          onUserInput={(input: string) => {}}
+                          onUserInput={(input: string) => { }}
                           item={item}
-                          onReverse={() => {}}
+                          onReverse={() => { }}
                           onRetry={() => {
                             streamResponse(
                               state.history[index - 1].editorState,
                               state.history[index - 1].modifiers ??
-                                defaultInputModifiers,
+                              defaultInputModifiers,
                               ideMessenger,
                               index - 1,
                             );
@@ -415,22 +434,56 @@ export function Chat() {
               </Fragment>
             ))}
           </StepsDiv>
+        </div>
+        <ChatScrollAnchor
+          scrollAreaRef={topGuiDivRef}
+          isAtBottom={isAtBottom}
+          trackVisibility={active}
+        />
+      </TopGuiDiv>
 
-          <ContinueInputBox
-            isMainInput
-            isLastUserInput={false}
-            hidden={active}
-            onEnter={(editorContent, modifiers) => {
-              sendInput(editorContent, modifiers);
-            }}
-          />
-
-          {active ? (
-            <>
-              <br />
-              <br />
-            </>
-          ) : state.history.length > 0 ? (
+      <div className={`relative`}>
+        <div className="absolute -top-8 right-2 z-30">
+          {ttsActive && (
+            <StopButton
+              className=""
+              onClick={() => {
+                ideMessenger.post("tts/kill", undefined);
+              }}
+            >
+              ■ Stop TTS
+            </StopButton>
+          )}
+          {active && (
+            <StopButton
+              onClick={() => {
+                dispatch(setInactive());
+                if (
+                  state.history[state.history.length - 1]?.message.content
+                    .length === 0
+                ) {
+                  dispatch(clearLastResponse());
+                }
+              }}
+            >
+              {getMetaKeyLabel()} ⌫ Cancel
+            </StopButton>
+          )}
+        </div>
+        <ContinueInputBox
+          isMainInput
+          isLastUserInput={false}
+          onEnter={(editorContent, modifiers) => {
+            sendInput(editorContent, modifiers);
+          }}
+        />
+        <div
+          style={{
+            // opacity: active ? 0 : 1,
+            pointerEvents: active ? "none" : "auto",
+          }}
+        >
+          {state.history.length > 0 ? (
             <div className="xs:inline mt-2 hidden">
               <NewSessionButton
                 onClick={() => {
@@ -475,40 +528,7 @@ export function Chat() {
             </>
           )}
         </div>
-
-        <ChatScrollAnchor
-          scrollAreaRef={topGuiDivRef}
-          isAtBottom={isAtBottom}
-          trackVisibility={active}
-        />
-      </TopGuiDiv>
-
-      {ttsActive && (
-        <StopButton
-          className="mb-4 mt-2"
-          onClick={() => {
-            ideMessenger.post("tts/kill", undefined);
-          }}
-        >
-          ■ Stop TTS
-        </StopButton>
-      )}
-      {active && (
-        <StopButton
-          className="mb-4 mt-auto"
-          onClick={() => {
-            dispatch(setInactive());
-            if (
-              state.history[state.history.length - 1]?.message.content
-                .length === 0
-            ) {
-              dispatch(clearLastResponse());
-            }
-          }}
-        >
-          {getMetaKeyLabel()} ⌫ Cancel
-        </StopButton>
-      )}
+      </div>
     </>
   );
 }
