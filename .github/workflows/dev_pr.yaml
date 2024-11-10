@@ -1,9 +1,9 @@
-name: Dev PR checks
+name: PR checks
 
 on:
   pull_request:
     branches:
-      - dev
+      - main
 
 jobs:
   tsc-check:
