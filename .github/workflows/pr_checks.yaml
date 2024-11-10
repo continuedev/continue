@@ -105,4 +105,9 @@ jobs:
       - name: Run core tests
         run: |
           cd core
-          npm run test
+          npm test
+
+      - name: Run gui tests
+        run: |
+          cd gui
+          npm test

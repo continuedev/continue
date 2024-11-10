@@ -1,6 +1,6 @@
-import HistoryPage from "./index";
-import { renderWithProviders } from "../../util/test/render";
 import { screen } from "@testing-library/dom";
+import { renderWithProviders } from "../../util/test/render";
+import HistoryPage from "./index";
 
 const navigateFn = vi.fn();
 
@@ -15,6 +15,8 @@ vi.mock("react-router-dom", async () => {
 describe("history Page test", () => {
   it("History text is existed after render", () => {
     renderWithProviders(<HistoryPage />);
-    expect(screen.getByText("History")).toBeInTheDocument();
+    expect(
+      screen.getByText("All session data is saved in ~/.continue/sessions"),
+    ).toBeInTheDocument();
   });
 });
