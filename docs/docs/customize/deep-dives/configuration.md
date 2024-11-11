@@ -1,9 +1,9 @@
 ---
-description: Ways to configure
+description: Configuration
 keywords: [config, settings, customize]
 ---
 
-# Ways to configure
+# Configuration
 
 Continue can be deeply customized. User-level configuration is stored and can be edited in your home directory in [`config.json`](#configjson):
 
