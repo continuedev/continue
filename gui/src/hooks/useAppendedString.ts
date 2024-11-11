@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 export function useAppendedString(
   fullString: string,
-  append: (chunk: string, lineCount: number) => void
+  append: (chunk: string, lineCount: number) => void,
 ) {
   // Queue of fullString updated versions to be processed atomically
   const [updateQueue, setUpdateQueue] = useState<string[]>([]);

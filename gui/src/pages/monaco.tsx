@@ -37,7 +37,7 @@ function EditorFrame(props: EditorFrameProps) {
   return (
     <div>
       <div
-        className="my-2 px-2 py-1 flex justify-between items-center"
+        className="my-2 flex items-center justify-between px-2 py-1"
         style={{
           backgroundColor: vscInputBackground,
         }}

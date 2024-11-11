@@ -2,7 +2,7 @@ import React from "react";
 import { type PlacesType } from "react-tooltip";
 import { HeaderButton } from ".";
 import { v4 as uuidv4 } from "uuid";
-import { ToolTip } from "./gui/Tooltip"; 
+import { ToolTip } from "./gui/Tooltip";
 
 interface HeaderButtonWithTextProps {
   text: string | undefined;

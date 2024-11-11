@@ -46,7 +46,7 @@ const RingLoader = (props: {
   return (
     <div
       className={
-        "m-auto text-center mt-2" +
+        "m-auto mt-2 text-center" +
         (props.wFull === false ? "" : " w-full") +
         " " +
         props.className

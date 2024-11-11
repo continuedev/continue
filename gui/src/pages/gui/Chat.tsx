@@ -157,11 +157,11 @@ export function Chat() {
 
   const smoothScrollToBottom = useCallback(async () => {
     if (!topGuiDivRef.current) return;
-    const elem = topGuiDivRef.current
+    const elem = topGuiDivRef.current;
     elem.scrollTo({
       top: elem.scrollHeight - elem.clientHeight,
-      behavior: 'smooth'
-    })
+      behavior: "smooth",
+    });
 
     setIsAtBottom(true);
   }, [topGuiDivRef, setIsAtBottom]);
@@ -173,7 +173,7 @@ export function Chat() {
   useEffect(() => {
     setTimeout(() => {
       smoothScrollToBottom();
-    }, 250)
+    }, 250);
   }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
@@ -299,13 +299,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [
-      state.history,
-      state.contextItems,
-      defaultModel,
-      state,
-      streamResponse,
-    ],
+    [state.history, state.contextItems, defaultModel, state, streamResponse],
   );
 
   useWebviewListener(
@@ -386,7 +380,7 @@ export function Chat() {
                               : true
                             : stepsOpen[index]!
                         }
-                        onToggle={() => { }}
+                        onToggle={() => {}}
                       >
                         <StepContainer
                           index={index}
@@ -398,14 +392,14 @@ export function Chat() {
                               : stepsOpen[index]!
                           }
                           key={index}
-                          onUserInput={(input: string) => { }}
+                          onUserInput={(input: string) => {}}
                           item={item}
-                          onReverse={() => { }}
+                          onReverse={() => {}}
                           onRetry={() => {
                             streamResponse(
                               state.history[index - 1].editorState,
                               state.history[index - 1].modifiers ??
-                              defaultInputModifiers,
+                                defaultInputModifiers,
                               ideMessenger,
                               index - 1,
                             );

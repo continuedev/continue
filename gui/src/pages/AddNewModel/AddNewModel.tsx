@@ -63,9 +63,9 @@ function AddNewModel() {
   const [providersSelected, setProvidersSelected] = React.useState(true);
 
   return (
-    <div className="overflow-y-scroll mb-6">
+    <div className="mb-6 overflow-y-scroll">
       <div
-        className="items-center flex m-0 p-0 sticky top-0"
+        className="sticky top-0 m-0 flex items-center p-0"
         style={{
           borderBottom: `0.5px solid ${lightGray}`,
           backgroundColor: vscBackground,
@@ -76,9 +76,9 @@ function AddNewModel() {
           width="1.2em"
           height="1.2em"
           onClick={() => navigate("/")}
-          className="inline-block ml-4 cursor-pointer"
+          className="ml-4 inline-block cursor-pointer"
         />
-        <h3 className="text-lg font-bold m-2 inline-block">Add a new model</h3>
+        <h3 className="m-2 inline-block text-lg font-bold">Add a new model</h3>
       </div>
       <br />
       <div className="px-6">
@@ -113,7 +113,7 @@ function AddNewModel() {
 
         {providersSelected ? (
           <>
-            <div className="text-center leading-relaxed col-span-full mb-8">
+            <div className="col-span-full mb-8 text-center leading-relaxed">
               <h2 className="mb-0">Providers</h2>
               <p className="mt-2">
                 Select a provider below, or configure your own in{" "}
@@ -142,7 +142,7 @@ function AddNewModel() {
           </>
         ) : (
           <>
-            <div className="text-center leading-relaxed col-span-full">
+            <div className="col-span-full text-center leading-relaxed">
               <h2 className="mb-0">Models</h2>
               <p className="mt-2">
                 Select a model from the most popular options below, or configure
@@ -152,8 +152,8 @@ function AddNewModel() {
 
             {Object.entries(modelsByProvider).map(
               ([providerTitle, modelConfigsByProviderTitle]) => (
-                <div className="flex flex-col mb-6">
-                  <div className="w-full items-center mb-4">
+                <div className="mb-6 flex flex-col">
+                  <div className="mb-4 w-full items-center">
                     <h3 className="">{providerTitle}</h3>
                     <hr
                       style={{
@@ -214,8 +214,8 @@ function AddNewModel() {
             ideMessenger.post("openConfigJson", undefined);
           }}
         >
-          <h3 className="text-center my-2">
-            <Cog6ToothIcon className="inline-block h-5 w-5 align-middle px-4" />
+          <h3 className="my-2 text-center">
+            <Cog6ToothIcon className="inline-block h-5 w-5 px-4 align-middle" />
             Open config.json
           </h3>
         </CustomModelButton>

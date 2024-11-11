@@ -83,9 +83,10 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div className="relative"
+    <div
+      className="relative"
       style={{
-        minHeight: props.isLast ? "50vh" : 0
+        minHeight: props.isLast ? "50vh" : 0,
       }}
     >
       <ContentDiv
@@ -95,7 +96,7 @@ function StepContainer(props: StepContainerProps) {
       >
         {uiConfig?.displayRawMarkdown ? (
           <pre
-            className="whitespace-pre-wrap break-words p-4 max-w-full overflow-x-auto"
+            className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4"
             style={{ fontSize: getFontSize() - 2 }}
           >
             {stripImages(props.item.message.content)}
@@ -107,10 +108,11 @@ function StepContainer(props: StepContainerProps) {
           />
         )}
       </ContentDiv>
-      <div className="h-7 mb-2 mx-2 flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 pb-0 cursor-default"
+      <div
+        className="xs:flex mx-2 mb-2 flex h-7 cursor-default items-center justify-end gap-0.5 pb-0 text-xs text-gray-400"
         style={{
           opacity: shouldRenderActions ? 1 : 0,
-          pointerEvents: shouldRenderActions ? "auto" : "none"
+          pointerEvents: shouldRenderActions ? "auto" : "none",
         }}
       >
         {truncatedEarly && (
@@ -145,7 +147,9 @@ function StepContainer(props: StepContainerProps) {
           tabIndex={-1}
           onClick={() => sendFeedback(true)}
         >
-          <HandThumbUpIcon className={`h-3.5 w-3.5 mx-0.5 ${feedback === true ? 'text-green-400' : 'text-gray-500'}`} />
+          <HandThumbUpIcon
+            className={`mx-0.5 h-3.5 w-3.5 ${feedback === true ? "text-green-400" : "text-gray-500"}`}
+          />
         </ButtonWithTooltip>
 
         <ButtonWithTooltip
@@ -153,7 +157,9 @@ function StepContainer(props: StepContainerProps) {
           tabIndex={-1}
           onClick={() => sendFeedback(false)}
         >
-          <HandThumbDownIcon className={`h-3.5 w-3.5 ${feedback === false ? 'text-red-400' : 'text-gray-500'}`} />
+          <HandThumbDownIcon
+            className={`h-3.5 w-3.5 ${feedback === false ? "text-red-400" : "text-gray-500"}`}
+          />
         </ButtonWithTooltip>
       </div>
     </div>
