@@ -23,7 +23,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
       text: string;
       streamId: string;
       curSelectedModelTitle: string;
-      filepath: string;
+      filepath?: string;
     },
     void,
   ];
@@ -60,7 +60,9 @@ export type EditStatus = "not-started" | "streaming" | "accepting" | "done";
 
 export interface ApplyState {
   streamId: string;
-  status: "streaming" | "done" | "closed";
+  status?: "streaming" | "done" | "closed";
+  numDiffs?: number;
+  filepath?: string;
 }
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

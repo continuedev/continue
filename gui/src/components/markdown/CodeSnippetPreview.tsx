@@ -10,7 +10,7 @@ import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
-import ButtonWithTooltip from "../ButtonWithTooltip";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import FileIcon from "../FileIcon";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
@@ -103,7 +103,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           {props.item.name}
         </div>
         <div className="flex items-center gap-1">
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             text="Delete"
             onClick={(e) => {
               e.stopPropagation();
@@ -111,7 +111,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             }}
           >
             <XMarkIcon width="1em" height="1em" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         </div>
       </PreviewMarkdownHeader>
       <div
@@ -125,12 +125,11 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description.split(" ")[0],
           )} ${props.item.description}\n${content}\n${fence}`}
-          showCodeBorder={false}
         />
       </div>
 
       {(codeBlockRef.current?.scrollHeight ?? 0) > MAX_PREVIEW_HEIGHT && (
-        <ButtonWithTooltip
+        <HeaderButtonWithToolTip
           className="absolute bottom-1 right-2"
           text={collapsed ? "Expand" : "Collapse"}
         >
@@ -145,7 +144,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               onClick={() => setCollapsed(true)}
             />
           )}
-        </ButtonWithTooltip>
+        </HeaderButtonWithToolTip>
       )}
     </PreviewMarkdownDiv>
   );

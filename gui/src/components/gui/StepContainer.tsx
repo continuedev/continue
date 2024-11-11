@@ -13,10 +13,10 @@ import { vscBackground, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
-import { getFontSize, getMetaKeyLabel } from "../../util";
-import ButtonWithTooltip from "../ButtonWithTooltip";
-import { CopyButton } from "../markdown/CopyButton";
+import { getFontSize } from "../../util";
+import HeaderButtonWithToolTip from "./HeaderButtonWithToolTip";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import { CopyIconButton } from "./CopyIconButton";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -83,9 +83,10 @@ function StepContainer(props: StepContainerProps) {
   };
 
   return (
-    <div className="relative"
+    <div
+      className="relative"
       style={{
-        minHeight: props.isLast ? "50vh" : 0
+        minHeight: props.isLast ? "50vh" : 0,
       }}
     >
       <ContentDiv
@@ -95,66 +96,71 @@ function StepContainer(props: StepContainerProps) {
       >
         {uiConfig?.displayRawMarkdown ? (
           <pre
-            className="whitespace-pre-wrap break-words p-4 max-w-full overflow-x-auto"
+            className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4"
             style={{ fontSize: getFontSize() - 2 }}
           >
             {stripImages(props.item.message.content)}
           </pre>
         ) : (
           <StyledMarkdownPreview
-            showCodeBorder
+            isRenderingInStepContainer
             source={stripImages(props.item.message.content)}
           />
         )}
       </ContentDiv>
-      <div className="h-7 mb-2 mx-2 flex items-center justify-end gap-0.5 xs:flex text-xs text-gray-400 pb-0 cursor-default"
+      <div
+        className="xs:flex mx-2 mb-2 flex h-7 cursor-default items-center justify-end gap-0.5 pb-0 text-xs text-gray-400"
         style={{
           opacity: shouldRenderActions ? 1 : 0,
-          pointerEvents: shouldRenderActions ? "auto" : "none"
+          pointerEvents: shouldRenderActions ? "auto" : "none",
         }}
       >
         {truncatedEarly && (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             tabIndex={-1}
             text="Continue generation"
             onClick={props.onContinueGeneration}
           >
             <BarsArrowDownIcon className="h-3.5 w-3.5 text-gray-500" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         )}
 
         {props.index !== 1 && (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             text="Delete"
             tabIndex={-1}
             onClick={props.onDelete}
           >
             <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         )}
 
-        <CopyButton
+        <CopyIconButton
           tabIndex={-1}
           text={stripImages(props.item.message.content)}
           clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
           checkIconClassName="h-3.5 w-3.5 text-green-400"
         />
 
-        <ButtonWithTooltip
+        <HeaderButtonWithToolTip
           text="Helpful"
           tabIndex={-1}
           onClick={() => sendFeedback(true)}
         >
-          <HandThumbUpIcon className={`h-3.5 w-3.5 mx-0.5 ${feedback === true ? 'text-green-400' : 'text-gray-500'}`} />
-        </ButtonWithTooltip>
+          <HandThumbUpIcon
+            className={`mx-0.5 h-3.5 w-3.5 ${feedback === true ? "text-green-400" : "text-gray-500"}`}
+          />
+        </HeaderButtonWithToolTip>
 
-        <ButtonWithTooltip
+        <HeaderButtonWithToolTip
           text="Unhelpful"
           tabIndex={-1}
           onClick={() => sendFeedback(false)}
         >
-          <HandThumbDownIcon className={`h-3.5 w-3.5 ${feedback === false ? 'text-red-400' : 'text-gray-500'}`} />
-        </ButtonWithTooltip>
+          <HandThumbDownIcon
+            className={`h-3.5 w-3.5 ${feedback === false ? "text-red-400" : "text-gray-500"}`}
+          />
+        </HeaderButtonWithToolTip>
       </div>
     </div>
   );
