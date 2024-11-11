@@ -28,6 +28,17 @@ export function getContinueUtilsPath(): string {
   return utilsPath;
 }
 
+export function getGlobalContinueIgnorePath(): string {
+  const continueIgnorePath = path.join(
+    getContinueGlobalPath(),
+    ".continueignore",
+  );
+  if (!fs.existsSync(continueIgnorePath)) {
+    fs.writeFileSync(continueIgnorePath, "");
+  }
+  return continueIgnorePath;
+}
+
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
   const continuePath = CONTINUE_GLOBAL_DIR;

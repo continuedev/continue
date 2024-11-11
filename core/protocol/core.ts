@@ -15,7 +15,7 @@ import type {
   SessionInfo,
   SiteIndexingConfig,
 } from "../";
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { AutocompleteInput } from "../autocomplete/util/types";
 import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -143,7 +143,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [
-    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
     void,
   ];
   "index/indexingProgressBarInitialized": [undefined, void];

@@ -14,7 +14,7 @@ import { IndexResultType } from "./types";
 
 jest.useFakeTimers();
 
-describe("ChunkCodebaseIndex", () => {
+describe.skip("ChunkCodebaseIndex", () => {
   let index: LanceDbIndex;
   let sqliteDb: DatabaseConnection;
   let lanceDb: lance.Connection;

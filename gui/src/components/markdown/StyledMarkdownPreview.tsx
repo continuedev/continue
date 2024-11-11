@@ -136,14 +136,16 @@ function processCodeBlocks(tree: any) {
       node.lang = node.lang.split(".").slice(-1)[0];
     }
 
-    node.data = node.data || {};
-    node.data.hProperties = node.data.hProperties || {};
-
-    node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
-    node.data.hProperties.codeBlockContent = node.value;
-
     if (node.meta) {
-      node.data.hProperties.filepath = node.meta;
+      node.data = node.data || {};
+      node.data.hProperties = node.data.hProperties || {};
+
+      node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
+      node.data.hProperties.codeBlockContent = node.value;
+
+      let meta = node.meta.split(" ");
+      node.data.hProperties.filepath = meta[0];
+      node.data.hProperties.range = meta[1];
     }
   });
 }
@@ -193,6 +195,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             filepath,
             isGeneratingCodeBlock,
             codeBlockContent,
+            range,
           } = preProps?.children?.[0]?.props;
 
           if (!props.isRenderingInStepContainer) {
@@ -225,6 +228,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               language={language}
               filepath={filepath}
               isGeneratingCodeBlock={isGeneratingCodeBlock}
+              range={range}
             >
               <SyntaxHighlightedPre {...preProps} />
             </StepContainerPreToolbar>

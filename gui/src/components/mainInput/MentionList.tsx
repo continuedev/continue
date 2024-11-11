@@ -6,14 +6,13 @@ import {
   BookOpenIcon,
   CodeBracketIcon,
   CommandLineIcon,
+  DocumentTextIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
   FolderOpenIcon,
   GlobeAltIcon,
-  HashtagIcon,
   MagnifyingGlassIcon,
-  PencilIcon,
   PlusIcon,
   SparklesIcon,
   TrashIcon,
@@ -21,6 +20,7 @@ import {
 import { Editor } from "@tiptap/react";
 import {
   forwardRef,
+  useContext,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -36,6 +36,7 @@ import {
   vscListActiveForeground,
   vscQuickInputBackground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   setDialogMessage,
   setShowDialog,
@@ -61,10 +62,9 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   issue: ExclamationCircleIcon,
   trash: TrashIcon,
   web: GlobeAltIcon,
+  "prompt-files": DocumentTextIcon,
   "repo-map": FolderIcon,
-  "/edit": PencilIcon,
   "/clear": TrashIcon,
-  "/comment": HashtagIcon,
   "/share": ArrowUpOnSquareIcon,
   "/cmd": CommandLineIcon,
 };
@@ -177,6 +177,8 @@ interface MentionListProps {
 const MentionList = forwardRef((props: MentionListProps, ref) => {
   const dispatch = useDispatch();
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
@@ -207,6 +209,24 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           );
         },
         description: "Add a new documentation source",
+      });
+    } else if (subMenuTitle === ".prompt files") {
+      items.push({
+        title: "New .prompt file",
+        type: "action",
+        action: () => {
+          ideMessenger.request("config/newPromptFile", undefined);
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          if (start !== -1) {
+            props.editor.view.dispatch(
+              tr.delete(start, tr.selection.from).scrollIntoView(),
+            );
+          }
+          props.onClose(); // Escape the mention list after creating a new prompt file
+        },
+        description: "Create a new .prompt file",
       });
     }
 

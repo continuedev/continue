@@ -7,7 +7,14 @@ import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "../components";
+import {
+  defaultBorderRadius,
+  lightGray,
+  parseColorForHex,
+  VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
+  VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
+  vscForeground,
+} from "../components";
 import FileIcon from "../components/FileIcon";
 import { NewSessionButton } from "../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../components/mainInput/resolveInput";
@@ -162,7 +169,7 @@ function Edit() {
               placeholder={
                 ["streaming", "accepting"].includes(editModeState.editStatus)
                   ? "Enter instructions for edit"
-                  : "Enter follow-up instructions"
+                  : "Enter instructions for edit"
               }
               border={`1px solid #aa0`}
               availableContextProviders={availableContextProviders.filter(
@@ -203,7 +210,9 @@ function Edit() {
           <div className="my-2 flex w-full cursor-pointer">
             <AcceptRejectButton
               disabled={editModeState.editStatus !== "accepting"}
-              backgroundColor="#dc354588"
+              backgroundColor={parseColorForHex(
+                VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
+              )}
               onClick={() => {
                 ideMessenger.request("edit/acceptReject", {
                   accept: false,
@@ -217,7 +226,9 @@ function Edit() {
             </AcceptRejectButton>
             <AcceptRejectButton
               disabled={editModeState.editStatus !== "accepting"}
-              backgroundColor="#28a74588"
+              backgroundColor={parseColorForHex(
+                VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
+              )}
               onClick={() => {
                 ideMessenger.request("edit/acceptReject", {
                   accept: true,
@@ -240,7 +251,7 @@ function Edit() {
             className="mr-auto flex items-center gap-2"
           >
             <ArrowLeftIcon width="11px" height="11px" />
-            Back to chat
+            Back to Chat
           </NewSessionButton>
         </div>
       </TopDiv>

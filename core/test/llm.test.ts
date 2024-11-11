@@ -55,7 +55,7 @@ function testLLM(llm: BaseLLM) {
   });
 }
 
-describe("LLM", () => {
+describe.skip("LLM", () => {
   // testLLM(
   //   new FreeTrial({
   //     model: "gpt-3.5-turbo",

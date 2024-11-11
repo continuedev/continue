@@ -189,18 +189,17 @@ export function getSlashCommandDropdownOptions(
   const items = async ({ query }: { query: string }) => {
     const options = [
       ...availableSlashCommandsRef.current,
-      {
-        title: "Build a custom prompt",
-        description: "Build a custom prompt",
-        type: "action",
-        id: "createPromptFile",
-        label: "Create Prompt File",
-        action: () => {
-          console.log("I", ideMessenger.request);
-          ideMessenger.request("config/newPromptFile", undefined);
-        },
-        name: "Create Prompt File",
-      },
+      // {
+      //   title: "Build a custom prompt",
+      //   description: "Build a custom prompt",
+      //   type: "action",
+      //   id: "createPromptFile",
+      //   label: "Create Prompt File",
+      //   action: () => {
+      //     ideMessenger.request("config/newPromptFile", undefined);
+      //   },
+      //   name: "Create Prompt File",
+      // },
     ];
     return (
       options.filter((slashCommand) => {

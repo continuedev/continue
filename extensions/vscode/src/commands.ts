@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { ContextMenuConfig, IDE } from "core";
-import { CompletionProvider } from "core/autocomplete/completionProvider";
+import { ContextMenuConfig } from "core";
+import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { RangeInFileWithContents } from "core/commands/util";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
@@ -33,8 +33,8 @@ import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import { getFullyQualifiedPath } from "./util/util";
 import { uriFromFilePath } from "./util/vscode";
-import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 import { VsCodeIde } from "./VsCodeIde";
+import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -178,12 +178,25 @@ async function addEntireFileToContext(
 
 function focusGUI() {
   const fullScreenTab = getFullScreenTab();
-  if (!fullScreenTab) {
-    // focus sidebar
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-  } else {
+  if (fullScreenTab) {
     // focus fullscreen
     fullScreenPanel?.reveal();
+  } else {
+    // focus sidebar
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    // vscode.commands.executeCommand("workbench.action.focusAuxiliaryBar");
+  }
+}
+
+function hideGUI() {
+  const fullScreenTab = getFullScreenTab();
+  if (fullScreenTab) {
+    // focus fullscreen
+    fullScreenPanel?.dispose();
+  } else {
+    // focus sidebar
+    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+    // vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   }
 }
 
@@ -286,7 +299,6 @@ const commandsMap: (
         fullPath = getFullyQualifiedPath(ide, fullPath);
       } else {
         console.warn(`Unable to resolve filepath: ${newFilepath}`);
-        return;
       }
 
       verticalDiffManager.clearForFilepath(fullPath, false);
@@ -351,32 +363,37 @@ const commandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
-      focusGUI();
-      sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      await addHighlightedCodeToContext(sidebar.webviewProtocol);
-    },
-    "continue.focusContinueInputWithoutClear": async () => {
-      const fullScreenTab = getFullScreenTab();
-
+      const historyLength = await sidebar.webviewProtocol.request(
+        "getWebviewHistoryLength",
+        undefined,
+      );
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
       );
 
       if (isContinueInputFocused) {
-        // Handle closing the GUI only if we are focused on the input
-        if (fullScreenTab) {
-          fullScreenPanel?.dispose();
+        if (historyLength === 0) {
+          hideGUI();
+        } else {
+          sidebar.webviewProtocol?.request("focusContinueInput", undefined);
         }
       } else {
-        // Handle opening the GUI otherwise
-        if (!fullScreenTab) {
-          // focus sidebar
-          vscode.commands.executeCommand("continue.continueGUIView.focus");
-        } else {
-          // focus fullscreen
-          fullScreenPanel?.reveal();
-        }
+        focusGUI();
+        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+        await addHighlightedCodeToContext(sidebar.webviewProtocol);
+      }
+    },
+    "continue.focusContinueInputWithoutClear": async () => {
+      const isContinueInputFocused = await sidebar.webviewProtocol.request(
+        "isContinueInputFocused",
+        undefined,
+      );
+
+      if (isContinueInputFocused) {
+        hideGUI();
+      } else {
+        focusGUI();
 
         sidebar.webviewProtocol?.request(
           "focusContinueInputWithoutClear",
@@ -388,39 +405,40 @@ const commandsMap: (
     },
     "continue.edit": async () => {
       captureCommandTelemetry("edit");
-      const fullScreenTab = getFullScreenTab();
-      if (!fullScreenTab) {
-        // focus sidebar
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      } else {
-        // focus fullscreen
-        fullScreenPanel?.reveal();
-      }
+      focusGUI();
 
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
         return;
       }
 
-      editDecorationManager.setDecoration(
-        editor,
-        new vscode.Range(editor.selection.start, editor.selection.end),
+      const existingDiff = await verticalDiffManager.getHandlerForFile(
+        editor.document.fileName,
       );
+      if (!existingDiff) {
+        // If there's a diff currently being applied, then we just toggle focus back to the input
+        editDecorationManager.setDecoration(
+          editor,
+          new vscode.Range(editor.selection.start, editor.selection.end),
+        );
 
-      const highlightedCode = getCurrentlyHighlightedCode(true)!;
-      await sidebar.webviewProtocol?.request("startEditMode", {
-        highlightedCode,
-      });
+        const highlightedCode = getCurrentlyHighlightedCode(true)!;
+        await sidebar.webviewProtocol?.request("startEditMode", {
+          highlightedCode,
+        });
 
-      // Un-select the current selection
-      editor.selection = new vscode.Selection(
-        editor.selection.anchor,
-        editor.selection.anchor,
-      );
+        // Un-select the current selection
+        editor.selection = new vscode.Selection(
+          editor.selection.anchor,
+          editor.selection.anchor,
+        );
 
-      setTimeout(() => {
+        setTimeout(() => {
+          sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+        }, 30);
+      } else {
         sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      }, 30);
+      }
     },
     "continue.exitEditMode": async () => {
       captureCommandTelemetry("exitEditMode");
@@ -571,15 +589,15 @@ const commandsMap: (
       const fullScreenTab = getFullScreenTab();
 
       if (fullScreenTab && fullScreenPanel) {
-        //Full screen open, but not focused - focus it
+        // Full screen open, but not focused - focus it
         fullScreenPanel.reveal();
         return;
       }
 
-      //Full screen not open - open it
+      // Full screen not open - open it
       captureCommandTelemetry("openFullScreen");
 
-      //create the full screen panel
+      // Create the full screen panel
       let panel = vscode.window.createWebviewPanel(
         "continue.continueGUIView",
         "Continue",
@@ -590,7 +608,7 @@ const commandsMap: (
       );
       fullScreenPanel = panel;
 
-      //Add content to the panel
+      // Add content to the panel
       panel.webview.html = sidebar.getSidebarContent(
         extensionContext,
         panel,
@@ -599,7 +617,7 @@ const commandsMap: (
         true,
       );
 
-      //When panel closes, reset the webview and focus
+      // When panel closes, reset the webview and focus
       panel.onDidDispose(
         () => {
           sidebar.resetWebviewProtocolWebview();

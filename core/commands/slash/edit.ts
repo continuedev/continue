@@ -6,7 +6,7 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/streamTransforms/lineStream";
+} from "../../autocomplete/filtering/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/images";
 import {

@@ -15,7 +15,7 @@
   - [🧑‍💻 Contributing Code](#-contributing-code)
     - [Environment Setup](#environment-setup)
       - [Pre-requisites](#pre-requisites)
-      - [Fork the Continue Repository with All Branches](#fork-the-continue-repository-with-all-branches)
+      - [Fork the Continue Repository with All Branches](#fork-the-continue-repository)
       - [VS Code](#vs-code)
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
@@ -94,8 +94,6 @@ This will start a local server and you can see the documentation rendered in you
 
 ## 🧑‍💻 Contributing Code
 
-> Please make PRs to the `dev` branch. We use this to first test changes in a pre-release version of the extension.
-
 ### Environment Setup
 
 #### Pre-requisites
@@ -106,15 +104,15 @@ You should have Node.js version 20.11.0 (LTS) or higher installed. You can get i
 nvm use
 ```
 
-#### Fork the Continue Repository with All Branches
+#### Fork the Continue Repository
 
-1. Go to the [Continue GitHub repository](https://github.com/continuedev/continue) and fork it to your GitHub account. **Ensure all branches are included in the fork**.
+1. Go to the [Continue GitHub repository](https://github.com/continuedev/continue) and fork it to your GitHub account.
 
 2. Clone your forked repository to your local machine. Use: `git clone https://github.com/YOUR_USERNAME/continue.git`
 
-3. Navigate to the cloned directory and switch to the **dev** branch. Execute: `git checkout dev`, then create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
+3. Navigate to the cloned directory and make sure you are on the main branch. Create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
 
-4. When you're ready to submit your changes, send your pull request specifically to the **dev** branch.
+4. Send your pull request to the main branch.
 
 #### VS Code
 
@@ -145,7 +143,7 @@ See the [`CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBr
 
 ### Our Git Workflow
 
-We keep two permanent branches: `main` and `dev`. All contributions should be made as pull requests to the `dev` branch. When we are ready to create a "pre-release" version, we create a tag on the `dev` branch, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will merge its tag into the `main` branch. Creating a tag on the `main` branch will then trigger a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question.
+We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the `main` branch titled `v0.9.x-vscode`, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will create a new release titled `v0.8.x-vscode`, triggering a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow is well explained by http://releaseflow.org.
 
 ### Formatting
 
