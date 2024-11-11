@@ -9,7 +9,7 @@ function AddModelButtonSubtext() {
     <ButtonSubtext>
       This will update your{" "}
       <span
-        className="underline cursor-pointer"
+        className="cursor-pointer underline"
         onClick={() => ideMessenger.post("openConfigJson", undefined)}
       >
         config file

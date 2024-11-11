@@ -25,6 +25,7 @@ import {
   vscBackground,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
+import { useFindWidget } from "../../components/find/FindWidget";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
@@ -61,8 +62,6 @@ import {
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import { useFindWidget } from "../../components/find/FindWidget";
-
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -147,11 +146,11 @@ export function Chat() {
 
   const smoothScrollToBottom = useCallback(async () => {
     if (!stepsDivRef.current) return;
-    const elem = stepsDivRef.current
+    const elem = stepsDivRef.current;
     elem.scrollTo({
       top: elem.scrollHeight - elem.clientHeight,
-      behavior: 'smooth'
-    })
+      behavior: "smooth",
+    });
 
     setIsAtBottom(true);
   }, [stepsDivRef, setIsAtBottom]);
@@ -163,7 +162,7 @@ export function Chat() {
   useEffect(() => {
     setTimeout(() => {
       smoothScrollToBottom();
-    }, 400)
+    }, 400);
   }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
@@ -196,7 +195,7 @@ export function Chat() {
     setIsAtBottom(atBottom);
   };
 
-  const { widget, highlights } = useFindWidget(stepsDivRef)
+  const { widget, highlights } = useFindWidget(stepsDivRef);
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
@@ -291,13 +290,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [
-      state.history,
-      state.contextItems,
-      defaultModel,
-      state,
-      streamResponse,
-    ],
+    [state.history, state.contextItems, defaultModel, state, streamResponse],
   );
 
   useWebviewListener(
@@ -318,14 +311,14 @@ export function Chat() {
     [state.history],
   );
 
-  const showScrollbar = state.config.ui?.showChatScrollbar || false
+  const showScrollbar = state.config.ui?.showChatScrollbar || false;
 
   return (
     <>
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`pt-[8px] overflow-y-scroll ${showScrollbar ? 'thin-scrollbar' : 'no-scrollbar'} ${state.history.length > 0 ? "h-full" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "h-full" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}
@@ -340,12 +333,7 @@ export function Chat() {
               {item.message.role === "user" ? (
                 <ContinueInputBox
                   onEnter={async (editorState, modifiers) => {
-                    streamResponse(
-                      editorState,
-                      modifiers,
-                      ideMessenger,
-                      index,
-                    );
+                    streamResponse(editorState, modifiers, ideMessenger, index);
                   }}
                   isLastUserInput={isLastUserInput(index)}
                   isMainInput={false}
@@ -366,10 +354,7 @@ export function Chat() {
                           color="red"
                         />
                       ) : (
-                        <ChatBubbleOvalLeftIcon
-                          width="16px"
-                          height="16px"
-                        />
+                        <ChatBubbleOvalLeftIcon width="16px" height="16px" />
                       )
                     }
                     open={
@@ -379,7 +364,7 @@ export function Chat() {
                           : true
                         : stepsOpen[index]!
                     }
-                    onToggle={() => { }}
+                    onToggle={() => {}}
                   >
                     <StepContainer
                       index={index}
@@ -391,14 +376,14 @@ export function Chat() {
                           : stepsOpen[index]!
                       }
                       key={index}
-                      onUserInput={(input: string) => { }}
+                      onUserInput={(input: string) => {}}
                       item={item}
-                      onReverse={() => { }}
+                      onReverse={() => {}}
                       onRetry={() => {
                         streamResponse(
                           state.history[index - 1].editorState,
                           state.history[index - 1].modifiers ??
-                          defaultInputModifiers,
+                            defaultInputModifiers,
                           ideMessenger,
                           index - 1,
                         );

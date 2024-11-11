@@ -79,7 +79,7 @@ export const StyledListboxOptions = styled(Listbox.Options)`
   }
 `;
 
-export const StyledListboxOption = styled(Listbox.Option) <{
+export const StyledListboxOption = styled(Listbox.Option)<{
   selected: boolean;
 }>`
   background-color: ${({ selected }) =>
@@ -121,7 +121,7 @@ function ModelSelectionListbox({
             {window.vscMediaUrl && selectedProvider.icon && (
               <img
                 src={`${window.vscMediaUrl}/logos/${selectedProvider.icon}`}
-                className="object-contain w-4 h-4 object-center mr-3"
+                className="mr-3 h-4 w-4 object-contain object-center"
               />
             )}
             <span className="text-xs">{selectedProvider.title}</span>
@@ -150,13 +150,13 @@ function ModelSelectionListbox({
                 {({ selected }) => (
                   <>
                     {option.title === "Autodetect" ? (
-                      <CubeIcon className="mr-2 w-4 h-4 text-gray-400" />
+                      <CubeIcon className="mr-2 h-4 w-4 text-gray-400" />
                     ) : (
                       window.vscMediaUrl &&
                       option.icon && (
                         <img
                           src={`${window.vscMediaUrl}/logos/${option.icon}`}
-                          className="object-contain w-4 h-4 object-center mr-1"
+                          className="mr-1 h-4 w-4 object-contain object-center"
                         />
                       )
                     )}
