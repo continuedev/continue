@@ -1,7 +1,5 @@
 import { GoogleAuth } from "google-auth-library";
-import { BaseLLM } from "../index.js";
-import { stripImages } from "../images.js";
-import { streamSse } from "../stream.js";
+
 import {
   ChatMessage,
   CompletionOptions,
@@ -9,7 +7,11 @@ import {
   MessagePart,
   ModelProvider,
 } from "../../index.js";
+import { stripImages } from "../images.js";
+import { BaseLLM } from "../index.js";
+import { streamSse } from "../stream.js";
 import { streamResponse } from "../stream.js";
+
 import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
 
@@ -46,7 +48,7 @@ class VertexAI extends BaseLLM {
             ? "gemini" :
             "unknown";
     this.anthropicInstance = new Anthropic(_options);
-    this.geminiInstance = new Gemini(_options)
+    this.geminiInstance = new Gemini(_options);
     
   }
 
@@ -123,7 +125,7 @@ class VertexAI extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      if (value.type == "message_start") console.log(value);
+      if (value.type == "message_start") {console.log(value);}
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }
@@ -384,7 +386,7 @@ class VertexAI extends BaseLLM {
     } else if (this.vertexProvider == "mistral") {
       yield* this.StreamChatMistral(messages, options);
     } else if (this.vertexProvider == "anthropic") {
-      yield* this.StreamChatAnthropic(messages, options)
+      yield* this.StreamChatAnthropic(messages, options);
     } else {
       if (options.model.includes("bison")) {
         yield* this.streamChatBison(convertedMsgs, options);

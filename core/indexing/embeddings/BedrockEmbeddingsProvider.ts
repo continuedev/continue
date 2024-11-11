@@ -3,7 +3,9 @@ import {
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
+
 import { EmbeddingsProviderName, EmbedOptions, FetchFunction } from "../../index.js";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 interface ModelConfig {
@@ -79,7 +81,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
 
   private _getModelConfig() {
     const modelConfigs: { [key: string]: ModelConfig } = {
-      'cohere': {
+      "cohere": {
         formatPayload: (text: string) => ({
           texts: [text],
           input_type: "search_document",
@@ -87,7 +89,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
         }),
         extractEmbeddings: (responseBody: any) => responseBody.embeddings || [],
       },
-      'amazon.titan-embed': {
+      "amazon.titan-embed": {
         formatPayload: (text: string) => ({
           inputText: text,
         }),

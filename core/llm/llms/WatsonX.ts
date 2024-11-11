@@ -11,7 +11,7 @@ import { streamResponse } from "../stream.js";
 let watsonxToken = {
           expiration: 0,
           token: ""
-}
+};
 
 class WatsonX extends BaseLLM {
 

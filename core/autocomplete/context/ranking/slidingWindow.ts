@@ -1,4 +1,5 @@
 import { RangeInFileWithContents } from "../../../commands/util.js";
+
 import { AutocompleteSnippet, jaccardSimilarity } from "./index.js";
 
 function* slidingWindow(

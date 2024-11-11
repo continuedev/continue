@@ -1,5 +1,7 @@
-import { Octokit } from "@octokit/rest";
 import { URL } from "node:url";
+
+import { Octokit } from "@octokit/rest";
+
 import { PageData } from "../DocsCrawler";
 
 class GitHubCrawler {

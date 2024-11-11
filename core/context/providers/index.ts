@@ -1,5 +1,6 @@
 import { BaseContextProvider } from "../";
 import { ContextProviderName } from "../../";
+
 import CodeContextProvider from "./CodeContextProvider";
 import ContinueProxyContextProvider from "./ContinueProxyContextProvider";
 import CurrentFileContextProvider from "./CurrentFileContextProvider";
@@ -16,8 +17,8 @@ import GoogleContextProvider from "./GoogleContextProvider";
 import GreptileContextProvider from "./GreptileContextProvider";
 import HttpContextProvider from "./HttpContextProvider";
 import JiraIssuesContextProvider from "./JiraIssuesContextProvider/";
-import OSContextProvider from "./OSContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
+import OSContextProvider from "./OSContextProvider";
 import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import RepoMapContextProvider from "./RepoMapContextProvider";

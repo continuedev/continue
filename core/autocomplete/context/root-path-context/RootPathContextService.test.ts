@@ -1,9 +1,11 @@
 import fs from "fs";
 import path from "path";
+
 import { Range } from "../../..";
 import { testIde } from "../../../test/util/fixtures";
 import { getAst, getTreePathAtCursor } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
+
 import { RootPathContextService } from "./RootPathContextService";
 
 function splitTextAtRange(fileContent: string, range: Range): [string, string] {

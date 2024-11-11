@@ -1,6 +1,6 @@
-import type { DiffLine } from "core";
 import { ApplyState } from "core/protocol/ideWebview";
 import * as vscode from "vscode";
+
 import {
   DecorationTypeRangeManager,
   belowIndexDecorationType,
@@ -8,7 +8,9 @@ import {
   indexDecorationType,
   redDecorationType,
 } from "./decorations";
+
 import type { VerticalDiffCodeLens } from "./manager";
+import type { DiffLine } from "core";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;
@@ -336,7 +338,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
   }
 
   async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
-    let diffLines = []
+    let diffLines = [];
     try {
       // As an indicator of loading
       this.updateIndexLineDecorations();
@@ -345,7 +347,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
         if (this.isCancelled) {
           return;
         }
-        diffLines.push(diffLine)
+        diffLines.push(diffLine);
         await this.queueDiffLine(diffLine);
       }
 
@@ -368,7 +370,7 @@ export class VerticalDiffHandler implements vscode.Disposable {
       this.clearForFilepath(this.filepath, false);
       throw e;
     }
-    return diffLines
+    return diffLines;
   }
 
   async acceptRejectBlock(

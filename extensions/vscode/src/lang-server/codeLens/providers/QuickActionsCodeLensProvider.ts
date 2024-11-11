@@ -1,6 +1,7 @@
 import { ContinueConfig, QuickActionConfig } from "core";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
+
 import { QuickEditShowParams } from "../../../quickEdit/QuickEditQuickPick";
 import {
   CONTINUE_WORKSPACE_KEY,

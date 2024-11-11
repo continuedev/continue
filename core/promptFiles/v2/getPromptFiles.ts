@@ -1,4 +1,5 @@
 import path from "path";
+
 import { IDE } from "../..";
 import { walkDir } from "../../indexing/walkDir";
 import { readAllGlobalPromptFiles } from "../../util/paths";

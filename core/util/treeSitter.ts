@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import * as path from "node:path";
+
 import Parser, { Language } from "web-tree-sitter";
 
 export const supportedLanguages: { [key: string]: string } = {

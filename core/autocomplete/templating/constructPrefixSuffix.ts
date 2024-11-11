@@ -1,7 +1,6 @@
 import { IDE } from "../..";
 import { getRangeInString } from "../../util/ranges";
 import { languageForFilepath } from "../constants/AutocompleteLanguageInfo";
-
 import { AutocompleteInput } from "../util/types";
 
 /**

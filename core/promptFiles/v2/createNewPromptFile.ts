@@ -1,6 +1,8 @@
 import path from "path";
+
 import { IDE } from "../..";
 import { GlobalContext } from "../../util/GlobalContext";
+
 import { DEFAULT_PROMPTS_FOLDER_V2 } from "./getPromptFiles";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file

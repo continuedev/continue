@@ -1,13 +1,15 @@
-import { IDE, SlashCommand } from "../..";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { stripImages } from "../../llm/images";
+
 import ignore from "ignore";
+
+import { IDE, SlashCommand } from "../..";
 import {
   defaultIgnoreDir,
   defaultIgnoreFile,
   gitIgArrayFromFile,
 } from "../../indexing/ignore";
+import { stripImages } from "../../llm/images";
 
 const LANGUAGE_DEP_MGMT_FILENAMES = [
   "package.json", // JavaScript (Node.js)

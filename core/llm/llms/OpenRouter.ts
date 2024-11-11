@@ -1,5 +1,6 @@
 import { LLMOptions, ModelProvider } from "../../index.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
+
 import OpenAI from "./OpenAI.js";
 
 class OpenRouter extends OpenAI {
