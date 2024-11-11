@@ -253,6 +253,7 @@ export class CompletionProvider {
         completionId: helper.input.completionId,
         gitRepo: await this.ide.getRepoName(helper.filepath),
         uniqueId: await this.ide.getUniqueId(),
+        timestamp: Date.now(),
         ...helper.options,
       };
 
@@ -265,6 +266,12 @@ export class CompletionProvider {
           (await this.autocompleteCache).put(outcome.prefix, completionToCache);
         }
       }, 100);
+
+      // When using the JetBrains extension, Mark as displayed
+      const ideType = (await this.ide.getIdeInfo()).ideType;
+      if (ideType === "jetbrains") {
+        this.markDisplayed(input.completionId, outcome);
+      }
 
       return outcome;
     } catch (e: any) {

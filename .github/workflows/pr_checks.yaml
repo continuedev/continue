@@ -1,9 +1,9 @@
-name: Dev PR checks
+name: PR checks
 
 on:
   pull_request:
     branches:
-      - dev
+      - main
 
 jobs:
   tsc-check:
@@ -101,3 +101,13 @@ jobs:
         run: |
           cd binary
           npx tsc --noEmit
+
+      - name: Run core tests
+        run: |
+          cd core
+          npm test
+
+      - name: Run gui tests
+        run: |
+          cd gui
+          npm test

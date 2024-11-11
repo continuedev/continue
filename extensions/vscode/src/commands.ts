@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { ContextMenuConfig } from "core";
-import { CompletionProvider } from "core/autocomplete/completionProvider";
+import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { RangeInFileWithContents } from "core/commands/util";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";

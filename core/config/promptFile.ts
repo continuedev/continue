@@ -4,7 +4,7 @@ import * as YAML from "yaml";
 import type { ChatHistory, ChatHistoryItem, ChatMessage, ContextItem, ContinueSDK, IContextProvider, IDE, SlashCommand } from "..";
 import { walkDir } from "../indexing/walkDir";
 import { stripImages } from "../llm/images";
-import { renderTemplatedString } from "../promptFiles/renderTemplatedString";
+import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
 import { getBasename } from "../util/index";
 import { BaseContextProvider } from "../context";
 

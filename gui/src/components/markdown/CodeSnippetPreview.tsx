@@ -1,7 +1,6 @@
 import {
   ChevronDownIcon,
   ChevronUpIcon,
-  PencilIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
@@ -36,7 +35,7 @@ const PreviewMarkdownHeader = styled.div`
   padding: 2px 6px;
   border-bottom: 0.5px solid ${lightGray};
   word-break: break-all;
-  font-size: ${getFontSize() - 2}px;
+  font-size: ${getFontSize() - 3}px;
   display: flex;
   align-items: center;
 `;
@@ -44,16 +43,8 @@ const PreviewMarkdownHeader = styled.div`
 interface CodeSnippetPreviewProps {
   item: ContextItemWithId;
   onDelete?: () => void;
-  onEdit?: () => void;
   borderColor?: string;
-  editing?: boolean;
 }
-
-const StyledHeaderButtonWithText = styled(ButtonWithTooltip) <{
-  color?: string;
-}>`
-  ${(props) => props.color && `background-color: ${props.color};`}
-`;
 
 const MAX_PREVIEW_HEIGHT = 300;
 
@@ -84,7 +75,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       className="find-widget-skip"
     >
       <PreviewMarkdownHeader
-        className="flex justify-between cursor-pointer"
+        className="flex cursor-pointer justify-between"
         onClick={() => {
           if (props.item.id.providerTitle === "file") {
             ideMessenger.post("showFile", {
@@ -109,23 +100,10 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         }}
       >
         <div className="flex items-center gap-1">
-          <FileIcon height="20px" width="20px" filename={props.item.name} />
+          <FileIcon height="16px" width="16px" filename={props.item.name} />
           {props.item.name}
         </div>
         <div className="flex items-center gap-1">
-          {props.onEdit && (
-            <StyledHeaderButtonWithText
-              text="Edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                props.onEdit?.();
-              }}
-              {...(props.editing && { color: "#f0f4" })}
-            >
-              <PencilIcon width="1.1em" height="1.1em" />
-            </StyledHeaderButtonWithText>
-          )}
           <ButtonWithTooltip
             text="Delete"
             onClick={(e) => {
@@ -133,7 +111,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               props.onDelete?.();
             }}
           >
-            <XMarkIcon width="1.1em" height="1.1em" />
+            <XMarkIcon width="1em" height="1em" />
           </ButtonWithTooltip>
         </div>
       </PreviewMarkdownHeader>
@@ -152,7 +130,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
 
       {(codeBlockRef.current?.scrollHeight ?? 0) > MAX_PREVIEW_HEIGHT && (
         <ButtonWithTooltip
-          className="bottom-1 right-2 absolute"
+          className="absolute bottom-1 right-2"
           text={collapsed ? "Expand" : "Collapse"}
         >
           <ChevronDownIcon

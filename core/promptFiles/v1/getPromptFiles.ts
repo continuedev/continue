@@ -1,5 +1,5 @@
-import { IDE } from "..";
-import { walkDir } from "../indexing/walkDir";
+import { IDE } from "../..";
+import { walkDir } from "../../indexing/walkDir";
 
 export async function getPromptFiles(
   ide: IDE,

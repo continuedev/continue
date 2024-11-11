@@ -143,7 +143,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [
-    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
     void,
   ];
   "index/indexingProgressBarInitialized": [undefined, void];

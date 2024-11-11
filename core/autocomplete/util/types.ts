@@ -40,4 +40,5 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   gitRepo?: string;
   completionId: string;
   uniqueId: string;
+  timestamp: number;
 }
