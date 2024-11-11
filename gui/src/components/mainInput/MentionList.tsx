@@ -41,7 +41,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import ButtonWithTooltip from "../ButtonWithTooltip";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
@@ -434,7 +434,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     {item.subActions?.map((subAction) => {
                       const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
                       return (
-                        <ButtonWithTooltip
+                        <HeaderButtonWithToolTip
                           onClick={(e) => {
                             subAction.action(item);
                             e.stopPropagation();
@@ -444,7 +444,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                           text={undefined}
                         >
                           <Icon width="1.2em" height="1.2em" />
-                        </ButtonWithTooltip>
+                        </HeaderButtonWithToolTip>
                       );
                     })}
                   </span>

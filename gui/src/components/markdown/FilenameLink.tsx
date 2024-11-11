@@ -1,7 +1,7 @@
 import { RangeInFile } from "core";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useContext } from "react";
 import { getBasename } from "core/util";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import FileIcon from "../FileIcon";
 
 interface FilenameLinkProps {

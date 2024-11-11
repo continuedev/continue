@@ -13,10 +13,10 @@ import { vscBackground, vscInputBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
-import { getFontSize, getMetaKeyLabel } from "../../util";
-import ButtonWithTooltip from "../ButtonWithTooltip";
-import { CopyButton } from "../markdown/CopyButton";
+import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
+import { CopyIconButton } from "./CopyIconButton";
+import HeaderButtonWithToolTip from "./HeaderButtonWithToolTip";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -103,7 +103,7 @@ function StepContainer(props: StepContainerProps) {
           </pre>
         ) : (
           <StyledMarkdownPreview
-            showCodeBorder
+            isRenderingInStepContainer
             source={stripImages(props.item.message.content)}
           />
         )}
@@ -116,33 +116,33 @@ function StepContainer(props: StepContainerProps) {
         }}
       >
         {truncatedEarly && (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             tabIndex={-1}
             text="Continue generation"
             onClick={props.onContinueGeneration}
           >
             <BarsArrowDownIcon className="h-3.5 w-3.5 text-gray-500" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         )}
 
         {props.index !== 1 && (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             text="Delete"
             tabIndex={-1}
             onClick={props.onDelete}
           >
             <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         )}
 
-        <CopyButton
+        <CopyIconButton
           tabIndex={-1}
           text={stripImages(props.item.message.content)}
           clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
           checkIconClassName="h-3.5 w-3.5 text-green-400"
         />
 
-        <ButtonWithTooltip
+        <HeaderButtonWithToolTip
           text="Helpful"
           tabIndex={-1}
           onClick={() => sendFeedback(true)}
@@ -150,9 +150,9 @@ function StepContainer(props: StepContainerProps) {
           <HandThumbUpIcon
             className={`mx-0.5 h-3.5 w-3.5 ${feedback === true ? "text-green-400" : "text-gray-500"}`}
           />
-        </ButtonWithTooltip>
+        </HeaderButtonWithToolTip>
 
-        <ButtonWithTooltip
+        <HeaderButtonWithToolTip
           text="Unhelpful"
           tabIndex={-1}
           onClick={() => sendFeedback(false)}
@@ -160,7 +160,7 @@ function StepContainer(props: StepContainerProps) {
           <HandThumbDownIcon
             className={`h-3.5 w-3.5 ${feedback === false ? "text-red-400" : "text-gray-500"}`}
           />
-        </ButtonWithTooltip>
+        </HeaderButtonWithToolTip>
       </div>
     </div>
   );

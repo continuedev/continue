@@ -182,23 +182,7 @@ export class ContinueGUIWebviewViewProvider
       </head>
       <body>
         <div id="root"></div>
-
-        ${`<script>
-        function log(level, ...args) {
-          const text = args.map(arg =>
-            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-          ).join(' ');
-          vscode.postMessage({ messageType: 'log', level, text, messageId: "log" });
-        }
-
-        window.console.log = (...args) => log('log', ...args);
-        window.console.info = (...args) => log('info', ...args);
-        window.console.warn = (...args) => log('warn', ...args);
-        window.console.error = (...args) => log('error', ...args);
-        window.console.debug = (...args) => log('debug', ...args);
-
-        console.debug('Logging initialized');
-        </script>`}
+        
         ${
           inDevelopmentMode
             ? `<script type="module">

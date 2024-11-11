@@ -1,4 +1,4 @@
-import ContinueLogo from "../../ContinueLogo";
+import ContinueLogo from "../../gui/ContinueLogo";
 import QuickStartSubmitButton from "../components/QuickStartSubmitButton";
 
 function OnboardingQuickstartTab() {
