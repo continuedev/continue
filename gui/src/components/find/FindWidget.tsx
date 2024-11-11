@@ -1,9 +1,9 @@
-import { useRef, useEffect, useState, RefObject, useCallback, useMemo } from 'react';
-import { RootState } from '../../redux/store';
-import { useSelector } from 'react-redux';
-import { HeaderButton, Input } from '..';
-import ButtonWithTooltip from '../ButtonWithTooltip';
-import { ArrowDownIcon, ArrowUpIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useRef, useEffect, useState, RefObject, useCallback, useMemo } from "react";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
+import { HeaderButton, Input } from "..";
+import ButtonWithTooltip from "../ButtonWithTooltip";
+import { ArrowDownIcon, ArrowUpIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 interface SearchMatch {
     index: number;
@@ -11,7 +11,7 @@ interface SearchMatch {
     overlayRectangle: Rectangle;
 }
 
-type ScrollToMatchOption = 'closest' | 'first' | 'none'
+type ScrollToMatchOption = "closest" | "first" | "none"
 
 const SEARCH_DEBOUNCE = 300
 const RESIZE_DEBOUNCE = 200
@@ -23,7 +23,6 @@ interface Rectangle {
     height: number;
 }
 
-
 interface HighlightOverlayProps extends Rectangle {
     isCurrent: boolean;
 }
@@ -32,15 +31,15 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
     const { isCurrent, top, left, width, height } = props;
     return (
         <div
-            className={isCurrent ? 'bg-vsc-find-match-selected' : 'bg-blue-200/30'} // bg-vsc-find-match can't get to work
+            className={isCurrent ? "bg-vsc-find-match-selected" : "bg-blue-200/30"} // bg-vsc-find-match can"t get to work
             key={`highlight-${top}-${left}`}
             style={{
-                position: 'absolute',
+                position: "absolute",
                 top,
                 left,
                 width,
                 height,
-                pointerEvents: 'none', // To click through the overlay
+                pointerEvents: "none", // To click through the overlay
                 zIndex: 10,
             }}
         />
@@ -82,7 +81,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         searchRef.current.scrollTo({
             top: match.overlayRectangle.top - searchRef.current.clientHeight / 2,
             left: match.overlayRectangle.left - searchRef.current.clientWidth / 2,
-            behavior: 'smooth'
+            behavior: "smooth"
         })
     }, [searchRef.current])
 
@@ -103,16 +102,16 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     // Handle keyboard shortcuts for navigation
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.metaKey && event.key.toLowerCase() === 'f') {
+            if (event.metaKey && event.key.toLowerCase() === "f") {
                 event.preventDefault();
                 event.stopPropagation();
                 openWidget();
             } else if (document.activeElement === inputRef.current) {
-                if (event.key === 'Escape') {
+                if (event.key === "Escape") {
                     event.preventDefault();
                     event.stopPropagation();
                     setOpen(false);
-                } else if (event.key === 'Enter') {
+                } else if (event.key === "Enter") {
                     event.preventDefault();
                     event.stopPropagation();
                     if (event.shiftKey) previousMatch()
@@ -121,9 +120,9 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
             }
         }
 
-        document.addEventListener('keydown', handleKeyDown);
+        document.addEventListener("keydown", handleKeyDown);
         return () => {
-            document.removeEventListener('keydown', handleKeyDown);
+            document.removeEventListener("keydown", handleKeyDown);
         };
     }, [inputRef, matches, nextMatch]);
 
@@ -153,7 +152,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     }, [searchRef.current]);
 
     // Main function for finding matches and generating highlight overlays
-    const refreshSearch = useCallback((scrollTo: ScrollToMatchOption = 'none', clearFirst = false) => {
+    const refreshSearch = useCallback((scrollTo: ScrollToMatchOption = "none", clearFirst = false) => {
         if (clearFirst) setMatches([])
 
         const _query = debouncedInput.current; // trimStart - decided no because spaces should be fully searchable
@@ -164,7 +163,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         const query = caseSensitive ? _query : _query.toLowerCase()
 
         // First grab all text nodes
-        // Skips any elements with the 'find-widget-skip' class
+        // Skips any elements with the "find-widget-skip" class
         const textNodes: Text[] = [];
         const walker = document.createTreeWalker(
             searchRef.current,
@@ -172,7 +171,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
             {
                 acceptNode: (node) => {
                     if (node.nodeType === Node.ELEMENT_NODE) {
-                        if ((node as Element).classList.contains('find-widget-skip')) return NodeFilter.FILTER_REJECT;
+                        if ((node as Element).classList.contains("find-widget-skip")) return NodeFilter.FILTER_REJECT;
                         return NodeFilter.FILTER_ACCEPT;
                     } else if (node.nodeType === Node.TEXT_NODE) {
                         if (!node.nodeValue) return NodeFilter.FILTER_REJECT;
@@ -189,17 +188,12 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
             textNodes.push(walker.currentNode as Text);
         }
 
-        // Keep track of the match closest match to the middle of the view
-        const verticalMiddle = searchRef.current.scrollTop + searchRef.current.clientHeight / 2
-        let closestDist = Infinity
-        let closestMatchToMiddle: SearchMatch | null = null
-
         // Now walk through each node match and extract search results
         // One node can have several matches
         const newMatches: SearchMatch[] = [];
         textNodes.forEach((textNode, idx) => {
             // Hacky way to detect code blocks that be wider than client and cause absolute positioning to fail
-            const highlightFullLine = textNode.parentElement.className.includes('hljs')
+            const highlightFullLine = textNode.parentElement.className.includes("hljs")
 
             let nodeTextValue = caseSensitive ? textNode.nodeValue : textNode.nodeValue.toLowerCase();
             let startIndex = 0;
@@ -229,13 +223,6 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                 }
                 newMatches.push(newMatch);
 
-                // Keep track of the match closest match to the middle of the view
-                const dist = Math.abs(verticalMiddle - top);
-                if (dist < closestDist) {
-                    closestDist = dist;
-                    closestMatchToMiddle = newMatch
-                }
-
                 if (highlightFullLine) {
                     break; // Since highlighting full line no need for multiple overlays, will cause darker highlight
                 }
@@ -247,15 +234,33 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         const matchHash = Object.fromEntries(newMatches.map(match => [JSON.stringify(match.overlayRectangle), match]))
         const filteredMatches = Object.values(matchHash).map((match, index) => ({ ...match, index }));
 
+        // Find match closest to the middle of the view
+        const verticalMiddle = searchRef.current.scrollTop + searchRef.current.clientHeight / 2
+        let closestDist = Infinity
+        let closestMatchToMiddle: SearchMatch | null = null
+        filteredMatches.forEach((match) => {
+            const dist = Math.abs(verticalMiddle - match.overlayRectangle.top);
+            if (dist < closestDist) {
+                closestDist = dist;
+                closestMatchToMiddle = match;
+            }
+        })
+
         // Update matches and scroll to the closest or first match
         setMatches(filteredMatches);
         if (query.length > 1 && filteredMatches.length) {
-            // console.log(scrollTo)
-            if (scrollTo === 'first') {
+            if (scrollTo === "first") {
                 scrollToMatch(filteredMatches[0]);
             }
-            if (scrollTo === 'closest' && closestMatchToMiddle) {
+            if (scrollTo === "closest") {
                 scrollToMatch(closestMatchToMiddle)
+            }
+            if (scrollTo === "none") {
+                if (closestMatchToMiddle) {
+                    setCurrentMatch(closestMatchToMiddle)
+                } else {
+                    setCurrentMatch(filteredMatches[0])
+                }
             }
         }
     }, [searchRef.current, debouncedInput, scrollToMatch, caseSensitive, useRegex])
@@ -267,7 +272,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         const debounce = () => {
             debouncedInput.current = input
             lastUpdateRef.current = Date.now();
-            refreshSearch('closest');
+            refreshSearch("closest");
         }
         const timeSinceLastUpdate = Date.now() - lastUpdateRef.current;
         if (timeSinceLastUpdate >= SEARCH_DEBOUNCE) {
@@ -282,41 +287,44 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
         }
     }, [refreshSearch, input]);
 
+    // Could consider doing any window click but I only handled search div here
+    // Since usually only clicks in search div will cause content changes in search div
     useEffect(() => {
-        if (!open) return
-        const handleWindowClick = () => {
-            refreshSearch('none');
+        if (!open || !searchRef.current) return
+        const handleSearchRefClick = () => {
+            refreshSearch("none");
         }
-        window.addEventListener('click', handleWindowClick)
+        searchRef.current.addEventListener("click", handleSearchRefClick)
         return () => {
-            window.removeEventListener('click', handleWindowClick);
+            searchRef.current.removeEventListener("click", handleSearchRefClick);
         };
-    }, [refreshSearch, open]);
+    }, [searchRef.current, refreshSearch, open]);
 
     // Triggers that should cause results to temporarily disappear and then reload
     // Active = LLM is generating, etc.
     const active = useSelector((state: RootState) => state.state.active);
     useEffect(() => {
         if (active || isResizing) setMatches([])
-        else refreshSearch('none')
+        else refreshSearch("none")
     }, [refreshSearch, active]);
 
     useEffect(() => {
         if (!open) setMatches([])
-        else refreshSearch('closest')
+        else refreshSearch("closest")
     }, [refreshSearch, open]);
 
     useEffect(() => {
-        refreshSearch('closest')
+        refreshSearch("closest")
     }, [refreshSearch, caseSensitive, useRegex])
 
     // Find widget component
     const widget = useMemo(() => {
         return (
             <div
-                className={`z-50 fixed transition-all top-0 ${open ? '' : '-translate-y-full'} right-0 pr-3 flex flex-row items-center gap-1.5 sm:gap-2 rounded-bl-lg border-b border-solid border-0 border-l border-zinc-700 bg-vsc-background pl-[3px]`}
+                className={`z-50 fixed transition-all top-0 ${open ? "" : "-translate-y-full"} right-0 pr-3 flex flex-row items-center gap-1.5 sm:gap-2 rounded-bl-lg border-b border-solid border-0 border-l border-zinc-700 bg-vsc-background pl-[3px]`}
             >
                 <Input
+                    disabled={active}
                     type="text"
                     ref={inputRef}
                     value={input}
@@ -325,47 +333,45 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                     }}
                     placeholder="Search..."
                 />
-                <p className='hidden xs:block whitespace-nowrap text-xs min-w-12 px-1 text-center'>
+                <p className="hidden xs:block whitespace-nowrap text-xs min-w-12 px-1 text-center">
                     {matches.length === 0 ? "No results" : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
                 </p>
-                <div className='hidden sm:flex flex-row gap-0.5'>
+                <div className="hidden sm:flex flex-row gap-0.5">
                     <ButtonWithTooltip
                         tooltipPlacement="top-end"
                         text={"Previous Match"}
                         onClick={(e) => {
                             e.stopPropagation()
-                            // e.preventDefault()
                             previousMatch()
                         }}
-                        className='h-4 w-4 focus:ring focus:ring-1'
-                        disabled={matches.length < 2}
+                        className="h-4 w-4 focus:ring focus:ring-1"
+                        disabled={matches.length < 2 || active}
                     >
-                        <ArrowUpIcon className='h-4 w-4' />
+                        <ArrowUpIcon className="h-4 w-4" />
                     </ButtonWithTooltip>
                     <ButtonWithTooltip
                         tooltipPlacement="top-end"
                         text={"Next Match"}
                         onClick={(e) => {
                             e.stopPropagation()
-                            // e.preventDefault()
                             nextMatch()
                         }}
-                        className='h-4 w-4 focus:ring focus:ring-1'
-                        disabled={matches.length < 2}
+                        className="h-4 w-4 focus:ring focus:ring-1"
+                        disabled={matches.length < 2 || active}
                     >
-                        <ArrowDownIcon className='h-4 w-4' />
+                        <ArrowDownIcon className="h-4 w-4" />
                     </ButtonWithTooltip>
                 </div>
                 <ButtonWithTooltip
+                    disabled={active}
                     inverted={caseSensitive}
                     tooltipPlacement="top-end"
                     text={caseSensitive ? "Turn off case sensitivity" : "Turn on case sensitivity"}
                     onClick={(e) => {
                         e.stopPropagation()
-                        // e.preventDefault()
                         setCaseSensitive(curr => !curr)
                     }}
-                    className='h-5 w-6 text-xs focus:ring focus:ring-1 rounded-full border focus:outline-none'
+                    className="h-5 w-6 text-xs focus:ring focus:ring-1 rounded-full border focus:outline-none"
                 >
                     Aa
                 </ButtonWithTooltip>
@@ -373,9 +379,9 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                 <HeaderButton
                     inverted={false}
                     onClick={() => setOpen(false)}
-                    className='focus:ring focus:ring-1'
+                    className="focus:ring focus:ring-1"
                 >
-                    <XMarkIcon className='h-4 w-4' />
+                    <XMarkIcon className="h-4 w-4" />
                 </HeaderButton>
             </div>
         )
