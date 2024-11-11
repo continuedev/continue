@@ -1,4 +1,5 @@
 import { dedent } from "../util";
+
 import { myersDiff } from "./myers";
 
 describe("Test myers diff function", () => {

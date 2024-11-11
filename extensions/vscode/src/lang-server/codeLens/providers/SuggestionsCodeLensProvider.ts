@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+
 import { editorToSuggestions } from "../../../suggestions";
 import { getMetaKeyLabel } from "../../../util/util";
 

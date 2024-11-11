@@ -1,6 +1,9 @@
-import type { FileEdit, RangeInFile, Thread } from "core";
 import path from "node:path";
+
+import { EXTENSION_NAME } from "core/control-plane/env";
+import _ from "lodash";
 import * as vscode from "vscode";
+
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
@@ -11,14 +14,15 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "../suggestions";
+
 import {
   getUniqueId,
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./vscode";
 
-import { EXTENSION_NAME } from "core/control-plane/env";
-import _ from "lodash";
+
+import type { FileEdit, RangeInFile, Thread } from "core";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);

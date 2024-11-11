@@ -1,6 +1,8 @@
 import * as fs from "fs";
+
 import { PersistedSessionInfo, SessionInfo } from "../index.js";
 import { ListHistoryOptions } from "../protocol/core.js";
+
 import { getSessionFilePath, getSessionsListPath } from "./paths.js";
 
 function safeParseArray<T>(

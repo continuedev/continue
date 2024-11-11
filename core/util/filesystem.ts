@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+
 import {
   ContinueRcJson,
   FileType,
@@ -14,8 +15,8 @@ import {
   Thread,
   ToastType,
 } from "../index.d.js";
-
 import { GetGhTokenArgs } from "../protocol/ide.js";
+
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {

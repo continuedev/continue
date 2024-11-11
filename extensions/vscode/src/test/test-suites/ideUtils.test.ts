@@ -1,9 +1,12 @@
-import { describe, test } from "mocha";
 import assert from "node:assert";
 import path from "node:path";
+
+import { describe, test } from "mocha";
 import * as vscode from "vscode";
+
 import { VsCodeIdeUtils } from "../../util/ideUtils";
 import { testWorkspacePath } from "../runner/runTestOnVSCodeHost";
+
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
 

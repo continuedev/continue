@@ -1,12 +1,13 @@
 import path from "path";
+
 import { walkDir, WalkerOptions } from "../indexing/walkDir";
-import FileSystemIde from "../util/filesystem";
 import {
   TEST_DIR,
   setUpTestDir,
   tearDownTestDir,
   addToTestDir,
 } from "../test/util/testDir";
+import FileSystemIde from "../util/filesystem";
 
 const ide = new FileSystemIde(TEST_DIR);
 

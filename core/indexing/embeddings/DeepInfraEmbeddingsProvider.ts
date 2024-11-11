@@ -1,5 +1,6 @@
 import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {

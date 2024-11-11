@@ -1,12 +1,14 @@
+  import { execSync } from "child_process";
+  import * as fs from "fs";
+  import * as path from "path";
+
 import {
     ContextItem,
     ContextProviderDescription,
     ContextProviderExtras,
   } from "../../index.js";
   import { BaseContextProvider } from "../index.js";
-  import { execSync } from "child_process";
-  import * as path from "path";
-  import * as fs from "fs";
+
   
   class GreptileContextProvider extends BaseContextProvider {
     static description: ContextProviderDescription = {
@@ -35,7 +37,7 @@ import {
         throw new Error("Failed to determine the workspace directory.");
       }
 
-      var remoteUrl = getRemoteUrl(absPath)
+      var remoteUrl = getRemoteUrl(absPath);
       remoteUrl = getRemoteUrl(absPath);
       const repoName = extractRepoName(remoteUrl);
       const branch = getCurrentBranch(absPath);
@@ -46,11 +48,11 @@ import {
       }
   
       const options = {
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `Bearer ${greptileToken}`,
-          'X-GitHub-Token': githubToken,
-          'Content-Type': 'application/json',
+          "X-GitHub-Token": githubToken,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           messages: [{ id: "<string>", content: query, role: "user" }],
@@ -66,7 +68,7 @@ import {
       };
     
       try {
-        const response = await extras.fetch('https://api.greptile.com/v2/query', options);
+        const response = await extras.fetch("https://api.greptile.com/v2/query", options);
         const rawText = await response.text();
   
         // Check for HTTP errors
@@ -84,7 +86,7 @@ import {
         }));
       } catch (error) {
         console.error("Error getting context items from Greptile:", error);
-        throw new Error(`Error getting context items from Greptile`);
+        throw new Error("Error getting context items from Greptile");
       }
     }
   
@@ -102,34 +104,34 @@ import {
         if (workspaceDirs && workspaceDirs.length > 0) {
           return workspaceDirs[0];
         } else {
-          console.warn(`extras.ide.getWorkspaceDirs() returned undefined or empty array.`);
+          console.warn("extras.ide.getWorkspaceDirs() returned undefined or empty array.");
         }
       } catch (err) {
-        console.warn(`Failed to get workspace directories from extras.ide.getWorkspaceDirs():`);
+        console.warn("Failed to get workspace directories from extras.ide.getWorkspaceDirs():");
       }
   
       // Fallback to using Git commands
       try {
         const currentDir = process.cwd();
         if (this.isGitRepository(currentDir)) {
-          const workspaceDir = execSync('git rev-parse --show-toplevel').toString().trim();
+          const workspaceDir = execSync("git rev-parse --show-toplevel").toString().trim();
           return workspaceDir;
         } else {
           console.warn(`Current directory is not a Git repository: ${currentDir}`);
           return null;
         }
       } catch (err) {
-        console.warn(`Failed to get workspace directory using Git commands: `);
+        console.warn("Failed to get workspace directory using Git commands: ");
         return null;
       }
     }
   
     private isGitRepository(dir: string): boolean {
       try {
-        const gitDir = path.join(dir, '.git');
+        const gitDir = path.join(dir, ".git");
         return fs.existsSync(gitDir);
       } catch (err) {
-        console.warn(`Failed to check if directory is a Git repository:`);
+        console.warn("Failed to check if directory is a Git repository:");
         return false;
       }
     }
@@ -141,7 +143,7 @@ import {
       const remote = execSync(`git -C ${absPath} remote get-url origin`).toString().trim();
       return remote;
     } catch (err) {
-      console.warn(`Failed to get remote URL`);
+      console.warn("Failed to get remote URL");
       return "";
     }
   }
@@ -151,7 +153,7 @@ import {
       const branch = execSync(`git -C ${absPath} rev-parse --abbrev-ref HEAD`).toString().trim();
       return branch;
     } catch (err) {
-      console.warn(`Failed to get current branch`);
+      console.warn("Failed to get current branch");
       return "master"; // Default to 'master' if the current branch cannot be determined
     }
   }

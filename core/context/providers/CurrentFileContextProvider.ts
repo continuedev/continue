@@ -1,10 +1,10 @@
+import { BaseContextProvider } from "../";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../";
 import { getBasename } from "../../util/";
-import { BaseContextProvider } from "../";
 
 class CurrentFileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

@@ -1,7 +1,9 @@
 import { URL } from "node:url";
+
 // @ts-ignore
 // @prettier-ignore
 import { ContinueConfig, IDE } from "../..";
+
 import CheerioCrawler from "./crawlers/CheerioCrawler";
 import { ChromiumCrawler, ChromiumInstaller } from "./crawlers/ChromiumCrawler";
 import { DefaultCrawler } from "./crawlers/DefaultCrawler";

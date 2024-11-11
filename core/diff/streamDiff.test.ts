@@ -1,9 +1,12 @@
 import fs from "node:fs";
+import path from "node:path";
+
+import { changed, diff as myersDiff } from "myers-diff";
+
 import { streamDiff } from "../diff/streamDiff.js";
 import { DiffLine, DiffLineType } from "../index.js";
 // @ts-ignore no typings available
-import { changed, diff as myersDiff } from "myers-diff";
-import path from "node:path";
+
 import { generateLines } from "./util.js";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line

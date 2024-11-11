@@ -1,15 +1,20 @@
-import { ChunkCodebaseIndex } from "../../indexing/chunk/ChunkCodebaseIndex";
-import { IContinueServerClient } from "../../continueServer/interface";
-import { testIde } from "./fixtures";
-import { addToTestDir, TEST_DIR } from "./testDir";
+import { jest } from "@jest/globals";
+
 import { IndexTag } from "../..";
+import { IContinueServerClient } from "../../continueServer/interface";
+import { ChunkCodebaseIndex } from "../../indexing/chunk/ChunkCodebaseIndex";
+import { tagToString } from "../../indexing/refreshIndex";
 import {
   CodebaseIndex,
   PathAndCacheKey,
   RefreshIndexResults,
 } from "../../indexing/types";
-import { jest } from "@jest/globals";
-import { tagToString } from "../../indexing/refreshIndex";
+
+import { testIde } from "./fixtures";
+import { addToTestDir, TEST_DIR } from "./testDir";
+
+
+
 
 export const mockFilename = "test.py";
 export const mockPathAndCacheKey = {

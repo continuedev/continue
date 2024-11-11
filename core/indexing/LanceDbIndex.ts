@@ -2,6 +2,7 @@
 import { RunResult } from "sqlite3";
 import { v4 as uuidv4 } from "uuid";
 import lance, { Table } from "vectordb";
+
 import { IContinueServerClient } from "../continueServer/interface.js";
 import {
   BranchAndDir,
@@ -12,6 +13,7 @@ import {
 } from "../index.js";
 import { getBasename } from "../util/index.js";
 import { getLanceDbPath, migrate } from "../util/paths.js";
+
 import { chunkDocument, shouldChunk } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {

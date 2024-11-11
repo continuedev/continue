@@ -1,6 +1,8 @@
 import path from "path";
-import { DEFAULT_PROMPTS_FOLDER } from ".";
+
 import { IDE } from "../..";
+
+import { DEFAULT_PROMPTS_FOLDER } from ".";
 
 const DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
 # It is used to define and reuse prompts within Continue

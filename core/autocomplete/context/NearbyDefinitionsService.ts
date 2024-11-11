@@ -1,5 +1,6 @@
 import { IDE, Location } from "../..";
 import { LANGUAGES } from "../constants/AutocompleteLanguageInfo";
+
 import { getSymbolsForSnippet } from "./ranking";
 
 interface FileInfo {

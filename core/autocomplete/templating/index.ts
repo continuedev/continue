@@ -1,9 +1,11 @@
 import Handlebars from "handlebars";
+
 import { CompletionOptions } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { AutocompleteSnippet } from "../context/ranking";
 import { HelperVars } from "../util/HelperVars";
+
 import {
   AutocompleteTemplate,
   getTemplateForModel,

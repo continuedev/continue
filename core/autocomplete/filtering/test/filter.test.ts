@@ -1,9 +1,10 @@
+import { setUpTestDir, tearDownTestDir } from "../../../test/util/testDir";
+
+import { TEST_CASES_WITH_DIFF, TEST_CASES_WITHOUT_DIFF } from "./testCases";
 import {
   AutocompleteFileringTestInput,
   testAutocompleteFiltering,
 } from "./util";
-import { TEST_CASES_WITH_DIFF, TEST_CASES_WITHOUT_DIFF } from "./testCases";
-import { setUpTestDir, tearDownTestDir } from "../../../test/util/testDir";
 
 const filterTestCases = (tests: AutocompleteFileringTestInput[]) => {
   if (tests.some((test) => test.options?.only)) {

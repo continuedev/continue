@@ -1,4 +1,5 @@
 import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
+
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
 
 class MistralEmbeddingsProvider extends OpenAIEmbeddingsProvider {
