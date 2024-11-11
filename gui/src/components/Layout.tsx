@@ -228,7 +228,7 @@ const Layout = () => {
             message={dialogMessage}
           />
 
-          <GridDiv>
+          <GridDiv className="">
             <PostHogPageView />
             <Outlet />
 

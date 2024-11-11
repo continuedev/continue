@@ -49,7 +49,7 @@ interface CodeSnippetPreviewProps {
   editing?: boolean;
 }
 
-const StyledHeaderButtonWithText = styled(ButtonWithTooltip)<{
+const StyledHeaderButtonWithText = styled(ButtonWithTooltip) <{
   color?: string;
 }>`
   ${(props) => props.color && `background-color: ${props.color};`}
@@ -81,6 +81,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       borderColor={props.borderColor}
+      className="find-widget-skip"
     >
       <PreviewMarkdownHeader
         className="flex justify-between cursor-pointer"
@@ -138,9 +139,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       </PreviewMarkdownHeader>
       <div
         contentEditable={false}
-        className={
-          collapsed ? "max-h-[33vh] overflow-hidden m-0" : "overflow-auto m-0"
-        }
+        className={`m-0 ${collapsed ? 'overflow-hidden max-h-[33vh]' : 'overflow-auto'}`}
         ref={codeBlockRef}
       >
         <StyledMarkdownPreview
@@ -156,17 +155,13 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           className="bottom-1 right-2 absolute"
           text={collapsed ? "Expand" : "Collapse"}
         >
-          {collapsed ? (
-            <ChevronDownIcon
-              className="h-5 w-5"
-              onClick={() => setCollapsed(false)}
-            />
-          ) : (
-            <ChevronUpIcon
-              className="h-5 w-5"
-              onClick={() => setCollapsed(true)}
-            />
-          )}
+          <ChevronDownIcon
+            className="h-5 w-5 transition-all duration-400"
+            onClick={() => setCollapsed(curr => !curr)}
+            style={{
+              rotate: collapsed ? '' : '180deg'
+            }}
+          />
         </ButtonWithTooltip>
       )}
     </PreviewMarkdownDiv>

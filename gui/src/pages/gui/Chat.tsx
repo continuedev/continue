@@ -163,7 +163,7 @@ export function Chat() {
   useEffect(() => {
     setTimeout(() => {
       smoothScrollToBottom();
-    }, 250)
+    }, 400)
   }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
@@ -196,11 +196,10 @@ export function Chat() {
     setIsAtBottom(atBottom);
   };
 
-  const { widget, highlights, setOpen: setFindWidgetOpen } = useFindWidget(stepsDivRef)
+  const { widget, highlights } = useFindWidget(stepsDivRef)
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
-      setFindWidgetOpen(false)
       if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
         if (u) {
@@ -298,7 +297,6 @@ export function Chat() {
       defaultModel,
       state,
       streamResponse,
-      setFindWidgetOpen
     ],
   );
 

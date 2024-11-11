@@ -1,17 +1,19 @@
-import React, { useRef, useEffect, useState, RefObject, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, RefObject, useCallback, useMemo } from 'react';
 import { RootState } from '../../redux/store';
 import { useSelector } from 'react-redux';
-import { Button, HeaderButton, Input } from '..';
+import { HeaderButton, Input } from '..';
 import ButtonWithTooltip from '../ButtonWithTooltip';
 import { ArrowDownIcon, ArrowUpIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 interface SearchMatch {
     index: number;
-    textNode: Text
+    textNode: Text;
     overlayRectangle: Rectangle;
 }
 
-const SEARCH_DEBOUNCE = 500
+type ScrollToMatchOption = 'closest' | 'first' | 'none'
+
+const SEARCH_DEBOUNCE = 300
 const RESIZE_DEBOUNCE = 200
 
 interface Rectangle {
@@ -20,6 +22,8 @@ interface Rectangle {
     width: number;
     height: number;
 }
+
+
 interface HighlightOverlayProps extends Rectangle {
     isCurrent: boolean;
 }
@@ -52,30 +56,10 @@ const HighlightOverlay = (props: HighlightOverlayProps) => {
     Container must have relative positioning
 */
 export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
-    // Used to disable search when chat is loading
-    const active = useSelector((state: RootState) => state.state.active);
-
     // Search input, debounced
     const [input, setInput] = useState<string>("");
-    const [debouncedInput, setDebouncedInput] = useState<string>("");
-    const inputRef = useRef(null) as RefObject<HTMLInputElement>;
-    const lastUpdateRef = useRef(0);
-
-    useEffect(() => {
-        const timeSinceLastUpdate = Date.now() - lastUpdateRef.current;
-        if (timeSinceLastUpdate >= SEARCH_DEBOUNCE) {
-            setDebouncedInput(input);
-            lastUpdateRef.current = Date.now();
-        } else {
-            const handler = setTimeout(() => {
-                setDebouncedInput(input);
-                lastUpdateRef.current = Date.now();
-            }, SEARCH_DEBOUNCE - timeSinceLastUpdate);
-            return () => {
-                clearTimeout(handler);
-            };
-        }
-    }, [input]);
+    const debouncedInput = useRef<string>("")
+    const inputRef = useRef<HTMLInputElement>(null)
 
     // Widget open/closed state
     const [open, setOpen] = useState<boolean>(false);
@@ -147,7 +131,9 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     const [isResizing, setIsResizing] = useState(false);
     useEffect(() => {
         let timeoutId: NodeJS.Timeout | null = null;
-        const handleResize = () => {
+        if (!searchRef?.current) return;
+
+        const resizeObserver = new ResizeObserver(entries => {
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
@@ -155,27 +141,30 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
             timeoutId = setTimeout(() => {
                 setIsResizing(false)
             }, RESIZE_DEBOUNCE);
-        };
+        });
 
-        window.addEventListener('resize', handleResize);
+        resizeObserver.observe(searchRef.current);
         return () => {
             if (timeoutId) {
                 clearTimeout(timeoutId);
             }
-            window.removeEventListener('resize', handleResize);
+            if (searchRef.current) resizeObserver.unobserve(searchRef.current);
         };
-    }, []);
+    }, [searchRef.current]);
 
-    // The bread and butter: 
-    // 
-    const loadHighlights = useCallback((_query: string | undefined, scrollTo: 'first' | 'closest' | 'none' = 'none') => {
+    // Main function for finding matches and generating highlight overlays
+    const refreshSearch = useCallback((scrollTo: ScrollToMatchOption = 'none', clearFirst = false) => {
+        if (clearFirst) setMatches([])
+
+        const _query = debouncedInput.current; // trimStart - decided no because spaces should be fully searchable
         if (!searchRef.current || !_query) {
             setMatches([]);
             return;
         };
         const query = caseSensitive ? _query : _query.toLowerCase()
 
-        // First grab all text nodes, skipping any elements with the 'find-widget-skip' class
+        // First grab all text nodes
+        // Skips any elements with the 'find-widget-skip' class
         const textNodes: Text[] = [];
         const walker = document.createTreeWalker(
             searchRef.current,
@@ -200,71 +189,126 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
             textNodes.push(walker.currentNode as Text);
         }
 
-        // Keep track of the match closest to the middle of the screen
+        // Keep track of the match closest match to the middle of the view
         const verticalMiddle = searchRef.current.scrollTop + searchRef.current.clientHeight / 2
         let closestDist = Infinity
         let closestMatchToMiddle: SearchMatch | null = null
 
         // Now walk through each node match and extract search results
         // One node can have several matches
-        let index = 0;
         const newMatches: SearchMatch[] = [];
-        textNodes.forEach(textNode => {
+        textNodes.forEach((textNode, idx) => {
+            // Hacky way to detect code blocks that be wider than client and cause absolute positioning to fail
+            const highlightFullLine = textNode.parentElement.className.includes('hljs')
+
             let nodeTextValue = caseSensitive ? textNode.nodeValue : textNode.nodeValue.toLowerCase();
             let startIndex = 0;
             while ((startIndex = nodeTextValue.indexOf(query, startIndex)) !== -1) {
                 // Create a range to measure the size and position of the match
                 const range = document.createRange();
                 range.setStart(textNode, startIndex);
-                range.setEnd(textNode, startIndex + query.length);
-
+                const endIndex = startIndex + query.length
+                range.setEnd(textNode, endIndex);
                 const rect = range.getBoundingClientRect();
+                range.detach();
+                startIndex = endIndex;
+
                 const top = rect.top + searchRef.current.clientTop + searchRef.current.scrollTop
                 const left = rect.left + searchRef.current.clientLeft + searchRef.current.scrollLeft;
 
-                // Hacky way to detect code blocks that be wider than client and cause absolute positioning to fail
-                const highlightFullLine = textNode.parentElement.className.includes('hljs')
-
+                // Build a match result and push to matches
                 const newMatch: SearchMatch = {
-                    index,
+                    index: 0, // will set later
                     textNode,
                     overlayRectangle: {
                         top,
                         left: highlightFullLine ? 2 : left,
-                        width: highlightFullLine ? (searchRef.current.clientWidth - 4) : rect.width,
+                        width: highlightFullLine ? (searchRef.current.clientWidth - 4) : rect.width, // equivalent of adding 2 px x padding
                         height: rect.height,
-                    }
+                    },
                 }
                 newMatches.push(newMatch);
 
+                // Keep track of the match closest match to the middle of the view
                 const dist = Math.abs(verticalMiddle - top);
                 if (dist < closestDist) {
                     closestDist = dist;
                     closestMatchToMiddle = newMatch
                 }
 
-                index++;
-                startIndex += query.length;
-                range.detach();
+                if (highlightFullLine) {
+                    break; // Since highlighting full line no need for multiple overlays, will cause darker highlight
+                }
             }
         });
 
-        setMatches(newMatches);
-        if (query.length > 1 && newMatches.length) {
+        // There will still be duplicate full lines when multiple text nodes are in the same line (e.g. Code highlights)
+        // Filter them out by using the overlay rectangle as a hash key
+        const matchHash = Object.fromEntries(newMatches.map(match => [JSON.stringify(match.overlayRectangle), match]))
+        const filteredMatches = Object.values(matchHash).map((match, index) => ({ ...match, index }));
+
+        // Update matches and scroll to the closest or first match
+        setMatches(filteredMatches);
+        if (query.length > 1 && filteredMatches.length) {
+            // console.log(scrollTo)
             if (scrollTo === 'first') {
-                scrollToMatch(newMatches[0]);
+                scrollToMatch(filteredMatches[0]);
             }
             if (scrollTo === 'closest' && closestMatchToMiddle) {
                 scrollToMatch(closestMatchToMiddle)
             }
         }
-    }, [searchRef.current, caseSensitive, useRegex, scrollToMatch])
+    }, [searchRef.current, debouncedInput, scrollToMatch, caseSensitive, useRegex])
 
-    // Trigger searches or clearing results on state changes
+    // Triggers that should cause immediate refresh of results to closest search value:
+    // Input change (debounced) and window click
+    const lastUpdateRef = useRef(0);
     useEffect(() => {
-        if (active || !open || isResizing) setMatches([])
-        else loadHighlights(debouncedInput, 'closest');
-    }, [debouncedInput, loadHighlights, active, open, isResizing]);
+        const debounce = () => {
+            debouncedInput.current = input
+            lastUpdateRef.current = Date.now();
+            refreshSearch('closest');
+        }
+        const timeSinceLastUpdate = Date.now() - lastUpdateRef.current;
+        if (timeSinceLastUpdate >= SEARCH_DEBOUNCE) {
+            debounce()
+        } else {
+            const handler = setTimeout(() => {
+                debounce()
+            }, SEARCH_DEBOUNCE - timeSinceLastUpdate);
+            return () => {
+                clearTimeout(handler);
+            };
+        }
+    }, [refreshSearch, input]);
+
+    useEffect(() => {
+        if (!open) return
+        const handleWindowClick = () => {
+            refreshSearch('none');
+        }
+        window.addEventListener('click', handleWindowClick)
+        return () => {
+            window.removeEventListener('click', handleWindowClick);
+        };
+    }, [refreshSearch, open]);
+
+    // Triggers that should cause results to temporarily disappear and then reload
+    // Active = LLM is generating, etc.
+    const active = useSelector((state: RootState) => state.state.active);
+    useEffect(() => {
+        if (active || isResizing) setMatches([])
+        else refreshSearch('none')
+    }, [refreshSearch, active]);
+
+    useEffect(() => {
+        if (!open) setMatches([])
+        else refreshSearch('closest')
+    }, [refreshSearch, open]);
+
+    useEffect(() => {
+        refreshSearch('closest')
+    }, [refreshSearch, caseSensitive, useRegex])
 
     // Find widget component
     const widget = useMemo(() => {
@@ -281,15 +325,19 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                     }}
                     placeholder="Search..."
                 />
-                <p className='hidden xs:block whitespace-nowrap text-xs min-w-14 px-1 text-center'>
+                <p className='hidden xs:block whitespace-nowrap text-xs min-w-12 px-1 text-center'>
                     {matches.length === 0 ? "No results" : `${(currentMatch?.index ?? 0) + 1} of ${matches.length}`}
                 </p>
                 <div className='hidden sm:flex flex-row gap-0.5'>
                     <ButtonWithTooltip
                         tooltipPlacement="top-end"
                         text={"Previous Match"}
-                        onClick={previousMatch}
-                        className='h-4 w-4'
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            // e.preventDefault()
+                            previousMatch()
+                        }}
+                        className='h-4 w-4 focus:ring focus:ring-1'
                         disabled={matches.length < 2}
                     >
                         <ArrowUpIcon className='h-4 w-4' />
@@ -297,8 +345,12 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                     <ButtonWithTooltip
                         tooltipPlacement="top-end"
                         text={"Next Match"}
-                        onClick={nextMatch}
-                        className='h-4 w-4'
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            // e.preventDefault()
+                            nextMatch()
+                        }}
+                        className='h-4 w-4 focus:ring focus:ring-1'
                         disabled={matches.length < 2}
                     >
                         <ArrowDownIcon className='h-4 w-4' />
@@ -308,8 +360,12 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                     inverted={caseSensitive}
                     tooltipPlacement="top-end"
                     text={caseSensitive ? "Turn off case sensitivity" : "Turn on case sensitivity"}
-                    onClick={() => setCaseSensitive(curr => !curr)}
-                    className='h-4 w-4 text-xs'
+                    onClick={(e) => {
+                        e.stopPropagation()
+                        // e.preventDefault()
+                        setCaseSensitive(curr => !curr)
+                    }}
+                    className='h-5 w-6 text-xs focus:ring focus:ring-1 rounded-full border focus:outline-none'
                 >
                     Aa
                 </ButtonWithTooltip>
@@ -317,6 +373,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
                 <HeaderButton
                     inverted={false}
                     onClick={() => setOpen(false)}
+                    className='focus:ring focus:ring-1'
                 >
                     <XMarkIcon className='h-4 w-4' />
                 </HeaderButton>

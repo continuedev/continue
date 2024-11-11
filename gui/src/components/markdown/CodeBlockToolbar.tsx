@@ -262,7 +262,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   return (
     <ToolbarDiv>
       <div
-        className="flex max-w-[50%] cursor-pointer items-center gap-1"
+        className="flex max-w-[50%] cursor-pointer items-center gap-1 find-widget-skip"
         onClick={onClickHeader}
       >
         <FileIcon height="20px" width="20px" filename={props.filepath} />
