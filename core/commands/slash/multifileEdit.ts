@@ -5,34 +5,32 @@ const MultiFileEditSlashCommand: SlashCommand = {
   name: "multifile-edit",
   description: "Edit multiple files in the codebase at once",
   run: async function* ({ llm, contextItems, selectedCode, input, ide }) {
-    const selectedCodeStr = (
-      await Promise.all(
-        selectedCode.map(async (item) => {
-          // Split the range string from the filename, e.g. `filename.ts (1-2) -> [filename.ts, (1-2)]`
-          const [filepath, rangeStr] = item.filepath.split(" ");
-          const { getFullyQualifiedPath } = await import(
-            "../../../extensions/vscode/src/util/util"
-          );
-          const fullPath = getFullyQualifiedPath(ide as any, filepath); // any = VsCodeIde here, but importing it breaks tests
-
-          if (!fullPath) {
-            return "";
-          }
-
-          const codeStr = await ide.readRangeInFile(fullPath, item.range);
-
-          // Include the filepath so the model can map it correctly with codeblock outputs
-          return `\`\`\`${fullPath} ${rangeStr}\n${codeStr}\`\`\``;
-        }),
-      )
-    ).join("\n");
+    // TODO: This is causing GUI builds to fail, so we're disabling it for now
+    // const selectedCodeStr = (
+    //   await Promise.all(
+    //     selectedCode.map(async (item) => {
+    //       // Split the range string from the filename, e.g. `filename.ts (1-2) -> [filename.ts, (1-2)]`
+    //       const [filepath, rangeStr] = item.filepath.split(" ");
+    //       const { getFullyQualifiedPath } = await import(
+    //         "../../../extensions/vscode/src/util/util"
+    //       );
+    //       const fullPath = getFullyQualifiedPath(ide as any, filepath); // any = VsCodeIde here, but importing it breaks tests
+    //       if (!fullPath) {
+    //         return "";
+    //       }
+    //       const codeStr = await ide.readRangeInFile(fullPath, item.range);
+    //       // Include the filepath so the model can map it correctly with codeblock outputs
+    //       return `\`\`\`${fullPath} ${rangeStr}\n${codeStr}\`\`\``;
+    //     }),
+    //   )
+    // ).join("\n");
 
     const fileContextItemsStr = contextItems
       .filter((item) => item.uri?.type === "file")
       .map((item) => item.content)
       .join("\n");
 
-    const filesToEditStr = fileContextItemsStr + "\n" + selectedCodeStr;
+    const filesToEditStr = fileContextItemsStr + "\n"; // + selectedCodeStr;
 
     const additionalContextStr = contextItems
       .filter((item) => item.uri?.type !== "file")
