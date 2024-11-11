@@ -101,3 +101,13 @@ jobs:
         run: |
           cd binary
           npx tsc --noEmit
+
+      - name: Run core tests
+        run: |
+          cd core
+          npm test
+
+      - name: Run gui tests
+        run: |
+          cd gui
+          npm test
