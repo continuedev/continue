@@ -7,11 +7,7 @@ import { testIde } from "../../../../test/util/fixtures";
 import { getAst, getTreePathAtCursor } from "../../../util/ast";
 import { ImportDefinitionsService } from "../../ImportDefinitionsService";
 import { RootPathContextService } from "../RootPathContextService";
-
-const MOCK_HARDCODED_RANGE = {
-  start: { line: 0, character: 0 },
-  end: { line: 0, character: 0 },
-};
+import Parser from "web-tree-sitter";
 
 function splitTextAtRange(fileContent: string, range: Range): [string, string] {
   const lines = fileContent.split("\n");
@@ -47,28 +43,20 @@ export async function testRootPathContext(
   folderName: string,
   relativeFilepath: string,
   rangeToFill: Range,
-  expectedSnippets: string[],
+  expectedDefinitionPositions: Parser.Point[],
 ) {
   // Create a mocked instance of RootPathContextService
   const ide = testIde;
   const importDefinitionsService = new ImportDefinitionsService(ide);
   const service = new RootPathContextService(importDefinitionsService, ide);
 
-  expectedSnippets.forEach((snippet) => {
-    jest
-      // @ts-ignore
-      .spyOn(service, "getSnippets")
-      // @ts-ignore
-      .mockImplementationOnce(async (_filepath, _endPosition) => {
-        return [
-          {
-            range: MOCK_HARDCODED_RANGE,
-            filepath: "NOT USED",
-            contents: snippet,
-          },
-        ];
-      });
-  });
+  const getSnippetsMock = jest
+    // @ts-ignore
+    .spyOn(service, "getSnippets")
+    // @ts-ignore
+    .mockImplementation(async (_filepath, _endPosition) => {
+      return [];
+    });
 
   // Copy the folder to the test directory
   const folderPath = path.join(
@@ -99,7 +87,17 @@ export async function testRootPathContext(
   }
 
   const treePath = await getTreePathAtCursor(ast, prefix.length);
-  const snippets = await service.getContextForPath(startPath, treePath);
+  await service.getContextForPath(startPath, treePath);
 
-  expect(snippets.map((snippet) => snippet.contents)).toEqual(expectedSnippets);
+  expect(getSnippetsMock).toHaveBeenCalledTimes(
+    expectedDefinitionPositions.length,
+  );
+
+  expectedDefinitionPositions.forEach((position, index) => {
+    expect(getSnippetsMock).toHaveBeenNthCalledWith(
+      index + 1,
+      expect.any(String), // filepath argument
+      position,
+    );
+  });
 }
