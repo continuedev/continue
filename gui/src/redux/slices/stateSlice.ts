@@ -44,6 +44,7 @@ type State = {
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
+  isInMultifileEdit: boolean;
 };
 
 const initialState: State = {
@@ -71,6 +72,7 @@ const initialState: State = {
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
+  isInMultifileEdit: false,
 };
 
 export const stateSlice = createSlice({
@@ -274,6 +276,7 @@ export const stateSlice = createSlice({
         state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
+        state.isInMultifileEdit = false;
       }
     },
     deleteContextWithIds: (
@@ -415,6 +418,9 @@ export const stateSlice = createSlice({
         selectedProfileId: payload,
       };
     },
+    setIsInMultifileEdit: (state, action: PayloadAction<boolean>) => {
+      state.isInMultifileEdit = action.payload;
+    },
   },
 });
 
@@ -442,6 +448,7 @@ export const {
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,
+  setIsInMultifileEdit,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

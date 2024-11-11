@@ -10,6 +10,7 @@ import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
+import AcceptRejectAllButtons from "./AcceptRejectAllButtons";
 
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
@@ -76,6 +77,13 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const [isGatheringContext, setIsGatheringContext] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const isInMultifileEdit = useSelector(
+    (state: RootState) => state.state.isInMultifileEdit,
+  );
+
+  const shouldShowAcceptRejectButtons =
+    props.isMainInput && isInMultifileEdit && !active;
+
   useWebviewListener(
     "newSessionWithPrompt",
     async (data) => {
@@ -110,6 +118,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   return (
     <div className={`mb-1 ${props.hidden ? "hidden" : ""}`}>
+      {shouldShowAcceptRejectButtons && <AcceptRejectAllButtons />}
+
       <div className={`relative flex px-2`}>
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}
