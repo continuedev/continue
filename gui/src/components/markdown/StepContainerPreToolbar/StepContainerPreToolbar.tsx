@@ -54,6 +54,7 @@ export interface StepContainerPreToolbarProps {
   filepath: string;
   isGeneratingCodeBlock: boolean;
   codeBlockIndex: number; // To track which codeblock we are applying
+  range?: string;
   children: any;
 }
 
@@ -177,7 +178,7 @@ export default function StepContainerPreToolbar(
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
-          <FileInfo filepath={props.filepath} />
+          <FileInfo filepath={props.filepath} range={props.range} />
         </div>
 
         <div className="flex items-center gap-3">

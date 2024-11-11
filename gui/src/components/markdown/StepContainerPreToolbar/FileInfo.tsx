@@ -6,9 +6,10 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 
 export interface FileInfoProps {
   filepath: string;
+  range?: string;
 }
 
-const FileInfo = ({ filepath }: FileInfoProps) => {
+const FileInfo = ({ filepath, range }: FileInfoProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
 
   // TODO: Need to turn into relative or fq path
@@ -25,7 +26,10 @@ const FileInfo = ({ filepath }: FileInfoProps) => {
         onClick={onClickFileName}
       >
         <FileIcon height="20px" width="20px" filename={filepath} />
-        <span className="runcate hover:underline">{getBasename(filepath)}</span>
+        <span className="truncate hover:underline">
+          {getBasename(filepath)}
+          {range && ` ${range}`}
+        </span>
       </div>
     </div>
   );
