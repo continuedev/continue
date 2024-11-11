@@ -213,10 +213,11 @@ export class VerticalDiffManager {
       endLine,
       {
         instant,
-        onStatusUpdate: (status) =>
+        onStatusUpdate: (status, numDiffs) =>
           this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
+            numDiffs,
           }),
       },
     );
@@ -331,11 +332,12 @@ export class VerticalDiffManager {
       endLine,
       {
         input,
-        onStatusUpdate: (status) =>
+        onStatusUpdate: (status, numDiffs) =>
           streamId &&
           this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
+            numDiffs,
           }),
       },
     );

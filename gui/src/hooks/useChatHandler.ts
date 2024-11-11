@@ -30,6 +30,7 @@ import {
   resubmitAtIndex,
   setInactive,
   setIsGatheringContext,
+  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
@@ -290,6 +291,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           step_name: slashCommand.name,
           params: {},
         });
+
+        if (slashCommand.name === "multifile-edit") {
+          dispatch(setIsInMultifileEdit(true));
+        }
 
         await _streamSlashCommand(
           messages,
