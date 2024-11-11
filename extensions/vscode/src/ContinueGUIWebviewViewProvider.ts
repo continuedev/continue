@@ -182,6 +182,7 @@ export class ContinueGUIWebviewViewProvider
       </head>
       <body>
         <div id="root"></div>
+        
         ${
           inDevelopmentMode
             ? `<script type="module">

@@ -1,21 +1,20 @@
+import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import { updateApplyState } from "../../../redux/slices/uiStateSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../../redux/store";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { childrenToText } from "../utils";
+import styled, { keyframes } from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { useWebviewListener } from "../../../hooks/useWebviewListener";
+import { updateApplyState } from "../../../redux/slices/uiStateSlice";
+import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
-import FileInfo from "./FileInfo";
-import styled, { keyframes } from "styled-components";
-import Spinner from "./Spinner";
-import ApplyActions from "./ApplyActions";
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import CopyButton from "./CopyButton";
+import { childrenToText } from "../utils";
 import { useApplyCodeBlock } from "../utils/useApplyCodeBlock";
+import ApplyActions from "./ApplyActions";
+import CopyButton from "./CopyButton";
+import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
 
 const fadeInAnimation = keyframes`
@@ -170,7 +169,7 @@ export default function StepContainerPreToolbar(
 
   return (
     <TopDiv>
-      <ToolbarDiv isExpanded={isExpanded}>
+      <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
         <div className="flex items-center">
           <ChevronDownIcon
             onClick={onClickExpand}
