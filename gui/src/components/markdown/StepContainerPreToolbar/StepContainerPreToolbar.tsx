@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { getFontSize } from "../../../util";
 import FileInfo from "./FileInfo";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import Spinner from "./Spinner";
 import ApplyActions from "./ApplyActions";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
@@ -18,12 +18,22 @@ import CopyButton from "./CopyButton";
 import { useApplyCodeBlock } from "../utils/useApplyCodeBlock";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
 
+const fadeInAnimation = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
 const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
+  animation: ${fadeInAnimation} 300ms ease-out forwards;
 `;
 
 const ToolbarDiv = styled.div<{ isExpanded: boolean }>`

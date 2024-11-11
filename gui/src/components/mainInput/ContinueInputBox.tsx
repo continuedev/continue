@@ -77,26 +77,12 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const [isGatheringContext, setIsGatheringContext] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const applyStates = useSelector(
-    (state: RootState) => state.uiState.applyStates,
-  );
-
   const isInMultifileEdit = useSelector(
     (state: RootState) => state.state.isInMultifileEdit,
   );
 
-  const isApplying =
-    applyStates.length > 0 &&
-    applyStates.some((state) => state.status === "streaming");
-
   const shouldShowAcceptRejectButtons =
-    props.isMainInput && isInMultifileEdit && !active && !isApplying;
-
-  console.log(
-    `isMainInput: ${props.isMainInput} isInMultifileEdit: ${isInMultifileEdit} isApplying:${isApplying} active: ${active}`,
-  );
-
-  console.log(applyStates);
+    props.isMainInput && isInMultifileEdit && !active;
 
   useWebviewListener(
     "newSessionWithPrompt",

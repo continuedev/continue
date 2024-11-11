@@ -44,17 +44,17 @@ export default function AcceptRejectAllButtons() {
     <div className="flex justify-center gap-2 border-b border-gray-200/25 p-1 px-3">
       <button
         className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
-        onClick={handleAcceptAll}
-      >
-        <CheckIcon className="mr-1 h-4 w-4" />
-        Accept all changes
-      </button>
-      <button
-        className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={handleRejectAll}
       >
         <XMarkIcon className="mr-1 h-4 w-4" />
         Reject all changes
+      </button>
+      <button
+        className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
+        onClick={handleAcceptAll}
+      >
+        <CheckIcon className="mr-1 h-4 w-4" />
+        Accept all changes
       </button>
     </div>
   );
