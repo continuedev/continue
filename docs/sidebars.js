@@ -132,6 +132,11 @@ const sidebars = {
       ],
     },
     "customize/changelog",
+    {
+      type: "link",
+      label: "Reference",
+      href: "/reference",
+    },
   ],
 };
 
