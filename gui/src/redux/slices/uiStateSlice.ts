@@ -64,11 +64,6 @@ export const uiStateSlice = createSlice({
 
       const curApplyState = state.applyStates[index];
 
-      // TODO: Verify this is not what's breaking the reject button for edit
-      // if (payload.status === "closed" && index !== -1) {
-      //   state.applyStates.splice(index, 1);
-      // } else
-
       if (index === -1) {
         state.applyStates.push(payload);
       } else {
