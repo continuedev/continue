@@ -1,13 +1,21 @@
-import { Address, Person } from "./types";
+import {
+  Address,
+  Person,
+  BaseClass,
+  FirstInterface,
+  SecondInterface,
+  // @ts-ignore
+} from "./types";
 
 function getAddress(person: Person): Address {
   return person.address;
 }
 
-class Group {
+class Group extends BaseClass implements FirstInterface, SecondInterface {
   people: Person[];
 
   constructor(people: Person[]) {
+    super();
     this.people = people;
   }
 

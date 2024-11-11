@@ -25,6 +25,7 @@ export class RootPathContextService {
     "program",
     "function_declaration",
     "method_definition",
+    "class_declaration",
   ]);
 
   /**
