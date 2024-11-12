@@ -370,6 +370,8 @@ export interface LLMOptions {
 
   // IBM watsonx Options
   deploymentId?: string;
+
+  ide?: IDE | undefined,
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -518,6 +520,11 @@ export interface IDE {
   // Callbacks
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
   pathSep(): Promise<string>;
+  setSessionInfo?( accessToken: string,
+    account: {
+      id: string;
+      label: string;
+    }): void;
 }
 
 // Slash Commands

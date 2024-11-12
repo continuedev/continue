@@ -58,7 +58,8 @@ export class Telemetry {
     try {
       const { PostHog } = await import("posthog-node");
       return new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
-        host: "https://app.posthog.com",
+        // host: "https://app.posthog.com",
+        host: "http://api.lingxi.eastcom-sw.com/lingxi/posthog",
       });
     } catch (e) {
       console.error(`Failed to setup telemetry: ${e}`);

@@ -125,6 +125,11 @@ export class ReverseMessageIde {
       return undefined;
     });
 
+    this.on("setControlPlaneSessionInfo", async (sessionInfo) => {
+      // Not supported in testing
+      return undefined;
+    });
+
     this.on("getContinueDir", () => {
       return this.ide.getContinueDir();
     });

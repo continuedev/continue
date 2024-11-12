@@ -252,6 +252,7 @@ async function intermediateToFinalConfig(
         writeLog,
         config.completionOptions,
         config.systemMessage,
+        ide
       );
       if (!llm) {
         continue;
@@ -274,6 +275,7 @@ async function intermediateToFinalConfig(
                 writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
+                ide
               );
             }),
           );
@@ -356,6 +358,7 @@ async function intermediateToFinalConfig(
               writeLog,
               config.completionOptions,
               config.systemMessage,
+              ide
             );
 
             if (llm?.providerName === "free-trial") {

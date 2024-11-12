@@ -139,6 +139,9 @@ export const defaultConfig: SerializedContinueConfig = {
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
   models: [DEFAULT_CHAT_MODEL_CONFIG],
+  tabAutocompleteOptions: {
+    maxPromptTokens: 4096
+  },
   tabAutocompleteModel: DEFAULT_AUTOCOMPLETE_MODEL_CONFIG,
   customCommands: [
     {

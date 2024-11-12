@@ -4,6 +4,7 @@ import {
   ILLM,
   LLMOptions,
   ModelDescription,
+  IDE
 } from "../..";
 import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
 import { BaseLLM } from "../index";
@@ -95,6 +96,7 @@ export async function llmFromDescription(
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
+  ide?: IDE | undefined,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
@@ -124,6 +126,8 @@ export async function llmFromDescription(
     systemMessage,
     writeLog,
     uniqueId,
+    // workOsAccessToken: JSON.stringify(ideSettings)
+    ide
   };
 
   if (desc.provider === "continue-proxy") {

@@ -87,6 +87,16 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     { silent: boolean },
     ControlPlaneSessionInfo | undefined,
   ];
+  setControlPlaneSessionInfo: [
+    {
+      accessToken: string;
+      account: {
+        id: string;
+        label: string;
+      };
+    },
+    undefined
+  ];
   logoutOfControlPlane: [undefined, void];
   pathSep: [undefined, string];
 };

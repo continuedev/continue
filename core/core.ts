@@ -88,6 +88,19 @@ export class Core {
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
     });
+    const setSessionInfo = (
+      accessToken: string,
+      account: {
+        id: string;
+        label: string;
+      },
+    ) => {
+      messenger.request("setControlPlaneSessionInfo", {
+        accessToken,
+        account,
+      });
+    };
+    this.ide.setSessionInfo = setSessionInfo
 
     this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
 
