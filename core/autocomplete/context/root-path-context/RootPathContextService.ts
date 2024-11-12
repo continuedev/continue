@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { LRUCache } from "lru-cache";
 import Parser from "web-tree-sitter";
 import { IDE } from "../../..";
-import { getQueryForFile, TSQueryType } from "../../../util/treeSitter";
+import { getQueryForFile } from "../../../util/treeSitter";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 import { AutocompleteSnippet } from "../ranking";

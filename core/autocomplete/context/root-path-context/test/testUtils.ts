@@ -1,13 +1,13 @@
+import { jest } from "@jest/globals";
 import fs from "fs";
 import path from "path";
-import { jest } from "@jest/globals";
 
+import Parser from "web-tree-sitter";
 import { Range } from "../../../..";
 import { testIde } from "../../../../test/util/fixtures";
 import { getAst, getTreePathAtCursor } from "../../../util/ast";
 import { ImportDefinitionsService } from "../../ImportDefinitionsService";
 import { RootPathContextService } from "../RootPathContextService";
-import Parser from "web-tree-sitter";
 
 function splitTextAtRange(fileContent: string, range: Range): [string, string] {
   const lines = fileContent.split("\n");

@@ -781,11 +781,13 @@ export interface CustomCommand {
 }
 
 interface Prediction {
-  type: "content"
-  content: string | {
-    type: "text"
-    text: string
-  }[]
+  type: "content";
+  content:
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 interface BaseCompletionOptions {

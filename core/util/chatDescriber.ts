@@ -1,8 +1,8 @@
-import type { IMessenger } from "./messenger";
-import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
+import { removeQuotesAndEscapes } from ".";
 import { ILLM, LLMFullCompletionOptions } from "..";
 import { stripImages } from "../llm/images";
-import { removeQuotesAndEscapes } from ".";
+import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
+import type { IMessenger } from "./messenger";
 
 /**
  * Removes code blocks from a message.
