@@ -3,46 +3,32 @@ import fs from "fs";
 import path from "path";
 
 import Parser from "web-tree-sitter";
-import { Range } from "../../../..";
+import { Position } from "../../../..";
 import { testIde } from "../../../../test/util/fixtures";
 import { getAst, getTreePathAtCursor } from "../../../util/ast";
 import { ImportDefinitionsService } from "../../ImportDefinitionsService";
 import { RootPathContextService } from "../RootPathContextService";
 
-function splitTextAtRange(fileContent: string, range: Range): [string, string] {
+function splitTextAtPosition(
+  fileContent: string,
+  position: Position,
+): [string, string] {
   const lines = fileContent.split("\n");
   let currentPos = 0;
 
-  if (range.start.line === range.end.line) {
-    // If range is on the same line, calculate position once
-    for (let i = 0; i < range.start.line; i++) {
-      currentPos += lines[i].length + 1; // +1 for the newline character
-    }
-    const startPos = currentPos + range.start.character;
-    const endPos = currentPos + range.end.character;
-    return [fileContent.slice(0, startPos), fileContent.slice(endPos)];
+  // Calculate position based on the provided line and character
+  for (let i = 0; i < position.line; i++) {
+    currentPos += lines[i].length + 1; // +1 for the newline character
   }
+  const splitPos = currentPos + position.character;
 
-  // Calculate position of range start
-  for (let i = 0; i < range.start.line; i++) {
-    currentPos += lines[i].length + 1;
-  }
-  const startPos = currentPos + range.start.character;
-
-  // Calculate position of range end
-  currentPos = 0;
-  for (let i = 0; i < range.end.line; i++) {
-    currentPos += lines[i].length + 1;
-  }
-  const endPos = currentPos + range.end.character;
-
-  return [fileContent.slice(0, startPos), fileContent.slice(endPos)];
+  return [fileContent.slice(0, splitPos), fileContent.slice(splitPos)];
 }
 
 export async function testRootPathContext(
   folderName: string,
   relativeFilepath: string,
-  rangeToFill: Range,
+  position: Position,
   expectedDefinitionPositions: Parser.Point[],
 ) {
   // Create a mocked instance of RootPathContextService
@@ -76,10 +62,11 @@ export async function testRootPathContext(
 
   // Get results of root path context
   const startPath = path.join(testFolderPath, relativeFilepath);
-  const [prefix, suffix] = splitTextAtRange(
+  const [prefix, suffix] = splitTextAtPosition(
     fs.readFileSync(startPath, "utf8"),
-    rangeToFill,
+    position,
   );
+  debugger;
   const fileContents = prefix + suffix;
   const ast = await getAst(startPath, fileContents);
   if (!ast) {

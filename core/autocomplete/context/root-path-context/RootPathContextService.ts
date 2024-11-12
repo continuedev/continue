@@ -26,8 +26,10 @@ export class RootPathContextService {
   private static TYPES_TO_USE = new Set([
     "program",
     "function_declaration",
+    "function_definition",
     "method_definition",
     "class_declaration",
+    "class_definition",
   ]);
 
   /**
@@ -56,12 +58,15 @@ export class RootPathContextService {
         this.importDefinitionsService.get(filepath);
         break;
       default:
+        const type = node.type;
+        debugger;
         query = await getQueryForFile(
           filepath,
           `root-path-context-queries/${node.type}`,
         );
         break;
     }
+    debugger;
 
     if (!query) {
       return snippets;
@@ -84,6 +89,7 @@ export class RootPathContextService {
     filepath: string,
     endPosition: Parser.Point,
   ): Promise<AutocompleteSnippet[]> {
+    debugger;
     const definitions = await this.ide.gotoDefinition({
       filepath,
       position: {
