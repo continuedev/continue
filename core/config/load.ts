@@ -215,7 +215,10 @@ async function serializedToIntermediateConfig(
     promptFiles.push(...readAllGlobalPromptFiles());
 
     for (const file of promptFiles) {
-      slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+      const slashCommand = slashCommandFromPromptFile(file.path, file.content);
+      if (slashCommand) {
+        slashCommands.push(slashCommand);
+      }
     }
   }
 

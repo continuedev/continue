@@ -362,11 +362,16 @@ export default class DocsService {
       isPreIndexedDoc: !!preIndexedDocs[startUrl],
     });
 
-    const docs: LanceDbDocsRow[] = await table
-      .search(vector)
-      .limit(nRetrieve)
-      .where(`starturl = '${startUrl}'`)
-      .execute();
+    let docs: LanceDbDocsRow[] = [];
+    try {
+      docs = await table
+        .search(vector)
+        .limit(nRetrieve)
+        .where(`starturl = '${startUrl}'`)
+        .execute();
+    } catch (e: any) {
+      console.error("Error retrieving chunks from LanceDB", e);
+    }
 
     const hasIndexedDoc = await this.hasIndexedDoc(startUrl);
 
@@ -553,9 +558,8 @@ export default class DocsService {
   private async getLanceTableNameFromEmbeddingsProvider(
     isPreIndexedDoc: boolean,
   ) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(
-      isPreIndexedDoc,
-    );
+    const embeddingsProvider =
+      await this.getEmbeddingsProvider(isPreIndexedDoc);
 
     const tableName = this.sanitizeLanceTableName(
       `${DocsService.lanceTableName}${embeddingsProvider.id}`,
