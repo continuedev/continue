@@ -99,7 +99,7 @@ export class RootPathContextService {
         contents: await this.ide.readRangeInFile(def.filepath, def.range),
       })),
     );
-    debugger;
+
     return newSnippets;
   }
 
