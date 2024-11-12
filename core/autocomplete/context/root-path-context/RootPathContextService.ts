@@ -26,8 +26,10 @@ export class RootPathContextService {
   private static TYPES_TO_USE = new Set([
     "program",
     "function_declaration",
+    "function_definition",
     "method_definition",
     "class_declaration",
+    "class_definition",
   ]);
 
   /**
@@ -97,6 +99,7 @@ export class RootPathContextService {
         contents: await this.ide.readRangeInFile(def.filepath, def.range),
       })),
     );
+
     return newSnippets;
   }
 
