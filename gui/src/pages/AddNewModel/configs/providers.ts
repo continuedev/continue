@@ -726,7 +726,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
   nebius: {
     title: "Nebius AI Studio",
     provider: "nebius",
-    refPage: "nebiusllm",
+    refPage: "nebius",
     description: "Use the Nebius API to run open-source models",
     longDescription: `Nebius AI Studio is a cheap hosted service with $100 trial. To get started with Nebius AI Studio:\n1. Obtain an API key from [here](https://studio.nebius.ai)\n2. Paste below\n3. Select a model preset`,
     params: {
@@ -744,7 +744,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     icon: "nebius.png",
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
-    packages: [models.MetaLlama3Large, models.Qwen2Coder],
+    packages: [models.llama31Chat, models.Qwen2Coder, models.mistralOs],
     apiKeyUrl: "https://studio.nebius.ai/settings/api-keys",
   },
 };

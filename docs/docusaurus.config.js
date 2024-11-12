@@ -384,6 +384,10 @@ const config = {
             to: "/customize/model-providers/more/watsonx",
             from: "/reference/Model Providers/watsonx",
           },
+          {
+            to: "/customize/model-providers/more/nebius",
+            from: "/reference/Model Providers/nebius",
+          },
           // Sidebar items that should route directly to a subpage
           {
             to: "/chat/how-to-use-it",
