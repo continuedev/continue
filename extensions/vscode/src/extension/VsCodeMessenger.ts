@@ -24,6 +24,7 @@ import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
+  setControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
@@ -421,7 +422,11 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
       return getControlPlaneSessionInfo(msg.data.silent);
     });
+    this.onWebviewOrCore("setControlPlaneSessionInfo", async (msg) => {
+      return setControlPlaneSessionInfo(msg.data.accessToken, msg.data.account);
+    });
     this.onWebviewOrCore("logoutOfControlPlane", async (msg) => {
+      setControlPlaneSessionInfo(undefined, undefined);
       const sessions = await this.workOsAuthProvider.getSessions();
       await Promise.all(
         sessions.map((session) => workOsAuthProvider.removeSession(session.id)),

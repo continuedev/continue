@@ -13,6 +13,7 @@ import {
   Uri,
   UriHandler,
   window,
+  workspace,
 } from "vscode";
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
@@ -482,19 +483,62 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
 export async function getControlPlaneSessionInfo(
   silent: boolean,
 ): Promise<ControlPlaneSessionInfo | undefined> {
-  const session = await authentication.getSession(
-    controlPlaneEnv.AUTH_TYPE,
-    [],
-    silent ? { silent: true } : { createIfNone: true },
-  );
+  const session = workspace.getConfiguration().get("continue.userToken");
+  // const session = await authentication.getSession(
+  //   controlPlaneEnv.AUTH_TYPE,
+  //   [],
+  //   silent ? { silent: true } : { createIfNone: true },
+  // );
   if (!session) {
     return undefined;
+    // return  {
+    //   accessToken: 'token1111',
+    //   account:{
+    //     id:'id1111',
+    //     label:'label1111'
+    //   }
+    // }
   }
-  return {
-    accessToken: session.accessToken,
-    account: {
-      id: session.account.id,
-      label: session.account.label,
-    },
-  };
+  try {
+    const info = JSON.parse(String(session));
+    if (info.accessToken && info.account) {
+      return info;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+  // return {
+  //   accessToken: session.accessToken,
+  //   account: {
+  //     id: session.account.id,
+  //     label: session.account.label,
+  //   },
+  // };
+}
+
+export async function setControlPlaneSessionInfo(
+  accessToken: string | undefined,
+  account: {
+    id: string;
+    label: string;
+  } | undefined,
+): Promise<undefined> {
+  if (accessToken && account) {
+    workspace
+      .getConfiguration()
+      .update(
+        "continue.userToken",
+        JSON.stringify({ accessToken, account }),
+        true,
+      );
+  } else {
+    workspace
+      .getConfiguration()
+      .update(
+        "continue.userToken",
+        '',
+        true,
+      );
+  }
 }
