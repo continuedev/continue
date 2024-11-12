@@ -204,7 +204,8 @@
             "askSage",
             "nebius",
             "vertexai",
-            "xAI"
+            "xAI",
+            "kindo"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -240,7 +241,8 @@
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
             "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
-            "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)"
+            "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
+            "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)"
           ],
           "type": "string"
         },
@@ -467,7 +469,8 @@
                   "cloudflare",
                   "sambanova",
                   "nebius",
-                  "xAI"
+                  "xAI",
+                  "kindo"
                 ]
               }
             },

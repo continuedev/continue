@@ -494,11 +494,14 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
-  getCurrentFile(): Promise<undefined | {
-    isUntitled: boolean
-    path: string
-    contents: string
-  }>;
+  getCurrentFile(): Promise<
+    | undefined
+    | {
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
+  >;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
@@ -677,10 +680,12 @@ export type ModelName =
   | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
+  | "mistral-8x22b"
   | "mistral-tiny"
   | "mistral-small"
   | "mistral-medium"
   | "mistral-embed"
+  | "mistral-nemo"
   // Llama 2
   | "llama2-7b"
   | "llama2-13b"
@@ -705,6 +710,8 @@ export type ModelName =
   | "grok-beta"
   // Other Open-source
   | "phi2"
+  | "phi-3-mini"
+  | "phi-3-medium"
   | "phind-codellama-34b"
   | "wizardcoder-7b"
   | "wizardcoder-13b"
@@ -713,9 +720,13 @@ export type ModelName =
   | "codeup-13b"
   | "deepseek-7b"
   | "deepseek-33b"
+  | "deepseek-2-lite"
   | "neural-chat-7b"
   | "gemma-7b-it"
+  | "gemma2-2b-it"
   | "gemma2-9b-it"
+  | "olmo-7b"
+  | "qwen-coder2.5-7b"
   // Anthropic
   | "claude-3-5-sonnet-latest"
   | "claude-3-5-sonnet-20240620"
@@ -785,11 +796,13 @@ export interface CustomCommand {
 }
 
 interface Prediction {
-  type: "content"
-  content: string | {
-    type: "text"
-    text: string
-  }[]
+  type: "content";
+  content:
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 interface BaseCompletionOptions {
@@ -931,6 +944,7 @@ export interface ContinueUIConfig {
   fontSize?: number;
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
+  getChatTitles?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -992,11 +1006,6 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
-
-  /**
-   * Prompt the user's LLM for a title given the current chat content
-   */
-  getChatTitles?: boolean;
 
   /**
    * If set to true, we will attempt to pull down and install an instance of Chromium

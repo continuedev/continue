@@ -628,6 +628,11 @@ declare global {
     | "mistral-large-latest"
     | "mistral-7b"
     | "mistral-8x7b"
+    | "mistral-8x22b"
+    | "mistral-tiny"
+    | "mistral-small"
+    | "mistral-medium"
+    | "mistral-nemo"
     // Llama 2
     | "llama2-7b"
     | "llama2-13b"
@@ -641,6 +646,8 @@ declare global {
     | "llama3-70b"
     // Other Open-source
     | "phi2"
+    | "phi-3-mini"
+    | "phi-3-medium"
     | "phind-codellama-34b"
     | "wizardcoder-7b"
     | "wizardcoder-13b"
@@ -649,9 +656,12 @@ declare global {
     | "codeup-13b"
     | "deepseek-7b"
     | "deepseek-33b"
+    | "deepseek-2-lite"
     | "neural-chat-7b"
     | "gemma-7b-it"
+    | "gemma2-2b-it"
     | "gemma2-9b-it"
+    | "olmo-7b"
     // Anthropic
     | "claude-3-5-sonnet-latest"
     | "claude-3-5-sonnet-20240620"
@@ -669,10 +679,6 @@ declare global {
     | "gemini-1.5-pro"
     | "gemini-1.5-flash-latest"
     | "gemini-1.5-flash"
-    // Mistral
-    | "mistral-tiny"
-    | "mistral-small"
-    | "mistral-medium"
     // Tab autocomplete
     | "deepseek-1b"
     | "starcoder-1b"
