@@ -58,15 +58,12 @@ export class RootPathContextService {
         this.importDefinitionsService.get(filepath);
         break;
       default:
-        const type = node.type;
-        debugger;
         query = await getQueryForFile(
           filepath,
           `root-path-context-queries/${node.type}`,
         );
         break;
     }
-    debugger;
 
     if (!query) {
       return snippets;
@@ -89,7 +86,6 @@ export class RootPathContextService {
     filepath: string,
     endPosition: Parser.Point,
   ): Promise<AutocompleteSnippet[]> {
-    debugger;
     const definitions = await this.ide.gotoDefinition({
       filepath,
       position: {
@@ -103,6 +99,7 @@ export class RootPathContextService {
         contents: await this.ide.readRangeInFile(def.filepath, def.range),
       })),
     );
+    debugger;
     return newSnippets;
   }
 

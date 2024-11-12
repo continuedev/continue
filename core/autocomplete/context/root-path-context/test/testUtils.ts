@@ -66,7 +66,6 @@ export async function testRootPathContext(
     fs.readFileSync(startPath, "utf8"),
     position,
   );
-  debugger;
   const fileContents = prefix + suffix;
   const ast = await getAst(startPath, fileContents);
   if (!ast) {
