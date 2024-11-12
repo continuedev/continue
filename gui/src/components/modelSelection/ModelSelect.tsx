@@ -169,7 +169,7 @@ function ModelOption({
     e.stopPropagation();
     e.preventDefault();
 
-    ideMessenger.post("openConfigJson", undefined);
+    ideMessenger.post("openConfig", undefined);
   }
 
   function handleOptionClick(e) {

@@ -211,7 +211,7 @@ function AddNewModel() {
           className="mt-12"
           disabled={false}
           onClick={(e) => {
-            ideMessenger.post("openConfigJson", undefined);
+            ideMessenger.post("openConfig", undefined);
           }}
         >
           <h3 className="my-2 text-center">

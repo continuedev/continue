@@ -188,7 +188,7 @@ class ContinueBrowser(val project: Project, url: String) {
                 }
 
                 "reloadWindow" -> {}
-                "openConfigJson" -> {
+                "openConfig" -> {
                     ide?.setFileOpen(getConfigJsonPath())
                 }
 

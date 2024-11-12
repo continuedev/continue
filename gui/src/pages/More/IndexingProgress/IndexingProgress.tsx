@@ -98,7 +98,7 @@ function IndexingProgress() {
         }
         break;
       case "disabled":
-        ideMessenger.post("openConfigJson", undefined);
+        ideMessenger.post("openConfig", undefined);
         break;
       case "done":
         ideMessenger.post("index/forceReIndex", undefined);

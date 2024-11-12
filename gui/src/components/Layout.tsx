@@ -114,7 +114,7 @@ const Layout = () => {
   );
 
   useWebviewListener("openSettings", async () => {
-    ideMessenger.post("openConfigJson", undefined);
+    ideMessenger.post("openConfig", undefined);
   });
 
   useWebviewListener(

@@ -108,7 +108,7 @@ export class VsCodeMessenger {
       );
     });
 
-    this.onWebview("openConfigJson", (msg) => {
+    this.onWebview("openConfig", (msg) => {
       this.ide.openFile(getConfigJsonPath());
     });
 

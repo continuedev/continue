@@ -29,7 +29,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   ];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
-  openConfigJson: [undefined, void];
+  openConfig: [undefined, void];
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
   focusEditor: [undefined, void];

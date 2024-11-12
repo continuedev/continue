@@ -37,7 +37,7 @@ function Footer() {
 
   function onClickSettings() {
     if (selectedProfileId === "local") {
-      ideMessenger.post("openConfigJson", undefined);
+      ideMessenger.post("openConfig", undefined);
     } else {
       ideMessenger.post(
         "openUrl",
@@ -46,47 +46,59 @@ function Footer() {
     }
   }
 
-  return (
-    <footer className="flex h-7 items-center justify-between overflow-hidden border-0 border-t border-solid border-t-zinc-700 p-2">
-      <div className="flex max-w-[40vw] gap-2">
-        <ProfileSwitcher />
-        {defaultModel?.provider === "free-trial" && (
-          <FreeTrialProgressBar
-            completed={parseInt(localStorage.getItem("ftc") || "0")}
-            total={FREE_TRIAL_LIMIT_REQUESTS}
-          />
-        )}
-      </div>
+  if (defaultModel?.provider === "free-trial") {
+    return (
+      <footer className="flex flex-row border-0 border-t border-solid border-t-zinc-700 px-2 py-2">
+        <FreeTrialProgressBar
+          completed={parseInt(localStorage.getItem("ftc") || "0")}
+          total={FREE_TRIAL_LIMIT_REQUESTS}
+        />
+      </footer>
+    );
+  }
+  return null;
 
-      <div className="flex gap-1">
-        {configError && (
-          <HeaderButtonWithToolTip
-            tooltipPlacement="top-end"
-            text="Config error"
-            onClick={onClickError}
-          >
-            <ExclamationTriangleIcon className="h-4 w-4" />
-          </HeaderButtonWithToolTip>
-        )}
+  // return (
+  //   <footer className="flex h-7 items-center justify-between overflow-hidden border-0 border-t border-solid border-t-zinc-700 p-2">
+  //     <div className="flex max-w-[40vw] gap-2">
+  //       <ProfileSwitcher />
+  //       {defaultModel?.provider === "free-trial" && (
+  //         <FreeTrialProgressBar
+  //           completed={parseInt(localStorage.getItem("ftc") || "0")}
+  //           total={FREE_TRIAL_LIMIT_REQUESTS}
+  //         />
+  //       )}
+  //     </div>
 
-        <HeaderButtonWithToolTip
-          tooltipPlacement="top-end"
-          text="More"
-          onClick={onClickMore}
-        >
-          <EllipsisHorizontalCircleIcon className="h-4 w-4" />
-        </HeaderButtonWithToolTip>
+  //     <div className="flex gap-1">
+  //       {configError && (
+  //         <HeaderButtonWithToolTip
+  //           tooltipPlacement="top-end"
+  //           text="Config error"
+  //           onClick={onClickError}
+  //         >
+  //           <ExclamationTriangleIcon className="h-4 w-4" />
+  //         </HeaderButtonWithToolTip>
+  //       )}
 
-        <HeaderButtonWithToolTip
-          tooltipPlacement="top-end"
-          onClick={onClickSettings}
-          text="Configure Continue"
-        >
-          <Cog6ToothIcon className="h-4 w-4" />
-        </HeaderButtonWithToolTip>
-      </div>
-    </footer>
-  );
+  //       <HeaderButtonWithToolTip
+  //         tooltipPlacement="top-end"
+  //         text="More"
+  //         onClick={onClickMore}
+  //       >
+  //         <EllipsisHorizontalCircleIcon className="h-4 w-4" />
+  //       </HeaderButtonWithToolTip>
+
+  //       {/* <HeaderButtonWithToolTip
+  //         tooltipPlacement="top-end"
+  //         onClick={onClickSettings}
+  //         text="Configure Continue"
+  //       >
+  //         <Cog6ToothIcon className="h-4 w-4" />
+  //       </HeaderButtonWithToolTip> */}
+  //     </div>
+  //   </footer>
+  // );
 }
 
 export default Footer;

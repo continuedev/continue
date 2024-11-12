@@ -219,9 +219,10 @@
         "group": "Continue"
       },
       {
-        "command": "continue.openConfigJson",
+        "command": "continue.openConfig",
         "category": "Continue",
-        "title": "Open config.json",
+        "title": "Open Continue Config",
+        "icon": "$(gear)",
         "group": "Continue"
       },
       {
@@ -497,6 +498,11 @@
         {
           "command": "continue.toggleFullScreen",
           "group": "navigation@3",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.openConfig",
+          "group": "navigation@4",
           "when": "view == continue.continueGUIView"
         }
       ],

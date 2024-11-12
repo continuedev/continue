@@ -632,7 +632,7 @@ const commandsMap: (
 
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
     },
-    "continue.openConfigJson": () => {
+    "continue.openConfig": () => {
       ide.openFile(getConfigJsonPath());
     },
     "continue.selectFilesAsContext": async (
