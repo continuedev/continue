@@ -66,10 +66,13 @@ export async function createNewPromptFileV2(
     counter++;
   } while (await ide.fileExists(promptFilePath));
 
+  const globalContext = new GlobalContext();
   const PROMPT_FILE =
-    new GlobalContext().get("hasAlreadyCreatedAPromptFile") === true
+    globalContext.get("hasAlreadyCreatedAPromptFile") === true
       ? DEFAULT_PROMPT_FILE
       : FIRST_TIME_DEFAULT_PROMPT_FILE;
+
+  globalContext.update("hasAlreadyCreatedAPromptFile", true);
 
   await ide.writeFile(promptFilePath, PROMPT_FILE);
   await ide.openFile(promptFilePath);
