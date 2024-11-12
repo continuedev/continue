@@ -9,6 +9,21 @@ import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 import { AutocompleteSnippet } from "../ranking";
 
+function getSyntaxTreeString(
+  node: Parser.SyntaxNode,
+  indent: string = "",
+): string {
+  let result = "";
+  const nodeInfo = `${node.type} [${node.startPosition.row}:${node.startPosition.column} - ${node.endPosition.row}:${node.endPosition.column}]`;
+  result += `${indent}${nodeInfo}\n`;
+
+  for (const child of node.children) {
+    result += getSyntaxTreeString(child, indent + "  ");
+  }
+
+  return result;
+}
+
 export class RootPathContextService {
   private cache = new LRUCache<string, AutocompleteSnippet[]>({
     max: 100,
@@ -58,12 +73,17 @@ export class RootPathContextService {
         this.importDefinitionsService.get(filepath);
         break;
       default:
+        console.log(getSyntaxTreeString(node));
+
         query = await getQueryForFile(
           filepath,
           `root-path-context-queries/${node.type}`,
         );
         break;
     }
+    const type = node.type;
+
+    debugger;
 
     if (!query) {
       return snippets;
@@ -115,6 +135,9 @@ export class RootPathContextService {
       RootPathContextService.TYPES_TO_USE.has(node.type),
     )) {
       const key = RootPathContextService.keyFromNode(parentKey, astNode);
+      const type = astNode.type;
+
+      debugger;
 
       const foundInCache = this.cache.get(key);
       const newSnippets =
