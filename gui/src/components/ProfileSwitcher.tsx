@@ -25,6 +25,12 @@ import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import ButtonWithTooltip from "./ButtonWithTooltip";
+import LoginForm from "../forms/LoginForm";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../redux/slices/uiStateSlice";
+import { useNavigate } from "react-router-dom";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -129,6 +135,7 @@ function ProfileSwitcher() {
   const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const lastControlServerBetaEnabledStatus = useSelector(
     (state: RootState) => state.misc.lastControlServerBetaEnabledStatus,
   );
@@ -187,9 +194,24 @@ function ProfileSwitcher() {
     return profiles.find((p) => p.id === selectedProfileId);
   }
 
+  function openLogin() {
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <LoginForm
+          onDone={() => {
+            dispatch(setShowDialog(false));
+            navigate("/");
+          }}
+        />,
+      ),
+    );
+  }
+
   return (
     <>
-      {controlServerBetaEnabled && session?.account?.id && (
+      {/* {controlServerBetaEnabled && session?.account?.id && ( */}
+      { false && (
         <StyledListbox
           value={"GPT-4"}
           onChange={(id: string) => {
@@ -245,7 +267,8 @@ function ProfileSwitcher() {
         </StyledListbox>
       )}
 
-      {controlServerBetaEnabled &&
+      {/* {controlServerBetaEnabled && */}
+      {true &&
         (session?.account ? (
           <ButtonWithTooltip
             tooltipPlacement="top-end"
@@ -262,7 +285,8 @@ function ProfileSwitcher() {
           <ButtonWithTooltip
             tooltipPlacement="top-end"
             text="Click to login to Continue"
-            onClick={login}
+            // onClick={login}
+            onClick={openLogin}
           >
             <UserCircleIconOutline className="h-4 w-4" />
           </ButtonWithTooltip>

@@ -18,17 +18,24 @@ export function useAuth(): {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
-  useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
-    setSession(data.sessionInfo);
+  // useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
+  useWebviewListener("didChangeIdeSettings", async (data) => {
+    getSessions()
   });
 
   useEffect(() => {
+    getSessions()
+  }, []);
+
+  const getSessions = () => {
     ideMessenger
       .request("getControlPlaneSessionInfo", { silent: true })
       .then(
-        (result) => result.status === "success" && setSession(result.content),
+        (result) => {
+          result.status === "success" && setSession(result.content)
+        },
       );
-  }, []);
+  }
 
   const login = () => {
     ideMessenger
@@ -69,6 +76,8 @@ export function useAuth(): {
           text={"Are you sure you want to log out of Continue?"}
           onConfirm={() => {
             ideMessenger.request("logoutOfControlPlane", undefined);
+            ideMessenger.post("config/reload", undefined)
+            setSession(undefined)
           }}
         />,
       ),
