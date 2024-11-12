@@ -30,7 +30,7 @@ interface TimelineItemProps {
   item: ChatHistoryItem;
   open: boolean;
   onToggle: () => void;
-  children: any;
+  children: React.ReactNode;
   iconElement?: any;
 }
 
