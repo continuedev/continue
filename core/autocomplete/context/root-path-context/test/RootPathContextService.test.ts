@@ -6,7 +6,7 @@ const TEST_CASES = [
     fileName: "file1.ts",
     language: "TypeScript",
     cursorPosition: { line: 10, character: 24 },
-    positions: [
+    definitionPositions: [
       { row: 9, column: 34 }, // Person
       { row: 9, column: 44 }, // Address
     ],
@@ -16,7 +16,7 @@ const TEST_CASES = [
     fileName: "file1.ts",
     language: "TypeScript",
     cursorPosition: { line: 22, character: 30 },
-    positions: [
+    definitionPositions: [
       { row: 13, column: 29 }, // BaseClass
       { row: 13, column: 55 }, // FirstInterface
       { row: 13, column: 72 }, // SecondInterface
@@ -28,11 +28,22 @@ const TEST_CASES = [
     nodeType: "function_definition",
     fileName: "file1.py",
     language: "Python",
+    cursorPosition: { line: 4, character: 25 },
+    definitionPositions: [
+      { row: 3, column: 30 }, // Person
+      { row: 3, column: 42 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_definition (inside a class)",
+    fileName: "file1.py",
+    language: "Python",
     cursorPosition: { line: 12, character: 33 },
-    positions: [
-      { row: 6, column: 21 },
-      { row: 6, column: 37 },
-      { row: 6, column: 54 },
+    definitionPositions: [
+      { row: 6, column: 21 }, // BaseClass
+      { row: 6, column: 33 }, // Collection
+      { row: 11, column: 47 }, // Person
+      { row: 11, column: 59 }, // Address
     ],
   },
 ];
@@ -40,8 +51,13 @@ const TEST_CASES = [
 describe("RootPathContextService", () => {
   test.each(TEST_CASES)(
     "Should look for correct type definitions when editing inside a $nodeType in $language",
-    async ({ fileName, cursorPosition, positions }) => {
-      await testRootPathContext("files", fileName, cursorPosition, positions);
+    async ({ fileName, cursorPosition, definitionPositions }) => {
+      await testRootPathContext(
+        "files",
+        fileName,
+        cursorPosition,
+        definitionPositions,
+      );
     },
   );
 });
