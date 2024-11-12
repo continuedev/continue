@@ -2,9 +2,7 @@ import * as fs from "fs";
 import { URL } from "node:url";
 
 import { Handler, HTTPResponse, Page } from "puppeteer";
-
 // @ts-ignore
-// @prettier-ignore
 import PCR from "puppeteer-chromium-resolver";
 
 import { ContinueConfig, IDE } from "../../..";

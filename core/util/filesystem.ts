@@ -20,7 +20,7 @@ import { GetGhTokenArgs } from "../protocol/ide.js";
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
-  constructor(private readonly workspaceDir: string) { }
+  constructor(private readonly workspaceDir: string) {}
   showToast(
     type: ToastType,
     message: string,

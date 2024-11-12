@@ -17,7 +17,6 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 // @ts-ignore - error finding typings
 // @ts-ignore
 
-
 /**
  * Used to track what action to take after a user interacts
  * with the initial Quick Pick

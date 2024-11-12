@@ -9,7 +9,16 @@ import { stripImages } from "../llm/images";
 import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
 import { getBasename } from "../util/index";
 
-import type { ChatHistory, ChatHistoryItem, ChatMessage, ContextItem, ContinueSDK, IContextProvider, IDE, SlashCommand } from "..";
+import type {
+  ChatHistory,
+  ChatHistoryItem,
+  ChatMessage,
+  ContextItem,
+  ContinueSDK,
+  IContextProvider,
+  IDE,
+  SlashCommand,
+} from "..";
 
 export const DEFAULT_PROMPTS_FOLDER = ".prompts";
 
@@ -151,7 +160,11 @@ function extractUserInput(input: string, commandName: string): string {
   return input;
 }
 
-async function renderPrompt(prompt: string, context: ContinueSDK, userInput: string) {
+async function renderPrompt(
+  prompt: string,
+  context: ContinueSDK,
+  userInput: string,
+) {
   const helpers = getContextProviderHelpers(context);
 
   // A few context providers that don't need to be in config.json to work in .prompt files

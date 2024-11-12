@@ -45,5 +45,5 @@ export const allEmbeddingsProviders: Record<
   nebius: NebiusEmbeddingsProvider,
   vertexai: VertexEmbeddingsProvider,
   watsonx: WatsonxEmbeddingsProvider,
-  lmstudio: LMStudioEmbeddingsProvider
+  lmstudio: LMStudioEmbeddingsProvider,
 };

@@ -95,7 +95,10 @@ export async function prepareTemplateAndData(
   return [newTemplate, data];
 }
 
-export function compileAndRenderTemplate(template: string, data: Record<string, string>): string {
+export function compileAndRenderTemplate(
+  template: string,
+  data: Record<string, string>,
+): string {
   const templateFn = Handlebars.compile(template);
   return templateFn(data);
 }

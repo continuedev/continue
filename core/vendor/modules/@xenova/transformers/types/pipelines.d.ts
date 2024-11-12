@@ -38,10 +38,21 @@
  * @returns {Promise<AllTasks[T]>} A Pipeline object for the specified task.
  * @throws {Error} If an unsupported pipeline is requested.
  */
-export function pipeline<T extends PipelineType>(task: T, model?: string, { quantized, progress_callback, config, cache_dir, local_files_only, revision, }?: import('./utils/hub.js').PretrainedOptions): Promise<AllTasks[T]>;
+export function pipeline<T extends PipelineType>(
+  task: T,
+  model?: string,
+  {
+    quantized,
+    progress_callback,
+    config,
+    cache_dir,
+    local_files_only,
+    revision,
+  }?: import("./utils/hub.js").PretrainedOptions,
+): Promise<AllTasks[T]>;
 declare const Pipeline_base: new () => {
-    (...args: any[]): any;
-    _call(...args: any[]): any;
+  (...args: any[]): any;
+  _call(...args: any[]): any;
 };
 /**
  * @callback DisposeType Disposes the item.
@@ -56,27 +67,34 @@ declare const Pipeline_base: new () => {
  * @extends Callable
  */
 export class Pipeline extends Pipeline_base {
-    /**
-     * Create a new Pipeline.
-     * @param {Object} options An object containing the following properties:
-     * @param {string} [options.task] The task of the pipeline. Useful for specifying subtasks.
-     * @param {PreTrainedModel} [options.model] The model used by the pipeline.
-     * @param {PreTrainedTokenizer} [options.tokenizer=null] The tokenizer used by the pipeline (if any).
-     * @param {Processor} [options.processor=null] The processor used by the pipeline (if any).
-     */
-    constructor({ task, model, tokenizer, processor }: {
-        task?: string;
-        model?: PreTrainedModel;
-        tokenizer?: PreTrainedTokenizer;
-        processor?: Processor;
-    });
-    task: string;
-    model: PreTrainedModel;
-    tokenizer: PreTrainedTokenizer;
-    processor: Processor;
-    dispose(): Promise<void>;
+  /**
+   * Create a new Pipeline.
+   * @param {Object} options An object containing the following properties:
+   * @param {string} [options.task] The task of the pipeline. Useful for specifying subtasks.
+   * @param {PreTrainedModel} [options.model] The model used by the pipeline.
+   * @param {PreTrainedTokenizer} [options.tokenizer=null] The tokenizer used by the pipeline (if any).
+   * @param {Processor} [options.processor=null] The processor used by the pipeline (if any).
+   */
+  constructor({
+    task,
+    model,
+    tokenizer,
+    processor,
+  }: {
+    task?: string;
+    model?: PreTrainedModel;
+    tokenizer?: PreTrainedTokenizer;
+    processor?: Processor;
+  });
+  task: string;
+  model: PreTrainedModel;
+  tokenizer: PreTrainedTokenizer;
+  processor: Processor;
+  dispose(): Promise<void>;
 }
-declare const TextClassificationPipeline_base: new (options: TextPipelineConstructorArgs) => TextClassificationPipelineType;
+declare const TextClassificationPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => TextClassificationPipelineType;
 /**
  * @typedef {Object} ModelTokenizerConstructorArgs
  * @property {string} task The task of the pipeline. Useful for specifying subtasks.
@@ -158,9 +176,14 @@ declare const TextClassificationPipeline_base: new (options: TextPipelineConstru
  * ```
  */
 export class TextClassificationPipeline extends TextClassificationPipeline_base {
-    _call(texts: string | string[], options?: TextClassificationPipelineOptions): Promise<TextClassificationOutput | TextClassificationOutput[]>;
+  _call(
+    texts: string | string[],
+    options?: TextClassificationPipelineOptions,
+  ): Promise<TextClassificationOutput | TextClassificationOutput[]>;
 }
-declare const TokenClassificationPipeline_base: new (options: TextPipelineConstructorArgs) => TokenClassificationPipelineType;
+declare const TokenClassificationPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => TokenClassificationPipelineType;
 /**
  * @typedef {Object} TokenClassificationSingle
  * @property {string} word The token/word classified. This is obtained by decoding the selected tokens.
@@ -211,9 +234,14 @@ declare const TokenClassificationPipeline_base: new (options: TextPipelineConstr
  * ```
  */
 export class TokenClassificationPipeline extends TokenClassificationPipeline_base {
-    _call(texts: string | string[], options?: TokenClassificationPipelineOptions): Promise<TokenClassificationOutput | TokenClassificationOutput[]>;
+  _call(
+    texts: string | string[],
+    options?: TokenClassificationPipelineOptions,
+  ): Promise<TokenClassificationOutput | TokenClassificationOutput[]>;
 }
-declare const QuestionAnsweringPipeline_base: new (options: TextPipelineConstructorArgs) => QuestionAnsweringPipelineType;
+declare const QuestionAnsweringPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => QuestionAnsweringPipelineType;
 /**
  * @typedef {Object} QuestionAnsweringOutput
  * @property {number} score The probability associated to the answer.
@@ -248,9 +276,15 @@ declare const QuestionAnsweringPipeline_base: new (options: TextPipelineConstruc
  * ```
  */
 export class QuestionAnsweringPipeline extends QuestionAnsweringPipeline_base {
-    _call(question: string | string[], context: string | string[], options?: QuestionAnsweringPipelineOptions): Promise<QuestionAnsweringOutput | QuestionAnsweringOutput[]>;
+  _call(
+    question: string | string[],
+    context: string | string[],
+    options?: QuestionAnsweringPipelineOptions,
+  ): Promise<QuestionAnsweringOutput | QuestionAnsweringOutput[]>;
 }
-declare const FillMaskPipeline_base: new (options: TextPipelineConstructorArgs) => FillMaskPipelineType;
+declare const FillMaskPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => FillMaskPipelineType;
 /**
  * @typedef {Object} FillMaskSingle
  * @property {string} sequence The corresponding input with the mask token prediction.
@@ -296,9 +330,14 @@ declare const FillMaskPipeline_base: new (options: TextPipelineConstructorArgs) 
  * ```
  */
 export class FillMaskPipeline extends FillMaskPipeline_base {
-    _call(texts: string | string[], options?: FillMaskPipelineOptions): Promise<FillMaskOutput | FillMaskOutput[]>;
+  _call(
+    texts: string | string[],
+    options?: FillMaskPipelineOptions,
+  ): Promise<FillMaskOutput | FillMaskOutput[]>;
 }
-declare const Text2TextGenerationPipeline_base: new (options: TextPipelineConstructorArgs) => Text2TextGenerationPipelineType;
+declare const Text2TextGenerationPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => Text2TextGenerationPipelineType;
 /**
  * @typedef {Object} Text2TextGenerationSingle
  * @property {string} generated_text The generated text.
@@ -324,11 +363,16 @@ declare const Text2TextGenerationPipeline_base: new (options: TextPipelineConstr
  * ```
  */
 export class Text2TextGenerationPipeline extends Text2TextGenerationPipeline_base {
-    /** @type {'generated_text'} */
-    _key: 'generated_text';
-    _call(texts: string | string[], options?: import('./utils/generation.js').GenerationConfigType): Promise<Text2TextGenerationOutput | Text2TextGenerationOutput[]>;
+  /** @type {'generated_text'} */
+  _key: "generated_text";
+  _call(
+    texts: string | string[],
+    options?: import("./utils/generation.js").GenerationConfigType,
+  ): Promise<Text2TextGenerationOutput | Text2TextGenerationOutput[]>;
 }
-declare const SummarizationPipeline_base: new (options: TextPipelineConstructorArgs) => SummarizationPipelineType;
+declare const SummarizationPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => SummarizationPipelineType;
 /**
  * @typedef {Object} SummarizationSingle
  * @property {string} summary_text The summary text.
@@ -362,10 +406,12 @@ declare const SummarizationPipeline_base: new (options: TextPipelineConstructorA
  * ```
  */
 export class SummarizationPipeline extends SummarizationPipeline_base {
-    /** @type {'summary_text'} */
-    _key: 'summary_text';
+  /** @type {'summary_text'} */
+  _key: "summary_text";
 }
-declare const TranslationPipeline_base: new (options: TextPipelineConstructorArgs) => TranslationPipelineType;
+declare const TranslationPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => TranslationPipelineType;
 /**
  * @typedef {Object} TranslationSingle
  * @property {string} translation_text The translated text.
@@ -424,10 +470,12 @@ declare const TranslationPipeline_base: new (options: TextPipelineConstructorArg
  * ```
  */
 export class TranslationPipeline extends TranslationPipeline_base {
-    /** @type {'translation_text'} */
-    _key: 'translation_text';
+  /** @type {'translation_text'} */
+  _key: "translation_text";
 }
-declare const TextGenerationPipeline_base: new (options: TextPipelineConstructorArgs) => TextGenerationPipelineType;
+declare const TextGenerationPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => TextGenerationPipelineType;
 /**
  * @typedef {Object} TextGenerationSingle
  * @property {string} generated_text The generated text.
@@ -495,9 +543,14 @@ declare const TextGenerationPipeline_base: new (options: TextPipelineConstructor
  * ```
  */
 export class TextGenerationPipeline extends TextGenerationPipeline_base {
-    _call(texts: string | string[], options?: TextGenerationConfig): Promise<TextGenerationOutput | TextGenerationOutput[]>;
+  _call(
+    texts: string | string[],
+    options?: TextGenerationConfig,
+  ): Promise<TextGenerationOutput | TextGenerationOutput[]>;
 }
-declare const ZeroShotClassificationPipeline_base: new (options: TextPipelineConstructorArgs) => ZeroShotClassificationPipelineType;
+declare const ZeroShotClassificationPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => ZeroShotClassificationPipelineType;
 /**
  * @typedef {Object} ZeroShotClassificationOutput
  * @property {string} sequence The sequence for which this is the output.
@@ -554,14 +607,20 @@ declare const ZeroShotClassificationPipeline_base: new (options: TextPipelineCon
  * ```
  */
 export class ZeroShotClassificationPipeline extends ZeroShotClassificationPipeline_base {
-    label2id: {
-        [k: string]: any;
-    };
-    entailment_id: any;
-    contradiction_id: any;
-    _call(texts: string | string[], candidate_labels: string | string[], options?: ZeroShotClassificationPipelineOptions): Promise<ZeroShotClassificationOutput | ZeroShotClassificationOutput[]>;
+  label2id: {
+    [k: string]: any;
+  };
+  entailment_id: any;
+  contradiction_id: any;
+  _call(
+    texts: string | string[],
+    candidate_labels: string | string[],
+    options?: ZeroShotClassificationPipelineOptions,
+  ): Promise<ZeroShotClassificationOutput | ZeroShotClassificationOutput[]>;
 }
-declare const FeatureExtractionPipeline_base: new (options: TextPipelineConstructorArgs) => FeatureExtractionPipelineType;
+declare const FeatureExtractionPipeline_base: new (
+  options: TextPipelineConstructorArgs,
+) => FeatureExtractionPipelineType;
 /**
  * @typedef {Object} FeatureExtractionPipelineOptions Parameters specific to feature extraction pipelines.
  * @property {'none'|'mean'|'cls'} [pooling="none"] The pooling method to use.
@@ -612,9 +671,14 @@ declare const FeatureExtractionPipeline_base: new (options: TextPipelineConstruc
  * ```
  */
 export class FeatureExtractionPipeline extends FeatureExtractionPipeline_base {
-    _call(texts: string | string[], options?: FeatureExtractionPipelineOptions): Promise<Tensor>;
+  _call(
+    texts: string | string[],
+    options?: FeatureExtractionPipelineOptions,
+  ): Promise<Tensor>;
 }
-declare const AudioClassificationPipeline_base: new (options: AudioPipelineConstructorArgs) => AudioClassificationPipelineType;
+declare const AudioClassificationPipeline_base: new (
+  options: AudioPipelineConstructorArgs,
+) => AudioClassificationPipelineType;
 /**
  * @typedef {Object} AudioClassificationSingle
  * @property {string} label The label predicted.
@@ -666,9 +730,14 @@ declare const AudioClassificationPipeline_base: new (options: AudioPipelineConst
  * ```
  */
 export class AudioClassificationPipeline extends AudioClassificationPipeline_base {
-    _call(audio: AudioPipelineInputs, options?: AudioClassificationPipelineOptions): Promise<AudioClassificationOutput | AudioClassificationOutput[]>;
+  _call(
+    audio: AudioPipelineInputs,
+    options?: AudioClassificationPipelineOptions,
+  ): Promise<AudioClassificationOutput | AudioClassificationOutput[]>;
 }
-declare const ZeroShotAudioClassificationPipeline_base: new (options: TextAudioPipelineConstructorArgs) => ZeroShotAudioClassificationPipelineType;
+declare const ZeroShotAudioClassificationPipeline_base: new (
+  options: TextAudioPipelineConstructorArgs,
+) => ZeroShotAudioClassificationPipelineType;
 /**
  * @typedef {Object} ZeroShotAudioClassificationOutput
  * @property {string} label The label identified by the model. It is one of the suggested `candidate_label`.
@@ -708,9 +777,17 @@ declare const ZeroShotAudioClassificationPipeline_base: new (options: TextAudioP
  * ```
  */
 export class ZeroShotAudioClassificationPipeline extends ZeroShotAudioClassificationPipeline_base {
-    _call(audio: AudioPipelineInputs, candidate_labels: string[], options?: ZeroShotAudioClassificationPipelineOptions): Promise<ZeroShotAudioClassificationOutput[] | ZeroShotAudioClassificationOutput[][]>;
+  _call(
+    audio: AudioPipelineInputs,
+    candidate_labels: string[],
+    options?: ZeroShotAudioClassificationPipelineOptions,
+  ): Promise<
+    ZeroShotAudioClassificationOutput[] | ZeroShotAudioClassificationOutput[][]
+  >;
 }
-declare const AutomaticSpeechRecognitionPipeline_base: new (options: TextAudioPipelineConstructorArgs) => AutomaticSpeechRecognitionPipelineType;
+declare const AutomaticSpeechRecognitionPipeline_base: new (
+  options: TextAudioPipelineConstructorArgs,
+) => AutomaticSpeechRecognitionPipelineType;
 /**
  * @typedef {{stride: number[], input_features: Tensor, is_last: boolean, tokens?: number[], token_timestamps?: number[]}} ChunkCallbackItem
  * @callback ChunkCallback
@@ -820,19 +897,26 @@ declare const AutomaticSpeechRecognitionPipeline_base: new (options: TextAudioPi
  * ```
  */
 export class AutomaticSpeechRecognitionPipeline extends AutomaticSpeechRecognitionPipeline_base {
-    _call(audio: AudioPipelineInputs, options?: AutomaticSpeechRecognitionConfig): Promise<AutomaticSpeechRecognitionOutput | AutomaticSpeechRecognitionOutput[]>;
-    /**
-     * @type {AutomaticSpeechRecognitionPipelineCallback}
-     * @private
-     */
-    private _call_wav2vec2;
-    /**
-     * @type {AutomaticSpeechRecognitionPipelineCallback}
-     * @private
-     */
-    private _call_whisper;
+  _call(
+    audio: AudioPipelineInputs,
+    options?: AutomaticSpeechRecognitionConfig,
+  ): Promise<
+    AutomaticSpeechRecognitionOutput | AutomaticSpeechRecognitionOutput[]
+  >;
+  /**
+   * @type {AutomaticSpeechRecognitionPipelineCallback}
+   * @private
+   */
+  private _call_wav2vec2;
+  /**
+   * @type {AutomaticSpeechRecognitionPipelineCallback}
+   * @private
+   */
+  private _call_whisper;
 }
-declare const ImageToTextPipeline_base: new (options: TextImagePipelineConstructorArgs) => ImageToTextPipelineType;
+declare const ImageToTextPipeline_base: new (
+  options: TextImagePipelineConstructorArgs,
+) => ImageToTextPipelineType;
 /**
  * @typedef {Object} ImageToTextSingle
  * @property {string} generated_text The generated text.
@@ -865,9 +949,14 @@ declare const ImageToTextPipeline_base: new (options: TextImagePipelineConstruct
  * ```
  */
 export class ImageToTextPipeline extends ImageToTextPipeline_base {
-    _call(texts: ImagePipelineInputs, options?: import('./utils/generation.js').GenerationConfigType): Promise<ImageToTextOutput | ImageToTextOutput[]>;
+  _call(
+    texts: ImagePipelineInputs,
+    options?: import("./utils/generation.js").GenerationConfigType,
+  ): Promise<ImageToTextOutput | ImageToTextOutput[]>;
 }
-declare const ImageClassificationPipeline_base: new (options: ImagePipelineConstructorArgs) => ImageClassificationPipelineType;
+declare const ImageClassificationPipeline_base: new (
+  options: ImagePipelineConstructorArgs,
+) => ImageClassificationPipelineType;
 /**
  * @typedef {Object} ImageClassificationSingle
  * @property {string} label The label identified by the model.
@@ -925,9 +1014,14 @@ declare const ImageClassificationPipeline_base: new (options: ImagePipelineConst
  * ```
  */
 export class ImageClassificationPipeline extends ImageClassificationPipeline_base {
-    _call(images: ImagePipelineInputs, options?: ImageClassificationPipelineOptions): Promise<ImageClassificationOutput | ImageClassificationOutput[]>;
+  _call(
+    images: ImagePipelineInputs,
+    options?: ImageClassificationPipelineOptions,
+  ): Promise<ImageClassificationOutput | ImageClassificationOutput[]>;
 }
-declare const ImageSegmentationPipeline_base: new (options: ImagePipelineConstructorArgs) => ImageSegmentationPipelineType;
+declare const ImageSegmentationPipeline_base: new (
+  options: ImagePipelineConstructorArgs,
+) => ImageSegmentationPipelineType;
 /**
  * @typedef {Object} ImageSegmentationPipelineOutput
  * @property {string} label The label of the segment.
@@ -966,14 +1060,19 @@ declare const ImageSegmentationPipeline_base: new (options: ImagePipelineConstru
  * ```
  */
 export class ImageSegmentationPipeline extends ImageSegmentationPipeline_base {
-    subtasks_mapping: {
-        panoptic: string;
-        instance: string;
-        semantic: string;
-    };
-    _call(images: ImagePipelineInputs, options?: ImageSegmentationPipelineOptions): Promise<ImageSegmentationPipelineOutput[]>;
+  subtasks_mapping: {
+    panoptic: string;
+    instance: string;
+    semantic: string;
+  };
+  _call(
+    images: ImagePipelineInputs,
+    options?: ImageSegmentationPipelineOptions,
+  ): Promise<ImageSegmentationPipelineOutput[]>;
 }
-declare const ZeroShotImageClassificationPipeline_base: new (options: TextImagePipelineConstructorArgs) => ZeroShotImageClassificationPipelineType;
+declare const ZeroShotImageClassificationPipeline_base: new (
+  options: TextImagePipelineConstructorArgs,
+) => ZeroShotImageClassificationPipelineType;
 /**
  * @typedef {Object} ZeroShotImageClassificationOutput
  * @property {string} label The label identified by the model. It is one of the suggested `candidate_label`.
@@ -1009,9 +1108,17 @@ declare const ZeroShotImageClassificationPipeline_base: new (options: TextImageP
  * ```
  */
 export class ZeroShotImageClassificationPipeline extends ZeroShotImageClassificationPipeline_base {
-    _call(images: ImagePipelineInputs, candidate_labels: string[], options?: ZeroShotImageClassificationPipelineOptions): Promise<ZeroShotImageClassificationOutput[] | ZeroShotImageClassificationOutput[][]>;
+  _call(
+    images: ImagePipelineInputs,
+    candidate_labels: string[],
+    options?: ZeroShotImageClassificationPipelineOptions,
+  ): Promise<
+    ZeroShotImageClassificationOutput[] | ZeroShotImageClassificationOutput[][]
+  >;
 }
-declare const ObjectDetectionPipeline_base: new (options: ImagePipelineConstructorArgs) => ObjectDetectionPipelineType;
+declare const ObjectDetectionPipeline_base: new (
+  options: ImagePipelineConstructorArgs,
+) => ObjectDetectionPipelineType;
 /**
  * @typedef {Object} ObjectDetectionPipelineSingle
  * @property {string} label The class label identified by the model.
@@ -1053,9 +1160,14 @@ declare const ObjectDetectionPipeline_base: new (options: ImagePipelineConstruct
  * ```
  */
 export class ObjectDetectionPipeline extends ObjectDetectionPipeline_base {
-    _call(images: ImagePipelineInputs, options?: ObjectDetectionPipelineOptions): Promise<ObjectDetectionPipelineOutput | ObjectDetectionPipelineOutput[]>;
+  _call(
+    images: ImagePipelineInputs,
+    options?: ObjectDetectionPipelineOptions,
+  ): Promise<ObjectDetectionPipelineOutput | ObjectDetectionPipelineOutput[]>;
 }
-declare const ZeroShotObjectDetectionPipeline_base: new (options: TextImagePipelineConstructorArgs) => ZeroShotObjectDetectionPipelineType;
+declare const ZeroShotObjectDetectionPipeline_base: new (
+  options: TextImagePipelineConstructorArgs,
+) => ZeroShotObjectDetectionPipelineType;
 /**
  * @typedef {Object} ZeroShotObjectDetectionOutput
  * @property {string} label Text query corresponding to the found object.
@@ -1142,9 +1254,17 @@ declare const ZeroShotObjectDetectionPipeline_base: new (options: TextImagePipel
  * ```
  */
 export class ZeroShotObjectDetectionPipeline extends ZeroShotObjectDetectionPipeline_base {
-    _call(images: ImagePipelineInputs, candidate_labels: string[], options?: ZeroShotObjectDetectionPipelineOptions): Promise<ZeroShotObjectDetectionOutput[] | ZeroShotObjectDetectionOutput[][]>;
+  _call(
+    images: ImagePipelineInputs,
+    candidate_labels: string[],
+    options?: ZeroShotObjectDetectionPipelineOptions,
+  ): Promise<
+    ZeroShotObjectDetectionOutput[] | ZeroShotObjectDetectionOutput[][]
+  >;
 }
-declare const DocumentQuestionAnsweringPipeline_base: new (options: TextImagePipelineConstructorArgs) => DocumentQuestionAnsweringPipelineType;
+declare const DocumentQuestionAnsweringPipeline_base: new (
+  options: TextImagePipelineConstructorArgs,
+) => DocumentQuestionAnsweringPipelineType;
 /**
  * @typedef {Object} DocumentQuestionAnsweringSingle
  * @property {string} answer The generated text.
@@ -1173,9 +1293,17 @@ declare const DocumentQuestionAnsweringPipeline_base: new (options: TextImagePip
  * ```
  */
 export class DocumentQuestionAnsweringPipeline extends DocumentQuestionAnsweringPipeline_base {
-    _call(image: ImageInput, question: string, options?: import('./utils/generation.js').GenerationConfigType): Promise<DocumentQuestionAnsweringOutput | DocumentQuestionAnsweringOutput[]>;
+  _call(
+    image: ImageInput,
+    question: string,
+    options?: import("./utils/generation.js").GenerationConfigType,
+  ): Promise<
+    DocumentQuestionAnsweringOutput | DocumentQuestionAnsweringOutput[]
+  >;
 }
-declare const TextToAudioPipeline_base: new (options: TextToAudioPipelineConstructorArgs) => TextToAudioPipelineType;
+declare const TextToAudioPipeline_base: new (
+  options: TextToAudioPipelineConstructorArgs,
+) => TextToAudioPipelineType;
 /**
  * @typedef {Object} VocoderOptions
  * @property {PreTrainedModel} [vocoder] The vocoder used by the pipeline (if the model uses one). If not provided, use the default HifiGan vocoder.
@@ -1232,21 +1360,31 @@ declare const TextToAudioPipeline_base: new (options: TextToAudioPipelineConstru
  * ```
  */
 export class TextToAudioPipeline extends TextToAudioPipeline_base {
-    DEFAULT_VOCODER_ID: string;
-    vocoder: PreTrainedModel;
-    _call(texts: string | string[], options: TextToAudioPipelineOptions): Promise<TextToAudioOutput>;
-    _call_text_to_waveform(text_inputs: any): Promise<{
-        audio: any;
-        sampling_rate: any;
-    }>;
-    _call_text_to_spectrogram(text_inputs: any, { speaker_embeddings }: {
-        speaker_embeddings: any;
-    }): Promise<{
-        audio: any;
-        sampling_rate: any;
-    }>;
+  DEFAULT_VOCODER_ID: string;
+  vocoder: PreTrainedModel;
+  _call(
+    texts: string | string[],
+    options: TextToAudioPipelineOptions,
+  ): Promise<TextToAudioOutput>;
+  _call_text_to_waveform(text_inputs: any): Promise<{
+    audio: any;
+    sampling_rate: any;
+  }>;
+  _call_text_to_spectrogram(
+    text_inputs: any,
+    {
+      speaker_embeddings,
+    }: {
+      speaker_embeddings: any;
+    },
+  ): Promise<{
+    audio: any;
+    sampling_rate: any;
+  }>;
 }
-declare const ImageToImagePipeline_base: new (options: ImagePipelineConstructorArgs) => ImageToImagePipelineType;
+declare const ImageToImagePipeline_base: new (
+  options: ImagePipelineConstructorArgs,
+) => ImageToImagePipelineType;
 /**
  * @callback ImageToImagePipelineCallback Transform the image(s) passed as inputs.
  * @param {ImagePipelineInputs} images The images to transform.
@@ -1271,9 +1409,11 @@ declare const ImageToImagePipeline_base: new (options: ImagePipelineConstructorA
  * ```
  */
 export class ImageToImagePipeline extends ImageToImagePipeline_base {
-    _call(images: ImagePipelineInputs): Promise<RawImage | RawImage[]>;
+  _call(images: ImagePipelineInputs): Promise<RawImage | RawImage[]>;
 }
-declare const DepthEstimationPipeline_base: new (options: ImagePipelineConstructorArgs) => DepthEstimationPipelineType;
+declare const DepthEstimationPipeline_base: new (
+  options: ImagePipelineConstructorArgs,
+) => DepthEstimationPipelineType;
 /**
  * @typedef {Object} DepthEstimationPipelineOutput
  * @property {Tensor} predicted_depth The raw depth map predicted by the model.
@@ -1310,29 +1450,31 @@ declare const DepthEstimationPipeline_base: new (options: ImagePipelineConstruct
  * ```
  */
 export class DepthEstimationPipeline extends DepthEstimationPipeline_base {
-    _call(images: ImagePipelineInputs): Promise<DepthEstimationPipelineOutput | DepthEstimationPipelineOutput[]>;
+  _call(
+    images: ImagePipelineInputs,
+  ): Promise<DepthEstimationPipelineOutput | DepthEstimationPipelineOutput[]>;
 }
 export type ImageInput = string | RawImage | URL;
 export type ImagePipelineInputs = ImageInput | ImageInput[];
 export type AudioInput = string | URL | Float32Array | Float64Array;
 export type AudioPipelineInputs = AudioInput | AudioInput[];
 export type BoundingBox = {
-    /**
-     * The minimum x coordinate of the bounding box.
-     */
-    xmin: number;
-    /**
-     * The minimum y coordinate of the bounding box.
-     */
-    ymin: number;
-    /**
-     * The maximum x coordinate of the bounding box.
-     */
-    xmax: number;
-    /**
-     * The maximum y coordinate of the bounding box.
-     */
-    ymax: number;
+  /**
+   * The minimum x coordinate of the bounding box.
+   */
+  xmin: number;
+  /**
+   * The minimum y coordinate of the bounding box.
+   */
+  ymin: number;
+  /**
+   * The maximum x coordinate of the bounding box.
+   */
+  xmax: number;
+  /**
+   * The maximum y coordinate of the bounding box.
+   */
+  ymax: number;
 };
 export type TaskType = keyof typeof SUPPORTED_TASKS;
 export type AliasType = keyof typeof TASK_ALIASES;
@@ -1344,39 +1486,39 @@ export type PipelineType = TaskType | AliasType;
  * A mapping of pipeline names to their corresponding pipeline classes.
  */
 export type SupportedTasks = {
-    "text-classification": TextClassificationPipeline;
-    "token-classification": TokenClassificationPipeline;
-    "question-answering": QuestionAnsweringPipeline;
-    "fill-mask": FillMaskPipeline;
-    summarization: SummarizationPipeline;
-    translation: TranslationPipeline;
-    "text2text-generation": Text2TextGenerationPipeline;
-    "text-generation": TextGenerationPipeline;
-    "zero-shot-classification": ZeroShotClassificationPipeline;
-    "audio-classification": AudioClassificationPipeline;
-    "zero-shot-audio-classification": ZeroShotAudioClassificationPipeline;
-    "automatic-speech-recognition": AutomaticSpeechRecognitionPipeline;
-    "text-to-audio": TextToAudioPipeline;
-    "image-to-text": ImageToTextPipeline;
-    "image-classification": ImageClassificationPipeline;
-    "image-segmentation": ImageSegmentationPipeline;
-    "zero-shot-image-classification": ZeroShotImageClassificationPipeline;
-    "object-detection": ObjectDetectionPipeline;
-    "zero-shot-object-detection": ZeroShotObjectDetectionPipeline;
-    "document-question-answering": DocumentQuestionAnsweringPipeline;
-    "image-to-image": ImageToImagePipeline;
-    "depth-estimation": DepthEstimationPipeline;
-    "feature-extraction": FeatureExtractionPipeline;
+  "text-classification": TextClassificationPipeline;
+  "token-classification": TokenClassificationPipeline;
+  "question-answering": QuestionAnsweringPipeline;
+  "fill-mask": FillMaskPipeline;
+  summarization: SummarizationPipeline;
+  translation: TranslationPipeline;
+  "text2text-generation": Text2TextGenerationPipeline;
+  "text-generation": TextGenerationPipeline;
+  "zero-shot-classification": ZeroShotClassificationPipeline;
+  "audio-classification": AudioClassificationPipeline;
+  "zero-shot-audio-classification": ZeroShotAudioClassificationPipeline;
+  "automatic-speech-recognition": AutomaticSpeechRecognitionPipeline;
+  "text-to-audio": TextToAudioPipeline;
+  "image-to-text": ImageToTextPipeline;
+  "image-classification": ImageClassificationPipeline;
+  "image-segmentation": ImageSegmentationPipeline;
+  "zero-shot-image-classification": ZeroShotImageClassificationPipeline;
+  "object-detection": ObjectDetectionPipeline;
+  "zero-shot-object-detection": ZeroShotObjectDetectionPipeline;
+  "document-question-answering": DocumentQuestionAnsweringPipeline;
+  "image-to-image": ImageToImagePipeline;
+  "depth-estimation": DepthEstimationPipeline;
+  "feature-extraction": FeatureExtractionPipeline;
 };
 /**
  * A mapping from pipeline aliases to their corresponding pipeline classes.
  */
 export type AliasTasks = {
-    "sentiment-analysis": TextClassificationPipeline;
-    ner: TokenClassificationPipeline;
-    asr: AutomaticSpeechRecognitionPipeline;
-    "text-to-speech": TextToAudioPipeline;
-    embeddings: FeatureExtractionPipeline;
+  "sentiment-analysis": TextClassificationPipeline;
+  ner: TokenClassificationPipeline;
+  asr: AutomaticSpeechRecognitionPipeline;
+  "text-to-speech": TextToAudioPipeline;
+  embeddings: FeatureExtractionPipeline;
 };
 /**
  * A mapping from all pipeline names and aliases to their corresponding pipeline classes.
@@ -1387,42 +1529,42 @@ export type AllTasks = SupportedTasks & AliasTasks;
  */
 export type DisposeType = () => Promise<void>;
 export type Disposable = {
-    /**
-     * A promise that resolves when the pipeline has been disposed.
-     */
-    dispose: DisposeType;
+  /**
+   * A promise that resolves when the pipeline has been disposed.
+   */
+  dispose: DisposeType;
 };
 export type ModelTokenizerConstructorArgs = {
-    /**
-     * The task of the pipeline. Useful for specifying subtasks.
-     */
-    task: string;
-    /**
-     * The model used by the pipeline.
-     */
-    model: PreTrainedModel;
-    /**
-     * The tokenizer used by the pipeline.
-     */
-    tokenizer: PreTrainedTokenizer;
+  /**
+   * The task of the pipeline. Useful for specifying subtasks.
+   */
+  task: string;
+  /**
+   * The model used by the pipeline.
+   */
+  model: PreTrainedModel;
+  /**
+   * The tokenizer used by the pipeline.
+   */
+  tokenizer: PreTrainedTokenizer;
 };
 /**
  * An object used to instantiate a text-based pipeline.
  */
 export type TextPipelineConstructorArgs = ModelTokenizerConstructorArgs;
 export type ModelProcessorConstructorArgs = {
-    /**
-     * The task of the pipeline. Useful for specifying subtasks.
-     */
-    task: string;
-    /**
-     * The model used by the pipeline.
-     */
-    model: PreTrainedModel;
-    /**
-     * The processor used by the pipeline.
-     */
-    processor: Processor;
+  /**
+   * The task of the pipeline. Useful for specifying subtasks.
+   */
+  task: string;
+  /**
+   * The model used by the pipeline.
+   */
+  model: PreTrainedModel;
+  /**
+   * The processor used by the pipeline.
+   */
+  processor: Processor;
 };
 /**
  * An object used to instantiate an audio-based pipeline.
@@ -1433,898 +1575,1042 @@ export type AudioPipelineConstructorArgs = ModelProcessorConstructorArgs;
  */
 export type ImagePipelineConstructorArgs = ModelProcessorConstructorArgs;
 export type ModelTokenizerProcessorConstructorArgs = {
-    /**
-     * The task of the pipeline. Useful for specifying subtasks.
-     */
-    task: string;
-    /**
-     * The model used by the pipeline.
-     */
-    model: PreTrainedModel;
-    /**
-     * The tokenizer used by the pipeline.
-     */
-    tokenizer: PreTrainedTokenizer;
-    /**
-     * The processor used by the pipeline.
-     */
-    processor: Processor;
+  /**
+   * The task of the pipeline. Useful for specifying subtasks.
+   */
+  task: string;
+  /**
+   * The model used by the pipeline.
+   */
+  model: PreTrainedModel;
+  /**
+   * The tokenizer used by the pipeline.
+   */
+  tokenizer: PreTrainedTokenizer;
+  /**
+   * The processor used by the pipeline.
+   */
+  processor: Processor;
 };
 /**
  * An object used to instantiate a text- and audio-based pipeline.
  */
-export type TextAudioPipelineConstructorArgs = ModelTokenizerProcessorConstructorArgs;
+export type TextAudioPipelineConstructorArgs =
+  ModelTokenizerProcessorConstructorArgs;
 /**
  * An object used to instantiate a text- and image-based pipeline.
  */
-export type TextImagePipelineConstructorArgs = ModelTokenizerProcessorConstructorArgs;
+export type TextImagePipelineConstructorArgs =
+  ModelTokenizerProcessorConstructorArgs;
 export type TextClassificationSingle = {
-    /**
-     * The label predicted.
-     */
-    label: string;
-    /**
-     * The corresponding probability.
-     */
-    score: number;
+  /**
+   * The label predicted.
+   */
+  label: string;
+  /**
+   * The corresponding probability.
+   */
+  score: number;
 };
 export type TextClassificationOutput = TextClassificationSingle[];
 /**
  * Parameters specific to text classification pipelines.
  */
 export type TextClassificationPipelineOptions = {
-    /**
-     * The number of top predictions to be returned.
-     */
-    topk?: number;
+  /**
+   * The number of top predictions to be returned.
+   */
+  topk?: number;
 };
 /**
  * Classify the text(s) given as inputs.
  */
-export type TextClassificationPipelineCallback = (texts: string | string[], options?: TextClassificationPipelineOptions) => Promise<TextClassificationOutput | TextClassificationOutput[]>;
-export type TextClassificationPipelineType = TextPipelineConstructorArgs & TextClassificationPipelineCallback & Disposable;
+export type TextClassificationPipelineCallback = (
+  texts: string | string[],
+  options?: TextClassificationPipelineOptions,
+) => Promise<TextClassificationOutput | TextClassificationOutput[]>;
+export type TextClassificationPipelineType = TextPipelineConstructorArgs &
+  TextClassificationPipelineCallback &
+  Disposable;
 export type TokenClassificationSingle = {
-    /**
-     * The token/word classified. This is obtained by decoding the selected tokens.
-     */
-    word: string;
-    /**
-     * The corresponding probability for `entity`.
-     */
-    score: number;
-    /**
-     * The entity predicted for that token/word.
-     */
-    entity: string;
-    /**
-     * The index of the corresponding token in the sentence.
-     */
-    index: number;
-    /**
-     * The index of the start of the corresponding entity in the sentence.
-     */
-    start?: number;
-    /**
-     * The index of the end of the corresponding entity in the sentence.
-     */
-    end?: number;
+  /**
+   * The token/word classified. This is obtained by decoding the selected tokens.
+   */
+  word: string;
+  /**
+   * The corresponding probability for `entity`.
+   */
+  score: number;
+  /**
+   * The entity predicted for that token/word.
+   */
+  entity: string;
+  /**
+   * The index of the corresponding token in the sentence.
+   */
+  index: number;
+  /**
+   * The index of the start of the corresponding entity in the sentence.
+   */
+  start?: number;
+  /**
+   * The index of the end of the corresponding entity in the sentence.
+   */
+  end?: number;
 };
 export type TokenClassificationOutput = TokenClassificationSingle[];
 /**
  * Parameters specific to token classification pipelines.
  */
 export type TokenClassificationPipelineOptions = {
-    /**
-     * A list of labels to ignore.
-     */
-    ignore_labels?: string[];
+  /**
+   * A list of labels to ignore.
+   */
+  ignore_labels?: string[];
 };
 /**
  * Classify each token of the text(s) given as inputs.
  */
-export type TokenClassificationPipelineCallback = (texts: string | string[], options?: TokenClassificationPipelineOptions) => Promise<TokenClassificationOutput | TokenClassificationOutput[]>;
-export type TokenClassificationPipelineType = TextPipelineConstructorArgs & TokenClassificationPipelineCallback & Disposable;
+export type TokenClassificationPipelineCallback = (
+  texts: string | string[],
+  options?: TokenClassificationPipelineOptions,
+) => Promise<TokenClassificationOutput | TokenClassificationOutput[]>;
+export type TokenClassificationPipelineType = TextPipelineConstructorArgs &
+  TokenClassificationPipelineCallback &
+  Disposable;
 export type QuestionAnsweringOutput = {
-    /**
-     * The probability associated to the answer.
-     */
-    score: number;
-    /**
-     * The character start index of the answer (in the tokenized version of the input).
-     */
-    start?: number;
-    /**
-     * The character end index of the answer (in the tokenized version of the input).
-     */
-    end?: number;
-    /**
-     * The answer to the question.
-     */
-    answer: string;
+  /**
+   * The probability associated to the answer.
+   */
+  score: number;
+  /**
+   * The character start index of the answer (in the tokenized version of the input).
+   */
+  start?: number;
+  /**
+   * The character end index of the answer (in the tokenized version of the input).
+   */
+  end?: number;
+  /**
+   * The answer to the question.
+   */
+  answer: string;
 };
 /**
  * Parameters specific to question answering pipelines.
  */
 export type QuestionAnsweringPipelineOptions = {
-    /**
-     * The number of top answer predictions to be returned.
-     */
-    topk?: number;
+  /**
+   * The number of top answer predictions to be returned.
+   */
+  topk?: number;
 };
 /**
  * Answer the question(s) given as inputs by using the context(s).
  */
-export type QuestionAnsweringPipelineCallback = (question: string | string[], context: string | string[], options?: QuestionAnsweringPipelineOptions) => Promise<QuestionAnsweringOutput | QuestionAnsweringOutput[]>;
-export type QuestionAnsweringPipelineType = TextPipelineConstructorArgs & QuestionAnsweringPipelineCallback & Disposable;
+export type QuestionAnsweringPipelineCallback = (
+  question: string | string[],
+  context: string | string[],
+  options?: QuestionAnsweringPipelineOptions,
+) => Promise<QuestionAnsweringOutput | QuestionAnsweringOutput[]>;
+export type QuestionAnsweringPipelineType = TextPipelineConstructorArgs &
+  QuestionAnsweringPipelineCallback &
+  Disposable;
 export type FillMaskSingle = {
-    /**
-     * The corresponding input with the mask token prediction.
-     */
-    sequence: string;
-    /**
-     * The corresponding probability.
-     */
-    score: number;
-    /**
-     * The predicted token id (to replace the masked one).
-     */
-    token: number;
-    /**
-     * The predicted token (to replace the masked one).
-     */
-    token_str: string;
+  /**
+   * The corresponding input with the mask token prediction.
+   */
+  sequence: string;
+  /**
+   * The corresponding probability.
+   */
+  score: number;
+  /**
+   * The predicted token id (to replace the masked one).
+   */
+  token: number;
+  /**
+   * The predicted token (to replace the masked one).
+   */
+  token_str: string;
 };
 export type FillMaskOutput = FillMaskSingle[];
 /**
  * Parameters specific to fill mask pipelines.
  */
 export type FillMaskPipelineOptions = {
-    /**
-     * When passed, overrides the number of predictions to return.
-     */
-    topk?: number;
+  /**
+   * When passed, overrides the number of predictions to return.
+   */
+  topk?: number;
 };
 /**
  * Fill the masked token in the text(s) given as inputs.
  */
-export type FillMaskPipelineCallback = (texts: string | string[], options?: FillMaskPipelineOptions) => Promise<FillMaskOutput | FillMaskOutput[]>;
-export type FillMaskPipelineType = TextPipelineConstructorArgs & FillMaskPipelineCallback & Disposable;
+export type FillMaskPipelineCallback = (
+  texts: string | string[],
+  options?: FillMaskPipelineOptions,
+) => Promise<FillMaskOutput | FillMaskOutput[]>;
+export type FillMaskPipelineType = TextPipelineConstructorArgs &
+  FillMaskPipelineCallback &
+  Disposable;
 export type Text2TextGenerationSingle = {
-    /**
-     * The generated text.
-     */
-    generated_text: string;
+  /**
+   * The generated text.
+   */
+  generated_text: string;
 };
 export type Text2TextGenerationOutput = Text2TextGenerationSingle[];
 /**
  * Generate the output text(s) using text(s) given as inputs.
  */
-export type Text2TextGenerationPipelineCallback = (texts: string | string[], options?: import('./utils/generation.js').GenerationConfigType) => Promise<Text2TextGenerationOutput | Text2TextGenerationOutput[]>;
-export type Text2TextGenerationPipelineType = TextPipelineConstructorArgs & Text2TextGenerationPipelineCallback & Disposable;
+export type Text2TextGenerationPipelineCallback = (
+  texts: string | string[],
+  options?: import("./utils/generation.js").GenerationConfigType,
+) => Promise<Text2TextGenerationOutput | Text2TextGenerationOutput[]>;
+export type Text2TextGenerationPipelineType = TextPipelineConstructorArgs &
+  Text2TextGenerationPipelineCallback &
+  Disposable;
 export type SummarizationSingle = {
-    /**
-     * The summary text.
-     */
-    summary_text: string;
+  /**
+   * The summary text.
+   */
+  summary_text: string;
 };
 export type SummarizationOutput = SummarizationSingle[];
 /**
  * Summarize the text(s) given as inputs.
  */
-export type SummarizationPipelineCallback = (texts: string | string[], options?: import('./utils/generation.js').GenerationConfigType) => Promise<SummarizationOutput | SummarizationOutput[]>;
-export type SummarizationPipelineType = TextPipelineConstructorArgs & SummarizationPipelineCallback & Disposable;
+export type SummarizationPipelineCallback = (
+  texts: string | string[],
+  options?: import("./utils/generation.js").GenerationConfigType,
+) => Promise<SummarizationOutput | SummarizationOutput[]>;
+export type SummarizationPipelineType = TextPipelineConstructorArgs &
+  SummarizationPipelineCallback &
+  Disposable;
 export type TranslationSingle = {
-    /**
-     * The translated text.
-     */
-    translation_text: string;
+  /**
+   * The translated text.
+   */
+  translation_text: string;
 };
 export type TranslationOutput = TranslationSingle[];
 /**
  * Translate the text(s) given as inputs.
  */
-export type TranslationPipelineCallback = (texts: string | string[], options?: import('./utils/generation.js').GenerationConfigType) => Promise<TranslationOutput | TranslationOutput[]>;
-export type TranslationPipelineType = TextPipelineConstructorArgs & TranslationPipelineCallback & Disposable;
+export type TranslationPipelineCallback = (
+  texts: string | string[],
+  options?: import("./utils/generation.js").GenerationConfigType,
+) => Promise<TranslationOutput | TranslationOutput[]>;
+export type TranslationPipelineType = TextPipelineConstructorArgs &
+  TranslationPipelineCallback &
+  Disposable;
 export type TextGenerationSingle = {
-    /**
-     * The generated text.
-     */
-    generated_text: string;
+  /**
+   * The generated text.
+   */
+  generated_text: string;
 };
 export type TextGenerationOutput = TextGenerationSingle[];
 /**
  * Parameters specific to text-generation pipelines.
  */
 export type TextGenerationSpecificParams = {
-    /**
-     * Whether or not to add special tokens when tokenizing the sequences.
-     */
-    add_special_tokens?: boolean;
+  /**
+   * Whether or not to add special tokens when tokenizing the sequences.
+   */
+  add_special_tokens?: boolean;
 };
-export type TextGenerationConfig = import('./utils/generation.js').GenerationConfigType & TextGenerationSpecificParams;
+export type TextGenerationConfig =
+  import("./utils/generation.js").GenerationConfigType &
+    TextGenerationSpecificParams;
 /**
  * Complete the prompt(s) given as inputs.
  */
-export type TextGenerationPipelineCallback = (texts: string | string[], options?: TextGenerationConfig) => Promise<TextGenerationOutput | TextGenerationOutput[]>;
-export type TextGenerationPipelineType = TextPipelineConstructorArgs & TextGenerationPipelineCallback & Disposable;
+export type TextGenerationPipelineCallback = (
+  texts: string | string[],
+  options?: TextGenerationConfig,
+) => Promise<TextGenerationOutput | TextGenerationOutput[]>;
+export type TextGenerationPipelineType = TextPipelineConstructorArgs &
+  TextGenerationPipelineCallback &
+  Disposable;
 export type ZeroShotClassificationOutput = {
-    /**
-     * The sequence for which this is the output.
-     */
-    sequence: string;
-    /**
-     * The labels sorted by order of likelihood.
-     */
-    labels: string[];
-    /**
-     * The probabilities for each of the labels.
-     */
-    scores: number[];
+  /**
+   * The sequence for which this is the output.
+   */
+  sequence: string;
+  /**
+   * The labels sorted by order of likelihood.
+   */
+  labels: string[];
+  /**
+   * The probabilities for each of the labels.
+   */
+  scores: number[];
 };
 /**
  * Parameters specific to zero-shot classification pipelines.
  */
 export type ZeroShotClassificationPipelineOptions = {
-    /**
-     * The template used to turn each
-     * candidate label into an NLI-style hypothesis. The candidate label will replace the {} placeholder.
-     */
-    hypothesis_template?: string;
-    /**
-     * Whether or not multiple candidate labels can be true.
-     * If `false`, the scores are normalized such that the sum of the label likelihoods for each sequence
-     * is 1. If `true`, the labels are considered independent and probabilities are normalized for each
-     * candidate by doing a softmax of the entailment score vs. the contradiction score.
-     */
-    multi_label?: boolean;
+  /**
+   * The template used to turn each
+   * candidate label into an NLI-style hypothesis. The candidate label will replace the {} placeholder.
+   */
+  hypothesis_template?: string;
+  /**
+   * Whether or not multiple candidate labels can be true.
+   * If `false`, the scores are normalized such that the sum of the label likelihoods for each sequence
+   * is 1. If `true`, the labels are considered independent and probabilities are normalized for each
+   * candidate by doing a softmax of the entailment score vs. the contradiction score.
+   */
+  multi_label?: boolean;
 };
 /**
  * Classify the sequence(s) given as inputs.
  */
-export type ZeroShotClassificationPipelineCallback = (texts: string | string[], candidate_labels: string | string[], options?: ZeroShotClassificationPipelineOptions) => Promise<ZeroShotClassificationOutput | ZeroShotClassificationOutput[]>;
-export type ZeroShotClassificationPipelineType = TextPipelineConstructorArgs & ZeroShotClassificationPipelineCallback & Disposable;
+export type ZeroShotClassificationPipelineCallback = (
+  texts: string | string[],
+  candidate_labels: string | string[],
+  options?: ZeroShotClassificationPipelineOptions,
+) => Promise<ZeroShotClassificationOutput | ZeroShotClassificationOutput[]>;
+export type ZeroShotClassificationPipelineType = TextPipelineConstructorArgs &
+  ZeroShotClassificationPipelineCallback &
+  Disposable;
 /**
  * Parameters specific to feature extraction pipelines.
  */
 export type FeatureExtractionPipelineOptions = {
-    /**
-     * The pooling method to use.
-     */
-    pooling?: 'none' | 'mean' | 'cls';
-    /**
-     * Whether or not to normalize the embeddings in the last dimension.
-     */
-    normalize?: boolean;
+  /**
+   * The pooling method to use.
+   */
+  pooling?: "none" | "mean" | "cls";
+  /**
+   * Whether or not to normalize the embeddings in the last dimension.
+   */
+  normalize?: boolean;
 };
 /**
  * Extract the features of the input(s).
  */
-export type FeatureExtractionPipelineCallback = (texts: string | string[], options?: FeatureExtractionPipelineOptions) => Promise<Tensor>;
-export type FeatureExtractionPipelineType = TextPipelineConstructorArgs & FeatureExtractionPipelineCallback & Disposable;
+export type FeatureExtractionPipelineCallback = (
+  texts: string | string[],
+  options?: FeatureExtractionPipelineOptions,
+) => Promise<Tensor>;
+export type FeatureExtractionPipelineType = TextPipelineConstructorArgs &
+  FeatureExtractionPipelineCallback &
+  Disposable;
 export type AudioClassificationSingle = {
-    /**
-     * The label predicted.
-     */
-    label: string;
-    /**
-     * The corresponding probability.
-     */
-    score: number;
+  /**
+   * The label predicted.
+   */
+  label: string;
+  /**
+   * The corresponding probability.
+   */
+  score: number;
 };
 export type AudioClassificationOutput = AudioClassificationSingle[];
 /**
  * Parameters specific to audio classification pipelines.
  */
 export type AudioClassificationPipelineOptions = {
-    /**
-     * The number of top labels that will be returned by the pipeline.
-     * If the provided number is `null` or higher than the number of labels available in the model configuration,
-     * it will default to the number of labels.
-     */
-    topk?: number;
+  /**
+   * The number of top labels that will be returned by the pipeline.
+   * If the provided number is `null` or higher than the number of labels available in the model configuration,
+   * it will default to the number of labels.
+   */
+  topk?: number;
 };
 /**
  * Classify the sequence(s) given as inputs.
  */
-export type AudioClassificationPipelineCallback = (audio: AudioPipelineInputs, options?: AudioClassificationPipelineOptions) => Promise<AudioClassificationOutput | AudioClassificationOutput[]>;
-export type AudioClassificationPipelineType = AudioPipelineConstructorArgs & AudioClassificationPipelineCallback & Disposable;
+export type AudioClassificationPipelineCallback = (
+  audio: AudioPipelineInputs,
+  options?: AudioClassificationPipelineOptions,
+) => Promise<AudioClassificationOutput | AudioClassificationOutput[]>;
+export type AudioClassificationPipelineType = AudioPipelineConstructorArgs &
+  AudioClassificationPipelineCallback &
+  Disposable;
 export type ZeroShotAudioClassificationOutput = {
-    /**
-     * The label identified by the model. It is one of the suggested `candidate_label`.
-     */
-    label: string;
-    /**
-     * The score attributed by the model for that label (between 0 and 1).
-     */
-    score: number;
+  /**
+   * The label identified by the model. It is one of the suggested `candidate_label`.
+   */
+  label: string;
+  /**
+   * The score attributed by the model for that label (between 0 and 1).
+   */
+  score: number;
 };
 /**
  * Parameters specific to zero-shot audio classification pipelines.
  */
 export type ZeroShotAudioClassificationPipelineOptions = {
-    /**
-     * The sentence used in conjunction with `candidate_labels`
-     * to attempt the audio classification by replacing the placeholder with the candidate_labels.
-     * Then likelihood is estimated by using `logits_per_audio`.
-     */
-    hypothesis_template?: string;
+  /**
+   * The sentence used in conjunction with `candidate_labels`
+   * to attempt the audio classification by replacing the placeholder with the candidate_labels.
+   * Then likelihood is estimated by using `logits_per_audio`.
+   */
+  hypothesis_template?: string;
 };
 /**
  * Classify the sequence(s) given as inputs.
  */
-export type ZeroShotAudioClassificationPipelineCallback = (audio: AudioPipelineInputs, candidate_labels: string[], options?: ZeroShotAudioClassificationPipelineOptions) => Promise<ZeroShotAudioClassificationOutput[] | ZeroShotAudioClassificationOutput[][]>;
-export type ZeroShotAudioClassificationPipelineType = TextAudioPipelineConstructorArgs & ZeroShotAudioClassificationPipelineCallback & Disposable;
+export type ZeroShotAudioClassificationPipelineCallback = (
+  audio: AudioPipelineInputs,
+  candidate_labels: string[],
+  options?: ZeroShotAudioClassificationPipelineOptions,
+) => Promise<
+  ZeroShotAudioClassificationOutput[] | ZeroShotAudioClassificationOutput[][]
+>;
+export type ZeroShotAudioClassificationPipelineType =
+  TextAudioPipelineConstructorArgs &
+    ZeroShotAudioClassificationPipelineCallback &
+    Disposable;
 export type ChunkCallbackItem = {
-    stride: number[];
-    input_features: Tensor;
-    is_last: boolean;
-    tokens?: number[];
-    token_timestamps?: number[];
+  stride: number[];
+  input_features: Tensor;
+  is_last: boolean;
+  tokens?: number[];
+  token_timestamps?: number[];
 };
 export type ChunkCallback = (chunk: ChunkCallbackItem) => any;
 export type Chunk = {
-    /**
-     * The start and end timestamp of the chunk in seconds.
-     */
-    timestamp: [number, number];
-    /**
-     * The recognized text.
-     */
-    text: string;
+  /**
+   * The start and end timestamp of the chunk in seconds.
+   */
+  timestamp: [number, number];
+  /**
+   * The recognized text.
+   */
+  text: string;
 };
 export type AutomaticSpeechRecognitionOutput = {
-    /**
-     * The recognized text.
-     */
-    text: string;
-    /**
-     * When using `return_timestamps`, the `chunks` will become a list
-     * containing all the various text chunks identified by the model.
-     */
-    chunks?: Chunk[];
+  /**
+   * The recognized text.
+   */
+  text: string;
+  /**
+   * When using `return_timestamps`, the `chunks` will become a list
+   * containing all the various text chunks identified by the model.
+   */
+  chunks?: Chunk[];
 };
 /**
  * Parameters specific to automatic-speech-recognition pipelines.
  */
 export type AutomaticSpeechRecognitionSpecificParams = {
-    /**
-     * Whether to return timestamps or not. Default is `false`.
-     */
-    return_timestamps?: boolean | 'word';
-    /**
-     * The length of audio chunks to process in seconds. Default is 0 (no chunking).
-     */
-    chunk_length_s?: number;
-    /**
-     * The length of overlap between consecutive audio chunks in seconds. If not provided, defaults to `chunk_length_s / 6`.
-     */
-    stride_length_s?: number;
-    /**
-     * Callback function to be called with each chunk processed.
-     */
-    chunk_callback?: ChunkCallback;
-    /**
-     * Whether to force outputting full sequences or not. Default is `false`.
-     */
-    force_full_sequences?: boolean;
-    /**
-     * The source language. Default is `null`, meaning it should be auto-detected. Use this to potentially improve performance if the source language is known.
-     */
-    language?: string;
-    /**
-     * The task to perform. Default is `null`, meaning it should be auto-detected.
-     */
-    task?: string;
-    /**
-     * A list of pairs of integers which indicates a mapping from generation indices to token indices
-     * that will be forced before sampling. For example, [[1, 123]] means the second generated token will always be a token of index 123.
-     */
-    forced_decoder_ids?: number[][];
-    /**
-     * The number of frames in the input audio.
-     */
-    num_frames?: number;
+  /**
+   * Whether to return timestamps or not. Default is `false`.
+   */
+  return_timestamps?: boolean | "word";
+  /**
+   * The length of audio chunks to process in seconds. Default is 0 (no chunking).
+   */
+  chunk_length_s?: number;
+  /**
+   * The length of overlap between consecutive audio chunks in seconds. If not provided, defaults to `chunk_length_s / 6`.
+   */
+  stride_length_s?: number;
+  /**
+   * Callback function to be called with each chunk processed.
+   */
+  chunk_callback?: ChunkCallback;
+  /**
+   * Whether to force outputting full sequences or not. Default is `false`.
+   */
+  force_full_sequences?: boolean;
+  /**
+   * The source language. Default is `null`, meaning it should be auto-detected. Use this to potentially improve performance if the source language is known.
+   */
+  language?: string;
+  /**
+   * The task to perform. Default is `null`, meaning it should be auto-detected.
+   */
+  task?: string;
+  /**
+   * A list of pairs of integers which indicates a mapping from generation indices to token indices
+   * that will be forced before sampling. For example, [[1, 123]] means the second generated token will always be a token of index 123.
+   */
+  forced_decoder_ids?: number[][];
+  /**
+   * The number of frames in the input audio.
+   */
+  num_frames?: number;
 };
-export type AutomaticSpeechRecognitionConfig = import('./utils/generation.js').GenerationConfigType & AutomaticSpeechRecognitionSpecificParams;
+export type AutomaticSpeechRecognitionConfig =
+  import("./utils/generation.js").GenerationConfigType &
+    AutomaticSpeechRecognitionSpecificParams;
 /**
  * Transcribe the audio sequence(s) given as inputs to text.
  */
-export type AutomaticSpeechRecognitionPipelineCallback = (audio: AudioPipelineInputs, options?: AutomaticSpeechRecognitionConfig) => Promise<AutomaticSpeechRecognitionOutput | AutomaticSpeechRecognitionOutput[]>;
-export type AutomaticSpeechRecognitionPipelineType = TextAudioPipelineConstructorArgs & AutomaticSpeechRecognitionPipelineCallback & Disposable;
+export type AutomaticSpeechRecognitionPipelineCallback = (
+  audio: AudioPipelineInputs,
+  options?: AutomaticSpeechRecognitionConfig,
+) => Promise<
+  AutomaticSpeechRecognitionOutput | AutomaticSpeechRecognitionOutput[]
+>;
+export type AutomaticSpeechRecognitionPipelineType =
+  TextAudioPipelineConstructorArgs &
+    AutomaticSpeechRecognitionPipelineCallback &
+    Disposable;
 export type ImageToTextSingle = {
-    /**
-     * The generated text.
-     */
-    generated_text: string;
+  /**
+   * The generated text.
+   */
+  generated_text: string;
 };
 export type ImageToTextOutput = ImageToTextSingle[];
 /**
  * Assign labels to the image(s) passed as inputs.
  */
-export type ImageToTextPipelineCallback = (texts: ImagePipelineInputs, options?: import('./utils/generation.js').GenerationConfigType) => Promise<ImageToTextOutput | ImageToTextOutput[]>;
-export type ImageToTextPipelineType = TextImagePipelineConstructorArgs & ImageToTextPipelineCallback & Disposable;
+export type ImageToTextPipelineCallback = (
+  texts: ImagePipelineInputs,
+  options?: import("./utils/generation.js").GenerationConfigType,
+) => Promise<ImageToTextOutput | ImageToTextOutput[]>;
+export type ImageToTextPipelineType = TextImagePipelineConstructorArgs &
+  ImageToTextPipelineCallback &
+  Disposable;
 export type ImageClassificationSingle = {
-    /**
-     * The label identified by the model.
-     */
-    label: string;
-    /**
-     * The score attributed by the model for that label.
-     */
-    score: number;
+  /**
+   * The label identified by the model.
+   */
+  label: string;
+  /**
+   * The score attributed by the model for that label.
+   */
+  score: number;
 };
 export type ImageClassificationOutput = ImageClassificationSingle[];
 /**
  * Parameters specific to image classification pipelines.
  */
 export type ImageClassificationPipelineOptions = {
-    /**
-     * The number of top labels that will be returned by the pipeline.
-     */
-    topk?: number;
+  /**
+   * The number of top labels that will be returned by the pipeline.
+   */
+  topk?: number;
 };
 /**
  * Assign labels to the image(s) passed as inputs.
  */
-export type ImageClassificationPipelineCallback = (images: ImagePipelineInputs, options?: ImageClassificationPipelineOptions) => Promise<ImageClassificationOutput | ImageClassificationOutput[]>;
-export type ImageClassificationPipelineType = ImagePipelineConstructorArgs & ImageClassificationPipelineCallback & Disposable;
+export type ImageClassificationPipelineCallback = (
+  images: ImagePipelineInputs,
+  options?: ImageClassificationPipelineOptions,
+) => Promise<ImageClassificationOutput | ImageClassificationOutput[]>;
+export type ImageClassificationPipelineType = ImagePipelineConstructorArgs &
+  ImageClassificationPipelineCallback &
+  Disposable;
 export type ImageSegmentationPipelineOutput = {
-    /**
-     * The label of the segment.
-     */
-    label: string;
-    /**
-     * The score of the segment.
-     */
-    score: number | null;
-    /**
-     * The mask of the segment.
-     */
-    mask: RawImage;
+  /**
+   * The label of the segment.
+   */
+  label: string;
+  /**
+   * The score of the segment.
+   */
+  score: number | null;
+  /**
+   * The mask of the segment.
+   */
+  mask: RawImage;
 };
 /**
  * Parameters specific to image segmentation pipelines.
  */
 export type ImageSegmentationPipelineOptions = {
-    /**
-     * Probability threshold to filter out predicted masks.
-     */
-    threshold?: number;
-    /**
-     * Threshold to use when turning the predicted masks into binary values.
-     */
-    mask_threshold?: number;
-    /**
-     * Mask overlap threshold to eliminate small, disconnected segments.
-     */
-    overlap_mask_area_threshold?: number;
-    /**
-     * Segmentation task to be performed. One of [`panoptic`, `instance`, and `semantic`],
-     * depending on model capabilities. If not set, the pipeline will attempt to resolve (in that order).
-     */
-    subtask?: null | string;
-    /**
-     * List of label ids to fuse. If not set, do not fuse any labels.
-     */
-    label_ids_to_fuse?: number[];
-    /**
-     * List of target sizes for the input images. If not set, use the original image sizes.
-     */
-    target_sizes?: number[][];
+  /**
+   * Probability threshold to filter out predicted masks.
+   */
+  threshold?: number;
+  /**
+   * Threshold to use when turning the predicted masks into binary values.
+   */
+  mask_threshold?: number;
+  /**
+   * Mask overlap threshold to eliminate small, disconnected segments.
+   */
+  overlap_mask_area_threshold?: number;
+  /**
+   * Segmentation task to be performed. One of [`panoptic`, `instance`, and `semantic`],
+   * depending on model capabilities. If not set, the pipeline will attempt to resolve (in that order).
+   */
+  subtask?: null | string;
+  /**
+   * List of label ids to fuse. If not set, do not fuse any labels.
+   */
+  label_ids_to_fuse?: number[];
+  /**
+   * List of target sizes for the input images. If not set, use the original image sizes.
+   */
+  target_sizes?: number[][];
 };
 /**
  * Segment the input images.
  */
-export type ImageSegmentationPipelineCallback = (images: ImagePipelineInputs, options?: ImageSegmentationPipelineOptions) => Promise<ImageSegmentationPipelineOutput[]>;
-export type ImageSegmentationPipelineType = ImagePipelineConstructorArgs & ImageSegmentationPipelineCallback & Disposable;
+export type ImageSegmentationPipelineCallback = (
+  images: ImagePipelineInputs,
+  options?: ImageSegmentationPipelineOptions,
+) => Promise<ImageSegmentationPipelineOutput[]>;
+export type ImageSegmentationPipelineType = ImagePipelineConstructorArgs &
+  ImageSegmentationPipelineCallback &
+  Disposable;
 export type ZeroShotImageClassificationOutput = {
-    /**
-     * The label identified by the model. It is one of the suggested `candidate_label`.
-     */
-    label: string;
-    /**
-     * The score attributed by the model for that label (between 0 and 1).
-     */
-    score: number;
+  /**
+   * The label identified by the model. It is one of the suggested `candidate_label`.
+   */
+  label: string;
+  /**
+   * The score attributed by the model for that label (between 0 and 1).
+   */
+  score: number;
 };
 /**
  * Parameters specific to zero-shot image classification pipelines.
  */
 export type ZeroShotImageClassificationPipelineOptions = {
-    /**
-     * The sentence used in conjunction with `candidate_labels`
-     * to attempt the image classification by replacing the placeholder with the candidate_labels.
-     * Then likelihood is estimated by using `logits_per_image`.
-     */
-    hypothesis_template?: string;
+  /**
+   * The sentence used in conjunction with `candidate_labels`
+   * to attempt the image classification by replacing the placeholder with the candidate_labels.
+   * Then likelihood is estimated by using `logits_per_image`.
+   */
+  hypothesis_template?: string;
 };
 /**
  * Assign labels to the image(s) passed as inputs.
  */
-export type ZeroShotImageClassificationPipelineCallback = (images: ImagePipelineInputs, candidate_labels: string[], options?: ZeroShotImageClassificationPipelineOptions) => Promise<ZeroShotImageClassificationOutput[] | ZeroShotImageClassificationOutput[][]>;
-export type ZeroShotImageClassificationPipelineType = TextImagePipelineConstructorArgs & ZeroShotImageClassificationPipelineCallback & Disposable;
+export type ZeroShotImageClassificationPipelineCallback = (
+  images: ImagePipelineInputs,
+  candidate_labels: string[],
+  options?: ZeroShotImageClassificationPipelineOptions,
+) => Promise<
+  ZeroShotImageClassificationOutput[] | ZeroShotImageClassificationOutput[][]
+>;
+export type ZeroShotImageClassificationPipelineType =
+  TextImagePipelineConstructorArgs &
+    ZeroShotImageClassificationPipelineCallback &
+    Disposable;
 export type ObjectDetectionPipelineSingle = {
-    /**
-     * The class label identified by the model.
-     */
-    label: string;
-    /**
-     * The score attributed by the model for that label.
-     */
-    score: number;
-    /**
-     * The bounding box of detected object in image's original size, or as a percentage if `percentage` is set to true.
-     */
-    box: BoundingBox;
+  /**
+   * The class label identified by the model.
+   */
+  label: string;
+  /**
+   * The score attributed by the model for that label.
+   */
+  score: number;
+  /**
+   * The bounding box of detected object in image's original size, or as a percentage if `percentage` is set to true.
+   */
+  box: BoundingBox;
 };
 export type ObjectDetectionPipelineOutput = ObjectDetectionPipelineSingle[];
 /**
  * Parameters specific to object detection pipelines.
  */
 export type ObjectDetectionPipelineOptions = {
-    /**
-     * The threshold used to filter boxes by score.
-     */
-    threshold?: number;
-    /**
-     * Whether to return the boxes coordinates in percentage (true) or in pixels (false).
-     */
-    percentage?: boolean;
+  /**
+   * The threshold used to filter boxes by score.
+   */
+  threshold?: number;
+  /**
+   * Whether to return the boxes coordinates in percentage (true) or in pixels (false).
+   */
+  percentage?: boolean;
 };
 /**
  * Detect objects (bounding boxes & classes) in the image(s) passed as inputs.
  */
-export type ObjectDetectionPipelineCallback = (images: ImagePipelineInputs, options?: ObjectDetectionPipelineOptions) => Promise<ObjectDetectionPipelineOutput | ObjectDetectionPipelineOutput[]>;
-export type ObjectDetectionPipelineType = ImagePipelineConstructorArgs & ObjectDetectionPipelineCallback & Disposable;
+export type ObjectDetectionPipelineCallback = (
+  images: ImagePipelineInputs,
+  options?: ObjectDetectionPipelineOptions,
+) => Promise<ObjectDetectionPipelineOutput | ObjectDetectionPipelineOutput[]>;
+export type ObjectDetectionPipelineType = ImagePipelineConstructorArgs &
+  ObjectDetectionPipelineCallback &
+  Disposable;
 export type ZeroShotObjectDetectionOutput = {
-    /**
-     * Text query corresponding to the found object.
-     */
-    label: string;
-    /**
-     * Score corresponding to the object (between 0 and 1).
-     */
-    score: number;
-    /**
-     * Bounding box of the detected object in image's original size, or as a percentage if `percentage` is set to true.
-     */
-    box: BoundingBox;
+  /**
+   * Text query corresponding to the found object.
+   */
+  label: string;
+  /**
+   * Score corresponding to the object (between 0 and 1).
+   */
+  score: number;
+  /**
+   * Bounding box of the detected object in image's original size, or as a percentage if `percentage` is set to true.
+   */
+  box: BoundingBox;
 };
 /**
  * Parameters specific to zero-shot object detection pipelines.
  */
 export type ZeroShotObjectDetectionPipelineOptions = {
-    /**
-     * The probability necessary to make a prediction.
-     */
-    threshold?: number;
-    /**
-     * The number of top predictions that will be returned by the pipeline.
-     * If the provided number is `null` or higher than the number of predictions available, it will default
-     * to the number of predictions.
-     */
-    topk?: number;
-    /**
-     * Whether to return the boxes coordinates in percentage (true) or in pixels (false).
-     */
-    percentage?: boolean;
+  /**
+   * The probability necessary to make a prediction.
+   */
+  threshold?: number;
+  /**
+   * The number of top predictions that will be returned by the pipeline.
+   * If the provided number is `null` or higher than the number of predictions available, it will default
+   * to the number of predictions.
+   */
+  topk?: number;
+  /**
+   * Whether to return the boxes coordinates in percentage (true) or in pixels (false).
+   */
+  percentage?: boolean;
 };
 /**
  * Detect objects (bounding boxes & classes) in the image(s) passed as inputs.
  */
-export type ZeroShotObjectDetectionPipelineCallback = (images: ImagePipelineInputs, candidate_labels: string[], options?: ZeroShotObjectDetectionPipelineOptions) => Promise<ZeroShotObjectDetectionOutput[] | ZeroShotObjectDetectionOutput[][]>;
-export type ZeroShotObjectDetectionPipelineType = TextImagePipelineConstructorArgs & ZeroShotObjectDetectionPipelineCallback & Disposable;
+export type ZeroShotObjectDetectionPipelineCallback = (
+  images: ImagePipelineInputs,
+  candidate_labels: string[],
+  options?: ZeroShotObjectDetectionPipelineOptions,
+) => Promise<
+  ZeroShotObjectDetectionOutput[] | ZeroShotObjectDetectionOutput[][]
+>;
+export type ZeroShotObjectDetectionPipelineType =
+  TextImagePipelineConstructorArgs &
+    ZeroShotObjectDetectionPipelineCallback &
+    Disposable;
 export type DocumentQuestionAnsweringSingle = {
-    /**
-     * The generated text.
-     */
-    answer: string;
+  /**
+   * The generated text.
+   */
+  answer: string;
 };
 export type DocumentQuestionAnsweringOutput = DocumentQuestionAnsweringSingle[];
 /**
  * Answer the question given as input by using the document.
  */
-export type DocumentQuestionAnsweringPipelineCallback = (image: ImageInput, question: string, options?: import('./utils/generation.js').GenerationConfigType) => Promise<DocumentQuestionAnsweringOutput | DocumentQuestionAnsweringOutput[]>;
-export type DocumentQuestionAnsweringPipelineType = TextImagePipelineConstructorArgs & DocumentQuestionAnsweringPipelineCallback & Disposable;
+export type DocumentQuestionAnsweringPipelineCallback = (
+  image: ImageInput,
+  question: string,
+  options?: import("./utils/generation.js").GenerationConfigType,
+) => Promise<
+  DocumentQuestionAnsweringOutput | DocumentQuestionAnsweringOutput[]
+>;
+export type DocumentQuestionAnsweringPipelineType =
+  TextImagePipelineConstructorArgs &
+    DocumentQuestionAnsweringPipelineCallback &
+    Disposable;
 export type VocoderOptions = {
-    /**
-     * The vocoder used by the pipeline (if the model uses one). If not provided, use the default HifiGan vocoder.
-     */
-    vocoder?: PreTrainedModel;
+  /**
+   * The vocoder used by the pipeline (if the model uses one). If not provided, use the default HifiGan vocoder.
+   */
+  vocoder?: PreTrainedModel;
 };
-export type TextToAudioPipelineConstructorArgs = TextAudioPipelineConstructorArgs & VocoderOptions;
+export type TextToAudioPipelineConstructorArgs =
+  TextAudioPipelineConstructorArgs & VocoderOptions;
 export type TextToAudioOutput = {
-    /**
-     * The generated audio waveform.
-     */
-    audio: Float32Array;
-    /**
-     * The sampling rate of the generated audio waveform.
-     */
-    sampling_rate: number;
+  /**
+   * The generated audio waveform.
+   */
+  audio: Float32Array;
+  /**
+   * The sampling rate of the generated audio waveform.
+   */
+  sampling_rate: number;
 };
 /**
  * Parameters specific to text-to-audio pipelines.
  */
 export type TextToAudioPipelineOptions = {
-    /**
-     * The speaker embeddings (if the model requires it).
-     */
-    speaker_embeddings?: Tensor | Float32Array | string | URL;
+  /**
+   * The speaker embeddings (if the model requires it).
+   */
+  speaker_embeddings?: Tensor | Float32Array | string | URL;
 };
 /**
  * Generates speech/audio from the inputs.
  */
-export type TextToAudioPipelineCallback = (texts: string | string[], options: TextToAudioPipelineOptions) => Promise<TextToAudioOutput>;
-export type TextToAudioPipelineType = TextToAudioPipelineConstructorArgs & TextToAudioPipelineCallback & Disposable;
+export type TextToAudioPipelineCallback = (
+  texts: string | string[],
+  options: TextToAudioPipelineOptions,
+) => Promise<TextToAudioOutput>;
+export type TextToAudioPipelineType = TextToAudioPipelineConstructorArgs &
+  TextToAudioPipelineCallback &
+  Disposable;
 /**
  * Transform the image(s) passed as inputs.
  */
-export type ImageToImagePipelineCallback = (images: ImagePipelineInputs) => Promise<RawImage | RawImage[]>;
-export type ImageToImagePipelineType = ImagePipelineConstructorArgs & ImageToImagePipelineCallback & Disposable;
+export type ImageToImagePipelineCallback = (
+  images: ImagePipelineInputs,
+) => Promise<RawImage | RawImage[]>;
+export type ImageToImagePipelineType = ImagePipelineConstructorArgs &
+  ImageToImagePipelineCallback &
+  Disposable;
 export type DepthEstimationPipelineOutput = {
-    /**
-     * The raw depth map predicted by the model.
-     */
-    predicted_depth: Tensor;
-    /**
-     * The processed depth map as an image (with the same size as the input image).
-     */
-    depth: RawImage;
+  /**
+   * The raw depth map predicted by the model.
+   */
+  predicted_depth: Tensor;
+  /**
+   * The processed depth map as an image (with the same size as the input image).
+   */
+  depth: RawImage;
 };
 /**
  * Predicts the depth for the image(s) passed as inputs.
  */
-export type DepthEstimationPipelineCallback = (images: ImagePipelineInputs) => Promise<DepthEstimationPipelineOutput | DepthEstimationPipelineOutput[]>;
-export type DepthEstimationPipelineType = ImagePipelineConstructorArgs & DepthEstimationPipelineCallback & Disposable;
-import { PreTrainedModel } from './models.js';
-import { PreTrainedTokenizer } from './tokenizers.js';
-import { Processor } from './processors.js';
-import { Tensor } from './utils/tensor.js';
-import { RawImage } from './utils/image.js';
+export type DepthEstimationPipelineCallback = (
+  images: ImagePipelineInputs,
+) => Promise<DepthEstimationPipelineOutput | DepthEstimationPipelineOutput[]>;
+export type DepthEstimationPipelineType = ImagePipelineConstructorArgs &
+  DepthEstimationPipelineCallback &
+  Disposable;
+import { PreTrainedModel } from "./models.js";
+import { PreTrainedTokenizer } from "./tokenizers.js";
+import { Processor } from "./processors.js";
+import { Tensor } from "./utils/tensor.js";
+import { RawImage } from "./utils/image.js";
 declare const SUPPORTED_TASKS: Readonly<{
-    "text-classification": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof TextClassificationPipeline;
-        model: typeof AutoModelForSequenceClassification;
-        default: {
-            model: string;
-        };
-        type: string;
+  "text-classification": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof TextClassificationPipeline;
+    model: typeof AutoModelForSequenceClassification;
+    default: {
+      model: string;
     };
-    "token-classification": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof TokenClassificationPipeline;
-        model: typeof AutoModelForTokenClassification;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "token-classification": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof TokenClassificationPipeline;
+    model: typeof AutoModelForTokenClassification;
+    default: {
+      model: string;
     };
-    "question-answering": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof QuestionAnsweringPipeline;
-        model: typeof AutoModelForQuestionAnswering;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "question-answering": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof QuestionAnsweringPipeline;
+    model: typeof AutoModelForQuestionAnswering;
+    default: {
+      model: string;
     };
-    "fill-mask": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof FillMaskPipeline;
-        model: typeof AutoModelForMaskedLM;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "fill-mask": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof FillMaskPipeline;
+    model: typeof AutoModelForMaskedLM;
+    default: {
+      model: string;
     };
-    summarization: {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof SummarizationPipeline;
-        model: typeof AutoModelForSeq2SeqLM;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  summarization: {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof SummarizationPipeline;
+    model: typeof AutoModelForSeq2SeqLM;
+    default: {
+      model: string;
     };
-    translation: {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof TranslationPipeline;
-        model: typeof AutoModelForSeq2SeqLM;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  translation: {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof TranslationPipeline;
+    model: typeof AutoModelForSeq2SeqLM;
+    default: {
+      model: string;
     };
-    "text2text-generation": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof Text2TextGenerationPipeline;
-        model: typeof AutoModelForSeq2SeqLM;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "text2text-generation": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof Text2TextGenerationPipeline;
+    model: typeof AutoModelForSeq2SeqLM;
+    default: {
+      model: string;
     };
-    "text-generation": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof TextGenerationPipeline;
-        model: typeof AutoModelForCausalLM;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "text-generation": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof TextGenerationPipeline;
+    model: typeof AutoModelForCausalLM;
+    default: {
+      model: string;
     };
-    "zero-shot-classification": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof ZeroShotClassificationPipeline;
-        model: typeof AutoModelForSequenceClassification;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "zero-shot-classification": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof ZeroShotClassificationPipeline;
+    model: typeof AutoModelForSequenceClassification;
+    default: {
+      model: string;
     };
-    "audio-classification": {
-        pipeline: typeof AudioClassificationPipeline;
-        model: typeof AutoModelForAudioClassification;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "audio-classification": {
+    pipeline: typeof AudioClassificationPipeline;
+    model: typeof AutoModelForAudioClassification;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "zero-shot-audio-classification": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof ZeroShotAudioClassificationPipeline;
-        model: typeof AutoModel;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "zero-shot-audio-classification": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof ZeroShotAudioClassificationPipeline;
+    model: typeof AutoModel;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "automatic-speech-recognition": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof AutomaticSpeechRecognitionPipeline;
-        model: (typeof AutoModelForSpeechSeq2Seq)[];
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "automatic-speech-recognition": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof AutomaticSpeechRecognitionPipeline;
+    model: (typeof AutoModelForSpeechSeq2Seq)[];
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "text-to-audio": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof TextToAudioPipeline;
-        model: (typeof AutoModelForTextToSpectrogram | typeof AutoModelForTextToWaveform)[];
-        processor: (typeof AutoProcessor)[];
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "text-to-audio": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof TextToAudioPipeline;
+    model: (
+      | typeof AutoModelForTextToSpectrogram
+      | typeof AutoModelForTextToWaveform
+    )[];
+    processor: (typeof AutoProcessor)[];
+    default: {
+      model: string;
     };
-    "image-to-text": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof ImageToTextPipeline;
-        model: typeof AutoModelForVision2Seq;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "image-to-text": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof ImageToTextPipeline;
+    model: typeof AutoModelForVision2Seq;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "image-classification": {
-        pipeline: typeof ImageClassificationPipeline;
-        model: typeof AutoModelForImageClassification;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "image-classification": {
+    pipeline: typeof ImageClassificationPipeline;
+    model: typeof AutoModelForImageClassification;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "image-segmentation": {
-        pipeline: typeof ImageSegmentationPipeline;
-        model: (typeof AutoModelForImageSegmentation)[];
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "image-segmentation": {
+    pipeline: typeof ImageSegmentationPipeline;
+    model: (typeof AutoModelForImageSegmentation)[];
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "zero-shot-image-classification": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof ZeroShotImageClassificationPipeline;
-        model: typeof AutoModel;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "zero-shot-image-classification": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof ZeroShotImageClassificationPipeline;
+    model: typeof AutoModel;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "object-detection": {
-        pipeline: typeof ObjectDetectionPipeline;
-        model: typeof AutoModelForObjectDetection;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "object-detection": {
+    pipeline: typeof ObjectDetectionPipeline;
+    model: typeof AutoModelForObjectDetection;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "zero-shot-object-detection": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof ZeroShotObjectDetectionPipeline;
-        model: typeof AutoModelForZeroShotObjectDetection;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "zero-shot-object-detection": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof ZeroShotObjectDetectionPipeline;
+    model: typeof AutoModelForZeroShotObjectDetection;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "document-question-answering": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof DocumentQuestionAnsweringPipeline;
-        model: typeof AutoModelForDocumentQuestionAnswering;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "document-question-answering": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof DocumentQuestionAnsweringPipeline;
+    model: typeof AutoModelForDocumentQuestionAnswering;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "image-to-image": {
-        pipeline: typeof ImageToImagePipeline;
-        model: typeof AutoModelForImageToImage;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "image-to-image": {
+    pipeline: typeof ImageToImagePipeline;
+    model: typeof AutoModelForImageToImage;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "depth-estimation": {
-        pipeline: typeof DepthEstimationPipeline;
-        model: typeof AutoModelForDepthEstimation;
-        processor: typeof AutoProcessor;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "depth-estimation": {
+    pipeline: typeof DepthEstimationPipeline;
+    model: typeof AutoModelForDepthEstimation;
+    processor: typeof AutoProcessor;
+    default: {
+      model: string;
     };
-    "feature-extraction": {
-        tokenizer: typeof AutoTokenizer;
-        pipeline: typeof FeatureExtractionPipeline;
-        model: typeof AutoModel;
-        default: {
-            model: string;
-        };
-        type: string;
+    type: string;
+  };
+  "feature-extraction": {
+    tokenizer: typeof AutoTokenizer;
+    pipeline: typeof FeatureExtractionPipeline;
+    model: typeof AutoModel;
+    default: {
+      model: string;
     };
+    type: string;
+  };
 }>;
 declare const TASK_ALIASES: Readonly<{
-    "sentiment-analysis": "text-classification";
-    ner: "token-classification";
-    asr: "automatic-speech-recognition";
-    "text-to-speech": "text-to-audio";
-    embeddings: "feature-extraction";
+  "sentiment-analysis": "text-classification";
+  ner: "token-classification";
+  asr: "automatic-speech-recognition";
+  "text-to-speech": "text-to-audio";
+  embeddings: "feature-extraction";
 }>;
-import { AutoTokenizer } from './tokenizers.js';
-import { AutoModelForSequenceClassification } from './models.js';
-import { AutoModelForTokenClassification } from './models.js';
-import { AutoModelForQuestionAnswering } from './models.js';
-import { AutoModelForMaskedLM } from './models.js';
-import { AutoModelForSeq2SeqLM } from './models.js';
-import { AutoModelForCausalLM } from './models.js';
-import { AutoModelForAudioClassification } from './models.js';
-import { AutoProcessor } from './processors.js';
-import { AutoModel } from './models.js';
-import { AutoModelForSpeechSeq2Seq } from './models.js';
-import { AutoModelForTextToSpectrogram } from './models.js';
-import { AutoModelForTextToWaveform } from './models.js';
-import { AutoModelForVision2Seq } from './models.js';
-import { AutoModelForImageClassification } from './models.js';
-import { AutoModelForImageSegmentation } from './models.js';
-import { AutoModelForObjectDetection } from './models.js';
-import { AutoModelForZeroShotObjectDetection } from './models.js';
-import { AutoModelForDocumentQuestionAnswering } from './models.js';
-import { AutoModelForImageToImage } from './models.js';
-import { AutoModelForDepthEstimation } from './models.js';
+import { AutoTokenizer } from "./tokenizers.js";
+import { AutoModelForSequenceClassification } from "./models.js";
+import { AutoModelForTokenClassification } from "./models.js";
+import { AutoModelForQuestionAnswering } from "./models.js";
+import { AutoModelForMaskedLM } from "./models.js";
+import { AutoModelForSeq2SeqLM } from "./models.js";
+import { AutoModelForCausalLM } from "./models.js";
+import { AutoModelForAudioClassification } from "./models.js";
+import { AutoProcessor } from "./processors.js";
+import { AutoModel } from "./models.js";
+import { AutoModelForSpeechSeq2Seq } from "./models.js";
+import { AutoModelForTextToSpectrogram } from "./models.js";
+import { AutoModelForTextToWaveform } from "./models.js";
+import { AutoModelForVision2Seq } from "./models.js";
+import { AutoModelForImageClassification } from "./models.js";
+import { AutoModelForImageSegmentation } from "./models.js";
+import { AutoModelForObjectDetection } from "./models.js";
+import { AutoModelForZeroShotObjectDetection } from "./models.js";
+import { AutoModelForDocumentQuestionAnswering } from "./models.js";
+import { AutoModelForImageToImage } from "./models.js";
+import { AutoModelForDepthEstimation } from "./models.js";
 export {};
 //# sourceMappingURL=pipelines.d.ts.map

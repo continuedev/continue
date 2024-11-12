@@ -553,9 +553,8 @@ export default class DocsService {
   private async getLanceTableNameFromEmbeddingsProvider(
     isPreIndexedDoc: boolean,
   ) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(
-      isPreIndexedDoc,
-    );
+    const embeddingsProvider =
+      await this.getEmbeddingsProvider(isPreIndexedDoc);
 
     const tableName = this.sanitizeLanceTableName(
       `${DocsService.lanceTableName}${embeddingsProvider.id}`,

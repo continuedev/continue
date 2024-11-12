@@ -7,8 +7,6 @@ import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
 import { constructAutocompletePrompt } from "./constructPrompt.js";
-// @prettier-ignore
-
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import { AutocompleteSnippet } from "./context/ranking/index.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";

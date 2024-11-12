@@ -27,11 +27,11 @@ export const Gemini: ModelProvider = {
     },
     //autocomplete
     {
-        model: "code-gecko",
-        displayName: "VertexAI Code Gecko",
-        recommendedFor: ["autocomplete"],
-        maxCompletionTokens: 64,
-    }
+      model: "code-gecko",
+      displayName: "VertexAI Code Gecko",
+      recommendedFor: ["autocomplete"],
+      maxCompletionTokens: 64,
+    },
   ],
   id: "gemini",
   displayName: "Gemini",

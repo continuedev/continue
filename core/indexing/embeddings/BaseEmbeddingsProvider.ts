@@ -45,7 +45,10 @@ abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
   }
   defaultOptions?: EmbedOptions | undefined;
   get maxBatchSize(): number | undefined {
-    return this.options.maxBatchSize ?? (this.constructor as typeof BaseEmbeddingsProvider).maxBatchSize;
+    return (
+      this.options.maxBatchSize ??
+      (this.constructor as typeof BaseEmbeddingsProvider).maxBatchSize
+    );
   }
 
   abstract embed(chunks: string[]): Promise<number[][]>;

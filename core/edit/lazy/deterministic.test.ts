@@ -3,9 +3,11 @@ import path from "node:path";
 
 // @ts-ignore no typings available
 import { diff as myersDiff } from "myers-diff";
+
 import { DiffLine } from "../..";
 import { myersDiff as continueMyersDiff } from "../../diff/myers";
 import { dedent } from "../../util";
+
 import { deterministicApplyLazyEdit } from "./deterministic";
 
 const UNIFIED_DIFF_SYMBOLS = {

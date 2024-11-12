@@ -39,7 +39,9 @@ export class HelperVars {
 
   private async init() {
     // Don't do anything if already initialized
-    if (this._fileContents !== undefined) {return;}
+    if (this._fileContents !== undefined) {
+      return;
+    }
 
     this._fileContents =
       this.input.manuallyPassFileContents ??

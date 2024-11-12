@@ -40,16 +40,17 @@ class VertexAI extends BaseLLM {
     super(_options);
     this.apiBase ??= VertexAI.getDefaultApiBaseFrom(_options);
     this.vertexProvider =
-      _options.model.includes("mistral") || _options.model.includes("codestral") || _options.model.includes("mixtral")
+      _options.model.includes("mistral") ||
+      _options.model.includes("codestral") ||
+      _options.model.includes("mixtral")
         ? "mistral"
         : _options.model.includes("claude")
           ? "anthropic"
           : _options.model.includes("gemini")
-            ? "gemini" :
-            "unknown";
+            ? "gemini"
+            : "unknown";
     this.anthropicInstance = new Anthropic(_options);
     this.geminiInstance = new Gemini(_options);
-    
   }
 
   async fetch(url: RequestInfo | URL, init?: RequestInit) {
@@ -82,18 +83,18 @@ class VertexAI extends BaseLLM {
     };
   }
 
-
   protected async *StreamChatAnthropic(
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage = !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
+    const shouldCacheSystemMessage =
+      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const systemMessage: string = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content,
     );
     const apiURL = new URL(
       `publishers/anthropic/models/${options.model}:streamRawPredict`,
-      this.apiBase
+      this.apiBase,
     );
 
     const response = await this.fetch(apiURL, {
@@ -108,12 +109,12 @@ class VertexAI extends BaseLLM {
         messages: this.anthropicInstance.convertMessages(messages),
         system: shouldCacheSystemMessage
           ? [
-            {
-              type: "text",
-              text: this.systemMessage,
-              cache_control: { type: "ephemeral" },
-            },
-          ]
+              {
+                type: "text",
+                text: this.systemMessage,
+                cache_control: { type: "ephemeral" },
+              },
+            ]
           : systemMessage,
       }),
     });
@@ -125,13 +126,14 @@ class VertexAI extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      if (value.type == "message_start") {console.log(value);}
+      if (value.type == "message_start") {
+        console.log(value);
+      }
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }
     }
   }
-
 
   //Gemini
 
@@ -168,8 +170,8 @@ class VertexAI extends BaseLLM {
       // if this.systemMessage is defined, reformat it for Gemini API
       ...(this.systemMessage &&
         !isV1API && {
-        systemInstruction: { parts: [{ text: this.systemMessage }] },
-      }),
+          systemInstruction: { parts: [{ text: this.systemMessage }] },
+        }),
     };
     const response = await this.fetch(apiURL, {
       method: "POST",
@@ -265,7 +267,6 @@ class VertexAI extends BaseLLM {
 
   //Mistral
 
-
   protected async *StreamChatMistral(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -336,23 +337,24 @@ class VertexAI extends BaseLLM {
     }
   }
 
-
-
   //gecko
   protected async *streamFimGecko(
     prefix: string,
     suffix: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const endpoint = new URL("publishers/google/models/code-gecko:predict", this.apiBase);
+    const endpoint = new URL(
+      "publishers/google/models/code-gecko:predict",
+      this.apiBase,
+    );
     const resp = await this.fetch(endpoint, {
       method: "POST",
       body: JSON.stringify({
         instances: [
           {
             prefix: prefix,
-            suffix: suffix
-          }
+            suffix: suffix,
+          },
         ],
         parameters: {
           temperature: options.temperature,
@@ -360,8 +362,7 @@ class VertexAI extends BaseLLM {
           stopSequences: options.stop?.splice(0, 5),
           frequencyPenalty: options.frequencyPenalty,
           presencePenalty: options.frequencyPenalty,
-        }
-
+        },
       }),
     });
     // Streaming is not supported by code-gecko
@@ -411,9 +412,6 @@ class VertexAI extends BaseLLM {
     suffix: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-
-
-
     if (this.model === "code-gecko") {
       yield* this.streamFimGecko(prefix, suffix, options);
     } else if (this.model.includes("codestral")) {
@@ -421,21 +419,15 @@ class VertexAI extends BaseLLM {
     } else {
       throw new Error(`Unsupported model: ${this.model}`);
     }
-
-
   }
 
   supportsFim(): boolean {
     return ["code-gecko", "codestral-latest"].includes(this.model);
   }
-
-
 }
 
 async function delay(seconds: number) {
   return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
-
-
 
 export default VertexAI;

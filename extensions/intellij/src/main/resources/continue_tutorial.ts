@@ -7,7 +7,6 @@
                                          Chat, Edit, and Autocomplete tutorial
 */
 
-
 /* —————————————————————————————————————————————————     Chat      ————————————————————————————————————————————————— */
 
 // Highlight the code below
@@ -50,6 +49,5 @@ function sortingAlgorithm2(x: number[]): number[] {
 // Press [Tab] to accept the Autocomplete suggestion
 
 // Basic assertion for sortingAlgorithm...
-
 
 /* ——————————————————      Learn more at https://docs.continue.dev/getting-started/overview      ——————————————————— */

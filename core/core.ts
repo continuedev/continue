@@ -83,7 +83,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => { },
+    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
@@ -174,7 +174,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => { },
+      (e) => {},
       (..._) => Promise.resolve([]),
     );
 
@@ -684,7 +684,7 @@ export class Core {
         await codebaseIndexer.clearIndexes();
       }
 
-      const dirs = data?.dirs ?? await this.ide.getWorkspaceDirs();
+      const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {

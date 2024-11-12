@@ -1,10 +1,11 @@
 import { execSync } from "child_process";
-import * as JSONC from "comment-json";
 import * as fs from "fs";
 import os from "os";
 import path from "path";
 
+import * as JSONC from "comment-json";
 import * as tar from "tar";
+
 import {
   BrowserSerializedContinueConfig,
   Config,
