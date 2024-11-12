@@ -10,7 +10,7 @@
 */
 
 export const patchNestedMarkdown = (source: string): string => {
-  if (!source.includes("```m")) return source; // For performance
+  if (!source.match(/```(md|markdown)/)) return source; // For performance
   // const start = Date.now();
   let nestCount = 0;
   const lines = source.split("\n");
@@ -30,7 +30,7 @@ export const patchNestedMarkdown = (source: string): string => {
       // Enter the markdown block, start tracking nesting
       if (line.startsWith("```md") || line.startsWith("```markdown")) {
         nestCount = 1;
-        lines[i] = lines[i].replace(/^```(md|markdown)/, "~~~"); // Replace backticks with tildes
+        lines[i] = lines[i].replace(/```(md|markdown)/, "~~~"); // Replace backticks with tildes
       }
     }
   }
