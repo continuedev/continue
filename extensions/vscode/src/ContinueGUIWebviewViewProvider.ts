@@ -15,6 +15,10 @@ export class ContinueGUIWebviewViewProvider
   public static readonly viewType = "continue.continueGUIView";
   public webviewProtocol: VsCodeWebviewProtocol;
 
+  public get isReady(): boolean {
+    return !!this.webview;
+  }
+
   private updateDebugLogsStatus() {
     const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
     this.enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
