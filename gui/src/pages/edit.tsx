@@ -1,6 +1,7 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
+import { stripImages } from "core/llm/images";
 import { getBasename } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useState } from "react";
@@ -71,7 +72,17 @@ const EditHistoryDiv = styled.div`
   }
 `;
 
-const EDIT_ALLOWS_CONTEXT_PROVIDERS = ["file", "code"];
+const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
+  "codebase",
+  "tree",
+  "open",
+  "web",
+  "diff",
+  "folder",
+  "search",
+  "debugger",
+  "repo-map",
+];
 
 function Edit() {
   const posthog = usePostHog();
@@ -174,7 +185,7 @@ function Edit() {
               border={`1px solid #aa0`}
               availableContextProviders={availableContextProviders.filter(
                 (provider) =>
-                  EDIT_ALLOWS_CONTEXT_PROVIDERS.includes(provider.title),
+                  !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
               )}
               historyKey="edit"
               availableSlashCommands={[]}
@@ -184,15 +195,21 @@ function Edit() {
                 modifiers: InputModifiers,
                 editor: Editor,
               ): Promise<void> {
-                const [_, __, prompt] = await resolveEditorContent(
-                  editorState,
-                  {
-                    noContext: true,
-                    useCodebase: false,
-                  },
-                  ideMessenger,
-                  [],
-                );
+                const [contextItems, __, userInstructions] =
+                  await resolveEditorContent(
+                    editorState,
+                    {
+                      noContext: true,
+                      useCodebase: false,
+                    },
+                    ideMessenger,
+                    [],
+                  );
+
+                const prompt = [
+                  ...contextItems.map((item) => item.content),
+                  stripImages(userInstructions),
+                ].join("\n\n");
                 ideMessenger.request("edit/sendPrompt", {
                   prompt,
                   range: editModeState.highlightedCode,
