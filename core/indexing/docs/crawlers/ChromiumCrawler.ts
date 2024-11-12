@@ -1,15 +1,18 @@
 import * as fs from "fs";
 import { URL } from "node:url";
+
 import { Handler, HTTPResponse, Page } from "puppeteer";
+
+// @ts-ignore
+// @prettier-ignore
+import PCR from "puppeteer-chromium-resolver";
+
+import { ContinueConfig, IDE } from "../../..";
 import {
   editConfigJson,
   getChromiumPath,
   getContinueUtilsPath,
 } from "../../../util/paths";
-// @ts-ignore
-// @prettier-ignore
-import PCR from "puppeteer-chromium-resolver";
-import { ContinueConfig, IDE } from "../../..";
 import { PageData } from "../DocsCrawler";
 
 export class ChromiumCrawler {

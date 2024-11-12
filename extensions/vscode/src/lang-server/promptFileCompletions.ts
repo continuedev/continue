@@ -1,6 +1,7 @@
 import { IDE } from "core";
 import { getBasename, getLastNPathParts } from "core/util";
 import vscode from "vscode";
+
 import { FileSearch } from "../util/FileSearch";
 
 class PromptFilesCompletionItemProvider

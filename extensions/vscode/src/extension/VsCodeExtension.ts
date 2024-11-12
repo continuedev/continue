@@ -1,3 +1,5 @@
+import fs from "fs";
+
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
@@ -5,9 +7,9 @@ import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
-import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
+
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 import {
   monitorBatteryChanges,
@@ -32,8 +34,10 @@ import { Battery } from "../util/battery";
 import { FileSearch } from "../util/FileSearch";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
-import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+
 import { VsCodeMessenger } from "./VsCodeMessenger";
+
+import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -293,15 +297,15 @@ export class VsCodeExtension {
         // Reindex the file
         this.core.invoke("index/forceReIndex", {
           dirs: [filepath]
-        })
+        });
       }
     });
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
       this.core.invoke("index/forceReIndex", {
         dirs: event.files.map((file) => file.fsPath.split("/").slice(0, -1).join("/"))
-      })
-    })
+      });
+    });
 
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {

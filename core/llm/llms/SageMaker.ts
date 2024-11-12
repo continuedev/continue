@@ -56,7 +56,7 @@ class SageMaker extends BaseLLM {
         while ((position = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, position);
           try {
-            const data = JSON.parse(line.replace(/^data:/, ''));
+            const data = JSON.parse(line.replace(/^data:/, ""));
             let text = undefined;
             if ("choices" in data) {
               if ("delta" in data.choices[0]) {
@@ -107,7 +107,7 @@ class SageMaker extends BaseLLM {
         while ((position = buffer.indexOf("\n")) >= 0) {
           const line = buffer.slice(0, position);
           try {
-            const data = JSON.parse(line.replace(/^data:/, ''));
+            const data = JSON.parse(line.replace(/^data:/, ""));
             let text = undefined;
             if ("choices" in data) {
               if ("delta" in data.choices[0]) {

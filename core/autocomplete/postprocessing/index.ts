@@ -1,6 +1,7 @@
-import type { ILLM } from "../../index.js";
 import { longestCommonSubsequence } from "../../util/lcs.js";
 import { lineIsRepeated } from "../filtering/streamTransforms/lineStream.js";
+
+import type { ILLM } from "../../index.js";
 
 function rewritesLineAbove(completion: string, prefix: string): boolean {
   const lineAbove = prefix

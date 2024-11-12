@@ -1,7 +1,9 @@
 import * as YAML from "yaml";
+
 import { ContinueSDK, SlashCommand } from "../..";
 import { stripImages } from "../../llm/images";
 import { getBasename } from "../../util/index";
+
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
 import { updateChatHistory } from "./updateChatHistory";

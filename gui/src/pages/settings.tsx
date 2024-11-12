@@ -140,7 +140,7 @@ function Settings() {
     <FormProvider {...formMethods}>
       <div className="overflow-y-scroll">
         <div
-          className="items-center flex sticky top-0"
+          className="sticky top-0 flex items-center"
           style={{
             borderBottom: `0.5px solid ${lightGray}`,
             backgroundColor: vscBackground,
@@ -150,9 +150,9 @@ function Settings() {
             width="1.2em"
             height="1.2em"
             onClick={submitAndLeave}
-            className="inline-block ml-4 cursor-pointer"
+            className="ml-4 inline-block cursor-pointer"
           />
-          <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
+          <h3 className="m-2 inline-block text-lg font-bold">Settings</h3>
           <ConfigJsonButton
             onClick={() => {
               ideMessenger.post("showFile", {
@@ -191,7 +191,7 @@ function Settings() {
             predictable.`}
                 />
               </h3>
-              <div className="flex justify-between mx-16 gap-1">
+              <div className="mx-16 flex justify-between gap-1">
                 <p>0</p>
                 <Slider
                   type="range"
@@ -272,7 +272,7 @@ function Settings() {
           />
         </div>
 
-        <div className="flex gap-2 justify-end px-4">
+        <div className="flex justify-end gap-2 px-4">
           <CancelButton
             onClick={() => {
               navigate("/");

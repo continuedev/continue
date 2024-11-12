@@ -121,7 +121,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
       mergeAttributes(
         { "data-type": this.name },
         this.options.HTMLAttributes,
-        HTMLAttributes
+        HTMLAttributes,
       ),
       this.options.renderText({
         options: this.options,
@@ -155,7 +155,7 @@ export const SlashCommand = Node.create<SlashCommandOptions>({
               tr.insertText(
                 this.options.suggestion.char || "",
                 pos,
-                pos + node.nodeSize
+                pos + node.nodeSize,
               );
 
               return false;

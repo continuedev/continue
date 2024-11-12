@@ -1,5 +1,6 @@
 import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
+
 import { getMetaKeyName } from "../util/util";
 
 const inlineTipDecoration = vscode.window.createTextEditorDecorationType({

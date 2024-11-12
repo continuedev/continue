@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+
 import { ContextMenuConfig } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import { RangeInFileWithContents } from "core/commands/util";
@@ -11,11 +15,9 @@ import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
+
 import {
   StatusBarStatus,
   getAutocompleteStatusBarDescription,
@@ -34,6 +36,7 @@ import { Battery } from "./util/battery";
 import { getFullyQualifiedPath } from "./util/util";
 import { uriFromFilePath } from "./util/vscode";
 import { VsCodeIde } from "./VsCodeIde";
+
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;

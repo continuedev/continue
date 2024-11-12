@@ -1,6 +1,8 @@
 import { Response } from "node-fetch";
+
 import { EmbeddingsProviderName } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 /**

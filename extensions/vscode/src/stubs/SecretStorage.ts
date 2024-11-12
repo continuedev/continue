@@ -1,6 +1,7 @@
 import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
+
 import * as vscode from "vscode";
 
 const ENCRYPTION_KEY_NAME = "dev.continue.continue";

@@ -1,4 +1,5 @@
 import { LLMOptions, ModelProvider } from "../../index.js";
+
 import OpenAI from "./OpenAI.js";
 
 class Fireworks extends OpenAI {

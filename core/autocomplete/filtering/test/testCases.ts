@@ -1,4 +1,5 @@
 import { dedent } from "../../../util";
+
 import { AutocompleteFileringTestInput } from "./util";
 
 export const TEST_CASES_WITH_DIFF: AutocompleteFileringTestInput[] = [
@@ -62,7 +63,7 @@ function sayHello() {
 `,
     llmOutput: `world!");
 `,
-    expectedCompletion: `world!");`,
+    expectedCompletion: "world!\");",
   },
   {
     description: "Should autocomplete Java when inside a block",
@@ -375,8 +376,8 @@ button {
   border: 2px solid #000;
   border-radius<|fim|>
 }`,
-    llmOutput: `: 5px;`,
-    expectedCompletion: `: 5px;`,
+    llmOutput: ": 5px;",
+    expectedCompletion: ": 5px;",
   },
 
   {
@@ -391,8 +392,8 @@ button {
   border-bottom-right-radius: 8px;
 }
 `,
-    llmOutput: `8`,
-    expectedCompletion: `8`,
+    llmOutput: "8",
+    expectedCompletion: "8",
   },
 
   {
@@ -404,8 +405,8 @@ input:focus {
   border: 2px solid <|fim|>;
 }
 `,
-    llmOutput: `#4CAF50;`,
-    expectedCompletion: `#4CAF50;`,
+    llmOutput: "#4CAF50;",
+    expectedCompletion: "#4CAF50;",
   },
 
   {
@@ -422,8 +423,8 @@ input:focus {
   padding: var(--padding);
 }
 `,
-    llmOutput: `--primary-color`,
-    expectedCompletion: `--primary-color`,
+    llmOutput: "--primary-color",
+    expectedCompletion: "--primary-color",
   },
   {
     description: "Should complete CSS grid template columns",
@@ -435,8 +436,8 @@ input:focus {
   grid-gap: 10px;
 }
 `,
-    llmOutput: `3, 1fr`,
-    expectedCompletion: `3, 1fr`,
+    llmOutput: "3, 1fr",
+    expectedCompletion: "3, 1fr",
   },
 
   {
@@ -476,8 +477,8 @@ function calculateArea($length, $width) {
 }
 
 echo calculateArea(5, 3);`,
-    llmOutput: `return $length * $width;`,
-    expectedCompletion: `return $length * $width;`,
+    llmOutput: "return $length * $width;",
+    expectedCompletion: "return $length * $width;",
     filename: "areaCalculator.php",
   },
 
@@ -488,8 +489,8 @@ echo calculateArea(5, 3);`,
 $colors = array("Red", "Green", <|fim|>);
 
 echo "First color is: " . $colors[0];`,
-    llmOutput: `"Blue"`,
-    expectedCompletion: `"Blue"`,
+    llmOutput: "\"Blue\"",
+    expectedCompletion: "\"Blue\"",
     filename: "colors.php",
   },
   {
@@ -529,8 +530,8 @@ export const Counter = () => {
     </div>
   );
 };`,
-    llmOutput: `0`,
-    expectedCompletion: `0`,
+    llmOutput: "0",
+    expectedCompletion: "0",
     filename: "Counter.tsx",
   },
 
@@ -557,8 +558,8 @@ export const Timer = () => {
     </div>
   );
 };`,
-    llmOutput: `return () => clearInterval(interval);`,
-    expectedCompletion: `return () => clearInterval(interval);`,
+    llmOutput: "return () => clearInterval(interval);",
+    expectedCompletion: "return () => clearInterval(interval);",
     filename: "Timer.tsx",
   },
 
@@ -593,8 +594,8 @@ class Form extends React.Component {
     );
   }
 }`,
-    llmOutput: `this.setState({ name: event.target.value });`,
-    expectedCompletion: `this.setState({ name: event.target.value });`,
+    llmOutput: "this.setState({ name: event.target.value });",
+    expectedCompletion: "this.setState({ name: event.target.value });",
     filename: "Form.tsx",
   },
   {
@@ -646,8 +647,8 @@ print(even_squares)
 odd_squares = [<|fim|>
 print(odd_squares)
 `,
-    llmOutput: `x for x in squares if x % 2 != 0`,
-    expectedCompletion: `x for x in squares if x % 2 != 0`,
+    llmOutput: "x for x in squares if x % 2 != 0",
+    expectedCompletion: "x for x in squares if x % 2 != 0",
   },
   {
     description: "Should autocomplete a simple Go function declaration",
@@ -731,8 +732,8 @@ func main() {
            WHERE release_year > 2000 AND director = 'Christopher Nolan'
            GROUP BY name
            HAVING avg_rating > <|fim|>`,
-    llmOutput: `8.5)`,
-    expectedCompletion: `8.5)`,
+    llmOutput: "8.5)",
+    expectedCompletion: "8.5)",
   },
   {
     description:
@@ -774,8 +775,8 @@ func main() {
           FROM users u
           WHERE u.active = 1
           <|fim|>`,
-    llmOutput: ` AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)`,
-    expectedCompletion: ` AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)`,
+    llmOutput: " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
+    expectedCompletion: " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
   },
   {
     description:
@@ -790,8 +791,8 @@ func main() {
                   ELSE 'Unknown'
                   END as order_status
            FROM orders`,
-    llmOutput: `WHEN status = 'cancelled' THEN 'Cancelled'`,
-    expectedCompletion: `WHEN status = 'cancelled' THEN 'Cancelled'`,
+    llmOutput: "WHEN status = 'cancelled' THEN 'Cancelled'",
+    expectedCompletion: "WHEN status = 'cancelled' THEN 'Cancelled'",
   },
   {
     description: "Should autocomplete HTML paragraph content",
@@ -803,8 +804,8 @@ func main() {
   <p><|fim|></p>
 </body>
 </html>`,
-    llmOutput: `This is a paragraph with some sample text.`,
-    expectedCompletion: `This is a paragraph with some sample text.`,
+    llmOutput: "This is a paragraph with some sample text.",
+    expectedCompletion: "This is a paragraph with some sample text.",
     filename: "test.html",
   },
   {
@@ -816,8 +817,8 @@ func main() {
     <p>Description text.</p>
   </div>
 </div>`,
-    llmOutput: `alt="Description of image"`,
-    expectedCompletion: `alt="Description of image"`,
+    llmOutput: "alt=\"Description of image\"",
+    expectedCompletion: "alt=\"Description of image\"",
     filename: "test.html",
   },
   {
@@ -827,8 +828,8 @@ func main() {
   <li>Item 2</li>
   <li>Item 3</li>
   <li<|fim|></ul>`,
-    llmOutput: `>Item 4</li>`,
-    expectedCompletion: `>Item 4</li>`,
+    llmOutput: ">Item 4</li>",
+    expectedCompletion: ">Item 4</li>",
     filename: "test.html",
   },
 
@@ -874,8 +875,8 @@ end
 numbers = [1, 2, 3, 4, 5]
 squared_numbers = numbers.<|fim|>
 `,
-    llmOutput: `map { |n| n ** 2 }`,
-    expectedCompletion: `map { |n| n ** 2 }`,
+    llmOutput: "map { |n| n ** 2 }",
+    expectedCompletion: "map { |n| n ** 2 }",
     filename: "array_methods.rb",
   },
   {
@@ -888,8 +889,8 @@ public class App {
         System.out.println(message);
     }
 }`,
-    llmOutput: `World`,
-    expectedCompletion: `World`,
+    llmOutput: "World",
+    expectedCompletion: "World",
   },
   {
     description:
@@ -929,8 +930,8 @@ public class App {
     <|fim|>
   ]
 }`,
-    llmOutput: `, { "id": 3, "name": "Charlie" }`,
-    expectedCompletion: `, { "id": 3, "name": "Charlie" }`,
+    llmOutput: ", { \"id\": 3, \"name\": \"Charlie\" }",
+    expectedCompletion: ", { \"id\": 3, \"name\": \"Charlie\" }",
   },
   {
     description: "Should autocomplete within a CSV record",
@@ -938,8 +939,8 @@ public class App {
     input: `Name, Age, City
 John Doe, 30, New York
 Jane Smith<|fim|>`,
-    llmOutput: `, 25, Los Angeles`,
-    expectedCompletion: `, 25, Los Angeles`,
+    llmOutput: ", 25, Los Angeles",
+    expectedCompletion: ", 25, Los Angeles",
   },
   {
     description:
@@ -948,8 +949,8 @@ Jane Smith<|fim|>`,
     input: `Product, Price, Quantity
 Laptop, 1200, 5
 Smart<|fim|>`,
-    llmOutput: `phone, 800, 10`,
-    expectedCompletion: `phone, 800, 10`,
+    llmOutput: "phone, 800, 10",
+    expectedCompletion: "phone, 800, 10",
   },
   {
     description: "Should complete CSV structure adding closing brackets",
@@ -957,8 +958,8 @@ Smart<|fim|>`,
     input: `ID, Name, JoiningDate
 1, Alice, 2023-01-10
 2, B<|fim|>`,
-    llmOutput: `ob, 2023-02-10`,
-    expectedCompletion: `ob, 2023-02-10`,
+    llmOutput: "ob, 2023-02-10",
+    expectedCompletion: "ob, 2023-02-10",
   },
   {
     description: "Should complete YAML list item and preserve structure",
@@ -1125,8 +1126,8 @@ sumTree (Node left right) =
   let leftSum = <|fim|>
       rightSum = sumTree right
   in leftSum + rightSum`,
-    llmOutput: `sumTree left`,
-    expectedCompletion: `sumTree left`,
+    llmOutput: "sumTree left",
+    expectedCompletion: "sumTree left",
   },
   {
     description: "Haskell: Complex function with where clause and guards",
@@ -1142,8 +1143,8 @@ solveQuadratic a b c
     sqrtD = sqrt discriminant
     x1 = (-b + sqrtD) / (2*a)
     <|fim|> = (-b - sqrtD) / (2*a)`,
-    llmOutput: `x2`,
-    expectedCompletion: `x2`,
+    llmOutput: "x2",
+    expectedCompletion: "x2",
   },
   {
     description: "Haskell: List comprehension with complex filter",
@@ -1153,8 +1154,8 @@ solveQuadratic a b c
 primesUpTo :: Int -> [Int]
 primesUpTo n = [x | x <- [2..n], isPrime x]
   where isPrime num = <|fim|> && all (\d -> num \`mod\` d /= 0) [2..(floor . sqrt $ fromIntegral num)]`,
-    llmOutput: `num > 1`,
-    expectedCompletion: `num > 1`,
+    llmOutput: "num > 1",
+    expectedCompletion: "num > 1",
   },
   {
     description: "Should autocomplete Dart class methods",
@@ -1192,8 +1193,8 @@ void main() {
   var name = "World";
   print('Hello, <|fim|>!');
 }`,
-    llmOutput: `\${name}`,
-    expectedCompletion: `\${name}`,
+    llmOutput: "${name}",
+    expectedCompletion: "${name}",
   },
   {
     description: "Should autocomplete within a Dart function body",
@@ -1213,8 +1214,8 @@ class Counter {
     count = 0;
   }
 }`,
-    llmOutput: `count--;`,
-    expectedCompletion: `count--;`,
+    llmOutput: "count--;",
+    expectedCompletion: "count--;",
   },
   {
     description:
@@ -1223,8 +1224,8 @@ class Counter {
   (let [sum (+ a b)]
     (println "The sum is" sum)
     sum<|fim|>`,
-    llmOutput: `))`,
-    expectedCompletion: `))`,
+    llmOutput: "))",
+    expectedCompletion: "))",
     filename: "test.clj",
   },
   {
@@ -1236,8 +1237,8 @@ class Counter {
    :age 30
    <|fim|>
   (println "User information loaded"))`,
-    llmOutput: `:location "Unknown"}`,
-    expectedCompletion: `:location "Unknown"}`,
+    llmOutput: ":location \"Unknown\"}",
+    expectedCompletion: ":location \"Unknown\"}",
     filename: "test.clj",
   },
   {
@@ -1248,8 +1249,8 @@ class Counter {
     (when (seq nums)
       (println (first nums))
       (recur (rest nums)))))`,
-    llmOutput: ` 7,`,
-    expectedCompletion: ` 7,`,
+    llmOutput: " 7,",
+    expectedCompletion: " 7,",
     filename: "test.clj",
   },
   {
@@ -1273,8 +1274,8 @@ numbers <- c(1, 2, 3, 4, 5)
 for (number in numbers) {
   print(<|fim|>)
 }`,
-    llmOutput: `number)`,
-    expectedCompletion: `number)`,
+    llmOutput: "number)",
+    expectedCompletion: "number)",
   },
   {
     description: "Should autocomplete R data frame creation",
@@ -1285,8 +1286,8 @@ data <- data.frame(
   Age = c(25, 30, 35),
   <|fim|>
 )`,
-    llmOutput: `Height = c(165, 180, 175)`,
-    expectedCompletion: `Height = c(165, 180, 175)`,
+    llmOutput: "Height = c(165, 180, 175)",
+    expectedCompletion: "Height = c(165, 180, 175)",
   },
   {
     description: "Should autocomplete R if-else statement",
@@ -1300,8 +1301,8 @@ if (grade >= 90) {
 } else {
   print("C")
 }`,
-    llmOutput: `print("B")`,
-    expectedCompletion: `print("B")`,
+    llmOutput: "print(\"B\")",
+    expectedCompletion: "print(\"B\")",
   },
   {
     description: "Should autocomplete R ggplot2 plot structure",
@@ -1312,8 +1313,8 @@ library(ggplot2)
 ggplot(data=mtcars, aes(x=wt, y=mpg)) +
   geom_point() +
   <|fim|>`,
-    llmOutput: `geom_smooth(method='lm', se=FALSE)`,
-    expectedCompletion: `geom_smooth(method='lm', se=FALSE)`,
+    llmOutput: "geom_smooth(method='lm', se=FALSE)",
+    expectedCompletion: "geom_smooth(method='lm', se=FALSE)",
   },
   {
     description: "Should autocomplete Scala class with a method",
@@ -1323,8 +1324,8 @@ ggplot(data=mtcars, aes(x=wt, y=mpg)) +
         <|fim|>
       }
   }`,
-    llmOutput: `s"Hello, my name is $name and I am $age years old."`,
-    expectedCompletion: `s"Hello, my name is $name and I am $age years old."`,
+    llmOutput: "s\"Hello, my name is $name and I am $age years old.\"",
+    expectedCompletion: "s\"Hello, my name is $name and I am $age years old.\"",
   },
 
   {
@@ -1334,8 +1335,8 @@ ggplot(data=mtcars, aes(x=wt, y=mpg)) +
   case class Person(name: String, age: Int, address: Address)
   
   val alice = Person("Alice", 30, Address("Wonderland", <|fim|>))`,
-    llmOutput: `"12345")`,
-    expectedCompletion: `"12345")`,
+    llmOutput: "\"12345\")",
+    expectedCompletion: "\"12345\")",
   },
 
   {
@@ -1380,8 +1381,8 @@ int main() {
     printf("Result: %d", add(2, 3));
     return 0;
 }`,
-    llmOutput: `return a - b;`,
-    expectedCompletion: `return a - b;`,
+    llmOutput: "return a - b;",
+    expectedCompletion: "return a - b;",
   },
 
   {
@@ -1400,8 +1401,8 @@ int main() {
     printf("Name: %s, Age: %d, Height: %.2f", alice.name, alice.age, alice.height);
     return 0;
 }`,
-    llmOutput: `5.5`,
-    expectedCompletion: `5.5`,
+    llmOutput: "5.5",
+    expectedCompletion: "5.5",
   },
 
   {
@@ -1453,8 +1454,8 @@ data class User(
     val email: String,
     <|fim|>
 )`,
-    llmOutput: `val age: Int`,
-    expectedCompletion: `val age: Int`,
+    llmOutput: "val age: Int",
+    expectedCompletion: "val age: Int",
   },
   {
     description:
@@ -1490,8 +1491,8 @@ contract SimpleStorage {
     }
 }
   `,
-    llmOutput: `return data;`,
-    expectedCompletion: `return data;`,
+    llmOutput: "return data;",
+    expectedCompletion: "return data;",
   },
 
   {
@@ -1508,8 +1509,8 @@ contract EventExample {
     }
 }
   `,
-    llmOutput: `id, content`,
-    expectedCompletion: `id, content`,
+    llmOutput: "id, content",
+    expectedCompletion: "id, content",
   },
 
   {
@@ -1582,8 +1583,8 @@ const multiplyNumbers = (a: number, b: number): number => {
 
 console.log(multiplyNumbers(2, 3));
 `,
-    llmOutput: `turn a * b;`,
-    expectedCompletion: `turn a * b;`,
+    llmOutput: "turn a * b;",
+    expectedCompletion: "turn a * b;",
   },
 
   // TODO
@@ -1677,8 +1678,8 @@ public class Person
 {
     void <|fim|>
 }`,
-    llmOutput: `Greet();`,
-    expectedCompletion: `Greet();`,
+    llmOutput: "Greet();",
+    expectedCompletion: "Greet();",
   },
   {
     description: "Should autocomplete inside C# method with if condition",
@@ -1696,8 +1697,8 @@ public class Calculator
         return 0;
     }
 }`,
-    llmOutput: `a > 0 && b > 0`,
-    expectedCompletion: `a > 0 && b > 0`,
+    llmOutput: "a > 0 && b > 0",
+    expectedCompletion: "a > 0 && b > 0",
   },
   {
     description: "Should complete a simple Julia function",
@@ -1706,8 +1707,8 @@ public class Calculator
     <|fim|>
 end
 `,
-    llmOutput: `return length * width`,
-    expectedCompletion: `return length * width`,
+    llmOutput: "return length * width",
+    expectedCompletion: "return length * width",
   },
   {
     description: "Should autocomplete Julia for loop",
@@ -1721,8 +1722,8 @@ end
 
 println(squared_numbers)
 `,
-    llmOutput: `push!(squared_numbers, num^2)`,
-    expectedCompletion: `push!(squared_numbers, num^2)`,
+    llmOutput: "push!(squared_numbers, num^2)",
+    expectedCompletion: "push!(squared_numbers, num^2)",
   },
   {
     description: "Should complete a Julia struct definition",
@@ -1756,8 +1757,8 @@ end
 
 println(get_grade("Alice")) # Should print 90
 `,
-    llmOutput: `student_name`,
-    expectedCompletion: `student_name`,
+    llmOutput: "student_name",
+    expectedCompletion: "student_name",
   },
   {
     description: "Should complete a Julia module declaration",
@@ -1776,8 +1777,8 @@ end
 
 <|fim|>
 `,
-    llmOutput: `end`,
-    expectedCompletion: `end`,
+    llmOutput: "end",
+    expectedCompletion: "end",
   },
   {
     description: "Should complete F# let-binding with function definition",
@@ -1786,8 +1787,8 @@ end
 
 let calculateArea length width =
     <|fim|>`,
-    llmOutput: `length * width`,
-    expectedCompletion: `length * width`,
+    llmOutput: "length * width",
+    expectedCompletion: "length * width",
   },
 
   {
@@ -1828,8 +1829,8 @@ let john = { FirstName = "John"; LastName = "Doe"; Age = 30 }`,
     input: `let squares = [ for x in 1..10 -> x * x ]
 let evenSquares = [ for x in squares do if x % 2 = 0 then yield x ]
 let oddSquares = [<|fim|>]`,
-    llmOutput: ` for x in squares do if x % 2 <> 0 then yield x ]`,
-    expectedCompletion: ` for x in squares do if x % 2 <> 0 then yield x ]`,
+    llmOutput: " for x in squares do if x % 2 <> 0 then yield x ]",
+    expectedCompletion: " for x in squares do if x % 2 <> 0 then yield x ]",
   },
   {
     description: "Should complete an F# recursive function",
@@ -1837,8 +1838,8 @@ let oddSquares = [<|fim|>]`,
     input: `let rec factorial n =
     if n <= 1 then 1
     else n <|fim|> factorial (n - 1)`,
-    llmOutput: `*`,
-    expectedCompletion: `*`,
+    llmOutput: "*",
+    expectedCompletion: "*",
   },
   {
     description: "Should complete F# member method inside a class type",
@@ -1919,8 +1920,8 @@ let oddSquares = [<|fim|>]`,
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
 }`,
-    llmOutput: ` transition(all 0.3s ease);`,
-    expectedCompletion: ` transition(all 0.3s ease);`,
+    llmOutput: " transition(all 0.3s ease);",
+    expectedCompletion: " transition(all 0.3s ease);",
   },
 
   {
@@ -1937,8 +1938,8 @@ $secondary-color: #6c757d;
   color: #fff;
   border-radius: 4px;
 }`,
-    llmOutput: `$primary-`,
-    expectedCompletion: `$primary-`,
+    llmOutput: "$primary-",
+    expectedCompletion: "$primary-",
   },
   {
     description: "Should autocomplete Vue component method",
@@ -2027,8 +2028,8 @@ export default {
 };
 </script>
 `,
-    llmOutput: `this.completed`,
-    expectedCompletion: `this.completed`,
+    llmOutput: "this.completed",
+    expectedCompletion: "this.completed",
   },
   {
     description: "Should autocomplete Svelte reactive statement",
@@ -2048,8 +2049,8 @@ export default {
   Clicked {count} times
 </button>
 `,
-    llmOutput: `doubledCount = count * 2`,
-    expectedCompletion: `doubledCount = count * 2`,
+    llmOutput: "doubledCount = count * 2",
+    expectedCompletion: "doubledCount = count * 2",
   },
 
   {
@@ -2065,8 +2066,8 @@ export default {
   <ChildComponent <|fim|> />
 </main>
 `,
-    llmOutput: `name="World"`,
-    expectedCompletion: `name="World"`,
+    llmOutput: "name=\"World\"",
+    expectedCompletion: "name=\"World\"",
   },
 
   {
@@ -2083,7 +2084,7 @@ export default {
   {/each<|fim|>
 </ul>
 `,
-    llmOutput: `}`,
-    expectedCompletion: `}`,
+    llmOutput: "}",
+    expectedCompletion: "}",
   },
 ];

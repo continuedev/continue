@@ -1,5 +1,7 @@
 import fs from "fs";
+
 import ignore from "ignore";
+
 import { getGlobalContinueIgnorePath } from "../util/paths";
 
 export const DEFAULT_IGNORE_FILETYPES = [

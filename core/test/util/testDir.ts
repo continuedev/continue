@@ -1,6 +1,6 @@
 import fs from "fs";
-import path from "path";
 import os from "os";
+import path from "path";
 
 // Want this outside of the git repository so we can change branches in tests
 export const TEST_DIR = path.join(os.tmpdir(), "testDir");

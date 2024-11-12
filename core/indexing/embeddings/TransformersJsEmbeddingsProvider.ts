@@ -1,8 +1,10 @@
 import path from "path";
+
 import { EmbeddingsProviderName } from "../../index.js";
 // @ts-ignore
 // prettier-ignore
 import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class EmbeddingsPipeline {

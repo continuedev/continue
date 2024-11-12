@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+
 import { testIde } from "../../test/util/fixtures";
 import {
   mockFileContents,
@@ -10,6 +11,7 @@ import {
 import { addToTestDir } from "../../test/util/testDir";
 import { DatabaseConnection, SqliteDb } from "../refreshIndex";
 import { IndexResultType } from "../types";
+
 import { ChunkCodebaseIndex } from "./ChunkCodebaseIndex";
 
 jest.useFakeTimers();

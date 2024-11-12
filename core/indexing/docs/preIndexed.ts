@@ -1,5 +1,6 @@
-import { Chunk } from "../../";
 import request from "request";
+
+import { Chunk } from "../../";
 
 export function getS3Filename(
   embeddingsProviderId: string,

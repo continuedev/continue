@@ -1,9 +1,11 @@
 import { execSync } from "child_process";
-import * as JSONC from "comment-json";
 import * as fs from "fs";
 import os from "os";
 import path from "path";
+
+import * as JSONC from "comment-json";
 import * as tar from "tar";
+
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -32,6 +34,7 @@ import ContinueProxyContextProvider from "../context/providers/ContinueProxyCont
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
+import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
 import { AllRerankers } from "../context/rerankers/index";
 import { LLMReranker } from "../context/rerankers/llm";
 import { allEmbeddingsProviders } from "../indexing/embeddings";
@@ -42,6 +45,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
 import { copyOf } from "../util";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions";
+import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
 import {
   DEFAULT_CONFIG_TS_CONTENTS,
@@ -54,6 +58,7 @@ import {
   getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
 } from "../util/paths";
+
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -67,8 +72,6 @@ import {
 } from "./promptFile.js";
 import { ConfigValidationError, validateConfig } from "./validation.js";
 
-import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
-import { GlobalContext } from "../util/GlobalContext";
 
 export interface ConfigResult<T> {
   config: T | undefined;

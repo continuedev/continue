@@ -1,5 +1,7 @@
-import { Analytics } from "@continuedev/config-types";
 import net from "node:net";
+
+import { Analytics } from "@continuedev/config-types";
+
 import {
   ControlPlaneProxyInfo,
   IAnalyticsProvider,
