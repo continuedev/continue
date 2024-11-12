@@ -944,6 +944,7 @@ export interface ContinueUIConfig {
   fontSize?: number;
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
+  getChatTitles?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -1005,11 +1006,6 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
-
-  /**
-   * Prompt the user's LLM for a title given the current chat content
-   */
-  getChatTitles?: boolean;
 
   /**
    * If set to true, we will attempt to pull down and install an instance of Chromium

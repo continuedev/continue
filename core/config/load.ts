@@ -1,11 +1,10 @@
 import { execSync } from "child_process";
+import * as JSONC from "comment-json";
 import * as fs from "fs";
 import os from "os";
 import path from "path";
 
-import * as JSONC from "comment-json";
 import * as tar from "tar";
-
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -72,7 +71,6 @@ import {
 } from "./promptFile.js";
 import { ConfigValidationError, validateConfig } from "./validation.js";
 
-
 export interface ConfigResult<T> {
   config: T | undefined;
   errors: ConfigValidationError[] | undefined;
@@ -136,6 +134,13 @@ function loadSerializedConfig(
 
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
+  }
+
+  if (config.ui?.getChatTitles === undefined) {
+    config.ui = {
+      ...config.ui,
+      getChatTitles: true,
+    };
   }
 
   if (ideSettings.remoteConfigServerUrl) {

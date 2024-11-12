@@ -4,7 +4,7 @@ import { LRUCache } from "lru-cache";
 import Parser from "web-tree-sitter";
 
 import { IDE } from "../../..";
-import { getQueryForFile, TSQueryType } from "../../../util/treeSitter";
+import { getQueryForFile } from "../../../util/treeSitter";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 import { AutocompleteSnippet } from "../ranking";
@@ -27,6 +27,7 @@ export class RootPathContextService {
     "program",
     "function_declaration",
     "method_definition",
+    "class_declaration",
   ]);
 
   /**
@@ -54,22 +55,11 @@ export class RootPathContextService {
       case "program":
         this.importDefinitionsService.get(filepath);
         break;
-      case "function_declaration":
+      default:
         query = await getQueryForFile(
           filepath,
-          TSQueryType.FunctionDeclaration,
+          `root-path-context-queries/${node.type}`,
         );
-        break;
-      case "method_definition":
-        query = await getQueryForFile(filepath, TSQueryType.MethodDefinition);
-        break;
-      case "function_definition":
-        query = await getQueryForFile(filepath, TSQueryType.FunctionDefinition);
-        break;
-      case "method_declaration":
-        query = await getQueryForFile(filepath, TSQueryType.MethodDeclaration);
-        break;
-      default:
         break;
     }
 
@@ -79,26 +69,35 @@ export class RootPathContextService {
 
     await Promise.all(
       query.matches(node).map(async (match) => {
-        const startPosition = match.captures[0].node.startPosition;
-        const endPosition = match.captures[0].node.endPosition;
-        const definitions = await this.ide.gotoDefinition({
-          filepath,
-          position: {
-            line: endPosition.row,
-            character: endPosition.column,
-          },
-        });
-        const newSnippets = await Promise.all(
-          definitions.map(async (def) => ({
-            ...def,
-            contents: await this.ide.readRangeInFile(def.filepath, def.range),
-          })),
-        );
-        snippets.push(...newSnippets);
+        for (const item of match.captures) {
+          const endPosition = item.node.endPosition;
+          const newSnippets = await this.getSnippets(filepath, endPosition);
+          snippets.push(...newSnippets);
+        }
       }),
     );
 
     return snippets;
+  }
+
+  private async getSnippets(
+    filepath: string,
+    endPosition: Parser.Point,
+  ): Promise<AutocompleteSnippet[]> {
+    const definitions = await this.ide.gotoDefinition({
+      filepath,
+      position: {
+        line: endPosition.row,
+        character: endPosition.column,
+      },
+    });
+    const newSnippets = await Promise.all(
+      definitions.map(async (def) => ({
+        ...def,
+        contents: await this.ide.readRangeInFile(def.filepath, def.range),
+      })),
+    );
+    return newSnippets;
   }
 
   async getContextForPath(
