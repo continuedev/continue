@@ -1,19 +1,19 @@
 import {
+  useRef,
+  useEffect,
+  useState,
+  RefObject,
+  useCallback,
+  useMemo,
+} from "react";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
+import { HeaderButton, Input } from "..";
+import {
   ArrowDownIcon,
   ArrowUpIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import {
-  RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useSelector } from "react-redux";
-import { HeaderButton, Input } from "..";
-import { RootState } from "../../redux/store";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 interface SearchMatch {
