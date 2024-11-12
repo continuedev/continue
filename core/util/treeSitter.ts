@@ -139,7 +139,7 @@ export enum TSQueryType {
 
 export async function getQueryForFile(
   filepath: string,
-  queryType: TSQueryType,
+  queryPath: string,
 ): Promise<Parser.Query | undefined> {
   const language = await getLanguageForFile(filepath);
   if (!language) {
@@ -153,7 +153,7 @@ export async function getQueryForFile(
     ...(process.env.NODE_ENV === "test"
       ? ["extensions", "vscode", "tree-sitter"]
       : ["tree-sitter"]),
-    queryType,
+    queryPath,
     `${fullLangName}.scm`,
   );
   if (!fs.existsSync(sourcePath)) {
