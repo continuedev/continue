@@ -366,6 +366,14 @@ const commandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
+      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
+      // when the GUI hasn't yet been setup and we should instead be
+      // immediately throwing an error, or returning a Result object
+      if (!sidebar.isReady) {
+        focusGUI();
+        return;
+      }
+
       const historyLength = await sidebar.webviewProtocol.request(
         "getWebviewHistoryLength",
         undefined,
@@ -388,6 +396,14 @@ const commandsMap: (
       }
     },
     "continue.focusContinueInputWithoutClear": async () => {
+      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
+      // when the GUI hasn't yet been setup and we should instead be
+      // immediately throwing an error, or returning a Result object
+      if (!sidebar.isReady) {
+        focusGUI();
+        return;
+      }
+
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
