@@ -1,7 +1,7 @@
+// @ts-ignore
 import adf2md from "adf-to-md";
 
 import { RequestOptions } from "../../../";
-// @ts-ignore
 
 interface JiraClientOptions {
   domain: string;
