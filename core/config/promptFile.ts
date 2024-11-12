@@ -3,13 +3,19 @@ import path from "path";
 import Handlebars from "handlebars";
 import * as YAML from "yaml";
 
-import { BaseContextProvider } from "../context";
 import { walkDir } from "../indexing/walkDir";
 import { stripImages } from "../llm/images";
 import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
 import { getBasename } from "../util/index";
 
-import type { ChatHistory, ChatHistoryItem, ChatMessage, ContextItem, ContinueSDK, IContextProvider, IDE, SlashCommand } from "..";
+import type {
+  ChatMessage,
+  ContextItem,
+  ContinueSDK,
+  IContextProvider,
+  IDE,
+  SlashCommand,
+} from "..";
 
 export const DEFAULT_PROMPTS_FOLDER = ".prompts";
 
@@ -93,11 +99,15 @@ export async function createNewPromptFile(
 export function slashCommandFromPromptFile(
   path: string,
   content: string,
-): SlashCommand {
-  const { name, description, systemMessage, prompt } = parsePromptFile(
+): SlashCommand | null {
+  const { name, description, systemMessage, prompt, version } = parsePromptFile(
     path,
     content,
   );
+
+  if (version !== 1) {
+    return null;
+  }
 
   return {
     name,
@@ -134,6 +144,7 @@ function parsePromptFile(path: string, content: string) {
   const preamble = YAML.parse(preambleRaw) ?? {};
   const name = preamble.name ?? getBasename(path).split(".prompt")[0];
   const description = preamble.description ?? name;
+  const version = preamble.version ?? 2;
 
   let systemMessage: string | undefined = undefined;
   if (prompt.includes("<system>")) {
@@ -141,7 +152,7 @@ function parsePromptFile(path: string, content: string) {
     prompt = prompt.split("</system>")[1].trim();
   }
 
-  return { name, description, systemMessage, prompt };
+  return { name, description, systemMessage, prompt, version };
 }
 
 function extractUserInput(input: string, commandName: string): string {
@@ -151,7 +162,11 @@ function extractUserInput(input: string, commandName: string): string {
   return input;
 }
 
-async function renderPrompt(prompt: string, context: ContinueSDK, userInput: string) {
+async function renderPrompt(
+  prompt: string,
+  context: ContinueSDK,
+  userInput: string,
+) {
   const helpers = getContextProviderHelpers(context);
 
   // A few context providers that don't need to be in config.json to work in .prompt files
