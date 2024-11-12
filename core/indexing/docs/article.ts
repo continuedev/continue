@@ -1,7 +1,9 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
+
 import { Chunk } from "../../";
 import { cleanFragment, cleanHeader } from "../chunk/markdown";
+
 import { type PageData } from "./DocsCrawler";
 
 export type ArticleComponent = {

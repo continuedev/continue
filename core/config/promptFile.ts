@@ -1,12 +1,15 @@
-import Handlebars from "handlebars";
 import path from "path";
+
+import Handlebars from "handlebars";
 import * as YAML from "yaml";
-import type { ChatHistory, ChatHistoryItem, ChatMessage, ContextItem, ContinueSDK, IContextProvider, IDE, SlashCommand } from "..";
+
+import { BaseContextProvider } from "../context";
 import { walkDir } from "../indexing/walkDir";
 import { stripImages } from "../llm/images";
 import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
 import { getBasename } from "../util/index";
-import { BaseContextProvider } from "../context";
+
+import type { ChatHistory, ChatHistoryItem, ChatMessage, ContextItem, ContinueSDK, IContextProvider, IDE, SlashCommand } from "..";
 
 export const DEFAULT_PROMPTS_FOLDER = ".prompts";
 

@@ -1,5 +1,6 @@
-import os from "node:os";
 import { exec, ChildProcess } from "child_process";
+import os from "node:os";
+
 import type { IMessenger } from "./messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 

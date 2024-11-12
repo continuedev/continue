@@ -1,7 +1,7 @@
 import React from "react";
 import { type PlacesType } from "react-tooltip";
-import { HeaderButton } from "..";
 import { v4 as uuidv4 } from "uuid";
+import { HeaderButton } from "..";
 import { ToolTip } from "./Tooltip";
 
 interface HeaderButtonWithToolTipProps {

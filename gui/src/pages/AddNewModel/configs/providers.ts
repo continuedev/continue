@@ -356,8 +356,10 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     title: "xAI",
     provider: "xAI",
     icon: "xAI.png",
-    description: "xAI is a company working on building artificial intelligence to accelerate human scientific discovery",
-    longDescription: "To get started with xAI, obtain an API key from their [console](https://console.x.ai/).",
+    description:
+      "xAI is a company working on building artificial intelligence to accelerate human scientific discovery",
+    longDescription:
+      "To get started with xAI, obtain an API key from their [console](https://console.x.ai/).",
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     collectInputFor: [
       {
@@ -368,9 +370,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         required: true,
       },
     ],
-    packages: [
-      models.grokBeta,
-    ],
+    packages: [models.grokBeta],
     apiKeyUrl: "https://console.x.ai/",
   },
   lmstudio: {
@@ -657,8 +657,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [
       models.VertexGemini15Pro,
       models.VertexGemini15Flash,
-      models.mistralLarge
-
+      models.mistralLarge,
     ],
     collectInputFor: [
       {

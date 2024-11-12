@@ -1,4 +1,5 @@
 import { SlashCommand } from "../../";
+
 import EditSlashCommand from "./edit";
 
 const CommentSlashCommand: SlashCommand = {

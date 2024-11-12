@@ -1,6 +1,7 @@
 import { streamLines } from "../../../diff/util";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../../util/parameters";
 import { HelperVars } from "../../util/HelperVars";
+
 import { stopAtStopTokens } from "./charStream";
 import {
   avoidEmptyComments,

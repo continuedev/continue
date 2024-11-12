@@ -1,10 +1,11 @@
+import OpenAI from "./OpenAI.js";
+
 import type {
   CompletionOptions,
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
 
-import OpenAI from "./OpenAI.js";
 
 class Together extends OpenAI {
   static providerName: ModelProvider = "together";

@@ -1,4 +1,5 @@
 import { distance } from "fastest-levenshtein";
+
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
 

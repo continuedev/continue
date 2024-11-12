@@ -1,5 +1,6 @@
-import * as vscode from "vscode";
 import * as os from "os";
+
+import * as vscode from "vscode";
 
 export class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(

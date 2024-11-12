@@ -1,3 +1,5 @@
+import { getDatabaseAdapter } from "dbinfoz";
+
 import {
   ContextItem,
   ContextProviderDescription,
@@ -6,7 +8,6 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
-import { getDatabaseAdapter } from "dbinfoz";
 
 class DatabaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

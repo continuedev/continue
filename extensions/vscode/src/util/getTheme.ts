@@ -1,8 +1,10 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+
 import mergeJson from "core/util/merge";
 import { convertTheme } from "monaco-vscode-textmate-theme-converter/lib/cjs";
 import * as vscode from "vscode";
+
 import { getExtensionUri } from "./vscode";
 
 const builtinThemes: any = {

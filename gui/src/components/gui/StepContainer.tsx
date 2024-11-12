@@ -14,9 +14,9 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
-import HeaderButtonWithToolTip from "./HeaderButtonWithToolTip";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import { CopyIconButton } from "./CopyIconButton";
+import HeaderButtonWithToolTip from "./HeaderButtonWithToolTip";
 
 interface StepContainerProps {
   item: ChatHistoryItem;

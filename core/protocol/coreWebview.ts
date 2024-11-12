@@ -1,4 +1,5 @@
 import { ProfileDescription } from "../config/ConfigHandler.js";
+
 import { ToCoreFromIdeOrWebviewProtocol } from "./core.js";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
