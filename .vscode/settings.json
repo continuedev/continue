@@ -13,6 +13,7 @@
       "args": ["-l"]
     }
   },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "search.exclude": {
     "**/package-lock.json": true,
     "binary/bin/**": true,

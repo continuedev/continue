@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.226",
+  "version": "0.9.227",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -540,7 +540,7 @@
     },
     "jsonValidation": [
       {
-        "fileMatch": "**/.continue/config.json",
+        "fileMatch": "**/.continue*/config.json",
         "url": "./config_schema.json"
       },
       {
