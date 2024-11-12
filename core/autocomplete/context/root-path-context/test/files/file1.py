@@ -1,4 +1,4 @@
-from base_module import BaseClass, Collection, Person, Address
+from .base_module import BaseClass, Collection, Person, Address
 from typing import List
 
 def get_address(person: Person) -> Address:
