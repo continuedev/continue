@@ -284,7 +284,8 @@ export class VsCodeExtension {
 
       if (
         filepath.endsWith(".continuerc.json") ||
-        filepath.endsWith(".prompt")
+        filepath.endsWith(".prompt") ||
+        filepath.endsWith(".instructions")
       ) {
         this.configHandler.reloadConfig();
       } else if (
@@ -296,14 +297,16 @@ export class VsCodeExtension {
       } else {
         // Reindex the file
         this.core.invoke("index/forceReIndex", {
-          dirs: [filepath]
+          dirs: [filepath],
         });
       }
     });
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
       this.core.invoke("index/forceReIndex", {
-        dirs: event.files.map((file) => file.fsPath.split("/").slice(0, -1).join("/"))
+        dirs: event.files.map((file) =>
+          file.fsPath.split("/").slice(0, -1).join("/"),
+        ),
       });
     });
 
@@ -352,7 +355,8 @@ export class VsCodeExtension {
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider {
+      implements vscode.TextDocumentContentProvider
+    {
       // emitter and its event
       onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
       onDidChange = this.onDidChangeEmitter.event;
