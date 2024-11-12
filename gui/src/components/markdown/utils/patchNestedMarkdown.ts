@@ -10,6 +10,7 @@
 */
 
 export const patchNestedMarkdown = (source: string): string => {
+  if (!source.includes("```m")) return source; // For performance
   // const start = Date.now();
   let nestCount = 0;
   const lines = source.split("\n");
