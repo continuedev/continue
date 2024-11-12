@@ -1,5 +1,7 @@
 import fs from "node:fs";
+
 import { EmbeddingsProvider } from "../";
+
 import { getGlobalContextFilePath } from "./paths";
 
 export type GlobalContextType = {
@@ -14,6 +16,7 @@ export type GlobalContextType = {
    */
   curEmbeddingsProviderId: EmbeddingsProvider["id"];
   hasDismissedConfigTsNoticeJetBrains: boolean;
+  hasAlreadyCreatedAPromptFile: boolean;
 };
 
 /**

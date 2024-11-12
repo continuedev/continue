@@ -1,8 +1,8 @@
 import {
-  InformationCircleIcon,
-  ExclamationTriangleIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/solid";
 import { ReactNode } from "react";
 import { vscBackground } from "..";
@@ -39,10 +39,10 @@ function Alert({ children, type = "info" }: AlertProps) {
   const { Icon } = ALERT_CONFIGS[type];
 
   return (
-    <div className="p-4 rounded-lg shadow-none border-l-4 bg-[color:var(--vscode-editor-foreground)] opacity-70">
+    <div className="rounded-lg border-l-4 bg-[color:var(--vscode-editor-foreground)] p-4 opacity-70 shadow-none">
       <div className="flex items-start">
         <Icon
-          className="w-6 min-w-5 h-6 min-h-5"
+          className="h-6 min-h-5 w-6 min-w-5"
           style={{ color: vscBackground }}
         />
 

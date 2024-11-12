@@ -1,7 +1,8 @@
-import ignore from "ignore";
 import path from "path";
+
+import ignore from "ignore";
 import { v4 as uuidv4 } from "uuid";
-import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import {
@@ -10,7 +11,6 @@ import {
   setupLocalConfigAfterFreeTrial,
   setupQuickstartConfig,
 } from "./config/onboarding";
-import { createNewPromptFile } from "./config/promptFile";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
 import { ContinueServerClient } from "./continueServer/stubs/client";
@@ -21,17 +21,20 @@ import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
 import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { GlobalContext } from "./util/GlobalContext";
+import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
 import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
+import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
+
+import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import type { IMessenger, Message } from "./util/messenger";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -80,7 +83,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => {},
+    private readonly onWrite: (text: string) => Promise<void> = async () => { },
   ) {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
@@ -171,7 +174,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => {},
+      (e) => { },
       (..._) => Promise.resolve([]),
     );
 
@@ -248,11 +251,11 @@ export class Core {
     });
 
     on("config/newPromptFile", async (msg) => {
-      void createNewPromptFile(
+      await createNewPromptFileV2(
         this.ide,
         (await this.config()).experimental?.promptPath,
       );
-      void this.configHandler.reloadConfig();
+      await this.configHandler.reloadConfig();
     });
 
     on("config/reload", (msg) => {
@@ -681,7 +684,7 @@ export class Core {
         await codebaseIndexer.clearIndexes();
       }
 
-      const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
+      const dirs = data?.dirs ?? await this.ide.getWorkspaceDirs();
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {

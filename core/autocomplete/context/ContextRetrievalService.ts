@@ -1,6 +1,7 @@
 import { IDE } from "../..";
 import { HelperVars } from "../util/HelperVars";
 import { RecentlyEditedRange } from "../util/types";
+
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
 import { AutocompleteSnippet, getSymbolsForSnippet } from "./ranking";
 import { RootPathContextService } from "./root-path-context/RootPathContextService";

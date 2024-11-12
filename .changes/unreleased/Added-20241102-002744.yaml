@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Added
-body: Significantly faster and more accurate docs crawler by default
-time: 2024-11-02T00:27:44.408045-07:00

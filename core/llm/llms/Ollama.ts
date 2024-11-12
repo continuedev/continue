@@ -30,6 +30,7 @@ interface ModelFileParams {
   min_p?: number;
   // deprecated?
   num_thread?: number;
+  use_mmap?: boolean;	
   num_gqa?: number;
   num_gpu?: number;
 }
@@ -191,6 +192,7 @@ class Ollama extends BaseLLM {
       num_ctx: this.contextLength,
       mirostat: options.mirostat,
       num_thread: options.numThreads,
+      use_mmap: options.useMmap,
       min_p: options.minP,
     };
   }

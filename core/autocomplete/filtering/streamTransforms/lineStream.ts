@@ -1,4 +1,5 @@
 import { distance } from "fastest-levenshtein";
+
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
 
@@ -196,7 +197,7 @@ export function lineIsRepeated(a: string, b: string): boolean {
 
   const aTrim = a.trim();
   const bTrim = b.trim();
-  return distance(aTrim, bTrim) / bTrim.length < 0.05;
+  return distance(aTrim, bTrim) / bTrim.length < 0.1;
 }
 
 /**

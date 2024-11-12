@@ -3,8 +3,8 @@
  */
 
 import * as path from "node:path";
-import { type ExtensionContext, extensions, workspace } from "vscode";
 
+import { type ExtensionContext, extensions, workspace } from "vscode";
 import {
   LanguageClient,
   type LanguageClientOptions,
@@ -13,6 +13,7 @@ import {
   type StateChangeEvent,
   TransportKind,
 } from "vscode-languageclient/node";
+
 import { getExtensionUri } from "../util/vscode";
 
 let client: LanguageClient;
@@ -65,7 +66,7 @@ function startPythonLanguageServer(context: ExtensionContext): LanguageClient {
       configurationSection: "pyls",
     },
   };
-  return new LanguageClient(command, serverOptions, clientOptions)
+  return new LanguageClient(command, serverOptions, clientOptions);
 }
 
 async function startPylance(context: ExtensionContext) {

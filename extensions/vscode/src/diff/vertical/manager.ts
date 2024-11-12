@@ -4,8 +4,10 @@ import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import * as vscode from "vscode";
+
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
+
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -213,10 +215,11 @@ export class VerticalDiffManager {
       endLine,
       {
         instant,
-        onStatusUpdate: (status) =>
+        onStatusUpdate: (status, numDiffs) =>
           this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
+            numDiffs,
           }),
       },
     );
@@ -331,11 +334,12 @@ export class VerticalDiffManager {
       endLine,
       {
         input,
-        onStatusUpdate: (status) =>
+        onStatusUpdate: (status, numDiffs) =>
           streamId &&
           this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
+            numDiffs,
           }),
       },
     );

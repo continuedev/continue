@@ -1,4 +1,5 @@
 import { ChunkWithoutID } from "../..";
+
 import { codeChunker } from "./code";
 
 async function genToArr<T>(generator: AsyncGenerator<T>): Promise<T[]> {

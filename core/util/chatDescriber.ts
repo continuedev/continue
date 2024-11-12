@@ -1,6 +1,8 @@
-import { removeQuotesAndEscapes } from ".";
 import { ILLM, LLMFullCompletionOptions } from "..";
 import { stripImages } from "../llm/images";
+
+import { removeQuotesAndEscapes } from ".";
+
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "./messenger";
 

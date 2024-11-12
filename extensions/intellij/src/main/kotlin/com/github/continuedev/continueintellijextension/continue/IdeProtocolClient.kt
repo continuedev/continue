@@ -1006,11 +1006,17 @@ class IdeProtocolClient(
 //        return openFiles.intersect(pinnedFiles).toList()
     }
 
-    private fun currentFile(): String? {
+    private fun currentFile(): Map<String, Any?>? {
         val fileEditorManager = FileEditorManager.getInstance(project)
         val editor = fileEditorManager.selectedTextEditor
         val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
-        return virtualFile?.path
+        return virtualFile?.let {
+            mapOf(
+                "path" to it.path,
+                "contents" to editor.document.text,
+                "isUntitled" to false
+            )
+        }
     }
 
     suspend fun showToast(type: String, content: String, buttonTexts: Array<String> = emptyArray()): String? =

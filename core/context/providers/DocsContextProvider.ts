@@ -1,4 +1,3 @@
-import { INSTRUCTIONS_BASE_ITEM } from "./utils";
 import { BaseContextProvider } from "../";
 import {
   Chunk,
@@ -11,6 +10,8 @@ import {
 import DocsService from "../../indexing/docs/DocsService";
 import preIndexedDocs from "../../indexing/docs/preIndexedDocs";
 import { Telemetry } from "../../util/posthog";
+
+import { INSTRUCTIONS_BASE_ITEM } from "./utils";
 
 class DocsContextProvider extends BaseContextProvider {
   static nRetrieve = 30;

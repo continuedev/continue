@@ -1,7 +1,8 @@
-const os = require("node:os");
-import path from "node:path";
 import * as vscode from "vscode";
+
 import { VsCodeIde } from "../VsCodeIde";
+
+const os = require("node:os");
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
   if (index === 0) {
@@ -125,7 +126,7 @@ export function getExtensionVersion(): string {
 }
 
 export function getFullyQualifiedPath(ide: VsCodeIde, filepath: string) {
-  if (ide.ideUtils.path.isAbsolute(filepath)) return filepath;
+  if (ide.ideUtils.path.isAbsolute(filepath)) {return filepath;}
 
   const workspaceFolders = vscode.workspace.workspaceFolders;
 

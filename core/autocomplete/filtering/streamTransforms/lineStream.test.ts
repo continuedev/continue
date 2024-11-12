@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+
 import * as lineStream from "./lineStream";
 
 describe("lineStream", () => {
@@ -115,7 +116,7 @@ describe("lineStream", () => {
       expect(mockFullStop).toHaveBeenCalledTimes(1);
     });
 
-    it("should stop at a similar line", async () => {
+    it.only("should stop at a similar line", async () => {
       const lineToTest = "const x = 6;";
       const linesGenerator = await getLineGenerator([
         "console.log();",

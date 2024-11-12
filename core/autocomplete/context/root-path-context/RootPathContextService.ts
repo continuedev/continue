@@ -1,6 +1,8 @@
 import { createHash } from "crypto";
+
 import { LRUCache } from "lru-cache";
 import Parser from "web-tree-sitter";
+
 import { IDE } from "../../..";
 import { getQueryForFile } from "../../../util/treeSitter";
 import { AstPath } from "../../util/ast";

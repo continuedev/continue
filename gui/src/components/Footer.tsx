@@ -11,7 +11,7 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { RootState } from "../redux/store";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { ROUTES } from "../util/navigation";
-import ButtonWithTooltip from "./ButtonWithTooltip";
+import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
 import ProfileSwitcher from "./ProfileSwitcher";
 
@@ -60,30 +60,30 @@ function Footer() {
 
       <div className="flex gap-1">
         {configError && (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             tooltipPlacement="top-end"
             text="Config error"
             onClick={onClickError}
           >
             <ExclamationTriangleIcon className="h-4 w-4" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         )}
 
-        <ButtonWithTooltip
+        <HeaderButtonWithToolTip
           tooltipPlacement="top-end"
           text="More"
           onClick={onClickMore}
         >
           <EllipsisHorizontalCircleIcon className="h-4 w-4" />
-        </ButtonWithTooltip>
+        </HeaderButtonWithToolTip>
 
-        <ButtonWithTooltip
+        <HeaderButtonWithToolTip
           tooltipPlacement="top-end"
           onClick={onClickSettings}
           text="Configure Continue"
         >
           <Cog6ToothIcon className="h-4 w-4" />
-        </ButtonWithTooltip>
+        </HeaderButtonWithToolTip>
       </div>
     </footer>
   );

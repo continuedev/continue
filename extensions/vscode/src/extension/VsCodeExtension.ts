@@ -1,3 +1,5 @@
+import fs from "fs";
+
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { controlPlaneEnv, EXTENSION_NAME } from "core/control-plane/env";
@@ -5,9 +7,9 @@ import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
-import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
+
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 import {
   monitorBatteryChanges,
@@ -19,6 +21,7 @@ import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvide
 import { DiffManager } from "../diff/horizontal";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { registerAllPromptFilesCompletionProviders } from "../lang-server/promptFileCompletions";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
@@ -28,10 +31,13 @@ import {
 } from "../stubs/WorkOsAuthProvider";
 import { arePathsEqual } from "../util/arePathsEqual";
 import { Battery } from "../util/battery";
+import { FileSearch } from "../util/FileSearch";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeIde } from "../VsCodeIde";
-import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+
 import { VsCodeMessenger } from "./VsCodeMessenger";
+
+import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -49,6 +55,7 @@ export class VsCodeExtension {
   private core: Core;
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
+  private fileSearch: FileSearch;
 
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
@@ -206,12 +213,21 @@ export class VsCodeExtension {
     context.subscriptions.push(this.battery);
     context.subscriptions.push(monitorBatteryChanges(this.battery));
 
+    // FileSearch
+    this.fileSearch = new FileSearch(this.ide);
+    registerAllPromptFilesCompletionProviders(
+      context,
+      this.fileSearch,
+      this.ide,
+    );
+
     const quickEdit = new QuickEdit(
       this.verticalDiffManager,
       this.configHandler,
       this.sidebar.webviewProtocol,
       this.ide,
       context,
+      this.fileSearch,
     );
 
     // Commands
@@ -279,9 +295,16 @@ export class VsCodeExtension {
         this.core.invoke("index/forceReIndex", undefined);
       } else {
         // Reindex the file
-        const indexer = await this.core.codebaseIndexerPromise;
-        indexer.refreshFile(filepath);
+        this.core.invoke("index/forceReIndex", {
+          dirs: [filepath]
+        });
       }
+    });
+
+    vscode.workspace.onDidDeleteFiles(async (event) => {
+      this.core.invoke("index/forceReIndex", {
+        dirs: event.files.map((file) => file.fsPath.split("/").slice(0, -1).join("/"))
+      });
     });
 
     // When GitHub sign-in status changes, reload config
@@ -316,7 +339,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.core.invoke("index/forceReIndex", { dir });
+                  this.core.invoke("index/forceReIndex", { dirs: [dir] });
                 }
               }
 
@@ -329,8 +352,7 @@ export class VsCodeExtension {
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider
-    {
+      implements vscode.TextDocumentContentProvider {
       // emitter and its event
       onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
       onDidChange = this.onDidChangeEmitter.event;

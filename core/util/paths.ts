@@ -1,8 +1,10 @@
-import * as JSONC from "comment-json";
-import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+
+import * as JSONC from "comment-json";
+import dotenv from "dotenv";
+
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
@@ -26,6 +28,17 @@ export function getContinueUtilsPath(): string {
     fs.mkdirSync(utilsPath);
   }
   return utilsPath;
+}
+
+export function getGlobalContinueIgnorePath(): string {
+  const continueIgnorePath = path.join(
+    getContinueGlobalPath(),
+    ".continueignore",
+  );
+  if (!fs.existsSync(continueIgnorePath)) {
+    fs.writeFileSync(continueIgnorePath, "");
+  }
+  return continueIgnorePath;
 }
 
 export function getContinueGlobalPath(): string {

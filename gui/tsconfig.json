@@ -17,6 +17,8 @@
     "jsx": "react-jsx",
     "noEmitOnError": false,
     "types": ["vitest/globals"]
+    // Disabled for now since it's causing too many errors
+    // "strictNullChecks": true
   },
   "include": ["src", "../src/util/messenger.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]

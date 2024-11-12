@@ -1,7 +1,9 @@
 import { GoogleAuth } from "google-auth-library";
 import { Response } from "node-fetch";
+
 import { EmbeddingsProviderName, EmbedOptions, FetchFunction } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 /**

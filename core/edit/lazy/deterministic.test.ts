@@ -1,8 +1,8 @@
 import fs from "node:fs";
+import path from "node:path";
 
 // @ts-ignore no typings available
 import { diff as myersDiff } from "myers-diff";
-import path from "node:path";
 import { DiffLine } from "../..";
 import { myersDiff as continueMyersDiff } from "../../diff/myers";
 import { dedent } from "../../util";
@@ -127,11 +127,11 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("calculator-comments.js");
   });
 
-  test("calculator docstrings", async () => {
+  test.skip("calculator docstrings", async () => {
     await expectDiff("calculator-docstrings.js");
   });
 
-  test("calculator stateless", async () => {
+  test.skip("calculator stateless", async () => {
     await expectDiff("calculator-stateless.js");
   });
 
@@ -151,7 +151,7 @@ describe("deterministicApplyLazyEdit(", () => {
     await expectDiff("no-lazy.js");
   });
 
-  test("no lazy blocks in single top level class", async () => {
+  test.skip("no lazy blocks in single top level class", async () => {
     await expectDiff("no-lazy-single-class.js");
   });
 

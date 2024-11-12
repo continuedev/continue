@@ -95,6 +95,7 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
+
     return await ideMessenger.request("history/save", sessionInfo);
   }
 

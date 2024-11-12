@@ -1,3 +1,6 @@
+import { AutocompleteInput } from "../autocomplete/util/types";
+import { ProfileDescription } from "../config/ConfigHandler";
+
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
@@ -15,8 +18,6 @@ import type {
   SessionInfo,
   SiteIndexingConfig,
 } from "../";
-import { AutocompleteInput } from "../autocomplete/util/types";
-import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -143,7 +144,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "tts/kill": [undefined, void];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [
-    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
     void,
   ];
   "index/indexingProgressBarInitialized": [undefined, void];

@@ -1,4 +1,3 @@
-import type { IndexTag, IndexingProgressUpdate } from "../index.js";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex.js";
 import {
   IndexResultType,
@@ -6,6 +5,8 @@ import {
   RefreshIndexResults,
   type CodebaseIndex,
 } from "./types.js";
+
+import type { IndexTag, IndexingProgressUpdate } from "../index.js";
 
 /**
  * This is a CodebaseIndex used for testing which files get indexed.

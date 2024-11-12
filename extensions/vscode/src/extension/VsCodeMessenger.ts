@@ -1,3 +1,6 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
@@ -17,19 +20,18 @@ import {
 import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
-import * as fs from "node:fs";
-import * as path from "node:path";
 import * as vscode from "vscode";
+
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { getFullyQualifiedPath } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { getFullyQualifiedPath } from "../util/util";
 
 /**
  * A shared messenger class between Core and Webview
@@ -159,28 +161,34 @@ export class VsCodeMessenger {
     });
 
     this.onWebview("applyToFile", async ({ data }) => {
-      const fullPath = getFullyQualifiedPath(ide, data.filepath);
+      let filepath = data.filepath;
 
-      if (!fullPath) {
-        return;
-      }
+      // If there is a filepath, verify it exists and then open the file
+      if (filepath) {
+        const fullPath = getFullyQualifiedPath(ide, filepath);
 
-      const fileExists = await this.ide.fileExists(fullPath);
+        if (!fullPath) {
+          return;
+        }
 
-      // If it's a new file, no need to apply, just write directly
-      if (!fileExists) {
-        await this.ide.writeFile(fullPath, data.text);
+        const fileExists = await this.ide.fileExists(fullPath);
+
+        // If it's a new file, no need to apply, just write directly
+        if (!fileExists) {
+          await this.ide.writeFile(fullPath, data.text);
+          await this.ide.openFile(fullPath);
+
+          await webviewProtocol.request("updateApplyState", {
+            streamId: data.streamId,
+            status: "done",
+            numDiffs: 0,
+          });
+
+          return;
+        }
+
         await this.ide.openFile(fullPath);
-
-        await webviewProtocol.request("updateApplyState", {
-          streamId: data.streamId,
-          status: "done",
-        });
-
-        return;
       }
-
-      await this.ide.openFile(fullPath);
 
       // Get active text editor
       const editor = vscode.window.activeTextEditor;
@@ -198,6 +206,7 @@ export class VsCodeMessenger {
         await webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
           status: "done",
+          numDiffs: 0,
         });
         return;
       }
