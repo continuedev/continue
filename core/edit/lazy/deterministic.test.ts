@@ -1,8 +1,8 @@
 import fs from "node:fs";
+import path from "node:path";
 
 // @ts-ignore no typings available
 import { diff as myersDiff } from "myers-diff";
-import path from "node:path";
 import { DiffLine } from "../..";
 import { myersDiff as continueMyersDiff } from "../../diff/myers";
 import { dedent } from "../../util";

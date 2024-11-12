@@ -1,19 +1,22 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { IDE } from "core";
+import { ConfigHandler } from "core/config/ConfigHandler";
+import { getModelByRole } from "core/config/util";
+import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
+
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import { FileSearch } from "../util/FileSearch";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 
 // @ts-ignore - error finding typings
-import { ConfigHandler } from "core/config/ConfigHandler";
 // @ts-ignore
-import { getModelByRole } from "core/config/util";
-import { logDevData } from "core/util/devdata";
-import { FileSearch } from "../util/FileSearch";
+
 
 /**
  * Used to track what action to take after a user interacts

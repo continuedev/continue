@@ -1,4 +1,5 @@
 import { diffLines, type Change } from "diff";
+
 import { DiffLine } from "..";
 
 export function convertMyersChangeToDiffLines(change: Change): DiffLine[] {

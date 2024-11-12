@@ -69,6 +69,7 @@ export const models: { [key: string]: ModelPackage } = {
       "replicate",
       "sambanova",
       "cerebras",
+      "nebius",
     ],
     isOpenSource: true,
   },
@@ -188,6 +189,10 @@ export const models: { [key: string]: ModelPackage } = {
           },
           "8x7b (MoE)": {
             model: "mistral-8x7b",
+            title: "Mixtral",
+          },
+          "8x22b (MoE)": {
+            model: "mistral-8x22b",
             title: "Mixtral",
           },
         },
@@ -1005,52 +1010,23 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
-  MetaLlama3Large: {
-    title: "Llama 3.1 405b",
-    description:
-      "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
-    params: {
-      title: "Llama 3.1 405b",
-      model: "meta-llama/Meta-Llama-3.1-405B-Instruct",
-      contextLength: 128_000,
-    },
-    icon: "meta.png",
-    dimensions: [
-      {
-        name: "Parameter Count",
-        description: "The number of parameters in the model",
-        options: {
-          "70b": {
-            model: "meta-llama/Meta-Llama-3.1-70B-Instruct",
-            title: "Llama 3.1 70b",
-          },
-          "405bb": {
-            model: "meta-llama/Meta-Llama-3.1-405B-Instruct",
-            title: "Llama 3.1 405b",
-          },
-        },
-      },
-    ],
-    providerOptions: ["nebius"],
-    isOpenSource: true,
-  },
   Qwen2Coder: {
     title: "Qwen 2.5 Coder 7b",
     description:
       "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
     params: {
       title: "Qwen 2.5 Coder 7b",
-      model: "Qwen/Qwen2.5-Coder-7B-Instruct",
+      model: "qwen-coder2.5-7b",
       contextLength: 32_000,
     },
-    icon: "meta.png",
+    icon: "qwen.png",
     dimensions: [
       {
         name: "Parameter Count",
         description: "The number of parameters in the model",
         options: {
           "7b": {
-            model: "Qwen/Qwen2.5-Coder-7B-Instruct",
+            model: "qwen-coder2.5-7b",
             title: "Qwen 2.5 Coder 7b",
           },
         },

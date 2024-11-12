@@ -1,4 +1,5 @@
 import { Analytics } from "@continuedev/config-types";
+
 import {
   ControlPlaneProxyInfo,
   IAnalyticsProvider,

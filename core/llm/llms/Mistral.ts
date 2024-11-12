@@ -1,5 +1,6 @@
 import { ChatMessage, LLMOptions, ModelProvider } from "../../index.js";
 import { gptEditPrompt } from "../templates/edit.js";
+
 import OpenAI from "./OpenAI.js";
 
 class Mistral extends OpenAI {

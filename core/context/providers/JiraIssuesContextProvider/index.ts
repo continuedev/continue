@@ -6,6 +6,7 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../../index.js";
 import { BaseContextProvider } from "../../index.js";
+
 import { JiraClient } from "./JiraClient.js";
 
 class JiraIssuesContextProvider extends BaseContextProvider {

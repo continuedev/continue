@@ -1,9 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { IDE, ILLM } from "..";
 import { CodeSnippetsCodebaseIndex } from "../indexing/CodeSnippetsIndex";
 import { walkDirAsync } from "../indexing/walkDir";
 import { pruneLinesFromTop } from "../llm/countTokens";
+
 import { getRepoMapFilePath } from "./paths";
 
 export interface RepoMapOptions {

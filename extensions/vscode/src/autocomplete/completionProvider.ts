@@ -1,4 +1,3 @@
-import type { IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import {
   type AutocompleteInput,
@@ -7,9 +6,10 @@ import {
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+
 import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import {
@@ -18,6 +18,9 @@ import {
   setupStatusBar,
   stopStatusBarLoading,
 } from "./statusBar";
+
+import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import type { IDE } from "core";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;

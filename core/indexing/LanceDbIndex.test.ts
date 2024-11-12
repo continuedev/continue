@@ -1,5 +1,6 @@
 import { jest } from "@jest/globals";
 import lance from "vectordb";
+
 import { testConfigHandler, testIde } from "../test/util/fixtures";
 import {
   mockPathAndCacheKey,
@@ -8,6 +9,7 @@ import {
   updateIndexAndAwaitGenerator,
 } from "../test/util/indexing";
 import { getLanceDbPath } from "../util/paths";
+
 import { LanceDbIndex } from "./LanceDbIndex";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 import { IndexResultType } from "./types";

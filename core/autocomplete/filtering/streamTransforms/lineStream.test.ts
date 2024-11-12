@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+
 import * as lineStream from "./lineStream";
 
 describe("lineStream", () => {

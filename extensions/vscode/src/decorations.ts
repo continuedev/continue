@@ -1,5 +1,7 @@
 import * as path from "node:path";
+
 import * as vscode from "vscode";
+
 import { uriFromFilePath } from "./util/vscode";
 
 export function showAnswerInTextEditor(

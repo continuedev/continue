@@ -1,4 +1,5 @@
 import { SerializedContinueConfig } from "../";
+
 import { FREE_TRIAL_MODELS } from "./default";
 
 export const TRIAL_FIM_MODEL = "codestral-latest";

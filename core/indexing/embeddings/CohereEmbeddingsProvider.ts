@@ -1,6 +1,8 @@
 import { Response } from "node-fetch";
+
 import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {

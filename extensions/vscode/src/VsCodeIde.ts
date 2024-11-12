@@ -2,6 +2,28 @@ import * as child_process from "node:child_process";
 import { exec } from "node:child_process";
 import * as path from "node:path";
 
+import { Range } from "core";
+import { EXTENSION_NAME } from "core/control-plane/env";
+import { walkDir } from "core/indexing/walkDir";
+import { GetGhTokenArgs } from "core/protocol/ide";
+import {
+  editConfigJson,
+  getConfigJsonPath,
+  getContinueGlobalPath,
+} from "core/util/paths";
+import * as vscode from "vscode";
+
+import { executeGotoProvider } from "./autocomplete/lsp";
+import { DiffManager } from "./diff/horizontal";
+import { Repository } from "./otherExtensions/git";
+import { VsCodeIdeUtils } from "./util/ideUtils";
+import {
+  getExtensionUri,
+  openEditorAndRevealRange,
+  uriFromFilePath,
+} from "./util/vscode";
+import { VsCodeWebviewProtocol } from "./webviewProtocol";
+
 import type {
   ContinueRcJson,
   FileType,
@@ -14,26 +36,6 @@ import type {
   RangeInFile,
   Thread,
 } from "core";
-import { Range } from "core";
-import { EXTENSION_NAME } from "core/control-plane/env";
-import { walkDir } from "core/indexing/walkDir";
-import { GetGhTokenArgs } from "core/protocol/ide";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  getContinueGlobalPath,
-} from "core/util/paths";
-import * as vscode from "vscode";
-import { executeGotoProvider } from "./autocomplete/lsp";
-import { DiffManager } from "./diff/horizontal";
-import { Repository } from "./otherExtensions/git";
-import { VsCodeIdeUtils } from "./util/ideUtils";
-import {
-  getExtensionUri,
-  openEditorAndRevealRange,
-  uriFromFilePath,
-} from "./util/vscode";
-import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -487,12 +489,12 @@ class VsCodeIde implements IDE {
   }
 
   async getCurrentFile() {
-    if (!vscode.window.activeTextEditor) return undefined
+    if (!vscode.window.activeTextEditor) {return undefined;}
     return {
       isUntitled: vscode.window.activeTextEditor.document.isUntitled,
       path: vscode.window.activeTextEditor.document.uri.fsPath,
       contents: vscode.window.activeTextEditor.document.getText()
-    }
+    };
   }
 
   async getPinnedFiles(): Promise<string[]> {

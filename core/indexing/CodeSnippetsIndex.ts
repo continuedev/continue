@@ -1,4 +1,21 @@
 import Parser from "web-tree-sitter";
+
+import { getBasename, getLastNPathParts } from "../util/";
+import { migrate } from "../util/paths";
+import {
+  TSQueryType,
+  getParserForFile,
+  getQueryForFile,
+} from "../util/treeSitter";
+
+import { DatabaseConnection, SqliteDb, tagToString, truncateSqliteLikePattern } from "./refreshIndex";
+import {
+  IndexResultType,
+  MarkCompleteCallback,
+  RefreshIndexResults,
+  type CodebaseIndex,
+} from "./types";
+
 import type {
   ChunkWithoutID,
   ContextItem,
@@ -7,20 +24,6 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../";
-import { getBasename, getLastNPathParts } from "../util/";
-import { migrate } from "../util/paths";
-import {
-  TSQueryType,
-  getParserForFile,
-  getQueryForFile,
-} from "../util/treeSitter";
-import { DatabaseConnection, SqliteDb, tagToString, truncateSqliteLikePattern } from "./refreshIndex";
-import {
-  IndexResultType,
-  MarkCompleteCallback,
-  RefreshIndexResults,
-  type CodebaseIndex,
-} from "./types";
 
 type SnippetChunk = ChunkWithoutID & { title: string; signature: string };
 

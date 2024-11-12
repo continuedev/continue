@@ -1,3 +1,5 @@
+import { ControlPlaneSessionInfo } from "../control-plane/client";
+
 import type {
   ContinueRcJson,
   DiffLine,
@@ -12,7 +14,6 @@ import type {
   RangeInFile,
   Thread,
 } from "../";
-import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export interface GetGhTokenArgs {
   force?: boolean;
