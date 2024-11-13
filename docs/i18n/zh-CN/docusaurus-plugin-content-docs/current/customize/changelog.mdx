@@ -1,0 +1,30 @@
+---
+title: 变更日志
+description: VSCode 和 JetBrains 扩展最新版本的变更日志
+keywords: [变更日志]
+hide_table_of_contents: true
+---
+
+import VSCodeChangelog from "../../../../../../extensions/vscode/CHANGELOG.md";
+import JetBrainsChangelog from "../../../../../../extensions/intellij/CHANGELOG.md";
+
+以下是 VSCode 和 JetBrains 扩展最新版本的变更日志。在 2024-07-02 之前，变更日志没有反映所有更新。
+
+import TOCInline from "@theme/TOCInline";
+
+<TOCInline
+  toc={toc.filter(
+    (node) =>
+      node.value === "VSCode Changelog" || node.value === "JetBrains Changelog",
+  )}
+/>
+
+<hr />
+
+## VSCode 变更日志
+
+<VSCodeChangelog />
+
+## JetBrains 变更日志
+
+<JetBrainsChangelog />
