@@ -46,6 +46,29 @@ const TEST_CASES = [
       { row: 11, column: 59 }, // Address
     ],
   },
+  {
+    nodeType: "function_definition",
+    fileName: "file1.php",
+    language: "PHP",
+    cursorPosition: { line: 12, character: 32 },
+    definitionPositions: [
+      { row: 10, column: 26 }, // Person
+      { row: 10, column: 44 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_definition (inside a class)",
+    fileName: "file1.php",
+    language: "PHP",
+    cursorPosition: { line: 26, character: 35 },
+    definitionPositions: [
+      { row: 15, column: 29 }, // BaseClass
+      { row: 15, column: 55 }, // FirstInterface
+      { row: 15, column: 72 }, // SecondInterface
+      { row: 25, column: 43 }, // Person
+      { row: 25, column: 61 }, // Address
+    ],
+  },
 ];
 
 describe("RootPathContextService", () => {
