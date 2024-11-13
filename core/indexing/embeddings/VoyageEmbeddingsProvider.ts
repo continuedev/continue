@@ -1,4 +1,5 @@
 import { EmbeddingsProviderName, EmbedOptions } from "../..";
+
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
 
 class VoyageEmbeddingsProvider extends OpenAIEmbeddingsProvider {

@@ -1,0 +1,20 @@
+##### Prompt #####
+{
+  "employees": [
+    { "name": "John Doe", "age": 30, "position": "Developer" },
+    { "name": "Jane Smith", "age": 25, "position": "Designer" },
+    { "name": "Emily Johnson", "age": 35, "position": "Manager" }<FIM>
+  ],
+  "active": true
+}
+==========================================================================
+==========================================================================
+Completion:
+
+
+}
+
+{
+   "employees": [
+     { "name": "John Doe", "age": 30 },
+     { "name": "Jane Smith", "age": 25 }

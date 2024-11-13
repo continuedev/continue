@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { table } from "table";
 import { lightGray, vscBackground, vscInputBackground } from "../components";
-import { CopyButton } from "../components/markdown/CopyButton";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
+import { CopyIconButton } from "../components/gui/CopyIconButton";
 
 const Th = styled.th`
   padding: 0.5rem;
@@ -67,20 +67,20 @@ function Stats() {
     >
       <div
         onClick={() => navigate(-1)}
-        className="items-center flex m-0 p-0 sticky top-0 cursor-pointer"
+        className="sticky top-0 m-0 flex cursor-pointer items-center p-0"
         style={{
           borderBottom: `0.5px solid ${lightGray}`,
           backgroundColor: vscBackground,
         }}
       >
-        <ArrowLeftIcon className="inline-block ml-4 cursor-pointer w-3 h-3" />
-        <span className="text-sm font-bold m-2 inline-block">More</span>
+        <ArrowLeftIcon className="ml-4 inline-block h-3 w-3 cursor-pointer" />
+        <span className="m-2 inline-block text-base font-bold">More</span>
       </div>
 
       <div className="p-2">
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           <h2 className="ml-2">Tokens per Day</h2>
-          <CopyButton
+          <CopyIconButton
             text={generateTable(
               ([["Day", "Generated Tokens", "Prompt Tokens"]] as any).concat(
                 days.map((day) => [
@@ -111,9 +111,9 @@ function Stats() {
           </tbody>
         </table>
 
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2">
           <h2 className="ml-2">Tokens per Model</h2>
-          <CopyButton
+          <CopyIconButton
             text={generateTable(
               ([["Model", "Generated Tokens", "Prompt Tokens"]] as any).concat(
                 models.map((model) => [

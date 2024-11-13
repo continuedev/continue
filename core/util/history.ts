@@ -1,7 +1,21 @@
 import * as fs from "fs";
+
 import { PersistedSessionInfo, SessionInfo } from "../index.js";
 import { ListHistoryOptions } from "../protocol/core.js";
+
 import { getSessionFilePath, getSessionsListPath } from "./paths.js";
+
+function safeParseArray<T>(
+  value: string,
+  errorMessage: string = "Error parsing array",
+): T[] | undefined {
+  try {
+    return JSON.parse(value) as T[];
+  } catch (e: any) {
+    console.warn(`${errorMessage}: ${e}`);
+    return undefined;
+  }
+}
 
 class HistoryManager {
   list(options: ListHistoryOptions): SessionInfo[] {
@@ -10,7 +24,9 @@ class HistoryManager {
       return [];
     }
     const content = fs.readFileSync(filepath, "utf8");
-    let sessions = JSON.parse(content).filter((session: any) => {
+
+    let sessions = safeParseArray<SessionInfo>(content) ?? [];
+    sessions = sessions.filter((session: any) => {
       // Filter out old format
       return typeof session.session_id !== "string";
     });
@@ -35,14 +51,11 @@ class HistoryManager {
     // Read and update the sessions list
     const sessionsListFile = getSessionsListPath();
     const sessionsListRaw = fs.readFileSync(sessionsListFile, "utf-8");
-    let sessionsList: SessionInfo[];
-    try {
-      sessionsList = JSON.parse(sessionsListRaw);
-    } catch (error) {
-      throw new Error(
-        `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFile}). Please fix this before creating a new session.`,
-      );
-    }
+    let sessionsList =
+      safeParseArray<SessionInfo>(
+        sessionsListRaw,
+        "Error parsing sessions.json",
+      ) ?? [];
 
     sessionsList = sessionsList.filter(
       (session) => session.sessionId !== sessionId,

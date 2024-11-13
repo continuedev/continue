@@ -12,6 +12,7 @@ import {
 } from "../index.js";
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
+
 import { ConfigResult } from "./load.js";
 import {
   LOCAL_ONBOARDING_CHAT_MODEL,
@@ -19,7 +20,6 @@ import {
 } from "./onboarding.js";
 import ControlPlaneProfileLoader from "./profile/ControlPlaneProfileLoader.js";
 import LocalProfileLoader from "./profile/LocalProfileLoader.js";
-
 import {
   ProfileDescription,
   ProfileLifecycleManager,

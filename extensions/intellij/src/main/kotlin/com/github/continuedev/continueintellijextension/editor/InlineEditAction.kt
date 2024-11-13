@@ -48,7 +48,7 @@ fun makeTextArea(): JTextArea {
             isOpaque = false
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-            margin = JBUI.insets(6, 4, 6, 4)
+            margin = JBUI.insets(6, 8, 6, 4)
             font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
             preferredSize = Dimension(400, 75)
         }
@@ -398,13 +398,32 @@ class CustomPanel(
                     isEditable = true
                     background = defaultBackground
                     foreground = Color(128, 128, 128, 200)
-                    font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 11)
-                    border = EmptyBorder(2, 4, 2, 4)
+                    font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, 12)
+                    border = EmptyBorder(8, 8, 8, 8)
                     isOpaque = false
                     isEditable = false
                     cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-                    renderer =
-                        DefaultListCellRenderer().apply { horizontalAlignment = SwingConstants.LEFT }
+                    preferredSize = Dimension(200, 30)
+
+                    renderer = object : DefaultListCellRenderer() {
+                        override fun getListCellRendererComponent(
+                            list: JList<*>?,
+                            value: Any?,
+                            index: Int,
+                            isSelected: Boolean,
+                            cellHasFocus: Boolean
+                        ): Component {
+                            val component =
+                                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
+                            if (component is JLabel) {
+                                component.border = EmptyBorder(4, 6, 4, 6)
+                            }
+                            return component
+                        }
+                    }.apply {
+                        horizontalAlignment = SwingConstants.LEFT
+                    }
+
                     selectedIndex =
                         continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
                             if (modelTitles.isEmpty()) -1
@@ -430,19 +449,16 @@ class CustomPanel(
                         border = EmptyBorder(2, 6, 2, 6)
                     }
 
-            val rightPanel =
-                JPanel(MigLayout("insets 0, fillx")).apply {
-                    isOpaque = false
-                    border = EmptyBorder(0, 0, 0, 0)
-                    add(dropdown, "align right")
-                    add(rightButton, "align right")
-                }
+            val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
+                isOpaque = false
+                add(rightButton, "align right")
+            }
 
             border = EmptyBorder(0, 0, 16, 12)
+            isOpaque = false
 
             add(dropdown, "align left")
-            add(rightPanel, "align right, split 2")
-            isOpaque = false
+            add(rightPanel, "align right")
 
             cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
         }
@@ -620,18 +636,7 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
                 cornerRadius.toFloat(),
                 cornerRadius.toFloat()
             )
-        if (isHovered) {
-            val brightenFactor = 1.1f
-            val brighterColor =
-                Color(
-                    (background.red * brightenFactor).coerceIn(0f, 255f).toInt(),
-                    (background.green * brightenFactor).coerceIn(0f, 255f).toInt(),
-                    (background.blue * brightenFactor).coerceIn(0f, 255f).toInt()
-                )
-            g2.color = brighterColor
-        } else {
-            g2.color = background
-        }
+        g2.color = background
         g2.fill(roundRect)
         g2.color = foreground
         g2.drawString(
@@ -653,7 +658,7 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
         if (text.isEmpty()) {
             g.color = Color(128, 128, 128, 255)
             g.font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
-            g.drawString("Enter instructions...", 3, 20)
+            g.drawString("Enter instructions...", 8, 20)
         }
 
         super.paintComponent(g)

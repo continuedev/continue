@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - preview
 
 jobs:
   tsc-check:
@@ -20,6 +19,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
+
+      - name: Cache root node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
 
       - name: Cache extension node_modules
         uses: actions/cache@v3
@@ -44,6 +49,10 @@ jobs:
         with:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: Install Root Dependencies
+        run: |
+          npm ci
 
       - name: Install extension Dependencies
         run: |
@@ -72,11 +81,13 @@ jobs:
         run: |
           cd core
           npx tsc --noEmit
+          npm run lint
 
       - name: tsc extensions/vscode
         run: |
           cd extensions/vscode
           npx tsc --noEmit
+          npm run lint
 
       - name: tsc binary
         run: |

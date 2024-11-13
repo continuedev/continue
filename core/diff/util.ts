@@ -1,4 +1,5 @@
 import { distance } from "fastest-levenshtein";
+
 import { ChatMessage } from "../index.js";
 import { stripImages } from "../llm/images.js";
 
@@ -110,6 +111,11 @@ export async function* streamLines(
         yield line;
         allLines.push(line);
       }
+
+      // if (buffer === "" && chunk.endsWith("\n")) {
+      //   yield "";
+      //   allLines.push("");
+      // }
     }
     if (buffer.length > 0) {
       yield buffer;

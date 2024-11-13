@@ -5,6 +5,8 @@ import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
+import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -16,9 +18,9 @@ import com.intellij.execution.util.ExecUtil
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.lang.annotation.HighlightSeverity
-import com.intellij.notification.NotificationType
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
+import com.intellij.notification.NotificationType
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
@@ -34,6 +36,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
+import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.psi.PsiDocumentManager
@@ -47,6 +50,7 @@ import java.net.NetworkInterface
 import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.util.*
+
 
 fun uuid(): String {
     return UUID.randomUUID().toString()
@@ -447,22 +451,26 @@ class IdeProtocolClient(
                     }
 
                     "getDiff" -> {
-                        val builder = ProcessBuilder("git", "diff")
-                        builder.directory(File(workspacePath ?: "."))
-                        val process = builder.start()
-
-                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val workspaceDirs = workspaceDirectories()
                         val output = StringBuilder()
-                        var line: String? = reader.readLine()
-                        while (line != null) {
-                            output.append(line)
-                            output.append("\n")
-                            line = reader.readLine()
+
+                        for (workspaceDir in workspaceDirs) {
+                            val builder = ProcessBuilder("git", "diff")
+                            builder.directory(File(workspaceDir))
+                            val process = builder.start()
+
+                            val reader = BufferedReader(InputStreamReader(process.inputStream))
+                            var line: String? = reader.readLine()
+                            while (line != null) {
+                                output.append(line)
+                                output.append("\n")
+                                line = reader.readLine()
+                            }
+
+                            process.waitFor()
                         }
 
-                        process.waitFor()
-
-                        respond(output.toString());
+                        respond(output.toString())
                     }
 
                     "getProblems" -> {
@@ -550,7 +558,6 @@ class IdeProtocolClient(
                     }
 
                     "openFile" -> {
-
                         setFileOpen((data as Map<String, Any>)["path"] as String)
                         respond(null)
                     }
@@ -572,10 +579,16 @@ class IdeProtocolClient(
 
                     "listFolders" -> {
                         val workspacePath = workspacePath ?: return@launch
-                        val workspaceDir = File(workspacePath)
-                        val folders =
-                            workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath }
-                                ?: emptyList()
+                        val folders = mutableListOf<String>()
+                        fun findNestedFolders(dirPath: String) {
+                            val dir = File(dirPath)
+                            val nestedFolders =
+                                dir.listFiles { file -> file.isDirectory }?.map { file -> file.absolutePath }
+                                    ?: emptyList()
+                            folders.addAll(nestedFolders);
+                            nestedFolders.forEach { folder -> findNestedFolders(folder) }
+                        }
+                        findNestedFolders(workspacePath)
                         respond(folders)
                     }
 
@@ -620,6 +633,80 @@ class IdeProtocolClient(
                     }
 
                     "applyToFile" -> {
+                        val msg = data as Map<String, String>;
+                        val text = msg["text"] as String
+                        val curSelectedModelTitle = msg["curSelectedModelTitle"] as String
+
+                        val editor = FileEditorManager.getInstance(project).selectedTextEditor
+
+                        if (editor == null) {
+                            showToast("error", "No active editor to apply edits to")
+                            respond(null)
+                            return@launch
+                        }
+
+                        if (editor.document.text.trim().isEmpty()) {
+                            WriteCommandAction.runWriteCommandAction(project) {
+                                editor.document.insertString(0, text)
+                            }
+                            respond(null)
+                            return@launch
+                        }
+
+                        val config = readConfigJson()
+                        var llm = getModelByRole(config, "applyCodeBlock")
+
+                        if (llm == null) {
+                            val models = (config as? Map<*, *>)?.get("models") as? List<Map<*, *>>
+                            llm = models?.find { model -> model["title"] == curSelectedModelTitle } as Map<String, Any>
+
+                            if (llm == null) {
+                                showToast("error", "Model '$curSelectedModelTitle' not found in config.")
+                                respond(null)
+                                return@launch
+                            }
+                        }
+
+                        val llmTitle = (llm as? Map<*, *>)?.get("title") as? String ?: ""
+
+                        val prompt =
+                            "The following code was suggested as an edit:\n```\n${text}\n```\nPlease apply it to the previous code."
+
+                        val rif = getHighlightedCode()
+
+                        val (prefix, highlighted, suffix) = if (rif == null) {
+                            // If no highlight, use the whole document as highlighted
+                            Triple("", editor.document.text, "")
+                        } else {
+                            val prefix = editor.document.getText(TextRange(0, rif.range.start.character))
+                            val highlighted = rif.contents
+                            val suffix =
+                                editor.document.getText(TextRange(rif.range.end.character, editor.document.textLength))
+
+                            // Remove the selection after processing
+                            ApplicationManager.getApplication().invokeLater {
+                                editor.selectionModel.removeSelection()
+                            }
+
+                            Triple(prefix, highlighted, suffix)
+                        }
+
+                        val diffStreamHandler =
+                            DiffStreamHandler(
+                                project,
+                                editor,
+                                rif?.range?.start?.line ?: 0,
+                                rif?.range?.end?.line ?: (editor.document.lineCount - 1),
+                                {}, {})
+
+                        val diffStreamService = project.service<DiffStreamService>()
+                        diffStreamService.register(diffStreamHandler, editor)
+
+                        diffStreamHandler.streamDiffLinesToEditor(
+                            prompt, prefix, highlighted, suffix, llmTitle
+                        )
+
+                        respond(null)
                     }
 
                     "getGitHubAuthToken" -> {
@@ -692,11 +779,11 @@ class IdeProtocolClient(
         )
     }
 
-    fun uniqueId(): String {
+    private fun uniqueId(): String {
         return getMachineUniqueID()
     }
 
-    suspend fun getBranch(dir: String): String = withContext(Dispatchers.IO) {
+    private suspend fun getBranch(dir: String): String = withContext(Dispatchers.IO) {
         try {
             val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
             builder.directory(File(dir))
@@ -715,7 +802,7 @@ class IdeProtocolClient(
 
     data class IndexTag(val directory: String, val branch: String, val artifactId: String)
 
-    suspend fun getTags(artifactId: String): List<IndexTag> {
+    private suspend fun getTags(artifactId: String): List<IndexTag> {
         val workspaceDirs = workspaceDirectories()
 
         // Collect branches concurrently using Kotlin coroutines
@@ -731,7 +818,7 @@ class IdeProtocolClient(
         }
     }
 
-    fun readFile(filepath: String): String {
+    private fun readFile(filepath: String): String {
         try {
             val content = ApplicationManager.getApplication().runReadAction<String?> {
                 val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
@@ -919,11 +1006,17 @@ class IdeProtocolClient(
 //        return openFiles.intersect(pinnedFiles).toList()
     }
 
-    private fun currentFile(): String? {
+    private fun currentFile(): Map<String, Any?>? {
         val fileEditorManager = FileEditorManager.getInstance(project)
         val editor = fileEditorManager.selectedTextEditor
         val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
-        return virtualFile?.path
+        return virtualFile?.let {
+            mapOf(
+                "path" to it.path,
+                "contents" to editor.document.text,
+                "isUntitled" to false
+            )
+        }
     }
 
     suspend fun showToast(type: String, content: String, buttonTexts: Array<String> = emptyArray()): String? =
@@ -981,5 +1074,20 @@ class IdeProtocolClient(
         val command = GeneralCommandLine(ripgrep, "-i", "-C", "2", "--", query, ".")
         command.setWorkDirectory(project.basePath)
         return ExecUtil.execAndGetOutput(command).stdout ?: ""
+    }
+
+    private fun getModelByRole(
+        config: Any,
+        role: Any
+    ): Any? {
+        val experimental = (config as? Map<*, *>)?.get("experimental") as? Map<*, *>
+        val roleTitle = (experimental?.get("modelRoles") as? Map<*, *>)?.get(role) as? String ?: return null
+
+        val models = (config as? Map<*, *>)?.get("models") as? List<*>
+        val matchingModel = models?.find { model ->
+            (model as? Map<*, *>)?.get("title") == roleTitle
+        }
+
+        return matchingModel
     }
 }

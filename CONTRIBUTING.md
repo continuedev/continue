@@ -15,7 +15,7 @@
   - [🧑‍💻 Contributing Code](#-contributing-code)
     - [Environment Setup](#environment-setup)
       - [Pre-requisites](#pre-requisites)
-      - [Fork the Continue Repository with All Branches](#fork-the-continue-repository-with-all-branches)
+      - [Fork the Continue Repository with All Branches](#fork-the-continue-repository)
       - [VS Code](#vs-code)
         - [Debugging](#debugging)
       - [JetBrains](#jetbrains)
@@ -94,8 +94,6 @@ This will start a local server and you can see the documentation rendered in you
 
 ## 🧑‍💻 Contributing Code
 
-> Please make PRs to the `dev` branch. We use this to first test changes in a pre-release version of the extension.
-
 ### Environment Setup
 
 #### Pre-requisites
@@ -106,15 +104,15 @@ You should have Node.js version 20.11.0 (LTS) or higher installed. You can get i
 nvm use
 ```
 
-#### Fork the Continue Repository with All Branches
+#### Fork the Continue Repository
 
-1. Go to the [Continue GitHub repository](https://github.com/continuedev/continue) and fork it to your GitHub account. **Ensure all branches are included in the fork**.
+1. Go to the [Continue GitHub repository](https://github.com/continuedev/continue) and fork it to your GitHub account.
 
 2. Clone your forked repository to your local machine. Use: `git clone https://github.com/YOUR_USERNAME/continue.git`
 
-3. Navigate to the cloned directory and switch to the **dev** branch. Execute: `git checkout dev`, then create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
+3. Navigate to the cloned directory and make sure you are on the main branch. Create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
 
-4. When you're ready to submit your changes, send your pull request specifically to the **dev** branch.
+4. Send your pull request to the main branch.
 
 #### VS Code
 
@@ -145,7 +143,7 @@ See the [`CONTRIBUTING.md`](./extensions/intellij/CONTRIBUTING.md) for the JetBr
 
 ### Our Git Workflow
 
-We keep two permanent branches: `main` and `dev`. All contributions should be made as pull requests to the `dev` branch. When we are ready to create a "pre-release" version, we create a tag on the `dev` branch, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will merge its tag into the `main` branch. Creating a tag on the `main` branch will then trigger a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question.
+We keep a single permanent branch: `main`. When we are ready to create a "pre-release" version, we create a tag on the `main` branch titled `v0.9.x-vscode`, which automatically triggers the workflow in [preview.yaml](./.github/workflows/preview.yaml), which builds and releases a version of the VS Code extension. When a release has been sufficiently tested, we will create a new release titled `v0.8.x-vscode`, triggering a similar workflow in [main.yaml](./.github/workflows/main.yaml), which will build and release a main release of the VS Code extension. Any hotfixes can be made by creating a feature branch from the tag for the release in question. This workflow is well explained by http://releaseflow.org.
 
 ### Formatting
 
@@ -200,10 +198,9 @@ Continue has support for more than a dozen different LLM "providers", making it 
 While any model that works with a supported provider can be used with Continue, we keep a list of recommended models that can be automatically configured from the UI or `config.json`. The following files should be updated when adding a model:
 
 - [config_schema.json](./extensions/vscode/config_schema.json) - This is the JSON Schema definition that is used to validate `config.json`. You'll notice a number of rules defined in "definitions.ModelDescription.allOf". Here is where you write rules that can specify something like "for the provider 'anthropic', only models 'claude-2' and 'claude-instant-1' are allowed. Look through all of these rules and make sure that your model is included for providers that support it.
-- [modelData.ts](./gui/src/util/modelData.ts) - This file defines that information that is shown in the model selection UI in the side bar. To add a new model:
-  1. create a `ModelPackage` object, following the lead of the many examples near the top of the file
-  2. add the `ModelPackage` to the `MODEL_INFO` array if you would like it to be displayed in the "Models" tab
-  3. if you would like it to be displayed as an option under any of the providers, go to the `PROVIDER_INFO` object and add it to the `packages` array for each provider that you want it to be displayed under. If it is an OS model that should be valid for most providers offering OS models, you might just be able to add it to the `osModels` array as shorthand.
+- [AddNewModel page](./gui/src/pages/AddNewModel) - This directory defines which model options are shown in the side bar model selection UI. To add a new model:
+  1. Add a `ModelPackage` entry for the model into [configs/models.ts](./gui/src/pages/AddNewModel/configs/models.ts), following the lead of the many examples near the top of the file
+  2. Add the model within its provider's array to [AddNewModel.tsx](./gui/src/pages/AddNewModel/AddNewModel.tsx) (add provider if needed)
 - [index.d.ts](./core/index.d.ts) - This file defines the TypeScript types used throughout Continue. You'll find a `ModelName` type. Be sure to add the name of your model to this.
 - LLM Providers: Since many providers use their own custom strings to identify models, you'll have to add the translation from Continue's model name (the one you added to `index.d.ts`) and the model string for each of these providers: [Ollama](./core/llm/llms/Ollama.ts), [Together](./core/llm/llms/Together.ts), and [Replicate](./core/llm/llms/Replicate.ts). You can find their full model lists here: [Ollama](https://ollama.ai/library), [Together](https://docs.together.ai/docs/inference-models), [Replicate](https://replicate.com/collections/streaming-language-models).
 - [Prompt Templates](./core/llm/index.ts) - In this file you'll find the `autodetectTemplateType` function. Make sure that for the model name you just added, this function returns the correct template type. This is assuming that the chat template for that model is already built in Continue. If not, you will have to add the template type and corresponding edit and chat templates.

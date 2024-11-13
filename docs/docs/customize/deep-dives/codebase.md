@@ -5,7 +5,11 @@ keywords: [talk, embeddings, reranker, codebase, experimental]
 
 # @Codebase
 
-Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally with `all-MiniLM-L6-v2` and stored locally in `~/.continue/index`.
+Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally using `transformers.js` and stored locally in `~/.continue/index`.
+
+:::info[`transformers.js cannot be used in JetBrains`]
+Currently, `transformers.js` cannot be used in JetBrains IDEs. However, you can select a differet embeddings model from [the list here](../model-types/embeddings.md).
+:::
 
 Currently, the codebase retrieval feature is available as the "codebase" and "folder" context providers. You can use them by typing `@Codebase` or `@Folder` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase (or folder) to determine relevant files.
 
@@ -34,7 +38,7 @@ Here are use cases where it is not useful:
 
 ## Configuration
 
-There are a few options that let you configure the behavior of the codebase context provider. These can be set in `config.json`, and are the same for the codebase and folder context providers:
+There are a few options that let you configure the behavior of the codebase context provider. These can be set in `config.json`, and are the same for the codebase, docs, and folder context providers:
 
 ```json title="config.json"
 {
@@ -67,10 +71,12 @@ Whether to use re-ranking, which will allow initial selection of `nRetrieve` res
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
 
+Continue also supports a **global** `.continueignore` file that will be respected for all workspaces, which can be created at `~/.continue/.continueignore`.
+
 If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
 
-If you need to force a refresh of the index, reload the VS Code window with `cmd/ctrl + shift + p` + "Reload Window".
+If you need to force a refresh of the index, reload the VS Code window with <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd> + "Reload Window".
 
 ## Repository map
 
-Models in the Claude 3, Llama 3.1, Gemini 1.5, and GPT-4o families will automatically use a [repository map](../context-providers.md#repository-map) during codebase retrieval, which allows the model to understand the structure of your codebase and use it to answer questions. Currently, the repository map only contains the filepaths in the codebase.
+Models in the Claude 3, Llama 3.1/3.2, Gemini 1.5, and GPT-4o families will automatically use a [repository map](../context-providers.md#repository-map) during codebase retrieval, which allows the model to understand the structure of your codebase and use it to answer questions. Currently, the repository map only contains the filepaths in the codebase.

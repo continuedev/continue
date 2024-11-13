@@ -1,4 +1,5 @@
 import os from "os";
+
 import {
   ContextItem,
   ContextProviderDescription,

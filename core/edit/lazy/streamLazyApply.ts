@@ -2,10 +2,11 @@ import {
   filterLeadingAndTrailingNewLineInsertion,
   filterLeadingNewline,
   stopAtLines,
-} from "../../autocomplete/streamTransforms/lineStream";
+} from "../../autocomplete/filtering/streamTransforms/lineStream.js";
 import { streamDiff } from "../../diff/streamDiff.js";
 import { LineStream, streamLines } from "../../diff/util.js";
 import { DiffLine, ILLM } from "../../index.js";
+
 import { lazyApplyPromptForModel, UNCHANGED_CODE } from "./prompts.js";
 import { BUFFER_LINES_BELOW, getReplacementWithLlm } from "./replace.js";
 

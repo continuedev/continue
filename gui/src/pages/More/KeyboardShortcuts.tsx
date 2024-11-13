@@ -63,15 +63,9 @@ interface KeyboardShortcutProps {
 function KeyboardShortcut(props: KeyboardShortcutProps) {
   const shortcut = getPlatform() === "mac" ? props.mac : props.windows;
   return (
-    <div className="flex justify-between w-full items-center">
-      <span
-        style={{
-          color: vscForeground,
-        }}
-      >
-        {props.description}
-      </span>
-      <div className="flex gap-2 float-right">
+    <div className="flex w-full items-center justify-between">
+      <span className="text-sm">{props.description}</span>
+      <div className="float-right flex gap-2">
         {shortcut.split(" ").map((key, i) => {
           return <KeyDiv key={i} text={key}></KeyDiv>;
         })}

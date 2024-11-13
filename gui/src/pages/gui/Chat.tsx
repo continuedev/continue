@@ -23,13 +23,14 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-  vscForeground,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
+import { useFindWidget } from "../../components/find/FindWidget";
 import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
+import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import {
   OnboardingCard,
@@ -62,19 +63,8 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 
-const TopGuiDiv = styled.div<{
-  showScrollbar?: boolean;
-}>`
-  overflow-y: auto;
-  height: 100%;
-  scrollbar-width: ${(props) => (props.showScrollbar ? "thin" : "none")};
-
-  &::-webkit-scrollbar {
-    display: ${(props) => (props.showScrollbar ? "block" : "none")};
-  }
-`;
-
 const StopButton = styled.div`
+  background-color: ${vscBackground};
   width: fit-content;
   margin-right: auto;
   margin-left: auto;
@@ -84,11 +74,15 @@ const StopButton = styled.div`
   padding: 4px 8px;
   color: ${lightGray};
   cursor: pointer;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.08);
   transition: box-shadow 0.3s ease;
 
   &:hover {
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 6px 8px rgba(0, 0, 0, 0.15),
+      0 3px 6px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -103,26 +97,6 @@ const StepsDiv = styled.div`
   .thread-message {
     margin: 8px 4px 0 4px;
   }
-`;
-
-const NewSessionButton = styled.div`
-  width: fit-content;
-  margin-right: auto;
-  margin-left: 6px;
-  margin-top: 2px;
-  margin-bottom: 8px;
-  font-size: ${getFontSize() - 2}px;
-
-  border-radius: ${defaultBorderRadius};
-  padding: 2px 6px;
-  color: ${lightGray};
-
-  &:hover {
-    background-color: ${lightGray}33;
-    color: ${vscForeground};
-  }
-
-  cursor: pointer;
 `;
 
 function fallbackRender({ error, resetErrorBoundary }: any) {
@@ -151,28 +125,45 @@ export function Chat() {
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const sessionState = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
   const active = useSelector((state: RootState) => state.state.active);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
-  const topGuiDivRef = useRef<HTMLDivElement>(null);
+  const stepsDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
   const state = useSelector((state: RootState) => state.state);
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
-  useEffect(() => {
-    if (!active || !topGuiDivRef.current) return;
-
-    const scrollAreaElement = topGuiDivRef.current;
-
-    scrollAreaElement.scrollTop =
-      scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
+  const snapToBottom = useCallback(() => {
+    if (!stepsDivRef.current) return;
+    const elem = stepsDivRef.current;
+    elem.scrollTop = elem.scrollHeight - elem.clientHeight;
 
     setIsAtBottom(true);
-  }, [active]);
+  }, [stepsDivRef, setIsAtBottom]);
+
+  const smoothScrollToBottom = useCallback(async () => {
+    if (!stepsDivRef.current) return;
+    const elem = stepsDivRef.current;
+    elem.scrollTo({
+      top: elem.scrollHeight - elem.clientHeight,
+      behavior: "smooth",
+    });
+
+    setIsAtBottom(true);
+  }, [stepsDivRef, setIsAtBottom]);
+
+  useEffect(() => {
+    if (active) snapToBottom();
+  }, [active, snapToBottom]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      smoothScrollToBottom();
+    }, 400);
+  }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -195,14 +186,16 @@ export function Chat() {
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
     const OFFSET_HERUISTIC = 300;
-    if (!topGuiDivRef.current) return;
+    if (!stepsDivRef.current) return;
 
-    const { scrollTop, scrollHeight, clientHeight } = topGuiDivRef.current;
+    const { scrollTop, scrollHeight, clientHeight } = stepsDivRef.current;
     const atBottom =
       scrollHeight - clientHeight <= scrollTop + OFFSET_HERUISTIC;
 
     setIsAtBottom(atBottom);
   };
+
+  const { widget, highlights } = useFindWidget(stepsDivRef);
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
@@ -234,7 +227,7 @@ export function Chat() {
         if (currentCount === 300) {
           dispatch(
             setDialogMessage(
-              <div className="text-center p-4">
+              <div className="p-4 text-center">
                 👋 Thanks for using Continue. We are always trying to improve
                 and love hearing from users. If you're interested in speaking,
                 enter your name and email. We won't use this information for
@@ -250,7 +243,7 @@ export function Chat() {
                     });
                     dispatch(
                       setDialogMessage(
-                        <div className="text-center p-4">
+                        <div className="p-4 text-center">
                           Thanks! We'll be in touch soon.
                         </div>,
                       ),
@@ -297,13 +290,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [
-      sessionState.history,
-      sessionState.contextItems,
-      defaultModel,
-      state,
-      streamResponse,
-    ],
+    [state.history, state.contextItems, defaultModel, state, streamResponse],
   );
 
   useWebviewListener(
@@ -324,145 +311,171 @@ export function Chat() {
     [state.history],
   );
 
+  const showScrollbar =
+    state.config.ui?.showChatScrollbar || window.innerHeight > 5000;
+
   return (
     <>
-      <TopGuiDiv
-        ref={topGuiDivRef}
+      {widget}
+      <StepsDiv
+        ref={stepsDivRef}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "h-full" : ""}`}
         onScroll={handleScroll}
-        showScrollbar={state.config.ui?.showChatScrollbar || false}
       >
-        <div className="max-w-3xl m-auto">
-          <StepsDiv>
-            {state.history.map((item, index: number) => (
-              <Fragment key={item.message.id}>
-                <ErrorBoundary
-                  FallbackComponent={fallbackRender}
-                  onReset={() => {
-                    dispatch(newSession());
+        {highlights}
+        {state.history.map((item, index: number) => (
+          <Fragment key={item.message.id}>
+            <ErrorBoundary
+              FallbackComponent={fallbackRender}
+              onReset={() => {
+                dispatch(newSession());
+              }}
+            >
+              {item.message.role === "user" ? (
+                <ContinueInputBox
+                  onEnter={async (editorState, modifiers) => {
+                    streamResponse(editorState, modifiers, ideMessenger, index);
                   }}
-                >
-                  {item.message.role === "user" ? (
-                    <ContinueInputBox
-                      onEnter={async (editorState, modifiers) => {
+                  isLastUserInput={isLastUserInput(index)}
+                  isMainInput={false}
+                  editorState={item.editorState}
+                  contextItems={item.contextItems}
+                />
+              ) : (
+                <div className="thread-message">
+                  <TimelineItem
+                    item={item}
+                    iconElement={
+                      false ? (
+                        <CodeBracketSquareIcon width="16px" height="16px" />
+                      ) : false ? (
+                        <ExclamationTriangleIcon
+                          width="16px"
+                          height="16px"
+                          color="red"
+                        />
+                      ) : (
+                        <ChatBubbleOvalLeftIcon width="16px" height="16px" />
+                      )
+                    }
+                    open={
+                      typeof stepsOpen[index] === "undefined"
+                        ? false
+                          ? false
+                          : true
+                        : stepsOpen[index]!
+                    }
+                    onToggle={() => {}}
+                  >
+                    <StepContainer
+                      index={index}
+                      isLast={index === state.history.length - 1}
+                      isFirst={index === 0}
+                      open={
+                        typeof stepsOpen[index] === "undefined"
+                          ? true
+                          : stepsOpen[index]!
+                      }
+                      key={index}
+                      onUserInput={(input: string) => {}}
+                      item={item}
+                      onReverse={() => {}}
+                      onRetry={() => {
                         streamResponse(
-                          editorState,
-                          modifiers,
+                          state.history[index - 1].editorState,
+                          state.history[index - 1].modifiers ??
+                            defaultInputModifiers,
                           ideMessenger,
-                          index,
+                          index - 1,
                         );
                       }}
-                      isLastUserInput={isLastUserInput(index)}
-                      isMainInput={false}
-                      editorState={item.editorState}
-                      contextItems={item.contextItems}
+                      onContinueGeneration={() => {
+                        window.postMessage(
+                          {
+                            messageType: "userInput",
+                            data: {
+                              input:
+                                "Continue your response exactly where you left off:",
+                            },
+                          },
+                          "*",
+                        );
+                      }}
+                      onDelete={() => {
+                        dispatch(deleteMessage(index));
+                      }}
+                      modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
                     />
-                  ) : (
-                    <div className="thread-message">
-                      <TimelineItem
-                        item={item}
-                        iconElement={
-                          false ? (
-                            <CodeBracketSquareIcon width="16px" height="16px" />
-                          ) : false ? (
-                            <ExclamationTriangleIcon
-                              width="16px"
-                              height="16px"
-                              color="red"
-                            />
-                          ) : (
-                            <ChatBubbleOvalLeftIcon
-                              width="16px"
-                              height="16px"
-                            />
-                          )
-                        }
-                        open={
-                          typeof stepsOpen[index] === "undefined"
-                            ? false
-                              ? false
-                              : true
-                            : stepsOpen[index]!
-                        }
-                        onToggle={() => {}}
-                      >
-                        <StepContainer
-                          index={index}
-                          isLast={index === sessionState.history.length - 1}
-                          isFirst={index === 0}
-                          open={
-                            typeof stepsOpen[index] === "undefined"
-                              ? true
-                              : stepsOpen[index]!
-                          }
-                          key={index}
-                          onUserInput={(input: string) => {}}
-                          item={item}
-                          onReverse={() => {}}
-                          onRetry={() => {
-                            streamResponse(
-                              state.history[index - 1].editorState,
-                              state.history[index - 1].modifiers ??
-                                defaultInputModifiers,
-                              ideMessenger,
-                              index - 1,
-                            );
-                          }}
-                          onContinueGeneration={() => {
-                            window.postMessage(
-                              {
-                                messageType: "userInput",
-                                data: {
-                                  input:
-                                    "Continue your response exactly where you left off:",
-                                },
-                              },
-                              "*",
-                            );
-                          }}
-                          onDelete={() => {
-                            dispatch(deleteMessage(index));
-                          }}
-                          modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
-                        />
-                      </TimelineItem>
-                    </div>
-                  )}
-                </ErrorBoundary>
-              </Fragment>
-            ))}
-          </StepsDiv>
+                  </TimelineItem>
+                </div>
+              )}
+            </ErrorBoundary>
+          </Fragment>
+        ))}
+        <ChatScrollAnchor
+          scrollAreaRef={stepsDivRef}
+          isAtBottom={isAtBottom}
+          trackVisibility={active}
+        />
+      </StepsDiv>
 
-          <ContinueInputBox
-            isMainInput
-            isLastUserInput={false}
-            hidden={active}
-            onEnter={(editorContent, modifiers) => {
-              sendInput(editorContent, modifiers);
-            }}
-          />
-
-          {active ? (
-            <>
-              <br />
-              <br />
-            </>
-          ) : state.history.length > 0 ? (
-            <div className="mt-2 hidden xs:inline">
+      <div className={`relative`}>
+        <div className="absolute -top-8 right-2 z-30">
+          {ttsActive && (
+            <StopButton
+              className=""
+              onClick={() => {
+                ideMessenger.post("tts/kill", undefined);
+              }}
+            >
+              ■ Stop TTS
+            </StopButton>
+          )}
+          {active && (
+            <StopButton
+              onClick={() => {
+                dispatch(setInactive());
+                if (
+                  state.history[state.history.length - 1]?.message.content
+                    .length === 0
+                ) {
+                  dispatch(clearLastResponse());
+                }
+              }}
+            >
+              {getMetaKeyLabel()} ⌫ Cancel
+            </StopButton>
+          )}
+        </div>
+        <ContinueInputBox
+          isMainInput
+          isLastUserInput={false}
+          onEnter={(editorContent, modifiers) => {
+            sendInput(editorContent, modifiers);
+          }}
+        />
+        <div
+          style={{
+            pointerEvents: active ? "none" : "auto",
+          }}
+        >
+          {state.history.length > 0 ? (
+            <div className="xs:inline mt-2 hidden">
               <NewSessionButton
                 onClick={() => {
                   saveSession();
                 }}
                 className="mr-auto"
               >
-                <span className="hidden xs:inline">
+                <span className="xs:inline hidden">
                   New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
                 </span>
-              </NewSessionButton>{" "}
+              </NewSessionButton>
             </div>
           ) : (
             <>
               {getLastSessionId() ? (
-                <div className="mt-2 hidden xs:inline">
+                <div className="xs:inline mt-2 hidden">
                   <NewSessionButton
                     onClick={async () => {
                       loadLastSession().catch((e) =>
@@ -471,60 +484,27 @@ export function Chat() {
                     }}
                     className="mr-auto flex items-center gap-2"
                   >
-                    <ArrowLeftIcon className="w-3 h-3" />
+                    <ArrowLeftIcon className="h-3 w-3" />
                     Last Session
                   </NewSessionButton>
                 </div>
               ) : null}
 
               {onboardingCard.show && (
-                <div className="mt-10 mx-2">
+                <div className="mx-2 mt-10">
                   <OnboardingCard activeTab={onboardingCard.activeTab} />
                 </div>
               )}
 
               {showTutorialCard !== false && !onboardingCard.open && (
-                <div className="flex justify-center w-full">
+                <div className="flex w-full justify-center">
                   <TutorialCard onClose={closeTutorialCard} />
                 </div>
               )}
             </>
           )}
         </div>
-
-        <ChatScrollAnchor
-          scrollAreaRef={topGuiDivRef}
-          isAtBottom={isAtBottom}
-          trackVisibility={active}
-        />
-      </TopGuiDiv>
-
-      {ttsActive && (
-        <StopButton
-          className="mt-2 mb-4"
-          onClick={() => {
-            ideMessenger.post("tts/kill", undefined);
-          }}
-        >
-          ■ Stop TTS
-        </StopButton>
-      )}
-      {active && (
-        <StopButton
-          className="mt-auto mb-4"
-          onClick={() => {
-            dispatch(setInactive());
-            if (
-              state.history[state.history.length - 1]?.message.content
-                .length === 0
-            ) {
-              dispatch(clearLastResponse());
-            }
-          }}
-        >
-          {getMetaKeyLabel()} ⌫ Cancel
-        </StopButton>
-      )}
+      </div>
     </>
   );
 }

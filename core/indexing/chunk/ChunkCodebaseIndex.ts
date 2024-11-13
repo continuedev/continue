@@ -1,5 +1,7 @@
 import * as path from "path";
+
 import { RunResult } from "sqlite3";
+
 import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
 import { getBasename } from "../../util/index.js";
@@ -11,6 +13,7 @@ import {
   RefreshIndexResults,
   type CodebaseIndex,
 } from "../types.js";
+
 import { chunkDocument, shouldChunk } from "./chunk.js";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
@@ -23,9 +26,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     private readonly pathSep: string,
     private readonly continueServerClient: IContinueServerClient,
     private readonly maxChunkSize: number,
-  ) {
-    this.readFile = readFile;
-  }
+  ) {}
 
   async *update(
     tag: IndexTag,

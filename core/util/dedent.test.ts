@@ -135,4 +135,21 @@ World
 
     expect(result).toBe("Hello\n\nWorld");
   });
+
+  it("should work with templated strings", () => {
+    const language = "typescript";
+    const code = "console.log('hello');\nconsole.log('world');";
+
+    const result = dedent`
+        This is the prefix of the file:
+        \`\`\`${language}
+        ${code}
+        \`\`\``;
+
+    expect(result).toBe(`\
+This is the prefix of the file:
+\`\`\`${language}
+${code}
+\`\`\``);
+  });
 });

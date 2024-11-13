@@ -1,4 +1,5 @@
 import { ConfigValidationError } from "../config/validation.js";
+
 import type { ContextItemWithId, IndexingProgressUpdate } from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
@@ -16,4 +17,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     void,
   ];
   setTTSActive: [boolean, void];
+  getWebviewHistoryLength: [undefined, number];
 };

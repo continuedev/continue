@@ -1,4 +1,5 @@
 import path from "path";
+
 import workerpool from "workerpool";
 
 export interface AsyncEncoder {

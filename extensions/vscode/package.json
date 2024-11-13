@@ -64,6 +64,23 @@
           ".continuerc.json"
         ],
         "id": "jsonc"
+      },
+      {
+        "id": "promptLanguage",
+        "extensions": [
+          ".prompt"
+        ],
+        "aliases": [
+          "Prompt Language"
+        ],
+        "configuration": "./prompt-file-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "promptLanguage",
+        "scopeName": "source.prompt",
+        "path": "./media/prompt.tmLanguage.json"
       }
     ],
     "configuration": {
@@ -183,6 +200,18 @@
         "group": "Jarvis"
       },
       {
+        "command": "continue.edit",
+        "category": "Continue",
+        "title": "Edit code with natural language",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.exitEditMode",
+        "category": "Continue",
+        "title": "Exit Edit Mode",
+        "group": "Continue"
+      },
+      {
         "command": "continue.toggleFullScreen",
         "category": "Jarvis",
         "title": "Toggle Full Screen",
@@ -280,6 +309,12 @@
         "category": "Jarvis",
         "title": "Docs Force Re-Index",
         "group": "Jarvis"
+      },
+      {
+        "command": "continue.focusContinueSessionId",
+        "category": "Jarvis",
+        "title": "Focus Continue Chat",
+        "group": "Jarvis"
       }
     ],
     "keybindings": [
@@ -333,8 +368,19 @@
       },
       {
         "command": "continue.quickEdit",
+        "mac": "cmd+shift+i",
+        "key": "ctrl+shift+i"
+      },
+      {
+        "command": "continue.edit",
         "mac": "cmd+i",
         "key": "ctrl+i"
+      },
+      {
+        "command": "continue.exitEditMode",
+        "mac": "escape",
+        "key": "escape",
+        "when": "continue.inEditMode && editorFocus"
       },
       {
         "command": "continue.debugTerminal",
@@ -494,7 +540,7 @@
     },
     "jsonValidation": [
       {
-        "fileMatch": "config.json",
+        "fileMatch": "**/.continue*/config.json",
         "url": "./config_schema.json"
       },
       {
@@ -513,6 +559,7 @@
     "tsc-watch": "tsc -watch -p ./",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
+    "lint:fix": "eslint . --ext ts --fix",
     "build-test": "npm run esbuild && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
@@ -539,10 +586,9 @@
     "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
-    "@typescript-eslint/parser": "^5.45.0",
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
-    "esbuild": "0.19.12",
+    "esbuild": "^0.19.12",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
@@ -563,9 +609,8 @@
     "axios": "^1.2.5",
     "core": "file:../../core",
     "cors": "^2.8.5",
-    "dbinfoz": "^0.11.0",
+    "dbinfoz": "^0.14.0",
     "downshift": "^7.6.0",
-    "esbuild": "^0.19.12",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",

@@ -1,3 +1,9 @@
+import {
+  GetGhTokenArgs,
+  ToIdeFromWebviewOrCoreProtocol,
+} from "../protocol/ide.js";
+import { FromIdeProtocol } from "../protocol/index.js";
+
 import type {
   ContinueRcJson,
   FileType,
@@ -11,11 +17,6 @@ import type {
   RangeInFile,
   Thread,
 } from "../index.js";
-import {
-  GetGhTokenArgs,
-  ToIdeFromWebviewOrCoreProtocol,
-} from "../protocol/ide.js";
-import { FromIdeProtocol } from "../protocol/index.js";
 
 export class MessageIde implements IDE {
   constructor(
@@ -27,7 +28,7 @@ export class MessageIde implements IDE {
       messageType: T,
       callback: (data: FromIdeProtocol[T][0]) => FromIdeProtocol[T][1],
     ) => void,
-  ) {}
+  ) { }
 
   pathSep(): Promise<string> {
     return this.request("pathSep", undefined);
@@ -177,7 +178,7 @@ export class MessageIde implements IDE {
     return this.request("getOpenFiles", undefined);
   }
 
-  getCurrentFile(): Promise<string | undefined> {
+  getCurrentFile() {
     return this.request("getCurrentFile", undefined);
   }
 

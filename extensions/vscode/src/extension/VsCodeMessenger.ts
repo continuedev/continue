@@ -1,6 +1,10 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
+import { stripImages } from "core/llm/images";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -16,14 +20,15 @@ import {
 import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
-import * as fs from "node:fs";
-import * as path from "node:path";
 import * as vscode from "vscode";
+
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { getFullyQualifiedPath } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -35,6 +40,7 @@ import { VsCodeWebviewProtocol } from "../webviewProtocol";
 type TODO = any;
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
+
 export class VsCodeMessenger {
   onWebview<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -78,10 +84,15 @@ export class VsCodeMessenger {
     private readonly verticalDiffManagerPromise: Promise<VerticalDiffManager>,
     private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly workOsAuthProvider: WorkOsAuthProvider,
+    private readonly editDecorationManager: EditDecorationManager,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
-      this.ide.openFile(msg.data.filepath);
+      const fullPath = getFullyQualifiedPath(this.ide, msg.data.filepath);
+
+      if (fullPath) {
+        this.ide.openFile(fullPath);
+      }
     });
 
     this.onWebview("vscode/openMoveRightMarkdown", (msg) => {
@@ -149,11 +160,54 @@ export class VsCodeMessenger {
       await vscode.commands.executeCommand("continue.rejectDiff", filepath);
     });
 
-    this.onWebview("applyToCurrentFile", async (msg) => {
+    this.onWebview("applyToFile", async ({ data }) => {
+      let filepath = data.filepath;
+
+      // If there is a filepath, verify it exists and then open the file
+      if (filepath) {
+        const fullPath = getFullyQualifiedPath(ide, filepath);
+
+        if (!fullPath) {
+          return;
+        }
+
+        const fileExists = await this.ide.fileExists(fullPath);
+
+        // If it's a new file, no need to apply, just write directly
+        if (!fileExists) {
+          await this.ide.writeFile(fullPath, data.text);
+          await this.ide.openFile(fullPath);
+
+          await webviewProtocol.request("updateApplyState", {
+            streamId: data.streamId,
+            status: "done",
+            numDiffs: 0,
+          });
+
+          return;
+        }
+
+        await this.ide.openFile(fullPath);
+      }
+
       // Get active text editor
       const editor = vscode.window.activeTextEditor;
+
       if (!editor) {
         vscode.window.showErrorMessage("No active editor to apply edits to");
+        return;
+      }
+
+      // If document is empty, insert at 0,0 and finish
+      if (!editor.document.getText().trim()) {
+        editor.edit((builder) =>
+          builder.insert(new vscode.Position(0, 0), data.text),
+        );
+        await webviewProtocol.request("updateApplyState", {
+          streamId: data.streamId,
+          status: "done",
+          numDiffs: 0,
+        });
         return;
       }
 
@@ -164,16 +218,13 @@ export class VsCodeMessenger {
       let llm = getModelByRole(config, "applyCodeBlock");
 
       if (!llm) {
-        const defaultModelTitle = await this.webviewProtocol.request(
-          "getDefaultModelTitle",
-          undefined,
+        llm = config.models.find(
+          (model) => model.title === data.curSelectedModelTitle,
         );
-
-        llm = config.models.find((model) => model.title === defaultModelTitle);
 
         if (!llm) {
           vscode.window.showErrorMessage(
-            `Model ${defaultModelTitle} not found in config.`,
+            `Model ${data.curSelectedModelTitle} not found in config.`,
           );
           return;
         }
@@ -184,20 +235,20 @@ export class VsCodeMessenger {
       // Generate the diff and pass through diff manager
       const [instant, diffLines] = await applyCodeBlock(
         editor.document.getText(),
-        msg.data.text,
+        data.text,
         getBasename(editor.document.fileName),
         llm,
         fastLlm,
       );
       const verticalDiffManager = await this.verticalDiffManagerPromise;
       if (instant) {
-        verticalDiffManager.streamDiffLines(
+        await verticalDiffManager.streamDiffLines(
           diffLines,
           instant,
-          msg.data.streamId,
+          data.streamId,
         );
       } else {
-        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
+        const prompt = `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`;
         const fullEditorRange = new vscode.Range(
           0,
           0,
@@ -207,10 +258,11 @@ export class VsCodeMessenger {
         const rangeToApplyTo = editor.selection.isEmpty
           ? fullEditorRange
           : editor.selection;
-        verticalDiffManager.streamEdit(
+
+        await verticalDiffManager.streamEdit(
           prompt,
           llm.title,
-          msg.data.streamId,
+          data.streamId,
           undefined,
           undefined,
           rangeToApplyTo,
@@ -255,6 +307,58 @@ export class VsCodeMessenger {
           msg.data.text,
         );
       });
+    });
+    this.onWebview("edit/sendPrompt", async (msg) => {
+      const prompt = msg.data.prompt;
+      const { start, end } = msg.data.range.range;
+      const verticalDiffManager = await verticalDiffManagerPromise;
+      const modelTitle = await this.webviewProtocol.request(
+        "getDefaultModelTitle",
+        undefined,
+      );
+      const fileAfterEdit = await verticalDiffManager.streamEdit(
+        stripImages(prompt),
+        modelTitle,
+        "edit",
+        undefined,
+        undefined,
+        new vscode.Range(
+          new vscode.Position(start.line, start.character),
+          new vscode.Position(end.line, end.character),
+        ),
+      );
+
+      this.webviewProtocol.request("setEditStatus", {
+        status: "accepting",
+        fileAfterEdit,
+      });
+    });
+    this.onWebview("edit/acceptReject", async (msg) => {
+      const { onlyFirst, accept, filepath } = msg.data;
+      if (accept && onlyFirst) {
+        // Accept first
+        vscode.commands.executeCommand(
+          "continue.acceptVerticalDiffBlock",
+          filepath,
+          0,
+        );
+      } else if (accept) {
+        vscode.commands.executeCommand("continue.acceptDiff", filepath);
+        // Accept all
+      } else if (onlyFirst) {
+        // Reject first
+        vscode.commands.executeCommand(
+          "continue.rejectVerticalDiffBlock",
+          filepath,
+          0,
+        );
+      } else {
+        // Reject all
+        vscode.commands.executeCommand("continue.rejectDiff", filepath);
+      }
+    });
+    this.onWebview("edit/escape", async (msg) => {
+      this.editDecorationManager.clear();
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

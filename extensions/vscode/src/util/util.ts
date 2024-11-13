@@ -1,6 +1,8 @@
-const os = require("node:os");
-import path from "node:path";
 import * as vscode from "vscode";
+
+import { VsCodeIde } from "../VsCodeIde";
+
+const os = require("node:os");
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
   if (index === 0) {
@@ -123,15 +125,12 @@ export function getExtensionVersion(): string {
   return extension?.packageJSON.version || "0.1.0";
 }
 
-export function getFullyQualifiedPath(filepath?: string) {
-  if (filepath && !path.isAbsolute(filepath)) {
-    const workspaceFolders = vscode.workspace.workspaceFolders;
-    if (workspaceFolders && workspaceFolders.length > 0) {
-      return path.join(workspaceFolders[0].uri.fsPath, filepath);
-    } else {
-      vscode.window.showErrorMessage(
-        "Unable to resolve filepath: no workspace folder found",
-      );
-    }
+export function getFullyQualifiedPath(ide: VsCodeIde, filepath: string) {
+  if (ide.ideUtils.path.isAbsolute(filepath)) {return filepath;}
+
+  const workspaceFolders = vscode.workspace.workspaceFolders;
+
+  if (workspaceFolders && workspaceFolders.length > 0) {
+    return ide.ideUtils.path.join(workspaceFolders[0].uri.fsPath, filepath);
   }
 }

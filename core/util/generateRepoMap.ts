@@ -1,9 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
+
 import { IDE, ILLM } from "..";
 import { CodeSnippetsCodebaseIndex } from "../indexing/CodeSnippetsIndex";
 import { walkDirAsync } from "../indexing/walkDir";
 import { pruneLinesFromTop } from "../llm/countTokens";
+
 import { getRepoMapFilePath } from "./paths";
 
 export interface RepoMapOptions {
@@ -12,9 +14,6 @@ export interface RepoMapOptions {
 }
 
 class RepoMapGenerator {
-  private llm: ILLM;
-  private ide: IDE;
-  private options: RepoMapOptions;
   private maxRepoMapTokens: number;
 
   private repoMapPath: string = getRepoMapFilePath();
@@ -32,10 +31,11 @@ class RepoMapGenerator {
     "this map contains the name of the file, and the signature for any " +
     "classes, methods, or functions in the file.\n\n";
 
-  constructor(llm: ILLM, ide: IDE, options: RepoMapOptions) {
-    this.llm = llm;
-    this.ide = ide;
-    this.options = options;
+  constructor(
+    private llm: ILLM,
+    private ide: IDE,
+    private options: RepoMapOptions,
+  ) {
     this.maxRepoMapTokens =
       llm.contextLength * this.REPO_MAX_CONTEXT_LENGTH_RATIO;
   }

@@ -1,6 +1,7 @@
 import { ILLM } from "core";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
+
 import { Battery } from "../util/battery";
 import {
   CONTINUE_WORKSPACE_KEY,

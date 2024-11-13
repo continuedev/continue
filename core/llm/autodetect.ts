@@ -1,10 +1,12 @@
 import { ModelCapability, ModelProvider, TemplateType } from "../index.js";
+
 import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
   gemmaTemplateMessage,
+  graniteTemplateMessages,
   llama2TemplateMessages,
   llama3TemplateMessages,
   llavaTemplateMessages,
@@ -41,28 +43,27 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "together",
   "msty",
   "anthropic",
-  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "continue-proxy",
   "mistral",
-  "mistral-vertexai",
   "sambanova",
+  "vertexai",
+  "watsonx"
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "openai",
   "ollama",
   "gemini",
-  "gemini-vertexai",
   "free-trial",
   "msty",
   "anthropic",
-  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "continue-proxy",
   "openrouter",
+  "vertexai"
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -79,6 +80,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "opus",
   "haiku",
   "pixtral",
+  "llama3.2",
 ];
 
 function modelSupportsImages(
@@ -107,20 +109,19 @@ function modelSupportsImages(
 }
 const PARALLEL_PROVIDERS: ModelProvider[] = [
   "anthropic",
-  "anthropic-vertexai",
   "bedrock",
   "sagemaker",
   "deepinfra",
   "gemini",
-  "gemini-vertexai",
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
-  "mistral-vertexai",
   "free-trial",
   "replicate",
   "together",
   "sambanova",
+  "nebius",
+  "vertexai"
 ];
 
 function llmCanGenerateInParallel(
@@ -146,7 +147,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("command") ||
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
-    lower.includes("gemini")
+    lower.includes("gemini") ||
+    lower.includes("grok")
   ) {
     return undefined;
   }
@@ -220,6 +222,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "neural-chat";
   }
 
+  if (lower.includes("granite")) {
+    return "granite";
+  }
+
   return "chatml";
 }
 
@@ -253,6 +259,7 @@ function autodetectTemplateFunction(
       llava: llavaTemplateMessages,
       "codellama-70b": codeLlama70bTemplateMessages,
       gemma: gemmaTemplateMessage,
+      granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
       none: null,
     };

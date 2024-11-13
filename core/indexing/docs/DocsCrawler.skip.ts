@@ -1,10 +1,13 @@
+import os from "os";
+
+import { jest } from "@jest/globals";
+
+import { ContinueConfig } from "../..";
+import { testConfigHandler } from "../../test/util/fixtures";
+import FileSystemIde from "../../util/filesystem";
+
 import DocsCrawler, { ChromiumInstaller, type PageData } from "./DocsCrawler";
 import preIndexedDocs from "./preIndexedDocs";
-import { jest } from "@jest/globals";
-import FileSystemIde from "../../util/filesystem";
-import { testConfigHandler } from "../../test/util/fixtures";
-import os from "os";
-import { ContinueConfig } from "../..";
 
 // Temporary workaround until we have better caching of Chromium
 // download between test runs

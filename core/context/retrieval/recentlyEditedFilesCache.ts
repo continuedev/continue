@@ -1,4 +1,5 @@
 import QuickLRU from "quick-lru";
+
 import { ToWebviewOrCoreFromIdeProtocol } from "../../protocol/ide.js";
 
 // The cache key and value are both a filepath string

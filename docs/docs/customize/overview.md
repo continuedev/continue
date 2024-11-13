@@ -8,13 +8,13 @@ Continue can be deeply customized. This is primarily accomplished by editing a l
 
 ## Getting started
 
-To open `config.json`, click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can use IntelliSense to see the available options as you type, or you can check the [full reference](./config.mdx).
+To open `config.json`, click the "gear" icon in the bottom right corner of the Continue Chat sidebar. When editing this file, you can see the available options suggested as you type, or you can check the [full reference](./deep-dives/configuration.md).
 
 When you save `config.json`, Continue will automatically refresh to take into account your changes.
 
 ## Per-workspace configuration
 
-If you'd like to scope certain settings to a particular workspace, you can add a `.continuerc.json` to the root of your project. It has the same [definition](./config.mdx) as `config.json`, and will automatically be applied on top of the local config.json.
+If you'd like to scope certain settings to a particular workspace, you can add a `.continuerc.json` to the root of your project. It has the same [definition](./deep-dives/configuration.md) as `config.json`, and will automatically be applied on top of the local config.json.
 
 ## Programmatic configuration
 

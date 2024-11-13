@@ -9,7 +9,7 @@ import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
 :::info
-This page recommends models and providers for Chat. Read more about how to set up your `config.json` [here](../customize/config.mdx).
+This page recommends models and providers for Chat. Read more about how to set up your `config.json` [here](../reference.md).
 :::
 
 ## Best overall experience
@@ -25,7 +25,7 @@ Our current top recommendation is Claude Sonnet 3.5 from [Anthropic](../customiz
    {
      "title": "Claude 3.5 Sonnet",
      "provider": "anthropic",
-     "model": "claude-3-5-sonnet-20240620",
+     "model": "claude-3-5-sonnet-latest",
      "apiKey": "[ANTHROPIC_API_KEY]"
    }
  ]
@@ -78,6 +78,18 @@ If you prefer to use an open-weight model, then Llama 3.1 405B from Meta is your
                     "title": "Llama 3.1 405B",
                     "provider": "ollama",
                     "model": "llama3.1-405b"
+                }
+            ]
+        ```
+    </TabItem>
+    <TabItem value="Nebius">
+        ```json title="config.json"
+            "models": [
+                {
+                    "title": "Llama 3.1 405B",
+                    "provider": "nebius",
+                    "model": "llama3.1-405b",
+                    "apiKey": "[NEBIUS_API_KEY]"
                 }
             ]
         ```

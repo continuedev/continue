@@ -1,7 +1,10 @@
 import fs from "fs";
+
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
+
 import { DatabaseConnection } from "../indexing/refreshIndex.js";
+
 import { getDevDataSqlitePath } from "./paths.js";
 
 export class DevDataSqliteDb {

@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Support for Nebius LLM provider
+time: 2024-11-08T11:46:12.94828-08:00

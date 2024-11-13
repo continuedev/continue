@@ -1,4 +1,5 @@
 import { ChatMessage, LLMOptions, ModelProvider } from "..";
+
 import { BaseLLM } from ".";
 
 class DummyLLM extends BaseLLM {
@@ -48,7 +49,7 @@ describe("BaseLLM", () => {
         aiGatewaySlug: "testSlug",
         apiBase: "https://api.example.com",
         accountId: "testAccountId",
-        engine: "davinci",
+        deployment: "davinci",
         apiVersion: "v1",
         apiType: "public",
         region: "us",
@@ -71,7 +72,7 @@ describe("BaseLLM", () => {
       expect(instance.aiGatewaySlug).toBe("testSlug");
       expect(instance.apiBase).toBe("https://api.example.com/");
       expect(instance.accountId).toBe("testAccountId");
-      expect(instance.engine).toBe("davinci");
+      expect(instance.deployment).toBe("davinci");
       expect(instance.apiVersion).toBe("v1");
       expect(instance.apiType).toBe("public");
       expect(instance.region).toBe("us");

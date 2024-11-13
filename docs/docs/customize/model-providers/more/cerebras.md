@@ -1,6 +1,6 @@
 # Cerebras Inference
 
-Cerebras Inference uses specialized silicon to provides fast inference for the Llama3.1 8B and Llama3.1 70B models.
+Cerebras Inference uses specialized silicon to provides fast inference.
 
 1. Create an account in the portal [here](https://cloud.cerebras.ai/).
 2. Create and copy the API key for use in Continue.

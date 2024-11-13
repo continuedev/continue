@@ -11,16 +11,17 @@ import { streamSse } from "../stream.js";
 class Anthropic extends BaseLLM {
   static providerName: ModelProvider = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
-    model: "claude-3-5-sonnet-20240620",
+    model: "claude-3-5-sonnet-latest",
     contextLength: 200_000,
     completionOptions: {
-      model: "claude-3-5-sonnet-20240620",
+      model: "claude-3-5-sonnet-latest",
       maxTokens: 4096,
     },
     apiBase: "https://api.anthropic.com/v1/",
   };
 
-  private _convertArgs(options: CompletionOptions) {
+  public convertArgs(options: CompletionOptions) {
+    // should be public for use within VertexAI
     const finalOptions = {
       top_k: options.topK,
       top_p: options.topP,
@@ -34,53 +35,61 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
-  private _convertMessages(msgs: ChatMessage[]): any[] {
-    const filteredmessages = msgs.filter((m) => m.role !== "system")
-    const lastTwoUserMsgIndices = filteredmessages 
+  public convertMessages(msgs: ChatMessage[]): any[] {
+    // should be public for use within VertexAI
+    const filteredmessages = msgs.filter((m) => m.role !== "system");
+    const lastTwoUserMsgIndices = filteredmessages
       .map((msg, index) => (msg.role === "user" ? index : -1))
-      .filter((index) => index !== -1).slice(-2);
+      .filter((index) => index !== -1)
+      .slice(-2);
 
     const messages = filteredmessages.map((message, filteredMsgIdx) => {
-        // Add cache_control parameter to the last two user messages
-        // The second-to-last because it retrieves potentially already cached contents,
-        // The last one because we want it cached for later retrieval.
-        // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
-        const addCaching = this.cacheBehavior?.cacheConversation && lastTwoUserMsgIndices.includes(filteredMsgIdx);
+      // Add cache_control parameter to the last two user messages
+      // The second-to-last because it retrieves potentially already cached contents,
+      // The last one because we want it cached for later retrieval.
+      // See: https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+      const addCaching =
+        this.cacheBehavior?.cacheConversation &&
+        lastTwoUserMsgIndices.includes(filteredMsgIdx);
 
-        if (typeof message.content === "string") {
-          var chatMessage = {
-            ...message, 
-            content: [{
-              type: "text", 
-              text: message.content,
-              ...(addCaching? { cache_control: { type: "ephemeral" } } : {})
-            }]
-          };
-          return chatMessage;
-        }
-
-        return {
+      if (typeof message.content === "string") {
+        var chatMessage = {
           ...message,
-          content: message.content.map((part, contentIdx) => {
-            if (part.type === "text") {
-              const newpart = {
-                      ...part,
-                      // If multiple text parts, only add cache_control to the last one
-                      ...((addCaching && contentIdx == message.content.length - 1) ? { cache_control: { type: "ephemeral" } } : {})
-                     };
-              return newpart;
-            }
-            return {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/jpeg",
-                data: part.imageUrl?.url.split(",")[1],
-              },
-            };
-          }),
+          content: [
+            {
+              type: "text",
+              text: message.content,
+              ...(addCaching ? { cache_control: { type: "ephemeral" } } : {}),
+            },
+          ],
         };
-      });
+        return chatMessage;
+      }
+
+      return {
+        ...message,
+        content: message.content.map((part, contentIdx) => {
+          if (part.type === "text") {
+            const newpart = {
+              ...part,
+              // If multiple text parts, only add cache_control to the last one
+              ...(addCaching && contentIdx == message.content.length - 1
+                ? { cache_control: { type: "ephemeral" } }
+                : {}),
+            };
+            return newpart;
+          }
+          return {
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: "image/jpeg",
+              data: part.imageUrl?.url.split(",")[1],
+            },
+          };
+        }),
+      };
+    });
     return messages;
   }
 
@@ -98,7 +107,8 @@ class Anthropic extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const shouldCacheSystemMessage = !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
+    const shouldCacheSystemMessage =
+      !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const systemMessage: string = stripImages(
       messages.filter((m) => m.role === "system")[0]?.content,
     );
@@ -115,8 +125,8 @@ class Anthropic extends BaseLLM {
           : {}),
       },
       body: JSON.stringify({
-        ...this._convertArgs(options),
-        messages: this._convertMessages(messages),
+        ...this.convertArgs(options),
+        messages: this.convertMessages(messages),
         system: shouldCacheSystemMessage
           ? [
               {
@@ -136,7 +146,7 @@ class Anthropic extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      if (value.type == "message_start") console.log(value);
+      if (value.type == "message_start") {console.log(value);}
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }

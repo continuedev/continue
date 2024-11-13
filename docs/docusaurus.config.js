@@ -31,10 +31,10 @@ const config = {
   // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: ["en", "zh-CN"],
   },
 
-  themes: [["docusaurus-json-schema-plugin", {}]],
+  themes: [],
 
   presets: [
     [
@@ -81,7 +81,7 @@ const config = {
             type: "docSidebar",
             sidebarId: "docsSidebar",
             position: "left",
-            label: "Docs",
+            label: "User Guide",
             href: "/",
           },
           {
@@ -90,6 +90,13 @@ const config = {
             position: "left",
             label: "Customize",
             href: "/customize/overview",
+          },
+          {
+            type: "docSidebar",
+            sidebarId: "customizingSidebar",
+            position: "left",
+            label: "Reference",
+            href: "/reference",
           },
           {
             to: "https://github.com/continuedev/continue",
@@ -102,6 +109,10 @@ const config = {
             label: "Discord",
             position: "right",
             className: "discord-navbar",
+          },
+          {
+            type: "localeDropdown",
+            position: "right",
           },
         ],
       },
@@ -230,7 +241,7 @@ const config = {
             from: "/changelog",
           },
           {
-            to: "/customize/config",
+            to: "/reference",
             from: ["/customization/code-config", "/reference/config"],
           },
           {
@@ -376,6 +387,10 @@ const config = {
           {
             to: "/customize/model-providers/more/watsonx",
             from: "/reference/Model Providers/watsonx",
+          },
+          {
+            to: "/customize/model-providers/more/nebius",
+            from: "/reference/Model Providers/nebius",
           },
           // Sidebar items that should route directly to a subpage
           {

@@ -1,5 +1,6 @@
 import { findLlmInfo } from "@continuedev/llm-info";
 import Handlebars from "handlebars";
+
 import {
   CacheBehavior,
   ChatMessage,
@@ -22,6 +23,7 @@ import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import mergeJson from "../util/merge.js";
 import { Telemetry } from "../util/posthog.js";
 import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
+
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -106,7 +108,7 @@ export abstract class BaseLLM implements ILLM {
   cacheBehavior?: CacheBehavior;
   capabilities?: ModelCapability;
 
-  engine?: string;
+  deployment?: string;
   apiVersion?: string;
   apiType?: string;
   region?: string;
@@ -114,13 +116,8 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
 
-  // For IBM watsonx only.
-  watsonxUrl?: string;
-  watsonxCreds?: string;
-  watsonxProjectId?: string;
-  watsonxStopToken?: string;
-  watsonxApiVersion?: string;
-  watsonxFullUrl?: string;
+  // For IBM watsonx
+  deploymentId?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -186,13 +183,8 @@ export abstract class BaseLLM implements ILLM {
     this.apiBase = options.apiBase;
     this.cacheBehavior = options.cacheBehavior;
 
-    // for watsonx only
-    this.watsonxUrl = options.watsonxUrl;
-    this.watsonxCreds = options.watsonxCreds;
-    this.watsonxProjectId = options.watsonxProjectId;
-    this.watsonxStopToken = options.watsonxStopToken;
-    this.watsonxApiVersion = options.watsonxApiVersion;
-    this.watsonxFullUrl = options.watsonxFullUrl;
+    // watsonx deploymentId
+    this.deploymentId = options.deploymentId;
 
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
@@ -200,7 +192,7 @@ export abstract class BaseLLM implements ILLM {
     this.accountId = options.accountId;
     this.capabilities = options.capabilities;
 
-    this.engine = options.engine;
+    this.deployment = options.deployment;
     this.apiVersion = options.apiVersion;
     this.apiType = options.apiType;
     this.region = options.region;
@@ -511,15 +503,20 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
-    for await (const chunk of this._streamComplete(prompt, completionOptions)) {
-      completion += chunk;
-      yield chunk;
-    }
+    try {
+      for await (const chunk of this._streamComplete(
+        prompt,
+        completionOptions,
+      )) {
+        completion += chunk;
+        yield chunk;
+      }
+    } finally {
+      this._logTokensGenerated(completionOptions.model, prompt, completion);
 
-    this._logTokensGenerated(completionOptions.model, prompt, completion);
-
-    if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      if (log && this.writeLog) {
+        await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      }
     }
 
     return {

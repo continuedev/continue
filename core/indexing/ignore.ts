@@ -1,4 +1,8 @@
+import fs from "fs";
+
 import ignore from "ignore";
+
+import { getGlobalContinueIgnorePath } from "../util/paths";
 
 export const DEFAULT_IGNORE_FILETYPES = [
   "*.DS_Store",
@@ -114,3 +118,8 @@ export function gitIgArrayFromFile(file: string) {
     .map((l) => l.trim()) // Remove whitespace
     .filter((l) => !/^#|^$/.test(l)); // Remove empty lines
 }
+
+export const getGlobalContinueIgArray = () => {
+  const contents = fs.readFileSync(getGlobalContinueIgnorePath(), "utf8");
+  return gitIgArrayFromFile(contents);
+};

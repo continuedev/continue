@@ -49,7 +49,7 @@ declare global {
     apiBase?: string;
     cacheBehavior?: CacheBehavior;
 
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
     region?: string;
@@ -322,7 +322,7 @@ declare global {
     accountId?: string;
 
     // Azure options
-    engine?: string;
+    deployment?: string;
     apiVersion?: string;
     apiType?: string;
 
@@ -338,11 +338,7 @@ declare global {
     capabilities?: ModelCapability;
 
     // IBM watsonx options
-    watsonxUrl?: string;
-    watsonxCreds?: string;
-    watsonxProjectId?: string;
-    watsonxStopToken?: string;
-    watsonxApiVersion?: string;
+    deploymentId?: string;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,
@@ -467,7 +463,11 @@ declare global {
       stepIndex: number,
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
-    getCurrentFile(): Promise<string | undefined>;
+    getCurrentFile(): Promise<undefined | {
+      isUntitled: boolean
+      path: string
+      contents: string
+    }>;
     getPinnedFiles(): Promise<string[]>;
     getSearchResults(query: string): Promise<string>;
     subprocess(command: string): Promise<[string, string]>;
@@ -542,6 +542,7 @@ declare global {
     | "folder"
     | "jira"
     | "postgres"
+    | "mssql"
     | "database"
     | "code"
     | "docs"
@@ -602,7 +603,8 @@ declare global {
     | "watsonx"
     | "openrouter"
     | "sambanova"
-    | "nvidia";
+    | "nvidia"
+    | "nebius";
 
   export type ModelName =
     | "AUTODETECT"
@@ -626,6 +628,11 @@ declare global {
     | "mistral-large-latest"
     | "mistral-7b"
     | "mistral-8x7b"
+    | "mistral-8x22b"
+    | "mistral-tiny"
+    | "mistral-small"
+    | "mistral-medium"
+    | "mistral-nemo"
     // Llama 2
     | "llama2-7b"
     | "llama2-13b"
@@ -639,6 +646,8 @@ declare global {
     | "llama3-70b"
     // Other Open-source
     | "phi2"
+    | "phi-3-mini"
+    | "phi-3-medium"
     | "phind-codellama-34b"
     | "wizardcoder-7b"
     | "wizardcoder-13b"
@@ -647,10 +656,14 @@ declare global {
     | "codeup-13b"
     | "deepseek-7b"
     | "deepseek-33b"
+    | "deepseek-2-lite"
     | "neural-chat-7b"
     | "gemma-7b-it"
+    | "gemma2-2b-it"
     | "gemma2-9b-it"
+    | "olmo-7b"
     // Anthropic
+    | "claude-3-5-sonnet-latest"
     | "claude-3-5-sonnet-20240620"
     | "claude-3-opus-20240229"
     | "claude-3-sonnet-20240229"
@@ -666,10 +679,6 @@ declare global {
     | "gemini-1.5-pro"
     | "gemini-1.5-flash-latest"
     | "gemini-1.5-flash"
-    // Mistral
-    | "mistral-tiny"
-    | "mistral-small"
-    | "mistral-medium"
     // Tab autocomplete
     | "deepseek-1b"
     | "starcoder-1b"
@@ -732,6 +741,7 @@ declare global {
     stop?: string[];
     maxTokens?: number;
     numThreads?: number;
+    useMmap?: boolean;
     keepAlive?: number;
     raw?: boolean;
     stream?: boolean;
@@ -768,17 +778,20 @@ declare global {
     | "gemini"
     | "continue-proxy"
     | "deepinfra"
-    | "voyage";
+    | "voyage"
+    | "watsonx"
+    | "nebius";
 
   export interface EmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;
-    engine?: string;
+    deployment?: string;
     apiType?: string;
     apiVersion?: string;
     requestOptions?: RequestOptions;
     maxChunkSize?: number;
+    projectId?: string;
   }
 
   export interface EmbeddingsProviderDescription extends EmbedOptions {

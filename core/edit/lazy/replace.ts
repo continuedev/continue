@@ -2,7 +2,7 @@ import { ILLM } from "../..";
 import {
   filterLeadingNewline,
   stopAtLines,
-} from "../../autocomplete/streamTransforms/lineStream";
+} from "../../autocomplete/filtering/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
 import { dedent } from "../../util";
 

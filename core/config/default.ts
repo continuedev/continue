@@ -25,7 +25,7 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
     title: "Claude 3.5 Sonnet (Free Trial)",
     provider: "free-trial",
-    model: "claude-3-5-sonnet-20240620",
+    model: "claude-3-5-sonnet-latest",
     systemMessage:
       "You are an expert software developer. You give helpful and concise responses.",
   },

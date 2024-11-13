@@ -1,7 +1,8 @@
 /* Terminal emulator - commented because node-pty is causing problems. */
 
-import { longestCommonSubsequence } from "core/util/lcs";
 import * as os from "node:os";
+
+import { longestCommonSubsequence } from "core/util/lcs";
 import stripAnsi from "strip-ansi";
 import * as vscode from "vscode";
 
@@ -129,7 +130,6 @@ export class CapturedTerminal {
   private readonly writeEmitter: vscode.EventEmitter<string>;
 
   private splitByCommandsBuffer = "";
-  private readonly onCommandOutput: ((output: string) => void) | undefined;
 
   splitByCommandsListener(data: string) {
     // Split the output by commands so it can be sent to Continue Server
@@ -164,10 +164,8 @@ export class CapturedTerminal {
 
   constructor(
     options: { name: string } & Partial<vscode.ExtensionTerminalOptions>,
-    onCommandOutput?: (output: string) => void,
+    private readonly onCommandOutput?: (output: string) => void,
   ) {
-    this.onCommandOutput = onCommandOutput;
-
     // this.shellCmd = "bash"; // getDefaultShell();
     this.shellCmd = getDefaultShell();
 

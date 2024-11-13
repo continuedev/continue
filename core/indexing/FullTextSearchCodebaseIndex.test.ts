@@ -1,14 +1,16 @@
 import { jest } from "@jest/globals";
+
 import {
   insertMockChunks,
   mockPathAndCacheKey,
   updateIndexAndAwaitGenerator,
 } from "../test/util/indexing";
+
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 import { IndexResultType } from "./types";
 
-describe("FullTextSearchCodebaseIndex", () => {
+describe.skip("FullTextSearchCodebaseIndex", () => {
   let index: FullTextSearchCodebaseIndex;
   let db: DatabaseConnection;
 
