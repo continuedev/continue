@@ -826,6 +826,9 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
+    "continue.openMorePage": () => {
+      vscode.commands.executeCommand("continue.navigateTo", "/more");
+    },
     "continue.navigateTo": (path: string) => {
       sidebar.webviewProtocol?.request("navigateTo", { path });
       focusGUI();

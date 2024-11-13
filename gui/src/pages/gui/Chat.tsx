@@ -62,6 +62,10 @@ import {
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import HeaderButtonWithToolTip from "../../components/gui/HeaderButtonWithToolTip";
+import { useNavigate } from "react-router-dom";
+import ConfigError from "./ConfigError";
+import ConfigErrorIndicator from "./ConfigError";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -458,37 +462,40 @@ export function Chat() {
             pointerEvents: active ? "none" : "auto",
           }}
         >
-          {state.history.length > 0 ? (
-            <div className="xs:inline mt-2 hidden">
-              <NewSessionButton
-                onClick={() => {
-                  saveSession();
-                }}
-                className="mr-auto"
-              >
-                <span className="xs:inline hidden">
-                  New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
-                </span>
-              </NewSessionButton>
-            </div>
-          ) : (
-            <>
-              {getLastSessionId() ? (
-                <div className="xs:inline mt-2 hidden">
+          <div className="flex flex-row items-center justify-between pl-0.5 pr-2">
+            <div className="xs:inline hidden">
+              {state.history.length > 0 ? (
+                <NewSessionButton
+                  onClick={() => {
+                    saveSession();
+                  }}
+                >
+                  <span className="xs:inline hidden">
+                    New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"}
+                    )
+                  </span>
+                </NewSessionButton>
+              ) : getLastSessionId() ? (
+                <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
                       loadLastSession().catch((e) =>
                         console.error(`Failed to load last session: ${e}`),
                       );
                     }}
-                    className="mr-auto flex items-center gap-2"
+                    className="flex items-center gap-2"
                   >
                     <ArrowLeftIcon className="h-3 w-3" />
                     Last Session
                   </NewSessionButton>
                 </div>
               ) : null}
+            </div>
+            <ConfigErrorIndicator />
+          </div>
 
+          {state.history.length === 0 && (
+            <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
                   <OnboardingCard activeTab={onboardingCard.activeTab} />

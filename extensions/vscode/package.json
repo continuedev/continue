@@ -258,6 +258,13 @@
         "group": "Continue"
       },
       {
+        "command": "continue.openMorePage",
+        "category": "Continue",
+        "title": "More",
+        "icon": "$(ellipsis)",
+        "group": "Continue"
+      },
+      {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
         "title": "Write Comments for this Code",
@@ -315,6 +322,24 @@
         "command": "continue.focusContinueSessionId",
         "category": "Continue",
         "title": "Focus Continue Chat",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.signOut",
+        "title": "Sign Out",
+        "category": "Continue",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.useLocalConfig",
+        "title": "Local Config",
+        "category": "Continue",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.useTeamConfig",
+        "title": "Team Config",
+        "category": "Continue",
         "group": "Continue"
       }
     ],
@@ -410,6 +435,11 @@
       {
         "id": "continue.continueSubMenu",
         "label": "Continue"
+      },
+      {
+        "id": "continue.accountSubmenu",
+        "label": "Account",
+        "icon": "$(account)"
       }
     ],
     "menus": {
@@ -504,6 +534,16 @@
           "command": "continue.openConfig",
           "group": "navigation@4",
           "when": "view == continue.continueGUIView"
+        },
+        {
+          "submenu": "continue.accountSubmenu",
+          "group": "navigation@5",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.openMorePage",
+          "group": "navigation@6",
+          "when": "view == continue.continueGUIView"
         }
       ],
       "editor/title": [
@@ -522,6 +562,23 @@
         {
           "command": "continue.debugTerminal",
           "group": "navigation@top"
+        }
+      ],
+      "continue.accountSubmenu": [
+        {
+          "command": "continue.useLocalConfig",
+          "title": "Local Config",
+          "group": "Config@1"
+        },
+        {
+          "command": "continue.useTeamConfig",
+          "title": "Team Config",
+          "group": "Config@2"
+        },
+        {
+          "command": "continue.signOut",
+          "title": "Sign Out",
+          "group": "Other@1"
         }
       ]
     },

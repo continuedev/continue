@@ -48,7 +48,7 @@ function Footer() {
 
   if (defaultModel?.provider === "free-trial") {
     return (
-      <footer className="flex flex-row border-0 border-t border-solid border-t-zinc-700 px-2 py-2">
+      <footer className="flex flex-col border-0 border-t border-solid border-t-zinc-700 px-2 py-2">
         <FreeTrialProgressBar
           completed={parseInt(localStorage.getItem("ftc") || "0")}
           total={FREE_TRIAL_LIMIT_REQUESTS}
@@ -57,6 +57,12 @@ function Footer() {
     );
   }
   return null;
+
+  // vscode.commands.executeCommand(
+  //   "setContext",
+  //   "continue.streamingDiff",
+  //   false,
+  // );
 
   // return (
   //   <footer className="flex h-7 items-center justify-between overflow-hidden border-0 border-t border-solid border-t-zinc-700 p-2">
