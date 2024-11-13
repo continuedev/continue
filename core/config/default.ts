@@ -6,7 +6,7 @@ import {
 } from "../";
 
 export const DEFAULT_CHAT_MODEL_CONFIG: ModelDescription = {
-  model: "claude-3-5-sonnet-20240620",
+  model: "claude-3-5-sonnet-latest",
   provider: "anthropic",
   apiKey: "",
   title: "Claude 3.5 Sonnet",
@@ -23,7 +23,7 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
   {
     title: "Claude 3.5 Sonnet (Free Trial)",
     provider: "free-trial",
-    model: "claude-3-5-sonnet-20240620",
+    model: "claude-3-5-sonnet-latest",
     systemMessage:
       "You are an expert software developer. You give helpful and concise responses.",
   },
@@ -68,14 +68,6 @@ export const defaultContextProvidersJetBrains: ContextProviderWithParams[] = [
 
 export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
   {
-    name: "edit",
-    description: "Edit selected code",
-  },
-  {
-    name: "comment",
-    description: "Write comments for the selected code",
-  },
-  {
     name: "share",
     description: "Export the current chat session to markdown",
   },
@@ -90,14 +82,6 @@ export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
 ];
 
 export const defaultSlashCommandsJetBrains = [
-  {
-    name: "edit",
-    description: "Edit selected code",
-  },
-  {
-    name: "comment",
-    description: "Write comments for the selected code",
-  },
   {
     name: "share",
     description: "Export the current chat session to markdown",

@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+
 import { openEditorAndRevealRange, translate } from "./util/vscode";
 
 export interface SuggestionRanges {

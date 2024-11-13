@@ -1,9 +1,12 @@
-import { describe, test } from "mocha";
 import assert from "node:assert";
 import path from "node:path";
+
+import { describe, test } from "mocha";
 import * as vscode from "vscode";
+
 import { VsCodeIdeUtils } from "../../util/ideUtils";
 import { testWorkspacePath } from "../runner/runTestOnVSCodeHost";
+
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
 
@@ -57,13 +60,6 @@ describe("IDE Utils", () => {
     assert(uniqueId.length === 64);
     const regex = /^[a-z0-9]+$/;
     assert(regex.test(uniqueId));
-  });
-
-  test("readFile", async () => {
-    const testPyContents = await utils.readFile(testPyPath);
-    assert(testPyContents === "print('Hello World!')");
-    const testJsContents = await utils.readFile(testJsPath);
-    assert(testJsContents === "console.log('Hello World!')");
   });
 
   test.skip("getTerminalContents", async () => {

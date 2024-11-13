@@ -3,18 +3,32 @@
  */
 
 import { setupCa } from "core/util/ca";
+import { extractMinimalStackTraceInfo } from "core/util/extractMinimalStackTraceInfo";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
+
 import { getExtensionVersion } from "./util/util";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
+  await setupCa();
   const { activateExtension } = await import("./activation/activate");
-  try {
-    return activateExtension(context);
-  } catch (e) {
+  return await activateExtension(context);
+}
+
+export function activate(context: vscode.ExtensionContext) {
+  return dynamicImportAndActivate(context).catch((e) => {
     console.log("Error activating extension: ", e);
+    Telemetry.capture(
+      "vscode_extension_activation_error",
+      {
+        stack: extractMinimalStackTraceInfo(e.stack),
+        message: e.message,
+      },
+      false,
+      true,
+    );
     vscode.window
-      .showInformationMessage(
+      .showWarningMessage(
         "Error activating the Continue extension.",
         "View Logs",
         "Retry",
@@ -27,12 +41,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
           vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
       });
-  }
-}
-
-export function activate(context: vscode.ExtensionContext) {
-  setupCa();
-  return dynamicImportAndActivate(context);
+  });
 }
 
 export function deactivate() {

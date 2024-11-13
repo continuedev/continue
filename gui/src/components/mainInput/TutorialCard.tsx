@@ -52,10 +52,10 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
       <ul className="space-y-4 pl-0" style={{ color: lightGray }}>
         {!isJetBrains() && (
           <li className="flex items-start">
-            <ArrowRightStartOnRectangleIcon className="align-middle pr-3 h-4 w-4" />
+            <ArrowRightStartOnRectangleIcon className="h-4 w-4 pr-3 align-middle" />
             <span>
               <span
-                className="underline cursor-pointer"
+                className="cursor-pointer underline"
                 onClick={() =>
                   ideMessenger.request(
                     "vscode/openMoveRightMarkdown",
@@ -70,32 +70,33 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
           </li>
         )}
         <li className="flex items-start">
-          <PencilSquareIcon className="align-middle pr-3 h-4 w-4" />
+          <PencilSquareIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
             Highlight code and press <code>{getMetaKeyLabel() + "I"}</code> to
             quickly make natural language edits
           </span>
         </li>
         <li className="flex items-start">
-          <ClipboardDocumentIcon className="align-middle pr-3 h-4 w-4" />
+          <ClipboardDocumentIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
             Highlight code and press <code>{getMetaKeyLabel() + "L"}</code> to
             add it to the chat window
           </span>
         </li>
         <li className="flex items-start">
-          <Cog6ToothIcon className="align-middle pr-3 h-4 w-4" />
+          <Cog6ToothIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
             Click the gear icon in the bottom right to configure Continue
           </span>
         </li>
         <li className="flex items-start">
-          <BookOpenIcon className="align-middle pr-3 h-4 w-4" />
+          <BookOpenIcon className="h-4 w-4 pr-3 align-middle" />
           <span>
             <a
-              href="https://docs.continue.dev"
-              target="_blank"
-              className="text-inherit underline cursor-pointer hover:text-inherit"
+              className="cursor-pointer text-inherit underline hover:text-inherit"
+              onClick={() =>
+                ideMessenger.post("openUrl", "https://docs.continue.dev")
+              }
             >
               Read our documentation
             </a>{" "}

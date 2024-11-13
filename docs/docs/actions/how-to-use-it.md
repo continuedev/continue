@@ -14,7 +14,7 @@ Actions are shortcuts for common use cases. For example, you might want to revie
 
 ### Slash commands
 
-The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
+The most common way to invoke an action is with a slash command. These are shortcuts that can be activated by typing '/' in a chat session (press <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> (VS Code) or <kbd>cmd/ctrl</kbd> + <kbd>J</kbd> (JetBrains)), and selecting from the dropdown. For example, the built-in '/edit' slash command lets you stream edits directly into your editor.
 
 ![slash-commands](/img/slash-commands.png)
 
@@ -48,7 +48,7 @@ Write unit tests for the above selected code, following each of these instructio
 - Don't explain how to set up `jest`
 ```
 
-Now to use this prompt, you can highlight code and use `cmd/ctrl+L` to select it in the Continue sidebar.
+Now to use this prompt, you can highlight code and use <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> to select it in the Continue sidebar.
 
 Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
 
@@ -76,10 +76,10 @@ Right click actions let you highlight a desired region of code, right click, and
 
 #### Debug action
 
-The debug action is a special built-in keyboard shortcut in the VS Code extension. Use `cmd/ctrl+shift+R` to instantly copy the contents of the current terminal into the chat sidebar and get debugging advice.
+The debug action is a special built-in keyboard shortcut in the VS Code extension. Use <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>R</kbd> to instantly copy the contents of the current terminal into the chat sidebar and get debugging advice.
 
 #### Quick fixes
 
-Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut `cmd/ctrl+.` will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use `cmd/ctrl+.` again and Continue will attempt to help solve the problem.
+Whenever you see red/yellow underlines in your code indicating errors, you can place your cursor nearby and VS Code will display a lightbulb icon. Either clicking the lightbulb or using the keyboard shortcut <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> will show a dropdown menu of quick fixes. One of these will be the “Ask Continue” action. Either click or use <kbd>cmd/ctrl</kbd> + <kbd>.</kbd> again and Continue will attempt to help solve the problem.
 
 ![ask-continue](/img/ask-continue.png)

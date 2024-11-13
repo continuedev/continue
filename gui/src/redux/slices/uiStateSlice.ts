@@ -11,6 +11,10 @@ type UiState = {
   dialogEntryOn: boolean;
   nextCodeBlockToApplyIndex: number;
   onboardingCard: OnboardingCardState;
+
+  /**
+   * Syncs the sidebar with the accepted/rejected blocks in the editor. Reused for Edit as well.
+   */
   applyStates: ApplyState[];
 };
 
@@ -53,17 +57,19 @@ export const uiStateSlice = createSlice({
     incrementNextCodeBlockToApplyIndex: (state, action) => {
       state.nextCodeBlockToApplyIndex++;
     },
-    updateApplyState: (state, action: PayloadAction<ApplyState>) => {
-      const { streamId, status } = action.payload;
+    updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const index = state.applyStates.findIndex(
-        (applyState) => applyState.streamId === streamId,
+        (applyState) => applyState.streamId === payload.streamId,
       );
-      if (status === "closed" && index !== -1) {
-        state.applyStates.splice(index, 1);
-      } else if (index === -1) {
-        state.applyStates.push(action.payload);
+
+      const curApplyState = state.applyStates[index];
+
+      if (index === -1) {
+        state.applyStates.push(payload);
       } else {
-        state.applyStates[index].status = status;
+        curApplyState.status = payload.status ?? curApplyState.status;
+        curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
+        curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
       }
     },
   },

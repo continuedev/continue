@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import useHistory from "../../hooks/useHistory";
-import ButtonWithTooltip from "../ButtonWithTooltip";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -56,10 +56,10 @@ export function HistoryTableRow({
         onMouseLeave={() => setHovered(false)}
       >
         <div
-          className="hover:bg-vsc-editor-background relative box-border flex max-w-full overflow-hidden rounded-lg p-3"
+          className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
           onClick={async () => {
             // Save current session
-            saveSession();
+            await saveSession();
             await loadSession(session.sessionId);
             navigate("/");
           }}
@@ -101,7 +101,7 @@ export function HistoryTableRow({
 
           {hovered && !editing && (
             <div className="bg-vsc-background absolute right-2 top-1/2 ml-auto flex -translate-y-1/2 transform items-center gap-x-2 rounded-full py-1.5 pl-4 pr-4 shadow-md">
-              <ButtonWithTooltip
+              <HeaderButtonWithToolTip
                 text="Edit"
                 onClick={async (e) => {
                   e.stopPropagation();
@@ -109,16 +109,16 @@ export function HistoryTableRow({
                 }}
               >
                 <PencilSquareIcon width="1.3em" height="1.3em" />
-              </ButtonWithTooltip>
-              <ButtonWithTooltip
+              </HeaderButtonWithToolTip>
+              <HeaderButtonWithToolTip
                 text="Delete"
                 onClick={async () => {
-                  deleteSession(session.sessionId);
+                  await deleteSession(session.sessionId);
                   onDelete(session.sessionId);
                 }}
               >
                 <TrashIcon width="1.3em" height="1.3em" />
-              </ButtonWithTooltip>
+              </HeaderButtonWithToolTip>
             </div>
           )}
         </div>

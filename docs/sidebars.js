@@ -131,8 +131,12 @@ const sidebars = {
         },
       ],
     },
-    "customize/config",
     "customize/changelog",
+    {
+      type: "link",
+      label: "Reference",
+      href: "/reference",
+    },
   ],
 };
 

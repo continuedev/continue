@@ -1,7 +1,8 @@
+import { v4 as uuidv4 } from "uuid";
+
 import { PersistedSessionInfo } from "../..";
 import historyManager from "../../util/history";
 import { getSessionFilePath } from "../../util/paths";
-import { v4 as uuidv4 } from "uuid";
 
 const sessionId = uuidv4();
 const testSession: PersistedSessionInfo = {

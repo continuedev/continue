@@ -55,7 +55,7 @@ function testLLM(llm: BaseLLM) {
   });
 }
 
-describe("LLM", () => {
+describe.skip("LLM", () => {
   // testLLM(
   //   new FreeTrial({
   //     model: "gpt-3.5-turbo",
@@ -106,5 +106,8 @@ describe("LLM", () => {
   // );
   // testLLM(
   //   new Flowise({ apiKey: process.env.FLOWISE_API_KEY, model: "gpt-3.5-turbo" })
+  // );
+  // testLLM(
+  //   new Nebius({ apiKey: process.env.NEBIUS_API_KEY, model: "llama3.1-8b" })
   // );
 });

@@ -1,20 +1,22 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { IDE } from "core";
-import { walkDir } from "core/indexing/walkDir";
+import { ConfigHandler } from "core/config/ConfigHandler";
+import { getModelByRole } from "core/config/util";
+import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
+
 import { VerticalDiffManager } from "../diff/vertical/manager";
+import { FileSearch } from "../util/FileSearch";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
 import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 
 // @ts-ignore - error finding typings
-import { ConfigHandler } from "core/config/ConfigHandler";
 // @ts-ignore
-import { getModelByRole } from "core/config/util";
-// @ts-ignore
-import MiniSearch from "minisearch";
+
 
 /**
  * Used to track what action to take after a user interacts
@@ -41,8 +43,6 @@ export type QuickEditShowParams = {
    */
   range?: vscode.Range;
 };
-
-type FileMiniSearchResult = { filename: string };
 
 const FILE_SEARCH_CHAR = "@";
 
@@ -88,15 +88,6 @@ export class QuickEdit {
   private range?: vscode.Range;
   private initialPrompt?: string;
 
-  private miniSearch = new MiniSearch<FileMiniSearchResult>({
-    fields: ["filename"],
-    storeFields: ["filename"],
-    searchOptions: {
-      prefix: true,
-      fuzzy: 2,
-    },
-  });
-
   private previousInput?: string;
 
   /**
@@ -122,9 +113,8 @@ export class QuickEdit {
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: IDE,
     private readonly context: vscode.ExtensionContext,
-  ) {
-    this.initializeFileSearchState();
-  }
+    private readonly fileSearch: FileSearch,
+  ) {}
 
   /**
    * Shows the Quick Edit Quick Pick, allowing the user to select an initial item or enter a prompt.
@@ -236,7 +226,14 @@ export class QuickEdit {
         default:
           break;
       }
-
+      let model = await this.getCurModelTitle();
+      logDevData("quickEdit", {
+        prompt,
+        path,
+        label,
+        diffs: this.verticalDiffManager.logDiffs,
+        model,
+      });
       quickPick.dispose();
     });
   }
@@ -249,23 +246,6 @@ export class QuickEdit {
     await this._streamEditWithInputAndContext(prompt, modelTitle);
     this.openAcceptRejectMenu(prompt, path);
   };
-
-  private async initializeFileSearchState() {
-    const workspaceDirs = await this.ide.getWorkspaceDirs();
-
-    const results = await Promise.all(
-      workspaceDirs.map((dir) => {
-        return walkDir(dir, this.ide);
-      }),
-    );
-
-    const filenames = results.flat().map((file) => ({
-      id: file,
-      filename: vscode.workspace.asRelativePath(file),
-    }));
-
-    this.miniSearch.addAll(filenames);
-  }
 
   private setActiveEditorAndPrevInput(editor: vscode.TextEditor) {
     const existingHandler = this.verticalDiffManager.getHandlerForFile(
@@ -385,7 +365,7 @@ export class QuickEdit {
     const modelTitle = await this.getCurModelTitle();
 
     if (!modelTitle) {
-      this.ide.showToast("info", "Please configure a model to use Quick Edit");
+      this.ide.showToast("error", "Please configure a model to use Quick Edit");
       return { label: undefined, value: undefined };
     }
 
@@ -464,9 +444,7 @@ export class QuickEdit {
           // search character to the end of the string
           const searchQuery = value.substring(lastAtIndex + 1);
 
-          const searchResults = this.miniSearch.search(
-            searchQuery,
-          ) as unknown as FileMiniSearchResult[];
+          const searchResults = this.fileSearch.search(searchQuery);
 
           if (searchResults.length > 0) {
             quickPick.items = searchResults

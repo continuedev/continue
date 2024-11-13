@@ -19,13 +19,17 @@ export const HistoryHeader = () => {
           borderBottom: `0.5px solid ${lightGray}`,
         }}
       >
-        <ArrowLeftIcon
-          width="1.2em"
-          height="1.2em"
+        <div
+          className="flex cursor-pointer items-center transition-colors duration-200 hover:text-zinc-100"
           onClick={() => navigate("/")}
-          className="ml-4 inline-block cursor-pointer"
-        />
-        <h3 className="m-2 inline-block text-lg font-bold">History</h3>
+        >
+          <ArrowLeftIcon
+            width="1.2em"
+            height="1.2em"
+            className="ml-4 inline-block"
+          />
+          <span className="m-2 inline-block text-base font-bold">Chat</span>
+        </div>
       </div>
       {/* {workspacePaths && workspacePaths.length > 0 && (
       <CheckDiv

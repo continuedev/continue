@@ -1,7 +1,6 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
-  ChatHistory,
   ChatHistoryItem,
   ChatMessage,
   ContextItemId,
@@ -10,12 +9,11 @@ import {
   PromptLog,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
+import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
 import { createSelector } from "reselect";
-import { v4 } from "uuid";
+import { v4 as uuidv4, v4 } from "uuid";
 import { RootState } from "../store";
-import { v4 as uuidv4 } from "uuid";
-import { ConfigValidationError } from "core/config/validation";
 
 export const memoizedContextItemsSelector = createSelector(
   [(state: RootState) => state.state.history],
@@ -46,6 +44,7 @@ type State = {
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
+  isInMultifileEdit: boolean;
 };
 
 const initialState: State = {
@@ -57,14 +56,6 @@ const initialState: State = {
   configError: undefined,
   config: {
     slashCommands: [
-      {
-        name: "edit",
-        description: "Edit selected code",
-      },
-      {
-        name: "comment",
-        description: "Write comments for the selected code",
-      },
       {
         name: "share",
         description: "Export the current chat session to markdown",
@@ -81,6 +72,7 @@ const initialState: State = {
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
+  isInMultifileEdit: false,
 };
 
 export const stateSlice = createSlice({
@@ -150,23 +142,6 @@ export const stateSlice = createSlice({
       if (state.history[index]) {
         state.history[index].contextItems = contextItems;
       }
-    },
-    setEditingContextItemAtIndex: (
-      state,
-      {
-        payload: { index, item },
-      }: PayloadAction<{ index?: number; item: ContextItemWithId }>,
-    ) => {
-      if (index === undefined) {
-        const isFirstContextItem =
-          state.contextItems[0]?.id.itemId === item.id.itemId;
-
-        state.contextItems = isFirstContextItem
-          ? []
-          : [{ ...item, editing: true }];
-        return;
-      }
-      // TODO
     },
     addContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
       state.contextItems = state.contextItems.concat(action.payload);
@@ -301,6 +276,7 @@ export const stateSlice = createSlice({
         state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
+        state.isInMultifileEdit = false;
       }
     },
     deleteContextWithIds: (
@@ -442,6 +418,9 @@ export const stateSlice = createSlice({
         selectedProfileId: payload,
       };
     },
+    setIsInMultifileEdit: (state, action: PayloadAction<boolean>) => {
+      state.isInMultifileEdit = action.payload;
+    },
   },
 });
 
@@ -462,7 +441,6 @@ export const {
   addPromptCompletionPair,
   setTTSActive,
   setActive,
-  setEditingContextItemAtIndex,
   initNewActiveMessage,
   setMessageAtIndex,
   clearLastResponse,
@@ -470,6 +448,7 @@ export const {
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,
+  setIsInMultifileEdit,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

@@ -1,7 +1,7 @@
 import { RangeInFile } from "core";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useContext } from "react";
 import { getBasename } from "core/util";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import FileIcon from "../FileIcon";
 
 interface FilenameLinkProps {
@@ -21,11 +21,11 @@ function FilenameLink({ rif }: FilenameLinkProps) {
 
   return (
     <div
-      className="inline-flex items-center align-middle hover:bg-stone-800 rounded-md py-0.5 pl-0 pr-1 mb-0.5 cursor-pointer gap-0.5"
+      className="mb-0.5 inline-flex cursor-pointer items-center gap-0.5 rounded-md py-0.5 pl-0 pr-1 align-middle hover:bg-stone-800"
       onClick={onClick}
     >
       <FileIcon filename={rif.filepath} height="20px" width="20px" />
-      <span className="align-middle underline underline-offset-2 decoration-gray-600">
+      <span className="align-middle underline decoration-gray-600 underline-offset-2">
         {getBasename(rif.filepath)}
       </span>
     </div>

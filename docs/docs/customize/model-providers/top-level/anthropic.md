@@ -19,7 +19,7 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
     {
       "title": "Claude 3.5 Sonnet",
       "provider": "anthropic",
-      "model": "claude-3-5-sonnet-20240620",
+      "model": "claude-3-5-sonnet-latest",
       "apiKey": "[API_KEY]"
     }
   ]
@@ -61,7 +61,7 @@ To enable caching of the system message and the turn-by-turn conversation, updat
       },
       "title": "Anthropic",
       "provider": "anthropic",
-      "model": "claude-3-5-sonnet-20240620",
+      "model": "claude-3-5-sonnet-latest",
       "apiKey": "[API_KEY]"
     }
   ]

@@ -143,28 +143,38 @@ class FreeTrial extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
-    const resp = await this.fetch(`${TRIAL_PROXY_URL}/stream_fim`, {
-      method: "POST",
-      headers: await this._getHeaders(),
-      body: JSON.stringify({
-        prefix,
-        suffix,
-        ...args,
-      }),
-    });
 
-    let completion = "";
-    for await (const value of streamResponse(resp)) {
-      yield value;
-      completion += value;
+    try {
+      const resp = await this.fetch(`${TRIAL_PROXY_URL}/stream_fim`, {
+        method: "POST",
+        headers: await this._getHeaders(),
+        body: JSON.stringify({
+          prefix,
+          suffix,
+          ...args,
+        }),
+      });
+
+      let completion = "";
+      for await (const value of streamResponse(resp)) {
+        yield value;
+        completion += value;
+      }
+      this._countTokens(completion, args.model, false);
+    } catch (e: any) {
+      if (e.message.startsWith("HTTP 429")) {
+        throw new Error(
+          "You have reached the 2000 request limit for the autocomplete free trial. To continue using autocomplete, please set up a local model or your own Codestral API key.",
+        );
+      }
+      throw e;
     }
-    this._countTokens(completion, args.model, false);
   }
 
   async listModels(): Promise<string[]> {
     return [
       "codestral-latest",
-      "claude-3-5-sonnet-20240620",
+      "claude-3-5-sonnet-latest",
       "llama3.1-405b",
       "llama3.1-70b",
       "gpt-4o",

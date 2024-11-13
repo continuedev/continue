@@ -1,7 +1,8 @@
 // https://github.com/mswjs/msw/issues/1576#issuecomment-1482643055
+import { TextDecoder, TextEncoder } from "util";
+
 import { jest } from "@jest/globals";
 import fetch, { Request, Response } from "node-fetch";
-import { TextDecoder, TextEncoder } from "util";
 
 if (process.env.DEBUG === "jest") {
   jest.setTimeout(5 * 60 * 1000);

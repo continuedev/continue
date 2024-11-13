@@ -1,10 +1,12 @@
 import { Chunk, IDE } from "core";
-import { languageForFilepath } from "core/autocomplete/constructPrompt";
+import { languageForFilepath } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 import { DEFAULT_IGNORE_DIRS } from "core/indexing/ignore";
 import { deduplicateArray } from "core/util";
 import { getParserForFile } from "core/util/treeSitter";
-import type { SyntaxNode } from "web-tree-sitter";
+
 import { getDefinitionsForNode } from "../autocomplete/lsp";
+
+import type { SyntaxNode } from "web-tree-sitter";
 
 export async function expandSnippet(
   filepath: string,

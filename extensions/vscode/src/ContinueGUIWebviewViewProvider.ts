@@ -1,17 +1,23 @@
-import type { FileEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
+
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
+
+import type { FileEdit } from "core";
 
 export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
   public webviewProtocol: VsCodeWebviewProtocol;
+
+  public get isReady(): boolean {
+    return !!this.webview;
+  }
 
   private updateDebugLogsStatus() {
     const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
@@ -58,6 +64,7 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken,
   ): void | Thenable<void> {
+    this._webviewView = webviewView;
     this._webview = webviewView.webview;
     this._webview.onDidReceiveMessage((message) =>
       this.handleWebviewMessage(message),
@@ -181,23 +188,7 @@ export class ContinueGUIWebviewViewProvider
       </head>
       <body>
         <div id="root"></div>
-
-        ${`<script>
-        function log(level, ...args) {
-          const text = args.map(arg =>
-            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-          ).join(' ');
-          vscode.postMessage({ messageType: 'log', level, text, messageId: "log" });
-        }
-
-        window.console.log = (...args) => log('log', ...args);
-        window.console.info = (...args) => log('info', ...args);
-        window.console.warn = (...args) => log('warn', ...args);
-        window.console.error = (...args) => log('error', ...args);
-        window.console.debug = (...args) => log('debug', ...args);
-
-        console.debug('Logging initialized');
-        </script>`}
+        
         ${
           inDevelopmentMode
             ? `<script type="module">

@@ -210,7 +210,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       - name: Pull latest changes
-        run: git pull origin dev
+        run: git pull origin main
 
       # 1. Download the artifacts
       - uses: actions/download-artifact@v4

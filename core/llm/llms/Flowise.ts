@@ -1,4 +1,5 @@
 import socketIOClient, { Socket } from "socket.io-client";
+
 import {
   ChatMessage,
   CompletionOptions,

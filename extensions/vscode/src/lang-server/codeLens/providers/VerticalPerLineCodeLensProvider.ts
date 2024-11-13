@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+
 import { VerticalDiffCodeLens } from "../../../diff/vertical/manager";
 import { getMetaKeyLabel } from "../../../util/util";
 

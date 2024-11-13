@@ -2,7 +2,7 @@ import { MinusCircleIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ContinueError } from "core";
 import styled from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
-import ButtonWithTooltip from "../ButtonWithTooltip";
+import HeaderButtonWithToolTip from "./HeaderButtonWithToolTip";
 
 const Div = styled.div`
   padding: 8px;
@@ -29,12 +29,15 @@ function ErrorStepContainer(props: ErrorStepContainerProps) {
           display: "flex",
         }}
       >
-        <ButtonWithTooltip text="Collapse" onClick={() => props.onClose()}>
+        <HeaderButtonWithToolTip
+          text="Collapse"
+          onClick={() => props.onClose()}
+        >
           <MinusCircleIcon width="1.3em" height="1.3em" />
-        </ButtonWithTooltip>
-        <ButtonWithTooltip text="Delete" onClick={() => props.onDelete()}>
+        </HeaderButtonWithToolTip>
+        <HeaderButtonWithToolTip text="Delete" onClick={() => props.onDelete()}>
           <XMarkIcon width="1.3em" height="1.3em" />
-        </ButtonWithTooltip>
+        </HeaderButtonWithToolTip>
       </div>
       <Div>
         <pre style={{ whiteSpace: "pre-wrap", wordWrap: "break-word" }}>

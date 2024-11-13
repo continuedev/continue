@@ -5,10 +5,11 @@ import {
   LLMOptions,
   ModelDescription,
 } from "../..";
-import { renderTemplatedString } from "../../promptFiles/renderTemplatedString";
+import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
 import { BaseLLM } from "../index";
+
 import Anthropic from "./Anthropic";
-import AnthropicVertexAI from "./AnthropicVertexAI";
+import Asksage from "./Asksage";
 import Azure from "./Azure";
 import Bedrock from "./Bedrock";
 import BedrockImport from "./BedrockImport";
@@ -21,18 +22,17 @@ import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
-import GeminiVertexAI from "./GeminiVertexAI";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import Kindo from "./Kindo";
-import LMStudio from "./LMStudio";
 import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
+import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
-import MistralVertexAI from "./MistralVertexAI";
 import Mock from "./Mock";
 import Msty from "./Msty";
+import Nebius from "./Nebius";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -40,19 +40,19 @@ import OpenRouter from "./OpenRouter";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
+import ContinueProxy from "./stubs/ContinueProxy";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
-import ContinueProxy from "./stubs/ContinueProxy";
+import xAI from "./xAI";
 
 const LLMs = [
   Anthropic,
-  AnthropicVertexAI,
   Cohere,
   FreeTrial,
   Gemini,
-  GeminiVertexAI,
   Llamafile,
   Ollama,
   Replicate,
@@ -65,7 +65,6 @@ const LLMs = [
   OpenAI,
   LMStudio,
   Mistral,
-  MistralVertexAI,
   Bedrock,
   BedrockImport,
   SageMaker,
@@ -85,6 +84,10 @@ const LLMs = [
   SambaNova,
   Mock,
   Cerebras,
+  Asksage,
+  Nebius,
+  VertexAI,
+  xAI,
 ];
 
 export async function llmFromDescription(

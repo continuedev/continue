@@ -15,7 +15,7 @@ import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/images";
 import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
@@ -30,11 +30,13 @@ import {
   resubmitAtIndex,
   setInactive,
   setIsGatheringContext,
+  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
+import useHistory from "./useHistory";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -55,6 +57,13 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const history = useSelector((store: RootState) => store.state.history);
   const active = useSelector((store: RootState) => store.state.active);
   const activeRef = useRef(active);
+
+  const { saveSession } = useHistory(dispatch);
+  const [save, triggerSave] = useState(false);
+
+  useEffect(() => {
+    saveSession(false);
+  }, [save]);
 
   useEffect(() => {
     activeRef.current = active;
@@ -208,31 +217,29 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       if (!modifiers.noContext) {
         const usingFreeTrial = defaultModel?.provider === "free-trial";
 
-        const currentFilePath = await ideMessenger.ide.getCurrentFile();
-        if (typeof currentFilePath === "string") {
-          let currentFileContents = await ideMessenger.ide.readFile(
-            currentFilePath,
-          );
+        const currentFile = await ideMessenger.ide.getCurrentFile();
+        if (currentFile) {
+          let currentFileContents = currentFile.contents;
           if (usingFreeTrial) {
-            currentFileContents = currentFileContents
+            currentFileContents = currentFile.contents
               .split("\n")
               .slice(0, 1000)
               .join("\n");
           }
           selectedContextItems.unshift({
             content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
-              currentFilePath,
+              currentFile.path,
               await ideMessenger.ide.getWorkspaceDirs(),
             )}\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getBasename(currentFilePath)}`,
-            description: currentFilePath,
+            name: `Active file: ${getBasename(currentFile.path)}`,
+            description: currentFile.path,
             id: {
-              itemId: currentFilePath,
+              itemId: currentFile.path,
               providerTitle: "file",
             },
             uri: {
               type: "file",
-              value: currentFilePath,
+              value: currentFile.path,
             },
           });
         }
@@ -285,11 +292,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           params: {},
         });
 
-        // For edit and comment slash commands, including the selected code in the context from store and for other commands, including the selected context alone
-        if (slashCommand.name === "edit" || slashCommand.name === "comment") {
-          updatedContextItems = [...contextItems];
-        } else {
-          updatedContextItems = [...selectedContextItems];
+        if (slashCommand.name === "multifile-edit") {
+          dispatch(setIsInMultifileEdit(true));
         }
 
         await _streamSlashCommand(
@@ -309,6 +313,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       ]);
     } finally {
       dispatch(setInactive());
+      triggerSave(!save);
     }
   }
 

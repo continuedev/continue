@@ -26,21 +26,25 @@ function MorePage() {
   return (
     <div className="overflow-y-scroll">
       <div
-        onClick={() => navigate("/")}
-        className="items-center flex m-0 p-0 sticky top-0 cursor-pointer border-0 border-b border-solid border-b-zinc-700 bg-inherit"
+        className="sticky top-0 m-0 flex items-center border-0 border-b border-solid border-b-zinc-700 bg-inherit p-0"
         style={{
           backgroundColor: vscBackground,
         }}
       >
-        <ArrowLeftIcon className="inline-block ml-3 cursor-pointer w-3 h-3" />
-        <span className="text-sm font-bold m-2 inline-block">Chat</span>
+        <div
+          className="cursor-pointer transition-colors duration-200 hover:text-zinc-100"
+          onClick={() => navigate("/")}
+        >
+          <ArrowLeftIcon className="ml-3 inline-block h-3 w-3" />
+          <span className="m-2 inline-block text-base font-bold">Chat</span>
+        </div>
       </div>
 
-      <div className="px-4 divide-y-2 divide-y divide-zinc-700 divide-solid divide-x-0 gap-2">
+      <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="py-5">
           <div>
-            <h3 className="mx-auto text-xl mb-1 mt-0">@codebase index</h3>
-            <span className="text-xs text-stone-500 w-3/4">
+            <h3 className="mx-auto mb-1 mt-0 text-xl">@codebase index</h3>
+            <span className="w-3/4 text-xs text-stone-500">
               Local embeddings of your codebase
             </span>
           </div>
@@ -48,7 +52,7 @@ function MorePage() {
         </div>
 
         <div className="py-5">
-          <h3 className="text-xl mb-4 mt-0">Help center</h3>
+          <h3 className="mb-4 mt-0 text-xl">Help center</h3>
           <div className="flex flex-col gap-5">
             <MoreHelpRow
               title="Documentation"
@@ -103,7 +107,7 @@ function MorePage() {
         </div>
 
         <div>
-          <h3 className="mx-auto text-lg mb-1">Keyboard shortcuts</h3>
+          <h3 className="mx-auto mb-1 text-lg">Keyboard shortcuts</h3>
           <KeyboardShortcuts />
         </div>
       </div>

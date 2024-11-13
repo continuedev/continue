@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+
 import { Chunk, Reranker } from "../../index.js";
 
 export class HuggingFaceTEIReranker implements Reranker {
@@ -15,6 +16,7 @@ export class HuggingFaceTEIReranker implements Reranker {
       apiBase?: string;
       truncate?: boolean;
       truncation_direction?: string;
+      apiKey?: string;
     },
   ) {}
 
@@ -24,9 +26,17 @@ export class HuggingFaceTEIReranker implements Reranker {
       apiBase += "/";
     }
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.params.apiKey) {
+      headers["Authorization"] = `Bearer ${this.params.apiKey}`;
+    }
+
     const resp = await fetch(new URL("rerank", apiBase), {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         query: query,
         return_text: false,

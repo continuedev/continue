@@ -1,7 +1,8 @@
 import * as fs from "node:fs";
 import { homedir } from "node:os";
 import path from "path";
-import { languageForFilepath } from "../../autocomplete/constructPrompt.js";
+
+import { languageForFilepath } from "../../autocomplete/constants/AutocompleteLanguageInfo.js";
 import { SlashCommand } from "../../index.js";
 import { stripImages } from "../../llm/images.js";
 

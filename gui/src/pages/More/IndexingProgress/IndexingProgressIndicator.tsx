@@ -27,12 +27,14 @@ function IndexingProgressIndicator({ update }: IndexingProgressIndicatorProps) {
 
   return (
     <div className="flex items-center justify-between gap-1 text-stone-500">
-      {showProgress && <span className="text-xs">{progressPercentage}%</span>}
+      {showProgress && (
+        <span className="text-xs">{progressPercentage.toFixed(0)}%</span>
+      )}
 
       {Icon && (
         <div className="flex items-center">
           <Icon
-            className={`h-4 w-4 inline-block align-top text-stone-500 ${
+            className={`inline-block h-4 w-4 align-top text-stone-500 ${
               animateIcon ? "animate-spin-slow" : ""
             }`}
           ></Icon>

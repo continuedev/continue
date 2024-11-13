@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Chat enhancements including sticking input to bottom
+time: 2024-11-08T11:44:37.408176-08:00

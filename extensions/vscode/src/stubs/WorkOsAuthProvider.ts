@@ -14,6 +14,7 @@ import {
   UriHandler,
   window,
 } from "vscode";
+
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
 const AUTH_NAME = "Continue";
@@ -28,7 +29,9 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
 
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import { controlPlaneEnv } from "core/control-plane/env";
+
 import crypto from "crypto";
+
 import { SecretStorage } from "./SecretStorage";
 
 // Function to generate a random string of specified length
@@ -94,31 +97,42 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     this.secretStorage = new SecretStorage(context);
   }
 
-  private decodeJwt(jwt: string): any {
-    const decodedToken = JSON.parse(
-      Buffer.from(jwt.split(".")[1], "base64").toString(),
-    );
-    return decodedToken;
+  private decodeJwt(jwt: string): Record<string, any> | null {
+    try {
+      const decodedToken = JSON.parse(
+        Buffer.from(jwt.split(".")[1], "base64").toString(),
+      );
+      return decodedToken;
+    } catch (e: any) {
+      console.warn(`Error decoding JWT: ${e}`);
+      return null;
+    }
   }
 
   private getExpirationTimeMs(jwt: string): number {
     const decodedToken = this.decodeJwt(jwt);
+    if (!decodedToken) {
+      return WorkOsAuthProvider.EXPIRATION_TIME_MS;
+    }
     return decodedToken.exp && decodedToken.iat
       ? (decodedToken.exp - decodedToken.iat) * 1000
       : WorkOsAuthProvider.EXPIRATION_TIME_MS;
   }
 
-  private jwtIsExpired(jwt: string): boolean {
+  private jwtIsExpiredOrInvalid(jwt: string): boolean {
     const decodedToken = this.decodeJwt(jwt);
+    if (!decodedToken) {
+      return true;
+    }
     return decodedToken.exp * 1000 < Date.now();
   }
 
   private async debugAccessTokenValidity(jwt: string, refreshToken: string) {
-    const expired = this.jwtIsExpired(jwt);
-    if (expired) {
-      console.debug(`Invalid JWT: ${expired}`);
+    const expiredOrInvalid = this.jwtIsExpiredOrInvalid(jwt);
+    if (expiredOrInvalid) {
+      console.debug("Invalid JWT");
     } else {
-      console.debug(`Valid JWT: ${expired}`);
+      console.debug("Valid JWT");
     }
   }
 
@@ -135,8 +149,13 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       return [];
     }
 
-    const value = JSON.parse(data) as ContinueAuthenticationSession[];
-    return value;
+    try {
+      const value = JSON.parse(data) as ContinueAuthenticationSession[];
+      return value;
+    } catch (e: any) {
+      console.warn(`Error parsing sessions.json: ${e}`);
+      return [];
+    }
   }
 
   get onDidChangeSessions() {
@@ -160,7 +179,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   }
 
   async refreshSessions() {
-    await this._refreshSessions();
+    try {
+      await this._refreshSessions();
+    } catch (e) {
+      console.error(`Error refreshing sessions: ${e}`);
+    }
   }
 
   private async _refreshSessions(): Promise<void> {

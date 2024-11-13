@@ -20,37 +20,37 @@ export default function ConfigErrorPage() {
     <div className="overflow-y-scroll">
       <div
         onClick={() => navigate(ROUTES.HOME)}
-        className="items-center flex m-0 p-0 sticky top-0 cursor-pointer border-0 border-b border-solid border-b-zinc-700 bg-inherit"
+        className="sticky top-0 m-0 flex cursor-pointer items-center border-0 border-b border-solid border-b-zinc-700 bg-inherit p-0"
         style={{
           backgroundColor: vscBackground,
         }}
       >
-        <ArrowLeftIcon className="inline-block ml-3 cursor-pointer w-3 h-3" />
-        <span className="text-sm font-bold m-2 inline-block">Chat</span>
+        <ArrowLeftIcon className="ml-3 inline-block h-3 w-3 cursor-pointer" />
+        <span className="m-2 inline-block text-sm font-bold">Chat</span>
       </div>
 
-      <div className="px-4 divide-y-2 divide-zinc-700 divide-solid divide-x-0 gap-2">
+      <div className="gap-2 divide-x-0 divide-y-2 divide-solid divide-zinc-700 px-4">
         <div className="py-5">
-          <h3 className="text-xl mb-2 mt-0">Config Errors</h3>
-          <p className="mb-4 text-md">
+          <h3 className="mb-2 mt-0 text-xl">Config Errors</h3>
+          <p className="text-md mb-4">
             Please resolve the following errors in your config.json file.
           </p>
           <div className="flex flex-col gap-5">
             {sortedErrors.length > 0 ? (
-              <ul className="list-none space-y-4 p-0 m-0">
+              <ul className="m-0 list-none space-y-4 p-0">
                 {sortedErrors.map((error, index) => (
                   <li
                     key={index}
-                    className={`text-sm p-2 rounded-md shadow-md flex items-start ${
+                    className={`flex items-start rounded-md p-2 text-sm shadow-md ${
                       error.fatal
-                        ? "text-red-800 bg-red-100"
-                        : "text-yellow-800 bg-yellow-100"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-yellow-100 text-yellow-800"
                     }`}
                   >
                     {error.fatal ? (
-                      <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+                      <ExclamationCircleIcon className="mr-2 h-5 w-5" />
                     ) : (
-                      <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                      <ExclamationTriangleIcon className="mr-2 h-5 w-5" />
                     )}
                     <p className="m-0">
                       <strong>
@@ -62,7 +62,7 @@ export default function ConfigErrorPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-green-700 bg-green-100 p-4 rounded-md">
+              <p className="rounded-md bg-green-100 p-4 text-sm text-green-700">
                 No configuration errors found.
               </p>
             )}

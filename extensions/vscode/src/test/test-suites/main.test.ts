@@ -1,6 +1,8 @@
-import { describe, test } from "mocha";
 import assert from "node:assert";
+
+import { describe, test } from "mocha";
 import * as vscode from "vscode";
+
 import { VsCodeExtension } from "../../extension/VsCodeExtension";
 
 describe("Extension Test Suite", () => {

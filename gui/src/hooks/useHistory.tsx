@@ -2,14 +2,16 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 
 import { stripImages } from "core/llm/images";
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { useLastSessionContext } from "../context/LastSessionContext";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { useLastSessionContext } from "../context/LastSessionContext";
+
+const MAX_TITLE_LENGTH = 100;
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -48,17 +50,17 @@ function useHistory(dispatch: Dispatch) {
     return result.status === "success" ? result.content : undefined;
   }
 
-  async function saveSession() {
+  async function saveSession(openNewSession: boolean = true) {
     if (state.history.length === 0) return;
 
     const stateCopy = { ...state };
-    dispatch(newSession());
+    if (openNewSession) {
+      dispatch(newSession());
+      updateLastSessionId(stateCopy.sessionId);
+    }
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    if (
-      state.config?.experimental?.getChatTitles &&
-      stateCopy.title === "New Session"
-    ) {
+    if (state.config?.ui?.getChatTitles && stateCopy.title === "New Session") {
       try {
         // Check if we have first assistant response
         let assistantResponse = stateCopy.history
@@ -81,11 +83,11 @@ function useHistory(dispatch: Dispatch) {
               .split("\n")
               .filter((l) => l.trim() !== "")
               .slice(-1)[0] || "",
-            50,
+            MAX_TITLE_LENGTH,
           )
         : stateCopy.title?.length > 0
-        ? stateCopy.title
-        : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
+          ? stateCopy.title
+          : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
 
     const sessionInfo: PersistedSessionInfo = {
       history: stateCopy.history,
@@ -93,7 +95,7 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    updateLastSessionId(stateCopy.sessionId);
+
     return await ideMessenger.request("history/save", sessionInfo);
   }
 

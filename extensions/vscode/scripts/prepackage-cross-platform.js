@@ -85,7 +85,7 @@ function isWin() {
 async function package(target, os, arch, exe) {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config_schema.json to config.json in docs and intellij
+  // Copy config_schema to intellij
   copyConfigSchema();
 
   // Install node_modules
@@ -153,10 +153,9 @@ async function package(target, os, arch, exe) {
 
     // onnx runtime bindngs
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
-    `bin/napi-v3/${os}/${arch}/${
-      os === "darwin"
-        ? "libonnxruntime.1.14.0.dylib"
-        : os === "linux"
+    `bin/napi-v3/${os}/${arch}/${os === "darwin"
+      ? "libonnxruntime.1.14.0.dylib"
+      : os === "linux"
         ? "libonnxruntime.so.1.14.0"
         : "onnxruntime.dll"
     }`,
@@ -193,17 +192,15 @@ async function package(target, os, arch, exe) {
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
-    `out/node_modules/@esbuild/${
-      target === "win32-arm64"
-        ? "esbuild.exe"
-        : target === "win32-x64"
+    `out/node_modules/@esbuild/${target === "win32-arm64"
+      ? "esbuild.exe"
+      : target === "win32-x64"
         ? "win32-x64/esbuild.exe"
         : `${target}/bin/esbuild`
     }`,
-    `out/node_modules/@lancedb/vectordb-${
-      os === "win32"
-        ? "win32-x64-msvc"
-        : `${target}${os === "linux" ? "-gnu" : ""}`
+    `out/node_modules/@lancedb/vectordb-${os === "win32"
+      ? "win32-x64-msvc"
+      : `${target}${os === "linux" ? "-gnu" : ""}`
     }/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,

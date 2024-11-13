@@ -1,8 +1,10 @@
-import type { IMessenger } from "./messenger";
-import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { ILLM, LLMFullCompletionOptions } from "..";
 import { stripImages } from "../llm/images";
+
 import { removeQuotesAndEscapes } from ".";
+
+import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
+import type { IMessenger } from "./messenger";
 
 /**
  * Removes code blocks from a message.
@@ -40,7 +42,7 @@ export class ChatDescriber {
       return;
     }
 
-    completionOptions.maxTokens = 24;
+    completionOptions.maxTokens = 6;
 
     // Prompt the user's current LLM for the title
     const titleResponse = await model.chat(

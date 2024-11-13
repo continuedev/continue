@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Fixed
+body: Brought back the Apply button for all code blocks
+time: 2024-11-08T11:49:05.021499-08:00

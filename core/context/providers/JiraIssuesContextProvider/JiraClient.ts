@@ -1,6 +1,7 @@
-import { RequestOptions } from "../../../";
 // @ts-ignore
 import adf2md from "adf-to-md";
+
+import { RequestOptions } from "../../../";
 
 interface JiraClientOptions {
   domain: string;
@@ -156,11 +157,16 @@ export class JiraClient {
       },
     );
 
-    if (response.status !== 200) {
+    if (response.status === 500) {
+      const text = await response.text();
       console.warn(
-        "Unable to get jira tickets. Response code from API is",
-        response.status,
+        "Unable to get Jira tickets. You may need to set 'apiVersion': 2 in your config.json. See full documentation here: https://docs.continue.dev/customize/context-providers#jira-datacenter-support\n\n",
+        text,
       );
+      return Promise.resolve([]);
+    } else if (response.status !== 200) {
+      const text = await response.text();
+      console.warn("Unable to get Jira tickets: ", text);
       return Promise.resolve([]);
     }
 
