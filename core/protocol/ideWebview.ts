@@ -56,7 +56,12 @@ export interface EditModeArgs {
   highlightedCode: RangeInFileWithContents;
 }
 
-export type EditStatus = "not-started" | "streaming" | "accepting" | "done";
+export type EditStatus =
+  | "not-started"
+  | "streaming"
+  | "accepting"
+  | "accepting:full-diff"
+  | "done";
 
 export interface ApplyState {
   streamId: string;
@@ -105,6 +110,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   applyCodeFromChat: [undefined, void];
   updateApplyState: [ApplyState, void];
   startEditMode: [EditModeArgs, void];
-  setEditStatus: [{ status: EditStatus }, void];
+  setEditStatus: [{ status: EditStatus; fileAfterEdit?: string }, void];
   exitEditMode: [undefined, void];
 };

@@ -2,28 +2,22 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
 import { stripImages } from "core/llm/images";
-import { getBasename } from "core/util";
-import { usePostHog } from "posthog-js/react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
-  parseColorForHex,
-  VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
-  VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
   vscForeground,
-} from "../components";
-import FileIcon from "../components/FileIcon";
-import { NewSessionButton } from "../components/mainInput/NewSessionButton";
-import resolveEditorContent from "../components/mainInput/resolveInput";
-import TipTapEditor from "../components/mainInput/TipTapEditor";
-import { IdeMessengerContext } from "../context/IdeMessenger";
-import { setEditDone, submitEdit } from "../redux/slices/editModeState";
-import { RootState } from "../redux/store";
-import { getMetaKeyLabel } from "../util";
+} from "../../components";
+import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
+import resolveEditorContent from "../../components/mainInput/resolveInput";
+import TipTapEditor from "../../components/mainInput/TipTapEditor";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { setEditDone, submitEdit } from "../../redux/slices/editModeState";
+import { RootState } from "../../redux/store";
+import { EditInputHeader } from "./EditInputHeader";
 
 const TopDiv = styled.div`
   overflow-y: auto;
@@ -32,6 +26,13 @@ const TopDiv = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+`;
+
+const ToolbarDiv = styled.div`
+  padding: 8px;
+  border-bottom: 1px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+  display: flex;
 `;
 
 const AcceptRejectButton = styled.div<{
@@ -85,7 +86,6 @@ const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
 ];
 
 function Edit() {
-  const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
@@ -94,8 +94,6 @@ function Edit() {
     (store: RootState) => store.state.config.contextProviders,
   );
   useEffect(() => {}, []);
-
-  const [showCode, setShowCode] = useState(false);
 
   // Reusing the applyState logic which was just the fastest way to get this working
   useEffect(() => {
@@ -137,35 +135,7 @@ function Edit() {
 
           <div className="relative mb-1 mt-3 flex px-2">
             <TipTapEditor
-              header={
-                <div
-                  className="select-none p-1"
-                  style={{
-                    backgroundColor: "#fff2",
-                  }}
-                >
-                  <div
-                    className="flex cursor-pointer"
-                    onClick={() => {
-                      ideMessenger.ide.showLines(
-                        editModeState.highlightedCode.filepath,
-                        editModeState.highlightedCode.range.start.line,
-                        editModeState.highlightedCode.range.end.line,
-                      );
-                      setShowCode(!showCode);
-                    }}
-                  >
-                    <FileIcon
-                      filename={editModeState.highlightedCode.filepath}
-                      height={"18px"}
-                      width={"18px"}
-                    ></FileIcon>
-                    {getBasename(editModeState.highlightedCode.filepath)} (
-                    {editModeState.highlightedCode.range.start.line}-
-                    {editModeState.highlightedCode.range.end.line})
-                  </div>
-                </div>
-              }
+              header={<EditInputHeader />}
               toolbarOptions={{
                 hideAddContext: true,
                 hideImageUpload: true,
@@ -222,43 +192,6 @@ function Edit() {
             ></TipTapEditor>
           </div>
         </div>
-
-        {["accepting", "streaming"].includes(editModeState.editStatus) && (
-          <div className="my-2 flex w-full cursor-pointer">
-            <AcceptRejectButton
-              disabled={editModeState.editStatus !== "accepting"}
-              backgroundColor={parseColorForHex(
-                VSC_DIFF_REMOVED_LINE_BACKGROUND_VAR,
-              )}
-              onClick={() => {
-                ideMessenger.request("edit/acceptReject", {
-                  accept: false,
-                  onlyFirst: false,
-                  filepath: editModeState.highlightedCode.filepath,
-                });
-                dispatch(setEditDone());
-              }}
-            >
-              <code>{getMetaKeyLabel()}⇧⌫</code> Reject all
-            </AcceptRejectButton>
-            <AcceptRejectButton
-              disabled={editModeState.editStatus !== "accepting"}
-              backgroundColor={parseColorForHex(
-                VSC_DIFF_INSERTED_LINE_BACKGROUND_VAR,
-              )}
-              onClick={() => {
-                ideMessenger.request("edit/acceptReject", {
-                  accept: true,
-                  onlyFirst: false,
-                  filepath: editModeState.highlightedCode.filepath,
-                });
-                dispatch(setEditDone());
-              }}
-            >
-              <code>{getMetaKeyLabel()}⇧⏎</code> Accept all
-            </AcceptRejectButton>
-          </div>
-        )}
 
         <div className="mt-2">
           <NewSessionButton
