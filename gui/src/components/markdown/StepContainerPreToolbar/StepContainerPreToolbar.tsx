@@ -7,11 +7,11 @@ import { v4 as uuidv4 } from "uuid";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import { updateApplyState } from "../../../redux/slices/uiStateSlice";
+import { updateApplyState } from "../../../redux/slices/stateSlice";
 import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
 import { childrenToText } from "../utils";
-import { useApplyCodeBlock } from "../utils/useApplyCodeBlock";
+import { useApplyCodeBlock } from "../../../hooks/useApplyCodeBlock";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
@@ -62,25 +62,21 @@ export default function StepContainerPreToolbar(
 ) {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const streamIdRef = useRef<string | null>(null);
+  const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
   const isMultifileEdit = useSelector(
-    (state: RootState) => state.state.isInMultifileEdit,
+    (state: RootState) => state.state.isMultifileEdit,
   );
   const [isExpanded, setIsExpanded] = useState(isMultifileEdit ? false : true);
   const [codeBlockContent, setCodeBlockContent] = useState("");
   const isChatActive = useSelector((state: RootState) => state.state.active);
-  const onClickApply = useApplyCodeBlock({
-    streamId: streamIdRef.current,
-    filepath: props.filepath,
-    codeBlockContent: props.codeBlockContent,
-  });
+  const applyCodeBlock = useApplyCodeBlock();
   const nextCodeBlockIndex = useSelector(
-    (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
+    (state: RootState) => state.state.nextCodeBlockToApplyIndex,
   );
 
   const applyState = useSelector((store: RootState) =>
-    store.uiState.applyStates.find(
+    store.state.applyStates.find(
       (state) => state.streamId === streamIdRef.current,
     ),
   );
@@ -97,14 +93,18 @@ export default function StepContainerPreToolbar(
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
 
-  if (streamIdRef.current === null) {
-    streamIdRef.current = uuidv4();
+  function onClickApply() {
+    applyCodeBlock({
+      streamId: streamIdRef.current,
+      filepath: props.filepath,
+      codeBlockContent: props.codeBlockContent,
+    });
   }
 
   // Handle apply keyboard shortcut
   useWebviewListener(
     "applyCodeFromChat",
-    onClickApply,
+    async () => onClickApply(),
     [isNextCodeBlock, codeBlockContent],
     !isNextCodeBlock,
   );

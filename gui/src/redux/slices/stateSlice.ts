@@ -3,6 +3,7 @@ import { JSONContent } from "@tiptap/react";
 import {
   ChatHistoryItem,
   ChatMessage,
+  Checkpoint,
   ContextItemId,
   ContextItemWithId,
   PersistedSessionInfo,
@@ -14,6 +15,7 @@ import { stripImages } from "core/llm/images";
 import { createSelector } from "reselect";
 import { v4 as uuidv4, v4 } from "uuid";
 import { RootState } from "../store";
+import { ApplyState } from "core/protocol/ideWebview";
 
 export const memoizedContextItemsSelector = createSelector(
   [(state: RootState) => state.state.history],
@@ -30,7 +32,6 @@ export const memoizedContextItemsSelector = createSelector(
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
-
 type State = {
   history: ChatHistoryItemWithMessageId[];
   contextItems: ContextItemWithId[];
@@ -44,7 +45,11 @@ type State = {
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
-  isInMultifileEdit: boolean;
+  checkpoints: Checkpoint[];
+  curCheckpointIndex: number;
+  isMultifileEdit: boolean;
+  applyStates: ApplyState[];
+  nextCodeBlockToApplyIndex: number;
 };
 
 const initialState: State = {
@@ -72,7 +77,11 @@ const initialState: State = {
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
-  isInMultifileEdit: false,
+  checkpoints: [],
+  isMultifileEdit: false,
+  curCheckpointIndex: 0,
+  nextCodeBlockToApplyIndex: 0,
+  applyStates: [],
 };
 
 export const stateSlice = createSlice({
@@ -204,6 +213,13 @@ export const stateSlice = createSlice({
       // https://github.com/continuedev/continue/pull/1021
       // state.contextItems = [];
       state.active = true;
+      console.log(
+        "incrementing state.curCheckpointIndex from ",
+        state.curCheckpointIndex,
+        " to ",
+        state.curCheckpointIndex + 1,
+      );
+      state.curCheckpointIndex = state.curCheckpointIndex + 1;
     },
     setMessageAtIndex: (
       state,
@@ -270,13 +286,16 @@ export const stateSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.sessionId = payload.sessionId;
+        state.checkpoints = payload.checkpoints;
+        // state.applyStates = [];
       } else {
         state.history = [];
         state.contextItems = [];
         state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
-        state.isInMultifileEdit = false;
+        state.checkpoints = [];
+        // state.applyStates = [];
       }
     },
     deleteContextWithIds: (
@@ -418,8 +437,57 @@ export const stateSlice = createSlice({
         selectedProfileId: payload,
       };
     },
-    setIsInMultifileEdit: (state, action: PayloadAction<boolean>) => {
-      state.isInMultifileEdit = action.payload;
+
+    setIsInMultifileEdit: (state, { payload }: PayloadAction<boolean>) => {
+      state.isMultifileEdit = payload;
+    },
+    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
+      state.curCheckpointIndex = payload;
+    },
+    updateCurCheckpoint: (
+      state,
+      { payload }: PayloadAction<{ filepath: string; content: string }>,
+    ) => {
+      // If the user has explicitly checked out a given checkpoint, `curCheckpointIndex` will be set to that index.
+      // Else, we assume the current checkpoint index is the end of the checkpoints array.
+      // const index =
+      //   state.curCheckpointIndex === -1
+      //     ? state.history.length / 2 - 1
+      //     : state.curCheckpointIndex;
+
+      console.log("updating checkpoint");
+      console.log({
+        index: state.curCheckpointIndex,
+        historyLength: state.history.length,
+        filepath: payload.filepath,
+        content: payload.content,
+      });
+
+      state.checkpoints[state.curCheckpointIndex] = {
+        ...state.checkpoints[state.curCheckpointIndex],
+        [payload.filepath]: payload.content,
+      };
+    },
+    incrementNextCodeBlockToApplyIndex: (state, action) => {
+      state.nextCodeBlockToApplyIndex++;
+    },
+    updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
+      const index = state.applyStates.findIndex(
+        (applyState) => applyState.streamId === payload.streamId,
+      );
+
+      const curApplyState = state.applyStates[index];
+
+      if (index === -1) {
+        state.applyStates.push(payload);
+      } else {
+        curApplyState.status = payload.status ?? curApplyState.status;
+        curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
+        curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
+      }
+    },
+    resetNextCodeBlockToApplyIndex: (state) => {
+      state.nextCodeBlockToApplyIndex = 0;
     },
   },
 });
@@ -449,6 +517,11 @@ export const {
   deleteMessage,
   setIsGatheringContext,
   setIsInMultifileEdit,
+  updateCurCheckpoint,
+  setCurCheckpointIndex,
+  resetNextCodeBlockToApplyIndex,
+  incrementNextCodeBlockToApplyIndex,
+  updateApplyState,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

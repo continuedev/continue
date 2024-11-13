@@ -1,20 +1,19 @@
 import { useContext } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { useDispatch } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { updateApplyState } from "../../redux/slices/uiStateSlice";
+import { updateApplyState } from "../../redux/slices/stateSlice";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
-export default function AcceptRejectAllButtons() {
+import { ApplyState } from "core/protocol/ideWebview";
+
+export interface AcceptRejectAllButtonsProps {
+  pendingApplyStates: ApplyState[];
+}
+
+export default function AcceptRejectAllButtons({
+  pendingApplyStates,
+}: AcceptRejectAllButtonsProps) {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-
-  const applyStates = useSelector(
-    (state: RootState) => state.uiState.applyStates,
-  );
-
-  const pendingApplyStates = applyStates.filter(
-    (state) => state.status === "done",
-  );
 
   const handleAcceptAll = async () => {
     for (const applyState of pendingApplyStates) {

@@ -163,29 +163,13 @@ export class VsCodeMessenger {
 
       // If there is a filepath, verify it exists and then open the file
       if (filepath) {
-        const fullPath = getFullyQualifiedPath(ide, filepath);
+        filepath = getFullyQualifiedPath(ide, filepath);
 
-        if (!fullPath) {
+        if (!filepath) {
           return;
         }
 
-        const fileExists = await this.ide.fileExists(fullPath);
-
-        // If it's a new file, no need to apply, just write directly
-        if (!fileExists) {
-          await this.ide.writeFile(fullPath, data.text);
-          await this.ide.openFile(fullPath);
-
-          await webviewProtocol.request("updateApplyState", {
-            streamId: data.streamId,
-            status: "done",
-            numDiffs: 0,
-          });
-
-          return;
-        }
-
-        await this.ide.openFile(fullPath);
+        await this.ide.openFile(filepath);
       }
 
       // Get active text editor
@@ -193,6 +177,24 @@ export class VsCodeMessenger {
 
       if (!editor) {
         vscode.window.showErrorMessage("No active editor to apply edits to");
+        return;
+      }
+
+      if (data.overwriteFileContents) {
+        debugger;
+        // TODO: Delete all contents and write new contents
+        editor.edit((builder) =>
+          builder.insert(new vscode.Position(0, 0), data.text),
+        );
+
+        await webviewProtocol.request("updateApplyState", {
+          filepath,
+          streamId: data.streamId,
+          status: "done",
+          numDiffs: 0,
+          fileContent: data.text,
+        });
+
         return;
       }
 
@@ -205,6 +207,8 @@ export class VsCodeMessenger {
           streamId: data.streamId,
           status: "done",
           numDiffs: 0,
+          fileContent: data.text,
+          filepath,
         });
         return;
       }

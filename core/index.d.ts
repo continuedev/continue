@@ -200,11 +200,16 @@ export interface IContextProvider {
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
+export interface Checkpoint {
+  [filepath: string]: string;
+}
+
 export interface PersistedSessionInfo {
   history: ChatHistory;
   title: string;
   workspaceDirectory: string;
   sessionId: string;
+  checkpoints?: Checkpoint[];
 }
 
 export interface SessionInfo {
@@ -494,11 +499,14 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
-  getCurrentFile(): Promise<undefined | {
-    isUntitled: boolean
-    path: string
-    contents: string
-  }>;
+  getCurrentFile(): Promise<
+    | undefined
+    | {
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
+  >;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
@@ -785,11 +793,13 @@ export interface CustomCommand {
 }
 
 interface Prediction {
-  type: "content"
-  content: string | {
-    type: "text"
-    text: string
-  }[]
+  type: "content";
+  content:
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
 }
 
 interface BaseCompletionOptions {

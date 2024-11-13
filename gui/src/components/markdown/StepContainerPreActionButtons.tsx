@@ -13,7 +13,7 @@ import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import useUIConfig from "../../hooks/useUIConfig";
 import { v4 as uuidv4 } from "uuid";
-import { useApplyCodeBlock } from "./utils/useApplyCodeBlock";
+import { useApplyCodeBlock } from "../../hooks/useApplyCodeBlock";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
@@ -68,10 +68,7 @@ export default function StepContainerPreActionButtons({
   const nextCodeBlockIndex = useSelector(
     (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
   );
-  const onClickApply = useApplyCodeBlock({
-    codeBlockContent,
-    streamId: streamIdRef.current,
-  });
+  const applyCodeBlock = useApplyCodeBlock();
 
   const isBottomToolbarPosition =
     uiConfig?.codeBlockToolbarPosition == "bottom";
@@ -83,10 +80,17 @@ export default function StepContainerPreActionButtons({
     streamIdRef.current = uuidv4();
   }
 
+  function onClickApply() {
+    applyCodeBlock({
+      streamId: streamIdRef.current,
+      codeBlockContent: codeBlockContent,
+    });
+  }
+
   // Handle apply keyboard shortcut
   useWebviewListener(
     "applyCodeFromChat",
-    onClickApply,
+    async () => onClickApply(),
     [isNextCodeBlock, codeBlockContent],
     !isNextCodeBlock,
   );

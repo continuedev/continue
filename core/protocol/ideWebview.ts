@@ -24,6 +24,9 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
       streamId: string;
       curSelectedModelTitle: string;
       filepath?: string;
+      // Overwrites the contents of the file with the value of "text"
+      // This is used in multifile edits when reverting to a given checkpoint
+      overwriteFileContents?: boolean;
     },
     void,
   ];
@@ -63,6 +66,7 @@ export interface ApplyState {
   status?: "streaming" | "done" | "closed";
   numDiffs?: number;
   filepath?: string;
+  fileContent?: string;
 }
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

@@ -16,6 +16,7 @@ export interface VerticalDiffHandlerOptions {
   onStatusUpdate: (
     status?: ApplyState["status"],
     numDiffs?: ApplyState["numDiffs"],
+    fileContent?: ApplyState["fileContent"],
   ) => void;
 }
 
@@ -269,7 +270,11 @@ export class VerticalDiffHandler implements vscode.Disposable {
       },
     );
 
-    this.options.onStatusUpdate("closed", this.diffBlocks.length);
+    this.options.onStatusUpdate(
+      "closed",
+      this.diffBlocks.length,
+      this.editor.document.getText(),
+    );
 
     this.cancelled = true;
     this.refreshCodeLens();
@@ -357,7 +362,11 @@ export class VerticalDiffHandler implements vscode.Disposable {
 
       this.refreshCodeLens();
 
-      this.options.onStatusUpdate("done", this.diffBlocks.length);
+      this.options.onStatusUpdate(
+        "done",
+        this.diffBlocks.length,
+        this.editor.document.getText(),
+      );
 
       // Reject on user typing
       // const listener = vscode.workspace.onDidChangeTextDocument((e) => {
@@ -408,7 +417,11 @@ export class VerticalDiffHandler implements vscode.Disposable {
     this.shiftCodeLensObjects(startLine, offset);
 
     const status = this.diffBlocks.length === 0 ? "closed" : undefined;
-    this.options.onStatusUpdate(status, this.diffBlocks.length);
+    this.options.onStatusUpdate(
+      status,
+      this.diffBlocks.length,
+      this.editor.document.getText(),
+    );
   }
 
   private shiftCodeLensObjects(startLine: number, offset: number) {
