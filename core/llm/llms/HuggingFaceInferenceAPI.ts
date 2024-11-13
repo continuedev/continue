@@ -16,6 +16,7 @@ class HuggingFaceInferenceAPI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     if (!this.apiBase) {
@@ -36,6 +37,7 @@ class HuggingFaceInferenceAPI extends BaseLLM {
         stream: true,
         parameters: this._convertArgs(options),
       }),
+      signal
     });
 
     async function* stream() {
