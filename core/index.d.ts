@@ -45,12 +45,12 @@ export interface IndexingProgressUpdate {
   debugInfo?: string;
 }
 
-export type PromptTemplate =
-  | string
-  | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+export type PromptTemplateFunction = (
+  history: ChatMessage[],
+  otherData: Record<string, string>,
+) => string | ChatMessage[];
+
+export type PromptTemplate = string | PromptTemplateFunction;
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
