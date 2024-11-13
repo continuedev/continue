@@ -149,8 +149,8 @@ function Edit() {
               }}
               placeholder={
                 ["streaming", "accepting"].includes(editModeState.editStatus)
-                  ? "Enter instructions for edit"
-                  : "Enter instructions for edit"
+                  ? "Describe how to modify code"
+                  : "Describe how to modify code"
               }
               border={`1px solid #aa0`}
               availableContextProviders={availableContextProviders.filter(
