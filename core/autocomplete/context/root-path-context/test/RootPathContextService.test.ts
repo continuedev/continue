@@ -57,7 +57,7 @@ const TEST_CASES = [
     ],
   },
   {
-    nodeType: "function_definition (inside a class)",
+    nodeType: "method_declaration",
     fileName: "file1.php",
     language: "PHP",
     cursorPosition: { line: 26, character: 35 },
@@ -67,6 +67,16 @@ const TEST_CASES = [
       { row: 15, column: 72 }, // SecondInterface
       { row: 25, column: 43 }, // Person
       { row: 25, column: 61 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_declaration",
+    fileName: "file1.go",
+    language: "Go",
+    cursorPosition: { line: 7, character: 21 },
+    definitionPositions: [
+      { row: 6, column: 33 }, // models.User
+      { row: 6, column: 50 }, // models.Address
     ],
   },
 ];
