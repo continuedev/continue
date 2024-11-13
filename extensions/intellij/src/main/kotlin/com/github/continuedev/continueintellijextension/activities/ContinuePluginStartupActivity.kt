@@ -71,7 +71,6 @@ private fun getTutorialFileName(): String {
 }
 
 class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
-    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     override fun runActivity(project: Project) {
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
@@ -110,6 +109,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     }
 
     private fun initializePlugin(project: Project) {
+        val coroutineScope = CoroutineScope(Dispatchers.IO)
         val continuePluginService = ServiceManager.getService(
             project,
             ContinuePluginService::class.java
@@ -234,7 +234,5 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     }
 
     override fun dispose() {
-        // Cleanup resources here
-        coroutineScope.cancel()
     }
 }

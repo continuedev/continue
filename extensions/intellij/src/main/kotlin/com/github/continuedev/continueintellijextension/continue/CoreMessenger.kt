@@ -19,7 +19,7 @@ class CoreMessenger(
     private val project: Project,
     continueCorePath: String,
     private val ideProtocolClient: IdeProtocolClient,
-    coroutineScope: CoroutineScope
+    val coroutineScope: CoroutineScope
 ) {
   private var writer: Writer? = null
   private var reader: BufferedReader? = null
@@ -230,6 +230,13 @@ class CoreMessenger(
           }
         }
       }
+    }
+  }
+
+  fun killSubProcess() {
+    process?.isAlive?.let {
+      exitCallbacks.clear()
+      process?.destroy()
     }
   }
 }
