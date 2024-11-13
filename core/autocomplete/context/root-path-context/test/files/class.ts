@@ -7,10 +7,6 @@ import {
   // @ts-ignore
 } from "./types";
 
-function getAddress(person: Person): Address {
-  return person.address;
-}
-
 class Group extends BaseClass implements FirstInterface, SecondInterface {
   people: Person[];
 
@@ -20,6 +16,18 @@ class Group extends BaseClass implements FirstInterface, SecondInterface {
   }
 
   getPersonAddress(person: Person): Address {
-    return getAddress(person);
+    return person.address;
+  }
+
+  getHardcodedAddress(): Address {
+    return { street: "123 Main St", city: "Anytown" };
+  }
+
+  addPerson(person: Person) {
+    this.people = [...this.people, person];
+  }
+
+  addPeople(people: Person[]) {
+    this.people = [...this.people, ...people];
   }
 }
