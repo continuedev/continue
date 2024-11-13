@@ -43,6 +43,7 @@ export class RootPathContextService {
     "function_declaration",
     "function_definition",
     "method_definition",
+    "method_declaration",
     "class_declaration",
     "class_definition",
   ]);
@@ -73,7 +74,9 @@ export class RootPathContextService {
         this.importDefinitionsService.get(filepath);
         break;
       default:
-        console.log(getSyntaxTreeString(node));
+        // const type = node.type;
+        // debugger;
+        // console.log(getSyntaxTreeString(node));
 
         query = await getQueryForFile(
           filepath,
@@ -82,8 +85,6 @@ export class RootPathContextService {
         break;
     }
     const type = node.type;
-
-    debugger;
 
     if (!query) {
       return snippets;
@@ -135,9 +136,8 @@ export class RootPathContextService {
       RootPathContextService.TYPES_TO_USE.has(node.type),
     )) {
       const key = RootPathContextService.keyFromNode(parentKey, astNode);
-      const type = astNode.type;
-
-      debugger;
+      // const type = astNode.type;
+      // debugger;
 
       const foundInCache = this.cache.get(key);
       const newSnippets =
