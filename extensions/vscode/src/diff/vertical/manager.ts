@@ -180,6 +180,8 @@ export class VerticalDiffManager {
       // Re-enable listener for user changes to file
       this.enableDocumentChangeListener();
     }
+
+    this.refreshCodeLens();
   }
 
   async streamDiffLines(
