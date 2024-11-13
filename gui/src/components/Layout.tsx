@@ -202,8 +202,8 @@ const Layout = () => {
     [navigate],
   );
 
-  useWebviewListener("setEditStatus", async ({ status }) => {
-    dispatch(setEditStatus(status));
+  useWebviewListener("setEditStatus", async ({ status, fileAfterEdit }) => {
+    dispatch(setEditStatus({ status, fileAfterEdit }));
   });
 
   useWebviewListener("exitEditMode", async () => {

@@ -1,5 +1,6 @@
 import { IDE } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
+
 import { Message } from "./messenger.js";
 
 export class ReverseMessageIde {

@@ -3,6 +3,7 @@ import * as JSONC from "comment-json";
 import * as fs from "fs";
 import os from "os";
 import path from "path";
+
 import * as tar from "tar";
 import {
   BrowserSerializedContinueConfig,
@@ -32,6 +33,7 @@ import ContinueProxyContextProvider from "../context/providers/ContinueProxyCont
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
+import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
 import { AllRerankers } from "../context/rerankers/index";
 import { LLMReranker } from "../context/rerankers/llm";
 import { allEmbeddingsProviders } from "../indexing/embeddings";
@@ -42,6 +44,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
 import { copyOf } from "../util";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions";
+import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
 import {
   DEFAULT_CONFIG_TS_CONTENTS,
@@ -54,6 +57,7 @@ import {
   getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
 } from "../util/paths";
+
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -66,9 +70,6 @@ import {
   slashCommandFromPromptFile,
 } from "./promptFile.js";
 import { ConfigValidationError, validateConfig } from "./validation.js";
-
-import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
-import { GlobalContext } from "../util/GlobalContext";
 
 export interface ConfigResult<T> {
   config: T | undefined;
@@ -133,6 +134,13 @@ function loadSerializedConfig(
 
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
+  }
+
+  if (config.ui?.getChatTitles === undefined) {
+    config.ui = {
+      ...config.ui,
+      getChatTitles: true,
+    };
   }
 
   if (ideSettings.remoteConfigServerUrl) {
@@ -207,7 +215,10 @@ async function serializedToIntermediateConfig(
     promptFiles.push(...readAllGlobalPromptFiles());
 
     for (const file of promptFiles) {
-      slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+      const slashCommand = slashCommandFromPromptFile(file.path, file.content);
+      if (slashCommand) {
+        slashCommands.push(slashCommand);
+      }
     }
   }
 

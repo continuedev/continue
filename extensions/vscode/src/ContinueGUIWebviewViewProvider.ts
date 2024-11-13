@@ -1,17 +1,23 @@
-import type { FileEdit } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { EXTENSION_NAME } from "core/control-plane/env";
 import * as vscode from "vscode";
+
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
+
+import type { FileEdit } from "core";
 
 export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
   public webviewProtocol: VsCodeWebviewProtocol;
+
+  public get isReady(): boolean {
+    return !!this.webview;
+  }
 
   private updateDebugLogsStatus() {
     const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);

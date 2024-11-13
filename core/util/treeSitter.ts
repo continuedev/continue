@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import * as path from "node:path";
+
 import Parser, { Language } from "web-tree-sitter";
 
 export const supportedLanguages: { [key: string]: string } = {
@@ -139,7 +140,7 @@ export enum TSQueryType {
 
 export async function getQueryForFile(
   filepath: string,
-  queryType: TSQueryType,
+  queryPath: string,
 ): Promise<Parser.Query | undefined> {
   const language = await getLanguageForFile(filepath);
   if (!language) {
@@ -153,7 +154,7 @@ export async function getQueryForFile(
     ...(process.env.NODE_ENV === "test"
       ? ["extensions", "vscode", "tree-sitter"]
       : ["tree-sitter"]),
-    queryType,
+    queryPath,
     `${fullLangName}.scm`,
   );
   if (!fs.existsSync(sourcePath)) {

@@ -4,6 +4,7 @@ import {
   FetchFunction,
 } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+
 import BaseEmbeddingsProvider, {
   IBaseEmbeddingsProvider,
 } from "./BaseEmbeddingsProvider.js";

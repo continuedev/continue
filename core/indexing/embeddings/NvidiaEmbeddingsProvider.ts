@@ -1,6 +1,8 @@
 import { Response } from "node-fetch";
+
 import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
@@ -37,9 +39,9 @@ class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
           }
       
           // Input list must be non empty and all elements must be non empty, therefore, for all empty elements replace it with a token
-          const emptyToken = '[EMPTY]';
+          const emptyToken = "[EMPTY]";
           for (let i = 0; i < batch.length; i++) {
-            if (batch[i].trim() === '') {
+            if (batch[i].trim() === "") {
               batch[i] = emptyToken;
             }
           }
@@ -51,7 +53,7 @@ class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
                 body: JSON.stringify({
                   input: batch,
                   model: this.options.model,
-                  input_type: 'passage',
+                  input_type: "passage",
                   truncate: "END",
                 }),
                 headers: {

@@ -1,9 +1,10 @@
+import { setUpTestDir, tearDownTestDir } from "../../../test/util/testDir";
+
+import { TEST_CASES_WITH_DIFF, TEST_CASES_WITHOUT_DIFF } from "./testCases";
 import {
   AutocompleteFileringTestInput,
   testAutocompleteFiltering,
 } from "./util";
-import { TEST_CASES_WITH_DIFF, TEST_CASES_WITHOUT_DIFF } from "./testCases";
-import { setUpTestDir, tearDownTestDir } from "../../../test/util/testDir";
 
 const filterTestCases = (tests: AutocompleteFileringTestInput[]) => {
   if (tests.some((test) => test.options?.only)) {
@@ -13,7 +14,7 @@ const filterTestCases = (tests: AutocompleteFileringTestInput[]) => {
   return tests;
 };
 
-describe("llms/Mock", () => {
+describe("Autocomplete filtering tests", () => {
   beforeAll(async () => {
     tearDownTestDir();
     setUpTestDir();
@@ -23,27 +24,25 @@ describe("llms/Mock", () => {
     tearDownTestDir();
   });
 
-  describe("Autocomplete Filtering Tests", () => {
-    beforeEach(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    });
+  beforeEach(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  });
 
-    describe("Should return unmodified LLM output", () => {
-      it.each(filterTestCases(TEST_CASES_WITHOUT_DIFF))(
-        "$description",
-        async (testCase) => {
-          await testAutocompleteFiltering(testCase);
-        },
-      );
-    });
+  describe("Should return unmodified LLM output", () => {
+    it.each(filterTestCases(TEST_CASES_WITHOUT_DIFF))(
+      "$description",
+      async (testCase) => {
+        await testAutocompleteFiltering(testCase);
+      },
+    );
+  });
 
-    describe("Should return modified LLM output", () => {
-      it.each(filterTestCases(TEST_CASES_WITH_DIFF))(
-        "$description",
-        async (testCase) => {
-          await testAutocompleteFiltering(testCase);
-        },
-      );
-    });
+  describe("Should return modified LLM output", () => {
+    it.each(filterTestCases(TEST_CASES_WITH_DIFF))(
+      "$description",
+      async (testCase) => {
+        await testAutocompleteFiltering(testCase);
+      },
+    );
   });
 });

@@ -30,7 +30,7 @@ function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
           <a
             href="https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers"
             target="_blank"
-            className="text-inherit underline cursor-pointer hover:text-inherit"
+            className="cursor-pointer text-inherit underline hover:text-inherit"
           >
             https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers
           </a>

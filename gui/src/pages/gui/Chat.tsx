@@ -309,7 +309,8 @@ export function Chat() {
     [state.history],
   );
 
-  const showScrollbar = state.config.ui?.showChatScrollbar || false;
+  const showScrollbar =
+    state.config.ui?.showChatScrollbar || window.innerHeight > 5000;
 
   return (
     <>
@@ -368,18 +369,6 @@ export function Chat() {
                       index={index}
                       isLast={index === state.history.length - 1}
                       item={item}
-                      onContinueGeneration={() => {
-                        window.postMessage(
-                          {
-                            messageType: "userInput",
-                            data: {
-                              input:
-                                "Continue your response exactly where you left off:",
-                            },
-                          },
-                          "*",
-                        );
-                      }}
                     />
                   </TimelineItem>
                 </div>

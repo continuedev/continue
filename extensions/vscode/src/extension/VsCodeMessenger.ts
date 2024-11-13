@@ -1,3 +1,6 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
@@ -17,19 +20,18 @@ import {
 import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
-import * as fs from "node:fs";
-import * as path from "node:path";
 import * as vscode from "vscode";
+
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
   getControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { getFullyQualifiedPath } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { getFullyQualifiedPath } from "../util/util";
 
 /**
  * A shared messenger class between Core and Webview
@@ -318,7 +320,7 @@ export class VsCodeMessenger {
         "getDefaultModelTitle",
         undefined,
       );
-      await verticalDiffManager.streamEdit(
+      const fileAfterEdit = await verticalDiffManager.streamEdit(
         stripImages(prompt),
         modelTitle,
         "edit",
@@ -332,6 +334,7 @@ export class VsCodeMessenger {
 
       this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
+        fileAfterEdit,
       });
     });
     this.onWebview("edit/acceptReject", async (msg) => {

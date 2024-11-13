@@ -1,6 +1,7 @@
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import lancedb, { Connection } from "vectordb";
+
 import {
   Chunk,
   ContinueConfig,
@@ -13,6 +14,7 @@ import { ConfigHandler } from "../../config/ConfigHandler";
 import { addContextProvider } from "../../config/util";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
+import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
 import { GlobalContext } from "../../util/GlobalContext";
 import { IMessenger } from "../../util/messenger";
 import {
@@ -22,6 +24,7 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider";
+
 import { Article, chunkArticle, pageToArticle } from "./article";
 import DocsCrawler from "./DocsCrawler";
 import { runLanceMigrations, runSqliteMigrations } from "./migrations";
@@ -32,7 +35,6 @@ import {
   SiteIndexingResults,
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
-import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -360,11 +362,16 @@ export default class DocsService {
       isPreIndexedDoc: !!preIndexedDocs[startUrl],
     });
 
-    const docs: LanceDbDocsRow[] = await table
-      .search(vector)
-      .limit(nRetrieve)
-      .where(`starturl = '${startUrl}'`)
-      .execute();
+    let docs: LanceDbDocsRow[] = [];
+    try {
+      docs = await table
+        .search(vector)
+        .limit(nRetrieve)
+        .where(`starturl = '${startUrl}'`)
+        .execute();
+    } catch (e: any) {
+      console.error("Error retrieving chunks from LanceDB", e);
+    }
 
     const hasIndexedDoc = await this.hasIndexedDoc(startUrl);
 
@@ -551,9 +558,8 @@ export default class DocsService {
   private async getLanceTableNameFromEmbeddingsProvider(
     isPreIndexedDoc: boolean,
   ) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(
-      isPreIndexedDoc,
-    );
+    const embeddingsProvider =
+      await this.getEmbeddingsProvider(isPreIndexedDoc);
 
     const tableName = this.sanitizeLanceTableName(
       `${DocsService.lanceTableName}${embeddingsProvider.id}`,

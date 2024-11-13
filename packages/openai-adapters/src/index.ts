@@ -73,6 +73,11 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
         ...config,
         apiBase: "https://api.sambanova.ai/v1/",
       });
+    case "nebius":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://api.studio.nebius.ai/v1/",
+      });
     default:
       throw new Error(`Unsupported LLM API format: ${config.provider}`);
   }

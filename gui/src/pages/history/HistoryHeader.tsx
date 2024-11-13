@@ -19,7 +19,10 @@ export const HistoryHeader = () => {
           borderBottom: `0.5px solid ${lightGray}`,
         }}
       >
-        <div className="flex items-center cursor-pointer hover:text-zinc-100 transition-colors duration-200" onClick={() => navigate("/")}> 
+        <div
+          className="flex cursor-pointer items-center transition-colors duration-200 hover:text-zinc-100"
+          onClick={() => navigate("/")}
+        >
           <ArrowLeftIcon
             width="1.2em"
             height="1.2em"

@@ -14,7 +14,7 @@ export async function findFaviconPath(url: URL): Promise<string | undefined> {
     const document = dom.window.document;
 
     // Look for favicon in <link> tags
-    const linkTags = document.querySelectorAll('link[rel*="icon"]');
+    const linkTags = document.querySelectorAll("link[rel*=\"icon\"]");
 
     for (const link of linkTags) {
       const href = link.getAttribute("href");

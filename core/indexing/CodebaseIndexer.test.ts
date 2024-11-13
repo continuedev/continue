@@ -1,7 +1,9 @@
-import { jest } from "@jest/globals";
 import { execSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+
+import { jest } from "@jest/globals";
+
 import { ContinueServerClient } from "../continueServer/stubs/client.js";
 import { testConfigHandler, testIde } from "../test/util/fixtures.js";
 import {
@@ -11,6 +13,7 @@ import {
   TEST_DIR,
 } from "../test/util/testDir.js";
 import { getIndexSqlitePath } from "../util/paths.js";
+
 import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { TestCodebaseIndex } from "./TestCodebaseIndex.js";
@@ -73,8 +76,8 @@ describe("CodebaseIndexer", () => {
     setUpTestDir();
 
     execSync("git init", { cwd: TEST_DIR });
-    execSync('git config user.email "test@example.com"', { cwd: TEST_DIR });
-    execSync('git config user.name "Test"', { cwd: TEST_DIR });
+    execSync("git config user.email \"test@example.com\"", { cwd: TEST_DIR });
+    execSync("git config user.name \"Test\"", { cwd: TEST_DIR });
   });
 
   afterAll(async () => {

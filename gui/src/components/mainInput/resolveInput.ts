@@ -62,7 +62,10 @@ async function resolveEditorContent(
         let extName = relativePath.split(".").slice(-1)[0];
         const text =
           "\n\n" +
-          "```" + extName + " " + p.attrs.item.description +
+          "```" +
+          extName +
+          " " +
+          p.attrs.item.description +
           "\n" +
           p.attrs.item.content +
           "\n```";

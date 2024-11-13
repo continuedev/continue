@@ -9,6 +9,7 @@ import {
   languageForFilepath,
 } from "../constants/AutocompleteLanguageInfo";
 import { constructInitialPrefixSuffix } from "../templating/constructPrefixSuffix";
+
 import { AstPath, getAst, getTreePathAtCursor } from "./ast";
 import { AutocompleteInput } from "./types";
 
@@ -38,7 +39,7 @@ export class HelperVars {
 
   private async init() {
     // Don't do anything if already initialized
-    if (this._fileContents !== undefined) return;
+    if (this._fileContents !== undefined) {return;}
 
     this._fileContents =
       this.input.manuallyPassFileContents ??

@@ -8,7 +8,7 @@ const InfoHover = ({ msg }: { msg: string }) => {
     <>
       <InformationCircleIcon
         data-tooltip-id={id}
-        className="h-5 w-5 text-gray-500 cursor-help"
+        className="h-5 w-5 cursor-help text-gray-500"
       />
 
       <ToolTip id={id} place="bottom">

@@ -3,6 +3,7 @@ import { countTokensAsync } from "../../llm/countTokens.js";
 import { extractMinimalStackTraceInfo } from "../../util/extractMinimalStackTraceInfo.js";
 import { Telemetry } from "../../util/posthog.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
+
 import { basicChunker } from "./basic.js";
 import { codeChunker } from "./code.js";
 

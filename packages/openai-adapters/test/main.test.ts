@@ -273,6 +273,12 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
     apiKey: process.env.SAMBANOVA_API_KEY!,
     chatOnly: true,
   },
+  {
+    provider: "nebius",
+    model: "llama3.1-8b",
+    apiKey: process.env.NEBIUS_API_KEY!,
+    chatOnly: true,
+  },
 ];
 
 const FIM_TESTS: LlmApiConfig[] = [
@@ -310,6 +316,11 @@ const EMBEDDINGS_TESTS: LlmApiConfig[] = [
     provider: "gemini",
     model: "models/text-embedding-004",
     apiKey: process.env.GEMINI_API_KEY!,
+  },
+  {
+    provider: "nebius",
+    model: "BAAI/bge-en-icl",
+    apiKey: process.env.NEBIUS_API_KEY!,
   },
 ];
 

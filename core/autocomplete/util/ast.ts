@@ -1,4 +1,5 @@
 import Parser from "web-tree-sitter";
+
 import { RangeInFileWithContents } from "../../commands/util.js";
 import { getParserForFile } from "../../util/treeSitter.js";
 

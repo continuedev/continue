@@ -146,7 +146,7 @@ class Anthropic extends BaseLLM {
     }
 
     for await (const value of streamSse(response)) {
-      if (value.type == "message_start") console.log(value);
+      if (value.type == "message_start") {console.log(value);}
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }

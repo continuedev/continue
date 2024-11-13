@@ -1,17 +1,19 @@
 import { ConfigHandler } from "../config/ConfigHandler.js";
+import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
+import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
+
+import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
 import { constructAutocompletePrompt } from "./constructPrompt.js";
-import { AutocompleteSnippet } from "./context/ranking/index.js";
-import { postprocessCompletion } from "./postprocessing/index.js";
 // @prettier-ignore
-import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
-import OpenAI from "../llm/llms/OpenAI.js";
-import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
+
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
+import { AutocompleteSnippet } from "./context/ranking/index.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
+import { postprocessCompletion } from "./postprocessing/index.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
 import { renderPrompt } from "./templating/index.js";
 import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
@@ -259,13 +261,10 @@ export class CompletionProvider {
 
       //////////
 
-      // Do some stuff later so as not to block return. Latency matters
-      const completionToCache = outcome.completion;
-      setTimeout(async () => {
-        if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prefix, completionToCache);
-        }
-      }, 100);
+      // Save to cache
+      if (!outcome.cacheHit) {
+        (await this.autocompleteCache).put(outcome.prefix, outcome.completion);
+      }
 
       // When using the JetBrains extension, Mark as displayed
       const ideType = (await this.ide.getIdeInfo()).ideType;

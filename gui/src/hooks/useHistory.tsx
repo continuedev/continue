@@ -5,10 +5,11 @@ import { stripImages } from "core/llm/images";
 import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { useLastSessionContext } from "../context/LastSessionContext";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { useLastSessionContext } from "../context/LastSessionContext";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -21,6 +22,7 @@ function truncateText(text: string, maxLength: number) {
 
 function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootState) => state.state);
+  const defaultModel = useSelector(defaultModelSelector);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
 
@@ -48,11 +50,17 @@ function useHistory(dispatch: Dispatch) {
     return result.status === "success" ? result.content : undefined;
   }
 
-  async function getSessionTitle(stateCopy: typeof state): Promise<string> {
-    if (
-      state.config?.experimental?.getChatTitles &&
-      stateCopy.title === "New Session"
-    ) {
+  async function saveSession(openNewSession: boolean = true) {
+    if (state.history.length === 0) return;
+
+    const stateCopy = { ...state };
+    if (openNewSession) {
+      dispatch(newSession());
+      updateLastSessionId(stateCopy.sessionId);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    if (state.config?.ui?.getChatTitles && stateCopy.title === "New Session") {
       try {
         // Check if we have first assistant response
         let assistantResponse = stateCopy.history
@@ -60,40 +68,26 @@ function useHistory(dispatch: Dispatch) {
           ?.message?.content?.toString();
 
         if (assistantResponse) {
-          return await getChatTitle(assistantResponse);
+          stateCopy.title = await getChatTitle(assistantResponse);
         }
       } catch (e) {
-        console.error("Unable to get chat title:", e);
+        throw new Error("Unable to get chat title");
       }
     }
 
     // Fallback if we get an error above or if the user has not set getChatTitles
-    return stateCopy.title === "New Session"
-      ? truncateText(
-          stripImages(stateCopy.history[0].message.content)
-            .split("\n")
-            .filter((l) => l.trim() !== "")
-            .slice(-1)[0] || "",
-          MAX_TITLE_LENGTH,
-        )
-      : stateCopy.title?.length > 0
-        ? stateCopy.title
-        : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
-  }
-
-  async function saveSession(openNewSession = true) {
-    if (state.history.length === 0) return;
-
-    const stateCopy = { ...state };
-
-    if (openNewSession) {
-      dispatch(newSession());
-      updateLastSessionId(stateCopy.sessionId);
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    const title = await getSessionTitle(stateCopy);
+    let title =
+      stateCopy.title === "New Session"
+        ? truncateText(
+            stripImages(stateCopy.history[0].message.content)
+              .split("\n")
+              .filter((l) => l.trim() !== "")
+              .slice(-1)[0] || "",
+            MAX_TITLE_LENGTH,
+          )
+        : stateCopy.title?.length > 0
+          ? stateCopy.title
+          : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
 
     const sessionInfo: PersistedSessionInfo = {
       history: stateCopy.history,

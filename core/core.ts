@@ -1,7 +1,8 @@
-import ignore from "ignore";
 import path from "path";
+
+import ignore from "ignore";
 import { v4 as uuidv4 } from "uuid";
-import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+
 import { CompletionProvider } from "./autocomplete/CompletionProvider";
 import { ConfigHandler } from "./config/ConfigHandler";
 import {
@@ -21,17 +22,19 @@ import DocsService from "./indexing/docs/DocsService";
 import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { GlobalContext } from "./util/GlobalContext";
 import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
+import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
+
+import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import type { IMessenger, Message } from "./util/messenger";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>

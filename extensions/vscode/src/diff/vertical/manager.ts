@@ -4,8 +4,10 @@ import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import * as vscode from "vscode";
+
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
+
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -178,6 +180,8 @@ export class VerticalDiffManager {
       // Re-enable listener for user changes to file
       this.enableDocumentChangeListener();
     }
+
+    this.refreshCodeLens();
   }
 
   async streamDiffLines(
@@ -267,13 +271,13 @@ export class VerticalDiffManager {
     onlyOneInsertion?: boolean,
     quickEdit?: string,
     range?: vscode.Range,
-  ) {
+  ): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     let editor = vscode.window.activeTextEditor;
 
     if (!editor) {
-      return;
+      return undefined;
     }
 
     const filepath = editor.document.uri.fsPath;
@@ -348,7 +352,7 @@ export class VerticalDiffManager {
 
     if (!diffHandler) {
       console.warn("Issue occured while creating new vertical diff handler");
-      return;
+      return undefined;
     }
 
     let selectedRange = diffHandler.range;
@@ -398,8 +402,10 @@ export class VerticalDiffManager {
     this.editDecorationManager.clear();
 
     try {
-      this.logDiffs = await diffHandler.run(
-        streamDiffLines(
+      const streamedLines: string[] = [];
+
+      async function* recordedStream() {
+        const stream = streamDiffLines(
           prefix,
           rangeContent,
           suffix,
@@ -407,14 +413,26 @@ export class VerticalDiffManager {
           input,
           getMarkdownLanguageTagForFile(filepath),
           onlyOneInsertion,
-        ),
-      );
+        );
+
+        for await (const line of stream) {
+          if (line.type === "new" || line.type === "same") {
+            streamedLines.push(line.line);
+          }
+          yield line;
+        }
+      }
+
+      this.logDiffs = await diffHandler.run(recordedStream());
 
       // enable a listener for user edits to file while diff is open
       this.enableDocumentChangeListener();
+
+      return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {
       this.disableDocumentChangeListener();
       vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      return undefined;
     } finally {
       vscode.commands.executeCommand(
         "setContext",

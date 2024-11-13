@@ -1,6 +1,7 @@
 import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
 import { streamSse } from "../stream.js";
 import { osModelsEditPrompt } from "../templates/edit.js";
+
 import OpenAI from "./OpenAI.js";
 
 class Deepseek extends OpenAI {

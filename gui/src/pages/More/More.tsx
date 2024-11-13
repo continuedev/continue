@@ -31,7 +31,10 @@ function MorePage() {
           backgroundColor: vscBackground,
         }}
       >
-        <div className="cursor-pointer hover:text-zinc-100 transition-colors duration-200" onClick={() => navigate("/")}>
+        <div
+          className="cursor-pointer transition-colors duration-200 hover:text-zinc-100"
+          onClick={() => navigate("/")}
+        >
           <ArrowLeftIcon className="ml-3 inline-block h-3 w-3" />
           <span className="m-2 inline-block text-base font-bold">Chat</span>
         </div>

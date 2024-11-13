@@ -1,9 +1,11 @@
 import * as fs from "fs/promises";
+
 import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexingProgressUpdate, IndexTag } from "../index.js";
 import { extractMinimalStackTraceInfo } from "../util/extractMinimalStackTraceInfo.js";
 import { getIndexSqlitePath, getLanceDbPath } from "../util/paths.js";
+
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex.js";
