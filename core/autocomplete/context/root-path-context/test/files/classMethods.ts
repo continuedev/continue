@@ -24,4 +24,8 @@ class Group {
   logPersonWithAddress(person: Person<Address>): Person<Address> {
     // TODO
   }
+
+  logPersonOrAddress(person: Person | Address): Person | Address {
+    // TODO
+  }
 }

@@ -19,3 +19,7 @@ const getAddresses = (people: Person[]): Address[] => {
 const logPersonWithAddres = (person: Person<Address>): Person<Address> => {
   // TODO
 };
+
+const logPersonOrAddress = (person: Person | Address): Person | Address => {
+  // TODO
+};

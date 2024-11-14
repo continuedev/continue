@@ -23,3 +23,7 @@ function getAddresses(people: Person[]): Address[] {
 function logPersonWithAddress(person: Person<Address>): Person<Address> {
   // TODO
 }
+
+function logPersonOrAddress(person: Person | Address): Person | Address {
+  // TODO
+}

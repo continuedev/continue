@@ -60,6 +60,19 @@ const FUNCTIONS = [
       { row: 22, column: 70 }, // Address
     ],
   },
+  {
+    nodeType:
+      "function_declaration with union type params and union return type",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 27, character: 9 },
+    definitionPositions: [
+      { row: 26, column: 42 }, // Person
+      { row: 26, column: 52 }, // Address
+      { row: 26, column: 61 }, // Person
+      { row: 26, column: 71 }, // Address
+    ],
+  },
 ];
 
 const ARROW_FUNCTIONS = [
@@ -111,6 +124,18 @@ const ARROW_FUNCTIONS = [
       { row: 18, column: 51 }, // Address
       { row: 18, column: 61 }, // Person
       { row: 18, column: 69 }, // Address
+    ],
+  },
+  {
+    nodeType: "arrow_function with union type params and union return type",
+    fileName: "arrowFunctions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 23, character: 9 },
+    definitionPositions: [
+      { row: 22, column: 42 }, // Person
+      { row: 22, column: 52 }, // Address
+      { row: 22, column: 61 }, // Person
+      { row: 22, column: 71 }, // Address
     ],
   },
 ];
@@ -175,6 +200,18 @@ const CLASS_METHODS = [
       { row: 23, column: 45 }, // Address
       { row: 23, column: 55 }, // Person
       { row: 23, column: 63 }, // Address
+    ],
+  },
+  {
+    nodeType: "method_declaration with union type params and union return type",
+    fileName: "classMethods.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 28, character: 11 },
+    definitionPositions: [
+      { row: 27, column: 35 }, // Person
+      { row: 27, column: 45 }, // Address
+      { row: 27, column: 54 }, // Person
+      { row: 27, column: 64 }, // Address
     ],
   },
 ];
