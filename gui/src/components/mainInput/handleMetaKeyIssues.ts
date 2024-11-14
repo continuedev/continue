@@ -4,7 +4,12 @@ import { Editor } from "@tiptap/react";
 
 const isWebEnv = isWebEnvironment();
 
-export const handleJetBrainsMetaKeyPress = (
+/**
+ * This handles various keypress issues when OSR is enabled
+ * @param e
+ * @param editor
+ */
+export const handleJetBrainsOSRMetaKeyIssues = (
   e: KeyboardEvent,
   editor: Editor,
 ) => {
@@ -46,7 +51,13 @@ export const handleJetBrainsMetaKeyPress = (
   }
 };
 
-export const handleMetaKeyPress = async (e: KeyboardEvent, editor: Editor) => {
+/**
+ * This handles reported issues with cut/copy/paste in .ipynb files in VSC
+ */
+export const handleVSCMetaKeyIssues = async (
+  e: KeyboardEvent,
+  editor: Editor,
+) => {
   const text = editor.state.doc.textBetween(
     editor.state.selection.from,
     editor.state.selection.to,

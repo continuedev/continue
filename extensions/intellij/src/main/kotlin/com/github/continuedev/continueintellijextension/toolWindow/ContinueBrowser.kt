@@ -18,8 +18,6 @@ import kotlinx.coroutines.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.util.SystemInfo
 
 class ContinueBrowser(val project: Project, url: String) {
     private val coroutineScope = CoroutineScope(
@@ -79,8 +77,8 @@ class ContinueBrowser(val project: Project, url: String) {
     val browser: JBCefBrowser
 
     init {
-        val enableOSR = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
-        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(enableOSR).build()
+        val isOSREnabled = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build()
 
 
         browser.jbCefClient.setProperty(
@@ -134,6 +132,10 @@ class ContinueBrowser(val project: Project, url: String) {
                 "jetbrains/editorInsetHeight" -> {
                     val height = data.asJsonObject.get("height").asInt
                     heightChangeListeners.forEach { it(height) }
+                }
+
+                "jetbrains/isOSREnabled" -> {
+                    respond(isOSREnabled)
                 }
 
                 "onLoad" -> {

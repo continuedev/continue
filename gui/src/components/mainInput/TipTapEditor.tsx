@@ -60,9 +60,9 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import {
-  handleJetBrainsMetaKeyPress,
-  handleMetaKeyPress,
-} from "./handleMetaKeyPress";
+  handleJetBrainsOSRMetaKeyIssues,
+  handleVSCMetaKeyIssues,
+} from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
@@ -551,17 +551,18 @@ function TipTapEditor(props: TipTapEditorProps) {
    *  with those key actions.
    */
   const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!editorFocusedRef?.current) return;
-
     setActiveKey(e.key);
 
-    // Handle meta key issues
-    if (isMetaEquivalentKeyPressed(e)) {
-      if (isJetBrains()) {
-        handleJetBrainsMetaKeyPress(e, editor);
-      }
+    if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
 
-      await handleMetaKeyPress(e, editor);
+    const isOSREnabled = isJetBrains()
+      ? await ideMessenger.request("jetbrains/isOSREnabled", undefined)
+      : false;
+
+    if (isOSREnabled) {
+      handleJetBrainsOSRMetaKeyIssues(e, editor);
+    } else {
+      await handleVSCMetaKeyIssues(e, editor);
     }
   };
 
