@@ -39,6 +39,7 @@ export class RootPathContextService {
   }
 
   private static TYPES_TO_USE = new Set([
+    "arrow_function",
     "program",
     "function_declaration",
     "function_definition",
