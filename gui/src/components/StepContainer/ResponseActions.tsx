@@ -5,9 +5,8 @@ import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { ChatHistoryItem } from "core";
-import UndoOrRedoAction from "./UndoOrRedoAction";
-import AcceptRejectAllButtons from "./AcceptRejectAllButtons";
 import FeedbackButtons from "./FeedbackButtons";
+import MultifileEditActions from "./MultifileEditActions";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -28,68 +27,11 @@ export default function ResponseActions({
     (store: RootState) => store.state.isMultifileEdit,
   );
 
-  const curCheckpointIndex = useSelector(
-    (store: RootState) => store.state.curCheckpointIndex,
-  );
-
-  const applyStates = useSelector(
-    (state: RootState) => state.state.applyStates,
-  );
-
-  const pendingApplyStates = applyStates.filter(
-    (state) => state.status === "done",
-  );
-
-  const isStreaming = applyStates.some((state) => state.status === "streaming");
-
   // Only render delete button if there is more than one message
   const shouldRenderDelete = index !== 1;
-  const hasPendingApplies = pendingApplyStates.length > 0;
-  const shouldRenderAcceptRejectAll =
-    isInMultifileEdit &&
-    hasPendingApplies &&
-    Math.floor(index / 2) === curCheckpointIndex;
-  const shouldRenderUndoRedo =
-    isInMultifileEdit &&
-    !isStreaming &&
-    !hasPendingApplies &&
-    Math.floor(index / 2) === curCheckpointIndex;
-
-  console.log({
-    applyStates,
-    pendingApplyStates,
-    shouldRenderMultifileEditActions: shouldRenderUndoRedo,
-    curCheckpointIndex,
-    index,
-    isInMultifileEdit,
-    isStreaming,
-    floored: Math.floor(index / 2),
-  });
 
   if (isInMultifileEdit) {
-    return (
-      <div
-        className={`mx-2 mb-2 mt-2 flex h-7 items-center justify-between pb-0 text-xs text-gray-400`}
-      >
-        <div className="flex-1" />
-
-        {shouldRenderAcceptRejectAll && (
-          <div className="flex-2 flex justify-center">
-            <AcceptRejectAllButtons pendingApplyStates={pendingApplyStates} />
-          </div>
-        )}
-
-        {shouldRenderUndoRedo && (
-          <div className="flex-2 flex justify-center">
-            <UndoOrRedoAction index={index} />
-          </div>
-        )}
-
-        <div className="flex flex-1 justify-end">
-          <FeedbackButtons item={item} />
-        </div>
-      </div>
-    );
+    return <MultifileEditActions index={index} item={item} />;
   }
 
   return (

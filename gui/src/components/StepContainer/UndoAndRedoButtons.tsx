@@ -8,11 +8,7 @@ import { setCurCheckpointIndex } from "../../redux/slices/stateSlice";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 
-export interface UndoOrRedoActionProps {
-  index: number;
-}
-
-export default function UndoOrRedoAction({ index }: UndoOrRedoActionProps) {
+export default function UndoAndRedoButtons() {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
