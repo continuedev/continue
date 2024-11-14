@@ -223,7 +223,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   };
 
   const contextItems = useSelector(
-    (store: RootState) => store.state.contextItems,
+    (store: RootState) => store.state.context.items,
   );
 
   const defaultModel = useSelector(defaultModelSelector);

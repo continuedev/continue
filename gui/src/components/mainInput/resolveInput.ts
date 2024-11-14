@@ -9,6 +9,8 @@ import {
 } from "core";
 import { stripImages } from "core/llm/images";
 import { IIdeMessenger } from "../../context/IdeMessenger";
+import { Dispatch } from "@reduxjs/toolkit";
+import { setIsGatheringContext } from "../../redux/slices/stateSlice";
 
 interface MentionAttrs {
   label: string;
@@ -29,6 +31,7 @@ async function resolveEditorContent(
   modifiers: InputModifiers,
   ideMessenger: IIdeMessenger,
   defaultContextProviders: DefaultContextProvider[],
+  dispatch: Dispatch,
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
@@ -38,8 +41,7 @@ async function resolveEditorContent(
     if (p.type === "paragraph") {
       const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
 
-      // Only take the first slash command
-
+      // Only take the first slash command\
       if (foundSlashCommand && typeof slashCommand === "undefined") {
         slashCommand = foundSlashCommand;
       }
@@ -103,6 +105,17 @@ async function resolveEditorContent(
     }
   }
 
+  const shouldGatherContext = modifiers.useCodebase || slashCommand;
+
+  if (shouldGatherContext) {
+    dispatch(
+      setIsGatheringContext({
+        isGathering: true,
+        gatheringMessage: "Gathering context",
+      }),
+    );
+  }
+
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
@@ -158,6 +171,18 @@ async function resolveEditorContent(
   );
   contextItems.push(...defaultContextItems.flat());
 
+  const contextItemFileUris = Array.from(
+    new Set(
+      contextItems
+        .filter((item) => item.uri?.type === "file" && item?.uri?.value)
+        .map((item) => item.uri.value),
+    ),
+  );
+
+  const symbols = await ideMessenger.request("context/getSymbolsForFiles", {
+    uris: contextItemFileUris,
+  });
+
   if (contextItemsText !== "") {
     contextItemsText += "\n";
   }
@@ -172,7 +197,16 @@ async function resolveEditorContent(
     }
   }
 
-  return [contextItems, selectedCode, parts];
+  if (shouldGatherContext) {
+    dispatch(
+      setIsGatheringContext({
+        isGathering: false,
+        gatheringMessage: "Gathering context",
+      }),
+    );
+  }
+
+  return [contextItems, selectedCode, parts, symbols];
 }
 
 function findLastIndex<T>(
@@ -213,30 +247,30 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
   return [text, contextItems, slashCommand];
 }
 
-export function hasSlashCommandOrContextProvider(
-  editorState: JSONContent,
-): boolean {
-  if (!editorState.content) {
-    return false;
-  }
+// export function hasSlashCommandOrContextProvider(
+//   editorState: JSONContent,
+// ): boolean {
+//   if (!editorState.content) {
+//     return false;
+//   }
 
-  for (const p of editorState.content) {
-    if (p.type === "paragraph" && p.content) {
-      for (const child of p.content) {
-        if (child.type === "slashcommand") {
-          return true;
-        }
-        if (
-          child.type === "mention" &&
-          child.attrs?.itemType === "contextProvider"
-        ) {
-          return true;
-        }
-      }
-    }
-  }
+//   for (const p of editorState.content) {
+//     if (p.type === "paragraph" && p.content) {
+//       for (const child of p.content) {
+//         if (child.type === "slashcommand") {
+//           return true;
+//         }
+//         if (
+//           child.type === "mention" &&
+//           child.attrs?.itemType === "contextProvider"
+//         ) {
+//           return true;
+//         }
+//       }
+//     }
+//   }
 
-  return false;
-}
+//   return false;
+// }
 
 export default resolveEditorContent;

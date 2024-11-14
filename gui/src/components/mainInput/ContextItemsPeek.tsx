@@ -10,10 +10,12 @@ import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getIconFromDropdownItem } from "./MentionList";
 import styled from "styled-components";
 import { getBasename } from "core/util";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
-  isGatheringContext: boolean;
+  isCurrentContextPeek: boolean;
 }
 
 interface ContextItemsPeekItemProps {
@@ -119,7 +121,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
 
 function ContextItemsPeek({
   contextItems,
-  isGatheringContext,
+  isCurrentContextPeek,
 }: ContextItemsPeekProps) {
   const [open, setOpen] = useState(false);
 
@@ -127,7 +129,16 @@ function ContextItemsPeek({
     (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
   );
 
-  if ((!ctxItems || ctxItems.length === 0) && !isGatheringContext) {
+  const isGatheringContext = useSelector(
+    (store: RootState) => store.state.context.isGathering,
+  );
+  const gatheringMessage = useSelector(
+    (store: RootState) => store.state.context.gatheringMessage,
+  );
+
+  const indicateIsGathering = isCurrentContextPeek && isGatheringContext;
+
+  if ((!ctxItems || ctxItems.length === 0) && !indicateIsGathering) {
     return null;
   }
 
@@ -152,7 +163,7 @@ function ContextItemsPeek({
         <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
           {isGatheringContext ? (
             <>
-              Gathering context
+              {gatheringMessage}
               <AnimatedEllipsis />
             </>
           ) : (

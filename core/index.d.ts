@@ -1,3 +1,4 @@
+import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -298,18 +299,26 @@ export interface InputModifiers {
   noContext: boolean;
 }
 
+export interface SymbolWithLocation {
+  name: string;
+  type: Parser.SyntaxNode["type"];
+  location: Location;
+}
+
+export type FileSymbolMap = Record<string, SymbolWithLocation[]>;
+
 export interface PromptLog {
   modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
 }
-
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
+  contextSymbols?: SymbolWithLocation[];
   promptLogs?: PromptLog[];
 }
 

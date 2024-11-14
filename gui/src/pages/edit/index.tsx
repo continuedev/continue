@@ -174,6 +174,7 @@ function Edit() {
                     },
                     ideMessenger,
                     [],
+                    dispatch,
                   );
 
                 const prompt = [

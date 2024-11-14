@@ -290,7 +290,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [state.history, state.contextItems, defaultModel, state, streamResponse],
+    [state.history, state.context.items, defaultModel, state, streamResponse],
   );
 
   useWebviewListener(

@@ -246,6 +246,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             return <FilenameLink rif={rif} />;
           }
 
+          // const symbole = symboles
+
           return <code {...codeProps}>{codeProps.children}</code>;
         },
       },

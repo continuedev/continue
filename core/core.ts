@@ -32,9 +32,15 @@ import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { TTS } from "./util/tts";
 
-import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+import type {
+  ContextItemId,
+  IDE,
+  IndexingProgressUpdate,
+  SymbolWithLocation,
+} from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./util/messenger";
+import { getFileSymbols, getSymbolsForFiles } from "./util/treeSitter";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -83,7 +89,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => { },
+    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
@@ -174,7 +180,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => { },
+      (e) => {},
       (..._) => Promise.resolve([]),
     );
 
@@ -363,6 +369,11 @@ export class Core {
         );
         return [];
       }
+    });
+
+    on("context/getSymbolsForFiles", async (msg) => {
+      const { uris } = msg.data;
+      return await getSymbolsForFiles(uris, this.ide);
     });
 
     on("config/getSerializedProfileInfo", async (msg) => {
@@ -684,7 +695,7 @@ export class Core {
         await codebaseIndexer.clearIndexes();
       }
 
-      const dirs = data?.dirs ?? await this.ide.getWorkspaceDirs();
+      const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {

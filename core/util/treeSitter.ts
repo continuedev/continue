@@ -2,6 +2,7 @@ import fs from "node:fs";
 import * as path from "node:path";
 
 import Parser, { Language } from "web-tree-sitter";
+import { FileSymbolMap, IDE, SymbolWithLocation } from "..";
 
 export const supportedLanguages: { [key: string]: string } = {
   cpp: "cpp",
@@ -177,4 +178,73 @@ async function loadLanguageForFileExt(
     `tree-sitter-${supportedLanguages[fileExtension]}.wasm`,
   );
   return await Parser.Language.load(wasmPath);
+}
+
+const GET_SYMBOLS_FOR_NODE_TYPES: Parser.SyntaxNode["type"][] = [
+  "class_declaration",
+  "function_item", // function name = first "identifier" child
+  "method_declaration", // method name = first "identifier" child
+  // "arrow_function",
+];
+
+export async function getSymbolsForFile(
+  filepath: string,
+  contents: string,
+): Promise<SymbolWithLocation[] | undefined> {
+  const parser = await getParserForFile(filepath);
+
+  if (!parser) {
+    return;
+  }
+
+  const tree = parser.parse(contents);
+  console.log(`file: ${filepath}`);
+
+  // Function to recursively find all named nodes (classes and functions)
+  const symbols: SymbolWithLocation[] = [];
+  function findNamedNodesRecursive(node: Parser.SyntaxNode) {
+    if (GET_SYMBOLS_FOR_NODE_TYPES.includes(node.type)) {
+      console.log(`parent: ${node.type}, ${node.text.substring(0, 200)}`);
+      node.children.forEach((child) => {
+        console.log(`child: ${child.type}, ${child.text}`);
+      });
+
+      // Empirically, the actualy name is the last identifier in the node
+      // Especially with languages where return type is declared before the name
+      const identifier = node.children.findLast(
+        (child) => child.type === "identifier",
+      )?.text;
+      if (identifier) {
+        symbols.push({
+          type: node.type,
+          name: identifier,
+          location: {
+            filepath,
+            position: {
+              character: node.startPosition.column,
+              line: node.startPosition.row + 1,
+            },
+          },
+        });
+      }
+    }
+    node.children.forEach(findNamedNodesRecursive);
+  }
+  findNamedNodesRecursive(tree.rootNode);
+
+  return symbols;
+}
+
+export async function getSymbolsForFiles(
+  uris: string[],
+  ide: IDE,
+): Promise<FileSymbolMap> {
+  const filesAndSymbols = await Promise.all(
+    uris.map(async (uri): Promise<[string, SymbolWithLocation[]]> => {
+      const contents = await ide.readFile(uri);
+      const symbols = await getSymbolsForFile(uri, contents);
+      return [uri, symbols ?? []];
+    }),
+  );
+  return Object.fromEntries(filesAndSymbols);
 }

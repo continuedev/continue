@@ -15,16 +15,6 @@ import { createSelector } from "reselect";
 import { v4 as uuidv4, v4 } from "uuid";
 import { RootState } from "../store";
 
-export const memoizedContextItemsSelector = createSelector(
-  [(state: RootState) => state.state.history],
-  (history) => {
-    return history.reduce<ContextItemWithId[]>((acc, item) => {
-      acc.push(...item.contextItems);
-      return acc;
-    }, []);
-  },
-);
-
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
@@ -33,10 +23,13 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 
 type State = {
   history: ChatHistoryItemWithMessageId[];
-  contextItems: ContextItemWithId[];
+  context: {
+    items: ContextItemWithId[];
+    isGathering: boolean;
+    gatheringMessage: string;
+  };
   ttsActive: boolean;
   active: boolean;
-  isGatheringContext: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
   sessionId: string;
@@ -49,10 +42,13 @@ type State = {
 
 const initialState: State = {
   history: [],
-  contextItems: [],
+  context: {
+    items: [],
+    isGathering: false,
+    gatheringMessage: "Gathering Context",
+  },
   ttsActive: false,
   active: false,
-  isGatheringContext: false,
   configError: undefined,
   config: {
     slashCommands: [
@@ -116,8 +112,17 @@ export const stateSlice = createSlice({
     setActive: (state) => {
       state.active = true;
     },
-    setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
-      state.isGatheringContext = payload;
+    setIsGatheringContext: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        isGathering: boolean;
+        gatheringMessage: string;
+      }>,
+    ) => {
+      state.context.isGathering = payload.isGathering;
+      state.context.gatheringMessage = payload.gatheringMessage;
     },
     clearLastResponse: (state) => {
       if (state.history.length < 2) {
@@ -144,7 +149,7 @@ export const stateSlice = createSlice({
       }
     },
     addContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
-      state.contextItems = state.contextItems.concat(action.payload);
+      state.context.items = state.context.items.concat(action.payload);
     },
     resubmitAtIndex: (
       state,
@@ -190,7 +195,7 @@ export const stateSlice = createSlice({
     ) => {
       state.history.push({
         message: { role: "user", content: "", id: uuidv4() },
-        contextItems: state.contextItems,
+        contextItems: state.context.items,
         editorState: payload.editorState,
       });
       state.history.push({
@@ -253,7 +258,7 @@ export const stateSlice = createSlice({
       historyItem.contextItems.push(...payload.contextItems);
     },
     setInactive: (state) => {
-      state.isGatheringContext = false;
+      state.context.isGathering = false;
       state.active = false;
     },
     streamUpdate: (state, action: PayloadAction<string>) => {
@@ -272,7 +277,7 @@ export const stateSlice = createSlice({
         state.sessionId = payload.sessionId;
       } else {
         state.history = [];
-        state.contextItems = [];
+        state.context.items = [];
         state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
@@ -289,7 +294,7 @@ export const stateSlice = createSlice({
       const ids = new Set(payload.ids.map(getKey));
 
       if (payload.index === undefined) {
-        state.contextItems = state.contextItems.filter(
+        state.context.items = state.context.items.filter(
           (item) => !ids.has(getKey(item.id)),
         );
       } else {
@@ -304,7 +309,7 @@ export const stateSlice = createSlice({
         payload,
       }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>,
     ) => {
-      let contextItems = [...state.contextItems].map((item) => {
+      let contextItems = [...state.context.items].map((item) => {
         return { ...item, editing: false };
       });
       const base = payload.rangeInFileWithContents.filepath
@@ -372,7 +377,7 @@ export const stateSlice = createSlice({
       if (typeof payload.index === "undefined") {
         return {
           ...state,
-          contextItems: state.contextItems.map((item) => {
+          contextItems: state.context.items.map((item) => {
             return {
               ...item,
               editing: ids.includes(item.id.itemId),
@@ -423,6 +428,16 @@ export const stateSlice = createSlice({
     },
   },
 });
+
+export const memoizedContextItemsSelector = createSelector(
+  [(state: RootState) => state.state.history],
+  (history) => {
+    return history.reduce<ContextItemWithId[]>((acc, item) => {
+      acc.push(...item.contextItems);
+      return acc;
+    }, []);
+  },
+);
 
 export const {
   setContextItemsAtIndex,

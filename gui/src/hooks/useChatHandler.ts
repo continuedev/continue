@@ -17,9 +17,7 @@ import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import resolveEditorContent, {
-  hasSlashCommandOrContextProvider,
-} from "../components/mainInput/resolveInput";
+import resolveEditorContent from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -51,7 +49,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   );
 
   const contextItems = useSelector(
-    (state: RootState) => state.state.contextItems,
+    (store: RootState) => store.state.context.items,
   );
 
   const history = useSelector((store: RootState) => store.state.history);
@@ -195,13 +193,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       // Reset current code block index
       dispatch(resetNextCodeBlockToApplyIndex());
 
-      const shouldGatherContext =
-        modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
-
-      if (shouldGatherContext) {
-        dispatch(setIsGatheringContext(true));
-      }
-
       // Resolve context providers and construct new history
       const [selectedContextItems, selectedCode, content] =
         await resolveEditorContent(
@@ -209,9 +200,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           modifiers,
           ideMessenger,
           defaultContextProviders,
+          dispatch,
         );
-
-      dispatch(setIsGatheringContext(false));
 
       // Automatically use currently open file
       if (!modifiers.noContext) {

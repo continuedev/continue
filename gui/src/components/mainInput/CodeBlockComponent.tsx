@@ -16,7 +16,7 @@ export const CodeBlockComponent = ({
   const item: ContextItemWithId = node.attrs.item;
 
   const contextItems = useSelector(
-    (state: RootState) => state.state.contextItems,
+    (state: RootState) => state.state.context.items,
   );
   return (
     <NodeViewWrapper className="code-block-with-content" as="p">

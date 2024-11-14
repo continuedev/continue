@@ -22,6 +22,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/deleteModel",
     "config/reload",
     "context/getContextItems",
+    "context/getSymbolsForFiles",
     "context/loadSubmenuItems",
     "context/addDocs",
     "context/removeDocs",
@@ -60,5 +61,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "isContinueInputFocused",
     "didChangeAvailableProfiles",
     "setTTSActive",
-    "getWebviewHistoryLength"
+    "getWebviewHistoryLength",
   ];

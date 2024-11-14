@@ -1,6 +1,5 @@
 import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
-import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
@@ -70,12 +69,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
   );
-  const isGatheringContextStore = useSelector(
-    (store: RootState) => store.state.isGatheringContext,
-  );
-
-  const [isGatheringContext, setIsGatheringContext] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isInMultifileEdit = useSelector(
     (state: RootState) => state.state.isInMultifileEdit,
@@ -99,22 +92,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     },
     [props.isMainInput],
   );
-
-  useEffect(() => {
-    if (isGatheringContextStore && !isGatheringContext) {
-      // 500ms delay when going from false -> true to prevent flashing loading indicator
-      timeoutRef.current = setTimeout(() => setIsGatheringContext(true), 500);
-    } else {
-      // Update immediately otherwise (i.e. true -> false)
-      setIsGatheringContext(isGatheringContextStore);
-    }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isGatheringContextStore]);
 
   return (
     <div className={`mb-1 ${props.hidden ? "hidden" : ""}`}>
@@ -145,7 +122,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       </div>
       <ContextItemsPeek
         contextItems={props.contextItems}
-        isGatheringContext={isGatheringContext && props.isLastUserInput}
+        isCurrentContextPeek={props.isLastUserInput}
       />
     </div>
   );

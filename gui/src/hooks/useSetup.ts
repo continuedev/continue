@@ -20,7 +20,7 @@ import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 
-function useSetup(dispatch: Dispatch<any>) {
+function useSetup(dispatch: Dispatch) {
   const [configLoaded, setConfigLoaded] = useState<boolean>(false);
 
   const ideMessenger = useContext(IdeMessengerContext);

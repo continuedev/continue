@@ -17,6 +17,7 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
+  SymbolWithLocation,
 } from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -75,6 +76,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       selectedCode: RangeInFile[];
     },
     ContextItemWithId[],
+  ];
+  "context/getSymbolsForFiles": [
+    { uris: string[] },
+    Record<string, SymbolWithLocation[]>,
   ];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
