@@ -1,50 +1,50 @@
-export const TYPESCRIPT_TEST_CASES = [
+const FUNCTIONS = [
   {
     nodeType: "function_declaration with a param and a return type",
     fileName: "functions.ts",
     language: "TypeScript",
-    cursorPosition: { line: 7, character: 24 },
+    cursorPosition: { line: 3, character: 9 },
     definitionPositions: [
-      { row: 6, column: 34 }, // Person
-      { row: 6, column: 44 }, // Address
+      { row: 2, column: 34 }, // Person
+      { row: 2, column: 44 }, // Address
     ],
   },
   {
     nodeType: "function_declaration with array param",
     fileName: "functions.ts",
     language: "TypeScript",
-    cursorPosition: { line: 11, character: 27 },
+    cursorPosition: { line: 7, character: 9 },
     definitionPositions: [
-      { row: 10, column: 39 }, // Person
-      { row: 10, column: 51 }, // Address
+      { row: 6, column: 39 }, // Person
+      { row: 6, column: 51 }, // Address
     ],
   },
   {
     nodeType: "function_declaration without return type",
     fileName: "functions.ts",
     language: "TypeScript",
-    cursorPosition: { line: 15, character: 58 },
+    cursorPosition: { line: 11, character: 9 },
     definitionPositions: [
-      { row: 14, column: 33 }, // Person
+      { row: 10, column: 33 }, // Person
     ],
   },
   {
     nodeType: "function_declaration without params",
     fileName: "functions.ts",
     language: "TypeScript",
-    cursorPosition: { line: 19, character: 70 },
+    cursorPosition: { line: 15, character: 9 },
     definitionPositions: [
-      { row: 18, column: 39 }, // Person
+      { row: 14, column: 39 }, // Person
     ],
   },
   {
     nodeType: "function_declaration with array params and array return type",
     fileName: "functions.ts",
     language: "TypeScript",
-    cursorPosition: { line: 23, character: 27 },
+    cursorPosition: { line: 19, character: 9 },
     definitionPositions: [
-      { row: 22, column: 36 }, // Person
-      { row: 22, column: 48 }, // Address
+      { row: 18, column: 36 }, // Person
+      { row: 18, column: 48 }, // Address
     ],
   },
   {
@@ -52,75 +52,135 @@ export const TYPESCRIPT_TEST_CASES = [
       "function_declaration with generic params and generic return type",
     fileName: "functions.ts",
     language: "TypeScript",
-    cursorPosition: { line: 27, character: 14 },
+    cursorPosition: { line: 23, character: 9 },
     definitionPositions: [
-      { row: 26, column: 44 }, // Person
-      { row: 26, column: 52 }, // Address
-      { row: 26, column: 62 }, // Person
-      { row: 26, column: 70 }, // Address
+      { row: 22, column: 44 }, // Person
+      { row: 22, column: 52 }, // Address
+      { row: 22, column: 62 }, // Person
+      { row: 22, column: 70 }, // Address
+    ],
+  },
+];
+
+const ARROW_FUNCTIONS = [
+  {
+    nodeType: "arrow_function with a param and a return type",
+    fileName: "arrowFunctions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 3, character: 9 },
+    definitionPositions: [
+      { row: 2, column: 34 }, // Person
+      { row: 2, column: 44 }, // Address
     ],
   },
   {
-    nodeType: "method_declaration with a param and a return type",
-    fileName: "class.ts",
+    nodeType: "arrow_function without return type",
+    fileName: "arrowFunctions.ts",
     language: "TypeScript",
-    cursorPosition: { line: 18, character: 26 },
+    cursorPosition: { line: 7, character: 9 },
     definitionPositions: [
-      { row: 9, column: 29 }, // BaseClass
-      { row: 9, column: 55 }, // FirstInterface
-      { row: 9, column: 72 }, // SecondInterface
-      { row: 17, column: 33 }, // Person
-      { row: 17, column: 43 }, // Address
+      { row: 6, column: 33 }, // Person
+    ],
+  },
+  {
+    nodeType: "arrow_function without params",
+    fileName: "arrowFunctions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 11, character: 9 },
+    definitionPositions: [
+      { row: 10, column: 39 }, // Person
+    ],
+  },
+  {
+    nodeType: "arrow_function with array params and array return type",
+    fileName: "arrowFunctions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 15, character: 9 },
+    definitionPositions: [
+      { row: 14, column: 36 }, // Person
+      { row: 14, column: 48 }, // Address
+    ],
+  },
+  {
+    nodeType: "arrow_function with generic params and generic return type",
+    fileName: "arrowFunctions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 19, character: 9 },
+    definitionPositions: [
+      { row: 18, column: 43 }, // Person
+      { row: 18, column: 51 }, // Address
+      { row: 18, column: 61 }, // Person
+      { row: 18, column: 69 }, // Address
+    ],
+  },
+];
+
+const CLASS_METHODS = [
+  {
+    nodeType: "method_declaration with a param and a return type",
+    fileName: "classMethods.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 4, character: 11 },
+    definitionPositions: [
+      { row: 3, column: 33 }, // Person
+      { row: 3, column: 43 }, // Address
     ],
   },
   {
     nodeType: "method_declaration without arguments",
-    fileName: "class.ts",
+    fileName: "classMethods.ts",
     language: "TypeScript",
-    cursorPosition: { line: 22, character: 54 },
+    cursorPosition: { line: 8, character: 11 },
     definitionPositions: [
-      { row: 9, column: 29 }, // BaseClass
-      { row: 9, column: 55 }, // FirstInterface
-      { row: 9, column: 72 }, // SecondInterface
-      { row: 21, column: 32 }, // Address
+      { row: 7, column: 32 }, // Address
     ],
   },
   {
     nodeType: "method_declaration without return type",
-    fileName: "class.ts",
+    fileName: "classMethods.ts",
     language: "TypeScript",
-    cursorPosition: { line: 26, character: 43 },
+    cursorPosition: { line: 12, character: 11 },
     definitionPositions: [
-      { row: 9, column: 29 }, // BaseClass
-      { row: 9, column: 55 }, // FirstInterface
-      { row: 9, column: 72 }, // SecondInterface
-      { row: 25, column: 26 }, // Person
+      { row: 11, column: 26 }, // Person
     ],
   },
   {
     nodeType: "method_declaration with array type arguments",
-    fileName: "class.ts",
+    fileName: "classMethods.ts",
     language: "TypeScript",
-    cursorPosition: { line: 30, character: 46 },
+    cursorPosition: { line: 16, character: 11 },
     definitionPositions: [
-      { row: 9, column: 29 }, // BaseClass
-      { row: 9, column: 55 }, // FirstInterface
-      { row: 9, column: 72 }, // SecondInterface
-      { row: 29, column: 26 }, // Person
+      { row: 15, column: 26 }, // Person
     ],
   },
   {
     nodeType:
       "method_declaration with array type arguments and array type return",
-    fileName: "class.ts",
+    fileName: "classMethods.ts",
     language: "TypeScript",
-    cursorPosition: { line: 34, character: 50 },
+    cursorPosition: { line: 20, character: 11 },
     definitionPositions: [
-      { row: 9, column: 29 }, // BaseClass
-      { row: 9, column: 55 }, // FirstInterface
-      { row: 9, column: 72 }, // SecondInterface
-      { row: 33, column: 29 }, // Person
-      { row: 33, column: 41 }, // Address
+      { row: 19, column: 29 }, // Person
+      { row: 19, column: 41 }, // Address
     ],
   },
+  {
+    nodeType:
+      "method_declaration with with generic params and generic return type",
+    fileName: "classMethods.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 24, character: 11 },
+    definitionPositions: [
+      { row: 23, column: 37 }, // Person
+      { row: 23, column: 45 }, // Address
+      { row: 23, column: 55 }, // Person
+      { row: 23, column: 63 }, // Address
+    ],
+  },
+];
+
+export const TYPESCRIPT_TEST_CASES = [
+  ...FUNCTIONS,
+  ...ARROW_FUNCTIONS,
+  ...CLASS_METHODS,
 ];
