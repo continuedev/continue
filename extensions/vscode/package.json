@@ -331,12 +331,14 @@
       {
         "command": "continue.acceptDiff",
         "mac": "shift+cmd+enter",
-        "key": "shift+ctrl+enter"
+        "key": "shift+ctrl+enter",
+        "when": "continue.diffVisible"
       },
       {
         "command": "continue.rejectDiff",
         "mac": "shift+cmd+backspace",
-        "key": "shift+ctrl+backspace"
+        "key": "shift+ctrl+backspace",
+        "when": "continue.diffVisible"
       },
       {
         "command": "continue.rejectDiff",
