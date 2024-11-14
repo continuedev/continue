@@ -1,5 +1,5 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
@@ -14,7 +14,7 @@ import {
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
-import { debounce } from "lodash";
+import { debounce, initial } from "lodash";
 import { isJetBrains } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
@@ -25,7 +25,8 @@ function useSetup(dispatch: Dispatch<any>) {
 
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const loadConfig = async () => {
+  const initialConfigLoad = useRef(false);
+  const loadConfig = useCallback(async () => {
     const result = await ideMessenger.request(
       "config/getSerializedProfileInfo",
       undefined,
@@ -36,7 +37,7 @@ function useSetup(dispatch: Dispatch<any>) {
     const { config, profileId } = result.content;
     dispatch(setConfig(config));
     dispatch(setSelectedProfileId(profileId));
-    // setConfigLoaded(true);
+    initialConfigLoad.current = true;
     setLocalStorage("disableIndexing", config.disableIndexing || false);
 
     // Perform any actions needed with the config
@@ -44,21 +45,21 @@ function useSetup(dispatch: Dispatch<any>) {
       setLocalStorage("fontSize", config.ui.fontSize);
       document.body.style.fontSize = `${config.ui.fontSize}px`;
     }
-  };
+  }, [dispatch, ideMessenger, initialConfigLoad]);
 
   // Load config from the IDE
   useEffect(() => {
     loadConfig();
-    // const interval = setInterval(() => {
-    //   if (configLoaded) {
-    //     clearInterval(interval);
-    //     return;
-    //   }
-    //   loadConfig();
-    // }, 2_000);
+    const interval = setInterval(() => {
+      if (initialConfigLoad.current) {
+        clearInterval(interval);
+        return;
+      }
+      loadConfig();
+    }, 2_000);
 
-    // return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval);
+  }, [initialConfigLoad]);
 
   useEffect(() => {
     // Override persisted state
