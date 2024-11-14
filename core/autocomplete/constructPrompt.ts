@@ -23,6 +23,7 @@ import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
 import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
 import { RootPathContextService } from "./services/RootPathContextService.js";
 import { shouldCompleteMultiline } from "./shouldCompleteMultiline.js";
+import { ConfigHandler } from "../config/ConfigHandler.js";
 
 export function languageForFilepath(
   filepath: string,
@@ -44,6 +45,7 @@ export async function constructAutocompletePrompt(
   extraSnippets: AutocompleteSnippet[],
   importDefinitionsService: ImportDefinitionsService,
   rootPathContextService: RootPathContextService,
+  configHandler: ConfigHandler 
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -51,10 +53,24 @@ export async function constructAutocompletePrompt(
   completeMultiline: boolean;
   snippets: AutocompleteSnippet[];
 }> {
+
+  // await configHandler.logMessage(
+  //   "core/autocomplete/constructPrompt.ts\n" +
+  //   "filepath: " + filepath + "\n" +
+  //   "cursorLine: " + cursorLine + "\n" +
+  //   "fullPrefix: " + fullPrefix + "\n" + 
+  //   "fullSuffix: " + fullSuffix + "\n" +
+  //   "language: " + JSON.stringify({...language},null,2) + "\n" +
+  //   "recentlyEditedRanges: " + JSON.stringify({...recentlyEditedRanges},null,2) + "\n" +
+  //   "modelName: " + modelName + "\n" +
+  //   "extraSnippets: " + JSON.stringify({...extraSnippets},null,2) + "\n" +
+  //   "importDefinitionsService: " + importDefinitionsService + "\n"
+  // );
+  
   // Construct basic prefix
   const maxPrefixTokens = options.maxPromptTokens * options.prefixPercentage;
   const prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
-
+  
   // Construct suffix
   const maxSuffixTokens = Math.min(
     options.maxPromptTokens - countTokens(prefix, modelName),
@@ -75,10 +91,8 @@ export async function constructAutocompletePrompt(
 
   // Find external snippets
   let snippets: AutocompleteSnippet[] = [];
- 
   if (options.useOtherFiles) {
     snippets.push(...extraSnippets);
-                                 
     const windowAroundCursor =
       fullPrefix.slice(
         -options.slidingWindowSize * options.slidingWindowPrefixPercentage,

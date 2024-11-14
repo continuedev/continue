@@ -286,7 +286,6 @@ export class VerticalDiffManager {
     range?: vscode.Range,
   ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
-
     let editor = vscode.window.activeTextEditor;
 
     if (!editor) {
@@ -421,7 +420,6 @@ export class VerticalDiffManager {
           onlyOneInsertion,
         ),
       );
-
       // enable a listener for user edits to file while diff is open
       this.enableDocumentChangeListener();
     } catch (e) {

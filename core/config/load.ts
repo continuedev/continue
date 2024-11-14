@@ -242,15 +242,6 @@ async function intermediateToFinalConfig(
 ): Promise<ContinueConfig> {
   // Auto-detect models
   let models: BaseLLM[] = [];
-
-  // writeLog(
-  //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/config/load.ts\n"+
-  //   "identify: intermediateToFinalConfig-config\n"+
-  //   JSON.stringify({
-  //     ...config
-  //   },null,2,)
-  // )
-  
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
@@ -262,6 +253,7 @@ async function intermediateToFinalConfig(
         config.completionOptions,
         config.systemMessage,
       );
+
       if (!llm) {
         continue;
       }

@@ -89,7 +89,8 @@ export abstract class BaseLLM implements ILLM {
   
   uniqueId: string;
   model: string;
-
+  times: number[];
+  ttfts: number[];
   title?: string;
   systemMessage?: string;
   contextLength: number;
@@ -121,7 +122,7 @@ export abstract class BaseLLM implements ILLM {
   watsonxStopToken?: string;
   watsonxApiVersion?: string;
   watsonxFullUrl?: string;
-
+  
   private _llmOptions: LLMOptions;
 
   constructor(_options: LLMOptions) {
@@ -161,6 +162,7 @@ export abstract class BaseLLM implements ILLM {
             )
           : DEFAULT_MAX_TOKENS),
     };
+
     if (CompletionOptionsForModels[options.model as ModelName]) {
       this.completionOptions = mergeJson(
         this.completionOptions,
@@ -205,6 +207,9 @@ export abstract class BaseLLM implements ILLM {
     this.apiType = options.apiType;
     this.region = options.region;
     this.projectId = options.projectId;
+    // 新增 times 数组
+    this.times = [];
+    this.ttfts = [];
   }
 
   listModels(): Promise<string[]> {
@@ -465,13 +470,19 @@ export abstract class BaseLLM implements ILLM {
       suffix,
       completionOptions,
     )) {
-      // 新增
-      // 如果是连续空行不返回
-      if (chunk.trim() === "" && completion[completion.length - 1] === "\n") {
-        continue;
+      let newChunk = chunk;
+      // 新增后处理
+      // 如果第一行为空行，不返回
+      if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+        while (newChunk.startsWith("\n")) {
+          newChunk = newChunk.slice(1);
+        }
+        if (newChunk.length === 0) {
+            continue;
+        }
       }
-      completion += chunk;
-      yield chunk;
+      completion += newChunk;
+      yield newChunk;
     }
 
     this._logTokensGenerated(
@@ -485,13 +496,10 @@ export abstract class BaseLLM implements ILLM {
     const lastNonEmptyLine = prefixLines[prefixLines.length - 1];
 
     if (log && this.writeLog) {
-      // await this.writeLog(
-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"
-      //   + "streamFim - time："+time/1000+"s\n"
-      //   + "streamFim - completion: \n"+completion+"\n"
-      // );
       await this.writeLog(
-        "streamFim - completion: \n"+completion+"\n"
+        "core/llm/index.ts\n"
+        + "streamFim - time: "+time/1000+"s\n"
+        + "streamFim - completion: \n"+completion+"\n"
       );
     }
     return {
@@ -536,23 +544,73 @@ export abstract class BaseLLM implements ILLM {
 
 
     let completion = "";
+    let flag = false;
+    
+    const start_TTFT_Time = Date.now(); // 记录开始时间
     for await (const chunk of this._streamComplete(prompt, completionOptions)) {
-      completion += chunk;
-      yield chunk;
+      let newChunk = chunk;
+      // 新增后处理
+      // 如果第一行为空行，不返回
+      if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+        while (newChunk.startsWith("\n")) {
+          newChunk = newChunk.slice(1);
+        }
+        if (newChunk.length === 0) {
+            continue;
+        }
+      }
+
+      // 计算ttft时间
+      if (!flag) {
+        flag = true;
+        const ttfts = Date.now() - start_TTFT_Time; // 计算ttft时间，单位为秒
+        this.ttfts.push(ttfts);
+      }
+    
+      completion += newChunk;
+      yield newChunk;
     }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
     const time = Date.now() - startTime;
     if (log && this.writeLog) {
-      // await this.writeLog(
-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
-      //   "streamComplete - time: "+time/1000+"s\n"
-      //   + "streamComplete - completion: \n"+completion+"\n"
-      // );
+      this.times.push(time);
+      
+      // 计算时间的统计数据
+      const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+      const sortedTimes = [...this.times].sort((a, b) => a - b);
+      const mid = Math.floor(sortedTimes.length / 2);
+      const medianTime = sortedTimes.length % 2 !== 0 ? sortedTimes[mid] : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+      const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+      const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+  
+      // 计算TTFT的统计数据
+      const meanTTFT = this.ttfts.reduce((acc, t) => acc + t, 0) / this.ttfts.length;
+      const sortedTTFT = [...this.ttfts].sort((a, b) => a - b);
+      const midTTFT = Math.floor(sortedTTFT.length / 2);
+      const medianTTFT = sortedTTFT.length % 2 !== 0 ? sortedTTFT[midTTFT] : (sortedTTFT[midTTFT - 1] + sortedTTFT[midTTFT]) / 2;
+      const p95TTFT = sortedTTFT[Math.ceil(0.95 * sortedTTFT.length) - 1];
+      const p99TTFT = sortedTTFT[Math.ceil(0.99 * sortedTTFT.length) - 1];
+  
       await this.writeLog(
-        "streamComplete - completion: \n"+completion+"\n"
+        "core/llm/index.ts\n" +
+        "streamComplete - Completion: \n" + completion + "\n" +
+        "----------------------Time------------------------\n" +
+        "streamComplete - Time: " + (time / 1000) + "s\n" +
+        "streamComplete - Data Count: " + this.times.length + "\n" + 
+        "streamComplete - Mean Time: " + (meanTime / 1000) + "s\n" +
+        "streamComplete - Median Time: " + (medianTime / 1000) + "s\n" +
+        "streamComplete - P95 Time: " + (p95Time / 1000) + "s\n" + 
+        "streamComplete - P99 Time: " + (p99Time / 1000) + "s\n" +
+        "----------------------Time to First Token------------------------\n" +
+        "streamComplete - TTFT: " + (this.ttfts[this.ttfts.length - 1] / 1000) + "s\n" +
+        "streamComplete - TTFT Count: " + this.ttfts.length + "\n" +
+        "streamComplete - Mean TTFT: " + (meanTTFT / 1000) + "s\n" +
+        "streamComplete - Median TTFT: " + (medianTTFT / 1000) + "s\n" +
+        "streamComplete - P95 TTFT: " + (p95TTFT / 1000) + "s\n" +
+        "streamComplete - P99 TTFT: " + (p99TTFT / 1000) + "s\n"
       );
-    }
+  }
 
     return {
       modelTitle: this.title ?? completionOptions.model,
@@ -595,13 +653,10 @@ export abstract class BaseLLM implements ILLM {
 
     const time = Date.now() - startTime;
     if (log && this.writeLog) {
-      // await this.writeLog(
-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
-      //   "complete - time: "+time/1000+"s\n"
-      //   +"complete - completion: \n"+completion+"\n"
-      // );
       await this.writeLog(
-        "complete - completion: \n"+completion+"\n"
+        "core/llm/index.ts\n"
+        + "complete - time: "+time/1000+"s\n"
+        + "complete - completion: \n"+completion+"\n"
       );
     }
 
@@ -670,13 +725,10 @@ export abstract class BaseLLM implements ILLM {
 
     const time = Date.now() - startTime;
     if (log && this.writeLog) {
-      // await this.writeLog(
-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
-      //   "streamChat - time: "+time/1000 + "s\n"+
-      //   "streamChat - completion: \n"+completion+"\n"
-      // );
       await this.writeLog(
-        "streamChat - completion: \n"+completion+"\n"
+        "core/llm/index.ts\n"
+        + "streamChat - time: "+time/1000+"s\n"
+        + "streamChat - completion: \n"+completion+"\n"
       );
     }
 
@@ -765,10 +817,17 @@ export abstract class BaseLLM implements ILLM {
       // Some providers don't allow you to put words in the model's mouth
       // So we have to manually compile the prompt template and use
       // raw /completions, not /chat/completions
+      /** DEBUG: llm 配置格式问题
+       * 读取到的 qwen模型 model 信息不在 this.model，而在 this.completionOptions.model
+       * */ 
+      let this_model = this.model;
+      if (this.model === undefined){
+        this_model = this.completionOptions.model;
+      }
       const templateMessages = autodetectTemplateFunction(
-        this.model,
+        this_model,
         this.providerName,
-        autodetectTemplateType(this.model),
+        autodetectTemplateType(this_model),
       );
       return templateMessages(rendered);
     }

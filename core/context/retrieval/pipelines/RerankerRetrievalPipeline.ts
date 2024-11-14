@@ -27,7 +27,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     // );
 
     // const recentlyEditedFilesstartTime = Date.now();
-    const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    // const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
     // const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
     // this.writeLog(
     //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
@@ -49,7 +49,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     // );
 
     retrievalResults.push(
-      ...recentlyEditedFilesChunks,
+      // ...recentlyEditedFilesChunks,
       ...ftsChunks,
       ...embeddingsChunks,
       ...repoMapChunks,

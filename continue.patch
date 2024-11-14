@@ -1,0 +1,304 @@
+diff --git a/core/autocomplete/completionProvider.ts b/core/autocomplete/completionProvider.ts
+index da11f1ed6..b694f0eeb 100644
+--- a/core/autocomplete/completionProvider.ts
++++ b/core/autocomplete/completionProvider.ts
+@@ -251,7 +251,6 @@ export class CompletionProvider {
+     token: AbortSignal | undefined,
+     selectedModelTitle: string | undefined,
+   ): Promise<AutocompleteOutcome | undefined> {
+-    const startTime = Date.now();
+     try {
+       // Debounce
+       const uuid = uuidv4();
+@@ -356,13 +355,6 @@ export class CompletionProvider {
+ 
+       const outcome = await this.getTabCompletion(token, options, llm, input,selectedModelTitle);
+ 
+-      const time = Date.now() - startTime;
+-      // console.log()
+-      // await this.configHandler.logMessage(
+-      //   "Document Path: /continue/core/autocomplete/completionProvider.ts\n"+
+-      //   "provideInlineCompletionItems - time："+time/1000+"s\n"
+-      // );
+-      // "provideInlineCompletionItems 补全结果："+outcome?.completion+"\n"
+       if (!outcome?.completion) {
+         return undefined;
+       }
+@@ -669,11 +661,6 @@ export class CompletionProvider {
+       }
+ 
+       completion = processedCompletion
+-      // await this.configHandler.logMessage(
+-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+-      //   "使用缓存：getTabCompletion-cachedCompletion\n"+
+-      //   completion+"\n"
+-      // );
+     } else {
+       const stop = [
+         ...(completionOptions?.stop || []),
+@@ -726,13 +713,6 @@ export class CompletionProvider {
+         this.configHandler
+       );
+ 
+-
+-      // const streamCompleteGenerator = llm.streamComplete(prompt, {
+-      //   ...completionOptions,
+-      //   raw: true,
+-      //   stop,
+-      // });
+-
+       // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
+       const fullStop = () =>
+         this.generatorReuseManager.currentGenerator?.cancel();
+@@ -791,24 +771,9 @@ export class CompletionProvider {
+ 
+ 
+       try {
+-        // await this.configHandler.logMessage(
+-        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+-        //   "步骤1-不使用缓存：getTabCompletion生成\n"
+-        // );
+-        
+         for await (const update of finalGenerator) {
+           completion += update;
+-          // await this.configHandler.logMessage(
+-          //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+-          //   "步骤1-不使用缓存：getTabCompletion生成中。。。。\n"+
+-          //   completion +"\n"
+-          // );
+         }
+-        // await this.configHandler.logMessage(
+-        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+-        //   "不使用缓存：finalGenerator\n"+
+-        //   completion+"\n"
+-        // );
+       } catch (e: any) {
+         if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
+           return undefined;
+@@ -828,12 +793,6 @@ export class CompletionProvider {
+         llm,
+         configHandler: this.configHandler
+       });
+-      
+-      // await this.configHandler.logMessage(
+-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+-      //   "步骤1-不使用缓存-后处理：getTabCompletion-processedCompletion\n"+
+-      //   processedCompletion+"\n"
+-      // );
+ 
+       if (!processedCompletion) {
+         return undefined;
+@@ -842,6 +801,14 @@ export class CompletionProvider {
+     }
+ 
+     const time = Date.now() - startTime;
++
++    await this.configHandler.logMessage(
++      "core/autocomplete/completionProvider.ts\n"
++      + "getTabCompletion - time:" + time/1000 +"s\n"
++      + "getTabCompletion - completion: " + completion +"\n"
++      + "getTabCompletion - cacheHit:" + cacheHit +"\n"
++    );
++
+     const timestamp = Date.now();
+     return {
+       time,
+diff --git a/core/autocomplete/postprocessing.ts b/core/autocomplete/postprocessing.ts
+index 32f83ad48..f790e019e 100644
+--- a/core/autocomplete/postprocessing.ts
++++ b/core/autocomplete/postprocessing.ts
+@@ -59,8 +59,9 @@ export function postprocessCompletion({
+   // Don't return empty
+   if (completion.trim().length <= 0) {
+     configHandler.logMessage(
+-      // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+-      "后处理：补全结果为空，返回 undefined\n"
++      "autocomplete/postprocessing.ts\n" 
++      + "completion: "+completion+"\n"
++      + "后处理：补全结果为空，返回 undefined\n"
+     )
+     return undefined;
+   }
+@@ -72,21 +73,23 @@ export function postprocessCompletion({
+       .filter((line) => line.trim().length > 0)
+       .slice(1)  // 获取第二个及以后的非空行
+       .join("\n");  // 将数组转换为字符串，以换行符连接
+-    // configHandler.logMessage(
+-    //   // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+-    //   + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
+-    //   + "completion: "+completion+"\n"
+-    // )
++    
++    configHandler.logMessage(
++      "autocomplete/postprocessing.ts\n"
++      + "completion: "+completion+"\n"
++      + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
++    )
+     if (secondLineAndAfterOfCompletion == undefined) return undefined;
+     else completion = secondLineAndAfterOfCompletion;
+   }
+ 
+   // Filter out repetitions of many lines in a row
+   if (isExtremeRepetition(completion)) {
+-    // configHandler.logMessage(
+-    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+-    //   + "后处理：连续多行的重复内容，返回 undefined\n"
+-    // )
++    configHandler.logMessage(
++      "autocomplete/postprocessing.ts\n"
++      + "completion: "+completion+"\n"
++      + "后处理：连续多行的重复内容，返回 undefined\n"
++    )
+     return undefined;
+   }
+ 
+@@ -111,11 +114,12 @@ export function postprocessCompletion({
+     !(prefix.endsWith("\n") ||prefix.endsWith("\t")||prefix.endsWith("  ")) &&
+     (suffix.startsWith("\n") || suffix.trim().length === 0)
+   ) {
+-    // configHandler.logMessage(
+-    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+-    //   + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
+-    //   + "前缀以" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
+-    // )
++    configHandler.logMessage(
++      "core/autocomplete/postprocessing.ts\n"
++      + "completion: "+completion+"\n"
++      + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
++      + "前缀以" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
++    )
+     // completion = "\n" + completion;
+     return undefined;
+   }
+diff --git a/core/llm/index.ts b/core/llm/index.ts
+index ea0580f95..e460a192d 100644
+--- a/core/llm/index.ts
++++ b/core/llm/index.ts
+@@ -465,13 +465,19 @@ export abstract class BaseLLM implements ILLM {
+       suffix,
+       completionOptions,
+     )) {
+-      // 新增
+-      // 如果是连续空行不返回
+-      if (chunk.trim() === "" && completion[completion.length - 1] === "\n") {
+-        continue;
++      let newChunk = chunk;
++      // 新增后处理
++      // 如果第一行为空行，不返回
++      if (completion.length === 0 || completion[completion.length - 1] === "\n") {
++        while (newChunk.startsWith("\n")) {
++          newChunk = newChunk.slice(1);
++        }
++        if (newChunk.length === 0) {
++            continue;
++        }
+       }
+-      completion += chunk;
+-      yield chunk;
++      completion += newChunk;
++      yield newChunk;
+     }
+ 
+     this._logTokensGenerated(
+@@ -485,13 +491,10 @@ export abstract class BaseLLM implements ILLM {
+     const lastNonEmptyLine = prefixLines[prefixLines.length - 1];
+ 
+     if (log && this.writeLog) {
+-      // await this.writeLog(
+-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"
+-      //   + "streamFim - time："+time/1000+"s\n"
+-      //   + "streamFim - completion: \n"+completion+"\n"
+-      // );
+       await this.writeLog(
+-        "streamFim - completion: \n"+completion+"\n"
++        "core/llm/index.ts\n"
++        + "streamFim - time: "+time/1000+"s\n"
++        + "streamFim - completion: \n"+completion+"\n"
+       );
+     }
+     return {
+@@ -537,20 +540,28 @@ export abstract class BaseLLM implements ILLM {
+ 
+     let completion = "";
+     for await (const chunk of this._streamComplete(prompt, completionOptions)) {
+-      completion += chunk;
+-      yield chunk;
++      let newChunk = chunk;
++      // 新增后处理
++      // 如果第一行为空行，不返回
++      if (completion.length === 0 || completion[completion.length - 1] === "\n") {
++        while (newChunk.startsWith("\n")) {
++          newChunk = newChunk.slice(1);
++        }
++        if (newChunk.length === 0) {
++            continue;
++        }
++      }
++      completion += newChunk;
++      yield newChunk;
+     }
+ 
+     this._logTokensGenerated(completionOptions.model, prompt, completion);
+     const time = Date.now() - startTime;
+     if (log && this.writeLog) {
+-      // await this.writeLog(
+-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+-      //   "streamComplete - time: "+time/1000+"s\n"
+-      //   + "streamComplete - completion: \n"+completion+"\n"
+-      // );
+       await this.writeLog(
+-        "streamComplete - completion: \n"+completion+"\n"
++        "core/llm/index.ts\n"
++        + "streamComplete - time: "+time/1000+"s\n"
++        + "streamComplete - completion: \n"+completion+"\n"
+       );
+     }
+ 
+@@ -595,13 +606,10 @@ export abstract class BaseLLM implements ILLM {
+ 
+     const time = Date.now() - startTime;
+     if (log && this.writeLog) {
+-      // await this.writeLog(
+-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+-      //   "complete - time: "+time/1000+"s\n"
+-      //   +"complete - completion: \n"+completion+"\n"
+-      // );
+       await this.writeLog(
+-        "complete - completion: \n"+completion+"\n"
++        "core/llm/index.ts\n"
++        + "complete - time: "+time/1000+"s\n"
++        + "complete - completion: \n"+completion+"\n"
+       );
+     }
+ 
+@@ -670,13 +678,10 @@ export abstract class BaseLLM implements ILLM {
+ 
+     const time = Date.now() - startTime;
+     if (log && this.writeLog) {
+-      // await this.writeLog(
+-      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+-      //   "streamChat - time: "+time/1000 + "s\n"+
+-      //   "streamChat - completion: \n"+completion+"\n"
+-      // );
+       await this.writeLog(
+-        "streamChat - completion: \n"+completion+"\n"
++        "core/llm/index.ts\n"
++        + "streamChat - time: "+time/1000+"s\n"
++        + "streamChat - completion: \n"+completion+"\n"
+       );
+     }
+ 
+diff --git a/extensions/vscode/src/autocomplete/completionProvider.ts b/extensions/vscode/src/autocomplete/completionProvider.ts
+index ade2a16e8..daa4c3275 100644
+--- a/extensions/vscode/src/autocomplete/completionProvider.ts
++++ b/extensions/vscode/src/autocomplete/completionProvider.ts
+@@ -220,7 +220,8 @@ export class ContinueCompletionProvider
+         );
+ 
+       const time = Date.now() - startTime;
+-      await console.log(
++      await this.configHandler.logMessage(
++        "extensions/vscode/src/autocomplete/completionProvider.ts\n"+ 
+         `ContinueCompletionProvider - time：`+time/1000 + `s\n`+
+         `ContinueCompletionProvider - completion：`+outcome?.completion + `\n`
+       );

@@ -102,7 +102,7 @@ export class VsCodeExtension {
       ToCoreProtocol,
       FromCoreProtocol
     >();
-
+    
     new VsCodeMessenger(
       inProcessMessenger,
       this.sidebar.webviewProtocol,
@@ -111,7 +111,7 @@ export class VsCodeExtension {
       configHandlerPromise,
       this.workOsAuthProvider,
     );
-
+    
     this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
       outputChannel.appendLine(
         "==========================================================================",

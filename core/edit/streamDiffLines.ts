@@ -68,14 +68,12 @@ export async function* streamDiffLines(
     },
     true,
   );
-
   // Strip common indentation for the LLM, then add back after generation
   let oldLines =
     highlighted.length > 0
       ? highlighted.split("\n")
       : // When highlighted is empty, we need to combine last line of prefix and first line of suffix to determine the line being edited
         [(prefix + suffix).split("\n")[prefix.split("\n").length - 1]];
-
   // But if that line is empty, we can assume we are insertion-only
   if (oldLines.length === 1 && oldLines[0].trim() === "") {
     oldLines = [];
@@ -83,7 +81,6 @@ export async function* streamDiffLines(
 
   // Trim end of oldLines, otherwise we have trailing \r on every line for CRLF files
   oldLines = oldLines.map((line) => line.trimEnd());
-
   const prompt = constructPrompt(
     prefix,
     highlighted,
@@ -92,8 +89,14 @@ export async function* streamDiffLines(
     input,
     language,
   );
-  const inept = modelIsInept(llm.model);
 
+  /** DEBUG 
+   */
+  let llm_model = llm.model;
+  if (llm.model === undefined){
+    llm_model = llm.completionOptions.model;
+  }
+  const inept = modelIsInept(llm_model); // llm.model -> llm_model
   const options: LLMFullCompletionOptions = {};
   const completion =
     typeof prompt === "string"
@@ -101,7 +104,6 @@ export async function* streamDiffLines(
       : llm.streamChat(prompt);
 
   let lines = streamLines(completion);
-
   lines = filterEnglishLinesAtStart(lines);
   lines = filterCodeBlockLines(lines);
   lines = stopAtLines(lines, () => {});
@@ -110,7 +112,6 @@ export async function* streamDiffLines(
     // lines = fixCodeLlamaFirstLineIndentation(lines);
     lines = filterEnglishLinesAtEnd(lines);
   }
-
   let diffLines = streamDiff(oldLines, lines);
   diffLines = filterLeadingAndTrailingNewLineInsertion(diffLines);
   if (highlighted.length === 0) {
@@ -118,7 +119,6 @@ export async function* streamDiffLines(
     const indentation = line.slice(0, line.length - line.trimStart().length);
     diffLines = addIndentation(diffLines, indentation);
   }
-
   let seenGreen = false;
   for await (const diffLine of diffLines) {
     yield diffLine;
