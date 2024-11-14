@@ -1,4 +1,5 @@
 import { ChatMessage, PromptTemplate } from "../../index.js";
+import { gptEditPrompt } from "./edit/gpt.js";
 
 const simplifiedEditPrompt = `Consider the following code:
 \`\`\`{{{language}}}
@@ -18,49 +19,6 @@ Here is the edit requested:
 
 Here is the code after editing:`;
 
-const gptEditPrompt: PromptTemplate = (_, otherData) => {
-  if (otherData?.codeToEdit?.trim().length === 0) {
-    return `\
-\`\`\`${otherData.language}
-${otherData.prefix}[BLANK]${otherData.codeToEdit}${otherData.suffix}
-\`\`\`
-
-Above is the file of code that the user is currently editing in. Their cursor is located at the "[BLANK]". They have requested that you fill in the "[BLANK]" with code that satisfies the following request:
-
-"${otherData.userInput}"
-
-Please generate this code. Your output will be only the code that should replace the "[BLANK]", without repeating any of the prefix or suffix, without any natural language explanation, and without messing up indentation. Here is the code that will replace the "[BLANK]":`;
-  }
-
-  const paragraphs = [
-    "The user has requested a section of code in a file to be rewritten.",
-  ];
-  if (otherData.prefix?.trim().length > 0) {
-    paragraphs.push(`This is the prefix of the file:
-\`\`\`${otherData.language}
-${otherData.prefix}
-\`\`\``);
-  }
-
-  if (otherData.suffix?.trim().length > 0) {
-    paragraphs.push(`This is the suffix of the file:
-\`\`\`${otherData.language}
-${otherData.suffix}
-\`\`\``);
-  }
-
-  paragraphs.push(`This is the code to rewrite:
-\`\`\`${otherData.language}
-${otherData.codeToEdit}
-\`\`\`
-
-The user's request is: "${otherData.userInput}"
-
-Here is the rewritten code:`);
-
-  return paragraphs.join("\n\n");
-};
-
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
 const START_TAG = "<START EDITING HERE>";
@@ -76,7 +34,7 @@ const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
     !firstCharOfFirstLine;
   const suffixTag = isSuffix ? "<STOP EDITING HERE>" : "";
   const suffixExplanation = isSuffix
-    ? " When you get to \"<STOP EDITING HERE>\", end your response."
+    ? ' When you get to "<STOP EDITING HERE>", end your response.'
     : "";
 
   // If neither prefilling nor /v1/completions are supported, we have to use a chat prompt without putting words in the model's mouth

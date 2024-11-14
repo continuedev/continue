@@ -311,7 +311,8 @@ export function Chat() {
     [state.history],
   );
 
-  const showScrollbar = state.config.ui?.showChatScrollbar || false;
+  const showScrollbar =
+    state.config.ui?.showChatScrollbar || window.innerHeight > 5000;
 
   return (
     <>

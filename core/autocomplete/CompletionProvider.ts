@@ -261,13 +261,10 @@ export class CompletionProvider {
 
       //////////
 
-      // Do some stuff later so as not to block return. Latency matters
-      const completionToCache = outcome.completion;
-      setTimeout(async () => {
-        if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prefix, completionToCache);
-        }
-      }, 100);
+      // Save to cache
+      if (!outcome.cacheHit) {
+        (await this.autocompleteCache).put(outcome.prefix, outcome.completion);
+      }
 
       // When using the JetBrains extension, Mark as displayed
       const ideType = (await this.ide.getIdeInfo()).ideType;

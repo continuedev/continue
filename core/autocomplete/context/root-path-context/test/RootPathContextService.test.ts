@@ -2,25 +2,21 @@ import { testRootPathContext } from "./testUtils";
 
 const TEST_CASES = [
   {
-    description: "function",
+    nodeType: "function_declaration",
     fileName: "file1.ts",
-    range: {
-      start: { line: 10, character: 2 },
-      end: { line: 10, character: 24 },
-    },
-    positions: [
+    language: "TypeScript",
+    cursorPosition: { line: 10, character: 24 },
+    definitionPositions: [
       { row: 9, column: 34 }, // Person
       { row: 9, column: 44 }, // Address
     ],
   },
   {
-    description: "class method",
+    nodeType: "method_declaration",
     fileName: "file1.ts",
-    range: {
-      start: { line: 22, character: 4 },
-      end: { line: 22, character: 30 },
-    },
-    positions: [
+    language: "TypeScript",
+    cursorPosition: { line: 22, character: 30 },
+    definitionPositions: [
       { row: 13, column: 29 }, // BaseClass
       { row: 13, column: 55 }, // FirstInterface
       { row: 13, column: 72 }, // SecondInterface
@@ -28,15 +24,63 @@ const TEST_CASES = [
       { row: 21, column: 43 }, // Address
     ],
   },
+  {
+    nodeType: "function_definition",
+    fileName: "file1.py",
+    language: "Python",
+    cursorPosition: { line: 4, character: 25 },
+    definitionPositions: [
+      { row: 3, column: 30 }, // Person
+      { row: 3, column: 42 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_definition (inside a class)",
+    fileName: "file1.py",
+    language: "Python",
+    cursorPosition: { line: 12, character: 33 },
+    definitionPositions: [
+      { row: 6, column: 21 }, // BaseClass
+      { row: 6, column: 33 }, // Collection
+      { row: 11, column: 47 }, // Person
+      { row: 11, column: 59 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_definition",
+    fileName: "file1.php",
+    language: "PHP",
+    cursorPosition: { line: 12, character: 32 },
+    definitionPositions: [
+      { row: 10, column: 26 }, // Person
+      { row: 10, column: 44 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_definition (inside a class)",
+    fileName: "file1.php",
+    language: "PHP",
+    cursorPosition: { line: 26, character: 35 },
+    definitionPositions: [
+      { row: 15, column: 29 }, // BaseClass
+      { row: 15, column: 55 }, // FirstInterface
+      { row: 15, column: 72 }, // SecondInterface
+      { row: 25, column: 43 }, // Person
+      { row: 25, column: 61 }, // Address
+    ],
+  },
 ];
 
 describe("RootPathContextService", () => {
-  describe("TypeScript should return expected snippets when editing inside a:", () => {
-    test.each(TEST_CASES)(
-      "should look for correct type definitions when editing inside a $description",
-      async ({ fileName, range, positions }) => {
-        await testRootPathContext("typescript", fileName, range, positions);
-      },
-    );
-  });
+  test.each(TEST_CASES)(
+    "Should look for correct type definitions when editing inside a $nodeType in $language",
+    async ({ fileName, cursorPosition, definitionPositions }) => {
+      await testRootPathContext(
+        "files",
+        fileName,
+        cursorPosition,
+        definitionPositions,
+      );
+    },
+  );
 });

@@ -6,7 +6,7 @@ import type { ILLM } from "core";
 
 export class TabAutocompleteModel {
   private _llm: ILLM | undefined;
-  private defaultTag = "starcoder2:3b";
+  private defaultTag = "qwen2.5-coder:1.5b";
   private globalContext: GlobalContext = new GlobalContext();
 
   constructor(private configHandler: ConfigHandler) {}

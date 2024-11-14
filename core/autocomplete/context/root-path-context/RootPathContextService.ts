@@ -9,6 +9,21 @@ import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 import { AutocompleteSnippet } from "../ranking";
 
+function getSyntaxTreeString(
+  node: Parser.SyntaxNode,
+  indent: string = "",
+): string {
+  let result = "";
+  const nodeInfo = `${node.type} [${node.startPosition.row}:${node.startPosition.column} - ${node.endPosition.row}:${node.endPosition.column}]`;
+  result += `${indent}${nodeInfo}\n`;
+
+  for (const child of node.children) {
+    result += getSyntaxTreeString(child, indent + "  ");
+  }
+
+  return result;
+}
+
 export class RootPathContextService {
   private cache = new LRUCache<string, AutocompleteSnippet[]>({
     max: 100,
@@ -26,8 +41,11 @@ export class RootPathContextService {
   private static TYPES_TO_USE = new Set([
     "program",
     "function_declaration",
+    "function_definition",
     "method_definition",
+    "method_declaration",
     "class_declaration",
+    "class_definition",
   ]);
 
   /**
@@ -56,12 +74,17 @@ export class RootPathContextService {
         this.importDefinitionsService.get(filepath);
         break;
       default:
+        // const type = node.type;
+        // debugger;
+        // console.log(getSyntaxTreeString(node));
+
         query = await getQueryForFile(
           filepath,
           `root-path-context-queries/${node.type}`,
         );
         break;
     }
+    const type = node.type;
 
     if (!query) {
       return snippets;
@@ -97,6 +120,7 @@ export class RootPathContextService {
         contents: await this.ide.readRangeInFile(def.filepath, def.range),
       })),
     );
+
     return newSnippets;
   }
 
@@ -112,6 +136,8 @@ export class RootPathContextService {
       RootPathContextService.TYPES_TO_USE.has(node.type),
     )) {
       const key = RootPathContextService.keyFromNode(parentKey, astNode);
+      // const type = astNode.type;
+      // debugger;
 
       const foundInCache = this.cache.get(key);
       const newSnippets =

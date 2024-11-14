@@ -316,7 +316,7 @@ export class VsCodeMessenger {
         "getDefaultModelTitle",
         undefined,
       );
-      await verticalDiffManager.streamEdit(
+      const fileAfterEdit = await verticalDiffManager.streamEdit(
         stripImages(prompt),
         modelTitle,
         "edit",
@@ -330,6 +330,7 @@ export class VsCodeMessenger {
 
       this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
+        fileAfterEdit,
       });
     });
     this.onWebview("edit/acceptReject", async (msg) => {

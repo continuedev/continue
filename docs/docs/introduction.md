@@ -15,7 +15,7 @@ keywords:
   ]
 ---
 
-![Continue Logo](/img/intro.png)
+![Continue Logo](../static/img/intro.png)
 
 **Continue is the leading open-source AI code assistant inside of [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 

@@ -141,6 +141,12 @@ class YamlKeysCompletionItemProvider implements vscode.CompletionItemProvider {
     const lineText = document.lineAt(position).text;
     const textBeforeCursor = lineText.substring(0, position.character);
 
+    // 0. If no delimiter in the file, return no completions
+    const fullContent = document.getText();
+    if (!fullContent.includes("---")) {
+      return undefined;
+    }
+
     // 1. Check if the cursor is in YAML section (before --- delimiter)
     const beforeDelimiter = isCursorBeforeDelimiter(document, position);
 
@@ -160,7 +166,7 @@ class YamlKeysCompletionItemProvider implements vscode.CompletionItemProvider {
         vscode.CompletionItemKind.Property,
       );
       item.documentation = new vscode.MarkdownString(key.description);
-      item.insertText = key + ": ";
+      item.insertText = key.key + ": ";
       return item;
     });
 

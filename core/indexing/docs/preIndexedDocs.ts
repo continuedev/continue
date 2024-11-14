@@ -325,6 +325,11 @@ const preIndexedDocs: Record<
     rootUrl: "https://awscli.amazonaws.com/v2/documentation/api/latest/",
     faviconUrl: "https://docs.aws.amazon.com/favicon.ico",
   },
+  "https://llama-stack.readthedocs.io/": {
+    title: "Llama Stack",
+    startUrl: "https://llama-stack.readthedocs.io/",
+    rootUrl: "https://llama-stack.readthedocs.io/",
+  },
 };
 
 export default preIndexedDocs;
