@@ -21,7 +21,7 @@ import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 
 function useSetup(dispatch: Dispatch<any>) {
-  const [configLoaded, setConfigLoaded] = useState<boolean>(false);
+  // const [configLoaded, setConfigLoaded] = useState<boolean>(false);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -36,7 +36,7 @@ function useSetup(dispatch: Dispatch<any>) {
     const { config, profileId } = result.content;
     dispatch(setConfig(config));
     dispatch(setSelectedProfileId(profileId));
-    setConfigLoaded(true);
+    // setConfigLoaded(true);
     setLocalStorage("disableIndexing", config.disableIndexing || false);
 
     // Perform any actions needed with the config
@@ -49,16 +49,16 @@ function useSetup(dispatch: Dispatch<any>) {
   // Load config from the IDE
   useEffect(() => {
     loadConfig();
-    const interval = setInterval(() => {
-      if (configLoaded) {
-        clearInterval(interval);
-        return;
-      }
-      loadConfig();
-    }, 2_000);
+    // const interval = setInterval(() => {
+    //   if (configLoaded) {
+    //     clearInterval(interval);
+    //     return;
+    //   }
+    //   loadConfig();
+    // }, 2_000);
 
-    return () => clearInterval(interval);
-  }, [configLoaded]);
+    // return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Override persisted state
@@ -116,6 +116,7 @@ function useSetup(dispatch: Dispatch<any>) {
   }, 1000);
 
   useWebviewListener("configUpdate", async () => {
+    console.log("config update");
     await loadConfig();
 
     if (!isJetBrains && !getLocalStorage("disableIndexing")) {

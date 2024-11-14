@@ -12,12 +12,11 @@ export const CodeBlockComponent = ({
   editor,
   updateAttributes,
 }: any) => {
-  const dispatch = useDispatch();
   const item: ContextItemWithId = node.attrs.item;
 
-  const contextItems = useSelector(
-    (state: RootState) => state.state.contextItems,
-  );
+  // const contextItems = useSelector(
+  //   (state: RootState) => state.state.history[0]?.contextItems[0]?.id,
+  // );
   return (
     <NodeViewWrapper className="code-block-with-content" as="p">
       <CodeSnippetPreview

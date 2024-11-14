@@ -30,6 +30,7 @@ async function resolveEditorContent(
   ideMessenger: IIdeMessenger,
   defaultContextProviders: DefaultContextProvider[],
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
+  console.log("resolve editor content start");
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
@@ -171,6 +172,7 @@ async function resolveEditorContent(
       parts = [{ type: "text", text: lastPart }];
     }
   }
+  console.log("resolve editor content end");
 
   return [contextItems, selectedCode, parts];
 }

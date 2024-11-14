@@ -159,6 +159,7 @@ interface TipTapEditorProps {
   placeholder?: string;
   header?: React.ReactNode;
   historyKey: string;
+  contextItems?: ContextItemWithId[];
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
@@ -221,10 +222,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   const onOpen = () => {
     inDropdownRef.current = true;
   };
-
-  const contextItems = useSelector(
-    (store: RootState) => store.state.contextItems,
-  );
 
   const defaultModel = useSelector(defaultModelSelector);
   const defaultModelRef = useUpdatingRef(defaultModel);
@@ -495,19 +492,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     content: props.editorState || mainEditorContent || "",
     onFocus: () => setIsEditorFocused(true),
     onBlur: () => setIsEditorFocused(false),
-    onUpdate: ({ editor, transaction }) => {
-      // If /edit is typed and no context items are selected, select the first
-
-      if (contextItems.length > 0) {
-        return;
-      }
-
-      const json = editor.getJSON();
-      let codeBlock = json.content?.find((el) => el.type === "codeBlock");
-      if (!codeBlock) {
-        return;
-      }
-    },
+    // onUpdate
     editable: !active || props.isMainInput,
   });
 
