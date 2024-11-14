@@ -37,6 +37,7 @@ import { VsCodeIde } from "../VsCodeIde";
 
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
+import { SYSTEM_PROMPT_DOT_FILE } from "core/config/getSystemPromptDotFile";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -285,7 +286,7 @@ export class VsCodeExtension {
       if (
         filepath.endsWith(".continuerc.json") ||
         filepath.endsWith(".prompt") ||
-        filepath.endsWith(".instructions")
+        filepath.endsWith(SYSTEM_PROMPT_DOT_FILE)
       ) {
         this.configHandler.reloadConfig();
       } else if (

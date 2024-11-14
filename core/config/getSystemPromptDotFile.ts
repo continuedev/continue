@@ -1,6 +1,6 @@
 import { IDE } from "..";
 
-export const SYSTEM_PROMPT_DOT_FILE = ".instructions";
+export const SYSTEM_PROMPT_DOT_FILE = ".continuerules";
 
 export async function getSystemPromptDotFile(ide: IDE): Promise<string | null> {
   const dirs = await ide.getWorkspaceDirs();
