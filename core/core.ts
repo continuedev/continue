@@ -30,17 +30,12 @@ import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
+import { getSymbolsForFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
-import type {
-  ContextItemId,
-  IDE,
-  IndexingProgressUpdate,
-  SymbolWithLocation,
-} from ".";
+import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./util/messenger";
-import { getFileSymbols, getSymbolsForFiles } from "./util/treeSitter";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>

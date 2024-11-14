@@ -299,13 +299,12 @@ export interface InputModifiers {
   noContext: boolean;
 }
 
-export interface SymbolWithLocation {
+export interface SymbolWithRange extends RangeInFile {
   name: string;
   type: Parser.SyntaxNode["type"];
-  location: Location;
 }
 
-export type FileSymbolMap = Record<string, SymbolWithLocation[]>;
+export type FileSymbolMap = Record<string, SymbolWithRange[]>;
 
 export interface PromptLog {
   modelTitle: string;
@@ -318,7 +317,7 @@ export interface ChatHistoryItem {
   editorState?: any;
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
-  contextSymbols?: SymbolWithLocation[];
+  contextSymbols?: SymbolWithRange[];
   promptLogs?: PromptLog[];
 }
 

@@ -7,6 +7,7 @@ import type {
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
+  FileSymbolMap,
   IdeSettings,
   LLMFullCompletionOptions,
   MessageContent,
@@ -17,7 +18,6 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
-  SymbolWithLocation,
 } from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -77,10 +77,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
-  "context/getSymbolsForFiles": [
-    { uris: string[] },
-    Record<string, SymbolWithLocation[]>,
-  ];
+  "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];

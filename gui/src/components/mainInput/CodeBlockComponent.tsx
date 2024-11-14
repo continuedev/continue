@@ -12,7 +12,6 @@ export const CodeBlockComponent = ({
   editor,
   updateAttributes,
 }: any) => {
-  const dispatch = useDispatch();
   const item: ContextItemWithId = node.attrs.item;
 
   const contextItems = useSelector(

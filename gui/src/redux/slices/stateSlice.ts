@@ -5,6 +5,7 @@ import {
   ChatMessage,
   ContextItemId,
   ContextItemWithId,
+  FileSymbolMap,
   PersistedSessionInfo,
   PromptLog,
 } from "core";
@@ -25,6 +26,7 @@ type State = {
   history: ChatHistoryItemWithMessageId[];
   context: {
     items: ContextItemWithId[];
+    symbols: FileSymbolMap;
     isGathering: boolean;
     gatheringMessage: string;
   };
@@ -44,6 +46,7 @@ const initialState: State = {
   history: [],
   context: {
     items: [],
+    symbols: {},
     isGathering: false,
     gatheringMessage: "Gathering Context",
   },
@@ -134,6 +137,12 @@ export const stateSlice = createSlice({
     },
     consumeMainEditorContent: (state) => {
       state.mainEditorContent = undefined;
+    },
+    updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
+      state.context.symbols = Object.assign(
+        state.context.symbols,
+        action.payload,
+      );
     },
     setContextItemsAtIndex: (
       state,
@@ -440,6 +449,7 @@ export const memoizedContextItemsSelector = createSelector(
 );
 
 export const {
+  updateFileSymbols,
   setContextItemsAtIndex,
   addContextItems,
   addContextItemsAtIndex,

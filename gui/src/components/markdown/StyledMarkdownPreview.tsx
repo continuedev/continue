@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { memo, useEffect, useMemo } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -21,6 +21,9 @@ import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
+import { RootState } from "../../redux/store";
+import { SymbolWithRange } from "core";
+import SymbolLink from "./SymbolLink";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -112,16 +115,16 @@ function getLanuageFromClassName(className: any): string | null {
 
 function getCodeChildrenContent(children: any) {
   if (typeof children === "string") {
+    console.log(children);
     return children;
   } else if (
     Array.isArray(children) &&
     children.length > 0 &&
-    typeof children[0] === "string" &&
-    children[0] !== ""
+    typeof children[0] === "string"
   ) {
+    console.log(children[0]);
     return children[0];
   }
-
   return undefined;
 }
 
@@ -154,6 +157,25 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
   const contextItems = useSelector(memoizedContextItemsSelector);
+  const symbols = useSelector(
+    (state: RootState) => state.state.context.symbols,
+  );
+  const symbolsForContextItems: SymbolWithRange[] = useMemo(() => {
+    const contextUris = Array.from(
+      new Set(
+        contextItems.filter((item) => item?.uri).map((item) => item.uri!.value),
+      ),
+    );
+    const contextSymbols: SymbolWithRange[] = [];
+    contextUris.forEach((uri) => {
+      const fileSymbols = symbols[uri];
+      if (fileSymbols) {
+        contextSymbols.push(...fileSymbols);
+      }
+    });
+    console.log(contextSymbols.map((s) => s.name));
+    return contextSymbols;
+  }, [contextItems, symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [remarkMath, () => processCodeBlocks],
@@ -245,9 +267,22 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             const rif = ctxItemToRifWithContents(ctxItem);
             return <FilenameLink rif={rif} />;
           }
+          // console.log("content", content);
+          const exactSymbol = symbolsForContextItems.find(
+            (s) => s.name === content,
+          );
+          if (exactSymbol) {
+            return <SymbolLink content={content} symbol={exactSymbol} />;
+          }
 
-          // const symbole = symboles
-
+          // PARTIAL - PARENTHESES
+          const partialSymbol = symbolsForContextItems.find(
+            (s) => false,
+            // content.startsWith(s.name),
+          );
+          if (partialSymbol) {
+            return <SymbolLink content={content} symbol={partialSymbol} />;
+          }
           return <code {...codeProps}>{codeProps.children}</code>;
         },
       },

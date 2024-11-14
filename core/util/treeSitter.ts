@@ -2,7 +2,8 @@ import fs from "node:fs";
 import * as path from "node:path";
 
 import Parser, { Language } from "web-tree-sitter";
-import { FileSymbolMap, IDE, SymbolWithLocation } from "..";
+
+import { FileSymbolMap, IDE, SymbolWithRange } from "..";
 
 export const supportedLanguages: { [key: string]: string } = {
   cpp: "cpp",
@@ -180,17 +181,24 @@ async function loadLanguageForFileExt(
   return await Parser.Language.load(wasmPath);
 }
 
+// See https://tree-sitter.github.io/tree-sitter/using-parsers
 const GET_SYMBOLS_FOR_NODE_TYPES: Parser.SyntaxNode["type"][] = [
   "class_declaration",
+  "class_definition",
   "function_item", // function name = first "identifier" child
+  "function_definition",
   "method_declaration", // method name = first "identifier" child
+  "method_definition",
+  "generator_function_declaration",
+  // property_identifier
+  // field_declaration
   // "arrow_function",
 ];
 
 export async function getSymbolsForFile(
   filepath: string,
   contents: string,
-): Promise<SymbolWithLocation[] | undefined> {
+): Promise<SymbolWithRange[] | undefined> {
   const parser = await getParserForFile(filepath);
 
   if (!parser) {
@@ -201,28 +209,39 @@ export async function getSymbolsForFile(
   console.log(`file: ${filepath}`);
 
   // Function to recursively find all named nodes (classes and functions)
-  const symbols: SymbolWithLocation[] = [];
+  const symbols: SymbolWithRange[] = [];
   function findNamedNodesRecursive(node: Parser.SyntaxNode) {
+    // console.log(`node: ${node.type}, ${node.text}`);
     if (GET_SYMBOLS_FOR_NODE_TYPES.includes(node.type)) {
-      console.log(`parent: ${node.type}, ${node.text.substring(0, 200)}`);
-      node.children.forEach((child) => {
-        console.log(`child: ${child.type}, ${child.text}`);
-      });
+      // console.log(`parent: ${node.type}, ${node.text.substring(0, 200)}`);
+      // node.children.forEach((child) => {
+      //   console.log(`child: ${child.type}, ${child.text}`);
+      // });
 
       // Empirically, the actualy name is the last identifier in the node
       // Especially with languages where return type is declared before the name
-      const identifier = node.children.findLast(
-        (child) => child.type === "identifier",
-      )?.text;
-      if (identifier) {
+      // TODO use findLast in newer version of node target
+      let identifier: Parser.SyntaxNode | undefined = undefined;
+      for (let i = node.children.length - 1; i >= 0; i--) {
+        if (node.children[i].type === "identifier") {
+          identifier = node.children[i];
+          break;
+        }
+      }
+
+      if (identifier?.text) {
         symbols.push({
+          filepath,
           type: node.type,
-          name: identifier,
-          location: {
-            filepath,
-            position: {
+          name: identifier.text,
+          range: {
+            start: {
               character: node.startPosition.column,
-              line: node.startPosition.row + 1,
+              line: node.startPosition.row,
+            },
+            end: {
+              character: node.endPosition.column + 1,
+              line: node.endPosition.row + 1,
             },
           },
         });
@@ -240,7 +259,7 @@ export async function getSymbolsForFiles(
   ide: IDE,
 ): Promise<FileSymbolMap> {
   const filesAndSymbols = await Promise.all(
-    uris.map(async (uri): Promise<[string, SymbolWithLocation[]]> => {
+    uris.map(async (uri): Promise<[string, SymbolWithRange[]]> => {
       const contents = await ide.readFile(uri);
       const symbols = await getSymbolsForFile(uri, contents);
       return [uri, symbols ?? []];

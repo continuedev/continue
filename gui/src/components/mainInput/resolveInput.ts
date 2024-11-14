@@ -10,7 +10,10 @@ import {
 import { stripImages } from "core/llm/images";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { Dispatch } from "@reduxjs/toolkit";
-import { setIsGatheringContext } from "../../redux/slices/stateSlice";
+import {
+  setIsGatheringContext,
+  updateFileSymbols,
+} from "../../redux/slices/stateSlice";
 
 interface MentionAttrs {
   label: string;
@@ -179,9 +182,15 @@ async function resolveEditorContent(
     ),
   );
 
-  const symbols = await ideMessenger.request("context/getSymbolsForFiles", {
-    uris: contextItemFileUris,
-  });
+  const symbolsResult = await ideMessenger.request(
+    "context/getSymbolsForFiles",
+    {
+      uris: contextItemFileUris,
+    },
+  );
+  if (symbolsResult.status === "success") {
+    dispatch(updateFileSymbols(symbolsResult.content));
+  }
 
   if (contextItemsText !== "") {
     contextItemsText += "\n";
@@ -206,7 +215,7 @@ async function resolveEditorContent(
     );
   }
 
-  return [contextItems, selectedCode, parts, symbols];
+  return [contextItems, selectedCode, parts];
 }
 
 function findLastIndex<T>(
