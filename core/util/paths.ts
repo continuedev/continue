@@ -327,7 +327,7 @@ export function getPromptLogsPath(): string {
 }
 
 export function getGlobalPromptsPath(): string {
-  return path.join(getContinueGlobalPath(), ".prompts");
+  return path.join(getContinueGlobalPath(), "prompts");
 }
 
 export function readAllGlobalPromptFiles(
