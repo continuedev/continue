@@ -105,7 +105,7 @@ class AsyncFileSaveListener(private val ideProtocolClient: IdeProtocolClient) : 
         for (event in events) {
             if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(
                     ".continue\\config.json"
-                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json")
+                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json") || event.path.endsWith(".continuerc.json")
             ) {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
