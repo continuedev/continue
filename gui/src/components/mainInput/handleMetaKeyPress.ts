@@ -1,6 +1,6 @@
+import { Editor } from "@tiptap/react";
 import { KeyboardEvent } from "react";
 import { isWebEnvironment } from "../../util";
-import { Editor } from "@tiptap/react";
 
 const isWebEnv = isWebEnvironment();
 
@@ -46,6 +46,10 @@ export const handleJetBrainsMetaKeyPress = (
   }
 };
 
+/**
+ * We use this for VS Code to fix an .ipynb bug
+ * And we use it in JetBrains when OSR is turned on
+ */
 export const handleMetaKeyPress = async (e: KeyboardEvent, editor: Editor) => {
   const text = editor.state.doc.textBetween(
     editor.state.selection.from,
