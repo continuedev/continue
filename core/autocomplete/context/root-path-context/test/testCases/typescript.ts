@@ -48,7 +48,7 @@ export const TYPESCRIPT_TEST_CASES = [
     ],
   },
   {
-    nodeType: "method_declaration",
+    nodeType: "method_declaration with a param and a return type",
     fileName: "class.ts",
     language: "TypeScript",
     cursorPosition: { line: 18, character: 26 },
@@ -94,6 +94,20 @@ export const TYPESCRIPT_TEST_CASES = [
       { row: 9, column: 55 }, // FirstInterface
       { row: 9, column: 72 }, // SecondInterface
       { row: 29, column: 26 }, // Person
+    ],
+  },
+  {
+    nodeType:
+      "method_declaration with array type arguments and array type return",
+    fileName: "class.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 34, character: 50 },
+    definitionPositions: [
+      { row: 9, column: 29 }, // BaseClass
+      { row: 9, column: 55 }, // FirstInterface
+      { row: 9, column: 72 }, // SecondInterface
+      { row: 33, column: 29 }, // Person
+      { row: 33, column: 41 }, // Address
     ],
   },
 ];
