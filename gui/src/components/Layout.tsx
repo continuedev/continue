@@ -162,10 +162,6 @@ const Layout = () => {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      // console.log({
-      //   filepath: state.filepath,
-      //   content: state.fileContent,
-      // });
       dispatch(
         updateCurCheckpoint({
           filepath: state.filepath,

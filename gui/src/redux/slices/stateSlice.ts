@@ -442,21 +442,6 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
     ) => {
-      // If the user has explicitly checked out a given checkpoint, `curCheckpointIndex` will be set to that index.
-      // Else, we assume the current checkpoint index is the end of the checkpoints array.
-      // const index =
-      //   state.curCheckpointIndex === -1
-      //     ? state.history.length / 2 - 1
-      //     : state.curCheckpointIndex;
-
-      console.log("updating checkpoint");
-      console.log({
-        index: state.curCheckpointIndex,
-        historyLength: state.history.length,
-        filepath: payload.filepath,
-        content: payload.content,
-      });
-
       state.checkpoints[state.curCheckpointIndex] = {
         ...state.checkpoints[state.curCheckpointIndex],
         [payload.filepath]: payload.content,

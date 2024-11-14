@@ -64,9 +64,14 @@ export type EditStatus =
   | "accepting:full-diff"
   | "done";
 
+export type ApplyStateStatus =
+  | "streaming" // Changes are being applied to the file
+  | "done" // All changes have been applied, awaiting user to accept/reject
+  | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
+
 export interface ApplyState {
   streamId: string;
-  status?: "streaming" | "done" | "closed";
+  status?: ApplyStateStatus;
   numDiffs?: number;
   filepath?: string;
   fileContent?: string;
