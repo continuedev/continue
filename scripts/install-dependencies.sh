@@ -5,6 +5,9 @@
 # - Debug -> Extension
 set -e
 
+# Change to the root directory
+cd "$(dirname "$0")/.."
+
 echo "Installing root-level dependencies..."
 npm install
 
