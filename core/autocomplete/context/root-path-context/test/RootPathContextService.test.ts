@@ -1,29 +1,8 @@
+import { TYPESCRIPT_TEST_CASES } from "./testCases/typescript";
 import { testRootPathContext } from "./testUtils";
 
 const TEST_CASES = [
-  {
-    nodeType: "function_declaration",
-    fileName: "file1.ts",
-    language: "TypeScript",
-    cursorPosition: { line: 10, character: 24 },
-    definitionPositions: [
-      { row: 9, column: 34 }, // Person
-      { row: 9, column: 44 }, // Address
-    ],
-  },
-  {
-    nodeType: "method_declaration",
-    fileName: "file1.ts",
-    language: "TypeScript",
-    cursorPosition: { line: 22, character: 30 },
-    definitionPositions: [
-      { row: 13, column: 29 }, // BaseClass
-      { row: 13, column: 55 }, // FirstInterface
-      { row: 13, column: 72 }, // SecondInterface
-      { row: 21, column: 33 }, // Person
-      { row: 21, column: 43 }, // Address
-    ],
-  },
+  ...TYPESCRIPT_TEST_CASES,
   {
     nodeType: "function_definition",
     fileName: "file1.py",
