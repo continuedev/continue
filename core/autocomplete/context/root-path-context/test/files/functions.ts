@@ -23,3 +23,10 @@ function getHardcodedAddress(): Address {
 function getAddresses(people: Person[]): Address[] {
   return people[0].address;
 }
+
+function logPersonWithAddress(person: Person<Address>): Person<Address> {
+  console.log(
+    `Name: ${person.name}, Age: ${person.age}, Address: ${person.address.street}`,
+  );
+  return person;
+}

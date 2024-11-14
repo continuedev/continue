@@ -44,7 +44,20 @@ export const TYPESCRIPT_TEST_CASES = [
     cursorPosition: { line: 23, character: 27 },
     definitionPositions: [
       { row: 22, column: 36 }, // Person
-      { row: 22, column: 48 }, // Person
+      { row: 22, column: 48 }, // Address
+    ],
+  },
+  {
+    nodeType:
+      "function_declaration with generic params and generic return type",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 27, character: 14 },
+    definitionPositions: [
+      { row: 26, column: 44 }, // Person
+      { row: 26, column: 52 }, // Address
+      { row: 26, column: 62 }, // Person
+      { row: 26, column: 70 }, // Address
     ],
   },
   {
