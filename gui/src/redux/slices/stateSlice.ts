@@ -83,6 +83,8 @@ export const stateSlice = createSlice({
       state,
       { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
     ) => {
+      console.log("setConfig");
+
       const defaultModelTitle =
         config.models.find((model) => model.title === state.defaultModelTitle)
           ?.title ||
@@ -101,6 +103,8 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<PromptLog[]>,
     ) => {
+      console.log("addPromptCompletionPair");
+
       if (!state.history.length) {
         return;
       }
@@ -139,11 +143,14 @@ export const stateSlice = createSlice({
         contextItems: ChatHistoryItem["contextItems"];
       }>,
     ) => {
+      console.log("setContextItemsAtIndex");
       if (state.history[index]) {
         state.history[index].contextItems = contextItems;
       }
     },
     addContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
+      console.log("addContextItems");
+
       state.contextItems = state.contextItems.concat(action.payload);
     },
     resubmitAtIndex: (
@@ -155,6 +162,8 @@ export const stateSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
+      console.log("resubmitAtIndex");
+
       const historyItem = state.history[payload.index];
       if (!historyItem) {
         return;
@@ -188,6 +197,8 @@ export const stateSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
+      console.log("initNewActiveMessage");
+
       state.history.push({
         message: { role: "user", content: "", id: uuidv4() },
         contextItems: state.contextItems,
@@ -215,6 +226,7 @@ export const stateSlice = createSlice({
         contextItems?: ContextItemWithId[];
       }>,
     ) => {
+      console.log("setMessageAtIndex");
       if (payload.index >= state.history.length) {
         state.history.push({
           message: { ...payload.message, id: uuidv4() },
@@ -246,6 +258,8 @@ export const stateSlice = createSlice({
         contextItems: ContextItemWithId[];
       }>,
     ) => {
+      console.log("addContextItemsAtIndex");
+
       const historyItem = state.history[payload.index];
       if (!historyItem) {
         return;
@@ -257,6 +271,8 @@ export const stateSlice = createSlice({
       state.active = false;
     },
     streamUpdate: (state, action: PayloadAction<string>) => {
+      console.log("streamUpdate");
+
       if (state.history.length) {
         state.history[state.history.length - 1].message.content +=
           action.payload;
@@ -267,6 +283,8 @@ export const stateSlice = createSlice({
       { payload }: PayloadAction<PersistedSessionInfo | undefined>,
     ) => {
       if (payload) {
+        console.log("newSession");
+
         state.history = payload.history as any;
         state.title = payload.title;
         state.sessionId = payload.sessionId;
@@ -285,6 +303,8 @@ export const stateSlice = createSlice({
         payload,
       }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>,
     ) => {
+      console.log("deleteContextWithIds");
+
       const getKey = (id: ContextItemId) => `${id.providerTitle}-${id.itemId}`;
       const ids = new Set(payload.ids.map(getKey));
 
@@ -304,6 +324,8 @@ export const stateSlice = createSlice({
         payload,
       }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>,
     ) => {
+      console.log("addHighlightedCode");
+
       let contextItems = [...state.contextItems].map((item) => {
         return { ...item, editing: false };
       });
@@ -367,6 +389,8 @@ export const stateSlice = createSlice({
         payload,
       }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>,
     ) => {
+      console.log("setEditingAtIds");
+
       const ids = payload.ids.map((id) => id.itemId);
 
       if (typeof payload.index === "undefined") {
@@ -403,6 +427,8 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<{ title: string; force?: boolean }>,
     ) => {
+      console.log("setDefaultModel");
+
       const model = state.config.models.find(
         (model) => model.title === payload.title,
       );
@@ -413,6 +439,8 @@ export const stateSlice = createSlice({
       };
     },
     setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
+      console.log("setSelectedProfileId");
+
       return {
         ...state,
         selectedProfileId: payload,
