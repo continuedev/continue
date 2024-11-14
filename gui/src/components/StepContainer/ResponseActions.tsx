@@ -15,7 +15,6 @@ export interface ResponseActionsProps {
   index: number;
   onDelete: () => void;
   item: ChatHistoryItem;
-  isLast: boolean;
 }
 
 export default function ResponseActions({
@@ -24,10 +23,13 @@ export default function ResponseActions({
   item,
   isTruncated,
   onDelete,
-  isLast,
 }: ResponseActionsProps) {
   const isInMultifileEdit = useSelector(
     (store: RootState) => store.state.isMultifileEdit,
+  );
+
+  const curCheckpointIndex = useSelector(
+    (store: RootState) => store.state.curCheckpointIndex,
   );
 
   const applyStates = useSelector(
@@ -39,12 +41,30 @@ export default function ResponseActions({
   );
 
   const isStreaming = applyStates.some((state) => state.status === "streaming");
-  console.log({
-    applyStates,
-  });
 
   // Only render delete button if there is more than one message
   const shouldRenderDelete = index !== 1;
+  const hasPendingApplies = pendingApplyStates.length > 0;
+  const shouldRenderAcceptRejectAll =
+    isInMultifileEdit &&
+    hasPendingApplies &&
+    Math.floor(index / 2) === curCheckpointIndex;
+  const shouldRenderUndoRedo =
+    isInMultifileEdit &&
+    !isStreaming &&
+    !hasPendingApplies &&
+    Math.floor(index / 2) === curCheckpointIndex;
+
+  console.log({
+    applyStates,
+    pendingApplyStates,
+    shouldRenderMultifileEditActions: shouldRenderUndoRedo,
+    curCheckpointIndex,
+    index,
+    isInMultifileEdit,
+    isStreaming,
+    floored: Math.floor(index / 2),
+  });
 
   if (isInMultifileEdit) {
     return (
@@ -53,13 +73,15 @@ export default function ResponseActions({
       >
         <div className="flex-1" />
 
-        {isLast && !isStreaming && (
+        {shouldRenderAcceptRejectAll && (
           <div className="flex-2 flex justify-center">
-            {pendingApplyStates.length > 0 ? (
-              <AcceptRejectAllButtons pendingApplyStates={pendingApplyStates} />
-            ) : (
-              <UndoOrRedoAction index={index} />
-            )}
+            <AcceptRejectAllButtons pendingApplyStates={pendingApplyStates} />
+          </div>
+        )}
+
+        {shouldRenderUndoRedo && (
+          <div className="flex-2 flex justify-center">
+            <UndoOrRedoAction index={index} />
           </div>
         )}
 

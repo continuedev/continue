@@ -152,26 +152,48 @@ export class VsCodeMessenger {
       );
     });
 
-    webviewProtocol.on("acceptDiff", async ({ data: { filepath } }) => {
-      await vscode.commands.executeCommand("continue.acceptDiff", filepath);
-    });
+    webviewProtocol.on(
+      "acceptDiff",
+      async ({ data: { filepath, streamId } }) => {
+        await vscode.commands.executeCommand(
+          "continue.acceptDiff",
+          filepath,
+          streamId,
+        );
+      },
+    );
 
-    webviewProtocol.on("rejectDiff", async ({ data: { filepath } }) => {
-      await vscode.commands.executeCommand("continue.rejectDiff", filepath);
-    });
+    webviewProtocol.on(
+      "rejectDiff",
+      async ({ data: { filepath, streamId } }) => {
+        await vscode.commands.executeCommand(
+          "continue.rejectDiff",
+          filepath,
+          streamId,
+        );
+      },
+    );
 
     this.onWebview("applyToFile", async ({ data }) => {
       let filepath = data.filepath;
 
       // If there is a filepath, verify it exists and then open the file
       if (filepath) {
-        filepath = getFullyQualifiedPath(ide, filepath);
+        const fullPath = getFullyQualifiedPath(ide, filepath);
 
-        if (!filepath) {
+        if (!fullPath) {
           return;
         }
 
-        await this.ide.openFile(filepath);
+        const fileExists = await this.ide.fileExists(fullPath);
+
+        // If there is no existing file at the path, create it
+        if (!fileExists) {
+          await this.ide.writeFile(fullPath, "");
+          await this.ide.openFile(fullPath);
+        }
+
+        await this.ide.openFile(fullPath);
       }
 
       // Get active text editor
@@ -182,36 +204,19 @@ export class VsCodeMessenger {
         return;
       }
 
-      if (data.overwriteFileContents) {
-        debugger;
-        // TODO: Delete all contents and write new contents
-        editor.edit((builder) =>
-          builder.insert(new vscode.Position(0, 0), data.text),
-        );
-
-        await webviewProtocol.request("updateApplyState", {
-          filepath,
-          streamId: data.streamId,
-          status: "done",
-          numDiffs: 0,
-          fileContent: data.text,
-        });
-
-        return;
-      }
-
       // If document is empty, insert at 0,0 and finish
       if (!editor.document.getText().trim()) {
         editor.edit((builder) =>
           builder.insert(new vscode.Position(0, 0), data.text),
         );
+
         await webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
-          status: "done",
+          status: "closed",
           numDiffs: 0,
           fileContent: data.text,
-          filepath,
         });
+
         return;
       }
 
@@ -299,6 +304,37 @@ export class VsCodeMessenger {
     this.onWebview("openUrl", (msg) => {
       vscode.env.openExternal(vscode.Uri.parse(msg.data));
     });
+
+    this.onWebview(
+      "overwriteFile",
+      async ({ data: { prevFileContent, filepath } }) => {
+        if (prevFileContent === null) {
+          // TODO: Delete the file
+          return;
+        }
+
+        await this.ide.openFile(filepath);
+
+        // Get active text editor
+        const editor = vscode.window.activeTextEditor;
+
+        if (!editor) {
+          vscode.window.showErrorMessage("No active editor to apply edits to");
+          return;
+        }
+
+        editor.edit((builder) =>
+          builder.replace(
+            new vscode.Range(
+              editor.document.positionAt(0),
+              editor.document.positionAt(editor.document.getText().length),
+            ),
+            prevFileContent,
+          ),
+        );
+      },
+    );
+
     this.onWebview("insertAtCursor", async (msg) => {
       const editor = vscode.window.activeTextEditor;
       if (editor === undefined || !editor.selection) {

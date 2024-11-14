@@ -60,7 +60,6 @@ export interface StepContainerPreToolbarProps {
 export default function StepContainerPreToolbar(
   props: StepContainerPreToolbarProps,
 ) {
-  const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
@@ -138,23 +137,17 @@ export default function StepContainerPreToolbar(
   }, [isGeneratingCodeBlock]);
 
   function onClickAcceptApply() {
-    ideMessenger.post("acceptDiff", { filepath: props.filepath });
-    dispatch(
-      updateApplyState({
-        streamId: streamIdRef.current,
-        status: "closed",
-      }),
-    );
+    ideMessenger.post("acceptDiff", {
+      filepath: props.filepath,
+      streamId: streamIdRef.current,
+    });
   }
 
   function onClickRejectApply() {
-    ideMessenger.post("rejectDiff", { filepath: props.filepath });
-    dispatch(
-      updateApplyState({
-        streamId: streamIdRef.current,
-        status: "closed",
-      }),
-    );
+    ideMessenger.post("rejectDiff", {
+      filepath: props.filepath,
+      streamId: streamIdRef.current,
+    });
   }
 
   function onClickExpand() {

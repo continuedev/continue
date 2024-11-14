@@ -66,7 +66,7 @@ export default function StepContainerPreActionButtons({
   const uiConfig = useUIConfig();
   const streamIdRef = useRef<string | null>(null);
   const nextCodeBlockIndex = useSelector(
-    (state: RootState) => state.uiState.nextCodeBlockToApplyIndex,
+    (state: RootState) => state.state.nextCodeBlockToApplyIndex,
   );
   const applyCodeBlock = useApplyCodeBlock();
 
@@ -82,8 +82,8 @@ export default function StepContainerPreActionButtons({
 
   function onClickApply() {
     applyCodeBlock({
+      codeBlockContent,
       streamId: streamIdRef.current,
-      codeBlockContent: codeBlockContent,
     });
   }
 

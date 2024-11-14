@@ -271,7 +271,10 @@ const commandsMap: (
   }
 
   return {
-    "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
+    "continue.acceptDiff": async (
+      newFilepath?: string | vscode.Uri,
+      streamId?: string,
+    ) => {
       captureCommandTelemetry("acceptDiff");
 
       let fullPath = newFilepath;
@@ -290,8 +293,23 @@ const commandsMap: (
       await sidebar.webviewProtocol.request("setEditStatus", {
         status: "done",
       });
+
+      if (streamId && fullPath) {
+        const fileContent = await ide.readFile(fullPath);
+
+        await sidebar.webviewProtocol.request("updateApplyState", {
+          fileContent,
+          filepath: fullPath,
+          streamId: streamId,
+          status: "closed",
+          numDiffs: 0,
+        });
+      }
     },
-    "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
+    "continue.rejectDiff": async (
+      newFilepath?: string | vscode.Uri,
+      streamId?: string,
+    ) => {
       captureCommandTelemetry("rejectDiff");
 
       let fullPath = newFilepath;
@@ -309,6 +327,18 @@ const commandsMap: (
       await sidebar.webviewProtocol.request("setEditStatus", {
         status: "done",
       });
+
+      if (streamId && fullPath) {
+        const fileContent = await ide.readFile(fullPath);
+
+        await sidebar.webviewProtocol.request("updateApplyState", {
+          fileContent,
+          filepath: fullPath,
+          streamId: streamId,
+          status: "closed",
+          numDiffs: 0,
+        });
+      }
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");

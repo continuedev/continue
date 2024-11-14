@@ -136,13 +136,13 @@ function processCodeBlocks(tree: any) {
       node.lang = node.lang.split(".").slice(-1)[0];
     }
 
+    node.data = node.data || {};
+    node.data.hProperties = node.data.hProperties || {};
+
+    node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
+    node.data.hProperties.codeBlockContent = node.value;
+
     if (node.meta) {
-      node.data = node.data || {};
-      node.data.hProperties = node.data.hProperties || {};
-
-      node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
-      node.data.hProperties.codeBlockContent = node.value;
-
       let meta = node.meta.split(" ");
       node.data.hProperties.filepath = meta[0];
       node.data.hProperties.range = meta[1];

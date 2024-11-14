@@ -13,7 +13,6 @@ import { deleteMessage } from "../../redux/slices/stateSlice";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
-  onContinueGeneration: () => void;
   index: number;
   isLast: boolean;
 }
@@ -33,9 +32,14 @@ export default function StepContainer(props: StepContainerProps) {
     (store: RootState) => store.state.curCheckpointIndex,
   );
   const uiConfig = useUIConfig();
-  const shouldRenderActions = !active || !props.isLast;
-  const shouldHideStep = props.index > curCheckpointIndex * 2 + 1;
-  console.log({ index: props.index, curCheckpointIndex });
+  const shouldHideActions = active && props.isLast;
+  const isStepAheadOfCurCheckpoint =
+    Math.floor(props.index / 2) > curCheckpointIndex;
+  console.log({
+    index: props.index,
+    curCheckpointIndex,
+    isStepAheadOfCurCheckpoint,
+  });
 
   useEffect(() => {
     if (!active) {
@@ -60,9 +64,21 @@ export default function StepContainer(props: StepContainerProps) {
     dispatch(deleteMessage(props.index));
   }
 
+  function onContinueGeneration() {
+    window.postMessage(
+      {
+        messageType: "userInput",
+        data: {
+          input: "Continue your response exactly where you left off:",
+        },
+      },
+      "*",
+    );
+  }
+
   return (
     <div
-      className={shouldHideStep ? "hidden" : "relative"}
+      className={isStepAheadOfCurCheckpoint ? "opacity-30" : "relative"}
       style={{
         minHeight: props.isLast ? "50vh" : 0,
       }}
@@ -84,14 +100,13 @@ export default function StepContainer(props: StepContainerProps) {
       </ContentDiv>
       {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on */}
       <div
-        className={`${shouldRenderActions ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"} transition-opacity duration-300 ease-in-out`}
+        className={`${shouldHideActions && "hidden"} transition-opacity duration-300 ease-in-out`}
       >
-        {shouldRenderActions && (
+        {!shouldHideActions && (
           <ResponseActions
-            isLast={props.isLast}
             isTruncated={isTruncated}
             onDelete={onDelete}
-            onContinueGeneration={props.onContinueGeneration}
+            onContinueGeneration={onContinueGeneration}
             index={props.index}
             item={props.item}
           />

@@ -30,6 +30,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
     void,
   ];
+  overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   openConfigJson: [undefined, void];
@@ -42,8 +43,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "jetbrains/editorInsetHeight": [{ height: number }, void];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
-  acceptDiff: [{ filepath: string }, void];
-  rejectDiff: [{ filepath: string }, void];
+  acceptDiff: [{ filepath: string; streamId?: string }, void];
+  rejectDiff: [{ filepath: string; streamId?: string }, void];
   "edit/sendPrompt": [
     { prompt: MessageContent; range: RangeInFileWithContents },
     void,

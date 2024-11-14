@@ -1,8 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { ArrowUturnLeftIcon } from "@heroicons/react/24/outline";
-import { useApplyCodeBlock } from "../../hooks/useApplyCodeBlock";
+import {
+  ArrowUturnLeftIcon,
+  ArrowUturnRightIcon,
+} from "@heroicons/react/24/outline";
 import { setCurCheckpointIndex } from "../../redux/slices/stateSlice";
+import { useContext } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 export interface UndoOrRedoActionProps {
   index: number;
@@ -10,45 +14,58 @@ export interface UndoOrRedoActionProps {
 
 export default function UndoOrRedoAction({ index }: UndoOrRedoActionProps) {
   const dispatch = useDispatch();
-  const applyCodeBlock = useApplyCodeBlock();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const checkpoints = useSelector(
     (store: RootState) => store.state.checkpoints,
   );
 
-  const prevCheckpointIndex = useSelector(
-    (store: RootState) => store.state.curCheckpointIndex - 1,
+  const curCheckpointIndex = useSelector(
+    (store: RootState) => store.state.curCheckpointIndex,
   );
 
-  const prevCheckpoint = checkpoints[prevCheckpointIndex];
+  const shouldRenderRedo = curCheckpointIndex !== checkpoints.length - 1;
 
-  // // `index` is the 0-based index of history items we map over in the step container.
-  // // This converts that index our checkpoint indices, e.g. first chat message becomes zeroth checkpoint
-  // const checkpointsIndex = Math.floor(index / 2);
-  // const checkpoint = checkpoints[checkpointsIndex];
+  async function handleUndoOrRedo(type: "undo" | "redo") {
+    const checkpointIndex = Math.max(
+      0,
+      type === "undo" ? curCheckpointIndex - 1 : curCheckpointIndex + 1,
+    );
 
-  async function handleUndo() {
-    console.log({ prevCheckpointIndex, checkpoints, prevCheckpoint });
+    const checkpoint = checkpoints[checkpointIndex];
 
-    for (const [filepath, codeBlockContent] of Object.entries(prevCheckpoint)) {
-      debugger;
-      await applyCodeBlock({
+    for (const [filepath, prevFileContent] of Object.entries(checkpoint)) {
+      console.log({
         filepath,
-        codeBlockContent,
-        overwriteFileContents: true,
+        prevFileContent,
+        checkpointIndex,
+        curCheckpointIndex,
       });
+      ideMessenger.post("overwriteFile", { filepath, prevFileContent });
     }
 
-    dispatch(setCurCheckpointIndex(prevCheckpointIndex));
+    dispatch(setCurCheckpointIndex(checkpointIndex));
   }
 
   return (
-    <button
-      className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
-      onClick={handleUndo}
-    >
-      <ArrowUturnLeftIcon className="mr-2 h-3.5 w-3.5" />
-      Undo changes
-    </button>
+    <div className="flex justify-center gap-2 border-b border-gray-200/25 p-1 px-3">
+      <button
+        className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
+        onClick={() => handleUndoOrRedo("undo")}
+      >
+        <ArrowUturnLeftIcon className="mr-2 h-3.5 w-3.5" />
+        Undo changes
+      </button>
+
+      {shouldRenderRedo && (
+        <button
+          className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
+          onClick={() => handleUndoOrRedo("redo")}
+        >
+          <ArrowUturnRightIcon className="mr-2 h-3.5 w-3.5" />
+          Redo changes
+        </button>
+      )}
+    </div>
   );
 }

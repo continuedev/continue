@@ -213,12 +213,6 @@ export const stateSlice = createSlice({
       // https://github.com/continuedev/continue/pull/1021
       // state.contextItems = [];
       state.active = true;
-      console.log(
-        "incrementing state.curCheckpointIndex from ",
-        state.curCheckpointIndex,
-        " to ",
-        state.curCheckpointIndex + 1,
-      );
       state.curCheckpointIndex = state.curCheckpointIndex + 1;
     },
     setMessageAtIndex: (
@@ -287,7 +281,7 @@ export const stateSlice = createSlice({
         state.title = payload.title;
         state.sessionId = payload.sessionId;
         state.checkpoints = payload.checkpoints;
-        // state.applyStates = [];
+        state.curCheckpointIndex = 0;
       } else {
         state.history = [];
         state.contextItems = [];
@@ -295,7 +289,7 @@ export const stateSlice = createSlice({
         state.title = "New Session";
         state.sessionId = v4();
         state.checkpoints = [];
-        // state.applyStates = [];
+        state.curCheckpointIndex = 0;
       }
     },
     deleteContextWithIds: (
