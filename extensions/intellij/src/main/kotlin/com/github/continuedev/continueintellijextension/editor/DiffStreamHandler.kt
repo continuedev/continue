@@ -253,7 +253,7 @@ class DiffStreamHandler(
     private fun handleFinishedResponse() {
         ApplicationManager.getApplication().invokeLater {
             // Since we only call onLastDiffLine() when we reach a "same" line, we need to handle the case where
-            // we reach EOF while in a diff block, since we won't encounter a "same" line.
+            // the last line in the diff stream is in the middle of a diff block.
             curLine.diffBlock?.onLastDiffLine()
 
             onFinish()
