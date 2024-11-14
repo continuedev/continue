@@ -25,7 +25,7 @@ repositories { mavenCentral() }
 // https://docs.gradle.org/current/userguide/platforms.html#sub:version-catalog
 dependencies {
     //    implementation(libs.annotations)
-    implementation("com.squareup.okhttp3:okhttp:4.9.2") {
+    implementation("com.squareup.okhttp3:okhttp:4.12.0") {
         exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
     }
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.32")
