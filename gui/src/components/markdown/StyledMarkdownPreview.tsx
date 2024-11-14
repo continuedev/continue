@@ -236,13 +236,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          const ctxItem = props.contextItems?.find((ctxItem) =>
-            ctxItem.uri?.value.includes(content),
-          );
-
-          if (ctxItem) {
-            const rif = ctxItemToRifWithContents(ctxItem);
-            return <FilenameLink rif={rif} />;
+          if (props.contextItems) {
+            const ctxItem = props.contextItems.find((ctxItem) =>
+              ctxItem.uri?.value.includes(content),
+            );
+            if (ctxItem) {
+              const rif = ctxItemToRifWithContents(ctxItem);
+              return <FilenameLink rif={rif} />;
+            }
           }
 
           return <code {...codeProps}>{codeProps.children}</code>;
