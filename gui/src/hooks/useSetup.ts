@@ -14,15 +14,13 @@ import {
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
-import { debounce, initial } from "lodash";
+import { debounce } from "lodash";
 import { isJetBrains } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 
 function useSetup(dispatch: Dispatch<any>) {
-  // const [configLoaded, setConfigLoaded] = useState<boolean>(false);
-
   const ideMessenger = useContext(IdeMessengerContext);
 
   const initialConfigLoad = useRef(false);

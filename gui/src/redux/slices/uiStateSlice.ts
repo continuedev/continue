@@ -58,7 +58,6 @@ export const uiStateSlice = createSlice({
       state.nextCodeBlockToApplyIndex++;
     },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
-      console.log("updateApplyState");
       const index = state.applyStates.findIndex(
         (applyState) => applyState.streamId === payload.streamId,
       );
