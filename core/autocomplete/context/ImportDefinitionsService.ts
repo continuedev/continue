@@ -2,7 +2,7 @@ import { IDE } from "../..";
 import { RangeInFileWithContents } from "../../commands/util";
 import { PrecalculatedLruCache } from "../../util/LruCache";
 import {
-  TSQueryType,
+  getFullLanguageName,
   getParserForFile,
   getQueryForFile,
 } from "../../util/treeSitter";
@@ -47,7 +47,11 @@ export class ImportDefinitionsService {
         },
       ],
     });
-    const query = await getQueryForFile(filepath, TSQueryType.Imports);
+    const language = getFullLanguageName(filepath);
+    const query = await getQueryForFile(
+      filepath,
+      `import-queries/${language}.scm`,
+    );
     if (!query) {
       return {
         imports: {},
