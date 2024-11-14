@@ -20,6 +20,24 @@ export const TYPESCRIPT_TEST_CASES = [
     ],
   },
   {
+    nodeType: "function_declaration without return type",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 15, character: 58 },
+    definitionPositions: [
+      { row: 14, column: 33 }, // Person
+    ],
+  },
+  {
+    nodeType: "function_declaration without params",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 19, character: 70 },
+    definitionPositions: [
+      { row: 18, column: 39 }, // Person
+    ],
+  },
+  {
     nodeType: "method_declaration",
     fileName: "class.ts",
     language: "TypeScript",
