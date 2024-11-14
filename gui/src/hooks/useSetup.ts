@@ -59,7 +59,7 @@ function useSetup(dispatch: Dispatch<any>) {
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad]);
+  }, [initialConfigLoad, loadConfig]);
 
   useEffect(() => {
     // Override persisted state
@@ -117,7 +117,6 @@ function useSetup(dispatch: Dispatch<any>) {
   }, 1000);
 
   useWebviewListener("configUpdate", async () => {
-    console.log("config update");
     await loadConfig();
 
     if (!isJetBrains && !getLocalStorage("disableIndexing")) {

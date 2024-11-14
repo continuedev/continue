@@ -71,8 +71,6 @@ export const stateSlice = createSlice({
       state,
       { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
     ) => {
-      console.log("setConfig");
-
       const defaultModelTitle =
         config.models.find((model) => model.title === state.defaultModelTitle)
           ?.title ||
@@ -91,8 +89,6 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<PromptLog[]>,
     ) => {
-      console.log("addPromptCompletionPair");
-
       if (!state.history.length) {
         return;
       }
@@ -131,7 +127,6 @@ export const stateSlice = createSlice({
         contextItems: ChatHistoryItem["contextItems"];
       }>,
     ) => {
-      console.log("setContextItemsAtIndex");
       if (state.history[index]) {
         state.history[index].contextItems = contextItems;
       }
@@ -145,8 +140,6 @@ export const stateSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
-      console.log("resubmitAtIndex");
-
       const historyItem = state.history[payload.index];
       if (!historyItem) {
         return;
@@ -179,8 +172,6 @@ export const stateSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
-      console.log("initNewActiveMessage");
-
       state.history.push({
         message: { role: "user", content: "", id: uuidv4() },
         contextItems: [],
@@ -207,7 +198,6 @@ export const stateSlice = createSlice({
         contextItems?: ContextItemWithId[];
       }>,
     ) => {
-      console.log("setMessageAtIndex");
       if (payload.index >= state.history.length) {
         state.history.push({
           message: { ...payload.message, id: uuidv4() },
@@ -239,8 +229,6 @@ export const stateSlice = createSlice({
         contextItems: ContextItemWithId[];
       }>,
     ) => {
-      console.log("addContextItemsAtIndex");
-
       const historyItem = state.history[payload.index];
       if (!historyItem) {
         return;
@@ -252,8 +240,6 @@ export const stateSlice = createSlice({
       state.active = false;
     },
     streamUpdate: (state, action: PayloadAction<string>) => {
-      console.log("streamUpdate");
-
       if (state.history.length) {
         state.history[state.history.length - 1].message.content +=
           action.payload;
@@ -264,8 +250,6 @@ export const stateSlice = createSlice({
       { payload }: PayloadAction<PersistedSessionInfo | undefined>,
     ) => {
       if (payload) {
-        console.log("newSession");
-
         state.history = payload.history as any;
         state.title = payload.title;
         state.sessionId = payload.sessionId;
@@ -283,7 +267,6 @@ export const stateSlice = createSlice({
         payload,
       }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>,
     ) => {
-      console.log("addHighlightedCode");
       let contextItems =
         state.history[state.history.length - 1].contextItems ?? [];
       contextItems = contextItems.map((item) => {
@@ -313,8 +296,6 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<{ title: string; force?: boolean }>,
     ) => {
-      console.log("setDefaultModel");
-
       const model = state.config.models.find(
         (model) => model.title === payload.title,
       );
@@ -325,8 +306,6 @@ export const stateSlice = createSlice({
       };
     },
     setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
-      console.log("setSelectedProfileId");
-
       return {
         ...state,
         selectedProfileId: payload,

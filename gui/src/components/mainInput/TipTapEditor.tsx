@@ -159,7 +159,6 @@ interface TipTapEditorProps {
   placeholder?: string;
   header?: React.ReactNode;
   historyKey: string;
-  contextItems?: ContextItemWithId[];
 }
 
 function TipTapEditor(props: TipTapEditorProps) {

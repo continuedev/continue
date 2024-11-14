@@ -14,13 +14,11 @@ import {
 import { getFontSize, isJetBrains } from "../../util";
 import "./katex.css";
 import "./markdown.css";
-import { useSelector } from "react-redux";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
-import { RootState } from "../../redux/store";
 import { ContextItemWithId } from "core";
 
 const StyledMarkdown = styled.div<{

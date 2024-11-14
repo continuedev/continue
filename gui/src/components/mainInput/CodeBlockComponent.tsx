@@ -8,12 +8,12 @@ import { RootState } from "../../redux/store";
 export const CodeBlockComponent = (props: any) => {
   const { node, deleteNode, selected, editor, updateAttributes } = props;
   const item: ContextItemWithId = node.attrs.item;
-  const contextItems = useSelector(
-    (store: RootState) =>
-      store.state.history[store.state.history.length - 1].contextItems,
-  );
-  const isFirstContextItem = item.id === contextItems[0]?.id;
-  // const isFirstContextItem = false;
+  // const contextItems = useSelector(
+  //   (store: RootState) =>
+  //     store.state.history[store.state.history.length - 1].contextItems,
+  // );
+  // const isFirstContextItem = item.id === contextItems[0]?.id;
+  const isFirstContextItem = false;
 
   return (
     <NodeViewWrapper className="code-block-with-content" as="p">
