@@ -90,15 +90,15 @@ export class RootPathContextService {
       return snippets;
     }
 
-    await Promise.all(
-      query.matches(node).map(async (match) => {
-        for (const item of match.captures) {
-          const endPosition = item.node.endPosition;
-          const newSnippets = await this.getSnippets(filepath, endPosition);
-          snippets.push(...newSnippets);
-        }
-      }),
-    );
+    const queries = query.matches(node).map(async (match) => {
+      for (const item of match.captures) {
+        const endPosition = item.node.endPosition;
+        const newSnippets = await this.getSnippets(filepath, endPosition);
+        snippets.push(...newSnippets);
+      }
+    });
+
+    await Promise.all(queries);
 
     return snippets;
   }

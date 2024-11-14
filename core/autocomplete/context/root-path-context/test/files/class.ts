@@ -30,4 +30,8 @@ class Group extends BaseClass implements FirstInterface, SecondInterface {
   addPeople(people: Person[]) {
     this.people = [...this.people, ...people];
   }
+
+  getAddresses(people: Person[]): Address[] {
+    return people.map((person) => person.address);
+  }
 }

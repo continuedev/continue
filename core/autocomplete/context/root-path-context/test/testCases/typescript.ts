@@ -38,7 +38,30 @@ export const TYPESCRIPT_TEST_CASES = [
     ],
   },
   {
-    nodeType: "method_declaration",
+    nodeType: "function_declaration with array params and array return type",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 23, character: 27 },
+    definitionPositions: [
+      { row: 22, column: 36 }, // Person
+      { row: 22, column: 48 }, // Address
+    ],
+  },
+  {
+    nodeType:
+      "function_declaration with generic params and generic return type",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 27, character: 14 },
+    definitionPositions: [
+      { row: 26, column: 44 }, // Person
+      { row: 26, column: 52 }, // Address
+      { row: 26, column: 62 }, // Person
+      { row: 26, column: 70 }, // Address
+    ],
+  },
+  {
+    nodeType: "method_declaration with a param and a return type",
     fileName: "class.ts",
     language: "TypeScript",
     cursorPosition: { line: 18, character: 26 },
@@ -84,6 +107,20 @@ export const TYPESCRIPT_TEST_CASES = [
       { row: 9, column: 55 }, // FirstInterface
       { row: 9, column: 72 }, // SecondInterface
       { row: 29, column: 26 }, // Person
+    ],
+  },
+  {
+    nodeType:
+      "method_declaration with array type arguments and array type return",
+    fileName: "class.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 34, character: 50 },
+    definitionPositions: [
+      { row: 9, column: 29 }, // BaseClass
+      { row: 9, column: 55 }, // FirstInterface
+      { row: 9, column: 72 }, // SecondInterface
+      { row: 33, column: 29 }, // Person
+      { row: 33, column: 41 }, // Address
     ],
   },
 ];
