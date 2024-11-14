@@ -135,7 +135,7 @@ class ContinueBrowser(val project: Project, url: String) {
                 }
 
                 "jetbrains/isOSREnabled" -> {
-                    respond(isOSREnabled)
+                    sendToWebview( "jetbrains/isOSREnabled", isOSREnabled)
                 }
 
                 "onLoad" -> {

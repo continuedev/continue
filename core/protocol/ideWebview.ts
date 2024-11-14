@@ -37,7 +37,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
-  "jetbrains/isOSREnabled": [boolean, void];
+  "jetbrains/isOSREnabled": [undefined, void];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
   acceptDiff: [{ filepath: string }, void];
@@ -104,6 +104,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
+  "jetbrains/isOSREnabled": [boolean, void];
   addApiKey: [undefined, void];
   setupLocalConfig: [undefined, void];
   incrementFtc: [undefined, void];

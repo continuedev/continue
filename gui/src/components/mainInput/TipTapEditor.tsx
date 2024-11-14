@@ -64,6 +64,7 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
+import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -180,6 +181,8 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
+
+  const isOSREnabled = useIsOSREnabled();
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -555,9 +558,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
 
-    const isOSREnabled = isJetBrains()
-      ? await ideMessenger.request("jetbrains/isOSREnabled", undefined)
-      : false;
+    console.log({ isOSREnabled });
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);

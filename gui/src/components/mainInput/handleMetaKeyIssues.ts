@@ -6,41 +6,21 @@ const isWebEnv = isWebEnvironment();
 
 /**
  * This handles various keypress issues when OSR is enabled
- * @param e
- * @param editor
  */
 export const handleJetBrainsOSRMetaKeyIssues = (
   e: KeyboardEvent,
   editor: Editor,
 ) => {
   const selection = window.getSelection();
+  const alter = e.shiftKey ? "extend" : "move";
 
   const handlers: Record<string, () => void> = {
     Backspace: () => handleJetBrainsMetaBackspace(editor),
-    ArrowLeft: () =>
-      selection.modify(
-        e.shiftKey ? "extend" : "move",
-        "backward",
-        "lineboundary",
-      ),
-    ArrowRight: () =>
-      selection.modify(
-        e.shiftKey ? "extend" : "move",
-        "forward",
-        "lineboundary",
-      ),
-    ArrowDown: () =>
-      selection.modify(
-        e.shiftKey ? "extend" : "move",
-        "forward",
-        "documentboundary",
-      ),
+    ArrowLeft: () => selection.modify(alter, "backward", "lineboundary"),
+    ArrowRight: () => selection.modify(alter, "forward", "lineboundary"),
+    ArrowDown: () => selection.modify(alter, "forward", "documentboundary"),
     ArrowUp: () => {
-      selection.modify(
-        e.shiftKey ? "extend" : "move",
-        "backward",
-        "documentboundary",
-      );
+      selection.modify(alter, "backward", "documentboundary");
     },
   };
 
