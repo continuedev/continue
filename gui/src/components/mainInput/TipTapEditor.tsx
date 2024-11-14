@@ -558,8 +558,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
 
-    console.log({ isOSREnabled });
-
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
     } else {
