@@ -38,6 +38,16 @@ export const TYPESCRIPT_TEST_CASES = [
     ],
   },
   {
+    nodeType: "function_declaration with array params and array return type",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 23, character: 27 },
+    definitionPositions: [
+      { row: 22, column: 36 }, // Person
+      { row: 22, column: 48 }, // Person
+    ],
+  },
+  {
     nodeType: "method_declaration",
     fileName: "class.ts",
     language: "TypeScript",

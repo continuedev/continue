@@ -1,9 +1,23 @@
-; Pattern for capturing the return type
+; Pattern for return type with direct type_identifier
 (
   (function_declaration
-    (type_annotation) @return_type
+    (type_annotation
+      (type_identifier) @return_type
+    )
   )
 )
+
+; Pattern for return type with one level of nesting
+(
+  (function_declaration
+    (type_annotation
+      (_
+        (type_identifier) @param_type
+      )
+    )
+  )
+)
+
 
 ; Pattern for parameters with direct type_identifier
 (
