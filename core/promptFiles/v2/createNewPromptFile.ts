@@ -7,40 +7,39 @@ import { DEFAULT_PROMPTS_FOLDER_V2 } from "./getPromptFiles";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
 # It is used to define and reuse prompts within Continue
-# Continue will automatically create a context provider for each prompt in the .prompts folder
+# Each .prompt file can be accessed by typing "@prompts" in the Chat input
 
 # A prompt file consists of two parts:
 # 1. Everything above the "---" is YAML. Here you can set "temperature", "description", and other options
 # 2. Everything below the "---" is the prompt body
 
-# If you don't want to set any options, you don't need to include the "---"
+# If you do not want to set any options, you do not need to include the "---"
 
 # In the body, you can reference:
-# 1. Files, using either absolute or relative (based on the workspace root) paths
-  # e.g. @README.md
-  # e.g. @src/test/test.py
-  # e.g. @/Users/me/Desktop/my-project/src/test/test.py
-# 2. URLs
-  # e.g. https://example.com
-# 3. Some context providers, like
-  # e.g. @currentFile
-  # e.g. @os
-  # e.g. @repo-map
+# 1. Files, using either absolute or relative paths (based on the workspace root)
+  # @README.md
+  # @src/test/test.py
+  # @/Users/me/Desktop/my-project/src/test/test.py
+# 2. URLs, for example
+  # @https://example.com
+# 3. Context providers, for example
+  # @currentFile
+  # @os
+  # @repo-map
 
 # To learn more, see the full .prompt file reference: https://docs.continue.dev/features/prompt-files
 name: Example
+
+# For example, here is how you would write a .prompt
+name: Example
 description: Example prompt file
-version: 2
----
-@README.md
-
-Please reference the above README.md file to understand the current project.
-`;
-
-const DEFAULT_PROMPT_FILE = `version: 2
 ---
 
-`;
+Here is information about the current repo:
+
+@README.md`;
+
+const DEFAULT_PROMPT_FILE = "";
 
 export async function createNewPromptFileV2(
   ide: IDE,
