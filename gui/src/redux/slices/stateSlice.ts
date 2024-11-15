@@ -447,9 +447,6 @@ export const stateSlice = createSlice({
         [payload.filepath]: payload.content,
       };
     },
-    incrementNextCodeBlockToApplyIndex: (state, action) => {
-      state.nextCodeBlockToApplyIndex++;
-    },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
       const index = state.applyStates.findIndex(
         (applyState) => applyState.streamId === payload.streamId,
@@ -463,6 +460,9 @@ export const stateSlice = createSlice({
         curApplyState.status = payload.status ?? curApplyState.status;
         curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
         curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
+      }
+      if(payload.status === "done"){
+        state.nextCodeBlockToApplyIndex++;
       }
     },
     resetNextCodeBlockToApplyIndex: (state) => {
@@ -499,7 +499,6 @@ export const {
   updateCurCheckpoint,
   setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,
-  incrementNextCodeBlockToApplyIndex,
   updateApplyState,
 } = stateSlice.actions;
 

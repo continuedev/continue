@@ -16,6 +16,7 @@ import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
+import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 
 const fadeInAnimation = keyframes`
   from {
@@ -69,7 +70,7 @@ export default function StepContainerPreToolbar(
   const [isExpanded, setIsExpanded] = useState(isMultifileEdit ? false : true);
   const [codeBlockContent, setCodeBlockContent] = useState("");
   const isChatActive = useSelector((state: RootState) => state.state.active);
-  const applyCodeBlock = useApplyCodeBlock();
+
   const nextCodeBlockIndex = useSelector(
     (state: RootState) => state.state.nextCodeBlockToApplyIndex,
   );
@@ -92,11 +93,13 @@ export default function StepContainerPreToolbar(
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
 
+  const defaultModel = useSelector(defaultModelSelector);
   function onClickApply() {
-    applyCodeBlock({
+    ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: props.filepath,
-      codeBlockContent: props.codeBlockContent,
+      text: codeBlockContent,
+      curSelectedModelTitle: defaultModel.title,
     });
   }
 

@@ -175,6 +175,12 @@ export class VsCodeMessenger {
     );
 
     this.onWebview("applyToFile", async ({ data }) => {
+      webviewProtocol.request("updateApplyState", {
+        streamId: data.streamId,
+        status: "streaming",
+        fileContent: data.text,
+      });
+
       let filepath = data.filepath;
 
       // If there is a filepath, verify it exists and then open the file
