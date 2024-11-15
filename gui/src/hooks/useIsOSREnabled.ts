@@ -13,7 +13,7 @@ export default function useIsOSREnabled() {
 
   useEffect(() => {
     if (isJetBrains()) {
-      ideMessenger.request("jetbrains/isOSREnabled", undefined);
+      ideMessenger.post("jetbrains/isOSREnabled", undefined);
     }
   }, []);
 

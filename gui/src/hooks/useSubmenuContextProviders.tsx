@@ -233,12 +233,12 @@ function useSubmenuContextProviders() {
                 storeFields: ["id", "title", "description"],
               });
 
-              const result = (await ideMessenger.request(
+              const result = await ideMessenger.request(
                 "context/loadSubmenuItems",
                 {
                   title: description.title,
                 },
-              )) as WebviewMessengerResult<"context/loadSubmenuItems">;
+              )
 
               if (result.status === "error") {
                 console.error(
