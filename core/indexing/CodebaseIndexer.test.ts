@@ -89,9 +89,19 @@ describe("CodebaseIndexer", () => {
     const abortSignal = abortController.signal;
 
     const updates = [];
-    for await (const update of codebaseIndexer.refresh(
+    for await (const update of codebaseIndexer.refreshDirs(
       [TEST_DIR],
       abortSignal,
+    )) {
+      updates.push(update);
+    }
+    return updates;
+  }
+
+  async function refreshIndexFiles(files: string[]) {
+    const updates = [];
+    for await (const update of codebaseIndexer.refreshFiles(
+      files,
     )) {
       updates.push(update);
     }
@@ -156,6 +166,15 @@ describe("CodebaseIndexer", () => {
     expect(indexed.length).toBe(2);
     expect(indexed.some((file) => file.endsWith("test.ts"))).toBe(true);
     expect(indexed.some((file) => file.endsWith("main.py"))).toBe(true);
+  });
+
+  test("should successfuly re-index specific files", async () => {
+    // Could add more specific tests for this but uses similar logic
+    const before = await getAllIndexedFiles();
+    await refreshIndexFiles(before);
+
+    const after = await getAllIndexedFiles();
+    expect(after.length).toBe(before.length);
   });
 
   test("should successfully re-index after adding a file", async () => {

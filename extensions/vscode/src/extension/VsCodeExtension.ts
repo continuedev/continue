@@ -309,6 +309,12 @@ export class VsCodeExtension {
       });
     });
 
+    vscode.workspace.onDidCreateFiles(async (event) => {
+      this.core.invoke("index/forceReIndexFiles", {
+        files: event.files.map((file) => file.fsPath),
+      });
+    });
+
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === "github") {
