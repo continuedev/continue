@@ -407,6 +407,11 @@ export default class DocsService {
   private async init(configHandler: ConfigHandler) {
     this.config = await configHandler.loadConfig();
     await this.handleConfigUpdate({config: this.config});
+
+    // only update on init because should only update on reindexDocsOnNewEmbeddingsProvider
+    const embeddingsProvider = await this.getEmbeddingsProvider();
+    this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
+
     configHandler.onConfigUpdate(this.handleConfigUpdate);
   }
 
@@ -414,10 +419,6 @@ export default class DocsService {
     if(newConfig){
       this.config = newConfig;
       this.docsCrawler = new DocsCrawler(this.ide, this.config);
-
-      const embeddingsProvider = await this.getEmbeddingsProvider();
-  
-      this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
 
       const oldConfig = this.config;
 
@@ -818,5 +819,3 @@ export default class DocsService {
     console.log("Completed reindexing of all docs");
   }
 }
-
-export const docsServiceSingleton = DocsService.getSingleton();

@@ -45,6 +45,18 @@ export interface IndexingProgressUpdate {
   debugInfo?: string;
 }
 
+// This is more or less a V2 of IndexingProgressUpdate
+export interface IndexingStatusUpdate {
+  type: "docs";
+  id: string; // Unique identifier, e.g. docs start url
+  progress: number;
+  description: string;
+  status: "initializing" | "indexing" | "complete" | "paused" | "failed" | "disabled";
+  embeddingsModel: string;
+  isReindexing: boolean;
+  debugInfo: string;
+}
+
 export type PromptTemplateFunction = (
   history: ChatMessage[],
   otherData: Record<string, string>,
