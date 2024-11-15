@@ -1,32 +1,29 @@
-import {
-  Address,
-  Person,
-  // @ts-ignore
-} from "./types";
+// @ts-nocheck
 
 function getAddress(person: Person): Address {
-  return person.address;
+  // TODO
 }
 
 function getFirstAddress(people: Person[]): Address {
-  return people[0].address;
+  // TODO
 }
 
 function logPerson(person: Person) {
-  console.log(`Name: ${person.name}, Age: ${person.age}`);
+  // TODO
 }
 
 function getHardcodedAddress(): Address {
-  return { street: "123 Main St", city: "Anytown", zipCode: "12345" };
+  // TODO
 }
 
 function getAddresses(people: Person[]): Address[] {
-  return people[0].address;
+  // TODO
 }
 
 function logPersonWithAddress(person: Person<Address>): Person<Address> {
-  console.log(
-    `Name: ${person.name}, Age: ${person.age}, Address: ${person.address.street}`,
-  );
-  return person;
+  // TODO
+}
+
+function logPersonOrAddress(person: Person | Address): Person | Address {
+  // TODO
 }
