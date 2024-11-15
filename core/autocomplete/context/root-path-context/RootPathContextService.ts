@@ -157,7 +157,6 @@ export class RootPathContextService {
 
       parentKey = key;
     }
-    debugger;
     return snippets;
   }
 }
