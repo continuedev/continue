@@ -43,7 +43,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
             onClick={onClickReject}
             tooltipContent={`Reject all (${getMetaKeyLabel()}⇧⌫)`}
           >
-            <XMarkIcon className="h-4 w-4 text-red-600" />
+            <XMarkIcon className="h-4 w-4 text-red-600 hover:brightness-125" />
           </ToolbarButtonWithTooltip>
 
           <ToolbarButtonWithTooltip
@@ -59,7 +59,7 @@ export default function ApplyActions(props: ApplyActionsProps) {
         return (
           <span className="flex items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
             <span className="max-sm:hidden">Applied</span>
-            <CheckIcon className="h-4 w-4 hover:brightness-125 sm:pl-1" />
+            <CheckIcon className="h-4 w-4 hover:brightness-125 sm:px-1" />
           </span>
         );
       }

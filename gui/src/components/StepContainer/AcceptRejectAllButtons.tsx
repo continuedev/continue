@@ -27,15 +27,19 @@ export default function AcceptRejectAllButtons({
         className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleAcceptOrReject("rejectDiff")}
       >
-        <XMarkIcon className="mr-1 h-4 w-4" />
-        Reject all changes
+        <XMarkIcon className="mr-1 h-4 w-4 text-red-600" />
+        <span className="sm:hidden">Reject</span>
+        <span className="max-sm:hidden md:hidden">Reject all</span>
+        <span className="max-md:hidden">Reject all changes</span>
       </button>
       <button
         className="flex cursor-pointer items-center border-none bg-transparent px-2 py-1 text-xs text-gray-300 opacity-80 hover:opacity-100 hover:brightness-125"
         onClick={() => handleAcceptOrReject("acceptDiff")}
       >
-        <CheckIcon className="mr-1 h-4 w-4" />
-        Accept all changes
+        <CheckIcon className="mr-1 h-4 w-4 text-green-600" />
+        <span className="sm:hidden">Accept</span>
+        <span className="max-sm:hidden md:hidden">Accept all</span>
+        <span className="max-md:hidden">Accept all changes</span>
       </button>
     </div>
   );
