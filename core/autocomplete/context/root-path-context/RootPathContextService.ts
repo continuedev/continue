@@ -4,7 +4,12 @@ import { LRUCache } from "lru-cache";
 import Parser from "web-tree-sitter";
 
 import { IDE } from "../../..";
-import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
+import {
+  getFullLanguageName,
+  getQueryForFile,
+  IGNORE_PATH_PATTERNS,
+  LanguageName,
+} from "../../../util/treeSitter";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 import { AutocompleteSnippet } from "../ranking";
@@ -40,6 +45,7 @@ export class RootPathContextService {
 
   private static TYPES_TO_USE = new Set([
     "arrow_function",
+    "generator_function_declaration",
     "program",
     "function_declaration",
     "function_definition",
@@ -68,6 +74,7 @@ export class RootPathContextService {
     node: Parser.SyntaxNode,
   ): Promise<AutocompleteSnippet[]> {
     const snippets: AutocompleteSnippet[] = [];
+    const language = getFullLanguageName(filepath);
 
     let query: Parser.Query | undefined;
     switch (node.type) {
@@ -75,10 +82,9 @@ export class RootPathContextService {
         this.importDefinitionsService.get(filepath);
         break;
       default:
-        // const type = node.type;
-        // debugger;
-        // console.log(getSyntaxTreeString(node));
-        const language = getFullLanguageName(filepath);
+        const type = node.type;
+        console.log(getSyntaxTreeString(node));
+        debugger;
 
         query = await getQueryForFile(
           filepath,
@@ -95,8 +101,13 @@ export class RootPathContextService {
     const queries = query.matches(node).map(async (match) => {
       for (const item of match.captures) {
         try {
+          const text = node.text;
           const endPosition = item.node.endPosition;
-          const newSnippets = await this.getSnippets(filepath, endPosition);
+          const newSnippets = await this.getSnippets(
+            filepath,
+            endPosition,
+            language,
+          );
           snippets.push(...newSnippets);
         } catch (e) {
           debugger;
@@ -107,12 +118,14 @@ export class RootPathContextService {
 
     await Promise.all(queries);
 
+    debugger;
     return snippets;
   }
 
   private async getSnippets(
     filepath: string,
     endPosition: Parser.Point,
+    language: LanguageName,
   ): Promise<AutocompleteSnippet[]> {
     const definitions = await this.ide.gotoDefinition({
       filepath,
@@ -122,10 +135,18 @@ export class RootPathContextService {
       },
     });
     const newSnippets = await Promise.all(
-      definitions.map(async (def) => ({
-        ...def,
-        contents: await this.ide.readRangeInFile(def.filepath, def.range),
-      })),
+      definitions
+        .filter((definition) => {
+          const isIgnoredPath = IGNORE_PATH_PATTERNS[language]?.some(
+            (pattern) => pattern.test(definition.filepath),
+          );
+
+          return !isIgnoredPath;
+        })
+        .map(async (def) => ({
+          ...def,
+          contents: await this.ide.readRangeInFile(def.filepath, def.range),
+        })),
     );
 
     return newSnippets;
@@ -157,6 +178,7 @@ export class RootPathContextService {
 
       parentKey = key;
     }
+    debugger;
     return snippets;
   }
 }
