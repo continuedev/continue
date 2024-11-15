@@ -61,15 +61,17 @@ const TEST_CASES = [
 ];
 
 describe("RootPathContextService", () => {
-  test.each(TEST_CASES)(
-    "Should look for correct type definitions when editing inside a $nodeType in $language",
-    async ({ fileName, cursorPosition, definitionPositions }) => {
-      await testRootPathContext(
-        "files",
-        fileName,
-        cursorPosition,
-        definitionPositions,
-      );
-    },
-  );
+  describe("should look for correct type definitions", () => {
+    test.each(TEST_CASES)(
+      "$language: $nodeType",
+      async ({ fileName, cursorPosition, definitionPositions }) => {
+        await testRootPathContext(
+          "files",
+          fileName,
+          cursorPosition,
+          definitionPositions,
+        );
+      },
+    );
+  });
 });
