@@ -1,8 +1,8 @@
 import { IndexingProgressUpdate } from "core";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { useSelector } from "react-redux";
-import { RootState } from "../../../../redux/store";
-import { isJetBrains } from "../../../../util";
+import { RootState } from "../../../redux/store";
+import { isJetBrains } from "../../../util";
 import { XCircleIcon } from "@heroicons/react/24/outline";
 
 export interface IndexingProgressErrorTextProps {

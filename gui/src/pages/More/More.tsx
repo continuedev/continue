@@ -14,7 +14,7 @@ import { useDispatch } from "react-redux";
 import { setOnboardingCard } from "../../redux/slices/uiStateSlice";
 import useHistory from "../../hooks/useHistory";
 import MoreHelpRow from "./MoreHelpRow";
-import IndexingProgress from "./progress/codebase";
+import IndexingProgress from "./IndexingProgress";
 
 function MorePage() {
   useNavigationListener();

@@ -1,20 +1,26 @@
 import { IndexingProgressUpdate } from "core";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { IdeMessengerContext } from "../../../../context/IdeMessenger";
-import { isJetBrains } from "../../../../util";
-import { useWebviewListener } from "../../../../hooks/useWebviewListener";
-import IndexingProgressBar from "../IndexingProgressBar";
-import IndexingProgressIndicator from "../IndexingProgressIndicator";
-import IndexingProgressSubtext from "../IndexingProgressSubtext";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { isJetBrains } from "../../../util";
+import { useWebviewListener } from "../../../hooks/useWebviewListener";
+import IndexingProgressBar from "./IndexingProgressBar";
+import IndexingProgressIndicator from "./IndexingProgressIndicator";
+import IndexingProgressTitleText from "./IndexingProgressTitleText";
+import IndexingProgressSubtext from "./IndexingProgressSubtext";
 import { usePostHog } from "posthog-js/react";
-import ConfirmationDialog from "../../../../components/dialogs/ConfirmationDialog";
+import ConfirmationDialog from "../../../components/dialogs/ConfirmationDialog";
 import {
   setShowDialog,
   setDialogMessage,
-} from "../../../../redux/slices/uiStateSlice";
+} from "../../../redux/slices/uiStateSlice";
 import IndexingProgressErrorText from "./IndexingProgressErrorText";
-import IndexingProgressTitleText from "../IndexingProgressTitleText";
+
+export function getProgressPercentage(
+  progress: IndexingProgressUpdate["progress"],
+) {
+  return Math.min(100, Math.max(0, progress * 100));
+}
 
 function IndexingProgress() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -27,13 +33,19 @@ function IndexingProgress() {
     status: "loading",
   });
 
+  // If sidebar is opened after extension initializes, retrieve saved states.
+  let initialized = false;
+
   useWebviewListener("indexProgress", async (data) => {
     setUpdate(data);
   });
 
   useEffect(() => {
-    // Triggers retrieval for possible non-default states set prior to IndexingProgressBar initialization
-    ideMessenger.post("index/indexingProgressBarInitialized", undefined);
+    if (!initialized) {
+      // Triggers retrieval for possible non-default states set prior to IndexingProgressBar initialization
+      ideMessenger.post("index/indexingProgressBarInitialized", undefined);
+      initialized = true;
+    }
   }, []);
 
   useEffect(() => {

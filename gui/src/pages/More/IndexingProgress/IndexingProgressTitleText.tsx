@@ -1,10 +1,18 @@
 import { IndexingProgressUpdate } from "core";
 import { AnimatedEllipsis } from "../../../components";
-import { STATUS_TO_TEXT } from ".";
 
 export interface IndexingProgressTitleTextProps {
   update: IndexingProgressUpdate;
 }
+
+const STATUS_TO_TEXT: Record<IndexingProgressUpdate["status"], string> = {
+  done: "Indexing complete",
+  loading: "Initializing",
+  indexing: "Indexing in-progress",
+  paused: "Indexing paused",
+  failed: "Indexing failed",
+  disabled: "Indexing disabled",
+};
 
 function IndexingProgressTitleText({ update }: IndexingProgressTitleTextProps) {
   const showEllipsis = update.status === "loading";
