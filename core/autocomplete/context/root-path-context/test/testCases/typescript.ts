@@ -216,8 +216,64 @@ const CLASS_METHODS = [
   },
 ];
 
+const CLASS_DEFINITIONS = [
+  {
+    nodeType: "class_declaration with base class",
+    fileName: "classes.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 2, character: 31 },
+    definitionPositions: [
+      { row: 2, column: 29 }, // BaseClass
+    ],
+  },
+  {
+    nodeType: "class_declaration with interface",
+    fileName: "classes.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 4, character: 39 },
+    definitionPositions: [
+      { row: 4, column: 37 }, // FirstInterface
+    ],
+  },
+  {
+    nodeType: "class_declaration with base class and multiple interfaces",
+    fileName: "classes.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 6, character: 74 },
+    definitionPositions: [
+      { row: 6, column: 29 }, // BaseClass
+      { row: 6, column: 55 }, // FirstInterface
+      { row: 6, column: 72 }, // SecondInterface
+    ],
+  },
+  {
+    nodeType: "class_declaration with base class and multiple interfaces",
+    fileName: "classes.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 6, character: 74 },
+    definitionPositions: [
+      { row: 6, column: 29 }, // BaseClass
+      { row: 6, column: 55 }, // FirstInterface
+      { row: 6, column: 72 }, // SecondInterface
+    ],
+  },
+  {
+    nodeType: "class_declaration with generic base class and generic interface",
+    fileName: "classes.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 8, character: 69 },
+    definitionPositions: [
+      { row: 8, column: 29 }, // BaseClass
+      { row: 8, column: 61 }, // FirstInterface
+      { row: 8, column: 34 }, // User
+      { row: 8, column: 66 }, // User
+    ],
+  },
+];
+
 export const TYPESCRIPT_TEST_CASES = [
   ...FUNCTIONS,
   ...ARROW_FUNCTIONS,
   ...CLASS_METHODS,
+  ...CLASS_DEFINITIONS,
 ];
