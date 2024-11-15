@@ -95,6 +95,6 @@ export default DocsCrawler;
 export {
   CheerioCrawler,
   ChromiumCrawler,
-  ChromiumInstaller as ChromiumInstaller,
+  ChromiumInstaller,
   GitHubCrawler,
 };

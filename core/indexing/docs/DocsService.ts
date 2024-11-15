@@ -103,26 +103,6 @@ export default class DocsService {
     return docsService;
   }
 
-  async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
-    const isJetBrains = await this.isJetBrains();
-
-    const isPreIndexedDocsProvider =
-      this.config.embeddingsProvider.id ===
-      DocsService.preIndexedDocsEmbeddingsProvider.id;
-
-    return isJetBrains && isPreIndexedDocsProvider;
-  }
-
-  /*
-   * Currently, we generate and host embeddings for pre-indexed docs using transformers.
-   * However, we don't ship transformers with the JetBrains extension.
-   * So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.
-   */
-  async canUsePreindexedDocs() {
-    const isJetBrains = await this.isJetBrains();
-    return !isJetBrains;
-  }
-
   async delete(startUrl: string) {
     await this.deleteFromLance(startUrl);
     await this.deleteFromSqlite(startUrl);
@@ -426,36 +406,41 @@ export default class DocsService {
 
   private async init(configHandler: ConfigHandler) {
     this.config = await configHandler.loadConfig();
-    this.docsCrawler = new DocsCrawler(this.ide, this.config);
+    await this.handleConfigUpdate({config: this.config});
+    configHandler.onConfigUpdate(this.handleConfigUpdate);
+  }
 
-    const embeddingsProvider = await this.getEmbeddingsProvider();
+  private async handleConfigUpdate({config: newConfig}: {config: ContinueConfig | undefined}) {
+    if(newConfig){
+      this.config = newConfig;
+      this.docsCrawler = new DocsCrawler(this.ide, this.config);
 
-    this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
+      const embeddingsProvider = await this.getEmbeddingsProvider();
+  
+      this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
 
-    configHandler.onConfigUpdate(async ({ config: newConfig }) => {
-      if (newConfig) {
-        const oldConfig = this.config;
+      const oldConfig = this.config;
 
-        // Need to update class property for config at the beginning of this callback
-        // to ensure downstream methods have access to the latest config.
-        this.config = newConfig;
+      // Need to update class property for config at the beginning of this callback
+      // to ensure downstream methods have access to the latest config.
+      this.config = newConfig;
 
-        if (oldConfig.docs !== newConfig.docs) {
-          await this.syncConfigAndSqlite();
-        }
-
-        const shouldReindex =
-          await this.shouldReindexDocsOnNewEmbeddingsProvider(
-            newConfig.embeddingsProvider.id,
-          );
-
-        if (shouldReindex) {
-          await this.reindexDocsOnNewEmbeddingsProvider(
-            newConfig.embeddingsProvider,
-          );
-        }
+      if (oldConfig.docs !== newConfig.docs) {
+        await this.syncConfigAndSqlite();
       }
-    });
+
+      const shouldReindex =
+        await this.shouldReindexDocsOnNewEmbeddingsProvider(
+          newConfig.embeddingsProvider.id,
+        );
+
+      if (shouldReindex) {
+        await this.reindexDocsOnNewEmbeddingsProvider(
+          newConfig.embeddingsProvider,
+        );
+      }
+    }
+
   }
 
   private async syncConfigAndSqlite() {
@@ -607,6 +592,26 @@ export default class DocsService {
   private async isJetBrains() {
     const ideInfo = await this.ide.getIdeInfo();
     return ideInfo.ideType === "jetbrains";
+  }
+
+    async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
+    const isJetBrains = await this.isJetBrains();
+
+    const isPreIndexedDocsProvider =
+      this.config.embeddingsProvider.id ===
+      DocsService.preIndexedDocsEmbeddingsProvider.id;
+
+    return isJetBrains && isPreIndexedDocsProvider;
+  }
+
+  /*
+   * Currently, we generate and host embeddings for pre-indexed docs using transformers.
+   * However, we don't ship transformers with the JetBrains extension.
+   * So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.
+   */
+  async canUsePreindexedDocs() {
+    const isJetBrains = await this.isJetBrains();
+    return !isJetBrains;
   }
 
   private async hasIndexedDoc(startUrl: string) {

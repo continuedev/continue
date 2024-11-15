@@ -688,7 +688,7 @@ export class Core {
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
-      new GlobalContext().update("indexingPaused", msg.data);
+      this.globalContext.update("indexingPaused", msg.data);
       this.indexingPauseToken.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {

@@ -37,7 +37,6 @@ function useSetup(dispatch: Dispatch<any>) {
     dispatch(setConfig(config));
     dispatch(setSelectedProfileId(profileId));
     setConfigLoaded(true);
-    setLocalStorage("disableIndexing", config.disableIndexing || false);
 
     // Perform any actions needed with the config
     if (config.ui?.fontSize) {
@@ -46,20 +45,7 @@ function useSetup(dispatch: Dispatch<any>) {
     }
   };
 
-  // Load config from the IDE
-  useEffect(() => {
-    loadConfig();
-    const interval = setInterval(() => {
-      if (configLoaded) {
-        clearInterval(interval);
-        return;
-      }
-      loadConfig();
-    }, 2_000);
-
-    return () => clearInterval(interval);
-  }, [configLoaded]);
-
+  // ON LOAD
   useEffect(() => {
     // Override persisted state
     dispatch(setInactive());
