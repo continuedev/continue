@@ -31,15 +31,13 @@ export default function StepContainer(props: StepContainerProps) {
   const curCheckpointIndex = useSelector(
     (store: RootState) => store.state.curCheckpointIndex,
   );
+  const isMultifileEdit = useSelector(
+    (store: RootState) => store.state.isMultifileEdit,
+  );
   const uiConfig = useUIConfig();
   const shouldHideActions = active && props.isLast;
   const isStepAheadOfCurCheckpoint =
-    Math.floor(props.index / 2) > curCheckpointIndex;
-  console.log({
-    index: props.index,
-    curCheckpointIndex,
-    isStepAheadOfCurCheckpoint,
-  });
+    isMultifileEdit && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
     if (!active) {
@@ -78,7 +76,7 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div
-      className={isStepAheadOfCurCheckpoint ? "opacity-30" : "relative"}
+      className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
       style={{
         minHeight: props.isLast ? "50vh" : 0,
       }}

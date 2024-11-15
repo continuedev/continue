@@ -4,6 +4,8 @@ import AcceptRejectAllButtons from "./AcceptRejectAllButtons";
 import FeedbackButtons from "./FeedbackButtons";
 import UndoAndRedoButtons from "./UndoAndRedoButtons";
 import { ChatHistoryItem } from "core";
+import { stripImages } from "core/llm/images";
+import { CopyIconButton } from "../gui/CopyIconButton";
 
 export interface MultifileEditActionsProps {
   index: number;
@@ -30,7 +32,6 @@ export default function MultifileEditActions({
     (state) => state.status === "closed",
   );
 
-  const isStreaming = applyStates.some((state) => state.status === "streaming");
   const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
   const hasPendingApplies = pendingApplyStates.length > 0;
 
@@ -50,6 +51,13 @@ export default function MultifileEditActions({
       )}
 
       <div className="flex flex-1 justify-end">
+        <CopyIconButton
+          tabIndex={-1}
+          text={stripImages(item.message.content)}
+          clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
+          checkIconClassName="h-3.5 w-3.5 text-green-400"
+        />
+
         <FeedbackButtons item={item} />
       </div>
     </div>

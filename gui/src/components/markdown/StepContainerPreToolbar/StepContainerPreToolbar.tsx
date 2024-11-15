@@ -33,6 +33,7 @@ const TopDiv = styled.div`
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
+  min-width: 0;
   animation: ${fadeInAnimation} 300ms ease-out forwards;
 `;
 
@@ -166,17 +167,19 @@ export default function StepContainerPreToolbar(
   return (
     <TopDiv>
       <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
-        <div className="flex items-center">
+        <div className="flex min-w-0 max-w-[45%] items-center">
           <ChevronDownIcon
             onClick={onClickExpand}
-            className={`h-4 w-4 cursor-pointer text-gray-400 hover:bg-gray-800 hover:brightness-125 ${
+            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 hover:bg-gray-800 hover:brightness-125 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />
-          <FileInfo filepath={props.filepath} range={props.range} />
+          <div className="w-full min-w-0">
+            <FileInfo filepath={props.filepath} range={props.range} />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 max-sm:gap-1.5">
           {isGeneratingCodeBlock && (
             <GeneratingCodeLoader
               showLineCount={!isExpanded}

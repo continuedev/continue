@@ -33,9 +33,10 @@ export default function ApplyActions(props: ApplyActionsProps) {
       );
     case "done":
       return (
-        <div className="flex items-center rounded bg-zinc-700 pl-2 pr-1">
-          <span className="mr-2 text-xs text-gray-400">
-            {`${props.applyState.numDiffs === 1 ? "1 diff" : `${props.applyState.numDiffs} diffs`} remaining`}
+        <div className="xs:pl-2 xs:pr-1 flex items-center rounded bg-zinc-700">
+          <span className="max-xs:hidden xs:mr-1 text-xs text-gray-400">
+            {`${props.applyState.numDiffs === 1 ? "1 diff" : `${props.applyState.numDiffs} diffs`}`}
+            <span className="max-md:hidden">{` remaining`}</span>
           </span>
 
           <ToolbarButtonWithTooltip
@@ -56,9 +57,9 @@ export default function ApplyActions(props: ApplyActionsProps) {
     case "closed":
       if (!hasRejected && props.applyState.numDiffs === 0) {
         return (
-          <span className="flex items-center rounded bg-zinc-700 pl-2 pr-1 text-slate-400">
-            Applied
-            <CheckIcon className="h-4 w-4 pl-1 hover:brightness-125" />
+          <span className="flex items-center rounded bg-zinc-700 text-slate-400 max-sm:px-0.5 sm:pl-2">
+            <span className="max-sm:hidden">Applied</span>
+            <CheckIcon className="h-4 w-4 hover:brightness-125 sm:pl-1" />
           </span>
         );
       }
