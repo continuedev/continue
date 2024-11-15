@@ -73,6 +73,16 @@ const FUNCTIONS = [
       { row: 26, column: 71 }, // Address
     ],
   },
+  {
+    nodeType: "function_declaration with two arguments",
+    fileName: "functions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 31, character: 9 },
+    definitionPositions: [
+      { row: 30, column: 43 }, // Person
+      { row: 30, column: 61 }, // Address
+    ],
+  },
 ];
 
 const ARROW_FUNCTIONS = [
@@ -136,6 +146,16 @@ const ARROW_FUNCTIONS = [
       { row: 22, column: 52 }, // Address
       { row: 22, column: 61 }, // Person
       { row: 22, column: 71 }, // Address
+    ],
+  },
+  {
+    nodeType: "arrow_function with two arguments",
+    fileName: "arrowFunctions.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 27, character: 11 },
+    definitionPositions: [
+      { row: 26, column: 43 }, // Person
+      { row: 26, column: 61 }, // Address
     ],
   },
 ];
@@ -212,6 +232,16 @@ const CLASS_METHODS = [
       { row: 27, column: 45 }, // Address
       { row: 27, column: 54 }, // Person
       { row: 27, column: 64 }, // Address
+    ],
+  },
+  {
+    nodeType: "method_declaration with two arguments",
+    fileName: "classMethods.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 32, character: 11 },
+    definitionPositions: [
+      { row: 31, column: 36 }, // Person
+      { row: 31, column: 54 }, // Address
     ],
   },
 ];
