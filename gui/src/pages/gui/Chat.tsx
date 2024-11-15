@@ -159,11 +159,11 @@ export function Chat() {
     if (active) snapToBottom();
   }, [active, snapToBottom]);
 
-  useEffect(() => {
-    setTimeout(() => {
-      smoothScrollToBottom();
-    }, 400);
-  }, [smoothScrollToBottom, state.sessionId]);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     smoothScrollToBottom();
+  //   }, 400);
+  // }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
