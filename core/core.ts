@@ -727,7 +727,7 @@ export class Core {
   }
 
   private indexingCancellationController: AbortController | undefined;
-  private async sendIndexingTelemetry(update: IndexingProgressUpdate) {
+  private async sendIndexingErrorTelemetry(update: IndexingProgressUpdate) {
     console.debug(
       "Indexing failed with error: ",
       update.desc,
@@ -763,11 +763,12 @@ export class Core {
       this.indexingState = updateToSend;
 
       if (update.status === "failed") {
-        void this.sendIndexingTelemetry(update);
+        void this.sendIndexingErrorTelemetry(update);
       }
     }
 
     this.messenger.send("refreshSubmenuItems", undefined);
+    this.indexingCancellationController = undefined;
   }
 
   private async refreshCodebaseIndexFiles(files: string[]) {
@@ -784,7 +785,6 @@ export class Core {
     this.indexingCancellationController = new AbortController();
     for await (const update of (await this.codebaseIndexerPromise).refreshFiles(
       files,
-      this.indexingCancellationController.signal,
     )) {
       let updateToSend = { ...update };
       if (update.status === "failed") {
@@ -797,7 +797,7 @@ export class Core {
       this.indexingState = updateToSend;
 
       if (update.status === "failed") {
-        void this.sendIndexingTelemetry(update);
+        void this.sendIndexingErrorTelemetry(update);
       }
     }
 

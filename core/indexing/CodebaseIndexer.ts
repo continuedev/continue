@@ -147,7 +147,6 @@ export class CodebaseIndexer {
 
   async *refreshFiles(
     files: string[],
-    abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
     let progress = 0;
     if (files.length === 0) {
@@ -172,14 +171,6 @@ export class CodebaseIndexer {
 
         if (this.pauseToken.paused) {
           yield* this.yieldUpdateAndPause();
-        }
-        if (abortSignal.aborted) {
-          yield {
-            progress: 1,
-            desc: "Indexing cancelled",
-            status: "disabled",
-          };
-          return;
         }
       }
 
