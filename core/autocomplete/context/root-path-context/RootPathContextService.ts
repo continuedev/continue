@@ -82,9 +82,9 @@ export class RootPathContextService {
         this.importDefinitionsService.get(filepath);
         break;
       default:
-        // const type = node.type;
-        // console.log(getSyntaxTreeString(node));
-        // debugger;
+        const type = node.type;
+        console.log(getSyntaxTreeString(node));
+        debugger;
 
         query = await getQueryForFile(
           filepath,
@@ -176,6 +176,7 @@ export class RootPathContextService {
       parentKey = key;
     }
 
+    debugger;
     return snippets;
   }
 }
