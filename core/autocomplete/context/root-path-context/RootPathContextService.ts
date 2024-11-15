@@ -92,7 +92,6 @@ export class RootPathContextService {
         );
         break;
     }
-    const type = node.type;
 
     if (!query) {
       return snippets;
@@ -117,7 +116,6 @@ export class RootPathContextService {
 
     await Promise.all(queries);
 
-    debugger;
     return snippets;
   }
 
