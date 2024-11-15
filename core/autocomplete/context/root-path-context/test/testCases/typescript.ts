@@ -85,6 +85,93 @@ const FUNCTIONS = [
   },
 ];
 
+const GENERATORS = [
+  {
+    nodeType: "function_declaration with a param and a return type",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 3, character: 9 },
+    definitionPositions: [
+      { row: 2, column: 35 }, // Person
+      { row: 2, column: 45 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_declaration with array param",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 7, character: 9 },
+    definitionPositions: [
+      { row: 6, column: 40 }, // Person
+      { row: 6, column: 52 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_declaration without return type",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 11, character: 9 },
+    definitionPositions: [
+      { row: 10, column: 34 }, // Person
+    ],
+  },
+  {
+    nodeType: "function_declaration without params",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 15, character: 9 },
+    definitionPositions: [
+      { row: 14, column: 40 }, // Person
+    ],
+  },
+  {
+    nodeType: "function_declaration with array params and array return type",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 19, character: 9 },
+    definitionPositions: [
+      { row: 18, column: 37 }, // Person
+      { row: 18, column: 49 }, // Address
+    ],
+  },
+  {
+    nodeType:
+      "function_declaration with generic params and generic return type",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 23, character: 9 },
+    definitionPositions: [
+      { row: 22, column: 45 }, // Person
+      { row: 22, column: 53 }, // Address
+      { row: 22, column: 63 }, // Person
+      { row: 22, column: 71 }, // Address
+    ],
+  },
+  {
+    nodeType:
+      "function_declaration with union type params and union return type",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 27, character: 9 },
+    definitionPositions: [
+      { row: 26, column: 43 }, // Person
+      { row: 26, column: 53 }, // Address
+      { row: 26, column: 62 }, // Person
+      { row: 26, column: 72 }, // Address
+    ],
+  },
+  {
+    nodeType: "function_declaration with two arguments",
+    fileName: "generators.ts",
+    language: "TypeScript",
+    cursorPosition: { line: 31, character: 9 },
+    definitionPositions: [
+      { row: 30, column: 44 }, // Person
+      { row: 30, column: 62 }, // Address
+    ],
+  },
+];
+
 const ARROW_FUNCTIONS = [
   {
     nodeType: "arrow_function with a param and a return type",
@@ -303,6 +390,7 @@ const CLASS_DEFINITIONS = [
 
 export const TYPESCRIPT_TEST_CASES = [
   ...FUNCTIONS,
+  ...GENERATORS,
   ...ARROW_FUNCTIONS,
   ...CLASS_METHODS,
   ...CLASS_DEFINITIONS,
