@@ -252,7 +252,7 @@ export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
 }
 
-export type ChatMessageRole = "user" | "assistant" | "system";
+export type ChatMessageRole = "user" | "assistant" | "system" | "tool";
 
 export interface MessagePart {
   type: "text" | "imageUrl";
@@ -262,9 +262,19 @@ export interface MessagePart {
 
 export type MessageContent = string | MessagePart[];
 
+export interface ToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
 export interface ChatMessage {
   role: ChatMessageRole;
   content: MessageContent;
+  toolCalls?: ToolCall[];
 }
 
 export interface ContextItemId {
@@ -805,6 +815,17 @@ interface Prediction {
       }[];
 }
 
+export interface Tool {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, any>;
+    strict?: boolean | null;
+  };
+  action: (parameters: any) => Promise<any>;
+}
+
 interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -821,6 +842,7 @@ interface BaseCompletionOptions {
   raw?: boolean;
   stream?: boolean;
   prediction?: Prediction;
+  tools?: Tool[];
 }
 
 export interface ModelCapability {

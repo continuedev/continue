@@ -188,6 +188,7 @@ export const stateSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
+      console.log("OAEJFOIJOJOJAJ");
       state.history.push({
         message: { role: "user", content: "", id: uuidv4() },
         contextItems: state.contextItems,
@@ -215,6 +216,7 @@ export const stateSlice = createSlice({
         contextItems?: ContextItemWithId[];
       }>,
     ) => {
+      console.log("aoiujnnnnnnn");
       if (payload.index >= state.history.length) {
         state.history.push({
           message: { ...payload.message, id: uuidv4() },
@@ -256,10 +258,37 @@ export const stateSlice = createSlice({
       state.isGatheringContext = false;
       state.active = false;
     },
-    streamUpdate: (state, action: PayloadAction<string>) => {
+    streamUpdate: (state, action: PayloadAction<ChatMessage>) => {
       if (state.history.length) {
-        state.history[state.history.length - 1].message.content +=
-          action.payload;
+        const lastMessage = state.history[state.history.length - 1];
+
+        if (
+          action.payload.role &&
+          lastMessage.message.role !== action.payload.role
+        ) {
+          console.log("NEW: ", action.payload);
+          // Create a new message
+          state.history.push({
+            contextItems: [],
+            message: { id: "NONE", ...action.payload },
+          });
+        } else {
+          console.log("ABC: ", action.payload);
+          // Add to the existing message
+          const msg = state.history[state.history.length - 1].message;
+          if (action.payload.content) {
+            msg.content += stripImages(action.payload.content);
+          } else if (action.payload.toolCalls) {
+            action.payload.toolCalls.forEach((toolCall, i) => {
+              if (msg.toolCalls.length < i) {
+                msg.toolCalls.push(toolCall);
+              } else {
+                msg.toolCalls[i].function.arguments +=
+                  toolCall.function.arguments;
+              }
+            });
+          }
+        }
       }
     },
     newSession: (

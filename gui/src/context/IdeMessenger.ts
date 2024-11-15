@@ -215,7 +215,7 @@ export class IdeMessenger implements IIdeMessenger {
 
     let next = await gen.next();
     while (!next.done) {
-      yield { role: "user", content: next.value };
+      yield next.value;
       next = await gen.next();
     }
 

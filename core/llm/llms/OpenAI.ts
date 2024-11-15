@@ -96,14 +96,16 @@ class OpenAI extends BaseLLM {
   }
 
   private supportsPrediction(model: string): boolean {
-    return [
-      "gpt-4o-mini",
-      "gpt-4o"
-    ].includes(model);
+    return ["gpt-4o-mini", "gpt-4o"].includes(model);
   }
 
   protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
     const url = new URL(this.apiBase!);
+    const tools = options.tools?.map((tool) => {
+      const { action, ...restOfTool } = tool;
+      return restOfTool;
+    });
+
     const finalOptions: any = {
       messages: messages.map(this._convertMessage),
       model: this._convertModelName(options.model),
@@ -120,11 +122,12 @@ class OpenAI extends BaseLLM {
           : url.host === "api.deepseek.com"
             ? options.stop?.slice(0, 16)
             : url.port === "1337" ||
-              url.host === "api.openai.com" ||
-              url.host === "api.groq.com" ||
-              this.apiType === "azure"
+                url.host === "api.openai.com" ||
+                url.host === "api.groq.com" ||
+                this.apiType === "azure"
               ? options.stop?.slice(0, 4)
               : options.stop,
+      tools,
     };
 
     // OpenAI o1-preview and o1-mini:
@@ -143,10 +146,12 @@ class OpenAI extends BaseLLM {
     }
 
     if (options.prediction && this.supportsPrediction(options.model)) {
-      if (finalOptions.presence_penalty) { // prediction doesn't support > 0
+      if (finalOptions.presence_penalty) {
+        // prediction doesn't support > 0
         finalOptions.presence_penalty = undefined;
       }
-      if (finalOptions.frequency_penalty) { // prediction doesn't support > 0
+      if (finalOptions.frequency_penalty) {
+        // prediction doesn't support > 0
         finalOptions.frequency_penalty = undefined;
       }
       finalOptions.max_completion_tokens = undefined;
@@ -279,6 +284,21 @@ class OpenAI extends BaseLLM {
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
+      } else if (value.choices?.[0]?.delta?.tool_calls) {
+        yield {
+          role: "assistant",
+          content: "",
+          toolCalls: value.choices?.[0]?.delta?.tool_calls.map(
+            (tool_call: any) => ({
+              id: tool_call.id,
+              type: tool_call.type,
+              function: {
+                name: tool_call.name,
+                arguments: tool_call.arguments,
+              },
+            }),
+          ),
+        };
       }
     }
   }

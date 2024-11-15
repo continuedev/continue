@@ -9,7 +9,6 @@ import type {
   DiffLine,
   IdeSettings,
   LLMFullCompletionOptions,
-  MessageContent,
   ModelDescription,
   ModelRoles,
   PersistedSessionInfo,
@@ -119,7 +118,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    ProtocolGeneratorType<MessageContent>,
+    ProtocolGeneratorType<ChatMessage>,
   ];
   streamDiffLines: [
     {

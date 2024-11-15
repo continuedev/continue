@@ -83,7 +83,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => { },
+    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
@@ -174,7 +174,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => { },
+      (e) => {},
       (..._) => Promise.resolve([]),
     );
 
@@ -404,8 +404,29 @@ export class Core {
           });
           break;
         }
+
+        const chunk = next.value;
+
+        // if (chunk.toolCalls?.length) {
+        //   for (const toolCall of chunk.toolCalls) {
+        //     const tool = model.completionOptions.tools?.find(
+        //       (tool) => tool.function.name === toolCall.function.name,
+        //     );
+        //     if (!tool) {
+        //       continue;
+        //     }
+        //     const response = await tool?.action(toolCall.function.arguments);
+
+        //     yield {
+        //       role: "assistant",
+        //       content: response,
+        //       toolCalls: [toolCall],
+        //     };
+        //   }
+        // }
+
         // @ts-ignore
-        yield { content: next.value.content };
+        yield { content: chunk };
         next = await gen.next();
       }
 
@@ -684,7 +705,7 @@ export class Core {
         await codebaseIndexer.clearIndexes();
       }
 
-      const dirs = data?.dirs ?? await this.ide.getWorkspaceDirs();
+      const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {

@@ -89,9 +89,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           abortController.abort();
           break;
         }
-        dispatch(
-          streamUpdate(stripImages((next.value as ChatMessage).content)),
-        );
+        console.log(".......", (next.value as any).role);
+        dispatch(streamUpdate(next.value as ChatMessage));
         next = await gen.next();
       }
 

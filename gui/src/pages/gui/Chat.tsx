@@ -62,6 +62,7 @@ import {
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { ToolCallDiv } from "./ToolCallDiv";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -331,6 +332,7 @@ export function Chat() {
                 dispatch(newSession());
               }}
             >
+              {item.message.role}-{JSON.stringify(item.message)}
               {item.message.role === "user" ? (
                 <ContinueInputBox
                   onEnter={async (editorState, modifiers) => {
@@ -341,6 +343,13 @@ export function Chat() {
                   editorState={item.editorState}
                   contextItems={item.contextItems}
                 />
+              ) : item.message.role === "assistant" &&
+                item.message.toolCalls ? (
+                <div>
+                  {item.message.toolCalls?.map((toolCall) => {
+                    return <ToolCallDiv toolCall={toolCall}></ToolCallDiv>;
+                  })}
+                </div>
               ) : (
                 <div className="thread-message">
                   <TimelineItem
