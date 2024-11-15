@@ -169,8 +169,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
                     // Create a data map if there are any paths to re-index
                     if (allPaths.isNotEmpty()) {
-                        val data = mapOf("dirs" to allPaths)
-                        continuePluginService.coreMessenger?.request("index/forceReIndex", data, null) { _ -> }
+                        val data = mapOf("files" to allPaths)
+                        continuePluginService.coreMessenger?.request("index/forceReIndexFiles", data, null) { _ -> }
                     }
                 }
             })

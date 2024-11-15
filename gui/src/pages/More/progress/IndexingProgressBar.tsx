@@ -1,5 +1,5 @@
 import { IndexingProgressUpdate } from "core";
-import { getProgressPercentage } from "./IndexingProgress";
+import { getProgressPercentage } from ".";
 
 export interface IndexingProgressBarProps {
   update: IndexingProgressUpdate;

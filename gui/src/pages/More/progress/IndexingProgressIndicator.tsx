@@ -1,10 +1,10 @@
 import { IndexingProgressUpdate } from "core";
-import { getProgressPercentage } from "./IndexingProgress";
 import {
   ArrowPathIcon,
   PauseCircleIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
+import { getProgressPercentage } from ".";
 
 export interface IndexingProgressIndicatorProps {
   update: IndexingProgressUpdate;
