@@ -141,7 +141,6 @@ export async function getQueryForFile(
     return undefined;
   }
 
-  // const fullLangName = getFullLanguageName(filepath);
   const sourcePath = path.join(
     __dirname,
     "..",
@@ -149,7 +148,6 @@ export async function getQueryForFile(
       ? ["extensions", "vscode", "tree-sitter"]
       : ["tree-sitter"]),
     queryPath,
-    // `${fullLangName}.scm`,
   );
   if (!fs.existsSync(sourcePath)) {
     return undefined;
