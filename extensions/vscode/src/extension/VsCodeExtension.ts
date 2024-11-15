@@ -297,15 +297,17 @@ export class VsCodeExtension {
         this.core.invoke("index/forceReIndex", undefined);
       } else {
         // Reindex the file
-        this.core.invoke("index/forceReIndexFiles", {
-          files: [filepath],
+        this.core.invoke("index/forceReIndex", {
+          dirs: [filepath],
         });
       }
     });
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
-      this.core.invoke("index/forceReIndexFiles", {
-        files: event.files.map((file) => file.fsPath),
+      this.core.invoke("index/forceReIndex", {
+        dirs: event.files.map((file) =>
+          file.fsPath.split("/").slice(0, -1).join("/"),
+        ),
       });
     });
 

@@ -58,7 +58,6 @@ class ContinueBrowser(val project: Project, url: String) {
         "stats/getTokensPerModel",
         "index/setPaused",
         "index/forceReIndex",
-        "index/forceReIndexFiles",
         "index/indexingProgressBarInitialized",
         "completeOnboarding",
         "addAutocompleteModel",
