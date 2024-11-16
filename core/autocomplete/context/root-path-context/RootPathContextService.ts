@@ -4,7 +4,7 @@ import { LRUCache } from "lru-cache";
 import Parser from "web-tree-sitter";
 
 import { IDE } from "../../..";
-import { getQueryForFile } from "../../../util/treeSitter";
+import { getFullLanguageName, getQueryForFile } from "../../../util/treeSitter";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 import { AutocompleteSnippet } from "../ranking";
@@ -78,10 +78,11 @@ export class RootPathContextService {
         // const type = node.type;
         // debugger;
         // console.log(getSyntaxTreeString(node));
+        const language = getFullLanguageName(filepath);
 
         query = await getQueryForFile(
           filepath,
-          `root-path-context-queries/${node.type}`,
+          `root-path-context-queries/${language}/${node.type}.scm`,
         );
         break;
     }
@@ -93,9 +94,14 @@ export class RootPathContextService {
 
     const queries = query.matches(node).map(async (match) => {
       for (const item of match.captures) {
-        const endPosition = item.node.endPosition;
-        const newSnippets = await this.getSnippets(filepath, endPosition);
-        snippets.push(...newSnippets);
+        try {
+          const endPosition = item.node.endPosition;
+          const newSnippets = await this.getSnippets(filepath, endPosition);
+          snippets.push(...newSnippets);
+        } catch (e) {
+          debugger;
+          throw e;
+        }
       }
     });
 
@@ -151,7 +157,7 @@ export class RootPathContextService {
 
       parentKey = key;
     }
-
+    debugger;
     return snippets;
   }
 }

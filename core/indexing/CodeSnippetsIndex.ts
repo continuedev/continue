@@ -3,12 +3,17 @@ import Parser from "web-tree-sitter";
 import { getBasename, getLastNPathParts } from "../util/";
 import { migrate } from "../util/paths";
 import {
-  TSQueryType,
+  getFullLanguageName,
   getParserForFile,
   getQueryForFile,
 } from "../util/treeSitter";
 
-import { DatabaseConnection, SqliteDb, tagToString, truncateSqliteLikePattern } from "./refreshIndex";
+import {
+  DatabaseConnection,
+  SqliteDb,
+  tagToString,
+  truncateSqliteLikePattern,
+} from "./refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
@@ -31,7 +36,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 1;
   artifactId = "codeSnippets";
 
-  constructor(private readonly ide: IDE) { }
+  constructor(private readonly ide: IDE) {}
 
   private static async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets (
@@ -183,7 +188,12 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     }
 
     const ast = parser.parse(contents);
-    const query = await getQueryForFile(filepath, TSQueryType.CodeSnippets);
+
+    const language = getFullLanguageName(filepath);
+    const query = await getQueryForFile(
+      filepath,
+      `code-snippet-queries/${language}.scm`,
+    );
     const matches = query?.matches(ast.rootNode);
 
     if (!matches) {
@@ -386,7 +396,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const db = await SqliteDb.get();
     await CodeSnippetsCodebaseIndex._createTables(db);
 
-    const likePatterns = workspaceDirs.map((dir) => truncateSqliteLikePattern(`${dir}%`));
+    const likePatterns = workspaceDirs.map((dir) =>
+      truncateSqliteLikePattern(`${dir}%`),
+    );
     const placeholders = likePatterns.map(() => "?").join(" OR path LIKE ");
 
     const query = `

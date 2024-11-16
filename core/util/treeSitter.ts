@@ -128,15 +128,9 @@ export async function getLanguageForFile(
   }
 }
 
-export enum TSQueryType {
-  CodeSnippets = "code-snippet-queries",
-  Imports = "import-queries",
-  // Used in RootPathContextService.ts
-  FunctionDeclaration = "root-path-context-queries/function_declaration",
-  MethodDefinition = "root-path-context-queries/method_definition",
-  FunctionDefinition = "root-path-context-queries/function_definition",
-  MethodDeclaration = "root-path-context-queries/method_declaration",
-}
+export const getFullLanguageName = (filepath: string) => {
+  return supportedLanguages[filepath.split(".").pop() ?? ""];
+};
 
 export async function getQueryForFile(
   filepath: string,
@@ -147,7 +141,6 @@ export async function getQueryForFile(
     return undefined;
   }
 
-  const fullLangName = supportedLanguages[filepath.split(".").pop() ?? ""];
   const sourcePath = path.join(
     __dirname,
     "..",
@@ -155,7 +148,6 @@ export async function getQueryForFile(
       ? ["extensions", "vscode", "tree-sitter"]
       : ["tree-sitter"]),
     queryPath,
-    `${fullLangName}.scm`,
   );
   if (!fs.existsSync(sourcePath)) {
     return undefined;
