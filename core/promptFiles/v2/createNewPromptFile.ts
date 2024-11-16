@@ -26,9 +26,6 @@ const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
 
 # To learn more, see the full .prompt file reference: https://docs.continue.dev/features/prompt-files
 name: Example
-
-# For example, here is how you would write a .prompt
-name: Example
 description: Example prompt file
 ---
 
