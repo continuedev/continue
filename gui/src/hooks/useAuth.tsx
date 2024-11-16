@@ -68,7 +68,7 @@ export function useAuth(): {
           confirmText="Yes, log out"
           text={"Are you sure you want to log out of Continue?"}
           onConfirm={() => {
-            ideMessenger.request("logoutOfControlPlane", undefined);
+            ideMessenger.post("logoutOfControlPlane", undefined);
           }}
         />,
       ),

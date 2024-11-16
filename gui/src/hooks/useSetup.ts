@@ -111,7 +111,7 @@ function useSetup(dispatch: Dispatch<any>) {
   });
 
   const debouncedIndexDocs = debounce(() => {
-    ideMessenger.request("context/indexDocs", { reIndex: false });
+    ideMessenger.post("context/indexDocs", { reIndex: false });
   }, 1000);
 
   useWebviewListener("configUpdate", async () => {

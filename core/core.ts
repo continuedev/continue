@@ -149,7 +149,7 @@ export class Core {
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
-          await this.messenger.request("indexProgress", {
+          void this.messenger.request("indexProgress", {
             progress: 1,
             desc: "Initial Indexing Skipped",
             status: "paused",

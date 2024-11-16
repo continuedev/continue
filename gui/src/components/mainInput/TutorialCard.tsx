@@ -57,7 +57,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
               <span
                 className="cursor-pointer underline"
                 onClick={() =>
-                  ideMessenger.request(
+                  ideMessenger.post(
                     "vscode/openMoveRightMarkdown",
                     undefined,
                   )

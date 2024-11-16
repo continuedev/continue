@@ -9,7 +9,7 @@ export default function useCopy(text: string | (() => string)) {
   const copyText = useCallback(() => {
     const textVal = typeof text === "string" ? text : text();
     if (isJetBrains()) {
-      ideMessenger.request("copyText", { text: textVal });
+      ideMessenger.post("copyText", { text: textVal });
     } else {
       navigator.clipboard.writeText(textVal);
     }
