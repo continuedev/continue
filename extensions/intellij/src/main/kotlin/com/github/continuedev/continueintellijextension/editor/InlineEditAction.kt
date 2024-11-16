@@ -48,7 +48,7 @@ fun makeTextArea(): JTextArea {
             isOpaque = false
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-            margin = JBUI.insets(6, 8, 6, 4)
+            margin = JBUI.insets(6, 8, 2, 4)
             font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
             preferredSize = Dimension(400, 75)
         }
