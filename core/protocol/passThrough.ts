@@ -41,6 +41,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "stats/getTokensPerModel",
     "index/setPaused",
     "index/forceReIndex",
+    "index/forceReIndexFiles",
     "index/indexingProgressBarInitialized",
     "completeOnboarding",
     "addAutocompleteModel",
@@ -60,5 +61,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "isContinueInputFocused",
     "didChangeAvailableProfiles",
     "setTTSActive",
-    "getWebviewHistoryLength"
+    "getWebviewHistoryLength",
   ];

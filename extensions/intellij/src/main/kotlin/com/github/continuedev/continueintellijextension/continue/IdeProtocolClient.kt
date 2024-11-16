@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
@@ -132,9 +133,9 @@ class IdeProtocolClient(
         initIdeProtocol()
 
         // Setup config.json / config.ts save listeners
-        VirtualFileManager.getInstance().addAsyncFileListener(AsyncFileSaveListener(this), object : Disposable {
-            override fun dispose() {}
-        })
+        VirtualFileManager.getInstance().addAsyncFileListener(
+            AsyncFileSaveListener(this), ContinuePluginDisposable.getInstance(project)
+        )
 
         val myPluginId = "com.github.continuedev.continueintellijextension"
         val pluginDescriptor =

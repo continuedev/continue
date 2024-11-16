@@ -23,3 +23,7 @@ const logPersonWithAddres = (person: Person<Address>): Person<Address> => {
 const logPersonOrAddress = (person: Person | Address): Person | Address => {
   // TODO
 };
+
+const logPersonAndAddress = (person: Person, address: Address) => {
+  // TODO
+};

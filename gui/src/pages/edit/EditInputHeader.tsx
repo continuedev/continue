@@ -82,7 +82,7 @@ export function EditInputHeader(editInputHeaderParams: EditInputHeaderParams) {
                     className="h-4 w-4 cursor-pointer px-2"
                     color="red"
                     onClick={() => {
-                      ideMessenger.request("edit/acceptReject", {
+                      ideMessenger.post("edit/acceptReject", {
                         accept: false,
                         onlyFirst: false,
                         filepath: editModeState.highlightedCode.filepath,
@@ -95,7 +95,7 @@ export function EditInputHeader(editInputHeaderParams: EditInputHeaderParams) {
                   <CheckIcon
                     className="h-4 w-4 cursor-pointer px-2 text-green-500"
                     onClick={() => {
-                      ideMessenger.request("edit/acceptReject", {
+                      ideMessenger.post("edit/acceptReject", {
                         accept: true,
                         onlyFirst: false,
                         filepath: editModeState.highlightedCode.filepath,

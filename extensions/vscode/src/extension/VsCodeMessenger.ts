@@ -48,7 +48,7 @@ export class VsCodeMessenger {
       message: Message<FromWebviewProtocol[T][0]>,
     ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
-    this.webviewProtocol.on(messageType, handler);
+    void this.webviewProtocol.on(messageType, handler);
   }
 
   onCore<T extends keyof ToIdeOrWebviewFromCoreProtocol>(
@@ -216,7 +216,7 @@ export class VsCodeMessenger {
           builder.insert(new vscode.Position(0, 0), data.text),
         );
 
-        await webviewProtocol.request("updateApplyState", {
+        void webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
           status: "closed",
           numDiffs: 0,
@@ -374,7 +374,7 @@ export class VsCodeMessenger {
         ),
       );
 
-      this.webviewProtocol.request("setEditStatus", {
+      void this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
         fileAfterEdit,
       });
