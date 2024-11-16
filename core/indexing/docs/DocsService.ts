@@ -254,6 +254,8 @@ export default class DocsService {
       if (processedPages === maxKnownPages) {
         maxKnownPages *= 2;
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     void Telemetry.capture("docs_pages_crawled", {

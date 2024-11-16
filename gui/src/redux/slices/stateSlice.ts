@@ -17,16 +17,6 @@ import { v4 as uuidv4, v4 } from "uuid";
 import { RootState } from "../store";
 import { ApplyState } from "core/protocol/ideWebview";
 
-export const memoizedContextItemsSelector = createSelector(
-  [(state: RootState) => state.state.history],
-  (history) => {
-    return history.reduce<ContextItemWithId[]>((acc, item) => {
-      acc.push(...item.contextItems);
-      return acc;
-    }, []);
-  },
-);
-
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
@@ -34,7 +24,6 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 };
 type State = {
   history: ChatHistoryItemWithMessageId[];
-  contextItems: ContextItemWithId[];
   ttsActive: boolean;
   active: boolean;
   isGatheringContext: boolean;
@@ -54,7 +43,6 @@ type State = {
 
 const initialState: State = {
   history: [],
-  contextItems: [],
   ttsActive: false,
   active: false,
   isGatheringContext: false,
@@ -152,9 +140,6 @@ export const stateSlice = createSlice({
         state.history[index].contextItems = contextItems;
       }
     },
-    addContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
-      state.contextItems = state.contextItems.concat(action.payload);
-    },
     resubmitAtIndex: (
       state,
       {
@@ -182,7 +167,6 @@ export const stateSlice = createSlice({
       });
 
       // https://github.com/continuedev/continue/pull/1021
-      // state.contextItems = [];
       state.active = true;
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
@@ -199,7 +183,7 @@ export const stateSlice = createSlice({
     ) => {
       state.history.push({
         message: { role: "user", content: "", id: uuidv4() },
-        contextItems: state.contextItems,
+        contextItems: [],
         editorState: payload.editorState,
       });
       state.history.push({
@@ -210,8 +194,7 @@ export const stateSlice = createSlice({
         },
         contextItems: [],
       });
-      // https://github.com/continuedev/continue/pull/1021
-      // state.contextItems = [];
+
       state.active = true;
       state.curCheckpointIndex = state.curCheckpointIndex + 1;
     },
@@ -284,31 +267,11 @@ export const stateSlice = createSlice({
         state.curCheckpointIndex = 0;
       } else {
         state.history = [];
-        state.contextItems = [];
         state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
         state.checkpoints = [];
         state.curCheckpointIndex = 0;
-      }
-    },
-    deleteContextWithIds: (
-      state,
-      {
-        payload,
-      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>,
-    ) => {
-      const getKey = (id: ContextItemId) => `${id.providerTitle}-${id.itemId}`;
-      const ids = new Set(payload.ids.map(getKey));
-
-      if (payload.index === undefined) {
-        state.contextItems = state.contextItems.filter(
-          (item) => !ids.has(getKey(item.id)),
-        );
-      } else {
-        state.history[payload.index].contextItems = state.history[
-          payload.index
-        ].contextItems.filter((item) => !ids.has(getKey(item.id)));
       }
     },
     addHighlightedCode: (
@@ -317,45 +280,14 @@ export const stateSlice = createSlice({
         payload,
       }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>,
     ) => {
-      let contextItems = [...state.contextItems].map((item) => {
+      let contextItems =
+        state.history[state.history.length - 1].contextItems ?? [];
+      contextItems = contextItems.map((item) => {
         return { ...item, editing: false };
       });
       const base = payload.rangeInFileWithContents.filepath
         .split(/[\\/]/)
         .pop();
-
-      // Merge if there is overlap
-      for (let i = 0; i < contextItems.length; i++) {
-        const item = contextItems[i];
-        if (item.description === payload.rangeInFileWithContents.filepath) {
-          let newStart = payload.rangeInFileWithContents.range.start.line;
-          let newEnd = payload.rangeInFileWithContents.range.end.line;
-          let [oldStart, oldEnd] = item.name
-            .split("(")[1]
-            .split(")")[0]
-            .split("-")
-            .map((x: string) => parseInt(x) - 1);
-          if (newStart > oldEnd || newEnd < oldStart) {
-            continue;
-          }
-          const startLine = Math.min(newStart, oldStart);
-          const endLine = Math.max(newEnd, oldEnd);
-
-          // const oldContents = item.content.split("\n");
-          // const newContents =
-          //   payload.rangeInFileWithContents.contents.split("\n");
-          // const finalContents = [];
-
-          contextItems[i] = {
-            ...item,
-            name: `${base} (${startLine + 1}-${endLine + 1})`,
-            content: payload.rangeInFileWithContents.contents,
-            editing: true,
-            editable: true,
-          };
-          return { ...state, contextItems };
-        }
-      }
 
       const lineNums = `(${
         payload.rangeInFileWithContents.range.start.line + 1
@@ -371,46 +303,7 @@ export const stateSlice = createSlice({
         editing: true,
         editable: true,
       });
-
-      return { ...state, contextItems };
-    },
-    setEditingAtIds: (
-      state,
-      {
-        payload,
-      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>,
-    ) => {
-      const ids = payload.ids.map((id) => id.itemId);
-
-      if (typeof payload.index === "undefined") {
-        return {
-          ...state,
-          contextItems: state.contextItems.map((item) => {
-            return {
-              ...item,
-              editing: ids.includes(item.id.itemId),
-            };
-          }),
-        };
-      } else {
-        return {
-          ...state,
-          history: state.history.map((step, i) => {
-            if (i === payload.index) {
-              return {
-                ...step,
-                contextItems: step.contextItems.map((item) => {
-                  return {
-                    ...item,
-                    editing: ids.includes(item.id.itemId),
-                  };
-                }),
-              };
-            }
-            return step;
-          }),
-        };
-      }
+      state.history[state.history.length - 1].contextItems = contextItems;
     },
     setDefaultModel: (
       state,
@@ -473,15 +366,12 @@ export const stateSlice = createSlice({
 
 export const {
   setContextItemsAtIndex,
-  addContextItems,
   addContextItemsAtIndex,
   setInactive,
   streamUpdate,
   newSession,
-  deleteContextWithIds,
   resubmitAtIndex,
   addHighlightedCode,
-  setEditingAtIds,
   setDefaultModel,
   setConfig,
   setConfigError,
