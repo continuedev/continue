@@ -92,7 +92,7 @@ class DocsContextProvider extends BaseContextProvider {
       await docsService.isJetBrainsAndPreIndexedDocsProvider();
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
-      await extras.ide.showToast(
+      void extras.ide.showToast(
         "error",
         `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
           "the embeddings provider, but it cannot be used with JetBrains. " +

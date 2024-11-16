@@ -13,12 +13,13 @@ class ContinueProxy extends OpenAI {
   static providerName: ModelProvider = "continue-proxy";
   static defaultOptions: Partial<LLMOptions> = {
     useLegacyCompletionsEndpoint: false,
-    requestOptions: {
-      headers: {
-        "x-continue-unique-id": Telemetry.uniqueId,
-      },
-    },
   };
+
+  protected _getHeaders() {
+    const headers: any = super._getHeaders();
+    headers["x-continue-unique-id"] = Telemetry.uniqueId;
+    return headers;
+  }
 
   supportsCompletions(): boolean {
     return false;

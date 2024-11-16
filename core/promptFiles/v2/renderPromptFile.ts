@@ -1,7 +1,7 @@
 import { ContextItem, ContextProviderExtras } from "../..";
+import { contextProviderClassFromName } from "../../context/providers";
 import URLContextProvider from "../../context/providers/URLContextProvider";
 import { getBasename } from "../../util";
-
 import { getPreambleAndBody } from "./parse";
 
 async function resolveAttachment(
@@ -15,6 +15,13 @@ async function resolveAttachment(
   if (contextProvider) {
     const items = await contextProvider.getContextItems("", extras);
     return items;
+  } else {
+    // Just instantiate it here
+    const providerClass = contextProviderClassFromName(name) as any;
+    if (providerClass) {
+      const providerInstance = new providerClass({});
+      return providerInstance.getContextItems("", extras);
+    }
   }
 
   // Files

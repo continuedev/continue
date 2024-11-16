@@ -29,6 +29,7 @@ class VerticalDiffBlock(
     private val rejectButton: JButton
     private var deletionInlay: Disposable? = null
     private var textArea: JTextArea? = null // Used for calculation of the text area height when rendering buttons
+    private var hasRenderedDiffBlock: Boolean = false
     private val editorComponentInlaysManager = EditorComponentInlaysManager.from(editor, false)
     private val greenKey = createTextAttributesKey("CONTINUE_DIFF_NEW_LINE", 0x3000FF00, editor)
 
@@ -81,11 +82,19 @@ class VerticalDiffBlock(
     }
 
     fun onLastDiffLine() {
+        // Handles the case where we are invoking one last time on last line of diff stream, but the block has
+        // already been rendered
+        if (hasRenderedDiffBlock) {
+            return
+        }
+
         if (deletedLines.size > 0) {
             renderDeletedLinesInlay()
         }
 
         renderButtons()
+
+        hasRenderedDiffBlock = true
     }
 
     fun handleReject() {

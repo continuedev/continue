@@ -121,9 +121,9 @@ function useHistory(dispatch: Dispatch) {
     if (result.status === "error") {
       throw new Error(result.error);
     }
-    const json = result.content;
-    dispatch(newSession(json));
-    return json;
+    const persistedSessionInfo = result.content;
+    dispatch(newSession(persistedSessionInfo));
+    return persistedSessionInfo;
   }
 
   async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {

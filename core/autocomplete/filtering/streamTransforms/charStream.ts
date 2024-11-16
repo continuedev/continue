@@ -70,7 +70,8 @@ export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
  * 2. Otherwise, buffers incoming chunks and checks for stop tokens.
  * 3. Yields characters one by one if no stop token is found at the start of the buffer.
  * 4. Stops yielding and returns if a stop token is encountered.
- * 5. After the stream ends, yields any remaining buffered characters.
+ * 5. After the stream ends, filters encountered stop tokens in remaining buffer.
+ * 6. Yields any remaining buffered characters.
  */
 export async function* stopAtStopTokens(
   stream: AsyncGenerator<string>,
@@ -106,6 +107,10 @@ export async function* stopAtStopTokens(
       }
     }
   }
+  // Filter out the possible stop tokens from remaining buffer
+  stopTokens.forEach((token) => {
+    buffer = buffer.replace(token, "");
+  });
 
   // Yield any remaining characters in the buffer
   for (const char of buffer) {

@@ -34,6 +34,10 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
 
     override fun dispose() {
         coroutineScope.cancel()
+        coreMessenger?.coroutineScope?.let {
+            it.cancel()
+            coreMessenger?.killSubProcess()
+        }
     }
 
     fun sendToWebview(
