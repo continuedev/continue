@@ -70,7 +70,7 @@ private fun getTutorialFileName(): String {
     }
 }
 
-class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
+class ContinuePluginStartupActivity : StartupActivity, DumbAware {
 
     override fun runActivity(project: Project) {
         removeShortcutFromAction(getPlatformSpecificKeyStroke("J"))
@@ -225,14 +225,11 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
             EditorFactory.getInstance().eventMulticaster.addSelectionListener(
                 listener,
-                this@ContinuePluginStartupActivity
+                ContinuePluginDisposable.getInstance(project)
             )
 
             val coreMessengerManager = CoreMessengerManager(project, ideProtocolClient, coroutineScope)
             continuePluginService.coreMessengerManager = coreMessengerManager
         }
-    }
-
-    override fun dispose() {
     }
 }
