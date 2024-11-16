@@ -10,11 +10,11 @@ Prompt files provide a convenient way to standardize common patterns and share a
 To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-examples). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
 ::: -->
 
-Below is a quick example of setting up a prompt file to write unit tests using Jest.
+Below is a quick example of setting up a prompt file to de
 
-1. Create a folder called `.prompts/` at the top level of your workspace.
-2. Add a file called `test.prompt` to this folder. The name of this file will be the name of the slash command you will use to generate your prompt.
-3. Write the following contents to `test.prompt` and save.
+1. Create a folder called `.continue/prompts` at the top level of your workspace (or you can use the button in the UI by typing @, selecting "Prompt Files", and selecting "New Prompt File").
+2. Add a file called `rails.prompt` to this folder.
+3. Write the following contents to `rails.prompt` and save.
 
 ```
 name: Rails Project
