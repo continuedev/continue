@@ -7,7 +7,7 @@ import {
   ContinueConfig,
   EmbeddingsProvider,
   IDE,
-  IndexingProgressUpdate,
+  IndexingStatusUpdate,
   SiteIndexingConfig,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
@@ -178,7 +178,7 @@ export default class DocsService {
   async *indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
-  ): AsyncGenerator<IndexingProgressUpdate> {
+  ): AsyncGenerator<IndexingStatusUpdate> {
     const { startUrl } = siteIndexingConfig;
     const embeddingsProvider = await this.getEmbeddingsProvider();
 
@@ -406,17 +406,29 @@ export default class DocsService {
 
   private async init(configHandler: ConfigHandler) {
     this.config = await configHandler.loadConfig();
-    await this.handleConfigUpdate({config: this.config});
+    await this.handleConfigUpdate({ config: this.config });
 
     // only update on init because should only update on reindexDocsOnNewEmbeddingsProvider
-    const embeddingsProvider = await this.getEmbeddingsProvider();
-    this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
+    const currentEmbeddingsProvider = this.globalContext.get(
+      "curEmbeddingsProviderId",
+    );
+    if (!currentEmbeddingsProvider) {
+      const embeddingsProvider = await this.getEmbeddingsProvider();
+      this.globalContext.update(
+        "curEmbeddingsProviderId",
+        embeddingsProvider.id,
+      );
+    }
 
     configHandler.onConfigUpdate(this.handleConfigUpdate);
   }
 
-  private async handleConfigUpdate({config: newConfig}: {config: ContinueConfig | undefined}) {
-    if(newConfig){
+  private async handleConfigUpdate({
+    config: newConfig,
+  }: {
+    config: ContinueConfig | undefined;
+  }) {
+    if (newConfig) {
       this.config = newConfig;
       this.docsCrawler = new DocsCrawler(this.ide, this.config);
 
@@ -430,10 +442,9 @@ export default class DocsService {
         await this.syncConfigAndSqlite();
       }
 
-      const shouldReindex =
-        await this.shouldReindexDocsOnNewEmbeddingsProvider(
-          newConfig.embeddingsProvider.id,
-        );
+      const shouldReindex = await this.shouldReindexDocsOnNewEmbeddingsProvider(
+        newConfig.embeddingsProvider.id,
+      );
 
       if (shouldReindex) {
         await this.reindexDocsOnNewEmbeddingsProvider(
@@ -441,7 +452,6 @@ export default class DocsService {
         );
       }
     }
-
   }
 
   private async syncConfigAndSqlite() {
@@ -595,7 +605,7 @@ export default class DocsService {
     return ideInfo.ideType === "jetbrains";
   }
 
-    async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
+  async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
     const isJetBrains = await this.isJetBrains();
 
     const isPreIndexedDocsProvider =

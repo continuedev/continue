@@ -45,7 +45,20 @@ function useSetup(dispatch: Dispatch<any>) {
     }
   };
 
-  // ON LOAD
+  // Load config from the IDE
+  useEffect(() => {
+    loadConfig();
+    const interval = setInterval(() => {
+      if (configLoaded) {
+        clearInterval(interval);
+        return;
+      }
+      loadConfig();
+    }, 2_000);
+
+    return () => clearInterval(interval);
+  }, [configLoaded]);
+
   useEffect(() => {
     // Override persisted state
     dispatch(setInactive());
@@ -104,7 +117,7 @@ function useSetup(dispatch: Dispatch<any>) {
   useWebviewListener("configUpdate", async () => {
     await loadConfig();
 
-    if (!isJetBrains && !getLocalStorage("disableIndexing")) {
+    if (!isJetBrains) {
       debouncedIndexDocs();
     }
   });

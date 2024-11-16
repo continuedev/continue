@@ -42,7 +42,8 @@ export class Core {
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
-  indexingState: IndexingProgressUpdate;
+  codebaseIndexingState: IndexingProgressUpdate;
+  docsIndexingStates: Map<string, IndexingProgressUpdate> = new Map();
   controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
@@ -83,12 +84,16 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => { },
+    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
 
-    this.indexingState = { status: "loading", desc: "loading", progress: 0 };
+    this.codebaseIndexingState = {
+      status: "loading",
+      desc: "loading",
+      progress: 0,
+    };
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
@@ -148,6 +153,7 @@ export class Core {
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
+        this.indexingPauseToken.paused = true;
         if (ideSettings.pauseCodebaseIndexOnStart) {
           await this.messenger.request("indexProgress", {
             progress: 1,
@@ -174,7 +180,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => { },
+      (e) => {},
       (..._) => Promise.resolve([]),
     );
 
@@ -684,7 +690,7 @@ export class Core {
         await codebaseIndexer.clearIndexes();
       }
 
-      const dirs = data?.dirs ?? await this.ide.getWorkspaceDirs();
+      const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
@@ -694,8 +700,11 @@ export class Core {
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.indexingState.status !== "loading") {
-        void this.messenger.request("indexProgress", this.indexingState);
+      if (this.codebaseIndexingState.status !== "loading") {
+        void this.messenger.request(
+          "indexProgress",
+          this.codebaseIndexingState,
+        );
       }
     });
 
@@ -740,7 +749,7 @@ export class Core {
       }
 
       void this.messenger.request("indexProgress", updateToSend);
-      this.indexingState = updateToSend;
+      this.codebaseIndexingState = updateToSend;
 
       if (update.status === "failed") {
         console.debug(
