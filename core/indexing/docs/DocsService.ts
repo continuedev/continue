@@ -517,11 +517,10 @@ export default class DocsService {
     nRetrieve: number,
     isRetry: boolean = false,
   ): Promise<Chunk[]> {
-    const isPreindexed = !!preIndexedDocs[startUrl];
-    const embeddingsProvider = await this.getEmbeddingsProvider(isPreindexed);
+    const isPreIndexedDoc = !!preIndexedDocs[startUrl];
     const table = await this.getOrCreateLanceTable({
       initializationVector: vector,
-      embeddingsProvider,
+      isPreIndexedDoc,
     });
 
     let docs: LanceDbDocsRow[] = [];
@@ -719,8 +718,11 @@ export default class DocsService {
   }
 
   private async getLanceTableNameFromEmbeddingsProvider(
-    embeddingsProvider: EmbeddingsProvider,
+    isPreIndexedDoc: boolean,
   ) {
+    const embeddingsProvider =
+      await this.getEmbeddingsProvider(isPreIndexedDoc);
+
     const tableName = this.sanitizeLanceTableName(
       `${DocsService.lanceTableName}${embeddingsProvider.id}`,
     );
@@ -730,15 +732,15 @@ export default class DocsService {
 
   private async getOrCreateLanceTable({
     initializationVector,
-    embeddingsProvider,
+    isPreIndexedDoc,
   }: {
     initializationVector: number[];
-    embeddingsProvider: EmbeddingsProvider;
+    isPreIndexedDoc?: boolean;
   }) {
     const conn = await lancedb.connect(getLanceDbPath());
     const tableNames = await conn.tableNames();
     const tableNameFromEmbeddingsProvider =
-      await this.getLanceTableNameFromEmbeddingsProvider(embeddingsProvider);
+      await this.getLanceTableNameFromEmbeddingsProvider(!!isPreIndexedDoc);
 
     if (!tableNames.includes(tableNameFromEmbeddingsProvider)) {
       if (initializationVector) {
@@ -770,11 +772,9 @@ export default class DocsService {
   }: AddParams) {
     const sampleVector = embeddings[0];
     const isPreIndexedDoc = !!preIndexedDocs[siteIndexingConfig.startUrl];
-    const embeddingsProvider =
-      await this.getEmbeddingsProvider(isPreIndexedDoc);
 
     const table = await this.getOrCreateLanceTable({
-      embeddingsProvider,
+      isPreIndexedDoc,
       initializationVector: sampleVector,
     });
 
