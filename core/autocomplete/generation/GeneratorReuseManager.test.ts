@@ -1,60 +1,6 @@
 import { jest } from "@jest/globals";
 import { GeneratorReuseManager } from "./GeneratorReuseManager";
 
-// Mock implementation of ListenableGenerator
-class MockListenableGenerator<T> {
-  private generator: AsyncGenerator<T>;
-  private listeners: Array<(chunk: T | undefined) => void> = [];
-  private canceled = false;
-  private chunks: T[] = [];
-  private teeIndex = 0;
-
-  constructor(
-    generator: AsyncGenerator<T>,
-    private onError: (err: any) => void,
-  ) {
-    this.generator = this._wrapGenerator(generator);
-  }
-
-  private async *_wrapGenerator(gen: AsyncGenerator<T>): AsyncGenerator<T> {
-    try {
-      for await (const chunk of gen) {
-        if (this.canceled) break;
-        this.chunks.push(chunk);
-        this.listeners.forEach((listener) => listener(chunk));
-        yield chunk;
-      }
-    } catch (err) {
-      this.onError(err);
-    } finally {
-      this.listeners.forEach((listener) => listener(undefined));
-    }
-  }
-
-  cancel() {
-    this.canceled = true;
-  }
-
-  listen(callback: (chunk: T | undefined) => void) {
-    this.listeners.push(callback);
-    // Send already received chunks
-    this.chunks.forEach((chunk) => callback(chunk));
-  }
-
-  async *tee(): AsyncGenerator<T> {
-    while (this.teeIndex < this.chunks.length) {
-      yield this.chunks[this.teeIndex++];
-    }
-    const iterator = this.generator[Symbol.asyncIterator]();
-    while (true) {
-      const { value, done } = await iterator.next();
-      if (done) break;
-      yield value;
-      this.teeIndex++;
-    }
-  }
-}
-
 function createMockGenerator(
   data: string[],
   delay: number = 0,
@@ -81,10 +27,7 @@ describe("GeneratorReuseManager", () => {
 
   beforeEach(() => {
     onErrorMock = jest.fn();
-    reuseManager = new GeneratorReuseManager(
-      onErrorMock,
-      // MockListenableGenerator as any,
-    );
+    reuseManager = new GeneratorReuseManager(onErrorMock);
   });
 
   afterEach(() => {
