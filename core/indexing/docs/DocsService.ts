@@ -258,7 +258,7 @@ export default class DocsService {
         params: {},
       });
 
-      await this.ide.showToast(
+      void this.ide.showToast(
         "info",
         "Successfuly added docs context provider",
       );

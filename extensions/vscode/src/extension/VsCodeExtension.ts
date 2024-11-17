@@ -297,17 +297,21 @@ export class VsCodeExtension {
         this.core.invoke("index/forceReIndex", undefined);
       } else {
         // Reindex the file
-        this.core.invoke("index/forceReIndex", {
-          dirs: [filepath],
+        this.core.invoke("index/forceReIndexFiles", {
+          files: [filepath],
         });
       }
     });
 
     vscode.workspace.onDidDeleteFiles(async (event) => {
-      this.core.invoke("index/forceReIndex", {
-        dirs: event.files.map((file) =>
-          file.fsPath.split("/").slice(0, -1).join("/"),
-        ),
+      this.core.invoke("index/forceReIndexFiles", {
+        files: event.files.map((file) => file.fsPath),
+      });
+    });
+
+    vscode.workspace.onDidCreateFiles(async (event) => {
+      this.core.invoke("index/forceReIndexFiles", {
+        files: event.files.map((file) => file.fsPath),
       });
     });
 
@@ -318,14 +322,14 @@ export class VsCodeExtension {
       } else if (e.provider.id === controlPlaneEnv.AUTH_TYPE) {
         const sessionInfo = await getControlPlaneSessionInfo(true);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
-          webviewProtocol.request("didChangeControlPlaneSessionInfo", {
+          void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
             sessionInfo,
           });
 
           // To make sure continue-proxy models and anything else requiring it get updated access token
           this.configHandler.reloadConfig();
         });
-        this.core.invoke("didChangeControlPlaneSessionInfo", { sessionInfo });
+        void this.core.invoke("didChangeControlPlaneSessionInfo", { sessionInfo });
       }
     });
 
@@ -374,14 +378,14 @@ export class VsCodeExtension {
     );
 
     this.ide.onDidChangeActiveTextEditor((filepath) => {
-      this.core.invoke("didChangeActiveTextEditor", { filepath });
+      void this.core.invoke("didChangeActiveTextEditor", { filepath });
     });
 
     vscode.workspace.onDidChangeConfiguration(async (event) => {
       if (event.affectsConfiguration(EXTENSION_NAME)) {
         const settings = this.ide.getIdeSettingsSync();
         const webviewProtocol = await this.webviewProtocolPromise;
-        webviewProtocol.request("didChangeIdeSettings", {
+        void webviewProtocol.request("didChangeIdeSettings", {
           settings,
         });
       }

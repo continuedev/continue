@@ -151,6 +151,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
     void,
   ];
+  "index/forceReIndexFiles": [undefined | { files?: string[] }, void];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {

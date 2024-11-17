@@ -41,7 +41,7 @@ function QuickstartSubmitButton() {
       force: true,
     });
 
-    if (result.status === "success" && typeof result.content === "string") {
+    if (result.status === "success") {
       onComplete();
     } else {
       ideMessenger.post("showToast", [

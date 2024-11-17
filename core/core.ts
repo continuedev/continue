@@ -161,7 +161,7 @@ export class Core {
         // Respect pauseCodebaseIndexOnStart user settings
         this.indexingPauseToken.paused = true;
         if (ideSettings.pauseCodebaseIndexOnStart) {
-          await this.messenger.request("indexProgress", {
+          void this.messenger.request("indexProgress", {
             progress: 1,
             desc: "Initial Indexing Skipped",
             status: "paused",
@@ -680,6 +680,11 @@ export class Core {
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.refreshCodebaseIndex(dirs);
     });
+    on("index/forceReIndexFiles", async ({ data }) => {
+      if (data?.files?.length) {
+        await this.refreshCodebaseIndexFiles(data.files);
+      }
+    });
     on("index/setPaused", (msg) => {
       this.globalContext.update("indexingPaused", msg.data);
       this.indexingPauseToken.paused = msg.data;
@@ -731,14 +736,29 @@ export class Core {
   }
 
   private indexingCancellationController: AbortController | undefined;
+  private async sendIndexingErrorTelemetry(update: IndexingProgressUpdate) {
+    console.debug(
+      "Indexing failed with error: ",
+      update.desc,
+      update.debugInfo,
+    );
+    void Telemetry.capture(
+      "indexing_error",
+      {
+        error: update.desc,
+        stack: update.debugInfo,
+      },
+      false,
+    );
+  }
 
-  private async refreshCodebaseIndex(dirs: string[]) {
+  private async refreshCodebaseIndex(paths: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
-    for await (const update of (await this.codebaseIndexerPromise).refresh(
-      dirs,
+    for await (const update of (await this.codebaseIndexerPromise).refreshDirs(
+      paths,
       this.indexingCancellationController.signal,
     )) {
       let updateToSend = { ...update };
@@ -752,19 +772,41 @@ export class Core {
       this.codebaseIndexingState = updateToSend;
 
       if (update.status === "failed") {
-        console.debug(
-          "Indexing failed with error: ",
-          update.desc,
-          update.debugInfo,
-        );
-        void Telemetry.capture(
-          "indexing_error",
-          {
-            error: update.desc,
-            stack: update.debugInfo,
-          },
-          false,
-        );
+        void this.sendIndexingErrorTelemetry(update);
+      }
+    }
+
+    this.messenger.send("refreshSubmenuItems", undefined);
+    this.indexingCancellationController = undefined;
+  }
+
+  private async refreshCodebaseIndexFiles(files: string[]) {
+    // Can be cancelled by codebase index but not vice versa
+    if (
+      this.indexingCancellationController &&
+      !this.indexingCancellationController.signal.aborted
+    ) {
+      return console.debug(
+        "Codebase indexing already in progress, skipping indexing of files\n" +
+          files.join("\n"),
+      );
+    }
+    this.indexingCancellationController = new AbortController();
+    for await (const update of (await this.codebaseIndexerPromise).refreshFiles(
+      files,
+    )) {
+      let updateToSend = { ...update };
+      if (update.status === "failed") {
+        updateToSend.status = "done";
+        updateToSend.desc = "Indexing complete";
+        updateToSend.progress = 1.0;
+      }
+
+      void this.messenger.request("indexProgress", updateToSend);
+      this.indexingState = updateToSend;
+
+      if (update.status === "failed") {
+        void this.sendIndexingErrorTelemetry(update);
       }
     }
 
