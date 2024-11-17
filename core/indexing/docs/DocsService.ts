@@ -24,6 +24,7 @@ import {
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
 import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider";
+import { IndexingStatusManager } from "../IndexingStatusManager";
 
 import { Article, chunkArticle, pageToArticle } from "./article";
 import DocsCrawler from "./DocsCrawler";
@@ -78,6 +79,8 @@ export type AddParams = {
 export default class DocsService {
   static lanceTableName = "docs";
   static sqlitebTableName = "docs";
+  static indexingType = "docs";
+
   static preIndexedDocsEmbeddingsProvider =
     new TransformersJsEmbeddingsProvider();
 
@@ -97,6 +100,7 @@ export default class DocsService {
     configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+    private readonly indexingManager?: IndexingStatusManager,
   ) {
     this.isInitialized = this.init(configHandler);
   }
@@ -119,9 +123,12 @@ export default class DocsService {
 
   // Initialization - load config and attach config listener
   private async init(configHandler: ConfigHandler) {
+    this.indexingManager?.registerService(
+      DocsService.indexingType,
+      this.reindexDoc,
+    );
     this.config = await configHandler.loadConfig();
     await this.handleConfigUpdate({ config: this.config });
-
     configHandler.onConfigUpdate(this.handleConfigUpdate);
   }
 
@@ -180,14 +187,7 @@ export default class DocsService {
         return;
       }
 
-      const newConfigDocs = newConfig.docs || [];
-      const oldConfigDocs = oldConfig.docs || [];
-
-      const newPreindexed = newConfigDocs.filter(
-        (doc) => !!preIndexedDocs[doc.startUrl],
-      );
-
-      // On embeddings provider change, reindex all docs
+      // On embeddings provider change, reindex all non-preindexed docs
       // change = doesn't match last successful embeddings provider
       const curEmbeddingsProviderId = this.globalContext.get(
         "curEmbeddingsProviderId",
@@ -204,7 +204,7 @@ export default class DocsService {
         }
       }
 
-      await this.syncConfigAndSqlite();
+      await this.syncDocsOnConfigUpdate(oldConfig, newConfig);
     }
   }
 
@@ -251,7 +251,7 @@ export default class DocsService {
     return res === actionMsg;
   }
 
-  async indexAllDocs(reIndex: boolean = false) {
+  async indexAllDocsWithPrompt(reIndex: boolean = false) {
     if (!this.hasDocsContextProvider()) {
       const didAddDocsContextProvider =
         await this.showAddDocsContextProviderToast();
@@ -264,8 +264,7 @@ export default class DocsService {
     const docs = await this.listMetadata();
 
     for (const doc of docs) {
-      const generator = this.indexAndAdd(doc, reIndex);
-      while (!(await generator.next()).done) {}
+      await this.indexAndAdd(doc, reIndex);
     }
 
     void this.ide.showToast("info", "Docs indexing completed");
@@ -280,10 +279,23 @@ export default class DocsService {
     return docs;
   }
 
-  async *indexAndAdd(
+  updateIndexingStatus(update: IndexingStatusUpdate) {
+    this.indexingManager?.handleUpdate(update);
+  }
+
+  async reindexDoc(startUrl: string) {
+    const docConfig = this.config.docs?.find(
+      (doc) => doc.startUrl === startUrl,
+    );
+    if (docConfig) {
+      await this.indexAndAdd(docConfig, true);
+    }
+  }
+
+  async indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
-  ): AsyncGenerator<IndexingStatusUpdate> {
+  ): Promise<void> {
     const { startUrl } = siteIndexingConfig;
 
     if (this.docsIndexingQueue.has(startUrl)) {
@@ -296,38 +308,34 @@ export default class DocsService {
 
     const fixedStatus: Pick<
       IndexingStatusUpdate,
-      "type" | "id" | "embeddingsModel" | "isReindexing"
+      "type" | "id" | "embeddingsProviderId" | "isReindexing"
     > = {
       type: "docs",
       id: siteIndexingConfig.startUrl,
-      embeddingsModel: embeddingsProvider.id,
+      embeddingsProviderId: embeddingsProvider.id,
       isReindexing: reIndex && indexExists,
     };
 
-    const completeStatus: IndexingStatusUpdate = {
-      ...fixedStatus,
-      progress: 1,
-      description: "Complete",
-      status: "complete",
-    };
-
     if (indexExists && !reIndex) {
-      yield {
-        ...completeStatus,
+      this.updateIndexingStatus({
+        ...fixedStatus,
+        progress: 1,
+        description: "Complete",
+        status: "complete",
         debugInfo: "Already indexed",
-      };
+      });
       return;
     }
 
     // Mark the site as currently being indexed
     this.docsIndexingQueue.add(startUrl);
 
-    yield {
+    this.updateIndexingStatus({
       ...fixedStatus,
       status: "indexing",
       description: "Finding subpages",
       progress: 0,
-    };
+    });
 
     const articles: Article[] = [];
     let processedPages = 0;
@@ -348,12 +356,12 @@ export default class DocsService {
       // Use a heuristic approach for progress calculation
       const progress = Math.min(processedPages / maxKnownPages, 1);
 
-      yield {
+      this.updateIndexingStatus({
         ...fixedStatus,
         description: `Finding subpages (${page.path})`,
         status: "indexing",
         progress, // Yield the heuristic progress
-      };
+      });
 
       // Increase maxKnownPages to delay progress reaching 100% too soon
       if (processedPages === maxKnownPages) {
@@ -375,12 +383,12 @@ export default class DocsService {
 
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
-      yield {
+      this.updateIndexingStatus({
         ...fixedStatus,
         status: "indexing",
         description: `Creating Embeddings: ${article.subpath}`,
         progress: i / articles.length,
-      };
+      });
 
       try {
         const chunkedArticle = chunkArticle(
@@ -409,12 +417,14 @@ export default class DocsService {
         `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
       );
 
-      yield {
+      this.updateIndexingStatus({
         ...fixedStatus,
         description: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
         status: "failed",
         progress: 1,
-      };
+      });
+
+      void this.ide.showToast("info", `Failed to index ${startUrl}`);
 
       this.docsIndexingQueue.delete(startUrl);
 
@@ -424,12 +434,12 @@ export default class DocsService {
     // Add docs to databases
     console.log(`Adding ${embeddings.length} embeddings to db`);
 
-    yield {
+    this.updateIndexingStatus({
       ...fixedStatus,
       description: `Adding ${embeddings.length} embeddings to db`,
       status: "indexing",
       progress: 0.5,
-    };
+    });
 
     // Delete indexed docs if re-indexing
     if (reIndex && (await this.hasMetadata(startUrl.toString()))) {
@@ -448,14 +458,14 @@ export default class DocsService {
 
     this.docsIndexingQueue.delete(startUrl);
 
-    yield {
+    this.updateIndexingStatus({
       ...fixedStatus,
       description: "Complete",
       status: "complete",
       progress: 1,
-    };
+    });
 
-    console.log(`Successfully indexed: ${siteIndexingConfig.startUrl}`);
+    void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
 
     if (this.messenger) {
       this.messenger.send("refreshSubmenuItems", undefined);
@@ -480,8 +490,7 @@ export default class DocsService {
       return [];
     }
 
-    const preIndexedDoc = preIndexedDocs[query];
-
+    const preIndexedDoc = preIndexedDocs[startUrl];
     if (!!preIndexedDoc) {
       void Telemetry.capture("docs_pre_indexed_doc_used", {
         doc: preIndexedDoc["title"],
@@ -583,32 +592,72 @@ export default class DocsService {
     return result.favicon;
   }
 
-  private async syncConfigAndSqlite() {
+  /*
+    Sync with no embeddings provider change
+    Ignores pre-indexed docs
+  */
+  private async syncDocsOnConfigUpdate(
+    oldConfig: ContinueConfig,
+    newConfig: ContinueConfig,
+  ) {
     try {
       this.isSyncing = true;
 
-      const sqliteDocs = await this.listMetadata();
-      const sqliteDocStartUrls = sqliteDocs.map((doc) => doc.startUrl) || [];
+      // Otherwise sync the index based on config changes
+      const oldConfigDocs = oldConfig.docs || [];
+      const newConfigDocs = newConfig.docs || [];
+      const newConfigStartUrls = newConfigDocs.map((doc) => doc.startUrl);
 
-      const configDocs = this.config.docs || [];
-      const configDocStartUrls =
-        this.config.docs?.map((doc) => doc.startUrl) || [];
+      const currentlyIndexedDocs = await this.listMetadata();
+      const currentStartUrls = currentlyIndexedDocs.map((doc) => doc.startUrl);
 
-      const newDocs = configDocs.filter(
-        (doc) => !sqliteDocStartUrls.includes(doc.startUrl),
-      );
-      const deletedDocs = sqliteDocs.filter(
+      // const newDocs = newConfigDocs.filter(
+      //   (doc) => !currentStartUrls.includes(doc.startUrl),
+      // );
+
+      // Anything found in sqlite but not in new config should be deleted
+      const deletedDocs = currentlyIndexedDocs.filter(
         (doc) =>
-          !configDocStartUrls.includes(doc.startUrl) &&
-          !preIndexedDocs[doc.startUrl],
+          !preIndexedDocs[doc.startUrl] &&
+          !newConfigStartUrls.includes(doc.startUrl),
       );
+
+      // Anything found in old config, new config, AND sqlite that doesn't match should be reindexed
+      // TODO if only favicon and title change, only update, don't embed
+      // Otherwise anything found in new config that isn't in sqlite should be added/indexed
+      const newDocs: SiteIndexingConfig[] = [];
+      const changedDocs: SiteIndexingConfig[] = [];
+      for (const doc of newConfigDocs) {
+        const oldConfigDoc = oldConfigDocs.find(
+          (d) => d.startUrl === doc.startUrl,
+        );
+        const currentIndexedDoc = currentStartUrls.includes(doc.startUrl);
+
+        if (currentIndexedDoc) {
+          if (
+            oldConfigDoc &&
+            (oldConfigDoc.maxDepth !== doc.maxDepth ||
+              oldConfigDoc.title !== doc.title ||
+              oldConfigDoc.faviconUrl !== doc.faviconUrl)
+          ) {
+            changedDocs.push(doc);
+          }
+          // if get's here, not changed, no update needed
+        } else {
+          newDocs.push(doc);
+        }
+      }
+
+      for (const doc of changedDocs) {
+        console.log(`Updating indexed doc: ${doc.startUrl}`);
+        await this.indexAndAdd(doc, true);
+      }
 
       for (const doc of newDocs) {
         console.log(`Indexing new doc: ${doc.startUrl}`);
         void Telemetry.capture("add_docs_config", { url: doc.startUrl });
 
-        const generator = this.indexAndAdd(doc);
-        while (!(await generator.next()).done) {}
+        await this.indexAndAdd(doc);
       }
 
       for (const doc of deletedDocs) {
@@ -706,8 +755,7 @@ export default class DocsService {
     return table;
   }
 
-  // Add methods for Individual docs
-
+  // Methods for adding individual docs
   private async addToLance({
     chunks,
     siteIndexingConfig,
@@ -858,7 +906,7 @@ export default class DocsService {
     }
 
     console.log(
-      `Reindexing docs with new embeddings provider: ${embeddingsProvider.id}`,
+      `Reindexing non-preindexed docs with new embeddings provider: ${embeddingsProvider.id}`,
     );
 
     for (const doc of docs) {
@@ -866,8 +914,7 @@ export default class DocsService {
     }
 
     for (const doc of docs) {
-      const generator = this.indexAndAdd(doc);
-      while (!(await generator.next()).done) {}
+      await this.indexAndAdd(doc);
     }
 
     // Important that this only is invoked after we have successfully
@@ -875,6 +922,6 @@ export default class DocsService {
     // invalid state.
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
 
-    console.log("Completed reindexing of all docs");
+    console.log("Completed reindexing of all non-preindexed docs");
   }
 }

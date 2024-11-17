@@ -39,11 +39,16 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "chatDescriber/describe",
     "stats/getTokensPerDay",
     "stats/getTokensPerModel",
+    // Codebase
     "index/setPaused",
     "index/forceReIndex",
-    "index/indexingProgressBarInitialized", // Deprecated
-    "index/getStatuses",
-
+    "index/indexingProgressBarInitialized",
+    // Docs, etc.
+    "indexing/getStatuses",
+    "indexing/reindex",
+    "indexing/abort",
+    "indexing/setPaused",
+    //
     "completeOnboarding",
     "addAutocompleteModel",
     "config/listProfiles",
@@ -56,8 +61,8 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
   [
     "configUpdate",
     "getDefaultModelTitle",
-    "indexProgress",
-    "index/statusUpdate", //
+    "indexProgress", // Codebase
+    "indexing/statusUpdate", // Docs, etc.
     "addContextItem",
     "refreshSubmenuItems",
     "isContinueInputFocused",

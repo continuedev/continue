@@ -47,21 +47,20 @@ export interface IndexingProgressUpdate {
 
 // This is more or less a V2 of IndexingProgressUpdate
 export interface IndexingStatusUpdate {
+  id: string;
   type: "docs";
-  id: string; // Unique identifier, e.g. docs start url
   progress: number;
   description: string;
-  status:
-    | "initializing"
-    | "indexing"
-    | "complete"
-    | "paused"
-    | "failed"
-    | "disabled";
-  embeddingsModel: string;
-  isReindexing: boolean;
+  status: "indexing" | "complete" | "paused" | "failed" | "aborted" | "deleted";
+  embeddingsProviderId: string;
+  isReindexing?: boolean;
   debugInfo?: string;
 }
+
+export type IndexingStatusMap = Map<
+  string,
+  Map<IndexingStatusUpdate["id"], IndexingStatusUpdate>
+>;
 
 export type PromptTemplateFunction = (
   history: ChatMessage[],

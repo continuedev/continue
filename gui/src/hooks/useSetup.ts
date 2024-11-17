@@ -110,16 +110,8 @@ function useSetup(dispatch: Dispatch<any>) {
     });
   });
 
-  const debouncedIndexDocs = debounce(() => {
-    ideMessenger.request("context/indexDocs", { reIndex: false });
-  }, 1000);
-
   useWebviewListener("configUpdate", async () => {
     await loadConfig();
-
-    if (!isJetBrains) {
-      debouncedIndexDocs();
-    }
   });
 
   useWebviewListener("configError", async (error) => {

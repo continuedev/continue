@@ -8,6 +8,7 @@ import type {
   ContextSubmenuItem,
   DiffLine,
   IdeSettings,
+  IndexingStatusMap,
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
@@ -142,6 +143,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
   "tts/kill": [undefined, void];
+
+  // Codebase indexing
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [
     undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
@@ -154,6 +157,15 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+
+  // Docs Indexing. TODO move codebase to this
+  "indexing/reindex": [
+    { id: string; shouldClearAllOfIndexType?: boolean },
+    void,
+  ];
+  "indexing/abort": [{ id: string }, void];
+  "indexing/setPaused": [{ id: string; pause: boolean }, void];
+  "indexing/getStatuses": [undefined, IndexingStatusMap];
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];

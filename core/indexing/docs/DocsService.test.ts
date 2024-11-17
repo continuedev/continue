@@ -66,8 +66,7 @@ describe.skip("DocsService Integration Tests", () => {
   });
 
   test("Indexing, retrieval, and deletion of a new documentation site", async () => {
-    const generator = docsService.indexAndAdd(mockSiteConfig);
-    while (!(await generator.next()).done) {}
+    await docsService.indexAndAdd(mockSiteConfig);
 
     let latestConfig = await getReloadedConfig();
 
@@ -133,13 +132,11 @@ describe.skip("DocsService Integration Tests", () => {
 
   test("Handles pulling down and adding pre-indexed docs", async () => {
     const preIndexedDoc = Object.values(preIndexedDocs)[0];
-    const generator = docsService.indexAndAdd(preIndexedDoc);
-    while (!(await generator.next()).done) {}
+    await docsService.indexAndAdd(preIndexedDoc);
   });
 
   test("Config synchronization with SQLite", async () => {
-    const generator = docsService.indexAndAdd(mockSiteConfig);
-    while (!(await generator.next()).done) {}
+    await docsService.indexAndAdd(mockSiteConfig);
 
     await getReloadedConfig();
 

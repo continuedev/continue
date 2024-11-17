@@ -9,7 +9,6 @@ import {
 } from "../..";
 import DocsService from "../../indexing/docs/DocsService";
 import preIndexedDocs from "../../indexing/docs/preIndexedDocs";
-import { Telemetry } from "../../util/posthog";
 
 import { INSTRUCTIONS_BASE_ITEM } from "./utils";
 

@@ -35,6 +35,7 @@ import { TTS } from "./util/tts";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./util/messenger";
+import { IndexingStatusManager } from "./indexing/IndexingStatusManager";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -43,8 +44,8 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   codebaseIndexingState: IndexingProgressUpdate;
-  docsIndexingStates: Map<string, IndexingProgressUpdate> = new Map();
   controlPlaneClient: ControlPlaneClient;
+  private indexingManager: IndexingStatusManager;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
 
@@ -108,6 +109,8 @@ export class Core {
       this.onWrite,
       this.controlPlaneClient,
     );
+
+    this.indexingManager = new IndexingStatusManager(this.messenger);
 
     this.docsService = DocsService.createSingleton(
       this.configHandler,
@@ -278,32 +281,15 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
-      // let hasFailed = false;
-      // for await (const result of this.docsService.indexAndAdd(msg.data)) {
-      //   if (result.status === "failed") {
-      //     hasFailed = true;
-      //     break;
-      //   }
-      // }
-      // if (hasFailed) {
-      //   void this.ide.showToast("info", `Failed to index ${msg.data.startUrl}`);
-      // } else {
-      //   void this.ide.showToast(
-      //     "info",
-      //     `Successfully indexed ${msg.data.startUrl}`,
-      //   );
-      //   this.messenger.send("refreshSubmenuItems", undefined);
-      // }
+      void this.docsService.indexAndAdd(msg.data);
     });
 
     on("context/removeDocs", async (msg) => {
       await this.docsService.delete(msg.data.startUrl);
-      this.messenger.send("refreshSubmenuItems", undefined);
     });
 
     on("context/indexDocs", async (msg) => {
-      await this.docsService.indexAllDocs(msg.data.reIndex);
-      this.messenger.send("refreshSubmenuItems", undefined);
+      await this.docsService.indexAllDocsWithPrompt(msg.data.reIndex);
     });
 
     on("context/loadSubmenuItems", async (msg) => {
@@ -726,6 +712,19 @@ export class Core {
         recentlyEditedFilesCache.set(filepath, filepath);
       }
     });
+
+    on("indexing/reindex", async (msg) => {
+      this.indexingManager.reindex(msg.data.id);
+    });
+    on("indexing/abort", async (msg) => {
+      this.indexingManager.abort(msg.data.id);
+    });
+    on("indexing/setPaused", async (msg) => {
+      this.indexingManager.setPaused(msg.data.id, msg.data.pause);
+    });
+    on("indexing/getStatuses", async (msg) => {
+      return this.indexingManager.statuses;
+    });
   }
 
   private indexingCancellationController: AbortController | undefined;
@@ -768,4 +767,6 @@ export class Core {
 
     this.messenger.send("refreshSubmenuItems", undefined);
   }
+
+  // private
 }
