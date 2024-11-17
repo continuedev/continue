@@ -88,38 +88,10 @@ class DocsContextProvider extends BaseContextProvider {
       return [];
     }
 
-    const isJetBrainsAndPreIndexedDocsProvider =
-      await docsService.isJetBrainsAndPreIndexedDocsProvider();
-
-    if (isJetBrainsAndPreIndexedDocsProvider) {
-      await extras.ide.showToast(
-        "error",
-        `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
-          "the embeddings provider, but it cannot be used with JetBrains. " +
-          "Please select a different embeddings provider to use the '@docs' " +
-          "context provider.",
-      );
-
-      return [];
-    }
-
-    const preIndexedDoc = preIndexedDocs[query];
-
-    if (!!preIndexedDoc) {
-      void Telemetry.capture("docs_pre_indexed_doc_used", {
-        doc: preIndexedDoc["title"],
-      });
-    }
-
-    const embeddingsProvider = await docsService.getEmbeddingsProvider(
-      !!preIndexedDoc,
-    );
-
-    const [vector] = await embeddingsProvider.embed([extras.fullInput]);
-
-    let chunks = await docsService.retrieveChunks(
+    await docsService.isInitialized;
+    let chunks = await docsService.retrieveChunksFromQuery(
+      extras.fullInput,
       query,
-      vector,
       this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
     );
 
@@ -175,7 +147,7 @@ class DocsContextProvider extends BaseContextProvider {
       return [];
     }
 
-    const docs = (await docsService.list()) ?? [];
+    const docs = (await docsService.listMetadata()) ?? [];
     const canUsePreindexedDocs = await docsService.canUsePreindexedDocs();
 
     const submenuItemsMap = new Map<string, ContextSubmenuItem>();

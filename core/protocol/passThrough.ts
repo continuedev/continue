@@ -41,7 +41,9 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "stats/getTokensPerModel",
     "index/setPaused",
     "index/forceReIndex",
-    "index/indexingProgressBarInitialized",
+    "index/indexingProgressBarInitialized", // Deprecated
+    "index/getStatuses",
+
     "completeOnboarding",
     "addAutocompleteModel",
     "config/listProfiles",
@@ -55,10 +57,11 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "configUpdate",
     "getDefaultModelTitle",
     "indexProgress",
+    "index/statusUpdate", //
     "addContextItem",
     "refreshSubmenuItems",
     "isContinueInputFocused",
     "didChangeAvailableProfiles",
     "setTTSActive",
-    "getWebviewHistoryLength"
+    "getWebviewHistoryLength",
   ];

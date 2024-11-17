@@ -72,7 +72,7 @@ describe.skip("DocsService Integration Tests", () => {
     let latestConfig = await getReloadedConfig();
 
     // Sqlite check
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(true);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(true);
 
     // config.json check
     expect(latestConfig.docs).toContainEqual(mockSiteConfig);
@@ -91,7 +91,7 @@ describe.skip("DocsService Integration Tests", () => {
     await docsService.delete(mockSiteConfig.startUrl);
 
     // Sqlite check
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(false);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(false);
 
     // config.json check
     latestConfig = await getReloadedConfig();
@@ -143,7 +143,7 @@ describe.skip("DocsService Integration Tests", () => {
 
     await getReloadedConfig();
 
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(true);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(true);
 
     editConfigJson((config) => {
       const { docs, ...restConfig } = config;
@@ -164,6 +164,6 @@ describe.skip("DocsService Integration Tests", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(false);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(false);
   });
 });

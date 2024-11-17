@@ -51,10 +51,16 @@ export interface IndexingStatusUpdate {
   id: string; // Unique identifier, e.g. docs start url
   progress: number;
   description: string;
-  status: "initializing" | "indexing" | "complete" | "paused" | "failed" | "disabled";
+  status:
+    | "initializing"
+    | "indexing"
+    | "complete"
+    | "paused"
+    | "failed"
+    | "disabled";
   embeddingsModel: string;
   isReindexing: boolean;
-  debugInfo: string;
+  debugInfo?: string;
 }
 
 export type PromptTemplateFunction = (

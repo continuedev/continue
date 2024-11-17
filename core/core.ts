@@ -278,24 +278,22 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
-      let hasFailed = false;
-
-      for await (const result of this.docsService.indexAndAdd(msg.data)) {
-        if (result.status === "failed") {
-          hasFailed = true;
-          break;
-        }
-      }
-
-      if (hasFailed) {
-        void this.ide.showToast("info", `Failed to index ${msg.data.startUrl}`);
-      } else {
-        void this.ide.showToast(
-          "info",
-          `Successfully indexed ${msg.data.startUrl}`,
-        );
-        this.messenger.send("refreshSubmenuItems", undefined);
-      }
+      // let hasFailed = false;
+      // for await (const result of this.docsService.indexAndAdd(msg.data)) {
+      //   if (result.status === "failed") {
+      //     hasFailed = true;
+      //     break;
+      //   }
+      // }
+      // if (hasFailed) {
+      //   void this.ide.showToast("info", `Failed to index ${msg.data.startUrl}`);
+      // } else {
+      //   void this.ide.showToast(
+      //     "info",
+      //     `Successfully indexed ${msg.data.startUrl}`,
+      //   );
+      //   this.messenger.send("refreshSubmenuItems", undefined);
+      // }
     });
 
     on("context/removeDocs", async (msg) => {
