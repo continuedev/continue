@@ -134,6 +134,16 @@ export default class DocsService {
       this.reindexDoc,
     );
     const config = await configHandler.loadConfig();
+    this.config = config;
+
+    // On first go we want to have an indexing status for all docs
+    // Since config handler will only trigger indexing status updates on changes
+    if (config.docs?.length) {
+      for (const doc of config.docs) {
+        await this.indexAndAdd(doc);
+      }
+    }
+
     await this.handleConfigUpdate({ config });
     configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
   }
@@ -335,146 +345,157 @@ export default class DocsService {
 
     // Mark the site as currently being indexed
     this.docsIndexingQueue.add(startUrl);
-
-    this.updateIndexingStatus({
-      ...fixedStatus,
-      status: "indexing",
-      description: "Finding subpages",
-      progress: 0,
-    });
-
-    const articles: Article[] = [];
-    let processedPages = 0;
-    let maxKnownPages = 1;
-
-    // Crawl pages and retrieve info as articles
-    for await (const page of this.docsCrawler.crawl(new URL(startUrl))) {
-      processedPages++;
-
-      const article = pageToArticle(page);
-
-      if (!article) {
-        continue;
-      }
-
-      articles.push(article);
-
-      // Use a heuristic approach for progress calculation
-      const progress = Math.min(processedPages / maxKnownPages, 1);
-
-      this.updateIndexingStatus({
-        ...fixedStatus,
-        description: `Finding subpages (${page.path})`,
-        status: "indexing",
-        progress, // Yield the heuristic progress
-      });
-
-      // Increase maxKnownPages to delay progress reaching 100% too soon
-      if (processedPages === maxKnownPages) {
-        maxKnownPages *= 2;
-      }
-
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
-
-    void Telemetry.capture("docs_pages_crawled", {
-      count: processedPages,
-    });
-
-    const chunks: Chunk[] = [];
-    const embeddings: number[][] = [];
-
-    // Create embeddings of retrieved articles
-    console.debug(`Creating embeddings for ${articles.length} articles`);
-
-    for (let i = 0; i < articles.length; i++) {
-      const article = articles[i];
+    try {
       this.updateIndexingStatus({
         ...fixedStatus,
         status: "indexing",
-        description: `Creating Embeddings: ${article.subpath}`,
-        progress: i / articles.length,
+        description: "Finding subpages",
+        progress: 0,
       });
 
-      try {
-        const chunkedArticle = chunkArticle(
-          article,
-          embeddingsProvider.maxChunkSize,
-        );
+      const articles: Article[] = [];
+      let processedPages = 0;
+      let maxKnownPages = 1;
 
-        const chunkedArticleContents = chunkedArticle.map(
-          (chunk) => chunk.content,
-        );
+      // Crawl pages and retrieve info as articles
+      for await (const page of this.docsCrawler.crawl(new URL(startUrl))) {
+        processedPages++;
 
-        chunks.push(...chunkedArticle);
+        const article = pageToArticle(page);
 
-        const subpathEmbeddings = await embeddingsProvider.embed(
-          chunkedArticleContents,
-        );
+        if (!article) {
+          continue;
+        }
 
-        embeddings.push(...subpathEmbeddings);
-      } catch (e) {
-        console.warn("Error chunking article: ", e);
+        articles.push(article);
+
+        // Use a heuristic approach for progress calculation
+        const progress = Math.min(processedPages / maxKnownPages, 1);
+
+        this.updateIndexingStatus({
+          ...fixedStatus,
+          description: `Finding subpages (${page.path})`,
+          status: "indexing",
+          progress, // Yield the heuristic progress
+        });
+
+        // Increase maxKnownPages to delay progress reaching 100% too soon
+        if (processedPages === maxKnownPages) {
+          maxKnownPages *= 2;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
-    }
 
-    if (embeddings.length === 0) {
-      console.error(
-        `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
-      );
+      void Telemetry.capture("docs_pages_crawled", {
+        count: processedPages,
+      });
 
+      const chunks: Chunk[] = [];
+      const embeddings: number[][] = [];
+
+      // Create embeddings of retrieved articles
+      console.debug(`Creating embeddings for ${articles.length} articles`);
+
+      for (let i = 0; i < articles.length; i++) {
+        const article = articles[i];
+        this.updateIndexingStatus({
+          ...fixedStatus,
+          status: "indexing",
+          description: `Creating Embeddings: ${article.subpath}`,
+          progress: i / articles.length,
+        });
+
+        try {
+          const chunkedArticle = chunkArticle(
+            article,
+            embeddingsProvider.maxChunkSize,
+          );
+
+          const chunkedArticleContents = chunkedArticle.map(
+            (chunk) => chunk.content,
+          );
+
+          chunks.push(...chunkedArticle);
+
+          const subpathEmbeddings = await embeddingsProvider.embed(
+            chunkedArticleContents,
+          );
+
+          embeddings.push(...subpathEmbeddings);
+        } catch (e) {
+          console.warn("Error chunking article: ", e);
+        }
+      }
+
+      if (embeddings.length === 0) {
+        console.error(
+          `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
+        );
+
+        this.updateIndexingStatus({
+          ...fixedStatus,
+          description: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
+          status: "failed",
+          progress: 1,
+        });
+
+        void this.ide.showToast("info", `Failed to index ${startUrl}`);
+
+        this.docsIndexingQueue.delete(startUrl);
+
+        return;
+      }
+
+      // Add docs to databases
+      console.log(`Adding ${embeddings.length} embeddings to db`);
+
+      this.updateIndexingStatus({
+        ...fixedStatus,
+        description: `Adding ${embeddings.length} embeddings to db`,
+        status: "indexing",
+        progress: 0.5,
+      });
+
+      // Delete indexed docs if re-indexing
+      if (reIndex && (await this.hasMetadata(startUrl.toString()))) {
+        console.log("Deleting old embeddings");
+        await this.delete(startUrl);
+      }
+
+      const favicon = await fetchFavicon(new URL(siteIndexingConfig.startUrl));
+
+      await this.add({
+        siteIndexingConfig,
+        chunks,
+        embeddings,
+        favicon,
+      });
+
+      this.docsIndexingQueue.delete(startUrl);
+
+      this.updateIndexingStatus({
+        ...fixedStatus,
+        description: "Complete",
+        status: "complete",
+        progress: 1,
+      });
+
+      void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
+
+      if (this.messenger) {
+        this.messenger.send("refreshSubmenuItems", undefined);
+      }
+    } catch (e) {
+      console.error("Error indexing docs", e);
       this.updateIndexingStatus({
         ...fixedStatus,
         description: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
         status: "failed",
         progress: 1,
       });
-
-      void this.ide.showToast("info", `Failed to index ${startUrl}`);
-
+    } finally {
       this.docsIndexingQueue.delete(startUrl);
-
-      return;
-    }
-
-    // Add docs to databases
-    console.log(`Adding ${embeddings.length} embeddings to db`);
-
-    this.updateIndexingStatus({
-      ...fixedStatus,
-      description: `Adding ${embeddings.length} embeddings to db`,
-      status: "indexing",
-      progress: 0.5,
-    });
-
-    // Delete indexed docs if re-indexing
-    if (reIndex && (await this.hasMetadata(startUrl.toString()))) {
-      console.log("Deleting old embeddings");
-      await this.delete(startUrl);
-    }
-
-    const favicon = await fetchFavicon(new URL(siteIndexingConfig.startUrl));
-
-    await this.add({
-      siteIndexingConfig,
-      chunks,
-      embeddings,
-      favicon,
-    });
-
-    this.docsIndexingQueue.delete(startUrl);
-
-    this.updateIndexingStatus({
-      ...fixedStatus,
-      description: "Complete",
-      status: "complete",
-      progress: 1,
-    });
-
-    void this.ide.showToast("info", `Successfully indexed ${startUrl}`);
-
-    if (this.messenger) {
-      this.messenger.send("refreshSubmenuItems", undefined);
     }
   }
 
