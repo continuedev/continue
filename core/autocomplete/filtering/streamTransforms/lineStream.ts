@@ -2,6 +2,7 @@ import { distance } from "fastest-levenshtein";
 
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
+import { BRACKETS, BRACKETS_REVERSE } from "../BracketMatchingService";
 
 export type LineFilter = (args: {
   lines: LineStream;
@@ -542,6 +543,46 @@ export async function* showWhateverWeHaveAtXMs(
     // But after that, soft break at X ms
     if (Date.now() - startTime > ms) {
       break;
+    }
+  }
+}
+
+export async function* noDoubleNewlineAfterClosingBracket(
+  lines: LineStream,
+): LineStream {
+  const bracketTypeCounts = new Map<string, number>();
+
+  for await (const line of lines) {
+    if (line.trim() === "") {
+      // Double newline detected
+      // Check if any bracket counts are negative
+      let hasNegativeCount = false;
+      for (const count of bracketTypeCounts.values()) {
+        if (count < 0) {
+          hasNegativeCount = true;
+          break;
+        }
+      }
+      if (hasNegativeCount) {
+        // Stop the generator if we've closed brackets we didn't open
+        return;
+      }
+    }
+
+    yield line;
+
+    // Update bracket counts
+    for (const char of line) {
+      if (BRACKETS[char]) {
+        // It's an opening bracket
+        const count = bracketTypeCounts.get(char) || 0;
+        bracketTypeCounts.set(char, count + 1);
+      } else if (BRACKETS_REVERSE[char]) {
+        // It's a closing bracket
+        const openingBracket = BRACKETS_REVERSE[char];
+        const count = bracketTypeCounts.get(openingBracket) || 0;
+        bracketTypeCounts.set(openingBracket, count - 1);
+      }
     }
   }
 }
