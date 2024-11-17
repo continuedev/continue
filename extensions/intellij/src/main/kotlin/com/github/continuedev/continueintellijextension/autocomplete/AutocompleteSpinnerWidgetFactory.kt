@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
@@ -35,7 +36,7 @@ class AutocompleteSpinnerWidget(project: Project) : EditorBasedWidget(project), 
     )
 
     init {
-        Disposer.register(project, this)
+        Disposer.register(ContinuePluginDisposable.getInstance(project), this)
         updateIcon()
     }
 

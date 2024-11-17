@@ -57,11 +57,11 @@ function OnboardingLocalTab() {
   useEffect(() => {
     const fetchDownloadedModels = async () => {
       try {
-        const result = (await ideMessenger.request("llm/listModels", {
+        const result = await ideMessenger.request("llm/listModels", {
           title: ONBOARDING_LOCAL_MODEL_TITLE,
-        })) as any;
+        })
 
-        if (result.status === "success" && Array.isArray(result.content)) {
+        if (result.status === "success") {
           setDownloadedOllamaModels(result.content);
           setIsOllamaConnected(true);
         } else {

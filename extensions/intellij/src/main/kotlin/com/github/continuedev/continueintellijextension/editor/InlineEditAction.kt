@@ -40,6 +40,8 @@ import org.jdesktop.swingx.JXTextArea
 
 const val MAIN_FONT_SIZE = 13
 
+const val DOWN_ARROW = " ▾"
+
 fun makeTextArea(): JTextArea {
     val textArea =
         CustomTextArea(1, 40).apply {
@@ -48,7 +50,7 @@ fun makeTextArea(): JTextArea {
             isOpaque = false
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-            margin = JBUI.insets(6, 8, 6, 4)
+            margin = JBUI.insets(6, 8, 2, 4)
             font = UIUtil.getFontWithFallback("Arial", Font.PLAIN, MAIN_FONT_SIZE)
             preferredSize = Dimension(400, 75)
         }
@@ -206,7 +208,7 @@ fun openInlineEdit(project: Project?, editor: Editor) {
     val comboBoxRef = Ref<JComboBox<String>>()
 
     fun onEnter() {
-        val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(" ▾")
+        val selectedModelStrippedOfCaret = (comboBoxRef.get().selectedItem as String).removeSuffix(DOWN_ARROW)
         customPanelRef.get().enter()
         diffStreamHandler.streamDiffLinesToEditor(
             textArea.text, prefix, highlighted, suffix, selectedModelStrippedOfCaret
@@ -425,7 +427,7 @@ class CustomPanel(
                     }
 
                     selectedIndex =
-                        continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
+                        if(itemCount == 0) -1 else continueSettingsService.continueState.lastSelectedInlineEditModel?.let {
                             if (modelTitles.isEmpty()) -1
                             else {
                                 val index = modelTitles.indexOf(it)
@@ -435,7 +437,7 @@ class CustomPanel(
 
                     addActionListener {
                         continueSettingsService.continueState.lastSelectedInlineEditModel =
-                            selectedItem as String
+                            (selectedItem as String).removeSuffix(DOWN_ARROW)
                     }
                 }
 
@@ -711,7 +713,7 @@ class TransparentArrowButtonUI : BasicComboBoxUI() {
 
                 override fun getSelectedItem(): Any? {
                     val item = originalModel.selectedItem
-                    return "$item ▾"
+                    return "$item$DOWN_ARROW"
                 }
 
                 override fun addListDataListener(l: ListDataListener?) {

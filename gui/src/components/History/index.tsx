@@ -46,13 +46,20 @@ export function History() {
     const fetchSessions = async () => {
       const sessions = await getHistory();
       setSessions(sessions);
-      minisearch.addAll(
-        sessions.map((session) => ({
-          title: session.title,
-          sessionId: session.sessionId,
-          id: session.sessionId,
-        })),
-      );
+
+      try {
+        // Consider adding just last session to existing instead of clearing/adding all
+        minisearch.removeAll();
+        minisearch.addAll(
+          sessions.map((session) => ({
+            title: session.title,
+            sessionId: session.sessionId,
+            id: session.sessionId,
+          })),
+        );
+      } catch (e) {
+        console.log("error adding sessions to minisearch", e);
+      }
     };
     fetchSessions();
   }, [lastSessionId]);

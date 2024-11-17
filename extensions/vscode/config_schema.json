@@ -772,6 +772,11 @@
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b",
                       "AUTODETECT"
                     ]
                   },
@@ -1028,7 +1033,12 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
-                      "starcoder2-3b"
+                      "starcoder2-3b",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b"
                     ]
                   },
                   {
@@ -1081,6 +1091,11 @@
                       "starcoder-1b",
                       "starcoder-3b",
                       "starcoder2-3b",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b",
                       "AUTODETECT"
                     ]
                   },
@@ -1400,7 +1415,12 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
-                      "starcoder2-3b"
+                      "starcoder2-3b",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b"
                     ]
                   },
                   {
@@ -2710,8 +2730,8 @@
         },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
-          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",

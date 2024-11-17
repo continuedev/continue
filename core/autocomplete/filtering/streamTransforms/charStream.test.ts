@@ -157,4 +157,20 @@ describe("stopAtStopTokens", () => {
 
     expect(output.join("")).toBe("Hello world!");
   });
+
+  it("should handle stop token when remaining buffer is smaller than maximum stop token length", async () => {
+    const mockStream = createMockStream(["Hello world!STOP"]);
+    const stopTokens: string[] = [
+      "STOP",
+      "STOP_TOKEN_THAT_IS_LARGER_THAN_BUFFER",
+    ];
+    const result = stopAtStopTokens(mockStream, stopTokens);
+
+    const output = [];
+    for await (const char of result) {
+      output.push(char);
+    }
+
+    expect(output.join("")).toBe("Hello world!");
+  });
 });

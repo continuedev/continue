@@ -2,7 +2,7 @@ import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -26,13 +26,18 @@ const fadeInAnimation = keyframes`
   }
 `;
 
-const TopDiv = styled.div`
+const TopDiv = styled.div<{ active?: boolean }>`
   outline: 1px solid rgba(153, 153, 152);
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
-  animation: ${fadeInAnimation} 300ms ease-out forwards;
+  ${(props) =>
+    props.active
+      ? "animation: none;"
+      : css`
+          animation: ${fadeInAnimation} 300ms ease-out forwards;
+        `}
 `;
 
 const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
@@ -67,6 +72,7 @@ export default function StepContainerPreToolbar(
   const isMultifileEdit = useSelector(
     (state: RootState) => state.state.isInMultifileEdit,
   );
+  const active = useSelector((state: RootState) => state.state.active);
   const [isExpanded, setIsExpanded] = useState(isMultifileEdit ? false : true);
   const [codeBlockContent, setCodeBlockContent] = useState("");
   const isChatActive = useSelector((state: RootState) => state.state.active);
@@ -168,7 +174,7 @@ export default function StepContainerPreToolbar(
   }
 
   return (
-    <TopDiv>
+    <TopDiv active={active}>
       <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
         <div className="flex items-center">
           <ChevronDownIcon

@@ -40,12 +40,7 @@ const windowIDTransform = (windowID: string) =>
   );
 
 const saveSubsetFilters = [
-  createFilter("state", [
-    "history",
-    "contextItems",
-    "sessionId",
-    "defaultModelTitle",
-  ]),
+  createFilter("state", ["history", "sessionId", "defaultModelTitle"]),
 ];
 
 const persistConfig = {

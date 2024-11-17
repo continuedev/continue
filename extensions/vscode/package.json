@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "1.100.0",
+  "version": "1.100.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -331,12 +331,14 @@
       {
         "command": "continue.acceptDiff",
         "mac": "shift+cmd+enter",
-        "key": "shift+ctrl+enter"
+        "key": "shift+ctrl+enter",
+        "when": "continue.diffVisible"
       },
       {
         "command": "continue.rejectDiff",
         "mac": "shift+cmd+backspace",
-        "key": "shift+ctrl+backspace"
+        "key": "shift+ctrl+backspace",
+        "when": "continue.diffVisible"
       },
       {
         "command": "continue.rejectDiff",
@@ -588,7 +590,7 @@
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
-    "esbuild": "^0.19.12",
+    "esbuild": "^0.17.19",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
@@ -611,6 +613,7 @@
     "cors": "^2.8.5",
     "dbinfoz": "^0.14.0",
     "downshift": "^7.6.0",
+    "esbuild": "^0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
