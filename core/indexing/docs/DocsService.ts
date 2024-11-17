@@ -199,8 +199,8 @@ export default class DocsService {
         "curEmbeddingsProviderId",
       );
       if (
-        curEmbeddingsProviderId &&
-        curEmbeddingsProviderId !== curEmbeddingsProviderId
+        !curEmbeddingsProviderId ||
+        curEmbeddingsProviderId !== newConfig.embeddingsProvider.id
       ) {
         // If not set, we're initializing
         const currentDocs = await this.listMetadata();
@@ -517,7 +517,8 @@ export default class DocsService {
     nRetrieve: number,
     isRetry: boolean = false,
   ): Promise<Chunk[]> {
-    const embeddingsProvider = await this.getEmbeddingsProvider();
+    const isPreindexed = !!preIndexedDocs[startUrl];
+    const embeddingsProvider = await this.getEmbeddingsProvider(isPreindexed);
     const table = await this.getOrCreateLanceTable({
       initializationVector: vector,
       embeddingsProvider,
@@ -894,8 +895,6 @@ export default class DocsService {
       embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
     });
   }
-
-  // METHODS FOR MASS REINDEXING
 
   /**
    * Currently this deletes re-crawls + re-indexes all docs.

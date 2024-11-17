@@ -77,11 +77,9 @@ describe.skip("DocsService Integration Tests", () => {
     expect(latestConfig.docs).toContainEqual(mockSiteConfig);
 
     // Lance DB check
-    const embeddingsProvider = await docsService.getEmbeddingsProvider();
-    const [mockVector] = await embeddingsProvider.embed(["test"]);
-    let retrievedChunks = await docsService.retrieveChunks(
+    let retrievedChunks = await docsService.retrieveChunksFromQuery(
+      "test",
       mockSiteConfig.startUrl,
-      mockVector,
       5,
     );
 
@@ -99,9 +97,9 @@ describe.skip("DocsService Integration Tests", () => {
     );
 
     // LanceDB check
-    retrievedChunks = await docsService.retrieveChunks(
+    retrievedChunks = await docsService.retrieveChunksFromQuery(
+      "test",
       mockSiteConfig.startUrl,
-      mockVector,
       5,
     );
     expect(retrievedChunks.length).toBe(0);
