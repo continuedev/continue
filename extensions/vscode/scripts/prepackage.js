@@ -390,11 +390,10 @@ const exe = os === "win32" ? ".exe" : "";
     // Download esbuild from npm in tmp and copy over
     console.log("npm installing esbuild binary");
     await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.19.12",
+      "esbuild@0.17.19",
       "@esbuild",
     );
   }
-
   console.log("[info] Copying sqlite node binding from core");
   await new Promise((resolve, reject) => {
     ncp(

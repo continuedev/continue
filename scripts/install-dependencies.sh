@@ -25,6 +25,17 @@ npm run build
 
 popd
 
+# VSCode Extension (will also package GUI)
+echo "Installing VSCode extension dependencies..."
+pushd extensions/vscode
+# This does way too many things inline but is the common denominator between many of the scripts
+npm install --include=dev
+npm link @continuedev/core
+npm run prepackage
+npm run package
+
+popd
+
 echo "Installing binary dependencies..."
 pushd binary
 npm install --include=dev
@@ -35,16 +46,5 @@ popd
 echo "Installing docs dependencies..."
 pushd docs
 npm install --include=dev
-
-popd
-
-# VSCode Extension (will also package GUI)
-echo "Installing VSCode extension dependencies..."
-pushd extensions/vscode
-# This does way too many things inline but is the common denominator between many of the scripts
-npm install --include=dev
-npm link @continuedev/core
-npm run prepackage
-npm run package
 
 popd

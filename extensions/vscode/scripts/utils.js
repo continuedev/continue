@@ -325,17 +325,17 @@ async function downloadEsbuildBinary(target) {
   fs.mkdirSync(`out/tmp`, { recursive: true });
   const downloadUrl = {
     "darwin-arm64":
-      "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.19.12.tgz",
+      "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.17.19.tgz",
     "linux-arm64":
-      "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.19.12.tgz",
+      "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.17.19.tgz",
     "win32-arm64":
-      "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.19.12.tgz",
+      "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.17.19.tgz",
     "linux-x64":
-      "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.19.12.tgz",
+      "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.19.tgz",
     "darwin-x64":
-      "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.19.12.tgz",
+      "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.17.19.tgz",
     "win32-x64":
-      "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.19.12.tgz",
+      "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.17.19.tgz",
   }[target];
   execCmdSync(`curl -L -o out/tmp/esbuild.tgz ${downloadUrl}`);
   execCmdSync("cd out/tmp && tar -xvzf esbuild.tgz");
