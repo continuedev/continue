@@ -57,6 +57,11 @@ export interface IndexingStatusUpdate {
   debugInfo?: string;
 }
 
+interface IndexIdentifier {
+  type: string;
+  id: string;
+}
+
 export type IndexingStatusMap = Map<
   string,
   Map<IndexingStatusUpdate["id"], IndexingStatusUpdate>

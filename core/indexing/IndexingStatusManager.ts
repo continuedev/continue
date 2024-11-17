@@ -1,4 +1,4 @@
-import { IndexingStatusMap, IndexingStatusUpdate } from "..";
+import { IndexIdentifier, IndexingStatusMap, IndexingStatusUpdate } from "..";
 import { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import { IMessenger } from "../util/messenger";
 
@@ -7,7 +7,8 @@ import { IMessenger } from "../util/messenger";
     1. Pass indexingManager to the service
     2. Register the service with the manager using `registerService`
        E.g. docs uses startUrl as id
-    3. 
+    3. Rules of engagement:
+        - service is responsible for checking corrupted indexes - don't check paused or deleted
 */
 export class IndexingStatusManager {
   private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
@@ -21,26 +22,29 @@ export class IndexingStatusManager {
     this.messenger = messenger;
   }
 
+  private static instance?: IndexingStatusManager;
+  static createSingleton(
+    messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+  ) {
+    const instance = new IndexingStatusManager(messenger);
+    IndexingStatusManager.instance = instance;
+    return instance;
+  }
+
+  static getSingleton() {
+    return IndexingStatusManager.instance;
+  }
+
   // Services that use an instance of this class should add their reindex functions here
   registerService(type: string, fn: (id: string) => Promise<void>) {
     this.reindexTypeFunctions.set(type, fn);
     this.statuses.set(type, new Map());
   }
 
-  reindex(type: string, id: string) {
-    const byType = this.statuses.get(type);
+  reindex({ type, id }: IndexIdentifier) {
     const reindexFn = this.reindexTypeFunctions.get(type);
-
-    if (byType && reindexFn) {
-      const status = byType.get(id);
-      if (status) {
-        if (status.status === "deleted") {
-          throw new Error(
-            "Cannot reindex a deleted item, shouldn't ever happen",
-          );
-        }
-        void reindexFn(id);
-      }
+    if (reindexFn) {
+      void reindexFn(id);
     }
   }
 
@@ -52,53 +56,38 @@ export class IndexingStatusManager {
     }
   }
 
-  delete(type: string, id: string) {
-    const byType = this.statuses.get(type);
-    if (byType) {
-      const status = byType.get(id);
-      if (status) {
-        this.handleUpdate({ ...status, status: "deleted" });
-      }
+  delete({ type, id }: IndexIdentifier) {
+    const status = this.statuses.get(type)?.get(id);
+    if (status) {
+      this.handleUpdate({ ...status, status: "deleted" });
     }
   }
 
-  abort(type: string, id: string) {
-    const byType = this.statuses.get(type);
-    if (byType) {
-      const status = byType.get(id);
-      if (status) {
-        this.handleUpdate({ ...status, status: "aborted" });
-      }
+  abort({ type, id }: IndexIdentifier) {
+    const status = this.statuses.get(type)?.get(id);
+    if (status) {
+      this.handleUpdate({ ...status, status: "aborted" });
     }
   }
 
-  isAborted(type: string, id: string) {
-    const byType = this.statuses.get(type);
-    if (byType) {
-      const status = byType.get(id);
-      if (status) {
-        return status.status === "aborted";
-      }
+  isAborted({ type, id }: IndexIdentifier) {
+    const status = this.statuses.get(type)?.get(id);
+    if (status) {
+      return status.status === "aborted";
     }
   }
 
-  setPaused(type: string, id: string, pause: boolean) {
-    const byType = this.statuses.get(type);
-    if (byType) {
-      const status = byType.get(id);
-      if (status) {
-        this.handleUpdate({ ...status, status: pause ? "paused" : "indexing" });
-      }
+  setPaused({ type, id }: IndexIdentifier, pause: boolean) {
+    const status = this.statuses.get(type)?.get(id);
+    if (status) {
+      this.handleUpdate({ ...status, status: pause ? "paused" : "indexing" });
     }
   }
 
-  isPaused(type: string, id: string) {
-    const byType = this.statuses.get(type);
-    if (byType) {
-      const status = byType.get(id);
-      if (status) {
-        return status.status === "paused";
-      }
+  isPaused({ type, id }: IndexIdentifier) {
+    const status = this.statuses.get(type)?.get(id);
+    if (status) {
+      return status.status === "paused";
     }
   }
 }

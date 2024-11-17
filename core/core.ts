@@ -110,12 +110,15 @@ export class Core {
       this.controlPlaneClient,
     );
 
-    this.indexingManager = new IndexingStatusManager(this.messenger);
+    this.indexingManager = IndexingStatusManager.createSingleton(
+      this.messenger,
+    );
 
     this.docsService = DocsService.createSingleton(
       this.configHandler,
       this.ide,
       this.messenger,
+      this.indexingManager,
     );
 
     this.configHandler.onConfigUpdate(
@@ -714,13 +717,13 @@ export class Core {
     });
 
     on("indexing/reindex", async (msg) => {
-      this.indexingManager.reindex(msg.data.id);
+      this.indexingManager.reindex(msg.data.identifier);
     });
     on("indexing/abort", async (msg) => {
-      this.indexingManager.abort(msg.data.id);
+      this.indexingManager.abort(msg.data.identifier);
     });
     on("indexing/setPaused", async (msg) => {
-      this.indexingManager.setPaused(msg.data.id, msg.data.pause);
+      this.indexingManager.setPaused(msg.data.identifier, msg.data.pause);
     });
     on("indexing/getStatuses", async (msg) => {
       return this.indexingManager.statuses;

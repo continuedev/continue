@@ -135,6 +135,16 @@ function useSetup(dispatch: Dispatch<any>) {
     );
   });
 
+  useWebviewListener("indexing/statusUpdate", async (data) => {
+    console.log("Indexing status update", data);
+    // dispatch(
+    //   addContextItemsAtIndex({
+    //     index: data.historyIndex,
+    //     contextItems: [data.item],
+    //   }),
+    // );
+  });
+
   useWebviewListener(
     "getDefaultModelTitle",
     async () => {

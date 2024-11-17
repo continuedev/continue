@@ -10,8 +10,8 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];
   configError: [ConfigValidationError[] | undefined, void];
   getDefaultModelTitle: [undefined, string];
-  indexProgress: [IndexingProgressUpdate, void];
-  "indexing/statusUpdate": [IndexingStatusUpdate, void];
+  indexProgress: [IndexingProgressUpdate, void]; // Codebase
+  "indexing/statusUpdate": [IndexingStatusUpdate, void]; // Docs, etc.
   refreshSubmenuItems: [undefined, void];
   isContinueInputFocused: [undefined, boolean];
   addContextItem: [

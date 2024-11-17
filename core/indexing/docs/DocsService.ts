@@ -111,8 +111,14 @@ export default class DocsService {
     configHandler: ConfigHandler,
     ide: IDE,
     messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+    indexingManager?: IndexingStatusManager,
   ) {
-    const docsService = new DocsService(configHandler, ide, messenger);
+    const docsService = new DocsService(
+      configHandler,
+      ide,
+      messenger,
+      indexingManager,
+    );
     DocsService.instance = docsService;
     return docsService;
   }
@@ -127,9 +133,9 @@ export default class DocsService {
       DocsService.indexingType,
       this.reindexDoc,
     );
-    this.config = await configHandler.loadConfig();
-    await this.handleConfigUpdate({ config: this.config });
-    configHandler.onConfigUpdate(this.handleConfigUpdate);
+    const config = await configHandler.loadConfig();
+    await this.handleConfigUpdate({ config });
+    configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
   }
 
   // Config
@@ -502,7 +508,7 @@ export default class DocsService {
 
     const [vector] = await embeddingsProvider.embed([query]);
 
-    return await this.retrieveChunks(query, vector, nRetrieve);
+    return await this.retrieveChunks(startUrl, vector, nRetrieve);
   }
 
   async retrieveChunks(
@@ -525,7 +531,7 @@ export default class DocsService {
         .where(`starturl = '${startUrl}'`)
         .execute();
     } catch (e: any) {
-      console.error("Error retrieving chunks from LanceDB", e);
+      console.warn("Error retrieving chunks from LanceDB", e);
     }
 
     const hasIndexedDoc = await this.hasMetadata(startUrl);
@@ -597,14 +603,14 @@ export default class DocsService {
     Ignores pre-indexed docs
   */
   private async syncDocsOnConfigUpdate(
-    oldConfig: ContinueConfig,
+    oldConfig: ContinueConfig | undefined,
     newConfig: ContinueConfig,
   ) {
     try {
       this.isSyncing = true;
 
       // Otherwise sync the index based on config changes
-      const oldConfigDocs = oldConfig.docs || [];
+      const oldConfigDocs = oldConfig?.docs || [];
       const newConfigDocs = newConfig.docs || [];
       const newConfigStartUrls = newConfigDocs.map((doc) => doc.startUrl);
 
@@ -664,7 +670,7 @@ export default class DocsService {
         await this.delete(doc.startUrl);
       }
     } catch (e) {
-      console.error("Error syncing config and sqlite", e);
+      console.error("Error syncing docs index on config update", e);
     } finally {
       this.isSyncing = false;
     }
