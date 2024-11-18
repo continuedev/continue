@@ -30,6 +30,11 @@ class Anthropic extends BaseLLM {
       model: options.model === "claude-2" ? "claude-2.1" : options.model,
       stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
       stream: options.stream ?? true,
+      tools: options.tools?.map((tool) => ({
+        name: tool.function.name,
+        description: tool.function.description,
+        input_schema: tool.function.parameters,
+      })),
     };
 
     return finalOptions;
@@ -145,10 +150,48 @@ class Anthropic extends BaseLLM {
       return;
     }
 
+    let lastToolUseId: string | undefined;
+    let lastToolUseName: string | undefined;
     for await (const value of streamSse(response)) {
-      if (value.type == "message_start") {console.log(value);}
-      if (value.delta?.text) {
-        yield { role: "assistant", content: value.delta.text };
+      // https://docs.anthropic.com/en/api/messages-streaming#event-types
+      switch (value.type) {
+        case "content_block_start":
+          if (value.content_block.type === "tool_use") {
+            lastToolUseId = value.content_block.id;
+            lastToolUseName = value.content_block.name;
+          }
+          break;
+        case "content_block_delta":
+          // https://docs.anthropic.com/en/api/messages-streaming#delta-types
+          switch (value.delta.type) {
+            case "text_delta":
+              yield { role: "assistant", content: value.delta.text };
+              break;
+            case "input_json_delta":
+              if (!lastToolUseId || !lastToolUseName) {
+                throw new Error("No tool use found");
+              }
+              yield {
+                role: "assistant",
+                content: "",
+                toolCalls: [
+                  {
+                    id: lastToolUseId,
+                    type: "function",
+                    function: {
+                      name: lastToolUseName,
+                      arguments: value.delta.partial_json,
+                    },
+                  },
+                ],
+              };
+              break;
+          }
+          break;
+        case "content_block_stop":
+          break;
+        default:
+          break;
       }
     }
   }

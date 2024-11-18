@@ -337,8 +337,8 @@ async function intermediateToFinalConfig(
       ...config.requestOptions,
     };
     model.completionOptions.tools = [
-      makeCreateNewFileTool(ide),
-      runTerminalCommandTool(ide),
+      makeCreateNewFileTool({ ide }),
+      runTerminalCommandTool({ ide }),
     ];
   }
 
