@@ -25,11 +25,9 @@ import {
   vscBackground,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
-import { useFindWidget } from "../../components/find/FindWidget";
-import StepContainer from "../../components/gui/StepContainer";
+import StepContainer from "../../components/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import {
@@ -44,7 +42,6 @@ import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   clearLastResponse,
-  deleteMessage,
   newSession,
   setInactive,
 } from "../../redux/slices/stateSlice";
@@ -63,6 +60,8 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
+import { useFindWidget } from "../../components/find/FindWidget";
+
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -371,41 +370,7 @@ export function Chat() {
                     <StepContainer
                       index={index}
                       isLast={index === state.history.length - 1}
-                      isFirst={index === 0}
-                      open={
-                        typeof stepsOpen[index] === "undefined"
-                          ? true
-                          : stepsOpen[index]!
-                      }
-                      key={index}
-                      onUserInput={(input: string) => {}}
                       item={item}
-                      onReverse={() => {}}
-                      onRetry={() => {
-                        streamResponse(
-                          state.history[index - 1].editorState,
-                          state.history[index - 1].modifiers ??
-                            defaultInputModifiers,
-                          ideMessenger,
-                          index - 1,
-                        );
-                      }}
-                      onContinueGeneration={() => {
-                        window.postMessage(
-                          {
-                            messageType: "userInput",
-                            data: {
-                              input:
-                                "Continue your response exactly where you left off:",
-                            },
-                          },
-                          "*",
-                        );
-                      }}
-                      onDelete={() => {
-                        dispatch(deleteMessage(index));
-                      }}
-                      modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
                     />
                   </TimelineItem>
                 </div>
