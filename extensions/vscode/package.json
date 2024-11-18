@@ -57,6 +57,12 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "authentication": [
+      {
+        "id": "continue",
+        "label": "Continue"
+      }
+    ],
     "languages": [
       {
         "filenames": [

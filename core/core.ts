@@ -34,6 +34,7 @@ import { TTS } from "./util/tts";
 
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { instantiateTool } from "./tools";
 import type { IMessenger, Message } from "./util/messenger";
 
 export class Core {
@@ -739,6 +740,12 @@ export class Core {
       if (!ignoreInstance.ignores(relativeFilePath)) {
         recentlyEditedFilesCache.set(filepath, filepath);
       }
+    });
+
+    on("tools/call", async ({ data: { toolCall } }) => {
+      const tool = instantiateTool(toolCall.function.name, { ide: this.ide });
+      const result = await tool.action(toolCall.function.arguments);
+      return { result };
     });
   }
 

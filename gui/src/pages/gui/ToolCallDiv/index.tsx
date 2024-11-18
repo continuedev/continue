@@ -1,4 +1,6 @@
 import { ToolCall } from "core";
+import { useContext } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -6,6 +8,8 @@ import {
   vscButtonBackground,
   vscButtonForeground,
 } from "../../../components";
+import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { streamUpdate } from "../../../redux/slices/stateSlice";
 import { CreateFile } from "./CreateFile";
 import { RunTerminalCommand } from "./RunTerminalCommand";
 
@@ -84,12 +88,29 @@ function FunctionSpecificToolCallDiv(toolCall: ToolCall) {
 }
 
 export function ToolCallDiv(props: ToolCallDivProps) {
+  const ideMessenger = useContext(IdeMessengerContext);
+  const dispatch = useDispatch();
+
+  async function callTool() {
+    const result = await ideMessenger.request("tools/call", {
+      toolCall: props.toolCall,
+    });
+    if (result.status === "success") {
+      dispatch(
+        streamUpdate({
+          role: "tool",
+          content: JSON.stringify(result.content.result),
+        }),
+      );
+    }
+  }
+
   return (
     <Container>
       <FunctionSpecificToolCallDiv {...props.toolCall} />
       <ButtonContainer>
-        <RejectButton>Cancel</RejectButton>
-        <AcceptButton>Continue</AcceptButton>
+        <RejectButton onClick={() => {}}>Cancel</RejectButton>
+        <AcceptButton onClick={callTool}>Continue</AcceptButton>
       </ButtonContainer>
     </Container>
   );

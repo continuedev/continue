@@ -1,9 +1,13 @@
 import { IDE, Tool } from "..";
 
-export const makeCreateNewFileTool = (ide: IDE): Tool => ({
+export interface ToolParams {
+  ide: IDE;
+}
+
+export const makeCreateNewFileTool = ({ ide }: ToolParams): Tool => ({
   type: "function",
-  action: async (...args: any) => {
-    await ide.writeFile(args[0], args[1]);
+  action: async (args: any) => {
+    await ide.writeFile(args.filepath, args.contents);
   },
   function: {
     name: "create_new_file",
@@ -25,10 +29,10 @@ export const makeCreateNewFileTool = (ide: IDE): Tool => ({
   },
 });
 
-export const runTerminalCommandTool = (ide: IDE): Tool => ({
+export const runTerminalCommandTool = ({ ide }: ToolParams): Tool => ({
   type: "function",
-  action: async (...args) => {
-    await ide.runCommand(args[0]);
+  action: async (args) => {
+    await ide.runCommand(args.command);
   },
   function: {
     name: "run_terminal_command",
@@ -46,3 +50,14 @@ export const runTerminalCommandTool = (ide: IDE): Tool => ({
     },
   },
 });
+
+export function instantiateTool(name: string, { ide }: ToolParams): Tool {
+  switch (name) {
+    case "create_new_file":
+      return makeCreateNewFileTool({ ide });
+    case "run_terminal_command":
+      return runTerminalCommandTool({ ide });
+    default:
+      throw new Error(`Unknown tool ${name}`);
+  }
+}

@@ -47,6 +47,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/listProfiles",
     "profiles/switch",
     "didChangeSelectedProfile",
+    "tools/call",
   ];
 
 // Message types to pass through from core to webview
@@ -60,5 +61,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "isContinueInputFocused",
     "didChangeAvailableProfiles",
     "setTTSActive",
-    "getWebviewHistoryLength"
+    "getWebviewHistoryLength",
   ];

@@ -16,6 +16,7 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
   SiteIndexingConfig,
+  ToolCall,
 } from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -158,4 +159,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "profiles/switch": [{ id: string }, undefined];
 
   "auth/getAuthUrl": [undefined, { url: string }];
+  "tools/call": [{ toolCall: ToolCall }, { result: any }];
 };

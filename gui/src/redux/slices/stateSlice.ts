@@ -266,7 +266,6 @@ export const stateSlice = createSlice({
           action.payload.role &&
           lastMessage.message.role !== action.payload.role
         ) {
-          console.log("NEW: ", action.payload);
           // Create a new message
           state.history.push({
             contextItems: [],
