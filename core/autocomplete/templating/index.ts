@@ -104,14 +104,6 @@ export function renderPrompt(
   const { template, compilePrefixSuffix, completionOptions } =
     getTemplate(helper);
 
-  const contextComments = getContextComments(
-    snippets,
-    helper.lang,
-    helper.filepath,
-    prefix,
-    suffix,
-  );
-
   // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
   // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
   if (compilePrefixSuffix) {
@@ -123,6 +115,13 @@ export function renderPrompt(
       snippets,
     );
   } else {
+    const contextComments = getContextComments(
+      snippets,
+      helper.lang,
+      helper.filepath,
+      prefix,
+      suffix,
+    );
     prefix = `${contextComments}${prefix}`;
   }
 
@@ -131,7 +130,7 @@ export function renderPrompt(
     typeof template === "string"
       ? renderStringTemplate(
           template,
-          `${contextComments}${prefix}`,
+          prefix,
           suffix,
           helper.lang,
           helper.filepath,
