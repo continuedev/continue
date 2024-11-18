@@ -6,6 +6,7 @@ import { CohereApi } from "./apis/Cohere.js";
 import { DeepSeekApi } from "./apis/DeepSeek.js";
 import { GeminiApi } from "./apis/Gemini.js";
 import { JinaApi } from "./apis/Jina.js";
+import { MoonshotApi } from "./apis/Moonshot.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 
 dotenv.config();
@@ -48,6 +49,8 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
       });
     case "deepseek":
       return new DeepSeekApi(config);
+    case "moonshot":
+      return new MoonshotApi(config);
     case "groq":
       return new OpenAIApi({
         ...config,

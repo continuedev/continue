@@ -15,18 +15,18 @@ export default function CopyButton({ text }: CopyButtonProps) {
       onClick={copyText}
     >
       <div
-        className="flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
+        className="max-2xs:hidden flex items-center gap-1 transition-colors duration-200 hover:brightness-125"
         style={{ color: lightGray }}
       >
         {copied ? (
           <>
             <CheckIcon className="h-3 w-3 text-green-500 hover:brightness-125" />
-            <span className="hidden sm:inline">Copied</span>
+            <span className="max-sm:hidden">Copied</span>
           </>
         ) : (
           <>
             <ClipboardIcon className="h-3 w-3 hover:brightness-125" />
-            <span className="xs:inline hidden text-gray-400">Copy</span>
+            <span className="text-gray-400 max-sm:hidden">Copy</span>
           </>
         )}
       </div>

@@ -23,18 +23,18 @@ import resolveEditorContent, {
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addContextItems,
   addPromptCompletionPair,
   clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
+  setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
   setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
 
@@ -48,10 +48,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
   const slashCommands = useSelector(
     (store: RootState) => store.state.config.slashCommands || [],
-  );
-
-  const contextItems = useSelector(
-    (state: RootState) => state.state.contextItems,
   );
 
   const history = useSelector((store: RootState) => store.state.history);
@@ -193,6 +189,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       // Reset current code block index
       dispatch(resetNextCodeBlockToApplyIndex());
 
+      if (index) {
+        dispatch(setCurCheckpointIndex(Math.floor(index / 2)));
+      }
+
       const shouldGatherContext =
         modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
 
@@ -224,26 +224,33 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
               .slice(0, 1000)
               .join("\n");
           }
-          selectedContextItems.unshift({
-            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
-              currentFile.path,
-              await ideMessenger.ide.getWorkspaceDirs(),
-            )}\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getBasename(currentFile.path)}`,
-            description: currentFile.path,
-            id: {
-              itemId: currentFile.path,
-              providerTitle: "file",
-            },
-            uri: {
-              type: "file",
-              value: currentFile.path,
-            },
-          });
+          if (
+            !selectedContextItems.find(
+              (item) => item.uri?.value === currentFile.path,
+            )
+          ) {
+            // don't add the file if it's already in the context items
+            selectedContextItems.unshift({
+              content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
+                currentFile.path,
+                await ideMessenger.ide.getWorkspaceDirs(),
+              )}\n${currentFileContents}\n\`\`\``,
+              name: `Active file: ${getBasename(currentFile.path)}`,
+              description: currentFile.path,
+              id: {
+                itemId: currentFile.path,
+                providerTitle: "file",
+              },
+              uri: {
+                type: "file",
+                value: currentFile.path,
+              },
+            });
+          }
         }
       }
 
-      dispatch(addContextItems(contextItems));
+      // dispatch(addContextItems(contextItems));
 
       const message: ChatMessage = {
         role: "user",

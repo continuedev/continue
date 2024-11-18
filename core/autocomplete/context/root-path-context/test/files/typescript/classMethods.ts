@@ -28,4 +28,8 @@ class Group {
   logPersonOrAddress(person: Person | Address): Person | Address {
     // TODO
   }
+
+  logPersonAndAddress(person: Person, address: Address) {
+    // TODO
+  }
 }

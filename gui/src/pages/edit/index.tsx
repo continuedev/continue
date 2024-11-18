@@ -98,14 +98,14 @@ function Edit() {
   // Reusing the applyState logic which was just the fastest way to get this working
   useEffect(() => {
     if (editModeState.editStatus === "done") {
-      ideMessenger.request("edit/escape", undefined);
+      ideMessenger.post("edit/escape", undefined);
       navigate("/");
     }
   }, [editModeState.editStatus]);
 
   const applyState = useSelector(
     (store: RootState) =>
-      store.uiState.applyStates.find((state) => state.streamId === "edit")
+      store.state.applyStates.find((state) => state.streamId === "edit")
         ?.status ?? "closed",
   );
 
@@ -180,7 +180,7 @@ function Edit() {
                   ...contextItems.map((item) => item.content),
                   stripImages(userInstructions),
                 ].join("\n\n");
-                ideMessenger.request("edit/sendPrompt", {
+                ideMessenger.post("edit/sendPrompt", {
                   prompt,
                   range: editModeState.highlightedCode,
                 });

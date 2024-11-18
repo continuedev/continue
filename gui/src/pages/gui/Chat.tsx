@@ -27,16 +27,15 @@ import {
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import { useFindWidget } from "../../components/find/FindWidget";
-import StepContainer from "../../components/gui/StepContainer";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import { defaultInputModifiers } from "../../components/mainInput/inputModifiers";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import {
   OnboardingCard,
   useOnboardingCard,
 } from "../../components/OnboardingCard";
+import StepContainer from "../../components/StepContainer";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useChatHandler from "../../hooks/useChatHandler";
 import useHistory from "../../hooks/useHistory";
@@ -45,7 +44,6 @@ import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   clearLastResponse,
-  deleteMessage,
   newSession,
   setInactive,
 } from "../../redux/slices/stateSlice";
@@ -161,11 +159,11 @@ export function Chat() {
     if (active) snapToBottom();
   }, [active, snapToBottom]);
 
-  useEffect(() => {
-    setTimeout(() => {
-      smoothScrollToBottom();
-    }, 400);
-  }, [smoothScrollToBottom, state.sessionId]);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     smoothScrollToBottom();
+  //   }, 400);
+  // }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -292,7 +290,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [state.history, state.contextItems, defaultModel, state, streamResponse],
+    [state.history, defaultModel, state, streamResponse],
   );
 
   useWebviewListener(
@@ -381,41 +379,7 @@ export function Chat() {
                     <StepContainer
                       index={index}
                       isLast={index === state.history.length - 1}
-                      isFirst={index === 0}
-                      open={
-                        typeof stepsOpen[index] === "undefined"
-                          ? true
-                          : stepsOpen[index]!
-                      }
-                      key={index}
-                      onUserInput={(input: string) => {}}
                       item={item}
-                      onReverse={() => {}}
-                      onRetry={() => {
-                        streamResponse(
-                          state.history[index - 1].editorState,
-                          state.history[index - 1].modifiers ??
-                            defaultInputModifiers,
-                          ideMessenger,
-                          index - 1,
-                        );
-                      }}
-                      onContinueGeneration={() => {
-                        window.postMessage(
-                          {
-                            messageType: "userInput",
-                            data: {
-                              input:
-                                "Continue your response exactly where you left off:",
-                            },
-                          },
-                          "*",
-                        );
-                      }}
-                      onDelete={() => {
-                        dispatch(deleteMessage(index));
-                      }}
-                      modelTitle={item.promptLogs?.[0]?.modelTitle ?? ""}
                     />
                   </TimelineItem>
                 </div>

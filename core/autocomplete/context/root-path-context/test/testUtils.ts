@@ -84,6 +84,7 @@ export async function testRootPathContext(
       index + 1,
       expect.any(String), // filepath argument
       position,
+      expect.any(String), // language argument
     );
   });
 }

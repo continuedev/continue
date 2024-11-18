@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
+import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.constants.MessageTypes
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
@@ -58,6 +59,7 @@ class ContinueBrowser(val project: Project, url: String) {
         "stats/getTokensPerModel",
         "index/setPaused",
         "index/forceReIndex",
+        "index/forceReIndexFiles",
         "index/indexingProgressBarInitialized",
         "completeOnboarding",
         "addAutocompleteModel",
@@ -88,7 +90,7 @@ class ContinueBrowser(val project: Project, url: String) {
 
         registerAppSchemeHandler()
         browser.loadURL(url);
-        Disposer.register(project, browser)
+        Disposer.register(ContinuePluginDisposable.getInstance(project), browser)
 
         // Listen for events sent from browser
         val myJSQueryOpenInBrowser = JBCefJSQuery.create((browser as JBCefBrowserBase?)!!)

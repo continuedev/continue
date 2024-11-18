@@ -215,7 +215,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
         title: "New .prompt file",
         type: "action",
         action: () => {
-          ideMessenger.request("config/newPromptFile", undefined);
+          ideMessenger.post("config/newPromptFile", undefined);
           const { tr } = props.editor.view.state;
           const text = tr.doc.textBetween(0, tr.selection.from);
           const start = text.lastIndexOf("@");
