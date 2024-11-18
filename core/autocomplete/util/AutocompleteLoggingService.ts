@@ -37,6 +37,7 @@ export class AutocompleteLoggingService {
 
     if (this._outcomes.has(completionId)) {
       const outcome = this._outcomes.get(completionId)!;
+      outcome.accepted = true;
       this.logAutocompleteOutcome(outcome);
       this._outcomes.delete(completionId);
       return outcome;
@@ -94,7 +95,6 @@ export class AutocompleteLoggingService {
   }
 
   private logAutocompleteOutcome(outcome: AutocompleteOutcome) {
-    outcome.accepted = true;
     logDevData("autocomplete", outcome);
     const { prompt, completion, prefix, suffix, ...restOfOutcome } = outcome;
     void Telemetry.capture(
