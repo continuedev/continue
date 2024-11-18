@@ -31,42 +31,6 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
-  moonshotChat: {
-    title: "Moonshot Chat",
-    description: "Moonshot AI provides high-performance large language models",
-    refUrl: "https://platform.moonshot.cn/",
-    params: {
-      title: "Moonshot-v1-8k",
-      model: "moonshot-v1-8k",
-      contextLength: 8192,
-    },
-    icon: "moonshot.png",
-    dimensions: [
-      {
-        name: "Context Window",
-        description: "The size of the model's context window",
-        options: {
-          "8K": {
-            model: "moonshot-v1-8k",
-            title: "Moonshot-v1-8k",
-            contextLength: 8192,
-          },
-          "32K": {
-            model: "moonshot-v1-32k",
-            title: "Moonshot-v1-32k",
-            contextLength: 32768,
-          },
-          "128K": {
-            model: "moonshot-v1-128k",
-            title: "Moonshot-v1-128k",
-            contextLength: 131072,
-          },
-        },
-      },
-    ],
-    providerOptions: ["moonshot"],
-    isOpenSource: false,
-  },
   llama31Chat: {
     title: "Llama3.1 Chat",
     description: "A model from Meta, fine-tuned for chat",
@@ -147,39 +111,6 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["ollama", "groq", "llama.cpp"],
     isOpenSource: true,
   },
-  moonshotChat: {
-    title: "Moonshot Chat",
-    description: "The latest model from Moonshot, fine-tuned for chat",
-    refUrl: "",
-    params: {
-      title: "Moonshot-8b",
-      model: "moonshot-8b",
-      contextLength: 8192,
-    },
-    icon: "moonshot.png",
-    dimensions: [
-      {
-        name: "Parameter Count",
-        description: "The number of parameters in the model",
-        options: {
-          "1b": {
-            model: "moonshot-1b",
-            title: "Moonshot-1b",
-          },
-          "8b": {
-            model: "moonshot-8b",
-            title: "Moonshot-8b",
-          },
-          "65b": {
-            model: "moonshot-65b",
-            title: "Moonshot-65b",
-          },
-        },
-      },
-    ],
-    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
-    isOpenSource: true,
-  },
   deepseek: {
     title: "DeepSeek Coder",
     description:
@@ -250,6 +181,42 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "deepseek.png",
     providerOptions: ["nebius"],
     isOpenSource: true,
+  },
+  moonshotChat: {
+    title: "Moonshot Chat",
+    description: "Moonshot AI provides high-performance large language models",
+    refUrl: "https://platform.moonshot.cn/",
+    params: {
+      title: "Moonshot-v1-8k",
+      model: "moonshot-v1-8k",
+      contextLength: 8192,
+    },
+    icon: "moonshot.png",
+    dimensions: [
+      {
+        name: "Context Window",
+        description: "The size of the model's context window",
+        options: {
+          "8K": {
+            model: "moonshot-v1-8k",
+            title: "Moonshot-v1-8k",
+            contextLength: 8192,
+          },
+          "32K": {
+            model: "moonshot-v1-32k",
+            title: "Moonshot-v1-32k",
+            contextLength: 32768,
+          },
+          "128K": {
+            model: "moonshot-v1-128k",
+            title: "Moonshot-v1-128k",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["moonshot"],
+    isOpenSource: false,
   },
   mistralOs: {
     title: "Mistral",
