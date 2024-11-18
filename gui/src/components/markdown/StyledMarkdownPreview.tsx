@@ -14,8 +14,6 @@ import {
 import { getFontSize, isJetBrains } from "../../util";
 import "./katex.css";
 import "./markdown.css";
-import { useSelector } from "react-redux";
-import { memoizedContextItemsSelector } from "../../redux/slices/stateSlice";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
@@ -24,6 +22,8 @@ import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { RootState } from "../../redux/store";
 import { SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
+import { ContextItemWithId } from "core";
+import { useSelector } from "react-redux";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -96,6 +96,7 @@ interface StyledMarkdownPreviewProps {
   className?: string;
   isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
   scrollLocked?: boolean;
+  contextItems?: ContextItemWithId[];
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -139,13 +140,12 @@ function processCodeBlocks(tree: any) {
       node.lang = node.lang.split(".").slice(-1)[0];
     }
 
+    node.data = node.data || {};
+    node.data.hProperties = node.data.hProperties || {};
+    node.data.hProperties.codeBlockContent = node.value;
+    node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
+
     if (node.meta) {
-      node.data = node.data || {};
-      node.data.hProperties = node.data.hProperties || {};
-
-      node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
-      node.data.hProperties.codeBlockContent = node.value;
-
       let meta = node.meta.split(" ");
       node.data.hProperties.filepath = meta[0];
       node.data.hProperties.range = meta[1];
@@ -156,14 +156,13 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
-  const contextItems = useSelector(memoizedContextItemsSelector);
-  const symbols = useSelector(
-    (state: RootState) => state.state.context.symbols,
-  );
+  const symbols = useSelector((state: RootState) => state.state.symbols);
   const symbolsForContextItems: SymbolWithRange[] = useMemo(() => {
     const contextUris = Array.from(
       new Set(
-        contextItems.filter((item) => item?.uri).map((item) => item.uri!.value),
+        props.contextItems
+          .filter((item) => item?.uri)
+          .map((item) => item.uri!.value),
       ),
     );
     const contextSymbols: SymbolWithRange[] = [];
@@ -175,7 +174,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     });
     console.log(contextSymbols.map((s) => s.name));
     return contextSymbols;
-  }, [contextItems, symbols]);
+  }, [props.contextItems, symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [remarkMath, () => processCodeBlocks],
@@ -259,13 +258,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          const ctxItem = contextItems.find((ctxItem) =>
-            ctxItem.uri?.value.includes(content),
-          );
-
-          if (ctxItem) {
-            const rif = ctxItemToRifWithContents(ctxItem);
-            return <FilenameLink rif={rif} />;
+          if (props.contextItems) {
+            const ctxItem = props.contextItems.find((ctxItem) =>
+              ctxItem.uri?.value.includes(content),
+            );
+            if (ctxItem) {
+              const rif = ctxItemToRifWithContents(ctxItem);
+              return <FilenameLink rif={rif} />;
+            }
           }
           // console.log("content", content);
           const exactSymbol = symbolsForContextItems.find(

@@ -48,7 +48,7 @@ export class VsCodeMessenger {
       message: Message<FromWebviewProtocol[T][0]>,
     ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
-    this.webviewProtocol.on(messageType, handler);
+    void this.webviewProtocol.on(messageType, handler);
   }
 
   onCore<T extends keyof ToIdeOrWebviewFromCoreProtocol>(
@@ -153,11 +153,11 @@ export class VsCodeMessenger {
     });
 
     webviewProtocol.on("acceptDiff", async ({ data: { filepath } }) => {
-      await vscode.commands.executeCommand("continue.acceptDiff", filepath);
+      void vscode.commands.executeCommand("continue.acceptDiff", filepath);
     });
 
     webviewProtocol.on("rejectDiff", async ({ data: { filepath } }) => {
-      await vscode.commands.executeCommand("continue.rejectDiff", filepath);
+      void vscode.commands.executeCommand("continue.rejectDiff", filepath);
     });
 
     this.onWebview("applyToFile", async ({ data }) => {
@@ -178,7 +178,7 @@ export class VsCodeMessenger {
           await this.ide.writeFile(fullPath, data.text);
           await this.ide.openFile(fullPath);
 
-          await webviewProtocol.request("updateApplyState", {
+          void webviewProtocol.request("updateApplyState", {
             streamId: data.streamId,
             status: "done",
             numDiffs: 0,
@@ -203,7 +203,7 @@ export class VsCodeMessenger {
         editor.edit((builder) =>
           builder.insert(new vscode.Position(0, 0), data.text),
         );
-        await webviewProtocol.request("updateApplyState", {
+        void webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
           status: "done",
           numDiffs: 0,
@@ -328,7 +328,7 @@ export class VsCodeMessenger {
         ),
       );
 
-      this.webviewProtocol.request("setEditStatus", {
+      void this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
         fileAfterEdit,
       });

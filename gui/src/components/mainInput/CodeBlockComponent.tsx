@@ -1,27 +1,23 @@
 import { NodeViewWrapper } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { useDispatch, useSelector } from "react-redux";
 import { vscBadgeBackground } from "..";
-import { RootState } from "../../redux/store";
 import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
 
-export const CodeBlockComponent = ({
-  node,
-  deleteNode,
-  selected,
-  editor,
-  updateAttributes,
-}: any) => {
+export const CodeBlockComponent = (props: any) => {
+  const { node, deleteNode, selected, editor, updateAttributes } = props;
   const item: ContextItemWithId = node.attrs.item;
+  // const contextItems = useSelector(
+  //   (store: RootState) =>
+  //     store.state.history[store.state.history.length - 1].contextItems,
+  // );
+  // const isFirstContextItem = item.id === contextItems[0]?.id;
+  const isFirstContextItem = false; // TODO: fix this, decided not worth the insane renders for now
 
-  const contextItems = useSelector(
-    (state: RootState) => state.state.context.items,
-  );
   return (
     <NodeViewWrapper className="code-block-with-content" as="p">
       <CodeSnippetPreview
         borderColor={
-          item.id === contextItems[0]?.id
+          isFirstContextItem
             ? "#d0d"
             : selected
               ? vscBadgeBackground

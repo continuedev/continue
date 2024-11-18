@@ -159,11 +159,11 @@ export function Chat() {
     if (active) snapToBottom();
   }, [active, snapToBottom]);
 
-  useEffect(() => {
-    setTimeout(() => {
-      smoothScrollToBottom();
-    }, 400);
-  }, [smoothScrollToBottom, state.sessionId]);
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     smoothScrollToBottom();
+  //   }, 400);
+  // }, [smoothScrollToBottom, state.sessionId]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -290,7 +290,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [state.history, state.context.items, defaultModel, state, streamResponse],
+    [state.history, defaultModel, state, streamResponse],
   );
 
   useWebviewListener(

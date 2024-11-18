@@ -41,7 +41,9 @@ export class ContinueCompletionProvider
       showFreeTrialLoginMessage(
         e.message,
         this.configHandler.reloadConfig.bind(this.configHandler),
-        () => this.webviewProtocol.request("openOnboardingCard", undefined),
+        () => {
+          void this.webviewProtocol.request("openOnboardingCard", undefined)
+        },
       );
       return;
     }

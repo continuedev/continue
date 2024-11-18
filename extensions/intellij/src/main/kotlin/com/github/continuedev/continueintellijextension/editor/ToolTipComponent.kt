@@ -88,8 +88,8 @@ class ToolTipComponent(editor: Editor, x: Int, y: Int) :
         val componentHorizontalPadding = 4
         val buttonMargin = 4
 
-        addToChatButton = StyledButton("Chat (${cmdCtrlChar}J)")
-        editButton = StyledButton("Edit (${cmdCtrlChar}I)")
+        addToChatButton = StyledButton("Chat (${cmdCtrlChar}+J)")
+        editButton = StyledButton("Edit (${cmdCtrlChar}+I)")
 
         addToChatButton.addActionListener { e: ActionEvent? ->
             focusContinueInput(editor.project)

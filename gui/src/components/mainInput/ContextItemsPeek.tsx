@@ -8,7 +8,6 @@ import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getIconFromDropdownItem } from "./MentionList";
-import styled from "styled-components";
 import { getBasename } from "core/util";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";

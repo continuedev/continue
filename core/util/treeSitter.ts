@@ -2,84 +2,118 @@ import fs from "node:fs";
 import * as path from "node:path";
 
 import Parser, { Language } from "web-tree-sitter";
-
 import { FileSymbolMap, IDE, SymbolWithRange } from "..";
 
-export const supportedLanguages: { [key: string]: string } = {
-  cpp: "cpp",
-  hpp: "cpp",
-  cc: "cpp",
-  cxx: "cpp",
-  hxx: "cpp",
-  cp: "cpp",
-  hh: "cpp",
-  inc: "cpp",
-  // Depended on this PR: https://github.com/tree-sitter/tree-sitter-cpp/pull/173
-  // ccm: "cpp",
-  // c++m: "cpp",
-  // cppm: "cpp",
-  // cxxm: "cpp",
-  cs: "c_sharp",
-  c: "c",
-  h: "c",
-  css: "css",
-  php: "php",
-  phtml: "php",
-  php3: "php",
-  php4: "php",
-  php5: "php",
-  php7: "php",
-  phps: "php",
-  "php-s": "php",
-  bash: "bash",
-  sh: "bash",
-  json: "json",
-  ts: "typescript",
-  mts: "typescript",
-  cts: "typescript",
-  tsx: "tsx",
-  // vue: "vue",  // tree-sitter-vue parser is broken
-  // The .wasm file being used is faulty, and yaml is split line-by-line anyway for the most part
-  // yaml: "yaml",
-  // yml: "yaml",
-  elm: "elm",
-  js: "javascript",
-  jsx: "javascript",
-  mjs: "javascript",
-  cjs: "javascript",
-  py: "python",
-  ipynb: "python",
-  pyw: "python",
-  pyi: "python",
-  el: "elisp",
-  emacs: "elisp",
-  ex: "elixir",
-  exs: "elixir",
-  go: "go",
-  eex: "embedded_template",
-  heex: "embedded_template",
-  leex: "embedded_template",
-  html: "html",
-  htm: "html",
-  java: "java",
-  lua: "lua",
-  ocaml: "ocaml",
-  ml: "ocaml",
-  mli: "ocaml",
-  ql: "ql",
-  res: "rescript",
-  resi: "rescript",
-  rb: "ruby",
-  erb: "ruby",
-  rs: "rust",
-  rdl: "systemrdl",
-  toml: "toml",
-  sol: "solidity",
+export enum LanguageName {
+  CPP = "cpp",
+  C_SHARP = "c_sharp",
+  C = "c",
+  CSS = "css",
+  PHP = "php",
+  BASH = "bash",
+  JSON = "json",
+  TYPESCRIPT = "typescript",
+  TSX = "tsx",
+  ELM = "elm",
+  JAVASCRIPT = "javascript",
+  PYTHON = "python",
+  ELISP = "elisp",
+  ELIXIR = "elixir",
+  GO = "go",
+  EMBEDDED_TEMPLATE = "embedded_template",
+  HTML = "html",
+  JAVA = "java",
+  LUA = "lua",
+  OCAML = "ocaml",
+  QL = "ql",
+  RESCRIPT = "rescript",
+  RUBY = "ruby",
+  RUST = "rust",
+  SYSTEMRDL = "systemrdl",
+  TOML = "toml",
+  SOLIDITY = "solidity",
+}
 
-  // jl: "julia",
-  // swift: "swift",
-  // kt: "kotlin",
-  // scala: "scala",
+export const supportedLanguages: { [key: string]: LanguageName } = {
+  cpp: LanguageName.CPP,
+  hpp: LanguageName.CPP,
+  cc: LanguageName.CPP,
+  cxx: LanguageName.CPP,
+  hxx: LanguageName.CPP,
+  cp: LanguageName.CPP,
+  hh: LanguageName.CPP,
+  inc: LanguageName.CPP,
+  // Depended on this PR: https://github.com/tree-sitter/tree-sitter-cpp/pull/173
+  // ccm: LanguageName.CPP,
+  // c++m: LanguageName.CPP,
+  // cppm: LanguageName.CPP,
+  // cxxm: LanguageName.CPP,
+  cs: LanguageName.C_SHARP,
+  c: LanguageName.C,
+  h: LanguageName.C,
+  css: LanguageName.CSS,
+  php: LanguageName.PHP,
+  phtml: LanguageName.PHP,
+  php3: LanguageName.PHP,
+  php4: LanguageName.PHP,
+  php5: LanguageName.PHP,
+  php7: LanguageName.PHP,
+  phps: LanguageName.PHP,
+  "php-s": LanguageName.PHP,
+  bash: LanguageName.BASH,
+  sh: LanguageName.BASH,
+  json: LanguageName.JSON,
+  ts: LanguageName.TYPESCRIPT,
+  mts: LanguageName.TYPESCRIPT,
+  cts: LanguageName.TYPESCRIPT,
+  tsx: LanguageName.TSX,
+  // vue: LanguageName.VUE,  // tree-sitter-vue parser is broken
+  // The .wasm file being used is faulty, and yaml is split line-by-line anyway for the most part
+  // yaml: LanguageName.YAML,
+  // yml: LanguageName.YAML,
+  elm: LanguageName.ELM,
+  js: LanguageName.JAVASCRIPT,
+  jsx: LanguageName.JAVASCRIPT,
+  mjs: LanguageName.JAVASCRIPT,
+  cjs: LanguageName.JAVASCRIPT,
+  py: LanguageName.PYTHON,
+  ipynb: LanguageName.PYTHON,
+  pyw: LanguageName.PYTHON,
+  pyi: LanguageName.PYTHON,
+  el: LanguageName.ELISP,
+  emacs: LanguageName.ELISP,
+  ex: LanguageName.ELIXIR,
+  exs: LanguageName.ELIXIR,
+  go: LanguageName.GO,
+  eex: LanguageName.EMBEDDED_TEMPLATE,
+  heex: LanguageName.EMBEDDED_TEMPLATE,
+  leex: LanguageName.EMBEDDED_TEMPLATE,
+  html: LanguageName.HTML,
+  htm: LanguageName.HTML,
+  java: LanguageName.JAVA,
+  lua: LanguageName.LUA,
+  ocaml: LanguageName.OCAML,
+  ml: LanguageName.OCAML,
+  mli: LanguageName.OCAML,
+  ql: LanguageName.QL,
+  res: LanguageName.RESCRIPT,
+  resi: LanguageName.RESCRIPT,
+  rb: LanguageName.RUBY,
+  erb: LanguageName.RUBY,
+  rs: LanguageName.RUST,
+  rdl: LanguageName.SYSTEMRDL,
+  toml: LanguageName.TOML,
+  sol: LanguageName.SOLIDITY,
+
+  // jl: LanguageName.JULIA,
+  // swift: LanguageName.SWIFT,
+  // kt: LanguageName.KOTLIN,
+  // scala: LanguageName.SCALA,
+};
+
+export const IGNORE_PATH_PATTERNS: Partial<Record<LanguageName, RegExp[]>> = {
+  [LanguageName.TYPESCRIPT]: [/.*node_modules/],
+  [LanguageName.JAVASCRIPT]: [/.*node_modules/],
 };
 
 export async function getParserForFile(filepath: string) {
@@ -130,15 +164,9 @@ export async function getLanguageForFile(
   }
 }
 
-export enum TSQueryType {
-  CodeSnippets = "code-snippet-queries",
-  Imports = "import-queries",
-  // Used in RootPathContextService.ts
-  FunctionDeclaration = "root-path-context-queries/function_declaration",
-  MethodDefinition = "root-path-context-queries/method_definition",
-  FunctionDefinition = "root-path-context-queries/function_definition",
-  MethodDeclaration = "root-path-context-queries/method_declaration",
-}
+export const getFullLanguageName = (filepath: string) => {
+  return supportedLanguages[filepath.split(".").pop() ?? ""];
+};
 
 export async function getQueryForFile(
   filepath: string,
@@ -149,7 +177,6 @@ export async function getQueryForFile(
     return undefined;
   }
 
-  const fullLangName = supportedLanguages[filepath.split(".").pop() ?? ""];
   const sourcePath = path.join(
     __dirname,
     "..",
@@ -157,7 +184,6 @@ export async function getQueryForFile(
       ? ["extensions", "vscode", "tree-sitter"]
       : ["tree-sitter"]),
     queryPath,
-    `${fullLangName}.scm`,
   );
   if (!fs.existsSync(sourcePath)) {
     return undefined;
@@ -218,7 +244,7 @@ export async function getSymbolsForFile(
       //   console.log(`child: ${child.type}, ${child.text}`);
       // });
 
-      // Empirically, the actualy name is the last identifier in the node
+      // Empirically, the actual name is the last identifier in the node
       // Especially with languages where return type is declared before the name
       // TODO use findLast in newer version of node target
       let identifier: Parser.SyntaxNode | undefined = undefined;
