@@ -1,27 +1,27 @@
 import StepContainerPreToolbar from "../../../components/markdown/StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "../../../components/markdown/SyntaxHighlightedPre";
 
-interface CreateFileToolCallProps {
-  filepath: string;
-  fileContents: string;
+interface RunTerminalCommandToolCallProps {
+  command: string;
 }
 
-export function CreateFile(props: CreateFileToolCallProps) {
+export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   return (
     <>
-      <p>Continue wants to create a file:</p>
+      <p>Continue wants to run a terminal command:</p>
+
       <StepContainerPreToolbar
-        codeBlockContent={props.fileContents ?? ""}
+        codeBlockContent={props.command ?? ""}
         codeBlockIndex={0}
-        language={"javascript"}
-        filepath={props.filepath ?? ""}
+        language={"bash"}
+        filepath={"bash"}
         isGeneratingCodeBlock={false}
         expanded={false}
         hideApply={true}
       >
         <SyntaxHighlightedPre>
           <span></span>
-          {props.fileContents}
+          {props.command}
         </SyntaxHighlightedPre>
       </StepContainerPreToolbar>
     </>

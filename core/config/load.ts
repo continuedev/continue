@@ -58,7 +58,7 @@ import {
   readAllGlobalPromptFiles,
 } from "../util/paths";
 
-import { makeCreateNewFileTool } from "../tools";
+import { makeCreateNewFileTool, runTerminalCommandTool } from "../tools";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -336,7 +336,10 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
-    model.completionOptions.tools = [makeCreateNewFileTool(ide)];
+    model.completionOptions.tools = [
+      makeCreateNewFileTool(ide),
+      runTerminalCommandTool(ide),
+    ];
   }
 
   if (allowFreeTrial) {

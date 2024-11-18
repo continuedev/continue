@@ -7,6 +7,7 @@ import {
   vscButtonForeground,
 } from "../../../components";
 import { CreateFile } from "./CreateFile";
+import { RunTerminalCommand } from "./RunTerminalCommand";
 
 const Container = styled.div`
   margin: 8px;
@@ -66,6 +67,8 @@ function FunctionSpecificToolCallDiv(toolCall: ToolCall) {
       return (
         <CreateFile filepath={args.filepath} fileContents={args.contents} />
       );
+    case "run_terminal_command":
+      return <RunTerminalCommand command={args.command} />;
     default:
       return (
         <>
