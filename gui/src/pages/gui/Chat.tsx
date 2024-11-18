@@ -463,20 +463,9 @@ export function Chat() {
             pointerEvents: active ? "none" : "auto",
           }}
         >
-          <div className="flex flex-row items-center justify-between pl-0.5 pr-2">
+          <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {state.history.length > 0 ? (
-                <NewSessionButton
-                  onClick={() => {
-                    saveSession();
-                  }}
-                >
-                  <span className="xs:inline hidden">
-                    New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"}
-                    )
-                  </span>
-                </NewSessionButton>
-              ) : getLastSessionId() ? (
+              {state.history.length === 0 && getLastSessionId() ? (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
