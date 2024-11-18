@@ -156,7 +156,7 @@ export class IdeMessenger implements IIdeMessenger {
 
     this.post(messageType, data, messageId);
 
-    let buffer = "";
+    const buffer: any[] = [];
     let index = 0;
     let done = false;
     let returnVal = undefined;
@@ -169,7 +169,7 @@ export class IdeMessenger implements IIdeMessenger {
           done = true;
           returnVal = responseData;
         } else {
-          buffer += responseData.content;
+          buffer.push(responseData.content);
         }
       }
     };
@@ -181,16 +181,16 @@ export class IdeMessenger implements IIdeMessenger {
 
     while (!done) {
       if (buffer.length > index) {
-        const chunk = buffer.slice(index);
-        index = buffer.length;
+        const chunk = buffer[index];
+        index++;
         yield chunk;
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
-    if (buffer.length > index) {
-      const chunk = buffer.slice(index);
-      index = buffer.length;
+    while (buffer.length > index) {
+      const chunk = buffer[index];
+      index++;
       yield chunk;
     }
 
