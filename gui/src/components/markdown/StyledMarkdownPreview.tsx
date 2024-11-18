@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -20,7 +20,7 @@ import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { RootState } from "../../redux/store";
-import { SymbolWithRange } from "core";
+import { ContextItemWithId, SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
 import { useSelector } from "react-redux";
 
@@ -153,17 +153,23 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
-  // Grab context items from the user history item before it
   const contextItems = useSelector(
     (state: RootState) =>
       state.state.history[props.itemIndex - 1]?.contextItems,
   );
   const symbols = useSelector((state: RootState) => state.state.symbols);
 
-  const symbolsForContextItems: SymbolWithRange[] = useMemo(() => {
+  // The refs are a workaround because rehype options are stored on initiation
+  // So they won't use the most up-to-date state values
+  // So in this case we just put them in refs
+  const symbolsForContextItems = useRef<SymbolWithRange[]>([]);
+  const contextItemsRef = useRef<ContextItemWithId[]>([]);
+  useEffect(() => {
+    contextItemsRef.current = contextItems || [];
     if (!contextItems) {
-      return [];
+      symbolsForContextItems.current = [];
     }
+    // Get unique URIs and then find relevant symbols
     const contextUris = Array.from(
       new Set(
         contextItems.filter((item) => item?.uri).map((item) => item.uri!.value),
@@ -176,7 +182,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         contextSymbols.push(...fileSymbols);
       }
     });
-    return contextSymbols;
+    symbolsForContextItems.current = contextSymbols;
   }, [contextItems, symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
@@ -261,8 +267,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (content && contextItems) {
-            const ctxItem = contextItems.find((ctxItem) =>
+          if (content && contextItemsRef.current) {
+            const ctxItem = contextItemsRef.current.find((ctxItem) =>
               ctxItem.uri?.value.includes(content),
             );
             if (ctxItem) {
@@ -270,7 +276,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               return <FilenameLink rif={rif} />;
             }
 
-            const exactSymbol = symbolsForContextItems.find(
+            const exactSymbol = symbolsForContextItems.current.find(
               (s) => s.name === content,
             );
             if (exactSymbol) {
@@ -278,7 +284,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             }
 
             // PARTIAL - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
-            const partialSymbol = symbolsForContextItems.find((s) =>
+            const partialSymbol = symbolsForContextItems.current.find((s) =>
               content.startsWith(s.name),
             );
             if (partialSymbol) {
