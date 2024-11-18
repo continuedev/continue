@@ -288,7 +288,8 @@ class OpenAI extends BaseLLM {
     suffix: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const endpoint = new URL("fim/completions", this.apiBase);
+    const url = this.apiBase?.includes("api.siliconflow.cn") ? "completions" : "fim/completions"
+    const endpoint = new URL(url, this.apiBase);
     const resp = await this.fetch(endpoint, {
       method: "POST",
       body: JSON.stringify({
