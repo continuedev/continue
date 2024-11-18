@@ -21,7 +21,6 @@ import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import PostHogPageView from "./PosthogPageView";
-import { setInactive } from "../redux/slices/stateSlice";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;

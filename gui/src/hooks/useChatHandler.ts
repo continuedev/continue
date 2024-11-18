@@ -69,15 +69,13 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    const cancelToken = streamAborter.signal;
-
     try {
       if (!defaultModel) {
         throw new Error("Default model not defined");
       }
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,
-        cancelToken,
+        streamAborter.signal,
         messages,
       );
       let next = await gen.next();
