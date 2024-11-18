@@ -255,6 +255,9 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<PersistedSessionInfo | undefined>,
     ) => {
+      state.streamAborter.abort();
+      state.streamAborter = new AbortController();
+
       state.active = false;
       state.isGatheringContext = false;
       state.isInMultifileEdit = false;

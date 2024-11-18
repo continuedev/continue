@@ -69,8 +69,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    const abortController = streamAborter ?? new AbortController();
-    const cancelToken = abortController.signal;
+    const cancelToken = streamAborter.signal;
 
     try {
       if (!defaultModel) {
@@ -85,7 +84,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
       while (!next.done) {
         if (!activeRef.current) {
-          abortController.abort();
+          dispatch(abortStream());
           break;
         }
         dispatch(
@@ -162,7 +161,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         historyIndex,
         selectedCode,
       },
-      cancelToken,
+      streamAborter.signal,
     )) {
       if (!activeRef.current) {
         dispatch(abortStream());

@@ -7,7 +7,11 @@ import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { newSession, setInactive } from "../redux/slices/stateSlice";
+import {
+  abortStream,
+  newSession,
+  setInactive,
+} from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
@@ -121,9 +125,9 @@ function useHistory(dispatch: Dispatch) {
     if (result.status === "error") {
       throw new Error(result.error);
     }
-    const persistedSessionInfo = result.content;
-    dispatch(newSession(persistedSessionInfo));
-    return persistedSessionInfo;
+    const sessionContent = result.content;
+    dispatch(newSession(sessionContent));
+    return sessionContent;
   }
 
   async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {
