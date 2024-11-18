@@ -189,6 +189,8 @@ class Anthropic extends BaseLLM {
           }
           break;
         case "content_block_stop":
+          lastToolUseId = undefined;
+          lastToolUseName = undefined;
           break;
         default:
           break;

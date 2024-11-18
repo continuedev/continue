@@ -11,7 +11,6 @@ interface CreateFileToolCallProps {
 export function CreateFile(props: CreateFileToolCallProps) {
   return (
     <>
-      <p>Continue wants to create a file:</p>
       <StepContainerPreToolbar
         codeBlockContent={props.fileContents ?? "New File"}
         codeBlockIndex={0}

@@ -65,7 +65,13 @@ function incrementalParseJson(raw: string): [boolean, any] {
   }
 }
 
-function FunctionSpecificToolCallDiv(toolCall: ToolCall, state: ToolState) {
+function FunctionSpecificToolCallDiv({
+  toolCall,
+  state,
+}: {
+  toolCall: ToolCall;
+  state: ToolState;
+}) {
   const [_, args] = incrementalParseJson(toolCall.function.arguments);
 
   switch (toolCall.function.name) {
@@ -140,11 +146,16 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
   return (
     <Container>
-      <FunctionSpecificToolCallDiv {...props.toolCall} />
+      <FunctionSpecificToolCallDiv toolCall={props.toolCall} state={state} />
       <ButtonContainer>
         {state === "generating" ? (
-          <div className="ml-auto flex items-center gap-4">
-            Loading...
+          <div
+            className="flex w-full items-center justify-center gap-4"
+            style={{
+              color: lightGray,
+            }}
+          >
+            Thinking...
             <Spinner />
           </div>
         ) : state === "generated" ? (
