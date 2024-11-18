@@ -105,7 +105,7 @@ function StepContainer(props: StepContainerProps) {
           <StyledMarkdownPreview
             isRenderingInStepContainer
             source={stripImages(props.item.message.content)}
-            contextItems={props.item.contextItems}
+            itemIndex={props.index}
           />
         )}
       </ContentDiv>

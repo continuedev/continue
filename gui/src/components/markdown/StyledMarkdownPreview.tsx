@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -22,7 +22,6 @@ import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { RootState } from "../../redux/store";
 import { SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
-import { ContextItemWithId } from "core";
 import { useSelector } from "react-redux";
 
 const StyledMarkdown = styled.div<{
@@ -96,7 +95,7 @@ interface StyledMarkdownPreviewProps {
   className?: string;
   isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
   scrollLocked?: boolean;
-  contextItems?: ContextItemWithId[];
+  itemIndex?: number;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -116,14 +115,12 @@ function getLanuageFromClassName(className: any): string | null {
 
 function getCodeChildrenContent(children: any) {
   if (typeof children === "string") {
-    console.log(children);
     return children;
   } else if (
     Array.isArray(children) &&
     children.length > 0 &&
     typeof children[0] === "string"
   ) {
-    console.log(children[0]);
     return children[0];
   }
   return undefined;
@@ -156,13 +153,20 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
+  // Grab context items from the user history item before it
+  const contextItems = useSelector(
+    (state: RootState) =>
+      state.state.history[props.itemIndex - 1]?.contextItems,
+  );
   const symbols = useSelector((state: RootState) => state.state.symbols);
+
   const symbolsForContextItems: SymbolWithRange[] = useMemo(() => {
+    if (!contextItems) {
+      return [];
+    }
     const contextUris = Array.from(
       new Set(
-        props.contextItems
-          .filter((item) => item?.uri)
-          .map((item) => item.uri!.value),
+        contextItems.filter((item) => item?.uri).map((item) => item.uri!.value),
       ),
     );
     const contextSymbols: SymbolWithRange[] = [];
@@ -172,9 +176,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         contextSymbols.push(...fileSymbols);
       }
     });
-    console.log(contextSymbols.map((s) => s.name));
+    console.log(contextSymbols);
     return contextSymbols;
-  }, [props.contextItems, symbols]);
+  }, [contextItems, symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [remarkMath, () => processCodeBlocks],
@@ -258,30 +262,30 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (props.contextItems) {
-            const ctxItem = props.contextItems.find((ctxItem) =>
+          if (content && contextItems) {
+            const ctxItem = contextItems.find((ctxItem) =>
               ctxItem.uri?.value.includes(content),
             );
+            console.log("CTX item", ctxItem);
             if (ctxItem) {
               const rif = ctxItemToRifWithContents(ctxItem);
               return <FilenameLink rif={rif} />;
             }
-          }
-          // console.log("content", content);
-          const exactSymbol = symbolsForContextItems.find(
-            (s) => s.name === content,
-          );
-          if (exactSymbol) {
-            return <SymbolLink content={content} symbol={exactSymbol} />;
-          }
 
-          // PARTIAL - PARENTHESES
-          const partialSymbol = symbolsForContextItems.find(
-            (s) => false,
-            // content.startsWith(s.name),
-          );
-          if (partialSymbol) {
-            return <SymbolLink content={content} symbol={partialSymbol} />;
+            const exactSymbol = symbolsForContextItems.find(
+              (s) => s.name === content,
+            );
+            if (exactSymbol) {
+              return <SymbolLink content={content} symbol={exactSymbol} />;
+            }
+
+            // PARTIAL - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
+            const partialSymbol = symbolsForContextItems.find((s) =>
+              content.startsWith(s.name),
+            );
+            if (partialSymbol) {
+              return <SymbolLink content={content} symbol={partialSymbol} />;
+            }
           }
           return <code {...codeProps}>{codeProps.children}</code>;
         },

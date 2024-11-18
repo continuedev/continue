@@ -30,7 +30,7 @@ import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
-import { getSymbolsForFiles } from "./util/treeSitter";
+import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
 
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
@@ -368,7 +368,7 @@ export class Core {
 
     on("context/getSymbolsForFiles", async (msg) => {
       const { uris } = msg.data;
-      return await getSymbolsForFiles(uris, this.ide);
+      return await getSymbolsForManyFiles(uris, this.ide);
     });
 
     on("config/getSerializedProfileInfo", async (msg) => {

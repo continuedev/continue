@@ -232,7 +232,7 @@ export async function getSymbolsForFile(
   }
 
   const tree = parser.parse(contents);
-  console.log(`file: ${filepath}`);
+  // console.log(`file: ${filepath}`);
 
   // Function to recursively find all named nodes (classes and functions)
   const symbols: SymbolWithRange[] = [];
@@ -249,7 +249,10 @@ export async function getSymbolsForFile(
       // TODO use findLast in newer version of node target
       let identifier: Parser.SyntaxNode | undefined = undefined;
       for (let i = node.children.length - 1; i >= 0; i--) {
-        if (node.children[i].type === "identifier") {
+        if (
+          node.children[i].type === "identifier" ||
+          node.children[i].type === "property_identifier"
+        ) {
           identifier = node.children[i];
           break;
         }
@@ -280,7 +283,7 @@ export async function getSymbolsForFile(
   return symbols;
 }
 
-export async function getSymbolsForFiles(
+export async function getSymbolsForManyFiles(
   uris: string[],
   ide: IDE,
 ): Promise<FileSymbolMap> {

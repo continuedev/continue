@@ -137,6 +137,7 @@ export const stateSlice = createSlice({
       state.mainEditorContent = undefined;
     },
     updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
+      console.log("UPDATE SYMBOLS", action.payload);
       state.symbols = Object.assign(state.symbols, action.payload);
     },
     setContextItemsAtIndex: (
@@ -254,7 +255,10 @@ export const stateSlice = createSlice({
       if (!historyItem) {
         return;
       }
-      historyItem.contextItems.push(...payload.contextItems);
+      historyItem.contextItems = [
+        ...historyItem.contextItems,
+        ...payload.contextItems,
+      ];
     },
     setInactive: (state) => {
       state.context.isGathering = false;
