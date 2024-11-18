@@ -201,11 +201,16 @@ export interface IContextProvider {
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
+export interface Checkpoint {
+  [filepath: string]: string;
+}
+
 export interface PersistedSessionInfo {
   history: ChatHistory;
   title: string;
   workspaceDirectory: string;
   sessionId: string;
+  checkpoints?: Checkpoint[];
 }
 
 export interface SessionInfo {

@@ -17,7 +17,9 @@ import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import resolveEditorContent from "../components/mainInput/resolveInput";
+import resolveEditorContent, {
+  hasSlashCommandOrContextProvider,
+} from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -25,13 +27,14 @@ import {
   clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
+  setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
   setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
 
@@ -187,6 +190,22 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
       // Reset current code block index
       dispatch(resetNextCodeBlockToApplyIndex());
+
+      if (index) {
+        dispatch(setCurCheckpointIndex(Math.floor(index / 2)));
+      }
+
+      const shouldGatherContext =
+        modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
+
+      if (shouldGatherContext) {
+        dispatch(
+          setIsGatheringContext({
+            isGathering: true,
+            gatheringMessage: "Gathering Context",
+          }),
+        );
+      }
 
       // Resolve context providers and construct new history
       const [selectedContextItems, selectedCode, content] =

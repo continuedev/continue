@@ -10,7 +10,6 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import editModeStateReducer from "./slices/editModeState";
-
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
