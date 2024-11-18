@@ -654,7 +654,8 @@ type ModelProvider =
   | "askSage"
   | "vertexai"
   | "nebius"
-  | "xAI";
+  | "xAI"
+  | "moonshot";
 
 export type ModelName =
   | "AUTODETECT"
@@ -749,7 +750,11 @@ export type ModelName =
   | "starcoder-1b"
   | "starcoder-3b"
   | "starcoder2-3b"
-  | "stable-code-3b";
+  | "stable-code-3b"
+  // Moonshot
+  | "moonshot-v1-8k"
+  | "moonshot-v1-32k"
+  | "moonshot-v1-128k";
 
 export interface RequestOptions {
   timeout?: number;

@@ -205,7 +205,8 @@
             "nebius",
             "vertexai",
             "xAI",
-            "kindo"
+            "kindo",
+            "moonshot"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -242,7 +243,8 @@
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
             "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
-            "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)"
+            "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
+            "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)"
           ],
           "type": "string"
         },
@@ -595,129 +597,6 @@
             "properties": {
               "provider": {
                 "enum": ["openai"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "gpt-3.5-turbo",
-                      "gpt-3.5-turbo-16k",
-                      "gpt-4o",
-                      "gpt-4o-mini",
-                      "gpt-4",
-                      "gpt-3.5-turbo-0613",
-                      "gpt-4-32k",
-                      "gpt-4-0125-preview",
-                      "gpt-4-turbo",
-                      "AUTODETECT"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["xAI"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": ["grok-beta", "AUTODETECT"]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["replicate"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "llama3.1-8b",
-                      "llama3.1-70b",
-                      "llama3.1-405b",
-                      "llama3-8b",
-                      "llama3-70b",
-                      "codellama-7b",
-                      "codellama-13b",
-                      "codellama-34b",
-                      "llama2-7b",
-                      "llama2-13b"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              },
-              "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models).",
-              "x-intellij-html-description": "Select a pre-defined option, or find an exact model ID from Replicate <a href='https://replicate.com/collections/streaming-language-models'>here</a>."
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["free-trial"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "enum": [
-                  "gpt-4o",
-                  "codestral-latest",
-                  "llama3.1-70b",
-                  "llama3.1-405b",
-                  "gpt-3.5-turbo",
-                  "gemini-pro",
-                  "claude-3-5-sonnet-latest",
-                  "claude-3-haiku-20240307",
-                  "AUTODETECT"
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["openai"]
               },
               "apiType": {
                 "not": {
@@ -769,9 +648,6 @@
                       "starcoder-1b",
                       "starcoder-3b",
                       "starcoder2-3b",
-                      "mistral-tiny",
-                      "mistral-small",
-                      "mistral-medium",
                       "qwen2.5-coder:1.5b",
                       "qwen2.5-coder:3b",
                       "qwen2.5-coder:7b",
@@ -1145,6 +1021,35 @@
           },
           "then": {
             "required": ["projectId", "region"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["moonshot"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "moonshot-v1-8k",
+                      "moonshot-v1-32k",
+                      "moonshot-v1-128k",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
           }
         },
         {
