@@ -369,11 +369,6 @@
         "key": "alt+ctrl+n"
       },
       {
-        "command": "continue.quickEdit",
-        "mac": "cmd+shift+i",
-        "key": "ctrl+shift+i"
-      },
-      {
         "command": "continue.edit",
         "mac": "cmd+i",
         "key": "ctrl+i"
@@ -415,9 +410,6 @@
     ],
     "menus": {
       "commandPalette": [
-        {
-          "command": "continue.quickEdit"
-        },
         {
           "command": "continue.focusContinueInput"
         },
