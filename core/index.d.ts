@@ -284,6 +284,7 @@ export interface ChatMessage {
   role: ChatMessageRole;
   content: MessageContent;
   toolCalls?: ToolCallDelta[];
+  toolCallId?: string;
 }
 
 export interface ContextItemId {

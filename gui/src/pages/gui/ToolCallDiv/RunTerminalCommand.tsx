@@ -1,8 +1,10 @@
 import StepContainerPreToolbar from "../../../components/markdown/StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "../../../components/markdown/SyntaxHighlightedPre";
+import { ToolState } from "./types";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
+  state: ToolState;
 }
 
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {

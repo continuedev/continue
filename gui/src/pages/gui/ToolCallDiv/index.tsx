@@ -13,6 +13,7 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { streamUpdate } from "../../../redux/slices/stateSlice";
 import { CreateFile } from "./CreateFile";
 import { RunTerminalCommand } from "./RunTerminalCommand";
+import { ToolState } from "./types";
 
 const Container = styled.div`
   margin: 8px;
@@ -64,16 +65,20 @@ function incrementalParseJson(raw: string): [boolean, any] {
   }
 }
 
-function FunctionSpecificToolCallDiv(toolCall: ToolCall) {
+function FunctionSpecificToolCallDiv(toolCall: ToolCall, state: ToolState) {
   const [_, args] = incrementalParseJson(toolCall.function.arguments);
 
   switch (toolCall.function.name) {
     case "create_new_file":
       return (
-        <CreateFile filepath={args.filepath} fileContents={args.contents} />
+        <CreateFile
+          filepath={args.filepath}
+          fileContents={args.contents}
+          state={state}
+        />
       );
     case "run_terminal_command":
-      return <RunTerminalCommand command={args.command} />;
+      return <RunTerminalCommand command={args.command} state={state} />;
     default:
       return (
         <>
@@ -92,7 +97,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
-  const [loading, setLoading] = useState<boolean>(true);
+  const [state, setState] = useState<ToolState>("generating");
 
   useEffect(() => {
     if (props.toolCall.function.arguments.length === 0) {
@@ -101,21 +106,35 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
     const [done, _] = incrementalParseJson(props.toolCall.function.arguments);
     if (done) {
-      setLoading(false);
+      setState("generated");
     }
   }, [props.toolCall.function.arguments]);
 
   async function callTool() {
+    let setCallingState = true;
+
+    const timer = setTimeout(() => {
+      if (setCallingState) {
+        setState("calling");
+      }
+    }, 800);
+
     const result = await ideMessenger.request("tools/call", {
       toolCall: props.toolCall,
     });
+
+    setCallingState = false;
+    clearTimeout(timer);
+
     if (result.status === "success") {
       dispatch(
         streamUpdate({
           role: "tool",
           content: JSON.stringify(result.content.result),
+          toolCallId: props.toolCall.id,
         }),
       );
+      setState("done");
     }
   }
 
@@ -123,17 +142,22 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     <Container>
       <FunctionSpecificToolCallDiv {...props.toolCall} />
       <ButtonContainer>
-        {loading ? (
+        {state === "generating" ? (
           <div className="ml-auto flex items-center gap-4">
             Loading...
             <Spinner />
           </div>
-        ) : (
+        ) : state === "generated" ? (
           <>
             <RejectButton onClick={() => {}}>Cancel</RejectButton>
             <AcceptButton onClick={callTool}>Continue</AcceptButton>
           </>
-        )}
+        ) : state === "calling" ? (
+          <div className="ml-auto flex items-center gap-4">
+            Loading...
+            <Spinner />
+          </div>
+        ) : null}
       </ButtonContainer>
     </Container>
   );

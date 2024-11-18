@@ -73,7 +73,7 @@ export function constructMessages(
   history: ChatHistory,
   model: string,
 ): ChatMessage[] {
-  const msgs = [];
+  const msgs: ChatMessage[] = [];
 
   // Only using this system message with Sonnet right now
   if (
@@ -100,7 +100,7 @@ export function constructMessages(
     content = [...ctxItems, ...content];
 
     msgs.push({
-      role: historyItem.message.role,
+      ...historyItem.message,
       content,
     });
   }

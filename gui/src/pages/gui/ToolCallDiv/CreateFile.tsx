@@ -1,9 +1,11 @@
 import StepContainerPreToolbar from "../../../components/markdown/StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "../../../components/markdown/SyntaxHighlightedPre";
+import { ToolState } from "./types";
 
 interface CreateFileToolCallProps {
   filepath: string;
   fileContents: string;
+  state: ToolState;
 }
 
 export function CreateFile(props: CreateFileToolCallProps) {
