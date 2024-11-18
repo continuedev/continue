@@ -14,14 +14,13 @@ import {
 import { getFontSize, isJetBrains } from "../../util";
 import "./katex.css";
 import "./markdown.css";
-import { useSelector } from "react-redux";
-import { memoizedContextItemsSelector } from "../../redux/slices/stateSlice";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
+import { ContextItemWithId } from "core";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -94,6 +93,7 @@ interface StyledMarkdownPreviewProps {
   className?: string;
   isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
   scrollLocked?: boolean;
+  contextItems?: ContextItemWithId[];
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -137,13 +137,13 @@ function processCodeBlocks(tree: any) {
       node.lang = node.lang.split(".").slice(-1)[0];
     }
 
+    node.data = node.data || {};
+    node.data.hProperties = node.data.hProperties || {};
+
+    node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
+    node.data.hProperties.codeBlockContent = node.value;
+
     if (node.meta) {
-      node.data = node.data || {};
-      node.data.hProperties = node.data.hProperties || {};
-
-      node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
-      node.data.hProperties.codeBlockContent = node.value;
-
       let meta = node.meta.split(" ");
       node.data.hProperties.filepath = meta[0];
       node.data.hProperties.range = meta[1];
@@ -154,8 +154,6 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
-  const contextItems = useSelector(memoizedContextItemsSelector);
-
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [remarkMath, () => processCodeBlocks],
     rehypePlugins: [
@@ -238,13 +236,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          const ctxItem = contextItems.find((ctxItem) =>
-            ctxItem.uri?.value.includes(content),
-          );
-
-          if (ctxItem) {
-            const rif = ctxItemToRifWithContents(ctxItem);
-            return <FilenameLink rif={rif} />;
+          if (props.contextItems) {
+            const ctxItem = props.contextItems.find((ctxItem) =>
+              ctxItem.uri?.value.includes(content),
+            );
+            if (ctxItem) {
+              const rif = ctxItemToRifWithContents(ctxItem);
+              return <FilenameLink rif={rif} />;
+            }
           }
 
           return <code {...codeProps}>{codeProps.children}</code>;

@@ -109,7 +109,6 @@ export function parseColorForHex(colorVar: string): string {
     colorVar,
   );
   if (value.startsWith("#")) {
-    console.log("OAIJFIOJOOJOIO", colorVar, value, value.slice(0, 7));
     return value.slice(0, 7);
   }
 

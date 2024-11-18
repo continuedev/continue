@@ -157,7 +157,7 @@ export default class DocsService {
         params: {},
       });
 
-      await this.ide.showToast(
+      void this.ide.showToast(
         "info",
         "Successfuly added docs context provider",
       );
@@ -183,7 +183,7 @@ export default class DocsService {
       while (!(await generator.next()).done) {}
     }
 
-    await this.ide.showToast("info", "Docs indexing completed");
+    void this.ide.showToast("info", "Docs indexing completed");
   }
 
   async list() {
@@ -254,6 +254,8 @@ export default class DocsService {
       if (processedPages === maxKnownPages) {
         maxKnownPages *= 2;
       }
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
     void Telemetry.capture("docs_pages_crawled", {
@@ -362,11 +364,16 @@ export default class DocsService {
       isPreIndexedDoc: !!preIndexedDocs[startUrl],
     });
 
-    const docs: LanceDbDocsRow[] = await table
-      .search(vector)
-      .limit(nRetrieve)
-      .where(`starturl = '${startUrl}'`)
-      .execute();
+    let docs: LanceDbDocsRow[] = [];
+    try {
+      docs = await table
+        .search(vector)
+        .limit(nRetrieve)
+        .where(`starturl = '${startUrl}'`)
+        .execute();
+    } catch (e: any) {
+      console.error("Error retrieving chunks from LanceDB", e);
+    }
 
     const hasIndexedDoc = await this.hasIndexedDoc(startUrl);
 
@@ -553,9 +560,8 @@ export default class DocsService {
   private async getLanceTableNameFromEmbeddingsProvider(
     isPreIndexedDoc: boolean,
   ) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(
-      isPreIndexedDoc,
-    );
+    const embeddingsProvider =
+      await this.getEmbeddingsProvider(isPreIndexedDoc);
 
     const tableName = this.sanitizeLanceTableName(
       `${DocsService.lanceTableName}${embeddingsProvider.id}`,
@@ -737,7 +743,7 @@ export default class DocsService {
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
       // A bit noisy for teams users whom have no choice if their admin is the one who didn't setup an embeddingsProvider
-      // this.ide.showToast(
+      // void this.ide.showToast(
       //   "error",
       //   "The 'transformers.js' embeddings provider currently cannot be used to index " +
       //     "documentation in JetBrains. To enable documentation indexing, you can use " +

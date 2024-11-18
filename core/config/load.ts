@@ -64,6 +64,7 @@ import {
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
 } from "./default";
+import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import {
   DEFAULT_PROMPTS_FOLDER,
   getPromptFiles,
@@ -215,7 +216,10 @@ async function serializedToIntermediateConfig(
     promptFiles.push(...readAllGlobalPromptFiles());
 
     for (const file of promptFiles) {
-      slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+      const slashCommand = slashCommandFromPromptFile(file.path, file.content);
+      if (slashCommand) {
+        slashCommands.push(slashCommand);
+      }
     }
   }
 
@@ -730,6 +734,11 @@ async function loadFullConfigNode(
 
   if (!serialized || configLoadInterrupted) {
     return { errors, config: undefined, configLoadInterrupted: true };
+  }
+
+  const systemPromptDotFile = await getSystemPromptDotFile(ide);
+  if (systemPromptDotFile) {
+    serialized.systemMessage = systemPromptDotFile;
   }
 
   // Convert serialized to intermediate config

@@ -49,7 +49,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "mistral",
   "sambanova",
   "vertexai",
-  "watsonx"
+  "watsonx",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -63,7 +63,8 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "sagemaker",
   "continue-proxy",
   "openrouter",
-  "vertexai"
+  "vertexai",
+  "azure",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
@@ -116,12 +117,13 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
+  "moonshot",
   "free-trial",
   "replicate",
   "together",
   "sambanova",
   "nebius",
-  "vertexai"
+  "vertexai",
 ];
 
 function llmCanGenerateInParallel(
@@ -148,9 +150,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini") ||
-    lower.includes("grok")
+    lower.includes("grok")||
+    lower.includes("moonshot")
   ) {
-    return undefined;
+    return undefined; 
   }
 
   if (lower.includes("llama3")) {

@@ -169,6 +169,55 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["deepseek"],
     isOpenSource: false,
   },
+  deepseekCoder2Lite: {
+    title: "DeepSeek Coder 2 Lite",
+    description:
+      "DeepSeek-Coder-V2-Lite-Instruct is an open-source code language model that supports 338 programming languages and offers a context length of up to 128,000 tokens.",
+    params: {
+      title: "DeepSeek-2-lite",
+      model: "deepseek-2-lite",
+      contextLength: 128_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["nebius"],
+    isOpenSource: true,
+  },
+  moonshotChat: {
+    title: "Moonshot Chat",
+    description: "Moonshot AI provides high-performance large language models",
+    refUrl: "https://platform.moonshot.cn/",
+    params: {
+      title: "Moonshot-v1-8k",
+      model: "moonshot-v1-8k",
+      contextLength: 8192,
+    },
+    icon: "moonshot.png",
+    dimensions: [
+      {
+        name: "Context Window",
+        description: "The size of the model's context window",
+        options: {
+          "8K": {
+            model: "moonshot-v1-8k",
+            title: "Moonshot-v1-8k",
+            contextLength: 8192,
+          },
+          "32K": {
+            model: "moonshot-v1-32k",
+            title: "Moonshot-v1-32k",
+            contextLength: 32768,
+          },
+          "128K": {
+            model: "moonshot-v1-128k",
+            title: "Moonshot-v1-128k",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["moonshot"],
+    isOpenSource: false,
+  },
   mistralOs: {
     title: "Mistral",
     description:
@@ -358,6 +407,18 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "meta.png",
     providerOptions: ["groq"],
     isOpenSource: false,
+  },
+  llama3170bNemotron: {
+    title: "Llama 3.1 Nemotron 70B",
+    description:
+      "Llama-3.1-Nemotron-70B-Instruct is a large language model customized by NVIDIA to improve the helpfulness of LLM generated responses to user queries.",
+    params: {
+      title: "Llama 3.1 Nemotron 70B",
+      model: "llama3.1-70b-nemotron",
+      contextLength: 128_000,
+    },
+    icon: "meta.png",
+    isOpenSource: true,
   },
   llama321bChat: {
     title: "Llama3.2 1b Chat",
@@ -627,6 +688,18 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "mistral.png",
     providerOptions: ["mistral", "askSage"],
     isOpenSource: false,
+  },
+  mistralNemo: {
+    title: "Mistral Nemo",
+    description:
+      "Mistral Nemo Instruct is a large language model developed by Mistral AI and NVIDIA.",
+    params: {
+      title: "Mistral Nemo",
+      model: "mistral-nemo",
+      contextLength: 128_000,
+    },
+    icon: "mistral.png",
+    isOpenSource: true,
   },
   geminiPro: {
     title: "Gemini Pro",
@@ -979,7 +1052,6 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["vertexai"],
     isOpenSource: false,
   },
-
   gpt4gov: {
     title: "GPT-4 gov",
     description:
@@ -1047,6 +1119,61 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "xAI.png",
     providerOptions: ["xAI"],
     isOpenSource: false,
+  },
+  gemma2_2b: {
+    title: "Gemma 2 2b IT",
+    description:
+      "Gemma 2 IT instruction-tuned language model developed by Google, designed for tasks like question answering, summarization, and reasoning.",
+    params: {
+      title: "Gemma 2 2b IT",
+      model: "gemma2-2b-it",
+      contextLength: 4000,
+    },
+    isOpenSource: true,
+  },
+  gemma2_9b: {
+    title: "Gemma 2 9b IT",
+    description:
+      "Gemma 2 IT instruction-tuned language model developed by Google, designed for tasks like question answering, summarization, and reasoning.",
+    params: {
+      title: "Gemma 2 9b IT",
+      model: "gemma2-9b-it",
+      contextLength: 8000,
+    },
+    isOpenSource: true,
+  },
+  phi3mini: {
+    title: "Microsoft Phi 3 mini",
+    description:
+      "Phi 3 Mini is a 3.8-billion-parameter language model developed by Microsoft.",
+    params: {
+      title: "Microsoft Phi 3 mini",
+      model: "phi-3-mini",
+      contextLength: 4000,
+    },
+    isOpenSource: true,
+  },
+  phi3medium: {
+    title: "Microsoft Phi 3 medium",
+    description:
+      "Phi 3 Medium is a 14-billion-parameter language model developed by Microsoft.",
+    params: {
+      title: "Microsoft Phi 3 medium",
+      model: "phi-3-medium",
+      contextLength: 128_000,
+    },
+    isOpenSource: true,
+  },
+  olmo7b: {
+    title: "OLMo 7b",
+    description:
+      "OLMo 7B Instruct HF is a 7-billion-parameter language model by the Allen Institute for AI, fine-tuned for question answering tasks.",
+    params: {
+      title: "OLMo 7b",
+      model: "olmo-7b",
+      contextLength: 2000,
+    },
+    isOpenSource: true,
   },
   AUTODETECT: {
     title: "Autodetect",

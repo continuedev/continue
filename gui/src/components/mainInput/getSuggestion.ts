@@ -89,7 +89,7 @@ function getSubActionsForSubmenuItem(
         label: "Open in new tab",
         icon: "trash",
         action: () => {
-          ideMessenger.request("context/removeDocs", { startUrl: item.id });
+          ideMessenger.post("context/removeDocs", { startUrl: item.id });
         },
       },
     ];
@@ -166,7 +166,7 @@ export function getContextProviderDropdownOptions(
         title: "Add more context providers",
         type: "action",
         action: () => {
-          ideMessenger.request(
+          ideMessenger.post(
             "openUrl",
             "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
           );
@@ -196,7 +196,7 @@ export function getSlashCommandDropdownOptions(
       //   id: "createPromptFile",
       //   label: "Create Prompt File",
       //   action: () => {
-      //     ideMessenger.request("config/newPromptFile", undefined);
+      //     ideMessenger.post("config/newPromptFile", undefined);
       //   },
       //   name: "Create Prompt File",
       // },

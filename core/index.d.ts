@@ -45,12 +45,12 @@ export interface IndexingProgressUpdate {
   debugInfo?: string;
 }
 
-export type PromptTemplate =
-  | string
-  | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+export type PromptTemplateFunction = (
+  history: ChatMessage[],
+  otherData: Record<string, string>,
+) => string | ChatMessage[];
+
+export type PromptTemplate = string | PromptTemplateFunction;
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -200,11 +200,16 @@ export interface IContextProvider {
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
+export interface Checkpoint {
+  [filepath: string]: string;
+}
+
 export interface PersistedSessionInfo {
   history: ChatHistory;
   title: string;
   workspaceDirectory: string;
   sessionId: string;
+  checkpoints?: Checkpoint[];
 }
 
 export interface SessionInfo {
@@ -654,7 +659,8 @@ type ModelProvider =
   | "askSage"
   | "vertexai"
   | "nebius"
-  | "xAI";
+  | "xAI"
+  | "moonshot";
 
 export type ModelName =
   | "AUTODETECT"
@@ -749,7 +755,11 @@ export type ModelName =
   | "starcoder-1b"
   | "starcoder-3b"
   | "starcoder2-3b"
-  | "stable-code-3b";
+  | "stable-code-3b"
+  // Moonshot
+  | "moonshot-v1-8k"
+  | "moonshot-v1-32k"
+  | "moonshot-v1-128k";
 
 export interface RequestOptions {
   timeout?: number;

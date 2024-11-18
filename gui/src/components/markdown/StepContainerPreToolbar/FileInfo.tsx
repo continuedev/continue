@@ -12,7 +12,6 @@ export interface FileInfoProps {
 const FileInfo = ({ filepath, range }: FileInfoProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // TODO: Need to turn into relative or fq path
   function onClickFileName() {
     ideMessenger.post("showFile", {
       filepath,
@@ -20,13 +19,13 @@ const FileInfo = ({ filepath, range }: FileInfoProps) => {
   }
 
   return (
-    <div className="flex max-w-[20%] items-center">
+    <div className="flex w-full min-w-0 items-center">
       <div
-        className="flex cursor-pointer items-center gap-1"
+        className="mr-0.5 flex w-full min-w-0 cursor-pointer items-center gap-0.5"
         onClick={onClickFileName}
       >
         <FileIcon height="20px" width="20px" filename={filepath} />
-        <span className="truncate hover:underline">
+        <span className="w-full truncate hover:underline">
           {getBasename(filepath)}
           {range && ` ${range}`}
         </span>

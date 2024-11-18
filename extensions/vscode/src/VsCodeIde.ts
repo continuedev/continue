@@ -489,11 +489,13 @@ class VsCodeIde implements IDE {
   }
 
   async getCurrentFile() {
-    if (!vscode.window.activeTextEditor) {return undefined;}
+    if (!vscode.window.activeTextEditor) {
+      return undefined;
+    }
     return {
       isUntitled: vscode.window.activeTextEditor.document.isUntitled,
       path: vscode.window.activeTextEditor.document.uri.fsPath,
-      contents: vscode.window.activeTextEditor.document.getText()
+      contents: vscode.window.activeTextEditor.document.getText(),
     };
   }
 
@@ -629,4 +631,3 @@ class VsCodeIde implements IDE {
 }
 
 export { VsCodeIde };
-
