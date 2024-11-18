@@ -744,7 +744,7 @@ export class Core {
 
     on("tools/call", async ({ data: { toolCall } }) => {
       const tool = instantiateTool(toolCall.function.name, { ide: this.ide });
-      const result = await tool.action(toolCall.function.arguments);
+      const result = await tool.action(JSON.parse(toolCall.function.arguments));
       return { result };
     });
   }

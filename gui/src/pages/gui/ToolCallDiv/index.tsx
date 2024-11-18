@@ -1,5 +1,5 @@
 import { ToolCall } from "core";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
@@ -8,6 +8,7 @@ import {
   vscButtonBackground,
   vscButtonForeground,
 } from "../../../components";
+import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { streamUpdate } from "../../../redux/slices/stateSlice";
 import { CreateFile } from "./CreateFile";
@@ -55,16 +56,16 @@ interface ToolCallDivProps {
   toolCall: ToolCall;
 }
 
-function incrementalParseJson(raw: string): any {
+function incrementalParseJson(raw: string): [boolean, any] {
   try {
-    return JSON.parse(raw);
+    return [true, JSON.parse(raw)];
   } catch (e) {
-    return {};
+    return [false, {}];
   }
 }
 
 function FunctionSpecificToolCallDiv(toolCall: ToolCall) {
-  const args = incrementalParseJson(toolCall.function.arguments);
+  const [_, args] = incrementalParseJson(toolCall.function.arguments);
 
   switch (toolCall.function.name) {
     case "create_new_file":
@@ -91,6 +92,19 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    if (props.toolCall.function.arguments.length === 0) {
+      return;
+    }
+
+    const [done, _] = incrementalParseJson(props.toolCall.function.arguments);
+    if (done) {
+      setLoading(false);
+    }
+  }, [props.toolCall.function.arguments]);
+
   async function callTool() {
     const result = await ideMessenger.request("tools/call", {
       toolCall: props.toolCall,
@@ -109,8 +123,17 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     <Container>
       <FunctionSpecificToolCallDiv {...props.toolCall} />
       <ButtonContainer>
-        <RejectButton onClick={() => {}}>Cancel</RejectButton>
-        <AcceptButton onClick={callTool}>Continue</AcceptButton>
+        {loading ? (
+          <div className="ml-auto flex items-center gap-4">
+            Loading...
+            <Spinner />
+          </div>
+        ) : (
+          <>
+            <RejectButton onClick={() => {}}>Cancel</RejectButton>
+            <AcceptButton onClick={callTool}>Continue</AcceptButton>
+          </>
+        )}
       </ButtonContainer>
     </Container>
   );

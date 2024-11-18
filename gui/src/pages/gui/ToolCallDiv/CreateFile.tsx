@@ -11,10 +11,10 @@ export function CreateFile(props: CreateFileToolCallProps) {
     <>
       <p>Continue wants to create a file:</p>
       <StepContainerPreToolbar
-        codeBlockContent={props.fileContents ?? ""}
+        codeBlockContent={props.fileContents ?? "New File"}
         codeBlockIndex={0}
         language={"javascript"}
-        filepath={props.filepath ?? ""}
+        filepath={props.filepath ?? "Loading"}
         isGeneratingCodeBlock={false}
         expanded={false}
         hideApply={true}
