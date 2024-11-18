@@ -31,6 +31,7 @@ import Llamafile from "./Llamafile";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
 import Mock from "./Mock";
+import Moonshot from "./Moonshot";
 import Msty from "./Msty";
 import Nebius from "./Nebius";
 import Nvidia from "./Nvidia";
@@ -54,6 +55,7 @@ const LLMs = [
   FreeTrial,
   Gemini,
   Llamafile,
+  Moonshot,
   Ollama,
   Replicate,
   TextGenWebUI,
