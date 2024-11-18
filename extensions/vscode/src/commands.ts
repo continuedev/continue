@@ -258,7 +258,7 @@ const commandsMap: (
     const modelTitle =
       getModelByRole(config, "inlineEdit")?.title ?? defaultModelTitle;
 
-    sidebar.webviewProtocol.request("incrementFtc", undefined);
+    void sidebar.webviewProtocol.request("incrementFtc", undefined);
 
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
@@ -287,7 +287,7 @@ const commandsMap: (
       verticalDiffManager.clearForFilepath(fullPath, true);
       await diffManager.acceptDiff(fullPath);
 
-      await sidebar.webviewProtocol.request("setEditStatus", {
+      void sidebar.webviewProtocol.request("setEditStatus", {
         status: "done",
       });
     },
@@ -306,7 +306,7 @@ const commandsMap: (
 
       verticalDiffManager.clearForFilepath(fullPath, false);
       await diffManager.rejectDiff(fullPath);
-      await sidebar.webviewProtocol.request("setEditStatus", {
+      void sidebar.webviewProtocol.request("setEditStatus", {
         status: "done",
       });
     },
@@ -366,6 +366,14 @@ const commandsMap: (
       core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
+      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
+      // when the GUI hasn't yet been setup and we should instead be
+      // immediately throwing an error, or returning a Result object
+      if (!sidebar.isReady) {
+        focusGUI();
+        return;
+      }
+
       const historyLength = await sidebar.webviewProtocol.request(
         "getWebviewHistoryLength",
         undefined,
@@ -379,15 +387,23 @@ const commandsMap: (
         if (historyLength === 0) {
           hideGUI();
         } else {
-          sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+          void sidebar.webviewProtocol?.request("focusContinueInput", undefined);
         }
       } else {
         focusGUI();
         sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-        await addHighlightedCodeToContext(sidebar.webviewProtocol);
+        void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
     "continue.focusContinueInputWithoutClear": async () => {
+      // This is a temporary fix—sidebar.webviewProtocol.request is blocking
+      // when the GUI hasn't yet been setup and we should instead be
+      // immediately throwing an error, or returning a Result object
+      if (!sidebar.isReady) {
+        focusGUI();
+        return;
+      }
+
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
         undefined,
@@ -403,7 +419,7 @@ const commandsMap: (
           undefined,
         );
 
-        await addHighlightedCodeToContext(sidebar.webviewProtocol);
+        void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
     "continue.edit": async () => {
@@ -580,10 +596,10 @@ const commandsMap: (
           prompt: "Enter the Session ID",
         });
       }
-      sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
+      void sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
     },
     "continue.applyCodeFromChat": () => {
-      sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
+      void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
     },
     "continue.toggleFullScreen": () => {
       focusGUI();

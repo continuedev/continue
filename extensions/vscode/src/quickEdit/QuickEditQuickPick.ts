@@ -329,7 +329,7 @@ export class QuickEdit {
       prompt = this.contextProviderStr + prompt;
     }
 
-    this.webviewProtocol.request("incrementFtc", undefined);
+    void this.webviewProtocol.request("incrementFtc", undefined);
 
     await this.verticalDiffManager.streamEdit(
       prompt,

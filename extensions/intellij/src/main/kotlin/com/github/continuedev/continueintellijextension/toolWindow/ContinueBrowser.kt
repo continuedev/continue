@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
+import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.constants.MessageTypes
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
@@ -18,8 +19,6 @@ import kotlinx.coroutines.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.util.SystemInfo
 
 class ContinueBrowser(val project: Project, url: String) {
     private val coroutineScope = CoroutineScope(
@@ -60,6 +59,7 @@ class ContinueBrowser(val project: Project, url: String) {
         "stats/getTokensPerModel",
         "index/setPaused",
         "index/forceReIndex",
+        "index/forceReIndexFiles",
         "index/indexingProgressBarInitialized",
         "completeOnboarding",
         "addAutocompleteModel",
@@ -79,8 +79,8 @@ class ContinueBrowser(val project: Project, url: String) {
     val browser: JBCefBrowser
 
     init {
-        val enableOSR = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
-        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(enableOSR).build()
+        val isOSREnabled = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build()
 
 
         browser.jbCefClient.setProperty(
@@ -90,7 +90,7 @@ class ContinueBrowser(val project: Project, url: String) {
 
         registerAppSchemeHandler()
         browser.loadURL(url);
-        Disposer.register(project, browser)
+        Disposer.register(ContinuePluginDisposable.getInstance(project), browser)
 
         // Listen for events sent from browser
         val myJSQueryOpenInBrowser = JBCefJSQuery.create((browser as JBCefBrowserBase?)!!)
@@ -134,6 +134,10 @@ class ContinueBrowser(val project: Project, url: String) {
                 "jetbrains/editorInsetHeight" -> {
                     val height = data.asJsonObject.get("height").asInt
                     heightChangeListeners.forEach { it(height) }
+                }
+
+                "jetbrains/isOSREnabled" -> {
+                    sendToWebview( "jetbrains/isOSREnabled", isOSREnabled)
                 }
 
                 "onLoad" -> {

@@ -193,7 +193,7 @@ function ProfileSwitcher() {
         <StyledListbox
           value={"GPT-4"}
           onChange={(id: string) => {
-            ideMessenger.request("didChangeSelectedProfile", { id });
+            ideMessenger.post("didChangeSelectedProfile", { id });
           }}
         >
           <div className="relative">

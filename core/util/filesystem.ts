@@ -20,7 +20,7 @@ import { GetGhTokenArgs } from "../protocol/ide.js";
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
-  constructor(private readonly workspaceDir: string) { }
+  constructor(private readonly workspaceDir: string) {}
   showToast(
     type: ToastType,
     message: string,
@@ -36,7 +36,7 @@ class FileSystemIde implements IDE {
   }
 
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
-    throw new Error("Method not implemented.");
+    return Promise.resolve([]);
   }
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
     return;

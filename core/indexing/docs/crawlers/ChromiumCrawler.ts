@@ -242,7 +242,7 @@ export class ChromiumInstaller {
 
       ChromiumCrawler.setUseChromiumForDocsCrawling(false);
 
-      await this.ide.showToast("error", "Failed to install Chromium");
+      void this.ide.showToast("error", "Failed to install Chromium");
 
       return false;
     }

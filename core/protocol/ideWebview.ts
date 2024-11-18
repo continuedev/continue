@@ -37,6 +37,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
+  "jetbrains/isOSREnabled": [undefined, void];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
   acceptDiff: [{ filepath: string }, void];
@@ -56,7 +57,12 @@ export interface EditModeArgs {
   highlightedCode: RangeInFileWithContents;
 }
 
-export type EditStatus = "not-started" | "streaming" | "accepting" | "done";
+export type EditStatus =
+  | "not-started"
+  | "streaming"
+  | "accepting"
+  | "accepting:full-diff"
+  | "done";
 
 export interface ApplyState {
   streamId: string;
@@ -98,6 +104,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
+  "jetbrains/isOSREnabled": [boolean, void];
   addApiKey: [undefined, void];
   setupLocalConfig: [undefined, void];
   incrementFtc: [undefined, void];
@@ -105,6 +112,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   applyCodeFromChat: [undefined, void];
   updateApplyState: [ApplyState, void];
   startEditMode: [EditModeArgs, void];
-  setEditStatus: [{ status: EditStatus }, void];
+  setEditStatus: [{ status: EditStatus; fileAfterEdit?: string }, void];
   exitEditMode: [undefined, void];
 };

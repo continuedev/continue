@@ -26,26 +26,23 @@ The API keys for Codestral and the general Mistral APIs are different. If you ar
 
 ## Local, offline / self-hosted experience
 
-For those preferring local execution or self-hosting,`StarCoder2-3b` offers a good balance of performance and quality for most users:
+For those preferring local execution or self-hosting,`Qwen2.5-Coder 1.5B` offers a good balance of performance and quality for most users:
 
 ```json title="config.json""
 {
   "tabAutocompleteModel": {
-    "title": "StarCoder2-3b",
-    "model": "starcoder2:3b",
+    "title": "Qwen2.5-Coder 1.5B",
+    "model": "qwen2.5-coder:1.5b",
     "provider": "ollama"
   }
 }
 ```
 
-## Alternative experiences
-
-- Completions too slow? Try `deepseek-coder:1.3b-base` for quicker completions on less powerful hardware
-- Have more compute? Use `deepseek-coder:6.7b-base` for potentially higher-quality suggestions
+Have more compute? Use `qwen2.5-coder:7b` for potentially higher-quality suggestions.
 
 :::note
 
-For LM Studio users, navigate to the "My Models" section, find your desired model, and copy the path (e.g., second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf). Use this path as the `model` value in your configuration.
+For LM Studio users, navigate to the "My Models" section, find your desired model, and copy the path (e.g., `Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/wen2.5-coder-1.5b-instruct-q4_k_m.gguf`). Use this path as the `model` value in your configuration.
 
 :::
 

@@ -1,0 +1,50 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.Getting started": {
+    "message": "开始",
+    "description": "The label for category Getting started in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Chat": {
+    "message": "聊天",
+    "description": "The label for category Chat in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Autocomplete": {
+    "message": "自动补全",
+    "description": "The label for category Autocomplete in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Edit": {
+    "message": "编辑",
+    "description": "The label for category Edit in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Actions": {
+    "message": "Actions",
+    "description": "The label for category Actions in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.link.Customize": {
+    "message": "定制",
+    "description": "The label for link Customize in sidebar docsSidebar, linking to /customize/overview"
+  },
+  "sidebar.customizingSidebar.category.Model providers": {
+    "message": "模型提供者",
+    "description": "The label for category Model providers in sidebar customizingSidebar"
+  },
+  "sidebar.customizingSidebar.category.More": {
+    "message": "更多",
+    "description": "The label for category More in sidebar customizingSidebar"
+  },
+  "sidebar.customizingSidebar.category.Model types": {
+    "message": "模型类型",
+    "description": "The label for category Model types in sidebar customizingSidebar"
+  },
+  "sidebar.customizingSidebar.category.Deep dives": {
+    "message": "深入理解",
+    "description": "The label for category Deep dives in sidebar customizingSidebar"
+  },
+  "sidebar.customizingSidebar.category.Tutorials": {
+    "message": "教程",
+    "description": "The label for category Tutorials in sidebar customizingSidebar"
+  }
+}

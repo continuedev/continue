@@ -34,6 +34,18 @@ export function validateConfig(config: SerializedContinueConfig) {
           message: `Model at index ${index} has an invalid 'provider'.`,
         });
       }
+
+      if (model.contextLength && model.completionOptions?.maxTokens) {
+        const difference =
+          model.contextLength - model.completionOptions.maxTokens;
+
+        if (difference < 1000) {
+          errors.push({
+            fatal: false,
+            message: `Model "${model.title}" has a contextLength of ${model.contextLength} and a maxTokens of ${model.completionOptions.maxTokens}. This leaves only ${difference} tokens for input context and will likely result in your inputs being truncated.`,
+          });
+        }
+      }
     });
   }
 
