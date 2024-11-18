@@ -271,10 +271,19 @@ export interface ToolCall {
   };
 }
 
+export interface ToolCallDelta {
+  id?: string;
+  type?: "function";
+  function?: {
+    name?: string;
+    arguments?: string[];
+  };
+}
+
 export interface ChatMessage {
   role: ChatMessageRole;
   content: MessageContent;
-  toolCalls?: ToolCall[];
+  toolCalls?: ToolCallDelta[];
 }
 
 export interface ContextItemId {
