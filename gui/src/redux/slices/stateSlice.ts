@@ -34,6 +34,7 @@ type State = {
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
   isInMultifileEdit: boolean;
+  streamAborter: AbortController;
 };
 
 const initialState: State = {
@@ -61,6 +62,7 @@ const initialState: State = {
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
   isInMultifileEdit: false,
+  streamAborter: new AbortController(),
 };
 
 export const stateSlice = createSlice({
@@ -239,6 +241,10 @@ export const stateSlice = createSlice({
       state.isGatheringContext = false;
       state.active = false;
     },
+    abortStream: (state) => {
+      state.streamAborter.abort();
+      state.streamAborter = new AbortController();
+    },
     streamUpdate: (state, action: PayloadAction<string>) => {
       if (state.history.length) {
         state.history[state.history.length - 1].message.content +=
@@ -249,16 +255,17 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<PersistedSessionInfo | undefined>,
     ) => {
+      state.active = false;
+      state.isGatheringContext = false;
+      state.isInMultifileEdit = false;
       if (payload) {
         state.history = payload.history as any;
         state.title = payload.title;
         state.sessionId = payload.sessionId;
       } else {
         state.history = [];
-        state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
-        state.isInMultifileEdit = false;
       }
     },
     addHighlightedCode: (
@@ -339,6 +346,7 @@ export const {
   deleteMessage,
   setIsGatheringContext,
   setIsInMultifileEdit,
+  abortStream,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

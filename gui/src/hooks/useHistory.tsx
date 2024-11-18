@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { newSession } from "../redux/slices/stateSlice";
+import { newSession, setInactive } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
