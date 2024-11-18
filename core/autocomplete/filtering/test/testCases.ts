@@ -63,7 +63,7 @@ function sayHello() {
 `,
     llmOutput: `world!");
 `,
-    expectedCompletion: "world!\");",
+    expectedCompletion: 'world!");',
   },
   {
     description: "Should autocomplete Java when inside a block",
@@ -489,8 +489,8 @@ echo calculateArea(5, 3);`,
 $colors = array("Red", "Green", <|fim|>);
 
 echo "First color is: " . $colors[0];`,
-    llmOutput: "\"Blue\"",
-    expectedCompletion: "\"Blue\"",
+    llmOutput: '"Blue"',
+    expectedCompletion: '"Blue"',
     filename: "colors.php",
   },
   {
@@ -775,8 +775,10 @@ func main() {
           FROM users u
           WHERE u.active = 1
           <|fim|>`,
-    llmOutput: " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
-    expectedCompletion: " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
+    llmOutput:
+      " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
+    expectedCompletion:
+      " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
   },
   {
     description:
@@ -817,8 +819,8 @@ func main() {
     <p>Description text.</p>
   </div>
 </div>`,
-    llmOutput: "alt=\"Description of image\"",
-    expectedCompletion: "alt=\"Description of image\"",
+    llmOutput: 'alt="Description of image"',
+    expectedCompletion: 'alt="Description of image"',
     filename: "test.html",
   },
   {
@@ -930,8 +932,8 @@ public class App {
     <|fim|>
   ]
 }`,
-    llmOutput: ", { \"id\": 3, \"name\": \"Charlie\" }",
-    expectedCompletion: ", { \"id\": 3, \"name\": \"Charlie\" }",
+    llmOutput: ', { "id": 3, "name": "Charlie" }',
+    expectedCompletion: ', { "id": 3, "name": "Charlie" }',
   },
   {
     description: "Should autocomplete within a CSV record",
@@ -1237,8 +1239,8 @@ class Counter {
    :age 30
    <|fim|>
   (println "User information loaded"))`,
-    llmOutput: ":location \"Unknown\"}",
-    expectedCompletion: ":location \"Unknown\"}",
+    llmOutput: ':location "Unknown"}',
+    expectedCompletion: ':location "Unknown"}',
     filename: "test.clj",
   },
   {
@@ -1301,8 +1303,8 @@ if (grade >= 90) {
 } else {
   print("C")
 }`,
-    llmOutput: "print(\"B\")",
-    expectedCompletion: "print(\"B\")",
+    llmOutput: 'print("B")',
+    expectedCompletion: 'print("B")',
   },
   {
     description: "Should autocomplete R ggplot2 plot structure",
@@ -1324,8 +1326,8 @@ ggplot(data=mtcars, aes(x=wt, y=mpg)) +
         <|fim|>
       }
   }`,
-    llmOutput: "s\"Hello, my name is $name and I am $age years old.\"",
-    expectedCompletion: "s\"Hello, my name is $name and I am $age years old.\"",
+    llmOutput: 's"Hello, my name is $name and I am $age years old."',
+    expectedCompletion: 's"Hello, my name is $name and I am $age years old."',
   },
 
   {
@@ -1335,8 +1337,8 @@ ggplot(data=mtcars, aes(x=wt, y=mpg)) +
   case class Person(name: String, age: Int, address: Address)
   
   val alice = Person("Alice", 30, Address("Wonderland", <|fim|>))`,
-    llmOutput: "\"12345\")",
-    expectedCompletion: "\"12345\")",
+    llmOutput: '"12345")',
+    expectedCompletion: '"12345")',
   },
 
   {
@@ -2066,8 +2068,8 @@ export default {
   <ChildComponent <|fim|> />
 </main>
 `,
-    llmOutput: "name=\"World\"",
-    expectedCompletion: "name=\"World\"",
+    llmOutput: 'name="World"',
+    expectedCompletion: 'name="World"',
   },
 
   {

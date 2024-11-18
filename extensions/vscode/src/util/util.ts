@@ -126,7 +126,9 @@ export function getExtensionVersion(): string {
 }
 
 export function getFullyQualifiedPath(ide: VsCodeIde, filepath: string) {
-  if (ide.ideUtils.path.isAbsolute(filepath)) {return filepath;}
+  if (ide.ideUtils.path.isAbsolute(filepath)) {
+    return filepath;
+  }
 
   const workspaceFolders = vscode.workspace.workspaceFolders;
 

@@ -19,7 +19,8 @@ class Gemini extends BaseLLM {
   };
 
   // Function to convert completion options to Gemini format
-  public convertArgs(options: CompletionOptions) {  // should be public for use within VertexAI
+  public convertArgs(options: CompletionOptions) {
+    // should be public for use within VertexAI
     const finalOptions: any = {}; // Initialize an empty object
 
     // Map known options
@@ -56,7 +57,8 @@ class Gemini extends BaseLLM {
     }
   }
 
-  public removeSystemMessage(messages: ChatMessage[]) { // should be public for use within VertexAI
+  public removeSystemMessage(messages: ChatMessage[]) {
+    // should be public for use within VertexAI
     const msgs = [...messages];
 
     if (msgs[0]?.role === "system") {

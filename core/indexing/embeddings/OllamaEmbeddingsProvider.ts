@@ -62,7 +62,7 @@ class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
     var results: number[][] = [];
 
     for (const batch of batchedChunks) {
-      results.push(...await embedOneBatch(batch, this.options, this.fetch));
+      results.push(...(await embedOneBatch(batch, this.options, this.fetch)));
     }
     return results;
   }

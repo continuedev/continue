@@ -8,7 +8,7 @@ export class HuggingFaceTEIReranker implements Reranker {
   static defaultOptions = {
     apiBase: "http://localhost:8080",
     truncate: true,
-    truncation_direction: "Right"
+    truncation_direction: "Right",
   };
 
   constructor(
@@ -21,7 +21,8 @@ export class HuggingFaceTEIReranker implements Reranker {
   ) {}
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    let apiBase = this.params.apiBase ?? HuggingFaceTEIReranker.defaultOptions.apiBase;
+    let apiBase =
+      this.params.apiBase ?? HuggingFaceTEIReranker.defaultOptions.apiBase;
     if (!apiBase.endsWith("/")) {
       apiBase += "/";
     }
@@ -42,8 +43,12 @@ export class HuggingFaceTEIReranker implements Reranker {
         return_text: false,
         raw_scores: false,
         texts: chunks.map((chunk) => chunk.content),
-        truncation_direction: this.params.truncation_direction ?? HuggingFaceTEIReranker.defaultOptions.truncation_direction,
-        truncate: this.params.truncate ?? HuggingFaceTEIReranker.defaultOptions.truncate
+        truncation_direction:
+          this.params.truncation_direction ??
+          HuggingFaceTEIReranker.defaultOptions.truncation_direction,
+        truncate:
+          this.params.truncate ??
+          HuggingFaceTEIReranker.defaultOptions.truncate,
       }),
     });
 

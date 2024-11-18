@@ -2,17 +2,7 @@
 title: 简介
 description: 开发者的开源 AI 代码助手
 slug: /
-keywords:
-  [
-    continue,
-    AI,
-    代码助手,
-    自动补全,
-    聊天,
-    VS Code,
-    JetBrains,
-    简介,
-  ]
+keywords: [continue, AI, 代码助手, 自动补全, 聊天, VS Code, JetBrains, 简介]
 ---
 
 ![Continue Logo](/img/intro.png)

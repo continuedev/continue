@@ -111,9 +111,8 @@ class DocsContextProvider extends BaseContextProvider {
       });
     }
 
-    const embeddingsProvider = await docsService.getEmbeddingsProvider(
-      !!preIndexedDoc,
-    );
+    const embeddingsProvider =
+      await docsService.getEmbeddingsProvider(!!preIndexedDoc);
 
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 

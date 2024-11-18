@@ -6,7 +6,6 @@ import type {
   ModelProvider,
 } from "../../index.js";
 
-
 class Together extends OpenAI {
   static providerName: ModelProvider = "together";
   static defaultOptions: Partial<LLMOptions> = {

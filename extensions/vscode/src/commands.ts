@@ -387,7 +387,10 @@ const commandsMap: (
         if (historyLength === 0) {
           hideGUI();
         } else {
-          void sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+          void sidebar.webviewProtocol?.request(
+            "focusContinueInput",
+            undefined,
+          );
         }
       } else {
         focusGUI();
@@ -596,7 +599,9 @@ const commandsMap: (
           prompt: "Enter the Session ID",
         });
       }
-      void sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
+      void sidebar.webviewProtocol?.request("focusContinueSessionId", {
+        sessionId,
+      });
     },
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);

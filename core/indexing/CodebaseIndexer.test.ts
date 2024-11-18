@@ -76,8 +76,8 @@ describe("CodebaseIndexer", () => {
     setUpTestDir();
 
     execSync("git init", { cwd: TEST_DIR });
-    execSync("git config user.email \"test@example.com\"", { cwd: TEST_DIR });
-    execSync("git config user.name \"Test\"", { cwd: TEST_DIR });
+    execSync('git config user.email "test@example.com"', { cwd: TEST_DIR });
+    execSync('git config user.name "Test"', { cwd: TEST_DIR });
   });
 
   afterAll(async () => {
@@ -100,9 +100,7 @@ describe("CodebaseIndexer", () => {
 
   async function refreshIndexFiles(files: string[]) {
     const updates = [];
-    for await (const update of codebaseIndexer.refreshFiles(
-      files,
-    )) {
+    for await (const update of codebaseIndexer.refreshFiles(files)) {
       updates.push(update);
     }
     return updates;

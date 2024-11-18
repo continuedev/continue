@@ -10,10 +10,9 @@ import BaseEmbeddingsProvider, {
 } from "./BaseEmbeddingsProvider.js";
 
 let accessToken = {
-    expiration: 0,
-    token: "",
+  expiration: 0,
+  token: "",
 };
-
 
 class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "watsonx";
@@ -23,9 +22,7 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
-    if (
-      this.options.apiBase?.includes("cloud.ibm.com")
-    ) {
+    if (this.options.apiBase?.includes("cloud.ibm.com")) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
@@ -68,16 +65,13 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
           })
         ).json();
         const wxTokenExpiry = await (
-          await fetch(
-            `${this.options.apiBase}/usermgmt/v1/user/tokenExpiry`,
-            {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${wxToken["token"]}`,
-              },
+          await fetch(`${this.options.apiBase}/usermgmt/v1/user/tokenExpiry`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${wxToken["token"]}`,
             },
-          )
+          })
         ).json();
         return {
           token: wxToken["token"],
@@ -96,7 +90,8 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
       accessToken = await this.getBearerToken();
     } else {
       console.log(
-        `Reusing token (expires in ${(accessToken.expiration - now) / 60
+        `Reusing token (expires in ${
+          (accessToken.expiration - now) / 60
         } mins)`,
       );
     }
@@ -112,8 +107,9 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
       };
       const headers = {
         "Content-Type": "application/json",
-        Authorization: `${accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-          } ${accessToken.token}`,
+        Authorization: `${
+          accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+        } ${accessToken.token}`,
       };
       const resp = await this.fetch(
         new URL(

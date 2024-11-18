@@ -128,4 +128,4 @@ Continue 可以在 [code-server](https://coder.com/) 中使用，但是如果你
 
 ## 仍然有问题？
 
-你还可以 [在这里](https://discord.gg/vapESyrFmJ) 加入我们的 Discord 社区，获得更多的支持和讨论。另外，你可以 [在这里](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=) 创建一个 GitHub issue  ，提供你的问题的详情，我们将能更快的帮助你。
+你还可以 [在这里](https://discord.gg/vapESyrFmJ) 加入我们的 Discord 社区，获得更多的支持和讨论。另外，你可以 [在这里](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=) 创建一个 GitHub issue ，提供你的问题的详情，我们将能更快的帮助你。

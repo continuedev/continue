@@ -59,7 +59,7 @@ function OnboardingLocalTab() {
       try {
         const result = await ideMessenger.request("llm/listModels", {
           title: ONBOARDING_LOCAL_MODEL_TITLE,
-        })
+        });
 
         if (result.status === "success") {
           setDownloadedOllamaModels(result.content);

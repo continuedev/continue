@@ -16,7 +16,6 @@ class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   async embed(chunks: string[]) {
-
     if (!this.options.apiBase?.endsWith("/")) {
       this.options.apiBase += "/";
     }
@@ -37,7 +36,7 @@ class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
           if (batch.length === 0) {
             return [];
           }
-      
+
           // Input list must be non empty and all elements must be non empty, therefore, for all empty elements replace it with a token
           const emptyToken = "[EMPTY]";
           for (let i = 0; i < batch.length; i++) {

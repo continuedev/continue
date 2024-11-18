@@ -57,10 +57,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
               <span
                 className="cursor-pointer underline"
                 onClick={() =>
-                  ideMessenger.post(
-                    "vscode/openMoveRightMarkdown",
-                    undefined,
-                  )
+                  ideMessenger.post("vscode/openMoveRightMarkdown", undefined)
                 }
               >
                 Move Chat panel to the right

@@ -145,9 +145,7 @@ export class CodebaseIndexer {
     }
   }
 
-  async *refreshFiles(
-    files: string[],
-  ): AsyncGenerator<IndexingProgressUpdate> {
+  async *refreshFiles(files: string[]): AsyncGenerator<IndexingProgressUpdate> {
     let progress = 0;
     if (files.length === 0) {
       yield {

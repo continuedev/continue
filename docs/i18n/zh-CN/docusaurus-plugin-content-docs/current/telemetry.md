@@ -5,6 +5,7 @@ keywords: [遥测, 匿名, 使用信息, 选择退出]
 ---
 
 ## 概述
+
 Continue 收集并报告 **匿名** 使用信息，来帮助我们提高产品。这个数据允许我们有效地理解用户交互，并优化用户体验。你可以在任何时候选择退出遥测收集，如果你倾向与不分享你的使用信息。
 
 我们使用 [Posthog](https://posthog.com/) ，一个产品分析的开源平台，来收集并存储这个数据。为了透明，你可以 [在这里](https://github.com/continuedev/continue/blob/main/gui/src/hooks/CustomPostHogProvider.tsx) 检查实现代码，或者查看我们的 [官方隐私策略](https://continue.dev/privacy) 。

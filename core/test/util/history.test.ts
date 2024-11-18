@@ -43,7 +43,9 @@ describe("Full session lifecycle", () => {
     // save and list
     historyManager.save(testSession);
     const sessions = historyManager.list({});
-    const sessionExists = sessions.some((session) => session?.sessionId === testSession.sessionId);
+    const sessionExists = sessions.some(
+      (session) => session?.sessionId === testSession.sessionId,
+    );
     expect(sessionExists).toBe(true);
   });
 
@@ -90,7 +92,9 @@ describe("Many sessions created", () => {
     const offset = 10;
 
     const sessions = historyManager.list({ offset: offset, limit: limit });
-    const sessionIds = Array.from({ length: limit }, (_, i) => (i + offset).toString());
+    const sessionIds = Array.from({ length: limit }, (_, i) =>
+      (i + offset).toString(),
+    );
     const isSessionIdInList = (sessionId: string) =>
       sessions.some((session) => session.sessionId === sessionId);
     expect(sessionIds.every(isSessionIdInList)).toBe(true);
@@ -111,8 +115,9 @@ describe("Many sessions created", () => {
     const offset = 75;
 
     const sessions = historyManager.list({ offset: offset });
-    const sessionIds = Array.from({ length: sessions.length - offset }, (_, i) =>
-      (i + offset).toString(),
+    const sessionIds = Array.from(
+      { length: sessions.length - offset },
+      (_, i) => (i + offset).toString(),
     );
 
     const isSessionIdInList = (sessionId: string) =>

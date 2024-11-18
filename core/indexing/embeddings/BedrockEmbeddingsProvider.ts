@@ -4,7 +4,11 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-import { EmbeddingsProviderName, EmbedOptions, FetchFunction } from "../../index.js";
+import {
+  EmbeddingsProviderName,
+  EmbedOptions,
+  FetchFunction,
+} from "../../index.js";
 
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
@@ -17,13 +21,14 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "bedrock";
   static defaultOptions: Partial<EmbedOptions> = {
     model: "amazon.titan-embed-text-v2:0",
-    region: "us-east-1"
+    region: "us-east-1",
   };
   profile?: string | undefined;
 
   constructor(options: EmbedOptions, fetch: FetchFunction) {
     super(options, fetch);
-    this.options.model = this.options.model || BedrockEmbeddingsProvider.defaultOptions.model!;
+    this.options.model =
+      this.options.model || BedrockEmbeddingsProvider.defaultOptions.model!;
     if (!options.apiBase) {
       options.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
     }
@@ -53,7 +58,9 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
           const command = new InvokeModelCommand(input);
           const response = await client.send(command);
           if (response.body) {
-            const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+            const responseBody = JSON.parse(
+              new TextDecoder().decode(response.body),
+            );
             return this._extractEmbeddings(responseBody);
           }
           return [];
@@ -81,7 +88,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
 
   private _getModelConfig() {
     const modelConfigs: { [key: string]: ModelConfig } = {
-      "cohere": {
+      cohere: {
         formatPayload: (text: string) => ({
           texts: [text],
           input_type: "search_document",
@@ -93,11 +100,14 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
         formatPayload: (text: string) => ({
           inputText: text,
         }),
-        extractEmbeddings: (responseBody: any) => responseBody.embedding ? [responseBody.embedding] : [],
+        extractEmbeddings: (responseBody: any) =>
+          responseBody.embedding ? [responseBody.embedding] : [],
       },
     };
 
-    const modelPrefix = Object.keys(modelConfigs).find(prefix => this.options.model!.startsWith(prefix));
+    const modelPrefix = Object.keys(modelConfigs).find((prefix) =>
+      this.options.model!.startsWith(prefix),
+    );
     if (!modelPrefix) {
       throw new Error(`Unsupported model: ${this.options.model}`);
     }
@@ -108,7 +118,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
     try {
       return await fromIni({
         profile: this.profile,
-        ignoreCache: true
+        ignoreCache: true,
       })();
     } catch (e) {
       console.warn(

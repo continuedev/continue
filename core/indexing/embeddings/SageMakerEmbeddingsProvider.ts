@@ -12,7 +12,6 @@ import {
 
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
-
 class SageMakerEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "sagemaker";
 

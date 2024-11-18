@@ -113,4 +113,3 @@ async function startPylance(context: ExtensionContext) {
   );
   return client;
 }
-

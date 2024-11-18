@@ -62,13 +62,15 @@ class Asksage extends BaseLLM {
       temperature: options.temperature ?? 0.0,
       live: options.live ?? 0,
       model: this._convertModelName(options.model),
-      system_prompt: options.systemPrompt ?? "You are an expert software developer. You give helpful and concise responses.",
+      system_prompt:
+        options.systemPrompt ??
+        "You are an expert software developer. You give helpful and concise responses.",
       tools: options.tools,
       tool_choice: options.toolChoice,
     };
 
     Object.keys(args).forEach(
-      (key) => args[key] === undefined && delete args[key]
+      (key) => args[key] === undefined && delete args[key],
     );
 
     return args;
@@ -89,7 +91,7 @@ class Asksage extends BaseLLM {
   protected _getEndpoint(endpoint: string) {
     if (!this.apiBase) {
       throw new Error(
-        "No API base URL provided. Please set the 'apiBase' option."
+        "No API base URL provided. Please set the 'apiBase' option.",
       );
     }
 
@@ -98,7 +100,7 @@ class Asksage extends BaseLLM {
 
   protected async _complete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): Promise<string> {
     if (typeof prompt !== "string" || prompt.trim() === "") {
       throw new Error("Prompt must be a non-empty string.");
@@ -116,7 +118,7 @@ class Asksage extends BaseLLM {
 
     if (!response.ok) {
       throw new Error(
-        `API request failed with status ${response.status}: ${response.statusText}`
+        `API request failed with status ${response.status}: ${response.statusText}`,
       );
     }
 
@@ -126,7 +128,7 @@ class Asksage extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const completion = await this._complete(prompt, options);
     yield completion;
@@ -134,7 +136,7 @@ class Asksage extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(options, messages);
 
@@ -146,7 +148,7 @@ class Asksage extends BaseLLM {
 
     if (!response.ok) {
       throw new Error(
-        `API request failed with status ${response.status}: ${response.statusText}`
+        `API request failed with status ${response.status}: ${response.statusText}`,
       );
     }
 

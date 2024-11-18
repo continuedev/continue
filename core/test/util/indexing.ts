@@ -13,9 +13,6 @@ import {
 import { testIde } from "./fixtures";
 import { addToTestDir, TEST_DIR } from "./testDir";
 
-
-
-
 export const mockFilename = "test.py";
 export const mockPathAndCacheKey = {
   path: `${TEST_DIR}/${mockFilename}`,

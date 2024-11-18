@@ -1,7 +1,11 @@
 import { GoogleAuth } from "google-auth-library";
 import { Response } from "node-fetch";
 
-import { EmbeddingsProviderName, EmbedOptions, FetchFunction } from "../../index.js";
+import {
+  EmbeddingsProviderName,
+  EmbedOptions,
+  FetchFunction,
+} from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
@@ -13,11 +17,10 @@ class VertexEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "vertexai";
   declare apiBase: string;
 
-
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     model: "text-embedding-004",
     maxBatchSize: 5,
-    region: "us-central1"
+    region: "us-central1",
   };
 
   private clientPromise = new GoogleAuth({
@@ -35,15 +38,10 @@ class VertexEmbeddingsProvider extends BaseEmbeddingsProvider {
     return `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}`;
   }
 
-
-
   constructor(options: EmbedOptions, fetch: FetchFunction) {
     super(options, fetch);
     this.apiBase ??= VertexEmbeddingsProvider.getDefaultApiBaseFrom(options);
-
   }
-
-
 
   get urlPath(): string {
     return `/publishers/google/models/${this.options.model}:predict`;
@@ -82,7 +80,9 @@ class VertexEmbeddingsProvider extends BaseEmbeddingsProvider {
           }
 
           const data = (await resp.json()) as any;
-          return data.predictions.map((prediction: any) => prediction.embeddings.values);
+          return data.predictions.map(
+            (prediction: any) => prediction.embeddings.values,
+          );
         }),
       )
     ).flat();

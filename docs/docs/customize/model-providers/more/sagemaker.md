@@ -17,7 +17,7 @@ To setup SageMaker as a chat model provider, add the following to your `config.j
   "embeddingsProvider": {
     "provider": "sagemaker",
     "model": "mxbai-embed-large-v1-endpoint"
-  },
+  }
 }
 ```
 

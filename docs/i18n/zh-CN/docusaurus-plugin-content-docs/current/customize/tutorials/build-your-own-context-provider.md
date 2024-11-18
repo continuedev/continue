@@ -68,7 +68,7 @@ export function modifyConfig(config: Config): Config {
 }
 ```
 
-不需要对  `config.json` 做修改。
+不需要对 `config.json` 做修改。
 
 ## 定制有 submenu 或 query 的上下文提供者
 
