@@ -387,7 +387,10 @@ const commandsMap: (
         if (historyLength === 0) {
           hideGUI();
         } else {
-          void sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+          void sidebar.webviewProtocol?.request(
+            "focusContinueInput",
+            undefined,
+          );
         }
       } else {
         focusGUI();
@@ -596,7 +599,9 @@ const commandsMap: (
           prompt: "Enter the Session ID",
         });
       }
-      void sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
+      void sidebar.webviewProtocol?.request("focusContinueSessionId", {
+        sessionId,
+      });
     },
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
@@ -822,7 +827,7 @@ const commandsMap: (
           vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(question) Open help center") {
           focusGUI();
-          vscode.commands.executeCommand("continue.navigateTo", "/more");
+          vscode.commands.executeCommand("continue.navigateTo", "/more", true);
         }
         quickPick.dispose();
       });
@@ -843,10 +848,10 @@ const commandsMap: (
       }
     },
     "continue.openMorePage": () => {
-      vscode.commands.executeCommand("continue.navigateTo", "/more");
+      vscode.commands.executeCommand("continue.navigateTo", "/more", true);
     },
-    "continue.navigateTo": (path: string) => {
-      sidebar.webviewProtocol?.request("navigateTo", { path });
+    "continue.navigateTo": (path: string, toggle: boolean) => {
+      sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
       focusGUI();
     },
   };
