@@ -293,8 +293,8 @@ class OpenAI extends BaseLLM {
               id: tool_call.id,
               type: tool_call.type,
               function: {
-                name: tool_call.name,
-                arguments: tool_call.arguments,
+                name: tool_call.function.name,
+                arguments: tool_call.function.arguments,
               },
             }),
           ),
