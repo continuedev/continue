@@ -1,7 +1,7 @@
 const FUNCTIONS = [
   {
     nodeType: "function_declaration with a param and a return type",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 3, character: 9 },
     definitionPositions: [
@@ -11,7 +11,7 @@ const FUNCTIONS = [
   },
   {
     nodeType: "function_declaration with array param",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 7, character: 9 },
     definitionPositions: [
@@ -21,7 +21,7 @@ const FUNCTIONS = [
   },
   {
     nodeType: "function_declaration without return type",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 11, character: 9 },
     definitionPositions: [
@@ -30,7 +30,7 @@ const FUNCTIONS = [
   },
   {
     nodeType: "function_declaration without params",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 15, character: 9 },
     definitionPositions: [
@@ -39,7 +39,7 @@ const FUNCTIONS = [
   },
   {
     nodeType: "function_declaration with array params and array return type",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 19, character: 9 },
     definitionPositions: [
@@ -50,7 +50,7 @@ const FUNCTIONS = [
   {
     nodeType:
       "function_declaration with generic params and generic return type",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 23, character: 9 },
     definitionPositions: [
@@ -63,7 +63,7 @@ const FUNCTIONS = [
   {
     nodeType:
       "function_declaration with union type params and union return type",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 27, character: 9 },
     definitionPositions: [
@@ -75,7 +75,7 @@ const FUNCTIONS = [
   },
   {
     nodeType: "function_declaration with two arguments",
-    fileName: "functions.ts",
+    fileName: "typescript/functions.ts",
     language: "TypeScript",
     cursorPosition: { line: 31, character: 9 },
     definitionPositions: [
@@ -88,7 +88,7 @@ const FUNCTIONS = [
 const GENERATORS = [
   {
     nodeType: "function_declaration with a param and a return type",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 3, character: 9 },
     definitionPositions: [
@@ -98,7 +98,7 @@ const GENERATORS = [
   },
   {
     nodeType: "function_declaration with array param",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 7, character: 9 },
     definitionPositions: [
@@ -108,7 +108,7 @@ const GENERATORS = [
   },
   {
     nodeType: "function_declaration without return type",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 11, character: 9 },
     definitionPositions: [
@@ -117,7 +117,7 @@ const GENERATORS = [
   },
   {
     nodeType: "function_declaration without params",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 15, character: 9 },
     definitionPositions: [
@@ -126,7 +126,7 @@ const GENERATORS = [
   },
   {
     nodeType: "function_declaration with array params and array return type",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 19, character: 9 },
     definitionPositions: [
@@ -137,7 +137,7 @@ const GENERATORS = [
   {
     nodeType:
       "function_declaration with generic params and generic return type",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 23, character: 9 },
     definitionPositions: [
@@ -150,7 +150,7 @@ const GENERATORS = [
   {
     nodeType:
       "function_declaration with union type params and union return type",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 27, character: 9 },
     definitionPositions: [
@@ -162,7 +162,7 @@ const GENERATORS = [
   },
   {
     nodeType: "function_declaration with two arguments",
-    fileName: "generators.ts",
+    fileName: "typescript/generators.ts",
     language: "TypeScript",
     cursorPosition: { line: 31, character: 9 },
     definitionPositions: [
@@ -175,7 +175,7 @@ const GENERATORS = [
 const ARROW_FUNCTIONS = [
   {
     nodeType: "arrow_function with a param and a return type",
-    fileName: "arrowFunctions.ts",
+    fileName: "typescript/arrowFunctions.ts",
     language: "TypeScript",
     cursorPosition: { line: 3, character: 9 },
     definitionPositions: [
@@ -185,7 +185,7 @@ const ARROW_FUNCTIONS = [
   },
   {
     nodeType: "arrow_function without return type",
-    fileName: "arrowFunctions.ts",
+    fileName: "typescript/arrowFunctions.ts",
     language: "TypeScript",
     cursorPosition: { line: 7, character: 9 },
     definitionPositions: [
@@ -194,7 +194,7 @@ const ARROW_FUNCTIONS = [
   },
   {
     nodeType: "arrow_function without params",
-    fileName: "arrowFunctions.ts",
+    fileName: "typescript/arrowFunctions.ts",
     language: "TypeScript",
     cursorPosition: { line: 11, character: 9 },
     definitionPositions: [
@@ -203,7 +203,7 @@ const ARROW_FUNCTIONS = [
   },
   {
     nodeType: "arrow_function with array params and array return type",
-    fileName: "arrowFunctions.ts",
+    fileName: "typescript/arrowFunctions.ts",
     language: "TypeScript",
     cursorPosition: { line: 15, character: 9 },
     definitionPositions: [
@@ -213,7 +213,7 @@ const ARROW_FUNCTIONS = [
   },
   {
     nodeType: "arrow_function with generic params and generic return type",
-    fileName: "arrowFunctions.ts",
+    fileName: "typescript/arrowFunctions.ts",
     language: "TypeScript",
     cursorPosition: { line: 19, character: 9 },
     definitionPositions: [
@@ -225,7 +225,7 @@ const ARROW_FUNCTIONS = [
   },
   {
     nodeType: "arrow_function with union type params and union return type",
-    fileName: "arrowFunctions.ts",
+    fileName: "typescript/arrowFunctions.ts",
     language: "TypeScript",
     cursorPosition: { line: 23, character: 9 },
     definitionPositions: [
@@ -237,7 +237,7 @@ const ARROW_FUNCTIONS = [
   },
   {
     nodeType: "arrow_function with two arguments",
-    fileName: "arrowFunctions.ts",
+    fileName: "typescript/arrowFunctions.ts",
     language: "TypeScript",
     cursorPosition: { line: 27, character: 11 },
     definitionPositions: [
@@ -250,7 +250,7 @@ const ARROW_FUNCTIONS = [
 const CLASS_METHODS = [
   {
     nodeType: "method_declaration with a param and a return type",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 4, character: 11 },
     definitionPositions: [
@@ -260,7 +260,7 @@ const CLASS_METHODS = [
   },
   {
     nodeType: "method_declaration without arguments",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 8, character: 11 },
     definitionPositions: [
@@ -269,7 +269,7 @@ const CLASS_METHODS = [
   },
   {
     nodeType: "method_declaration without return type",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 12, character: 11 },
     definitionPositions: [
@@ -278,7 +278,7 @@ const CLASS_METHODS = [
   },
   {
     nodeType: "method_declaration with array type arguments",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 16, character: 11 },
     definitionPositions: [
@@ -288,7 +288,7 @@ const CLASS_METHODS = [
   {
     nodeType:
       "method_declaration with array type arguments and array type return",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 20, character: 11 },
     definitionPositions: [
@@ -299,7 +299,7 @@ const CLASS_METHODS = [
   {
     nodeType:
       "method_declaration with with generic params and generic return type",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 24, character: 11 },
     definitionPositions: [
@@ -311,7 +311,7 @@ const CLASS_METHODS = [
   },
   {
     nodeType: "method_declaration with union type params and union return type",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 28, character: 11 },
     definitionPositions: [
@@ -323,7 +323,7 @@ const CLASS_METHODS = [
   },
   {
     nodeType: "method_declaration with two arguments",
-    fileName: "classMethods.ts",
+    fileName: "typescript/classMethods.ts",
     language: "TypeScript",
     cursorPosition: { line: 32, character: 11 },
     definitionPositions: [
@@ -336,7 +336,7 @@ const CLASS_METHODS = [
 const CLASS_DEFINITIONS = [
   {
     nodeType: "class_declaration with base class",
-    fileName: "classes.ts",
+    fileName: "typescript/classes.ts",
     language: "TypeScript",
     cursorPosition: { line: 2, character: 31 },
     definitionPositions: [
@@ -345,7 +345,7 @@ const CLASS_DEFINITIONS = [
   },
   {
     nodeType: "class_declaration with interface",
-    fileName: "classes.ts",
+    fileName: "typescript/classes.ts",
     language: "TypeScript",
     cursorPosition: { line: 4, character: 39 },
     definitionPositions: [
@@ -354,7 +354,7 @@ const CLASS_DEFINITIONS = [
   },
   {
     nodeType: "class_declaration with base class and multiple interfaces",
-    fileName: "classes.ts",
+    fileName: "typescript/classes.ts",
     language: "TypeScript",
     cursorPosition: { line: 6, character: 74 },
     definitionPositions: [
@@ -365,7 +365,7 @@ const CLASS_DEFINITIONS = [
   },
   {
     nodeType: "class_declaration with base class and multiple interfaces",
-    fileName: "classes.ts",
+    fileName: "typescript/classes.ts",
     language: "TypeScript",
     cursorPosition: { line: 6, character: 74 },
     definitionPositions: [
@@ -376,7 +376,7 @@ const CLASS_DEFINITIONS = [
   },
   {
     nodeType: "class_declaration with generic base class and generic interface",
-    fileName: "classes.ts",
+    fileName: "typescript/classes.ts",
     language: "TypeScript",
     cursorPosition: { line: 8, character: 69 },
     definitionPositions: [

@@ -1,30 +1,9 @@
-import { TYPESCRIPT_TEST_CASES } from "./testCases/typescript";
+import { PYTHON_TEST_CASES, TYPESCRIPT_TEST_CASES } from "./testCases";
 import { testRootPathContext } from "./testUtils";
 
 const TEST_CASES = [
+  ...PYTHON_TEST_CASES,
   ...TYPESCRIPT_TEST_CASES,
-  {
-    nodeType: "function_definition",
-    fileName: "file1.py",
-    language: "Python",
-    cursorPosition: { line: 4, character: 25 },
-    definitionPositions: [
-      { row: 3, column: 30 }, // Person
-      { row: 3, column: 42 }, // Address
-    ],
-  },
-  {
-    nodeType: "function_definition (inside a class)",
-    fileName: "file1.py",
-    language: "Python",
-    cursorPosition: { line: 12, character: 33 },
-    definitionPositions: [
-      { row: 6, column: 21 }, // BaseClass
-      { row: 6, column: 33 }, // Collection
-      { row: 11, column: 47 }, // Person
-      { row: 11, column: 59 }, // Address
-    ],
-  },
   {
     nodeType: "function_definition",
     fileName: "file1.php",
