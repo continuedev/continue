@@ -14,7 +14,6 @@ import { ROUTES } from "../util/navigation";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
 import ProfileSwitcher from "./ProfileSwitcher";
-import FooterIndexingPeeks from "./indexing/FooterIndexingPeeks";
 
 function Footer() {
   const navigate = useNavigate();
@@ -48,49 +47,45 @@ function Footer() {
   }
 
   return (
-    <>
-      <FooterIndexingPeeks />
+    <footer className="flex h-7 items-center justify-between overflow-hidden border-0 border-t border-solid border-t-zinc-700 p-2">
+      <div className="flex max-w-[40vw] gap-2">
+        <ProfileSwitcher />
+        {defaultModel?.provider === "free-trial" && (
+          <FreeTrialProgressBar
+            completed={parseInt(localStorage.getItem("ftc") || "0")}
+            total={FREE_TRIAL_LIMIT_REQUESTS}
+          />
+        )}
+      </div>
 
-      <footer className="flex h-7 items-center justify-between overflow-hidden border-0 border-t border-solid border-t-zinc-700 p-2">
-        <div className="flex max-w-[40vw] gap-2">
-          <ProfileSwitcher />
-          {defaultModel?.provider === "free-trial" && (
-            <FreeTrialProgressBar
-              completed={parseInt(localStorage.getItem("ftc") || "0")}
-              total={FREE_TRIAL_LIMIT_REQUESTS}
-            />
-          )}
-        </div>
-
-        <div className="flex gap-1">
-          {configError && (
-            <HeaderButtonWithToolTip
-              tooltipPlacement="top-end"
-              text="Config error"
-              onClick={onClickError}
-            >
-              <ExclamationTriangleIcon className="h-4 w-4" />
-            </HeaderButtonWithToolTip>
-          )}
-
+      <div className="flex gap-1">
+        {configError && (
           <HeaderButtonWithToolTip
             tooltipPlacement="top-end"
-            text="More"
-            onClick={onClickMore}
+            text="Config error"
+            onClick={onClickError}
           >
-            <EllipsisHorizontalCircleIcon className="h-4 w-4" />
+            <ExclamationTriangleIcon className="h-4 w-4" />
           </HeaderButtonWithToolTip>
+        )}
 
-          <HeaderButtonWithToolTip
-            tooltipPlacement="top-end"
-            onClick={onClickSettings}
-            text="Configure Continue"
-          >
-            <Cog6ToothIcon className="h-4 w-4" />
-          </HeaderButtonWithToolTip>
-        </div>
-      </footer>
-    </>
+        <HeaderButtonWithToolTip
+          tooltipPlacement="top-end"
+          text="More"
+          onClick={onClickMore}
+        >
+          <EllipsisHorizontalCircleIcon className="h-4 w-4" />
+        </HeaderButtonWithToolTip>
+
+        <HeaderButtonWithToolTip
+          tooltipPlacement="top-end"
+          onClick={onClickSettings}
+          text="Configure Continue"
+        >
+          <Cog6ToothIcon className="h-4 w-4" />
+        </HeaderButtonWithToolTip>
+      </div>
+    </footer>
   );
 }
 

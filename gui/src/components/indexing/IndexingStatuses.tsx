@@ -18,7 +18,6 @@ function IndexingStatuses() {
       (status) => status.type === "docs" && status.status !== "deleted",
     );
 
-    return [];
     return docs;
   }, [indexingStatuses]);
   const dispatch = useDispatch();

@@ -37,6 +37,12 @@ import {
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
 
+// Progress heuristic values
+// subpages -> embeddings -> delete from db -> add to db
+const PROGRESS_AT_EMBEDDING = 0.5;
+const PROGRESS_AT_DELETE_OPERATIONS = 0.7;
+const PROGRESS_AT_ADD_OPERATIONS = 0.8;
+
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
   title: string;
@@ -140,6 +146,8 @@ export default class DocsService {
       this.handleStatusUpdate({
         ...status,
         status: "aborted",
+        progress: 0,
+        description: "Canceled",
       });
     }
   }
@@ -148,20 +156,20 @@ export default class DocsService {
     return this.statuses.get(startUrl)?.status === "aborted";
   }
 
-  // Pausing not supported for docs yet
-  // setPaused(startUrl: string, pause: boolean) {
-  //   const status = this.statuses.get(startUrl);
-  //   if (status) {
-  //     this.handleStatusUpdate({
-  //       ...status,
-  //       status: pause ? "paused" : "indexing",
-  //     });
-  //   }
-  // }
+  // NOTE Pausing not supported for docs yet
+  setPaused(startUrl: string, pause: boolean) {
+    const status = this.statuses.get(startUrl);
+    if (status) {
+      this.handleStatusUpdate({
+        ...status,
+        status: pause ? "paused" : "indexing",
+      });
+    }
+  }
 
-  // isPaused(startUrl: string) {
-  //   return this.statuses.get(startUrl)?.status === "paused";
-  // }
+  isPaused(startUrl: string) {
+    return this.statuses.get(startUrl)?.status === "paused";
+  }
 
   /*
    * Currently, we generate and host embeddings for pre-indexed docs using transformers.
@@ -372,11 +380,11 @@ export default class DocsService {
 
       const articles: Article[] = [];
       let processedPages = 0;
-      let maxKnownPages = 1;
+      let estimatedProgress = 0; // progress heuristic = sum series 1/(3*2^n) from n=0 to pages. Alternative e.g. sum 1/(2^n)
 
       // Crawl pages and retrieve info as articles
       for await (const page of this.docsCrawler.crawl(new URL(startUrl))) {
-        processedPages++;
+        estimatedProgress += 1 / (3 * 2 ** processedPages);
 
         const article = pageToArticle(page);
 
@@ -386,9 +394,6 @@ export default class DocsService {
 
         articles.push(article);
 
-        // Use a heuristic approach for progress calculation
-        const progress = Math.min(processedPages / maxKnownPages, 1);
-
         if (this.isAborted(startUrl)) {
           return;
         }
@@ -396,15 +401,11 @@ export default class DocsService {
           ...fixedStatus,
           description: `Finding subpages (${page.path})`,
           status: "indexing",
-          progress, // Yield the heuristic progress
+          progress: 0.4 * estimatedProgress, // 0% -> 40%, a heuristic approach for progress calculation
         });
 
-        // Increase maxKnownPages to delay progress reaching 100% too soon
-        if (processedPages === maxKnownPages) {
-          maxKnownPages *= 2;
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, 50));
+        processedPages++;
+        await new Promise((resolve) => setTimeout(resolve, 50)); // Locks down GUI if no sleeping
       }
 
       void Telemetry.capture("docs_pages_crawled", {
@@ -427,7 +428,7 @@ export default class DocsService {
           ...fixedStatus,
           status: "indexing",
           description: `Creating Embeddings: ${article.subpath}`,
-          progress: i / articles.length,
+          progress: 0.4 + 0.4 * (i / articles.length), // 40% -> 80%
         });
 
         try {
@@ -484,7 +485,7 @@ export default class DocsService {
         ...fixedStatus,
         description: "Deleting old embeddings from the db",
         status: "indexing",
-        progress: 0.5,
+        progress: 0.8,
       });
 
       // Delete indexed docs if re-indexing
@@ -502,7 +503,7 @@ export default class DocsService {
         ...fixedStatus,
         description: `Adding ${embeddings.length} embeddings to db`,
         status: "indexing",
-        progress: 0.5,
+        progress: 0.85,
       });
 
       await this.add({

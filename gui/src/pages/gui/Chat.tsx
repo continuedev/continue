@@ -62,6 +62,7 @@ import {
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -505,6 +506,7 @@ export function Chat() {
           )}
         </div>
       </div>
+      <ChatIndexingPeeks />
     </>
   );
 }

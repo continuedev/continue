@@ -9,6 +9,7 @@ import {
   PauseCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import { updateIndexingStatus } from "../../redux/slices/stateSlice";
 
 interface IndexingStatusViewerProps {
   status: IndexingStatus;
@@ -27,6 +28,7 @@ const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
 function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const posthog = usePostHog();
+  const dispatch = useDispatch();
 
   const reIndex = () =>
     ideMessenger.post("indexing/reindex", {
@@ -34,11 +36,16 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
       id: status.id,
     });
 
-  const abort = () =>
+  const abort = () => {
     ideMessenger.post("indexing/abort", {
       type: status.type,
       id: status.id,
     });
+    // Optimistic abort status
+    dispatch(
+      updateIndexingStatus({ ...status, status: "aborted", progress: 0 }),
+    );
+  };
 
   const progressPercentage = useMemo(() => {
     return Math.min(100, Math.max(0, status.progress * 100));
