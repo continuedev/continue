@@ -19,6 +19,7 @@ import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
+import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { RootState } from "../../redux/store";
 import { ContextItemWithId, SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
@@ -299,7 +300,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   });
 
   useEffect(() => {
-    setMarkdownSource(props.source || "");
+    setMarkdownSource(patchNestedMarkdown(props.source ?? ""));
   }, [props.source]);
 
   return (
