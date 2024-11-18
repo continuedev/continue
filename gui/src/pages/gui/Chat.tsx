@@ -320,7 +320,7 @@ export function Chat() {
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "h-full" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "flex-1" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}
@@ -506,7 +506,11 @@ export function Chat() {
           )}
         </div>
       </div>
-      <ChatIndexingPeeks />
+      <div
+        className={`${state.history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
+      >
+        <ChatIndexingPeeks />
+      </div>
     </>
   );
 }

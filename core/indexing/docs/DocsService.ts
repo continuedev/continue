@@ -376,24 +376,15 @@ export default class DocsService {
         progress: 0,
       });
 
-      // NOTE - during "indexing" phase, check if aborted before each status update
-
       const articles: Article[] = [];
       let processedPages = 0;
-      let estimatedProgress = 0; // progress heuristic = sum series 1/(3*2^n) from n=0 to pages. Alternative e.g. sum 1/(2^n)
+      let estimatedProgress = 0; // progress heuristic = sum series 1/(2^n) from n=1 to pages + 1. Alternative e.g. sum 1/(2^n)
 
       // Crawl pages and retrieve info as articles
       for await (const page of this.docsCrawler.crawl(new URL(startUrl))) {
-        estimatedProgress += 1 / (3 * 2 ** processedPages);
+        estimatedProgress += 1 / 2 ** (processedPages + 1);
 
-        const article = pageToArticle(page);
-
-        if (!article) {
-          continue;
-        }
-
-        articles.push(article);
-
+        // NOTE - during "indexing" phase, check if aborted before each status update
         if (this.isAborted(startUrl)) {
           return;
         }
@@ -403,6 +394,12 @@ export default class DocsService {
           status: "indexing",
           progress: 0.4 * estimatedProgress, // 0% -> 40%, a heuristic approach for progress calculation
         });
+
+        const article = pageToArticle(page);
+        if (!article) {
+          continue;
+        }
+        articles.push(article);
 
         processedPages++;
         await new Promise((resolve) => setTimeout(resolve, 50)); // Locks down GUI if no sleeping

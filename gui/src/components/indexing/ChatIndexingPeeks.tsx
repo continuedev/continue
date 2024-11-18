@@ -13,7 +13,7 @@ interface IndexingStatusViewerProps {
   status: IndexingStatus;
 }
 
-function FooterIndexingPeek({ status }: IndexingStatusViewerProps) {
+function ChatIndexingPeek({ status }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ function FooterIndexingPeek({ status }: IndexingStatusViewerProps) {
 
   return (
     <div
-      className="flex cursor-pointer flex-row items-center gap-2 hover:opacity-60"
+      className="flex cursor-pointer flex-row items-center gap-2 hover:opacity-80"
       onClick={() => {
         navigate("/more");
       }}
@@ -87,12 +87,12 @@ function ChatIndexingPeeks() {
   if (!currentlyIndexingDocs.length) return null;
 
   return (
-    <div className="flex flex-col gap-1 px-2 py-1">
-      <p className="m-0 p-0">Indexing in progress</p>
+    <div className="flex flex-col gap-1 px-3 pb-1">
+      {/* <p className="m-0 p-0 text-xs text-stone-500">Indexing in progress</p> */}
       {hidden
         ? null
         : currentlyIndexingDocs.map((status) => {
-            return <FooterIndexingPeek status={status} />;
+            return <ChatIndexingPeek status={status} />;
           })}
     </div>
   );

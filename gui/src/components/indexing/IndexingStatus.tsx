@@ -129,11 +129,11 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
           }
         </span>
 
-        {status.status === "indexing" && (
-          <span className="lines lines-1 text-right text-xs text-stone-500">
-            {status.description}
-          </span>
-        )}
+        {/* {status.status === "indexing" && ( */}
+        <span className="lines lines-1 text-right text-xs text-stone-500">
+          {status.description}
+        </span>
+        {/* )} */}
       </div>
     </div>
   );
