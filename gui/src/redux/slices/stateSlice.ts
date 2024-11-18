@@ -264,7 +264,10 @@ export const stateSlice = createSlice({
 
         if (
           action.payload.role &&
-          lastMessage.message.role !== action.payload.role
+          (lastMessage.message.role !== action.payload.role ||
+            // This is when a tool call comes after assistant text
+            (lastMessage.message.content !== "" &&
+              action.payload.toolCalls?.length))
         ) {
           // Create a new message
           state.history.push({
