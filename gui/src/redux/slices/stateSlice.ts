@@ -4,7 +4,6 @@ import {
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
-  ContextItemId,
   ContextItemWithId,
   PersistedSessionInfo,
   PromptLog,
@@ -12,9 +11,7 @@ import {
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
-import { createSelector } from "reselect";
 import { v4 as uuidv4, v4 } from "uuid";
-import { RootState } from "../store";
 import { ApplyState } from "core/protocol/ideWebview";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
@@ -36,10 +33,10 @@ type State = {
   configError: ConfigValidationError[] | undefined;
   checkpoints: Checkpoint[];
   curCheckpointIndex: number;
-  isMultifileEdit: boolean;
   applyStates: ApplyState[];
   nextCodeBlockToApplyIndex: number;
   streamAborter: AbortController;
+  isMultifileEdit: boolean;
 };
 
 const initialState: State = {
@@ -270,7 +267,7 @@ export const stateSlice = createSlice({
 
       state.active = false;
       state.isGatheringContext = false;
-      state.isInMultifileEdit = false;
+      state.isMultifileEdit = false;
       if (payload) {
         state.history = payload.history as any;
         state.title = payload.title;
@@ -365,7 +362,7 @@ export const stateSlice = createSlice({
         curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
         curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
       }
-      if(payload.status === "done"){
+      if (payload.status === "done") {
         state.nextCodeBlockToApplyIndex++;
       }
     },
