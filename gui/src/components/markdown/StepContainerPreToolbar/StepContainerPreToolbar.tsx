@@ -55,6 +55,8 @@ export interface StepContainerPreToolbarProps {
   codeBlockIndex: number; // To track which codeblock we are applying
   range?: string;
   children: any;
+  expanded?: boolean;
+  hideApply?: boolean;
 }
 
 export default function StepContainerPreToolbar(
@@ -67,7 +69,9 @@ export default function StepContainerPreToolbar(
   const isMultifileEdit = useSelector(
     (state: RootState) => state.state.isInMultifileEdit,
   );
-  const [isExpanded, setIsExpanded] = useState(isMultifileEdit ? false : true);
+  const [isExpanded, setIsExpanded] = useState(
+    props.expanded ?? (isMultifileEdit ? false : true),
+  );
   const [codeBlockContent, setCodeBlockContent] = useState("");
   const isChatActive = useSelector((state: RootState) => state.state.active);
   const onClickApply = useApplyCodeBlock({
@@ -179,7 +183,6 @@ export default function StepContainerPreToolbar(
           />
           <FileInfo filepath={props.filepath} range={props.range} />
         </div>
-
         <div className="flex items-center gap-3">
           {isGeneratingCodeBlock && (
             <GeneratingCodeLoader
@@ -191,12 +194,14 @@ export default function StepContainerPreToolbar(
           {!isGeneratingCodeBlock && (
             <>
               <CopyButton text={props.codeBlockContent} />
-              <ApplyActions
-                applyState={applyState}
-                onClickApply={onClickApply}
-                onClickAccept={onClickAcceptApply}
-                onClickReject={onClickRejectApply}
-              />
+              {props.hideApply || (
+                <ApplyActions
+                  applyState={applyState}
+                  onClickApply={onClickApply}
+                  onClickAccept={onClickAcceptApply}
+                  onClickReject={onClickRejectApply}
+                />
+              )}
             </>
           )}
         </div>

@@ -332,7 +332,6 @@ export function Chat() {
                 dispatch(newSession());
               }}
             >
-              {item.message.role}-{JSON.stringify(item.message)}
               {item.message.role === "user" ? (
                 <ContinueInputBox
                   onEnter={async (editorState, modifiers) => {
@@ -347,7 +346,7 @@ export function Chat() {
                 item.message.toolCalls ? (
                 <div>
                   {item.message.toolCalls?.map((toolCall) => {
-                    return <ToolCallDiv toolCall={toolCall}></ToolCallDiv>;
+                    return <ToolCallDiv toolCall={toolCall as any} />;
                   })}
                 </div>
               ) : (

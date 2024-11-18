@@ -10,9 +10,9 @@ export const makeCreateNewFileTool = (ide: IDE): Tool => ({
     description: "Create a new file",
     parameters: {
       type: "object",
-      required: ["filePath", "contents"],
+      required: ["filepath", "contents"],
       properties: {
-        filePath: {
+        filepath: {
           type: "string",
           description: "The path where the new file should be created",
         },
