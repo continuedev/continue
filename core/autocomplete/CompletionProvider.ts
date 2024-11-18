@@ -182,7 +182,6 @@ export class CompletionProvider {
         this.contextRetrievalService,
       );
 
-      debugger;
       const { prompt, prefix, suffix, completionOptions } = renderPrompt(
         snippets,
         await this.ide.getWorkspaceDirs(),

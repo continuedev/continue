@@ -95,20 +95,13 @@ export function renderPrompt(
   suffix: string;
   completionOptions: Partial<CompletionOptions> | undefined;
 } {
-  debugger;
   // If prefix is manually passed
-  let prefix = helper.prunedPrefix;
-  let suffix = helper.prunedSuffix;
+  let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
+  let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
 
-  if (helper.input.manuallyPassPrefix) {
-    prefix = helper.input.manuallyPassPrefix;
-    suffix = "";
-  }
-
-  let prompt: string;
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
 
-  let { template, compilePrefixSuffix, completionOptions } =
+  const { template, compilePrefixSuffix, completionOptions } =
     getTemplate(helper);
 
   const contextComments = getContextComments(
@@ -133,7 +126,7 @@ export function renderPrompt(
     prefix = `${contextComments}${prefix}`;
   }
 
-  prompt =
+  const prompt =
     // Templates can be passed as a Handlebars template string or a function
     typeof template === "string"
       ? renderStringTemplate(
@@ -159,10 +152,13 @@ export function renderPrompt(
     helper.modelName,
   );
 
-  completionOptions = {
-    ...completionOptions,
-    stop: stopTokens,
+  return {
+    prompt,
+    prefix,
+    suffix,
+    completionOptions: {
+      ...completionOptions,
+      stop: stopTokens,
+    },
   };
-
-  return { prompt, prefix, suffix, completionOptions };
 }
