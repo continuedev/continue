@@ -317,7 +317,6 @@ export interface ChatHistoryItem {
   editorState?: any;
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
-  contextSymbols?: SymbolWithRange[];
   promptLogs?: PromptLog[];
 }
 

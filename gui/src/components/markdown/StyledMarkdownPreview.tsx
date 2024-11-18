@@ -176,7 +176,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         contextSymbols.push(...fileSymbols);
       }
     });
-    console.log(contextSymbols);
     return contextSymbols;
   }, [contextItems, symbols]);
 
@@ -266,7 +265,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             const ctxItem = contextItems.find((ctxItem) =>
               ctxItem.uri?.value.includes(content),
             );
-            console.log("CTX item", ctxItem);
             if (ctxItem) {
               const rif = ctxItemToRifWithContents(ctxItem);
               return <FilenameLink rif={rif} />;
