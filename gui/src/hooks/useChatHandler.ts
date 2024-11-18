@@ -27,13 +27,14 @@ import {
   clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
+  setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
   setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
 
@@ -189,6 +190,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
       // Reset current code block index
       dispatch(resetNextCodeBlockToApplyIndex());
+
+      if (index) {
+        dispatch(setCurCheckpointIndex(Math.floor(index / 2)));
+      }
 
       const shouldGatherContext =
         modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);

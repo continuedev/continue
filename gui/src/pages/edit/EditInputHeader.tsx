@@ -77,7 +77,7 @@ export function EditInputHeader(editInputHeaderParams: EditInputHeaderParams) {
               )} */}
 
               <div className="flex">
-                <HeaderButtonWithToolTip text="Accept">
+                <HeaderButtonWithToolTip text="Reject">
                   <XMarkIcon
                     className="h-4 w-4 cursor-pointer px-2"
                     color="red"
@@ -91,7 +91,7 @@ export function EditInputHeader(editInputHeaderParams: EditInputHeaderParams) {
                     }}
                   ></XMarkIcon>
                 </HeaderButtonWithToolTip>
-                <HeaderButtonWithToolTip text="Reject">
+                <HeaderButtonWithToolTip text="Accept">
                   <CheckIcon
                     className="h-4 w-4 cursor-pointer px-2 text-green-500"
                     onClick={() => {
