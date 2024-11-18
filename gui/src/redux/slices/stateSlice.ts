@@ -273,14 +273,16 @@ export const stateSlice = createSlice({
             message: { id: "NONE", ...action.payload },
           });
         } else {
-          console.log("ABC: ", action.payload);
           // Add to the existing message
           const msg = state.history[state.history.length - 1].message;
           if (action.payload.content) {
             msg.content += stripImages(action.payload.content);
           } else if (action.payload.toolCalls) {
+            if (!msg.toolCalls) {
+              msg.toolCalls = [];
+            }
             action.payload.toolCalls.forEach((toolCall, i) => {
-              if (msg.toolCalls.length < i) {
+              if (msg.toolCalls.length <= i) {
                 msg.toolCalls.push(toolCall);
               } else {
                 msg.toolCalls[i].function.arguments +=

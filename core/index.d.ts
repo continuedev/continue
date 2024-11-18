@@ -276,7 +276,7 @@ export interface ToolCallDelta {
   type?: "function";
   function?: {
     name?: string;
-    arguments?: string[];
+    arguments?: string;
   };
 }
 
