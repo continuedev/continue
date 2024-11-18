@@ -138,8 +138,9 @@ function processCodeBlocks(tree: any) {
 
     node.data = node.data || {};
     node.data.hProperties = node.data.hProperties || {};
-    node.data.hProperties.codeBlockContent = node.value;
+
     node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
+    node.data.hProperties.codeBlockContent = node.value;
 
     if (node.meta) {
       let meta = node.meta.split(" ");

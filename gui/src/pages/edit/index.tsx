@@ -105,7 +105,7 @@ function Edit() {
 
   const applyState = useSelector(
     (store: RootState) =>
-      store.uiState.applyStates.find((state) => state.streamId === "edit")
+      store.state.applyStates.find((state) => state.streamId === "edit")
         ?.status ?? "closed",
   );
 
