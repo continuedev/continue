@@ -3,17 +3,15 @@ import { JSONContent } from "@tiptap/react";
 import {
   ChatHistoryItem,
   ChatMessage,
-  ContextItemId,
   ContextItemWithId,
+  IndexingStatus,
   PersistedSessionInfo,
   PromptLog,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
-import { createSelector } from "reselect";
 import { v4 as uuidv4, v4 } from "uuid";
-import { RootState } from "../store";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -34,6 +32,7 @@ type State = {
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
   isInMultifileEdit: boolean;
+  indexingStatuses: { [id: string]: IndexingStatus };
 };
 
 const initialState: State = {
@@ -61,6 +60,7 @@ const initialState: State = {
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
   isInMultifileEdit: false,
+  indexingStatuses: {},
 };
 
 export const stateSlice = createSlice({
@@ -314,6 +314,15 @@ export const stateSlice = createSlice({
     setIsInMultifileEdit: (state, action: PayloadAction<boolean>) => {
       state.isInMultifileEdit = action.payload;
     },
+    updateIndexingStatus: (state, action: PayloadAction<IndexingStatus>) => {
+      console.log("update indexing status");
+      state.indexingStatuses = {
+        ...state.indexingStatuses,
+        [action.payload.id]: action.payload,
+      };
+      // consider only overwriting the one that changed
+      // depends on how watching
+    },
   },
 });
 
@@ -339,6 +348,7 @@ export const {
   deleteMessage,
   setIsGatheringContext,
   setIsInMultifileEdit,
+  updateIndexingStatus,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

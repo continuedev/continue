@@ -11,6 +11,7 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -50,14 +51,20 @@ function useSetup(dispatch: Dispatch<any>) {
     loadConfig();
     const interval = setInterval(() => {
       if (initialConfigLoad.current) {
+        // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
+        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
       loadConfig();
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig]);
+  }, [initialConfigLoad, loadConfig, ideMessenger]);
+
+  useWebviewListener("configUpdate", async () => {
+    await loadConfig();
+  });
 
   useEffect(() => {
     // Override persisted state
@@ -110,10 +117,6 @@ function useSetup(dispatch: Dispatch<any>) {
     });
   });
 
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-  });
-
   useWebviewListener("configError", async (error) => {
     dispatch(setConfigError(error));
   });
@@ -136,13 +139,7 @@ function useSetup(dispatch: Dispatch<any>) {
   });
 
   useWebviewListener("indexing/statusUpdate", async (data) => {
-    console.log("Indexing status update", data);
-    // dispatch(
-    //   addContextItemsAtIndex({
-    //     index: data.historyIndex,
-    //     contextItems: [data.item],
-    //   }),
-    // );
+    dispatch(updateIndexingStatus(data));
   });
 
   useWebviewListener(

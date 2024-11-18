@@ -8,7 +8,6 @@ import type {
   ContextSubmenuItem,
   DiffLine,
   IdeSettings,
-  IndexIdentifier,
   IndexingStatusMap,
   LLMFullCompletionOptions,
   MessageContent,
@@ -160,11 +159,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
 
-  // Docs Indexing. TODO move codebase to this
-  "indexing/reindex": [{ identifier: IndexIdentifier }, void];
-  "indexing/abort": [{ identifier: IndexIdentifier }, void];
-  "indexing/setPaused": [{ identifier: IndexIdentifier; pause: boolean }, void];
-  "indexing/getStatuses": [undefined, IndexingStatusMap];
+  // Docs etc. Indexing. TODO move codebase to this
+  "indexing/reindex": [{ type: string; id: string }, void];
+  "indexing/abort": [{ type: string; id: string }, void];
+  "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
+  "indexing/initStatuses": [undefined, void];
 
   addAutocompleteModel: [{ model: ModelDescription }, void];
 

@@ -35,7 +35,6 @@ import { TTS } from "./util/tts";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./util/messenger";
-import { IndexingStatusManager } from "./indexing/IndexingStatusManager";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -45,7 +44,6 @@ export class Core {
   continueServerClientPromise: Promise<ContinueServerClient>;
   codebaseIndexingState: IndexingProgressUpdate;
   controlPlaneClient: ControlPlaneClient;
-  private indexingManager: IndexingStatusManager;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
 
@@ -110,15 +108,10 @@ export class Core {
       this.controlPlaneClient,
     );
 
-    this.indexingManager = IndexingStatusManager.createSingleton(
-      this.messenger,
-    );
-
     this.docsService = DocsService.createSingleton(
       this.configHandler,
       this.ide,
       this.messenger,
-      this.indexingManager,
     );
 
     this.configHandler.onConfigUpdate(
@@ -292,7 +285,7 @@ export class Core {
     });
 
     on("context/indexDocs", async (msg) => {
-      await this.docsService.indexAllDocsWithPrompt(msg.data.reIndex);
+      await this.docsService.syncOrReindexAllDocsWithPrompt(msg.data.reIndex);
     });
 
     on("context/loadSubmenuItems", async (msg) => {
@@ -671,6 +664,8 @@ export class Core {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
     });
+
+    // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
@@ -700,6 +695,27 @@ export class Core {
       }
     });
 
+    // Docs, etc. indexing
+    on("indexing/reindex", async (msg) => {
+      if (msg.data.type === "docs") {
+        void this.docsService.reindexDoc(msg.data.id);
+      }
+    });
+    on("indexing/abort", async (msg) => {
+      if (msg.data.type === "docs") {
+        this.docsService.abort(msg.data.id);
+      }
+    });
+    on("indexing/setPaused", async (msg) => {
+      if (msg.data.type === "docs") {
+        this.docsService.setPaused(msg.data.id, msg.data.paused);
+      }
+    });
+    on("indexing/initStatuses", async (msg) => {
+      return this.docsService.initStatuses();
+    });
+    //
+
     on("didChangeSelectedProfile", (msg) => {
       void this.configHandler.setSelectedProfile(msg.data.id);
       void this.configHandler.reloadConfig();
@@ -719,19 +735,6 @@ export class Core {
       if (!ignoreInstance.ignores(relativeFilePath)) {
         recentlyEditedFilesCache.set(filepath, filepath);
       }
-    });
-
-    on("indexing/reindex", async (msg) => {
-      this.indexingManager.reindex(msg.data.identifier);
-    });
-    on("indexing/abort", async (msg) => {
-      this.indexingManager.abort(msg.data.identifier);
-    });
-    on("indexing/setPaused", async (msg) => {
-      this.indexingManager.setPaused(msg.data.identifier, msg.data.pause);
-    });
-    on("indexing/getStatuses", async (msg) => {
-      return this.indexingManager.statuses;
     });
   }
 
@@ -803,7 +806,7 @@ export class Core {
       }
 
       void this.messenger.request("indexProgress", updateToSend);
-      this.indexingState = updateToSend;
+      this.codebaseIndexingState = updateToSend;
 
       if (update.status === "failed") {
         void this.sendIndexingErrorTelemetry(update);

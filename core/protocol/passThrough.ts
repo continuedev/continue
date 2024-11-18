@@ -45,7 +45,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "index/forceReIndexFiles",
     "index/indexingProgressBarInitialized",
     // Docs, etc.
-    "indexing/getStatuses",
+    "indexing/initStatuses",
     "indexing/reindex",
     "indexing/abort",
     "indexing/setPaused",
