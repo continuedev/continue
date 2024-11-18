@@ -18,6 +18,9 @@ import { ToolState } from "./types";
 const Container = styled.div`
   margin: 8px;
   overflow: hidden;
+  border-left: 1px solid ${lightGray};
+  margin-left: 16px;
+  padding-left: 16px;
 `;
 
 const ButtonContainer = styled.div`
@@ -27,8 +30,7 @@ const ButtonContainer = styled.div`
 `;
 
 const Button = styled.button`
-  color: ${vscButtonForeground};
-  padding: 6px;
+  padding: 5px;
   border-radius: ${defaultBorderRadius};
   flex: 1;
 
@@ -39,6 +41,7 @@ const Button = styled.button`
 `;
 
 const AcceptButton = styled(Button)`
+  color: ${vscButtonForeground};
   border: none;
   background-color: ${vscButtonBackground};
   color: ${vscButtonForeground};
@@ -49,6 +52,7 @@ const AcceptButton = styled(Button)`
 `;
 
 const RejectButton = styled(Button)`
+  color: ${lightGray};
   border: 1px solid ${lightGray};
   background-color: transparent;
 `;
