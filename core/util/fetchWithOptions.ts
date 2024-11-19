@@ -79,6 +79,7 @@ export function fetchwithRequestOptions(
     headers[key] = value as string;
   }
   headers = {
+    "User-Agent": "continue.dev",
     ...headers,
     ...requestOptions?.headers,
   };
