@@ -176,17 +176,22 @@ export class CompletionProvider {
       // or they might separately track recently edited ranges)
       const extraSnippets = await this._getExtraSnippets(helper);
 
-      let snippets = await aggregateSnippets(
-        helper,
-        extraSnippets,
-        this.contextRetrievalService,
-      );
-
-      const { prompt, prefix, suffix, completionOptions } = renderPrompt(
-        snippets,
+      const [snippets, diff, workspaceDirs] = await Promise.all([
+        await aggregateSnippets(
+          helper,
+          extraSnippets,
+          this.contextRetrievalService,
+        ),
+        await this.ide.getDiff(true),
         await this.ide.getWorkspaceDirs(),
+      ]);
+
+      const { prompt, prefix, suffix, completionOptions } = renderPrompt({
+        snippets,
+        diff,
+        workspaceDirs,
         helper,
-      );
+      });
 
       // Completion
       let completion: string | undefined = "";

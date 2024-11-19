@@ -11,6 +11,7 @@ import {
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
+import { countTokens } from "../../llm/countTokens";
 
 export function formatExternalSnippet(
   filepath: string,
@@ -33,25 +34,17 @@ function getContextComments(
   snippets: AutocompleteSnippet[],
   lang: AutocompleteLanguageInfo,
   filepath: string,
-  prefix: string,
-  suffix: string,
 ) {
-  const formattedSnippets = snippets
-    .map((snippet) =>
-      formatExternalSnippet(snippet.filepath, snippet.contents, lang),
-    )
-    .join("\n");
-  if (formattedSnippets.length > 0) {
-    return `${formattedSnippets}\n\n`;
-  }
+  const fileNameSnippet = `\n\n${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n\n`;
 
-  const isEmptyFile = prefix.trim().length === 0 && suffix.trim().length === 0;
-  if (isEmptyFile) {
-    // Include the file name as a comment
-    prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n`;
-  }
+  const formattedSnippets =
+    snippets
+      .map((snippet) =>
+        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
+      )
+      .join("\n") + fileNameSnippet;
 
-  return "";
+  return formattedSnippets;
 }
 
 function getTemplate(helper: HelperVars): AutocompleteTemplate {
@@ -85,11 +78,29 @@ function renderStringTemplate(
   });
 }
 
-export function renderPrompt(
-  snippets: AutocompleteSnippet[],
-  workspaceDirs: string[],
-  helper: HelperVars,
-): {
+const formatDiff = (helper: HelperVars, diff?: string) => {
+  if (!diff) return "";
+
+  const tokenCount = countTokens(diff, helper.modelName);
+
+  if (tokenCount > helper.maxDiffTokens) {
+    return "";
+  }
+
+  return `${diff}\n\n`;
+};
+
+export function renderPrompt({
+  snippets,
+  workspaceDirs,
+  helper,
+  diff,
+}: {
+  snippets: AutocompleteSnippet[];
+  workspaceDirs: string[];
+  helper: HelperVars;
+  diff?: string;
+}): {
   prompt: string;
   prefix: string;
   suffix: string;
@@ -119,10 +130,10 @@ export function renderPrompt(
       snippets,
       helper.lang,
       helper.filepath,
-      prefix,
-      suffix,
     );
-    prefix = `${contextComments}${prefix}`;
+    const formattedDiff = formatDiff(helper, diff);
+
+    prefix = `${formattedDiff}${contextComments}${prefix}`;
   }
 
   const prompt =
