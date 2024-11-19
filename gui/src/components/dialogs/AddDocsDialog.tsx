@@ -15,7 +15,6 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import IndexingStatusViewer from "../indexing/IndexingStatus";
-import { NewSessionButton } from "../mainInput/NewSessionButton";
 
 function AddDocsDialog() {
   const posthog = usePostHog();

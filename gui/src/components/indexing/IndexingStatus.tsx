@@ -5,6 +5,8 @@ import { usePostHog } from "posthog-js/react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   ArrowPathIcon,
+  ArrowRightStartOnRectangleIcon,
+  ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
   PauseCircleIcon,
   XMarkIcon,
@@ -60,7 +62,7 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
         <div
-          className={`flex flex-row items-center gap-2 ${status.url ? "hover:cursor-pointer hover:underline" : ""}`}
+          className={`flex flex-row items-center gap-2 ${status.url ? "cursor-pointer hover:underline" : ""}`}
           onClick={() => {
             if (status.url) {
               ideMessenger.post("openUrl", status.url);
@@ -73,6 +75,9 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
           <p className="lines lines-1 m-0 p-0 text-left">
             {status.title ?? status.id}
           </p>
+          {!!status.url && (
+            <ArrowTopRightOnSquareIcon className="mb-0.5 h-3 w-3 text-stone-500" />
+          )}
         </div>
         {status.status === "pending" ? (
           <div className="text-xs text-stone-500">Pending...</div>
