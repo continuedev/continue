@@ -114,22 +114,6 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     }
   }, [props.toolCall.function.arguments]);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Tab") {
-        e.preventDefault();
-        callTool();
-      }
-      if (e.key === "Backspace" && e.metaKey) {
-        e.preventDefault();
-        cancelTool();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   async function cancelTool() {
     setState("canceled");
   }
