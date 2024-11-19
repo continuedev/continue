@@ -35,7 +35,7 @@ export default function ResponseActions({
   }
 
   return (
-    <div className="mx-2 mb-2 flex h-7 cursor-default items-center justify-end space-x-1 pb-0 text-xs text-gray-400">
+    <div className="mx-2 flex h-7 cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs text-gray-400">
       {isTruncated && (
         <HeaderButtonWithToolTip
           tabIndex={-1}

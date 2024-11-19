@@ -1,14 +1,14 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
+import { getBasename } from "core/util";
 import { useContext, useState } from "react";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
-import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getIconFromDropdownItem } from "./MentionList";
-import { getBasename } from "core/util";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -131,7 +131,12 @@ function ContextItemsPeek({
   }
 
   return (
-    <div className={`pl-2 pt-2 bg-[${vscBackground}]`}>
+    <div
+      className={`pl-2 pt-2`}
+      style={{
+        backgroundColor: vscBackground,
+      }}
+    >
       <div
         className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
         onClick={() => setOpen((prev) => !prev)}
