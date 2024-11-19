@@ -7,7 +7,7 @@ import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, HelperText, Input, lightGray } from "..";
+import { Button, HelperText, Input, lightGray, SecondaryButton } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   setDialogMessage,
@@ -15,6 +15,7 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import IndexingStatusViewer from "../indexing/IndexingStatus";
+import { NewSessionButton } from "../mainInput/NewSessionButton";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -31,7 +32,7 @@ function AddDocsDialog() {
 
   const ideMessenger = useContext(IdeMessengerContext);
   const indexingStatuses = useSelector(
-    (store: RootState) => store.state.indexingStatuses,
+    (store: RootState) => store.state.indexing.statuses,
   );
 
   const isFormValid = startUrl && title;
@@ -92,23 +93,23 @@ function AddDocsDialog() {
             </div>
           </div>
         )}
-        <div className="mt-4 flex flex-row items-center gap-4">
-          <Button
-            className="flex-1"
+        <div className="mt-4 flex flex-row items-center justify-end gap-4">
+          <SecondaryButton
+            className=""
             onClick={() => {
               setSubmittedConfig(undefined);
             }}
           >
             Add another
-          </Button>
+          </SecondaryButton>
           <Button
-            className="flex-1"
+            className=""
             onClick={() => {
               dispatch(setDialogMessage(undefined));
               dispatch(setShowDialog(false));
             }}
           >
-            Close
+            Done
           </Button>
         </div>
       </div>

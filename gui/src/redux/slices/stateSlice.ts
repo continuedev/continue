@@ -38,7 +38,10 @@ type State = {
   isMultifileEdit: boolean;
   applyStates: ApplyState[];
   nextCodeBlockToApplyIndex: number;
-  indexingStatuses: Record<string, IndexingStatus>;
+  indexing: {
+    hiddenChatPeekTypes: Record<IndexingStatus["type"], boolean>;
+    statuses: Record<string, IndexingStatus>;
+  };
 };
 
 const initialState: State = {
@@ -70,7 +73,12 @@ const initialState: State = {
   curCheckpointIndex: 0,
   nextCodeBlockToApplyIndex: 0,
   applyStates: [],
-  indexingStatuses: {},
+  indexing: {
+    statuses: {},
+    hiddenChatPeekTypes: {
+      docs: false,
+    },
+  },
 };
 
 export const stateSlice = createSlice({
@@ -366,9 +374,36 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<IndexingStatus>,
     ) => {
-      state.indexingStatuses = {
-        ...state.indexingStatuses,
+      state.indexing.statuses = {
+        ...state.indexing.statuses,
         [payload.id]: payload,
+      };
+
+      // This check is so that if all indexing is stopped for e.g. docs
+      // The next time docs indexing starts the peek will show again
+      const indexingThisType = Object.values(state.indexing.statuses).filter(
+        (status) =>
+          status.type === payload.type && status.status === "indexing",
+      );
+      if (indexingThisType.length === 0) {
+        state.indexing.hiddenChatPeekTypes = {
+          ...state.indexing.hiddenChatPeekTypes,
+          [payload.type]: false,
+        };
+      }
+    },
+    setIndexingChatPeekHidden: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        type: IndexingStatus["type"];
+        hidden: boolean;
+      }>,
+    ) => {
+      state.indexing.hiddenChatPeekTypes = {
+        ...state.indexing.hiddenChatPeekTypes,
+        [payload.type]: payload.hidden,
       };
     },
   },
@@ -401,6 +436,7 @@ export const {
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
   updateIndexingStatus,
+  setIndexingChatPeekHidden,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

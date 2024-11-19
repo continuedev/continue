@@ -1,14 +1,15 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 
 import { IndexingStatus } from "core";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowPathIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { setIndexingChatPeekHidden } from "../../redux/slices/stateSlice";
 
 interface MergedIndexingState {
   displayName: string;
-  type: string;
+  type: IndexingStatus["type"];
   titles: IndexingStatus["title"][];
   progressPercentage: number;
 }
@@ -21,14 +22,16 @@ const mergeProgress = (states: IndexingStatus[]): number => {
 
 export interface ChatIndexingPeekProps {
   state: MergedIndexingState;
-  hidden: boolean;
-  setHidden: (hidden: boolean) => void;
 }
 
-function ChatIndexingPeek({ state, hidden, setHidden }: ChatIndexingPeekProps) {
+function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const hiddenPeeks = useSelector(
+    (store: RootState) => store.state.indexing.hiddenChatPeekTypes,
+  );
 
-  if (hidden) return null;
+  if (hiddenPeeks[state.type]) return null;
   return (
     <div
       className="flex flex-row items-center border-0 border-t border-solid border-t-zinc-700 px-3 py-0.5"
@@ -65,7 +68,9 @@ function ChatIndexingPeek({ state, hidden, setHidden }: ChatIndexingPeekProps) {
       <EyeSlashIcon
         className="ml-2 h-4 w-4 cursor-pointer text-stone-500 hover:opacity-80"
         onClick={(e) => {
-          setHidden(true);
+          dispatch(
+            setIndexingChatPeekHidden({ type: state.type, hidden: true }),
+          );
           e.stopPropagation();
         }}
       />
@@ -75,13 +80,8 @@ function ChatIndexingPeek({ state, hidden, setHidden }: ChatIndexingPeekProps) {
 
 function ChatIndexingPeeks() {
   const indexingStatuses = useSelector(
-    (store: RootState) => store.state.indexingStatuses,
+    (store: RootState) => store.state.indexing.statuses,
   );
-
-  const [hidden, setHidden] = useState<{
-    [key: string]: boolean;
-  }>({});
-
   const mergedIndexingStates: MergedIndexingState[] = useMemo(() => {
     const mergedStates: MergedIndexingState[] = [];
 
@@ -95,12 +95,6 @@ function ChatIndexingPeeks() {
         titles: docsStates.map((state) => state.title),
         progressPercentage: mergeProgress(docsStates),
       });
-    } else {
-      // So that next indexing will show again if hidden
-      setHidden({
-        ...hidden,
-        docs: false,
-      });
     }
     return mergedStates;
   }, [indexingStatuses]);
@@ -110,18 +104,7 @@ function ChatIndexingPeeks() {
   return (
     <div className="flex flex-col gap-1">
       {mergedIndexingStates.map((state) => {
-        return (
-          <ChatIndexingPeek
-            state={state}
-            hidden={hidden[state.type]}
-            setHidden={() =>
-              setHidden({
-                ...hidden,
-                [state.type]: true,
-              })
-            }
-          />
-        );
+        return <ChatIndexingPeek state={state} />;
       })}
     </div>
   );

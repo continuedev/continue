@@ -11,7 +11,7 @@ import AddDocsDialog from "../dialogs/AddDocsDialog";
 
 function IndexingStatuses() {
   const indexingStatuses = useSelector(
-    (store: RootState) => store.state.indexingStatuses,
+    (store: RootState) => store.state.indexing.statuses,
   );
   const docsStatuses = useMemo(() => {
     const docs = Object.values(indexingStatuses).filter(
@@ -28,6 +28,7 @@ function IndexingStatuses() {
         {/* <div className="border-1 rounded-full border">
           <ChevronUpIcon className="h-8 w-8" />
         </div> */}
+        {/* TODO add some way to hide, scroll, etc. */}
       </div>
       <span className="text-xs text-stone-500">
         Manage your documentation sources
