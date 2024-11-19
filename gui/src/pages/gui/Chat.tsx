@@ -41,7 +41,7 @@ import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
-  clearLastResponse,
+  clearLastEmptyResponse,
   newSession,
   setInactive,
 } from "../../redux/slices/stateSlice";
@@ -399,12 +399,7 @@ export function Chat() {
             <StopButton
               onClick={() => {
                 dispatch(setInactive());
-                if (
-                  state.history[state.history.length - 1]?.message.content
-                    .length === 0
-                ) {
-                  dispatch(clearLastResponse());
-                }
+                dispatch(clearLastEmptyResponse());
               }}
             >
               {getMetaKeyLabel()} ⌫ Cancel

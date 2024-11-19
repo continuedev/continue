@@ -24,7 +24,7 @@ import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addPromptCompletionPair,
-  clearLastResponse,
+  clearLastEmptyResponse,
   initNewActiveMessage,
   resubmitAtIndex,
   setCurCheckpointIndex,
@@ -69,35 +69,27 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
 
-    try {
-      if (!defaultModel) {
-        throw new Error("Default model not defined");
+    if (!defaultModel) {
+      throw new Error("Default model not defined");
+    }
+    const gen = ideMessenger.llmStreamChat(
+      defaultModel.title,
+      cancelToken,
+      messages,
+    );
+    let next = await gen.next();
+    while (!next.done) {
+      if (!activeRef.current) {
+        abortController.abort();
+        break;
       }
-      const gen = ideMessenger.llmStreamChat(
-        defaultModel.title,
-        cancelToken,
-        messages,
-      );
-      let next = await gen.next();
+      dispatch(streamUpdate(stripImages((next.value as ChatMessage).content)));
+      next = await gen.next();
+    }
 
-      while (!next.done) {
-        if (!activeRef.current) {
-          abortController.abort();
-          break;
-        }
-        dispatch(
-          streamUpdate(stripImages((next.value as ChatMessage).content)),
-        );
-        next = await gen.next();
-      }
-
-      let returnVal = next.value as PromptLog;
-      if (returnVal) {
-        dispatch(addPromptCompletionPair([returnVal]));
-      }
-    } catch (e) {
-      // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
+    let returnVal = next.value as PromptLog;
+    if (returnVal) {
+      dispatch(addPromptCompletionPair([returnVal]));
     }
   }
 
@@ -150,29 +142,35 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
     }, 100);
 
-    for await (const update of ideMessenger.streamRequest(
-      "command/run",
-      {
-        input,
-        history: messages,
-        modelTitle,
-        slashCommandName: slashCommand.name,
-        contextItems,
-        params: slashCommand.params,
-        historyIndex,
-        selectedCode,
-      },
-      cancelToken,
-    )) {
-      if (!activeRef.current) {
-        abortController.abort();
-        break;
+    try {
+      for await (const update of ideMessenger.streamRequest(
+        "command/run",
+        {
+          input,
+          history: messages,
+          modelTitle,
+          slashCommandName: slashCommand.name,
+          contextItems,
+          params: slashCommand.params,
+          historyIndex,
+          selectedCode,
+        },
+        cancelToken,
+      )) {
+        if (!activeRef.current) {
+          abortController.abort();
+          clearInterval(checkActiveInterval);
+          break;
+        }
+        if (typeof update === "string") {
+          dispatch(streamUpdate(update));
+        }
       }
-      if (typeof update === "string") {
-        dispatch(streamUpdate(update));
-      }
+    } catch (e) {
+      throw e;
+    } finally {
+      clearInterval(checkActiveInterval);
     }
-    clearInterval(checkActiveInterval);
   }
 
   async function streamResponse(
@@ -252,8 +250,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         }
       }
 
-      // dispatch(addContextItems(contextItems));
-
       const message: ChatMessage = {
         role: "user",
         content,
@@ -313,6 +309,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         );
       }
     } catch (e: any) {
+      dispatch(clearLastEmptyResponse());
       console.debug("Error streaming response: ", e);
       ideMessenger.post("showToast", [
         "error",

@@ -540,33 +540,39 @@ export class Core {
         }
       }, 100);
 
-      for await (const content of slashCommand.run({
-        input,
-        history,
-        llm,
-        contextItems,
-        params,
-        ide,
-        addContextItem: (item) => {
-          void messenger.request("addContextItem", {
-            item,
-            historyIndex,
-          });
-        },
-        selectedCode,
-        config,
-        fetch: (url, init) =>
-          fetchwithRequestOptions(url, init, config.requestOptions),
-      })) {
-        if (abortedMessageIds.has(msg.messageId)) {
-          abortedMessageIds.delete(msg.messageId);
-          break;
+      try {
+        for await (const content of slashCommand.run({
+          input,
+          history,
+          llm,
+          contextItems,
+          params,
+          ide,
+          addContextItem: (item) => {
+            void messenger.request("addContextItem", {
+              item,
+              historyIndex,
+            });
+          },
+          selectedCode,
+          config,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        })) {
+          if (abortedMessageIds.has(msg.messageId)) {
+            abortedMessageIds.delete(msg.messageId);
+            clearInterval(checkActiveInterval);
+            break;
+          }
+          if (content) {
+            yield { content };
+          }
         }
-        if (content) {
-          yield { content };
-        }
+      } catch (e) {
+        throw e;
+      } finally {
+        clearInterval(checkActiveInterval);
       }
-      clearInterval(checkActiveInterval);
       yield { done: true, content: "" };
     }
     on("command/run", (msg) =>
