@@ -90,6 +90,16 @@ const StepsDiv = styled.div`
   position: relative;
   background-color: transparent;
 
+  // &::before {
+  //   content: "";
+  //   position: absolute;
+  //   top: 0;
+  //   left: 16px;
+  //   bottom: 0;
+  //   width: 1px;
+  //   background-color: ${lightGray};
+  // }
+
   & > * {
     position: relative;
   }

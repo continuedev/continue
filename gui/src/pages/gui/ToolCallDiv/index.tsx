@@ -1,3 +1,4 @@
+import { CheckIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ToolCall } from "core";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -13,19 +14,8 @@ import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { streamUpdate } from "../../../redux/slices/stateSlice";
 import { CreateFile } from "./CreateFile";
 import { RunTerminalCommand } from "./RunTerminalCommand";
+import { ThreadDiv } from "./ThreadDiv";
 import { ToolState } from "./types";
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  margin: 8px;
-  overflow: hidden;
-  border-left: 1px solid ${lightGray};
-  margin-left: 16px;
-  padding-left: 16px;
-`;
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -172,8 +162,23 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     }
   }
 
+  function getIcon(state: ToolState) {
+    switch (state) {
+      case "generating":
+        return <Spinner />;
+      case "done":
+        return <CheckIcon className="text-green-500" color={lightGray} />;
+      case "calling":
+        return <Spinner />;
+      case "canceled":
+        return <XMarkIcon className="text-red-500" />;
+      case "generated":
+        return <PlayIcon color={lightGray} />;
+    }
+  }
+
   return (
-    <Container>
+    <ThreadDiv icon={getIcon(state)}>
       <FunctionSpecificToolCallDiv toolCall={props.toolCall} state={state} />
       <ButtonContainer>
         {state === "generating" ? (
@@ -199,6 +204,6 @@ export function ToolCallDiv(props: ToolCallDivProps) {
           </div>
         ) : null}
       </ButtonContainer>
-    </Container>
+    </ThreadDiv>
   );
 }
