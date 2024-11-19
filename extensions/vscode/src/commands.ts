@@ -138,7 +138,6 @@ async function addHighlightedCodeToContext(
 
 async function addEntireFileToContext(
   filepath: vscode.Uri,
-  edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   // If a directory, add all files in the directory
@@ -149,7 +148,6 @@ async function addEntireFileToContext(
       if (type === vscode.FileType.File) {
         addEntireFileToContext(
           vscode.Uri.joinPath(filepath, filename),
-          edit,
           webviewProtocol,
         );
       }
@@ -455,42 +453,53 @@ const commandsMap: (
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    "continue.edit": async () => {
-      captureCommandTelemetry("edit");
+    // TODO
+    "continue.focusEditWithoutClear": async () => {},
+    "continue.focusEdit": async () => {
+      captureCommandTelemetry("focusEdit");
       focusGUI();
 
+      sidebar.webviewProtocol?.request("focusEdit", undefined);
+
       const editor = vscode.window.activeTextEditor;
+
       if (!editor) {
         return;
       }
 
-      const existingDiff = await verticalDiffManager.getHandlerForFile(
+      const existingDiff = verticalDiffManager.getHandlerForFile(
         editor.document.fileName,
       );
-      if (!existingDiff) {
-        // If there's a diff currently being applied, then we just toggle focus back to the input
-        editDecorationManager.setDecoration(
-          editor,
-          new vscode.Range(editor.selection.start, editor.selection.end),
-        );
 
-        const highlightedCode = getCurrentlyHighlightedCode(true)!;
-        await sidebar.webviewProtocol?.request("startEditMode", {
-          highlightedCode,
-        });
+      // If there's a diff currently being applied, then we just toggle focus back to the input
+      if (existingDiff) {
+        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+        return;
+      }
+
+      editDecorationManager.setDecoration(
+        editor,
+        new vscode.Range(editor.selection.start, editor.selection.end),
+      );
+
+      const rangeInFileWithContents = getCurrentlyHighlightedCode(true);
+
+      if (rangeInFileWithContents) {
+        sidebar.webviewProtocol?.request(
+          "addRIFToCodeToEdit",
+          rangeInFileWithContents,
+        );
 
         // Un-select the current selection
         editor.selection = new vscode.Selection(
           editor.selection.anchor,
           editor.selection.anchor,
         );
-
-        setTimeout(() => {
-          sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-        }, 30);
-      } else {
-        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       }
+
+      setTimeout(() => {
+        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+      }, 30);
     },
     "continue.exitEditMode": async () => {
       captureCommandTelemetry("exitEditMode");
@@ -705,12 +714,11 @@ const commandsMap: (
           for await (const filepath of walkDirAsync(uri.fsPath, ide)) {
             addEntireFileToContext(
               uriFromFilePath(filepath),
-              false,
               sidebar.webviewProtocol,
             );
           }
         } else {
-          addEntireFileToContext(uri, false, sidebar.webviewProtocol);
+          addEntireFileToContext(uri, sidebar.webviewProtocol);
         }
       }
     },

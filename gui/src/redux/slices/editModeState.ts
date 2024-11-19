@@ -1,26 +1,35 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { MessageContent } from "core";
 import { RangeInFileWithContents } from "core/commands/util";
-import { EditModeArgs, EditStatus } from "core/protocol/ideWebview";
+import { EditStatus } from "core/protocol/ideWebview";
 
 interface EditModeState {
-  highlightedCode?: RangeInFileWithContents;
   editStatus: EditStatus;
   previousInputs: MessageContent[];
   fileAfterEdit?: string;
+  codeToEdit: RangeInFileWithContents[];
 }
 
 const initialState: EditModeState = {
   editStatus: "not-started",
   previousInputs: [],
+  codeToEdit: [],
 };
 
 export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    startEditMode: (state, { payload }: PayloadAction<EditModeArgs>) => {
-      state.highlightedCode = payload.highlightedCode;
+    addRIFToCodeToEdit: (
+      state,
+      { payload }: PayloadAction<RangeInFileWithContents>,
+    ) => {
+      state.codeToEdit.push(payload);
+      state.editStatus = "not-started";
+      state.previousInputs = [];
+      state.fileAfterEdit = undefined;
+    },
+    focusEdit: (state) => {
       state.editStatus = "not-started";
       state.previousInputs = [];
       state.fileAfterEdit = undefined;
@@ -28,6 +37,14 @@ export const editModeStateSlice = createSlice({
     submitEdit: (state, { payload }: PayloadAction<MessageContent>) => {
       state.previousInputs.push(payload);
       state.editStatus = "streaming";
+    },
+    removeEntryFromCodeToEdit: (
+      state,
+      { payload }: PayloadAction<RangeInFileWithContents>,
+    ) => {
+      state.codeToEdit = state.codeToEdit.filter(
+        (entry) => entry.toString() !== payload.toString(),
+      );
     },
     setEditStatus: (
       state,
@@ -77,10 +94,12 @@ export const editModeStateSlice = createSlice({
 });
 
 export const {
-  startEditMode,
+  addRIFToCodeToEdit,
   setEditStatus,
   addPreviousInput,
   setEditDone,
   submitEdit,
+  removeEntryFromCodeToEdit,
+  focusEdit,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

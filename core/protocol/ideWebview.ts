@@ -54,10 +54,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "edit/escape": [undefined, void];
 };
 
-export interface EditModeArgs {
-  highlightedCode: RangeInFileWithContents;
-}
-
 export type EditStatus =
   | "not-started"
   | "streaming"
@@ -98,6 +94,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
     },
     void,
   ];
+  addRIFToCodeToEdit: [RangeInFileWithContents, void];
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 
@@ -118,7 +115,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   openOnboardingCard: [undefined, void];
   applyCodeFromChat: [undefined, void];
   updateApplyState: [ApplyState, void];
-  startEditMode: [EditModeArgs, void];
   setEditStatus: [{ status: EditStatus; fileAfterEdit?: string }, void];
   exitEditMode: [undefined, void];
+  focusEdit: [undefined, void];
 };

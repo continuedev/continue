@@ -158,7 +158,6 @@ interface TipTapEditorProps {
   toolbarOptions?: ToolbarOptions;
   border?: string;
   placeholder?: string;
-  header?: React.ReactNode;
   historyKey: string;
 }
 
@@ -829,8 +828,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         event.preventDefault();
       }}
     >
-      <div>{props.header}</div>
-
       <PaddingDiv>
         <EditorContent
           spellCheck={false}
