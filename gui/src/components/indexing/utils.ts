@@ -2,7 +2,6 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   PauseCircleIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { IndexingStatus } from "core";
 

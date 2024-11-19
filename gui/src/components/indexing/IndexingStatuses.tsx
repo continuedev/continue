@@ -8,7 +8,6 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
-import { ChevronUpIcon } from "@heroicons/react/24/outline";
 
 function IndexingStatuses() {
   const indexingStatuses = useSelector(

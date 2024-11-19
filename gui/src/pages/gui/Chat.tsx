@@ -62,7 +62,6 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import { useFindWidget } from "../../components/find/FindWidget";
 
-
 const StopButton = styled.div`
   background-color: ${vscBackground};
   width: fit-content;

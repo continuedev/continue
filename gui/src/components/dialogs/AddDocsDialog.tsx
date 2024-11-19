@@ -9,7 +9,10 @@ import { useContext, useLayoutEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, HelperText, Input, lightGray } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import IndexingStatusViewer from "../indexing/IndexingStatus";
 
@@ -57,8 +60,6 @@ function AddDocsDialog() {
     setStartUrl("");
     setFaviconUrl("");
 
-    // dispatch(setShowDialog(false));
-
     posthog.capture("add_docs_gui", { url: startUrl });
   }
 
@@ -103,6 +104,7 @@ function AddDocsDialog() {
           <Button
             className="flex-1"
             onClick={() => {
+              dispatch(setDialogMessage(undefined));
               dispatch(setShowDialog(false));
             }}
           >
