@@ -105,7 +105,7 @@ const StepsDiv = styled.div`
   }
 
   .thread-message {
-    margin: 8px 4px 0 4px;
+    margin: 0px 4px 0 4px;
   }
 `;
 
@@ -329,7 +329,7 @@ export function Chat() {
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "h-full" : ""}`}
+        className={`mt-[8px] overflow-y-scroll ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "h-full" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}

@@ -19,6 +19,7 @@ interface StepContainerProps {
 
 const ContentDiv = styled.div<{ fontSize?: number }>`
   padding-top: 4px;
+  padding-bottom: 4px;
   background-color: ${vscBackground};
   font-size: ${getFontSize()}px;
   overflow: hidden;

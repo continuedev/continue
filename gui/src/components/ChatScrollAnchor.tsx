@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useInView } from "react-intersection-observer";
+import { vscBackground } from ".";
 
 interface ChatScrollAnchorProps {
   trackVisibility: boolean;
@@ -25,5 +26,13 @@ export function ChatScrollAnchor({
     }
   }, [inView, entry, isAtBottom, trackVisibility]);
 
-  return <div ref={ref} className="h-px w-full" />;
+  return (
+    <div
+      ref={ref}
+      className="h-px w-full"
+      style={{
+        backgroundColor: vscBackground,
+      }}
+    />
+  );
 }
