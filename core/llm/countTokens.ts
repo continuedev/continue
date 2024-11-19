@@ -115,13 +115,15 @@ function countTokens(
   }
 }
 
-function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
+export function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
   const flattened: ChatMessage[] = [];
   for (let i = 0; i < msgs.length; i++) {
     const msg = msgs[i];
     if (
       flattened.length > 0 &&
-      flattened[flattened.length - 1].role === msg.role
+      flattened[flattened.length - 1].role === msg.role &&
+      !msg.toolCalls &&
+      !flattened[flattened.length - 1].toolCalls
     ) {
       flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
     } else {

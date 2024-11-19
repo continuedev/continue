@@ -1,10 +1,10 @@
 import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/images";
-import { CopyIconButton } from "../gui/CopyIconButton";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { ChatHistoryItem } from "core";
+import { CopyIconButton } from "../gui/CopyIconButton";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import FeedbackButtons from "./FeedbackButtons";
 import MultifileEditActions from "./MultifileEditActions";
 

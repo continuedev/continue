@@ -40,6 +40,69 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
+  private convertMessage(message: ChatMessage, addCaching: boolean): any {
+    if (message.role === "tool") {
+      return {
+        role: "user",
+        content: [
+          {
+            type: "tool_result",
+            tool_use_id: message.toolCallId,
+            content: stripImages(message.content) || undefined,
+          },
+        ],
+      };
+    } else if (message.role === "assistant" && message.toolCalls) {
+      return {
+        role: "assistant",
+        content: message.toolCalls.map((toolCall) => ({
+          type: "tool_use",
+          id: toolCall.id,
+          name: toolCall.function?.name,
+          input: JSON.parse(toolCall.function?.arguments ?? "{}"),
+        })),
+      };
+    }
+
+    if (typeof message.content === "string") {
+      var chatMessage = {
+        role: message.role,
+        content: [
+          {
+            type: "text",
+            text: message.content,
+            ...(addCaching ? { cache_control: { type: "ephemeral" } } : {}),
+          },
+        ],
+      };
+      return chatMessage;
+    }
+
+    return {
+      role: message.role,
+      content: message.content.map((part, contentIdx) => {
+        if (part.type === "text") {
+          const newpart = {
+            ...part,
+            // If multiple text parts, only add cache_control to the last one
+            ...(addCaching && contentIdx == message.content.length - 1
+              ? { cache_control: { type: "ephemeral" } }
+              : {}),
+          };
+          return newpart;
+        }
+        return {
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: "image/jpeg",
+            data: part.imageUrl?.url.split(",")[1],
+          },
+        };
+      }),
+    };
+  }
+
   public convertMessages(msgs: ChatMessage[]): any[] {
     // should be public for use within VertexAI
     const filteredmessages = msgs.filter((m) => m.role !== "system");
@@ -57,43 +120,8 @@ class Anthropic extends BaseLLM {
         this.cacheBehavior?.cacheConversation &&
         lastTwoUserMsgIndices.includes(filteredMsgIdx);
 
-      if (typeof message.content === "string") {
-        var chatMessage = {
-          ...message,
-          content: [
-            {
-              type: "text",
-              text: message.content,
-              ...(addCaching ? { cache_control: { type: "ephemeral" } } : {}),
-            },
-          ],
-        };
-        return chatMessage;
-      }
-
-      return {
-        ...message,
-        content: message.content.map((part, contentIdx) => {
-          if (part.type === "text") {
-            const newpart = {
-              ...part,
-              // If multiple text parts, only add cache_control to the last one
-              ...(addCaching && contentIdx == message.content.length - 1
-                ? { cache_control: { type: "ephemeral" } }
-                : {}),
-            };
-            return newpart;
-          }
-          return {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: "image/jpeg",
-              data: part.imageUrl?.url.split(",")[1],
-            },
-          };
-        }),
-      };
+      const chatMessage = this.convertMessage(message, !!addCaching);
+      return chatMessage;
     });
     return messages;
   }
@@ -118,6 +146,7 @@ class Anthropic extends BaseLLM {
       messages.filter((m) => m.role === "system")[0]?.content,
     );
 
+    const msgs = this.convertMessages(messages);
     const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
@@ -131,7 +160,7 @@ class Anthropic extends BaseLLM {
       },
       body: JSON.stringify({
         ...this.convertArgs(options),
-        messages: this.convertMessages(messages),
+        messages: msgs,
         system: shouldCacheSystemMessage
           ? [
               {

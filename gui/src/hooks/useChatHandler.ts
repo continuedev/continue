@@ -26,6 +26,7 @@ import {
   addPromptCompletionPair,
   clearLastResponse,
   initNewActiveMessage,
+  resetNextCodeBlockToApplyIndex,
   resubmitAtIndex,
   setCurCheckpointIndex,
   setInactive,
@@ -34,7 +35,6 @@ import {
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
 

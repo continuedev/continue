@@ -1,3 +1,5 @@
+import { ContextItemWithId } from "core";
+import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
@@ -12,15 +14,13 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize, isJetBrains } from "../../util";
+import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
-import { ctxItemToRifWithContents } from "core/commands/util";
-import FilenameLink from "./FilenameLink";
+import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
-import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { ContextItemWithId } from "core";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;

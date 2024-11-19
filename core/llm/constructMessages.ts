@@ -103,6 +103,13 @@ export function constructMessages(
       ...historyItem.message,
       content,
     });
+
+    // Remove the "id" from all of the messages
+    msgs.forEach((msg: any) => {
+      if (msg.id !== undefined) {
+        delete msg.id;
+      }
+    });
   }
 
   return msgs;

@@ -5,11 +5,11 @@ import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
 import useUIConfig from "../../hooks/useUIConfig";
+import { deleteMessage } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import ResponseActions from "./ResponseActions";
-import { deleteMessage } from "../../redux/slices/stateSlice";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -42,7 +42,7 @@ export default function StepContainer(props: StepContainerProps) {
   useEffect(() => {
     if (!active) {
       const content = stripImages(props.item.message.content).trim();
-      const endingPunctuation = [".", "?", "!", "```"];
+      const endingPunctuation = [".", "?", "!", "```", ":"];
 
       // If not ending in punctuation or emoji, we assume the response got truncated
       if (
