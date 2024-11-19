@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import IndexingStatusViewer from "./IndexingStatus";
-import { Button } from "..";
+import { Button, SecondaryButton } from "..";
 import {
   setDialogMessage,
   setShowDialog,
@@ -39,14 +39,14 @@ function IndexingStatuses() {
           return <IndexingStatusViewer key={status.id} status={status} />;
         })
       ) : (
-        <Button
+        <SecondaryButton
           onClick={() => {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<AddDocsDialog />));
           }}
         >
           Add Docs
-        </Button>
+        </SecondaryButton>
       )}
     </div>
     // </div>
