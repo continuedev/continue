@@ -1,1 +1,6 @@
-export type ToolState = "generating" | "generated" | "calling" | "done";
+export type ToolState =
+  | "generating"
+  | "generated"
+  | "calling"
+  | "done"
+  | "canceled";

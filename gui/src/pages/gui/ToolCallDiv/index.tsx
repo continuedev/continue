@@ -16,6 +16,10 @@ import { RunTerminalCommand } from "./RunTerminalCommand";
 import { ToolState } from "./types";
 
 const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
   margin: 8px;
   overflow: hidden;
   border-left: 1px solid ${lightGray};
@@ -120,6 +124,26 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     }
   }, [props.toolCall.function.arguments]);
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        callTool();
+      }
+      if (e.key === "Backspace" && e.metaKey) {
+        e.preventDefault();
+        cancelTool();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  async function cancelTool() {
+    setState("canceled");
+  }
+
   async function callTool() {
     let setCallingState = true;
 
@@ -157,14 +181,15 @@ export function ToolCallDiv(props: ToolCallDivProps) {
             className="flex w-full items-center justify-center gap-4"
             style={{
               color: lightGray,
+              minHeight: "40px",
             }}
           >
             Thinking...
-            <Spinner />
+            {/* <Spinner /> */}
           </div>
         ) : state === "generated" ? (
           <>
-            <RejectButton onClick={() => {}}>Cancel</RejectButton>
+            <RejectButton onClick={cancelTool}>Cancel</RejectButton>
             <AcceptButton onClick={callTool}>Continue</AcceptButton>
           </>
         ) : state === "calling" ? (
