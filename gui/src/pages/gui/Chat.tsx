@@ -62,6 +62,7 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { ToolCallDiv } from "./ToolCallDiv";
+import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -89,16 +90,6 @@ const StopButton = styled.div`
 const StepsDiv = styled.div`
   position: relative;
   background-color: transparent;
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 16px;
-    bottom: 0;
-    width: 1px;
-    background-color: ${lightGray};
-  }
 
   & > * {
     position: relative;
@@ -432,6 +423,7 @@ export function Chat() {
             </StopButton>
           )}
         </div>
+        <ToolCallButtons />
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}
