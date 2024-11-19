@@ -271,7 +271,10 @@ const commandsMap: (
   }
 
   return {
-    "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
+    "continue.acceptDiff": async (
+      newFilepath?: string | vscode.Uri,
+      streamId?: string,
+    ) => {
       captureCommandTelemetry("acceptDiff");
 
       let fullPath = newFilepath;
@@ -290,8 +293,23 @@ const commandsMap: (
       void sidebar.webviewProtocol.request("setEditStatus", {
         status: "done",
       });
+
+      if (streamId && fullPath) {
+        const fileContent = await ide.readFile(fullPath);
+
+        await sidebar.webviewProtocol.request("updateApplyState", {
+          fileContent,
+          filepath: fullPath,
+          streamId: streamId,
+          status: "closed",
+          numDiffs: 0,
+        });
+      }
     },
-    "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
+    "continue.rejectDiff": async (
+      newFilepath?: string | vscode.Uri,
+      streamId?: string,
+    ) => {
       captureCommandTelemetry("rejectDiff");
 
       let fullPath = newFilepath;
@@ -309,6 +327,18 @@ const commandsMap: (
       void sidebar.webviewProtocol.request("setEditStatus", {
         status: "done",
       });
+
+      if (streamId && fullPath) {
+        const fileContent = await ide.readFile(fullPath);
+
+        await sidebar.webviewProtocol.request("updateApplyState", {
+          fileContent,
+          filepath: fullPath,
+          streamId: streamId,
+          status: "closed",
+          numDiffs: 0,
+        });
+      }
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
@@ -387,7 +417,10 @@ const commandsMap: (
         if (historyLength === 0) {
           hideGUI();
         } else {
-          void sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+          void sidebar.webviewProtocol?.request(
+            "focusContinueInput",
+            undefined,
+          );
         }
       } else {
         focusGUI();
@@ -596,7 +629,9 @@ const commandsMap: (
           prompt: "Enter the Session ID",
         });
       }
-      void sidebar.webviewProtocol?.request("focusContinueSessionId", { sessionId });
+      void sidebar.webviewProtocol?.request("focusContinueSessionId", {
+        sessionId,
+      });
     },
     "continue.applyCodeFromChat": () => {
       void sidebar.webviewProtocol.request("applyCodeFromChat", undefined);
@@ -734,7 +769,7 @@ const commandsMap: (
         !selected ||
         !autocompleteModels.some((model) => model.title === selected)
       ) {
-        selected = autocompleteModels[0].title;
+        selected = autocompleteModels[0]?.title;
       }
 
       // Toggle between Disabled, Paused, and Enabled

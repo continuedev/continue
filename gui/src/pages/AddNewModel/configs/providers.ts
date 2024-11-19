@@ -116,6 +116,29 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
+  moonshot: {
+    title: "Moonshot",
+    provider: "moonshot",
+    description: "Use the Moonshot API for LLMs",
+    longDescription: `[Visit our documentation](https://docs.continue.dev/reference/Model%20Providers/moonshot) for information on obtaining an API key.`,
+    icon: "moonshot.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "moonshot",
+    apiKeyUrl: "https://docs.moonshot.cn/docs/getting-started",
+    packages: [
+      models.moonshotChat,
+    ],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Moonshot API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+  },
   azure: {
     title: "Azure OpenAI",
     provider: "azure",

@@ -21,47 +21,54 @@ export class GeneratorReuseManager {
     this.currentGenerator = listenableGen;
   }
 
+  private shouldReuseExistingGenerator(prefix: string): boolean {
+    return (
+      !!this.currentGenerator &&
+      !!this.pendingGeneratorPrefix &&
+      (this.pendingGeneratorPrefix + this.pendingCompletion).startsWith(
+        prefix,
+      ) &&
+      // for e.g. backspace
+      this.pendingGeneratorPrefix?.length <= prefix?.length
+    );
+  }
+
   async *getGenerator(
     prefix: string,
     newGenerator: () => AsyncGenerator<string>,
     multiline: boolean,
   ): AsyncGenerator<string> {
-    // Check if current can be reused
-    if (
-      !(
-        this.currentGenerator &&
-        this.pendingGeneratorPrefix &&
-        (this.pendingGeneratorPrefix + this.pendingCompletion).startsWith(
-          prefix,
-        ) &&
-        // for e.g. backspace
-        this.pendingGeneratorPrefix?.length <= prefix?.length
-      )
-    ) {
+    // If we can't reuse, then create a new generator
+    if (!this.shouldReuseExistingGenerator(prefix)) {
       // Create a wrapper over the current generator to fix the prompt
       this._createListenableGenerator(newGenerator(), prefix);
     }
 
-    let alreadyTyped = prefix.slice(this.pendingGeneratorPrefix?.length) || "";
+    // Already typed characters are those that are new in the prefix from the old generator
+    let typedSinceLastGenerator =
+      prefix.slice(this.pendingGeneratorPrefix?.length) || "";
     for await (let chunk of this.currentGenerator?.tee() ?? []) {
       if (!chunk) {
         continue;
       }
-      while (chunk.length && alreadyTyped.length) {
-        if (chunk[0] === alreadyTyped[0]) {
-          alreadyTyped = alreadyTyped.slice(1);
+
+      // Ignore already typed characters in the completion
+      while (chunk.length && typedSinceLastGenerator.length) {
+        if (chunk[0] === typedSinceLastGenerator[0]) {
+          typedSinceLastGenerator = typedSinceLastGenerator.slice(1);
           chunk = chunk.slice(1);
         } else {
           break;
         }
       }
 
+      // Break at newline unless we are in multiline mode
       const newLineIndex = chunk.indexOf("\n");
-      if (multiline || newLineIndex === -1) {
-        yield chunk;
-      } else {
+      if (newLineIndex >= 0 && !multiline) {
         yield chunk.slice(0, newLineIndex);
         break;
+      } else if (chunk !== "") {
+        yield chunk;
       }
     }
   }

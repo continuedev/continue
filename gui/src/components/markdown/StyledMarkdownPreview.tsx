@@ -19,6 +19,7 @@ import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
+import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { ContextItemWithId } from "core";
 
 const StyledMarkdown = styled.div<{
@@ -138,8 +139,9 @@ function processCodeBlocks(tree: any) {
 
     node.data = node.data || {};
     node.data.hProperties = node.data.hProperties || {};
-    node.data.hProperties.codeBlockContent = node.value;
+
     node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
+    node.data.hProperties.codeBlockContent = node.value;
 
     if (node.meta) {
       let meta = node.meta.split(" ");
@@ -251,7 +253,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   });
 
   useEffect(() => {
-    setMarkdownSource(props.source || "");
+    setMarkdownSource(patchNestedMarkdown(props.source ?? ""));
   }, [props.source]);
 
   return (

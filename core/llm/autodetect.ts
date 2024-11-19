@@ -117,6 +117,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
+  "moonshot",
   "free-trial",
   "replicate",
   "together",
@@ -149,9 +150,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini") ||
-    lower.includes("grok")
+    lower.includes("grok")||
+    lower.includes("moonshot")
   ) {
-    return undefined;
+    return undefined; 
   }
 
   if (lower.includes("llama3")) {

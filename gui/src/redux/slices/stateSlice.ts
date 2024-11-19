@@ -3,6 +3,7 @@ import { JSONContent } from "@tiptap/react";
 import {
   ChatHistoryItem,
   ChatMessage,
+  Checkpoint,
   ContextItemId,
   ContextItemWithId,
   PersistedSessionInfo,
@@ -14,13 +15,13 @@ import { stripImages } from "core/llm/images";
 import { createSelector } from "reselect";
 import { v4 as uuidv4, v4 } from "uuid";
 import { RootState } from "../store";
+import { ApplyState } from "core/protocol/ideWebview";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
-
 type State = {
   history: ChatHistoryItemWithMessageId[];
   ttsActive: boolean;
@@ -33,7 +34,11 @@ type State = {
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
-  isInMultifileEdit: boolean;
+  checkpoints: Checkpoint[];
+  curCheckpointIndex: number;
+  isMultifileEdit: boolean;
+  applyStates: ApplyState[];
+  nextCodeBlockToApplyIndex: number;
 };
 
 const initialState: State = {
@@ -60,7 +65,11 @@ const initialState: State = {
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
-  isInMultifileEdit: false,
+  checkpoints: [],
+  isMultifileEdit: false,
+  curCheckpointIndex: 0,
+  nextCodeBlockToApplyIndex: 0,
+  applyStates: [],
 };
 
 export const stateSlice = createSlice({
@@ -187,6 +196,7 @@ export const stateSlice = createSlice({
       });
 
       state.active = true;
+      state.curCheckpointIndex = state.curCheckpointIndex + 1;
     },
     setMessageAtIndex: (
       state,
@@ -253,12 +263,15 @@ export const stateSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.sessionId = payload.sessionId;
+        state.checkpoints = payload.checkpoints;
+        state.curCheckpointIndex = 0;
       } else {
         state.history = [];
         state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
-        state.isInMultifileEdit = false;
+        state.checkpoints = [];
+        state.curCheckpointIndex = 0;
       }
     },
     addHighlightedCode: (
@@ -311,8 +324,42 @@ export const stateSlice = createSlice({
         selectedProfileId: payload,
       };
     },
-    setIsInMultifileEdit: (state, action: PayloadAction<boolean>) => {
-      state.isInMultifileEdit = action.payload;
+
+    setIsInMultifileEdit: (state, { payload }: PayloadAction<boolean>) => {
+      state.isMultifileEdit = payload;
+    },
+    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
+      state.curCheckpointIndex = payload;
+    },
+    updateCurCheckpoint: (
+      state,
+      { payload }: PayloadAction<{ filepath: string; content: string }>,
+    ) => {
+      state.checkpoints[state.curCheckpointIndex] = {
+        ...state.checkpoints[state.curCheckpointIndex],
+        [payload.filepath]: payload.content,
+      };
+    },
+    updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
+      const index = state.applyStates.findIndex(
+        (applyState) => applyState.streamId === payload.streamId,
+      );
+
+      const curApplyState = state.applyStates[index];
+
+      if (index === -1) {
+        state.applyStates.push(payload);
+      } else {
+        curApplyState.status = payload.status ?? curApplyState.status;
+        curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
+        curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
+      }
+      if(payload.status === "done"){
+        state.nextCodeBlockToApplyIndex++;
+      }
+    },
+    resetNextCodeBlockToApplyIndex: (state) => {
+      state.nextCodeBlockToApplyIndex = 0;
     },
   },
 });
@@ -339,6 +386,10 @@ export const {
   deleteMessage,
   setIsGatheringContext,
   setIsInMultifileEdit,
+  updateCurCheckpoint,
+  setCurCheckpointIndex,
+  resetNextCodeBlockToApplyIndex,
+  updateApplyState,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

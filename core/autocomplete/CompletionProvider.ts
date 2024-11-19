@@ -6,7 +6,7 @@ import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
-import { constructAutocompletePrompt } from "./constructPrompt.js";
+import { aggregateSnippets } from "./aggregateSnippets";
 // @prettier-ignore
 
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
@@ -176,7 +176,7 @@ export class CompletionProvider {
       // or they might separately track recently edited ranges)
       const extraSnippets = await this._getExtraSnippets(helper);
 
-      let snippets = await constructAutocompletePrompt(
+      let snippets = await aggregateSnippets(
         helper,
         extraSnippets,
         this.contextRetrievalService,

@@ -44,7 +44,7 @@ function getRangeOfPrefixAndSuffixWithBuffer(
   return prefixSuffixRangeWithBuffer;
 }
 
-export async function constructAutocompletePrompt(
+export async function aggregateSnippets(
   helper: HelperVars,
   extraSnippets: AutocompleteSnippet[],
   contextRetrievalService: ContextRetrievalService,
