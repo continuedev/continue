@@ -144,13 +144,16 @@ export const stateSlice = createSlice({
       state.context.isGathering = payload.isGathering;
       state.context.gatheringMessage = payload.gatheringMessage;
     },
-    clearLastResponse: (state) => {
+    clearLastEmptyResponse: (state) => {
       if (state.history.length < 2) {
         return;
       }
-      state.mainEditorContent =
-        state.history[state.history.length - 2].editorState;
-      state.history = state.history.slice(0, -2);
+      // Only clear in the case of an empty message
+      if (!state.history[state.history.length - 1]?.message.content.length) {
+        state.mainEditorContent =
+          state.history[state.history.length - 2].editorState;
+        state.history = state.history.slice(0, -2);
+      }
     },
     consumeMainEditorContent: (state) => {
       state.mainEditorContent = undefined;
@@ -464,7 +467,7 @@ export const {
   setActive,
   initNewActiveMessage,
   setMessageAtIndex,
-  clearLastResponse,
+  clearLastEmptyResponse,
   consumeMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
