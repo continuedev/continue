@@ -11,6 +11,7 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -50,14 +51,20 @@ function useSetup(dispatch: Dispatch<any>) {
     loadConfig();
     const interval = setInterval(() => {
       if (initialConfigLoad.current) {
+        // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
+        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
       loadConfig();
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig]);
+  }, [initialConfigLoad, loadConfig, ideMessenger]);
+
+  useWebviewListener("configUpdate", async () => {
+    await loadConfig();
+  });
 
   useEffect(() => {
     // Override persisted state
@@ -110,18 +117,6 @@ function useSetup(dispatch: Dispatch<any>) {
     });
   });
 
-  const debouncedIndexDocs = debounce(() => {
-    ideMessenger.post("context/indexDocs", { reIndex: false });
-  }, 1000);
-
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-
-    if (!isJetBrains && !getLocalStorage("disableIndexing")) {
-      debouncedIndexDocs();
-    }
-  });
-
   useWebviewListener("configError", async (error) => {
     dispatch(setConfigError(error));
   });
@@ -142,6 +137,10 @@ function useSetup(dispatch: Dispatch<any>) {
         contextItems: [data.item],
       }),
     );
+  });
+
+  useWebviewListener("indexing/statusUpdate", async (data) => {
+    dispatch(updateIndexingStatus(data));
   });
 
   useWebviewListener(

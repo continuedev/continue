@@ -42,7 +42,7 @@ export class Core {
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
-  indexingState: IndexingProgressUpdate;
+  codebaseIndexingState: IndexingProgressUpdate;
   controlPlaneClient: ControlPlaneClient;
   private docsService: DocsService;
   private globalContext = new GlobalContext();
@@ -88,7 +88,11 @@ export class Core {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
 
-    this.indexingState = { status: "loading", desc: "loading", progress: 0 };
+    this.codebaseIndexingState = {
+      status: "loading",
+      desc: "loading",
+      progress: 0,
+    };
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
@@ -148,6 +152,7 @@ export class Core {
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
+        this.indexingPauseToken.paused = true;
         if (ideSettings.pauseCodebaseIndexOnStart) {
           void this.messenger.request("indexProgress", {
             progress: 1,
@@ -272,34 +277,15 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
-      let hasFailed = false;
-
-      for await (const result of this.docsService.indexAndAdd(msg.data)) {
-        if (result.status === "failed") {
-          hasFailed = true;
-          break;
-        }
-      }
-
-      if (hasFailed) {
-        void this.ide.showToast("info", `Failed to index ${msg.data.startUrl}`);
-      } else {
-        void this.ide.showToast(
-          "info",
-          `Successfully indexed ${msg.data.startUrl}`,
-        );
-        this.messenger.send("refreshSubmenuItems", undefined);
-      }
+      void this.docsService.indexAndAdd(msg.data);
     });
 
     on("context/removeDocs", async (msg) => {
       await this.docsService.delete(msg.data.startUrl);
-      this.messenger.send("refreshSubmenuItems", undefined);
     });
 
     on("context/indexDocs", async (msg) => {
-      await this.docsService.indexAllDocs(msg.data.reIndex);
-      this.messenger.send("refreshSubmenuItems", undefined);
+      await this.docsService.syncOrReindexAllDocsWithPrompt(msg.data.reIndex);
     });
 
     on("context/loadSubmenuItems", async (msg) => {
@@ -681,6 +667,8 @@ export class Core {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
     });
+
+    // Codebase indexing
     on("index/forceReIndex", async ({ data }) => {
       if (data?.shouldClearIndexes) {
         const codebaseIndexer = await this.codebaseIndexerPromise;
@@ -696,16 +684,40 @@ export class Core {
       }
     });
     on("index/setPaused", (msg) => {
-      new GlobalContext().update("indexingPaused", msg.data);
+      this.globalContext.update("indexingPaused", msg.data);
       this.indexingPauseToken.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.indexingState.status !== "loading") {
-        void this.messenger.request("indexProgress", this.indexingState);
+      if (this.codebaseIndexingState.status !== "loading") {
+        void this.messenger.request(
+          "indexProgress",
+          this.codebaseIndexingState,
+        );
       }
     });
+
+    // Docs, etc. indexing
+    on("indexing/reindex", async (msg) => {
+      if (msg.data.type === "docs") {
+        void this.docsService.reindexDoc(msg.data.id);
+      }
+    });
+    on("indexing/abort", async (msg) => {
+      if (msg.data.type === "docs") {
+        this.docsService.abort(msg.data.id);
+      }
+    });
+    on("indexing/setPaused", async (msg) => {
+      if (msg.data.type === "docs") {
+        this.docsService.setPaused(msg.data.id, msg.data.paused);
+      }
+    });
+    on("indexing/initStatuses", async (msg) => {
+      return this.docsService.initStatuses();
+    });
+    //
 
     on("didChangeSelectedProfile", (msg) => {
       void this.configHandler.setSelectedProfile(msg.data.id);
@@ -763,7 +775,7 @@ export class Core {
       }
 
       void this.messenger.request("indexProgress", updateToSend);
-      this.indexingState = updateToSend;
+      this.codebaseIndexingState = updateToSend;
 
       if (update.status === "failed") {
         void this.sendIndexingErrorTelemetry(update);
@@ -797,7 +809,7 @@ export class Core {
       }
 
       void this.messenger.request("indexProgress", updateToSend);
-      this.indexingState = updateToSend;
+      this.codebaseIndexingState = updateToSend;
 
       if (update.status === "failed") {
         void this.sendIndexingErrorTelemetry(update);
@@ -806,4 +818,6 @@ export class Core {
 
     this.messenger.send("refreshSubmenuItems", undefined);
   }
+
+  // private
 }
