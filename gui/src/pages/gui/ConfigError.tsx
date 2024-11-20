@@ -17,7 +17,7 @@ const ConfigErrorIndicator = () => {
     navigate(pathname === ROUTES.CONFIG_ERROR ? "/" : ROUTES.CONFIG_ERROR);
   }
 
-  if (!configError) {
+  if (!configError?.length) {
     return null;
   }
 

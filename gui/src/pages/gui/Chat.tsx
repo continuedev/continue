@@ -57,14 +57,10 @@ import { RootState } from "../../redux/store";
 import {
   getFontSize,
   getMetaKeyLabel,
-  isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import HeaderButtonWithToolTip from "../../components/gui/HeaderButtonWithToolTip";
-import { useNavigate } from "react-router-dom";
-import ConfigError from "./ConfigError";
 import ConfigErrorIndicator from "./ConfigError";
 
 const StopButton = styled.div`
