@@ -106,7 +106,7 @@ export interface ILLM extends LLMOptions {
   complete(
     prompt: string,
     signal: AbortSignal,
-    options?: LLMFullCompletionOptions
+    options?: LLMFullCompletionOptions,
   ): Promise<string>;
 
   streamComplete(
@@ -508,6 +508,7 @@ export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
   getDiff(includeUnstaged: boolean): Promise<string>;
+  getClipboardContent(): Promise<{ text: string; copiedAt: string }>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
@@ -979,6 +980,7 @@ export interface TabAutocompleteOptions {
   slidingWindowSize: number;
   maxSnippetPercentage: number;
   maxDiffPercentage: number;
+  maxClipboardPercentage: number;
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;

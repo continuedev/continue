@@ -29,7 +29,7 @@ const autocompleteCache = AutocompleteLruCache.get();
 const ERRORS_TO_IGNORE = [
   // From Ollama
   "unexpected server status",
-  "operation was aborted"
+  "operation was aborted",
 ];
 
 export type GetLspDefinitionsFunction = (
@@ -176,16 +176,25 @@ export class CompletionProvider {
       // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
       // or they might separately track recently edited ranges)
       const extraSnippets = await this._getExtraSnippets(helper);
+      // debugger;
 
-      const [snippets, diff, workspaceDirs] = await Promise.all([
-        aggregateSnippets(helper, extraSnippets, this.contextRetrievalService),
-        this.ide.getDiff(true),
-        this.ide.getWorkspaceDirs(),
-      ]);
+      const [snippets, diff, clipboardContent, workspaceDirs] =
+        await Promise.all([
+          aggregateSnippets(
+            helper,
+            extraSnippets,
+            this.contextRetrievalService,
+          ),
+          "",
+          this.ide.getClipboardContent(),
+          this.ide.getWorkspaceDirs(),
+        ]);
+      // debugger;
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
         snippets,
         diff,
+        clipboardContent,
         workspaceDirs,
         helper,
       });

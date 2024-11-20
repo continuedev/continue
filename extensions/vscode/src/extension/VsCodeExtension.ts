@@ -73,7 +73,11 @@ export class VsCodeExtension {
       },
     );
     this.diffManager = new DiffManager(context);
-    this.ide = new VsCodeIde(this.diffManager, this.webviewProtocolPromise);
+    this.ide = new VsCodeIde(
+      this.diffManager,
+      this.webviewProtocolPromise,
+      context,
+    );
     this.extensionContext = context;
     this.windowId = uuidv4();
 
@@ -329,7 +333,9 @@ export class VsCodeExtension {
           // To make sure continue-proxy models and anything else requiring it get updated access token
           this.configHandler.reloadConfig();
         });
-        void this.core.invoke("didChangeControlPlaneSessionInfo", { sessionInfo });
+        void this.core.invoke("didChangeControlPlaneSessionInfo", {
+          sessionInfo,
+        });
       }
     });
 
