@@ -15,7 +15,7 @@ import {
 } from "../redux/slices/editModeState";
 import { setShowDialog } from "../redux/slices/uiStateSlice";
 import {
-  setIsInMultifileEdit,
+  setIsInEditMode,
   updateApplyState,
   updateCurCheckpoint,
 } from "../redux/slices/stateSlice";
@@ -195,7 +195,7 @@ const Layout = () => {
     "focusEdit",
     async (payload) => {
       // TODO: Move into edit state
-      dispatch(setIsInMultifileEdit(true));
+      dispatch(setIsInEditMode(true));
 
       dispatch(focusEdit(payload));
       navigate("/edit");

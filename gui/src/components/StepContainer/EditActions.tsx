@@ -12,7 +12,7 @@ export interface MultifileEditActionsProps {
   item: ChatHistoryItem;
 }
 
-export default function MultifileEditActions({
+export default function EditActions({
   index,
   item,
 }: MultifileEditActionsProps) {

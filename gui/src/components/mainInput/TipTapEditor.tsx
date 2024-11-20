@@ -65,6 +65,7 @@ import {
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
+import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -170,6 +171,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useSelector(
     (store: RootState) => store.state.history.length,
   );
+
   const useActiveFile = useSelector(selectUseActiveFile);
 
   const { saveSession, loadSession } = useHistory(dispatch);
@@ -183,11 +185,13 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const isOSREnabled = useIsOSREnabled();
 
-  const isMultifileEdit = useSelector(
-    (state: RootState) => state.state.isMultifileEdit,
+  const isInEditMode = useSelector(
+    (state: RootState) => state.editModeState.isInEditMode,
   );
 
-  console.log("isMultifileEdit", isMultifileEdit);
+  const shouldAddFileForEditing = useSelector(
+    (state: RootState) => state.uiState.shouldAddFileForEditing,
+  );
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -473,7 +477,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
           })
         : undefined,
-      isMultifileEdit
+      isInEditMode
         ? Mention.configure({
             HTMLAttributes: {
               class: "mention",
@@ -807,6 +811,13 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (shouldAddFileForEditing && props.isMainInput) {
+      insertCharacterWithWhitespace("#");
+      dispatch(setShouldAddFileForEditing(false));
+    }
+  }, [shouldAddFileForEditing]);
 
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {

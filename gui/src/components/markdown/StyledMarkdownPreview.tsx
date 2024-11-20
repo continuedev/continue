@@ -166,7 +166,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // So in this case we just put them in refs
   const symbolsRef = useRef<SymbolWithRange[]>([]);
   const contextItemsRef = useRef<ContextItemWithId[]>([]);
-  
+
   useEffect(() => {
     contextItemsRef.current = contextItems || [];
   }, [contextItems]);

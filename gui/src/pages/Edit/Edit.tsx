@@ -58,7 +58,11 @@ export default function Edit() {
     (store: RootState) => store.state.config.contextProviders,
   );
 
-  const state = useSelector((state: RootState) => state.state);
+  const history = useSelector((state: RootState) => state.state.history);
+
+  const applyStates = useSelector(
+    (state: RootState) => state.state.applyStates,
+  );
 
   const applyState = useSelector(
     (store: RootState) =>
@@ -83,11 +87,7 @@ export default function Edit() {
     }
   }, [applyState, editModeState.editStatus]);
 
-  const applyStates = useSelector(
-    (state: RootState) => state.state.applyStates,
-  );
-
-  const active = useSelector((state: RootState) => state.state.active);
+  // const active = useSelector((state: RootState) => state.state.active);
 
   const pendingApplyStates = applyStates.filter(
     (state) => state.status === "done",
@@ -98,8 +98,8 @@ export default function Edit() {
     editModeState.editStatus === "accepting";
 
   const toolbarOptions = {
-    hideAddContext: true,
-    hideImageUpload: true,
+    hideAddContext: false,
+    hideImageUpload: false,
     hideUseCodebase: true,
     hideSelectModel: false,
     enterText: isStreaming ? "Retry" : "Edit",
@@ -124,6 +124,7 @@ export default function Edit() {
       },
       ideMessenger,
       [],
+      dispatch,
     );
 
     const prompt = [
@@ -166,11 +167,11 @@ export default function Edit() {
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
-      return !state.history
+      return !history
         .slice(index + 1)
         .some((entry) => entry.message.role === "user");
     },
-    [state.history],
+    [history],
   );
 
   return (
@@ -181,7 +182,7 @@ export default function Edit() {
           <TipTapEditor
             isMainInput
             toolbarOptions={toolbarOptions}
-            placeholder="Describe how to modify code - use '#' to add files to 'Code to edit'"
+            placeholder="Describe how to modify the code - use '#' to add files to 'Code to edit'"
             availableContextProviders={filteredContextProviders}
             historyKey="edit"
             availableSlashCommands={[]}
@@ -189,9 +190,9 @@ export default function Edit() {
           />
         </div>
 
-        {!isSingleFileEdit && state.history.length > 1 && (
+        {!isSingleFileEdit && history.length > 1 && (
           <div>
-            {state.history.slice(1).map((item, index: number) => (
+            {history.slice(1).map((item, index: number) => (
               <div>
                 {item.message.role === "user" ? (
                   <ContinueInputBox
@@ -211,7 +212,7 @@ export default function Edit() {
                 ) : (
                   <StepContainer
                     index={index}
-                    isLast={index === state.history.length - 1}
+                    isLast={index === history.length - 1}
                     item={item}
                   />
                 )}

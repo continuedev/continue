@@ -31,13 +31,13 @@ export default function StepContainer(props: StepContainerProps) {
   const curCheckpointIndex = useSelector(
     (store: RootState) => store.state.curCheckpointIndex,
   );
-  const isMultifileEdit = useSelector(
-    (store: RootState) => store.state.isMultifileEdit,
+  const isInEditMode = useSelector(
+    (store: RootState) => store.editModeState.isInEditMode,
   );
   const uiConfig = useUIConfig();
   const shouldHideActions = active && props.isLast;
   const isStepAheadOfCurCheckpoint =
-    isMultifileEdit && Math.floor(props.index / 2) > curCheckpointIndex;
+    isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
     if (!active) {

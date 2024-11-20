@@ -8,6 +8,7 @@ import CodeToEditListItem from "./CodeToEditListItem";
 import { RangeInFileWithContents } from "core/commands/util";
 import { vscEditorBackground } from "../../components";
 import { ToolTip } from "../../components/gui/Tooltip";
+import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
 
 export default function WorkingSet() {
   const dispatch = useDispatch();
@@ -20,7 +21,9 @@ export default function WorkingSet() {
     dispatch(removeEntryFromCodeToEdit(rif));
   }
 
-  function onClickAddFileToCodeToEdit() {}
+  function onClickAddFileToCodeToEdit() {
+    dispatch(setShouldAddFileForEditing(true));
+  }
 
   function onClickFilename(rif: RangeInFileWithContents) {
     const { filepath, range } = editModeState.codeToEdit.find(
@@ -44,7 +47,7 @@ export default function WorkingSet() {
       className="mx-1 flex flex-col rounded-t-lg px-1 pb-1"
       style={{ backgroundColor: vscEditorBackground }}
     >
-      <div className="flex items-center justify-between gap-1.5 border-0 border-b border-solid border-zinc-600 px-1 py-1.5 text-xs text-zinc-400">
+      <div className="flex items-center justify-between gap-1.5 border-0 border-b border-solid border-neutral-500 px-1 py-1.5 text-xs text-neutral-500">
         <span>Code to edit</span>
 
         <span
@@ -58,7 +61,7 @@ export default function WorkingSet() {
 
       <div className="scrollbar-hide max-h-[25vh] overflow-y-auto">
         {hasCodeToEdit ? (
-          <ul className="my-1.5 list-outside list-none space-y-1 pl-0">
+          <ul className="my-1.5 list-outside list-none space-y-1.5 pl-0">
             {codeToEditItems}
           </ul>
         ) : (

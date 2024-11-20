@@ -46,7 +46,6 @@ type State = {
     statuses: Record<string, IndexingStatus>;
   };
   streamAborter: AbortController;
-  isMultifileEdit: boolean;
 };
 
 const initialState: State = {
@@ -78,7 +77,6 @@ const initialState: State = {
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
   checkpoints: [],
-  isMultifileEdit: false,
   curCheckpointIndex: 0,
   nextCodeBlockToApplyIndex: 0,
   applyStates: [],
@@ -308,7 +306,6 @@ export const stateSlice = createSlice({
 
       state.active = false;
       state.context.isGathering = false;
-      state.isMultifileEdit = false;
       state.symbols = {};
       if (payload) {
         state.history = payload.history as any;
@@ -373,10 +370,6 @@ export const stateSlice = createSlice({
         ...state,
         selectedProfileId: payload,
       };
-    },
-
-    setIsInMultifileEdit: (state, { payload }: PayloadAction<boolean>) => {
-      state.isMultifileEdit = payload;
     },
     setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
       state.curCheckpointIndex = payload;
@@ -472,7 +465,6 @@ export const {
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,
-  setIsInMultifileEdit,
   updateCurCheckpoint,
   setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,

@@ -8,12 +8,14 @@ interface EditModeState {
   previousInputs: MessageContent[];
   fileAfterEdit?: string;
   codeToEdit: RangeInFileWithContents[];
+  isInEditMode: boolean;
 }
 
 const initialState: EditModeState = {
   editStatus: "not-started",
   previousInputs: [],
   codeToEdit: [],
+  isInEditMode: false,
 };
 
 export const editModeStateSlice = createSlice({
@@ -98,6 +100,9 @@ export const editModeStateSlice = createSlice({
       state.editStatus = "done";
       state.previousInputs = [];
     },
+    setIsInEditMode: (state, { payload }: PayloadAction<boolean>) => {
+      state.isInEditMode = payload;
+    },
   },
 });
 
@@ -110,5 +115,6 @@ export const {
   removeEntryFromCodeToEdit,
   focusEdit,
   clearCodeToEdit,
+  setIsInEditMode,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;
