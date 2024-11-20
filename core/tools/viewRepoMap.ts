@@ -1,7 +1,7 @@
 import { Tool } from "..";
 import generateRepoMap from "../util/generateRepoMap";
 
-export const viewFileTreeTool: Tool = {
+export const viewRepoMapTool: Tool = {
   type: "function",
   action: async (args, extras) => {
     const repoMap = await generateRepoMap(extras.llm, extras.ide, {});

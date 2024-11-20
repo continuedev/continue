@@ -63,7 +63,10 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   }
 
   return (
-    <ThreadDiv icon={getIcon(toolCallState.currentToolCallState)}>
+    <ThreadDiv
+      icon={getIcon(toolCallState.currentToolCallState)}
+      toolCall={props.toolCall}
+    >
       <FunctionSpecificToolCallDiv
         toolCall={props.toolCall}
         state={toolCallState.currentToolCallState}

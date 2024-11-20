@@ -1,8 +1,11 @@
+import { ToolCall } from "core";
 import styled from "styled-components";
+import { FunctionSpecificHeader } from "./FunctionSpecificHeader";
 
 interface ThreadDivProps {
   children: React.ReactNode;
   icon: React.ReactNode;
+  toolCall: ToolCall;
 }
 
 const Container = styled.div`
@@ -41,7 +44,7 @@ export function ThreadDiv(props: ThreadDivProps) {
         >
           {props.icon}
         </div>
-        Continue wants to create a new file
+        <FunctionSpecificHeader toolCall={props.toolCall} />
       </HeaderDiv>
       <ChildrenDiv>{props.children}</ChildrenDiv>
     </Container>
