@@ -191,13 +191,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         dispatch(setCurCheckpointIndex(Math.floor(index / 2)));
       }
 
-      const shouldGatherContext =
-        modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
-
-      if (shouldGatherContext) {
-        dispatch(setIsGatheringContext(true));
-      }
-
+      dispatch(setIsGatheringContext(true));
       // Resolve context providers and construct new history
       const [selectedContextItems, selectedCode, content] =
         await resolveEditorContent(
@@ -212,7 +206,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       // Automatically use currently open file
       if (!modifiers.noContext) {
         const usingFreeTrial = defaultModel?.provider === "free-trial";
-
         const currentFile = await ideMessenger.ide.getCurrentFile();
         if (currentFile) {
           let currentFileContents = currentFile.contents;
