@@ -95,11 +95,8 @@ class OpenAI extends BaseLLM {
     );
   }
 
-  private supportsPrediction(model: string): boolean {
-    return [
-      "gpt-4o-mini",
-      "gpt-4o"
-    ].includes(model);
+  protected supportsPrediction(model: string): boolean {
+    return ["gpt-4o-mini", "gpt-4o"].includes(model);
   }
 
   protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
@@ -120,9 +117,9 @@ class OpenAI extends BaseLLM {
           : url.host === "api.deepseek.com"
             ? options.stop?.slice(0, 16)
             : url.port === "1337" ||
-              url.host === "api.openai.com" ||
-              url.host === "api.groq.com" ||
-              this.apiType === "azure"
+                url.host === "api.openai.com" ||
+                url.host === "api.groq.com" ||
+                this.apiType === "azure"
               ? options.stop?.slice(0, 4)
               : options.stop,
     };
@@ -143,10 +140,12 @@ class OpenAI extends BaseLLM {
     }
 
     if (options.prediction && this.supportsPrediction(options.model)) {
-      if (finalOptions.presence_penalty) { // prediction doesn't support > 0
+      if (finalOptions.presence_penalty) {
+        // prediction doesn't support > 0
         finalOptions.presence_penalty = undefined;
       }
-      if (finalOptions.frequency_penalty) { // prediction doesn't support > 0
+      if (finalOptions.frequency_penalty) {
+        // prediction doesn't support > 0
         finalOptions.frequency_penalty = undefined;
       }
       finalOptions.max_completion_tokens = undefined;

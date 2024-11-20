@@ -4,7 +4,6 @@ import {
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
-  ContextItemId,
   ContextItemWithId,
   IndexingStatus,
   PersistedSessionInfo,
@@ -35,13 +34,14 @@ type State = {
   configError: ConfigValidationError[] | undefined;
   checkpoints: Checkpoint[];
   curCheckpointIndex: number;
-  isMultifileEdit: boolean;
   applyStates: ApplyState[];
   nextCodeBlockToApplyIndex: number;
   indexing: {
     hiddenChatPeekTypes: Record<IndexingStatus["type"], boolean>;
     statuses: Record<string, IndexingStatus>;
   };
+  streamAborter: AbortController;
+  isMultifileEdit: boolean;
 };
 
 const initialState: State = {
@@ -79,6 +79,7 @@ const initialState: State = {
       docs: false,
     },
   },
+  streamAborter: new AbortController(),
 };
 
 export const stateSlice = createSlice({
@@ -258,6 +259,10 @@ export const stateSlice = createSlice({
       state.isGatheringContext = false;
       state.active = false;
     },
+    abortStream: (state) => {
+      state.streamAborter.abort();
+      state.streamAborter = new AbortController();
+    },
     streamUpdate: (state, action: PayloadAction<string>) => {
       if (state.history.length) {
         state.history[state.history.length - 1].message.content +=
@@ -268,6 +273,12 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<PersistedSessionInfo | undefined>,
     ) => {
+      state.streamAborter.abort();
+      state.streamAborter = new AbortController();
+
+      state.active = false;
+      state.isGatheringContext = false;
+      state.isMultifileEdit = false;
       if (payload) {
         state.history = payload.history as any;
         state.title = payload.title;
@@ -276,7 +287,6 @@ export const stateSlice = createSlice({
         state.curCheckpointIndex = 0;
       } else {
         state.history = [];
-        state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
         state.checkpoints = [];
@@ -437,6 +447,7 @@ export const {
   updateApplyState,
   updateIndexingStatus,
   setIndexingChatPeekHidden,
+  abortStream,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

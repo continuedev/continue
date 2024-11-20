@@ -961,7 +961,7 @@ export interface TabAutocompleteOptions {
   slidingWindowPrefixPercentage: number;
   slidingWindowSize: number;
   maxSnippetPercentage: number;
-  recentlyEditedSimilarityThreshold: number;
+  maxDiffPercentage: number;
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;
