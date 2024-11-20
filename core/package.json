@@ -78,6 +78,7 @@
     "onnxruntime-node": "1.14.0",
     "openai": "^4.20.1",
     "p-limit": "^6.1.0",
+    "partial-json": "^0.1.7",
     "pg": "^8.11.3",
     "posthog-node": "^3.6.3",
     "puppeteer": "^22.4.0",

@@ -111,6 +111,7 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
     >
       <p>Something went wrong:</p>
       <pre style={{ color: "red" }}>{error.message}</pre>
+      <pre style={{ color: lightGray }}>{error.stack}</pre>
 
       <div className="text-center">
         <Button onClick={resetErrorBoundary}>Restart</Button>
@@ -136,6 +137,10 @@ export function Chat() {
   const state = useSelector((state: RootState) => state.state);
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
+
+  const toolCallState = useSelector(
+    (store: RootState) => store.state.currentToolCallState,
+  );
 
   const snapToBottom = useCallback(() => {
     if (!stepsDivRef.current) return;
@@ -348,7 +353,12 @@ export function Chat() {
                 item.message.toolCalls ? (
                 <div>
                   {item.message.toolCalls?.map((toolCall) => {
-                    return <ToolCallDiv toolCall={toolCall as any} />;
+                    return (
+                      <ToolCallDiv
+                        toolCall={toolCall as any}
+                        acceptedToolCall={item.acceptedToolCall}
+                      />
+                    );
                   })}
                 </div>
               ) : (
@@ -423,7 +433,10 @@ export function Chat() {
             </StopButton>
           )}
         </div>
-        <ToolCallButtons />
+
+        {toolCallState.currentToolCallState === "generated" && (
+          <ToolCallButtons />
+        )}
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}

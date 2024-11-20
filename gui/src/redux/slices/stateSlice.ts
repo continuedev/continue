@@ -4,18 +4,23 @@ import {
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
-  ContextItemId,
   ContextItemWithId,
   PersistedSessionInfo,
   PromptLog,
+  ToolCall,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
-import { createSelector } from "reselect";
-import { v4 as uuidv4, v4 } from "uuid";
-import { RootState } from "../store";
 import { ApplyState } from "core/protocol/ideWebview";
+import { v4 as uuidv4, v4 } from "uuid";
+import { ToolState } from "../../pages/gui/ToolCallDiv/types";
+
+interface CurrentToolCallState {
+  currentToolCallId?: string;
+  currentToolCallState?: ToolState;
+  toolCall?: ToolCall;
+}
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -23,6 +28,7 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
 type State = {
+  currentToolCallState: CurrentToolCallState;
   history: ChatHistoryItemWithMessageId[];
   ttsActive: boolean;
   active: boolean;
@@ -42,6 +48,10 @@ type State = {
 };
 
 const initialState: State = {
+  currentToolCallState: {
+    currentToolCallId: undefined,
+    currentToolCallState: undefined,
+  },
   history: [],
   ttsActive: false,
   active: false,
@@ -181,7 +191,6 @@ export const stateSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
-      console.log("OAEJFOIJOJOJAJ");
       state.history.push({
         message: { role: "user", content: "", id: uuidv4() },
         contextItems: [],
@@ -209,7 +218,6 @@ export const stateSlice = createSlice({
         contextItems?: ContextItemWithId[];
       }>,
     ) => {
-      console.log("aoiujnnnnnnn");
       if (payload.index >= state.history.length) {
         state.history.push({
           message: { ...payload.message, id: uuidv4() },
@@ -387,12 +395,35 @@ export const stateSlice = createSlice({
         curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
         curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
       }
-      if(payload.status === "done"){
+      if (payload.status === "done") {
         state.nextCodeBlockToApplyIndex++;
       }
     },
     resetNextCodeBlockToApplyIndex: (state) => {
       state.nextCodeBlockToApplyIndex = 0;
+    },
+
+    // Related to currentToolCallState
+    registerCurrentToolCall: (state, { payload }: PayloadAction<string>) => {
+      state.currentToolCallState.currentToolCallId = payload;
+      state.currentToolCallState.currentToolCallState = "generating";
+    },
+    cancelToolCall: (state) => {
+      state.currentToolCallState.currentToolCallId = undefined;
+      state.currentToolCallState.currentToolCallState = undefined;
+      state.history[state.history.length - 1].acceptedToolCall = false;
+    },
+    acceptToolCall: (state) => {
+      state.currentToolCallState.currentToolCallId = undefined;
+      state.currentToolCallState.currentToolCallState = undefined;
+      state.history[state.history.length - 1].acceptedToolCall = true;
+    },
+    setGeneratedOutput: (state, { payload }: PayloadAction<ToolCall>) => {
+      state.currentToolCallState.currentToolCallState = "generated";
+      state.currentToolCallState.toolCall = payload;
+    },
+    setCalling: (state) => {
+      state.currentToolCallState.currentToolCallState = "calling";
     },
   },
 });
@@ -423,6 +454,12 @@ export const {
   setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
+  // toolCallState
+  registerCurrentToolCall,
+  setGeneratedOutput,
+  cancelToolCall,
+  acceptToolCall,
+  setCalling,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

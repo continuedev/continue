@@ -9,12 +9,12 @@ import {
 } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { streamUpdate } from "../../../redux/slices/stateSlice";
 import {
   acceptToolCall,
   cancelToolCall,
   setCalling,
-} from "../../../redux/slices/toolCallSlice";
+  streamUpdate,
+} from "../../../redux/slices/stateSlice";
 import { RootState } from "../../../redux/store";
 
 const ButtonContainer = styled.div`
@@ -56,7 +56,9 @@ interface ToolCallButtonsProps {}
 
 export function ToolCallButtons(props: ToolCallButtonsProps) {
   const dispatch = useDispatch();
-  const toolCallState = useSelector((store: RootState) => store.toolCallState);
+  const toolCallState = useSelector(
+    (store: RootState) => store.state.currentToolCallState,
+  );
   const ideMessenger = useContext(IdeMessengerContext);
 
   async function callTool() {

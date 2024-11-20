@@ -10,7 +10,6 @@ import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import editModeStateReducer from "./slices/editModeState";
-import toolCallStateSliceReducer from "./slices/toolCallSlice";
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
@@ -23,7 +22,6 @@ const rootReducer = combineReducers({
   uiState: uiStateReducer,
   serverState: serverStateReducer,
   editModeState: editModeStateReducer,
-  toolCallState: toolCallStateSliceReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

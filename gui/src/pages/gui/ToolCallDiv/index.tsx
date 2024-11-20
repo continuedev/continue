@@ -8,7 +8,7 @@ import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinne
 import {
   registerCurrentToolCall,
   setGeneratedOutput,
-} from "../../../redux/slices/toolCallSlice";
+} from "../../../redux/slices/stateSlice";
 import { RootState } from "../../../redux/store";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { ThreadDiv } from "./ThreadDiv";
@@ -16,11 +16,14 @@ import { ToolState } from "./types";
 
 interface ToolCallDivProps {
   toolCall: ToolCall;
+  acceptedToolCall?: boolean;
 }
 
 export function ToolCallDiv(props: ToolCallDivProps) {
   const dispatch = useDispatch();
-  const toolCallState = useSelector((store: RootState) => store.toolCallState);
+  const toolCallState = useSelector(
+    (store: RootState) => store.state.currentToolCallState,
+  );
 
   useEffect(() => {
     dispatch(registerCurrentToolCall());
@@ -39,11 +42,17 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   }, [props.toolCall.function.arguments]);
 
   function getIcon(state: ToolState) {
+    if (props.acceptedToolCall === true) {
+      return <CheckIcon className="text-green-500" color={lightGray} />;
+    } else if (props.acceptedToolCall === false) {
+      return <XMarkIcon className="text-red-500" />;
+    }
+
     switch (state) {
       case "generating":
         return <Spinner />;
       case "done":
-        return <CheckIcon className="text-green-500" color={lightGray} />;
+        return <CheckIcon className="text-green-500" />;
       case "calling":
         return <Spinner />;
       case "canceled":

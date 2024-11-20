@@ -336,6 +336,7 @@ export interface ChatHistoryItem {
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
   promptLogs?: PromptLog[];
+  acceptedToolCall?: boolean;
 }
 
 export type ChatHistory = ChatHistoryItem[];
