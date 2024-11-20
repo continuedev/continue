@@ -38,6 +38,7 @@ import {
 import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -70,22 +71,18 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-<<<<<<< HEAD
-    const abortController = new AbortController();
-    const cancelToken = abortController.signal;
-
     if (!defaultModel) {
       throw new Error("Default model not defined");
     }
     const gen = ideMessenger.llmStreamChat(
       defaultModel.title,
-      cancelToken,
+      streamAborter.signal,
       messages,
     );
     let next = await gen.next();
     while (!next.done) {
       if (!activeRef.current) {
-        abortController.abort();
+        dispatch(abortStream());
         break;
       }
       dispatch(streamUpdate(stripImages((next.value as ChatMessage).content)));
@@ -95,37 +92,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     let returnVal = next.value as PromptLog;
     if (returnVal) {
       dispatch(addPromptCompletionPair([returnVal]));
-=======
-    try {
-      if (!defaultModel) {
-        throw new Error("Default model not defined");
-      }
-      const gen = ideMessenger.llmStreamChat(
-        defaultModel.title,
-        streamAborter.signal,
-        messages,
-      );
-      let next = await gen.next();
-
-      while (!next.done) {
-        if (!activeRef.current) {
-          dispatch(abortStream());
-          break;
-        }
-        dispatch(
-          streamUpdate(stripImages((next.value as ChatMessage).content)),
-        );
-        next = await gen.next();
-      }
-
-      let returnVal = next.value as PromptLog;
-      if (returnVal) {
-        dispatch(addPromptCompletionPair([returnVal]));
-      }
-    } catch (e) {
-      // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
->>>>>>> e60341647fcf9834844ad7ef4d5aa44fe1edf801
     }
   }
 
@@ -230,7 +196,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
 
       if (shouldGatherContext) {
-        dispatch(setIsGatheringContext(true));
+        dispatch(
+          setIsGatheringContext({
+            isGathering: true,
+            gatheringMessage: "Gathering Context",
+          }),
+        );
       }
 
       // Resolve context providers and construct new history
@@ -240,9 +211,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           modifiers,
           ideMessenger,
           defaultContextProviders,
+          dispatch,
         );
-
-      dispatch(setIsGatheringContext(false));
 
       // Automatically use currently open file
       if (!modifiers.noContext) {
@@ -282,6 +252,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           }
         }
       }
+
+      await updateFileSymbolsFromContextItems(
+        selectedContextItems,
+        ideMessenger,
+        dispatch,
+      );
 
       const message: ChatMessage = {
         role: "user",

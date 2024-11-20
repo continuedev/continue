@@ -93,6 +93,7 @@ export default function StepContainer(props: StepContainerProps) {
           <StyledMarkdownPreview
             isRenderingInStepContainer
             source={stripImages(props.item.message.content)}
+            itemIndex={props.index}
           />
         )}
       </ContentDiv>

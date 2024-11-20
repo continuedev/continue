@@ -124,7 +124,6 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description.split(" ")[0],
           )} ${props.item.description}\n${content}\n${fence}`}
-          contextItems={[props.item]}
         />
       </div>
 

@@ -1,3 +1,4 @@
+import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -44,6 +45,30 @@ export interface IndexingProgressUpdate {
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
   debugInfo?: string;
 }
+
+// This is more or less a V2 of IndexingProgressUpdate
+export interface IndexingStatus {
+  id: string;
+  type: "docs";
+  progress: number;
+  description: string;
+  status:
+    | "indexing"
+    | "complete"
+    | "paused"
+    | "failed"
+    | "aborted"
+    | "deleted"
+    | "pending";
+  embeddingsProviderId: string;
+  isReindexing?: boolean;
+  debugInfo?: string;
+  title: string;
+  icon?: string;
+  url?: string;
+}
+
+export type IndexingStatusMap = Map<string, IndexingStatus>;
 
 export type PromptTemplateFunction = (
   history: ChatMessage[],
@@ -311,13 +336,19 @@ export interface InputModifiers {
   noContext: boolean;
 }
 
+export interface SymbolWithRange extends RangeInFile {
+  name: string;
+  type: Parser.SyntaxNode["type"];
+}
+
+export type FileSymbolMap = Record<string, SymbolWithRange[]>;
+
 export interface PromptLog {
   modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
 }
-
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
