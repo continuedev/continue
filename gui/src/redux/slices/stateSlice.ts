@@ -387,16 +387,6 @@ export const stateSlice = createSlice({
   },
 });
 
-export const memoizedContextItemsSelector = createSelector(
-  [(state: RootState) => state.state.history],
-  (history) => {
-    return history.reduce<ContextItemWithId[]>((acc, item) => {
-      acc.push(...item.contextItems);
-      return acc;
-    }, []);
-  },
-);
-
 export const {
   updateFileSymbols,
   setContextItemsAtIndex,
