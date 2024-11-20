@@ -325,20 +325,14 @@
         "group": "Continue"
       },
       {
-        "command": "continue.signOut",
-        "title": "Sign Out",
+        "command": "continue.signIn",
+        "title": "Sign In",
         "category": "Continue",
         "group": "Continue"
       },
       {
-        "command": "continue.useLocalConfig",
-        "title": "Local Config",
-        "category": "Continue",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.useTeamConfig",
-        "title": "Team Config",
+        "command": "continue.openProfileSwitcher",
+        "title": "Profiles",
         "category": "Continue",
         "group": "Continue"
       }
@@ -437,11 +431,6 @@
       {
         "id": "continue.continueSubMenu",
         "label": "Continue"
-      },
-      {
-        "id": "continue.accountSubmenu",
-        "label": "Account",
-        "icon": "$(account)"
       }
     ],
     "menus": {
@@ -538,9 +527,14 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "submenu": "continue.accountSubmenu",
+          "submenu": "continue.signIn",
           "group": "navigation@5",
-          "when": "view == continue.continueGUIView"
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && !config.continue.userToken"
+        },
+        {
+          "submenu": "continue.openProfileSwitcher",
+          "group": "navigation@5",
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && config.continue.userToken"
         },
         {
           "command": "continue.openMorePage",
@@ -564,23 +558,6 @@
         {
           "command": "continue.debugTerminal",
           "group": "navigation@top"
-        }
-      ],
-      "continue.accountSubmenu": [
-        {
-          "command": "continue.useLocalConfig",
-          "title": "Local Config",
-          "group": "Config@1"
-        },
-        {
-          "command": "continue.useTeamConfig",
-          "title": "Team Config",
-          "group": "Config@2"
-        },
-        {
-          "command": "continue.signOut",
-          "title": "Sign Out",
-          "group": "Other@1"
         }
       ]
     },
