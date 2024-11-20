@@ -771,6 +771,9 @@
                       "starcoder-1b",
                       "starcoder-3b",
                       "starcoder2-3b",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium",
                       "qwen2.5-coder:1.5b",
                       "qwen2.5-coder:3b",
                       "qwen2.5-coder:7b",
@@ -2353,7 +2356,7 @@
                 "type": "integer",
                 "description": "The maximum depth to crawl the documentation site"
               },
-              "favicon": {
+              "faviconUrl": {
                 "type": "string",
                 "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }

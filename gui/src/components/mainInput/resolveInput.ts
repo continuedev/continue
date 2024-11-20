@@ -9,6 +9,8 @@ import {
 } from "core";
 import { stripImages } from "core/llm/images";
 import { IIdeMessenger } from "../../context/IdeMessenger";
+import { Dispatch } from "@reduxjs/toolkit";
+import { setIsGatheringContext } from "../../redux/slices/stateSlice";
 
 interface MentionAttrs {
   label: string;
@@ -29,6 +31,7 @@ async function resolveEditorContent(
   modifiers: InputModifiers,
   ideMessenger: IIdeMessenger,
   defaultContextProviders: DefaultContextProvider[],
+  dispatch: Dispatch,
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
@@ -38,8 +41,7 @@ async function resolveEditorContent(
     if (p.type === "paragraph") {
       const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
 
-      // Only take the first slash command
-
+      // Only take the first slash command\
       if (foundSlashCommand && typeof slashCommand === "undefined") {
         slashCommand = foundSlashCommand;
       }
@@ -101,6 +103,17 @@ async function resolveEditorContent(
     } else {
       console.warn("Unexpected content type", p.type);
     }
+  }
+
+  const shouldGatherContext = modifiers.useCodebase || slashCommand;
+
+  if (shouldGatherContext) {
+    dispatch(
+      setIsGatheringContext({
+        isGathering: true,
+        gatheringMessage: "Gathering context",
+      }),
+    );
   }
 
   let contextItemsText = "";
@@ -170,6 +183,15 @@ async function resolveEditorContent(
     } else {
       parts = [{ type: "text", text: lastPart }];
     }
+  }
+
+  if (shouldGatherContext) {
+    dispatch(
+      setIsGatheringContext({
+        isGathering: false,
+        gatheringMessage: "Gathering context",
+      }),
+    );
   }
 
   return [contextItems, selectedCode, parts];

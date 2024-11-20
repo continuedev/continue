@@ -9,7 +9,6 @@ import {
 } from "../..";
 import DocsService from "../../indexing/docs/DocsService";
 import preIndexedDocs from "../../indexing/docs/preIndexedDocs";
-import { Telemetry } from "../../util/posthog";
 
 import { INSTRUCTIONS_BASE_ITEM } from "./utils";
 
@@ -88,38 +87,10 @@ class DocsContextProvider extends BaseContextProvider {
       return [];
     }
 
-    const isJetBrainsAndPreIndexedDocsProvider =
-      await docsService.isJetBrainsAndPreIndexedDocsProvider();
-
-    if (isJetBrainsAndPreIndexedDocsProvider) {
-      void extras.ide.showToast(
-        "error",
-        `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
-          "the embeddings provider, but it cannot be used with JetBrains. " +
-          "Please select a different embeddings provider to use the '@docs' " +
-          "context provider.",
-      );
-
-      return [];
-    }
-
-    const preIndexedDoc = preIndexedDocs[query];
-
-    if (!!preIndexedDoc) {
-      void Telemetry.capture("docs_pre_indexed_doc_used", {
-        doc: preIndexedDoc["title"],
-      });
-    }
-
-    const embeddingsProvider = await docsService.getEmbeddingsProvider(
-      !!preIndexedDoc,
-    );
-
-    const [vector] = await embeddingsProvider.embed([extras.fullInput]);
-
-    let chunks = await docsService.retrieveChunks(
+    await docsService.isInitialized;
+    let chunks = await docsService.retrieveChunksFromQuery(
+      extras.fullInput, // confusing: fullInput = the query, query = startUrl in this case
       query,
-      vector,
       this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
     );
 
@@ -175,7 +146,7 @@ class DocsContextProvider extends BaseContextProvider {
       return [];
     }
 
-    const docs = (await docsService.list()) ?? [];
+    const docs = (await docsService.listMetadata()) ?? [];
     const canUsePreindexedDocs = await docsService.canUsePreindexedDocs();
 
     const submenuItemsMap = new Map<string, ContextSubmenuItem>();

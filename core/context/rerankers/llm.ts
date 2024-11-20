@@ -6,7 +6,7 @@ const RERANK_PROMPT = (
   documentId: string,
   document: string,
 ) => `You are an expert software developer responsible for helping detect whether the retrieved snippet of code is relevant to the query. For a given input, you need to output a single word: "Yes" or "No" indicating the retrieved snippet is relevant to the query.
-  
+
   Query: Where is the FastAPI server?
   Snippet:
   \`\`\`/Users/andrew/Desktop/server/main.py
@@ -17,7 +17,7 @@ const RERANK_PROMPT = (
       return {{"Hello": "World"}}
   \`\`\`
   Relevant: Yes
-  
+
   Query: Where in the documentation does it talk about the UI?
   Snippet:
   \`\`\`/Users/andrew/Projects/bubble_sort/src/lib.rs
@@ -32,13 +32,13 @@ const RERANK_PROMPT = (
   }}
   \`\`\`
   Relevant: No
-  
+
   Query: ${query}
   Snippet:
   \`\`\`${documentId}
   ${document}
   \`\`\`
-  Relevant: 
+  Relevant:
   `;
 
 export class LLMReranker implements Reranker {
@@ -49,6 +49,7 @@ export class LLMReranker implements Reranker {
   async scoreChunk(chunk: Chunk, query: string): Promise<number> {
     const completion = await this.llm.complete(
       RERANK_PROMPT(query, getBasename(chunk.filepath), chunk.content),
+      new AbortController().signal,
       {
         maxTokens: 1,
         model:

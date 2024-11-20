@@ -41,7 +41,7 @@ import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
-  clearLastResponse,
+  clearLastEmptyResponse,
   newSession,
   setInactive,
 } from "../../redux/slices/stateSlice";
@@ -59,6 +59,7 @@ import {
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import { useFindWidget } from "../../components/find/FindWidget";
 
 const StopButton = styled.div`
@@ -317,7 +318,7 @@ export function Chat() {
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "h-full" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "flex-1" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}
@@ -399,12 +400,7 @@ export function Chat() {
             <StopButton
               onClick={() => {
                 dispatch(setInactive());
-                if (
-                  state.history[state.history.length - 1]?.message.content
-                    .length === 0
-                ) {
-                  dispatch(clearLastResponse());
-                }
+                dispatch(clearLastEmptyResponse());
               }}
             >
               {getMetaKeyLabel()} ⌫ Cancel
@@ -468,6 +464,11 @@ export function Chat() {
             </>
           )}
         </div>
+      </div>
+      <div
+        className={`${state.history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
+      >
+        <ChatIndexingPeeks />
       </div>
     </>
   );

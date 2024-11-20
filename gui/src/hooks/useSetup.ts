@@ -11,6 +11,7 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -19,9 +20,11 @@ import { isJetBrains } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
-function useSetup(dispatch: Dispatch<any>) {
+function useSetup(dispatch: Dispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const history = useSelector((store: RootState) => store.state.history);
 
   const initialConfigLoad = useRef(false);
   const loadConfig = useCallback(async () => {
@@ -50,14 +53,34 @@ function useSetup(dispatch: Dispatch<any>) {
     loadConfig();
     const interval = setInterval(() => {
       if (initialConfigLoad.current) {
+        // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
+        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
       loadConfig();
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig]);
+  }, [initialConfigLoad, loadConfig, ideMessenger]);
+
+  useWebviewListener("configUpdate", async () => {
+    await loadConfig();
+  });
+
+  // Load symbols for chat on any session change
+  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const sessionIdRef = useRef("");
+  useEffect(() => {
+    if (sessionIdRef.current !== sessionId) {
+      updateFileSymbolsFromContextItems(
+        history.flatMap((item) => item.contextItems),
+        ideMessenger,
+        dispatch,
+      );
+    }
+    sessionIdRef.current = sessionId;
+  }, [sessionId, history, ideMessenger, dispatch]);
 
   useEffect(() => {
     // Override persisted state
@@ -86,7 +109,6 @@ function useSetup(dispatch: Dispatch<any>) {
   );
 
   // IDE event listeners
-  const history = useSelector((store: RootState) => store.state.history);
   useWebviewListener(
     "getWebviewHistoryLength",
     async () => {
@@ -110,22 +132,11 @@ function useSetup(dispatch: Dispatch<any>) {
     });
   });
 
-  const debouncedIndexDocs = debounce(() => {
-    ideMessenger.post("context/indexDocs", { reIndex: false });
-  }, 1000);
-
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-
-    if (!isJetBrains && !getLocalStorage("disableIndexing")) {
-      debouncedIndexDocs();
-    }
-  });
-
   useWebviewListener("configError", async (error) => {
     dispatch(setConfigError(error));
   });
 
+  // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
     streamResponse(
       data.message,
@@ -141,6 +152,10 @@ function useSetup(dispatch: Dispatch<any>) {
         contextItems: [data.item],
       }),
     );
+  });
+
+  useWebviewListener("indexing/statusUpdate", async (data) => {
+    dispatch(updateIndexingStatus(data));
   });
 
   useWebviewListener(

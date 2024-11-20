@@ -1,5 +1,7 @@
 import path from "node:path";
 
+import ignore from "ignore";
+
 import { IDE } from "../..";
 import { getBasename } from "../../util";
 import { getConfigJsonPath } from "../../util/paths";
@@ -31,7 +33,7 @@ async function isDisabledForFile(
     }
 
     // @ts-ignore
-    const pattern = ignore.default().add(options.disableInFiles);
+    const pattern = ignore.default().add(disableInFiles);
     if (pattern.ignores(filepath)) {
       return true;
     }
