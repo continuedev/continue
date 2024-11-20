@@ -60,8 +60,8 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
 
@@ -74,11 +74,11 @@ class FreeTrial extends BaseLLM {
         prompt,
         ...args,
       }),
-      signal
+      signal: token
     });
 
     let completion = "";
-    for await (const value of streamResponse(response)) {
+    for await (const value of streamResponse(response, token ? token : null)) {
       yield value;
       completion += value;
     }
@@ -105,8 +105,8 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
 
@@ -123,11 +123,10 @@ class FreeTrial extends BaseLLM {
         messages: messages.map(this._convertMessage),
         ...args,
       }),
-      signal
     });
 
     let completion = "";
-    for await (const chunk of streamResponse(response)) {
+    for await (const chunk of streamResponse(response, token ? token : null)) {
       yield {
         role: "assistant",
         content: chunk,
@@ -144,8 +143,8 @@ class FreeTrial extends BaseLLM {
   async *_streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
 
@@ -158,11 +157,11 @@ class FreeTrial extends BaseLLM {
           suffix,
           ...args,
         }),
-        signal
+        signal: token
       });
 
       let completion = "";
-      for await (const value of streamResponse(resp)) {
+      for await (const value of streamResponse(resp, token ? token : null)) {
         yield value;
         completion += value;
       }

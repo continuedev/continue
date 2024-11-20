@@ -9,8 +9,8 @@ import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 let watsonxToken = {
-          expiration: 0,
-          token: ""
+  expiration: 0,
+  token: ""
 };
 
 class WatsonX extends BaseLLM {
@@ -84,8 +84,8 @@ class WatsonX extends BaseLLM {
   getWatsonxEndpoint(): string {
     return (
       this.deploymentId ?
-      `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}`:
-      `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`
+        `${this.apiBase}/ml/v1/deployments/${this.deploymentId}/text/generation_stream?version=${this.apiVersion}` :
+        `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`
     );
   }
 
@@ -140,14 +140,14 @@ class WatsonX extends BaseLLM {
 
   protected async _complete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): Promise<string> {
     let completion = "";
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
-      signal,
       options,
+      token
     )) {
       completion += chunk.content;
     }
@@ -157,13 +157,13 @@ class WatsonX extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
-      signal,
       options,
+      token
     )) {
       yield stripImages(chunk.content);
     }
@@ -171,8 +171,8 @@ class WatsonX extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     var now = new Date().getTime() / 1000;
     if (
@@ -191,7 +191,7 @@ class WatsonX extends BaseLLM {
       throw new Error("Something went wrong. Check your credentials, please.");
     }
     const stopSequences =
-      options.stop?.slice(0,6) ?? (options.model?.includes("granite") ? ["Question:"] : []);
+      options.stop?.slice(0, 6) ?? (options.model?.includes("granite") ? ["Question:"] : []);
     const url = this.getWatsonxEndpoint();
     const headers = this._getHeaders();
 
@@ -224,7 +224,7 @@ class WatsonX extends BaseLLM {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
-      signal
+      signal: token
     });
 
     if (!response.ok || response.body === null) {
@@ -232,7 +232,7 @@ class WatsonX extends BaseLLM {
         "Something went wrong. No response received, check your connection",
       );
     } else {
-      for await (const value of streamResponse(response)) {
+      for await (const value of streamResponse(response, token ? token : null)) {
         const lines = value.split("\n");
         let generatedChunk = "";
         let generatedTextIndex = undefined;

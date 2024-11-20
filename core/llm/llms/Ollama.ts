@@ -77,6 +77,7 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
+
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: {
@@ -261,8 +262,8 @@ class Ollama extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
@@ -271,11 +272,11 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getGenerateOptions(options, prompt)),
-      signal
+      signal: token
     });
 
     let buffer = "";
-    for await (const value of streamResponse(response)) {
+    for await (const value of streamResponse(response, token ? token : null)) {
       // Append the received chunk to the buffer
       buffer += value;
       // Split the buffer into individual JSON chunks
@@ -302,8 +303,8 @@ class Ollama extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
@@ -312,11 +313,11 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getChatOptions(options, messages)),
-      signal
+      signal: token
     });
 
     let buffer = "";
-    for await (const value of streamResponse(response)) {
+    for await (const value of streamResponse(response, token ? token : null)) {
       // Append the received chunk to the buffer
       buffer += value;
       // Split the buffer into individual JSON chunks
@@ -351,10 +352,9 @@ class Ollama extends BaseLLM {
   protected async *_streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
-
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: {
@@ -362,11 +362,11 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getGenerateOptions(options, prefix, suffix)),
-      signal
+      signal: token
     });
 
     let buffer = "";
-    for await (const value of streamResponse(response)) {
+    for await (const value of streamResponse(response, token ? token : null)) {
       // Append the received chunk to the buffer
       buffer += value;
       // Split the buffer into individual JSON chunks

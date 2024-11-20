@@ -48,8 +48,8 @@ class HuggingFaceTGI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const args = this._convertArgs(options, prompt);
 
@@ -61,11 +61,11 @@ class HuggingFaceTGI extends BaseLLM {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ inputs: prompt, parameters: args }),
-        signal
+        signal: token
       },
     );
 
-    for await (const value of streamSse(response)) {
+    for await (const value of streamSse(response, token ? token : null)) {
       yield value.token.text;
     }
   }

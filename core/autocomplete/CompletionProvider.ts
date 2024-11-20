@@ -29,7 +29,6 @@ const autocompleteCache = AutocompleteLruCache.get();
 const ERRORS_TO_IGNORE = [
   // From Ollama
   "unexpected server status",
-  "operation was aborted",
 ];
 
 export type GetLspDefinitionsFunction = (

@@ -4,7 +4,7 @@ async function* toAsyncIterable(nodeReadable: NodeJS.ReadableStream): AsyncGener
   }
 }
 
-export async function* streamResponse(response: Response): AsyncGenerator<string> {
+export async function* streamResponse(response: Response, token: AbortSignal | null): AsyncGenerator<string> {
   if (response.status !== 200) {
     throw new Error(await response.text());
   }
@@ -63,9 +63,9 @@ function parseSseLine(line: string): { done: boolean; data: any } {
   return { done: false, data: undefined };
 }
 
-export async function* streamSse(response: Response): AsyncGenerator<any> {
+export async function* streamSse(response: Response, token: AbortSignal | null): AsyncGenerator<any> {
   let buffer = "";
-  for await (const value of streamResponse(response)) {
+  for await (const value of streamResponse(response, token)) {
     buffer += value;
 
     let position: number;
@@ -91,9 +91,9 @@ export async function* streamSse(response: Response): AsyncGenerator<any> {
   }
 }
 
-export async function* streamJSON(response: Response): AsyncGenerator<any> {
+export async function* streamJSON(response: Response, token: AbortSignal | null): AsyncGenerator<any> {
   let buffer = "";
-  for await (const value of streamResponse(response)) {
+  for await (const value of streamResponse(response, token)) {
     buffer += value;
 
     let position;

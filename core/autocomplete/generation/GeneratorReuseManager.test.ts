@@ -4,7 +4,7 @@ import { GeneratorReuseManager } from "./GeneratorReuseManager";
 function createMockGenerator(
   data: string[],
   delay: number = 0,
-): (abortSignal: AbortSignal) => AsyncGenerator<string> {
+): () => AsyncGenerator<string> {
   const mockGenerator = async function* () {
     for (const chunk of data) {
       yield chunk;

@@ -86,6 +86,7 @@ class VertexAI extends BaseLLM {
   protected async *StreamChatAnthropic(
     messages: ChatMessage[],
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage = !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
     const systemMessage: string = stripImages(
@@ -116,6 +117,7 @@ class VertexAI extends BaseLLM {
           ]
           : systemMessage,
       }),
+      signal: token
     });
 
     if (options.stream === false) {
@@ -124,8 +126,8 @@ class VertexAI extends BaseLLM {
       return;
     }
 
-    for await (const value of streamSse(response)) {
-      if (value.type == "message_start") {console.log(value);}
+    for await (const value of streamSse(response, token ? token : null)) {
+      if (value.type == "message_start") { console.log(value); }
       if (value.delta?.text) {
         yield { role: "assistant", content: value.delta.text };
       }
@@ -138,6 +140,7 @@ class VertexAI extends BaseLLM {
   private async *streamChatGemini(
     messages: ChatMessage[],
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const apiURL = new URL(
       `publishers/google/models/${options.model}:streamGenerateContent`,
@@ -174,10 +177,11 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal: token
     });
 
     let buffer = "";
-    for await (const chunk of streamResponse(response)) {
+    for await (const chunk of streamResponse(response, token ? token : null)) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
         buffer = buffer.slice(1);
@@ -236,6 +240,7 @@ class VertexAI extends BaseLLM {
   private async *streamChatBison(
     messages: ChatMessage[],
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const instances = messages.map((message) => ({ prompt: message.content }));
 
@@ -258,6 +263,7 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal: token
     });
     const data = await response.json();
     yield { role: "assistant", content: data.predictions[0].content };
@@ -269,6 +275,7 @@ class VertexAI extends BaseLLM {
   protected async *StreamChatMistral(
     messages: ChatMessage[],
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const apiBase = this.apiBase!;
     const apiURL = new URL(
@@ -294,9 +301,10 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal: token
     });
 
-    for await (const chunk of streamSse(response)) {
+    for await (const chunk of streamSse(response, token ? token : null)) {
       if (chunk.choices?.[0]) {
         // At the end vertexai will return a empty chunk.
         yield chunk.choices[0].delta;
@@ -307,8 +315,8 @@ class VertexAI extends BaseLLM {
   protected async *StreamFimMistral(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const apiBase = this.apiBase!;
     const apiURL = new URL(
@@ -330,10 +338,10 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
-      signal
+      signal: token
     });
 
-    for await (const chunk of streamSse(response)) {
+    for await (const chunk of streamSse(response, token ? token : null)) {
       yield chunk.choices[0].delta.content;
     }
   }
@@ -344,8 +352,8 @@ class VertexAI extends BaseLLM {
   protected async *streamFimGecko(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const endpoint = new URL("publishers/google/models/code-gecko:predict", this.apiBase);
     const resp = await this.fetch(endpoint, {
@@ -366,7 +374,7 @@ class VertexAI extends BaseLLM {
         }
 
       }),
-      signal
+      signal: token
     });
     // Streaming is not supported by code-gecko
     // TODO: convert to non-streaming fim method when one exist in continue.
@@ -377,8 +385,8 @@ class VertexAI extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const isV1API = this.apiBase.includes("/v1/");
 
@@ -387,27 +395,27 @@ class VertexAI extends BaseLLM {
       ? this.geminiInstance.removeSystemMessage(messages)
       : messages;
     if (this.vertexProvider == "gemini") {
-      yield* this.streamChatGemini(convertedMsgs, options);
+      yield* this.streamChatGemini(convertedMsgs, options, token);
     } else if (this.vertexProvider == "mistral") {
-      yield* this.StreamChatMistral(messages, options);
+      yield* this.StreamChatMistral(messages, options, token);
     } else if (this.vertexProvider == "anthropic") {
-      yield* this.StreamChatAnthropic(messages, options);
+      yield* this.StreamChatAnthropic(messages, options, token);
     } else {
       if (options.model.includes("bison")) {
-        yield* this.streamChatBison(convertedMsgs, options);
+        yield* this.streamChatBison(convertedMsgs, options, token);
       }
     }
   }
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     for await (const message of this._streamChat(
       [{ content: prompt, role: "user" }],
-      signal,
       options,
+      token
     )) {
       yield stripImages(message.content);
     }
@@ -416,16 +424,16 @@ class VertexAI extends BaseLLM {
   protected async *_streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
 
 
 
     if (this.model === "code-gecko") {
-      yield* this.streamFimGecko(prefix, suffix, signal, options);
+      yield* this.streamFimGecko(prefix, suffix, options, token);
     } else if (this.model.includes("codestral")) {
-      yield* this.StreamFimMistral(prefix, suffix, signal, options);
+      yield* this.StreamFimMistral(prefix, suffix, options, token);
     } else {
       throw new Error(`Unsupported model: ${this.model}`);
     }
