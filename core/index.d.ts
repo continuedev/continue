@@ -78,26 +78,34 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
-  complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
+  complete(
+    prompt: string,
+    signal: AbortSignal,
+    options?: LLMFullCompletionOptions
+  ): Promise<string>;
 
   streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
   streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
   streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
 
@@ -388,11 +396,13 @@ export interface CustomLLMWithOptionals {
   options: LLMOptions;
   streamCompletion?: (
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
   streamChat?: (
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;

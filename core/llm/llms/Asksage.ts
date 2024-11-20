@@ -98,6 +98,7 @@ class Asksage extends BaseLLM {
 
   protected async _complete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions
   ): Promise<string> {
     if (typeof prompt !== "string" || prompt.trim() === "") {
@@ -126,14 +127,16 @@ class Asksage extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const completion = await this._complete(prompt, options);
+    const completion = await this._complete(prompt, signal, options);
     yield completion;
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(options, messages);
@@ -142,6 +145,7 @@ class Asksage extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify(args),
+      signal
     });
 
     if (!response.ok) {

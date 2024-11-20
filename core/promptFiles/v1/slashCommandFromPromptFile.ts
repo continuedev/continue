@@ -90,7 +90,7 @@ export function slashCommandFromPromptFile(
         systemMessage,
       );
 
-      for await (const chunk of context.llm.streamChat(messages)) {
+      for await (const chunk of context.llm.streamChat(messages, new AbortController().signal)) {
         yield stripImages(chunk.content);
       }
     },

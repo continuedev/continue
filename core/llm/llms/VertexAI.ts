@@ -49,7 +49,7 @@ class VertexAI extends BaseLLM {
             "unknown";
     this.anthropicInstance = new Anthropic(_options);
     this.geminiInstance = new Gemini(_options);
-    
+
   }
 
   async fetch(url: RequestInfo | URL, init?: RequestInit) {
@@ -307,6 +307,7 @@ class VertexAI extends BaseLLM {
   protected async *StreamFimMistral(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const apiBase = this.apiBase!;
@@ -329,6 +330,7 @@ class VertexAI extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal
     });
 
     for await (const chunk of streamSse(response)) {
@@ -342,6 +344,7 @@ class VertexAI extends BaseLLM {
   protected async *streamFimGecko(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const endpoint = new URL("publishers/google/models/code-gecko:predict", this.apiBase);
@@ -363,6 +366,7 @@ class VertexAI extends BaseLLM {
         }
 
       }),
+      signal
     });
     // Streaming is not supported by code-gecko
     // TODO: convert to non-streaming fim method when one exist in continue.
@@ -373,6 +377,7 @@ class VertexAI extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const isV1API = this.apiBase.includes("/v1/");
@@ -396,10 +401,12 @@ class VertexAI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const message of this._streamChat(
       [{ content: prompt, role: "user" }],
+      signal,
       options,
     )) {
       yield stripImages(message.content);
@@ -409,15 +416,16 @@ class VertexAI extends BaseLLM {
   protected async *_streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
 
 
 
     if (this.model === "code-gecko") {
-      yield* this.streamFimGecko(prefix, suffix, options);
+      yield* this.streamFimGecko(prefix, suffix, signal, options);
     } else if (this.model.includes("codestral")) {
-      yield* this.StreamFimMistral(prefix, suffix, options);
+      yield* this.StreamFimMistral(prefix, suffix, signal, options);
     } else {
       throw new Error(`Unsupported model: ${this.model}`);
     }

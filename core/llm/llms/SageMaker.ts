@@ -32,6 +32,7 @@ class SageMaker extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const credentials = await this._getCredentials();
@@ -45,7 +46,7 @@ class SageMaker extends BaseLLM {
     });
     const toolkit = new CompletionAPIToolkit(this);
     const command = toolkit.generateCommand([], prompt, options);
-    const response = await client.send(command);
+    const response = await client.send(command, { abortSignal: signal });
     if (response.Body) {
       let buffer = "";
       for await (const rawValue of response.Body) {
@@ -82,6 +83,7 @@ class SageMaker extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const credentials = await this._getCredentials();
@@ -96,7 +98,7 @@ class SageMaker extends BaseLLM {
     const toolkit = new MessageAPIToolkit(this);
 
     const command = toolkit.generateCommand(messages, "", options);
-    const response = await client.send(command);
+    const response = await client.send(command, { abortSignal: signal });
     if (response.Body) {
       let buffer = "";
       for await (const rawValue of response.Body) {
