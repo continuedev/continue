@@ -37,6 +37,7 @@ import {
 import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -256,7 +257,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         }
       }
 
-      // dispatch(addContextItems(contextItems));
+      await updateFileSymbolsFromContextItems(
+        selectedContextItems,
+        ideMessenger,
+        dispatch,
+      );
 
       const message: ChatMessage = {
         role: "user",

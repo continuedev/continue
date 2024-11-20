@@ -10,11 +10,7 @@ import {
 import { stripImages } from "core/llm/images";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { Dispatch } from "@reduxjs/toolkit";
-import {
-  setIsGatheringContext,
-  updateFileSymbols,
-} from "../../redux/slices/stateSlice";
-import { updateFileSymbolsFromContextItems } from "../../util/symbols";
+import { setIsGatheringContext } from "../../redux/slices/stateSlice";
 
 interface MentionAttrs {
   label: string;
@@ -174,8 +170,6 @@ async function resolveEditorContent(
     }),
   );
   contextItems.push(...defaultContextItems.flat());
-
-  await updateFileSymbolsFromContextItems(contextItems, ideMessenger, dispatch);
 
   if (contextItemsText !== "") {
     contextItemsText += "\n";

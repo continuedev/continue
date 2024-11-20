@@ -29,6 +29,7 @@ export async function updateFileSymbolsFromContextItems(
       }
     }
   } catch (e) {
+    // Catch all - don't want file symbols to break the chat experience for now
     console.error("Error updating file symbols from context items", e);
   }
 }
