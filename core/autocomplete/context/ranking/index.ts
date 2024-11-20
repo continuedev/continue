@@ -153,24 +153,6 @@ export function fillPromptWithSnippets(
   return keptSnippets;
 }
 
-function rangeIntersectionByLines(a: Range, b: Range): Range | null {
-  const startLine = Math.max(a.start.line, b.start.line);
-  const endLine = Math.min(a.end.line, b.end.line);
-  if (startLine >= endLine) {
-    return null;
-  }
-  return {
-    start: {
-      line: startLine,
-      character: 0,
-    },
-    end: {
-      line: endLine,
-      character: 0,
-    },
-  };
-}
-
 /**
  * Remove one range from another range, which may lead to returning two disjoint ranges
  */
@@ -224,32 +206,4 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
     ];
   }
   return [orig];
-}
-
-export function removeRangeFromSnippets(
-  snippets: Required<AutocompleteSnippet>[],
-  filepath: string,
-  range: Range,
-): Required<AutocompleteSnippet>[] {
-  const finalSnippets: Required<AutocompleteSnippet>[] = [];
-  for (const snippet of snippets) {
-    if (snippet.filepath !== filepath) {
-      finalSnippets.push(snippet);
-      continue;
-    }
-
-    const intersection = rangeIntersectionByLines(range, snippet.range);
-    if (!intersection) {
-      finalSnippets.push(snippet);
-    } else {
-      finalSnippets.push(
-        ...rangeDifferenceByLines(snippet.range, intersection).map((range) => ({
-          ...snippet,
-          range,
-        })),
-      );
-    }
-  }
-
-  return finalSnippets;
 }

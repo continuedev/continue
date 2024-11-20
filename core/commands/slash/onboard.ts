@@ -47,7 +47,7 @@ const OnboardSlashCommand: SlashCommand = {
 
     for await (const chunk of llm.streamChat([
       { role: "user", content: prompt },
-    ])) {
+    ], new AbortController().signal)) {
       yield stripImages(chunk.content);
     }
   },
@@ -134,7 +134,7 @@ function createOnboardingPrompt(context: string): string {
     Your response should be structured, clear, and focused on giving the new developer both a detailed understanding of individual components and a high-level overview of the project as a whole.
 
     Here is an example of a valid response:
-    
+
     ## Important folders
 
     ### /folder1

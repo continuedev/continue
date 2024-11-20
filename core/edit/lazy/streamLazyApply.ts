@@ -23,7 +23,7 @@ export async function* streamLazyApply(
   }
 
   const promptMessages = promptFactory(oldCode, filename, newCode);
-  const lazyCompletion = llm.streamChat(promptMessages);
+  const lazyCompletion = llm.streamChat(promptMessages, new AbortController().signal);
 
   // Do find and replace over the lazy edit response
   async function* replacementFunction(

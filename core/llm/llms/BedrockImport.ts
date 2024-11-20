@@ -37,6 +37,7 @@ class BedrockImport extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const credentials = await this._getCredentials();
@@ -51,7 +52,7 @@ class BedrockImport extends BaseLLM {
 
     const input = this._generateInvokeModelCommandInput(prompt, options);
     const command = new InvokeModelWithResponseStreamCommand(input);
-    const response = await client.send(command);
+    const response = await client.send(command, {abortSignal: signal});
 
     if (response.body) {
       for await (const item of response.body) {

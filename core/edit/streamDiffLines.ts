@@ -96,8 +96,8 @@ export async function* streamDiffLines(
 
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt, { raw: true, prediction })
-      : llm.streamChat(prompt, {
+      ? llm.streamComplete(prompt,  new AbortController().signal, { raw: true, prediction })
+      : llm.streamChat(prompt,  new AbortController().signal, {
           prediction,
         });
 

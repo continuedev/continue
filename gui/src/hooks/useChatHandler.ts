@@ -23,6 +23,7 @@ import resolveEditorContent, {
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
+  abortStream,
   addPromptCompletionPair,
   clearLastEmptyResponse,
   initNewActiveMessage,
@@ -52,6 +53,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
   const history = useSelector((store: RootState) => store.state.history);
   const active = useSelector((store: RootState) => store.state.active);
+  const streamAborter = useSelector(
+    (store: RootState) => store.state.streamAborter,
+  );
   const activeRef = useRef(active);
 
   const { saveSession } = useHistory(dispatch);
@@ -66,6 +70,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
+<<<<<<< HEAD
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
 
@@ -90,6 +95,37 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     let returnVal = next.value as PromptLog;
     if (returnVal) {
       dispatch(addPromptCompletionPair([returnVal]));
+=======
+    try {
+      if (!defaultModel) {
+        throw new Error("Default model not defined");
+      }
+      const gen = ideMessenger.llmStreamChat(
+        defaultModel.title,
+        streamAborter.signal,
+        messages,
+      );
+      let next = await gen.next();
+
+      while (!next.done) {
+        if (!activeRef.current) {
+          dispatch(abortStream());
+          break;
+        }
+        dispatch(
+          streamUpdate(stripImages((next.value as ChatMessage).content)),
+        );
+        next = await gen.next();
+      }
+
+      let returnVal = next.value as PromptLog;
+      if (returnVal) {
+        dispatch(addPromptCompletionPair([returnVal]));
+      }
+    } catch (e) {
+      // If there's an error, we should clear the response so there aren't two input boxes
+      dispatch(clearLastResponse());
+>>>>>>> e60341647fcf9834844ad7ef4d5aa44fe1edf801
     }
   }
 
@@ -126,9 +162,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     selectedCode: RangeInFile[],
     contextItems: ContextItemWithId[],
   ) {
-    const abortController = new AbortController();
-    const cancelToken = abortController.signal;
-
     if (!defaultModel) {
       throw new Error("Default model not defined");
     }
@@ -137,7 +170,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
     const checkActiveInterval = setInterval(() => {
       if (!activeRef.current) {
-        abortController.abort();
+        dispatch(abortStream());
         clearInterval(checkActiveInterval);
       }
     }, 100);
@@ -155,10 +188,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           historyIndex,
           selectedCode,
         },
-        cancelToken,
+        streamAborter.signal,
       )) {
         if (!activeRef.current) {
-          abortController.abort();
+          dispatch(abortStream());
           clearInterval(checkActiveInterval);
           break;
         }
@@ -321,7 +354,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     }
   }
 
-  return { streamResponse };
+  return {
+    streamResponse,
+  };
 }
 
 export default useChatHandler;
