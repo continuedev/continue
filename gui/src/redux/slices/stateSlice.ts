@@ -6,6 +6,7 @@ import {
   Checkpoint,
   ContextItemWithId,
   FileSymbolMap,
+  IndexingStatus,
   PersistedSessionInfo,
   PromptLog,
 } from "core";
@@ -40,6 +41,10 @@ type State = {
   curCheckpointIndex: number;
   applyStates: ApplyState[];
   nextCodeBlockToApplyIndex: number;
+  indexing: {
+    hiddenChatPeekTypes: Record<IndexingStatus["type"], boolean>;
+    statuses: Record<string, IndexingStatus>;
+  };
   streamAborter: AbortController;
   isMultifileEdit: boolean;
 };
@@ -77,6 +82,12 @@ const initialState: State = {
   curCheckpointIndex: 0,
   nextCodeBlockToApplyIndex: 0,
   applyStates: [],
+  indexing: {
+    statuses: {},
+    hiddenChatPeekTypes: {
+      docs: false,
+    },
+  },
   streamAborter: new AbortController(),
 };
 
@@ -397,6 +408,42 @@ export const stateSlice = createSlice({
     resetNextCodeBlockToApplyIndex: (state) => {
       state.nextCodeBlockToApplyIndex = 0;
     },
+    updateIndexingStatus: (
+      state,
+      { payload }: PayloadAction<IndexingStatus>,
+    ) => {
+      state.indexing.statuses = {
+        ...state.indexing.statuses,
+        [payload.id]: payload,
+      };
+
+      // This check is so that if all indexing is stopped for e.g. docs
+      // The next time docs indexing starts the peek will show again
+      const indexingThisType = Object.values(state.indexing.statuses).filter(
+        (status) =>
+          status.type === payload.type && status.status === "indexing",
+      );
+      if (indexingThisType.length === 0) {
+        state.indexing.hiddenChatPeekTypes = {
+          ...state.indexing.hiddenChatPeekTypes,
+          [payload.type]: false,
+        };
+      }
+    },
+    setIndexingChatPeekHidden: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        type: IndexingStatus["type"];
+        hidden: boolean;
+      }>,
+    ) => {
+      state.indexing.hiddenChatPeekTypes = {
+        ...state.indexing.hiddenChatPeekTypes,
+        [payload.type]: payload.hidden,
+      };
+    },
   },
 });
 
@@ -427,6 +474,8 @@ export const {
   setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
+  updateIndexingStatus,
+  setIndexingChatPeekHidden,
   abortStream,
 } = stateSlice.actions;
 

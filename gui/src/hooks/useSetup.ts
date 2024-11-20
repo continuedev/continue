@@ -11,6 +11,7 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -52,14 +53,20 @@ function useSetup(dispatch: Dispatch) {
     loadConfig();
     const interval = setInterval(() => {
       if (initialConfigLoad.current) {
+        // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
+        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
       loadConfig();
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig]);
+  }, [initialConfigLoad, loadConfig, ideMessenger]);
+
+  useWebviewListener("configUpdate", async () => {
+    await loadConfig();
+  });
 
   // Load symbols for chat on any session change
   const sessionId = useSelector((store: RootState) => store.state.sessionId);
@@ -125,18 +132,6 @@ function useSetup(dispatch: Dispatch) {
     });
   });
 
-  const debouncedIndexDocs = debounce(() => {
-    ideMessenger.post("context/indexDocs", { reIndex: false });
-  }, 1000);
-
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-
-    if (!isJetBrains && !getLocalStorage("disableIndexing")) {
-      debouncedIndexDocs();
-    }
-  });
-
   useWebviewListener("configError", async (error) => {
     dispatch(setConfigError(error));
   });
@@ -157,6 +152,10 @@ function useSetup(dispatch: Dispatch) {
         contextItems: [data.item],
       }),
     );
+  });
+
+  useWebviewListener("indexing/statusUpdate", async (data) => {
+    dispatch(updateIndexingStatus(data));
   });
 
   useWebviewListener(

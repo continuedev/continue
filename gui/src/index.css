@@ -72,3 +72,22 @@ a:focus {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+.lines {
+  /* white-space: pre-wrap; */
+  word-break: break-word;
+  overflow: hidden;
+  line-height: 1.375;
+}
+
+.lines-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.lines-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}

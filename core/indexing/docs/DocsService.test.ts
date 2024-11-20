@@ -66,23 +66,20 @@ describe.skip("DocsService Integration Tests", () => {
   });
 
   test("Indexing, retrieval, and deletion of a new documentation site", async () => {
-    const generator = docsService.indexAndAdd(mockSiteConfig);
-    while (!(await generator.next()).done) {}
+    await docsService.indexAndAdd(mockSiteConfig);
 
     let latestConfig = await getReloadedConfig();
 
     // Sqlite check
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(true);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(true);
 
     // config.json check
     expect(latestConfig.docs).toContainEqual(mockSiteConfig);
 
     // Lance DB check
-    const embeddingsProvider = await docsService.getEmbeddingsProvider();
-    const [mockVector] = await embeddingsProvider.embed(["test"]);
-    let retrievedChunks = await docsService.retrieveChunks(
+    let retrievedChunks = await docsService.retrieveChunksFromQuery(
+      "test",
       mockSiteConfig.startUrl,
-      mockVector,
       5,
     );
 
@@ -91,7 +88,7 @@ describe.skip("DocsService Integration Tests", () => {
     await docsService.delete(mockSiteConfig.startUrl);
 
     // Sqlite check
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(false);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(false);
 
     // config.json check
     latestConfig = await getReloadedConfig();
@@ -100,9 +97,9 @@ describe.skip("DocsService Integration Tests", () => {
     );
 
     // LanceDB check
-    retrievedChunks = await docsService.retrieveChunks(
+    retrievedChunks = await docsService.retrieveChunksFromQuery(
+      "test",
       mockSiteConfig.startUrl,
-      mockVector,
       5,
     );
     expect(retrievedChunks.length).toBe(0);
@@ -133,17 +130,15 @@ describe.skip("DocsService Integration Tests", () => {
 
   test("Handles pulling down and adding pre-indexed docs", async () => {
     const preIndexedDoc = Object.values(preIndexedDocs)[0];
-    const generator = docsService.indexAndAdd(preIndexedDoc);
-    while (!(await generator.next()).done) {}
+    await docsService.indexAndAdd(preIndexedDoc);
   });
 
   test("Config synchronization with SQLite", async () => {
-    const generator = docsService.indexAndAdd(mockSiteConfig);
-    while (!(await generator.next()).done) {}
+    await docsService.indexAndAdd(mockSiteConfig);
 
     await getReloadedConfig();
 
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(true);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(true);
 
     editConfigJson((config) => {
       const { docs, ...restConfig } = config;
@@ -164,6 +159,6 @@ describe.skip("DocsService Integration Tests", () => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(false);
+    expect(await docsService.hasMetadata(mockSiteConfig.startUrl)).toBe(false);
   });
 });
