@@ -330,6 +330,12 @@ const preIndexedDocs: Record<
     startUrl: "https://llama-stack.readthedocs.io/",
     rootUrl: "https://llama-stack.readthedocs.io/",
   },
+  "https://go.dev/doc": {
+    title: "Go",
+    startUrl: "https://go.dev/doc",
+    rootUrl: "https://go.dev",
+    faviconUrl: "https://go.dev/favicon.ico",
+  },
 };
 
 export default preIndexedDocs;
