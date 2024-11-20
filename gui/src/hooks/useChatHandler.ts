@@ -30,7 +30,6 @@ import {
   setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
-  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
@@ -180,6 +179,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
     index?: number,
+    promptPreamble?: string,
   ) {
     try {
       if (typeof index === "number") {
@@ -203,7 +203,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
 
       // Resolve context providers and construct new history
-      const [selectedContextItems, selectedCode, content] =
+      let [selectedContextItems, selectedCode, content] =
         await resolveEditorContent(
           editorState,
           modifiers,
@@ -254,6 +254,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
       // dispatch(addContextItems(contextItems));
 
+      if (promptPreamble) {
+        typeof content === "string"
+          ? (content += promptPreamble)
+          : (content.at(-1).text += promptPreamble);
+      }
+
       const message: ChatMessage = {
         role: "user",
         content,
@@ -293,15 +299,13 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
+
         let updatedContextItems = [];
+
         posthog.capture("step run", {
           step_name: slashCommand.name,
           params: {},
         });
-
-        if (slashCommand.name === "multifile-edit") {
-          dispatch(setIsInMultifileEdit(true));
-        }
 
         await _streamSlashCommand(
           messages,

@@ -2,6 +2,7 @@ import { RangeInFileWithContents } from "core/commands/util";
 import FileIcon from "../../components/FileIcon";
 import {
   ChevronDownIcon,
+  ChevronRightIcon,
   ChevronUpIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
@@ -12,15 +13,15 @@ import { getMarkdownLanguageTagForFile } from "core/util";
 export interface CodeToEditListItemProps {
   rif: RangeInFileWithContents;
   onDelete: (rif: RangeInFileWithContents) => void;
-  onClick: (rif: RangeInFileWithContents) => void;
+  onClickFilename: (rif: RangeInFileWithContents) => void;
 }
 
 export default function CodeToEditListItem({
   rif,
   onDelete,
-  onClick,
+  onClickFilename,
 }: CodeToEditListItemProps) {
-  const [showCodeSnippet, setShowCodeSnippet] = useState(false);
+  const [showCodeSnippet, setShowCodeSnippet] = useState(true);
 
   const filepath = rif.filepath.split("/").pop() || rif.filepath;
   const title = `${filepath} (${rif.range.start.line + 1} - ${rif.range.end.line + 1})`;
@@ -36,16 +37,13 @@ export default function CodeToEditListItem({
   return (
     <li
       className={`flex cursor-pointer flex-col rounded p-1 transition-colors hover:bg-white/10 ${showCodeSnippet && "bg-white/10"}`}
-      onClick={() => onClick(rif)}
+      onClick={() => setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet)}
     >
+      {" "}
       <div className="flex justify-between">
         <div className="flex gap-0.5">
-          <FileIcon filename={rif.filepath} height={"18px"} width={"18px"} />
-          <span>{title}</span>
-        </div>
-        <div className="flex gap-1.5">
           {showCodeSnippet ? (
-            <ChevronUpIcon
+            <ChevronDownIcon
               onClick={(e) => {
                 e.stopPropagation();
                 setShowCodeSnippet(false);
@@ -53,7 +51,7 @@ export default function CodeToEditListItem({
               className="h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 text-gray-400 transition-colors hover:bg-white/10"
             />
           ) : (
-            <ChevronDownIcon
+            <ChevronRightIcon
               onClick={(e) => {
                 e.stopPropagation();
                 setShowCodeSnippet(true);
@@ -61,6 +59,18 @@ export default function CodeToEditListItem({
               className="h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 text-gray-400 transition-colors hover:bg-white/10"
             />
           )}
+          <FileIcon filename={rif.filepath} height={"18px"} width={"18px"} />
+          <span
+            className="hover:underline"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClickFilename(rif);
+            }}
+          >
+            {title}
+          </span>
+        </div>
+        <div className="flex gap-1.5">
           <XMarkIcon
             onClick={(e) => {
               e.stopPropagation();
@@ -70,8 +80,11 @@ export default function CodeToEditListItem({
           />
         </div>
       </div>
-
-      {showCodeSnippet && <StyledMarkdownPreview source={source} />}
+      {showCodeSnippet && (
+        <div className="max-h-[15vh] overflow-y-auto">
+          <StyledMarkdownPreview source={source} />
+        </div>
+      )}
     </li>
   );
 }

@@ -7,6 +7,7 @@ import { RootState } from "../../redux/store";
 import CodeToEditListItem from "./CodeToEditListItem";
 import { RangeInFileWithContents } from "core/commands/util";
 import { vscEditorBackground } from "../../components";
+import { ToolTip } from "../../components/gui/Tooltip";
 
 export default function WorkingSet() {
   const dispatch = useDispatch();
@@ -21,9 +22,9 @@ export default function WorkingSet() {
 
   function onClickAddFileToCodeToEdit() {}
 
-  function onClickCodeToEditItem(rif: RangeInFileWithContents) {
+  function onClickFilename(rif: RangeInFileWithContents) {
     const { filepath, range } = editModeState.codeToEdit.find(
-      (workingSetRIF) => workingSetRIF === rif,
+      (codeToEdit) => codeToEdit === rif,
     );
 
     ideMessenger.ide.showLines(filepath, range.start.line, range.end.line);
@@ -34,20 +35,17 @@ export default function WorkingSet() {
       key={rif.filepath + rif.range.start.line + rif.range.end.line}
       rif={rif}
       onDelete={onDelete}
-      onClick={onClickCodeToEditItem}
+      onClickFilename={onClickFilename}
     />
   ));
 
   return (
     <div
-      className="mx-1 rounded-t-lg px-1 pb-1"
+      className="mx-1 flex flex-col rounded-t-lg px-1 pb-1"
       style={{ backgroundColor: vscEditorBackground }}
     >
       <div className="flex items-center justify-between gap-1.5 border-0 border-b border-solid border-zinc-600 px-1 py-1.5 text-xs text-zinc-400">
-        <div className="flex items-center justify-between gap-1.5">
-          <span>Code to edit</span>
-          <InformationCircleIcon className="inline h-3 w-3 cursor-pointer" />
-        </div>
+        <span>Code to edit</span>
 
         <span
           className="flex cursor-pointer items-center justify-between gap-1 rounded px-1 py-0.5 transition-colors hover:bg-white/10"
@@ -58,19 +56,21 @@ export default function WorkingSet() {
         </span>
       </div>
 
-      {hasCodeToEdit ? (
-        <ul className="my-1.5 list-outside list-none space-y-1 pl-0">
-          {codeToEditItems}
-        </ul>
-      ) : (
-        <span
-          className="my-1.5 flex cursor-pointer items-center gap-1 rounded p-1 transition-colors hover:bg-white/10"
-          onClick={onClickAddFileToCodeToEdit}
-        >
-          <PlusIcon className="inline h-3 w-3" />
-          <span>Add a file to get started</span>
-        </span>
-      )}
+      <div className="scrollbar-hide max-h-[25vh] overflow-y-auto">
+        {hasCodeToEdit ? (
+          <ul className="my-1.5 list-outside list-none space-y-1 pl-0">
+            {codeToEditItems}
+          </ul>
+        ) : (
+          <span
+            className="my-1.5 flex cursor-pointer items-center gap-1 rounded p-1 transition-colors hover:bg-white/10"
+            onClick={onClickAddFileToCodeToEdit}
+          >
+            <PlusIcon className="inline h-3 w-3" />
+            <span>Add a file to get started</span>
+          </span>
+        )}
+      </div>
     </div>
   );
 }

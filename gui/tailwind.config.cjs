@@ -46,12 +46,14 @@ module.exports = {
         "vsc-badge-background": "var(--vscode-badge-background, #1bbe84)",
         "vsc-badge-foreground": "var(--vscode-badge-foreground, #fff)",
         "vsc-sidebar-border": "var(--vscode-sideBar-border, transparent)",
-        "vsc-find-match": "var(--vscode-editor-findMatchBackground, rgba(255, 255, 0, 0.6))",
-        "vsc-find-match-selected": "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0, 0.8))",
+        "vsc-find-match":
+          "var(--vscode-editor-findMatchBackground, rgba(255, 255, 0, 0.6))",
+        "vsc-find-match-selected":
+          "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0, 0.8))",
       },
     },
   },
-  plugins: [],
+  plugins: [require("tailwind-scrollbar-hide")],
   corePlugins: {
     preflight: false,
   },

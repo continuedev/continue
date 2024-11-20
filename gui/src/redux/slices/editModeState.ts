@@ -42,9 +42,17 @@ export const editModeStateSlice = createSlice({
       state,
       { payload }: PayloadAction<RangeInFileWithContents>,
     ) => {
+      // Remove entry from codeToEdit that doesn't match the payload's filepath and contents
       state.codeToEdit = state.codeToEdit.filter(
-        (entry) => entry.toString() !== payload.toString(),
+        (entry) =>
+          !(
+            entry.filepath === payload.filepath &&
+            entry.contents === payload.contents
+          ),
       );
+    },
+    clearCodeToEdit: (state) => {
+      state.codeToEdit = [];
     },
     setEditStatus: (
       state,
@@ -101,5 +109,6 @@ export const {
   submitEdit,
   removeEntryFromCodeToEdit,
   focusEdit,
+  clearCodeToEdit,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

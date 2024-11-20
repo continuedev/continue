@@ -4,7 +4,7 @@ import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
-import { Plugin } from "@tiptap/pm/state";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import {
   ContextItemWithId,
@@ -182,6 +182,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   const inDropdownRef = useRef(false);
 
   const isOSREnabled = useIsOSREnabled();
+
+  const isMultifileEdit = useSelector(
+    (state: RootState) => state.state.isMultifileEdit,
+  );
+
+  console.log("isMultifileEdit", isMultifileEdit);
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -452,17 +458,52 @@ function TipTapEditor(props: TipTapEditorProps) {
             HTMLAttributes: {
               class: "mention",
             },
-            suggestion: getContextProviderDropdownOptions(
-              availableContextProvidersRef,
-              getSubmenuContextItemsRef,
-              enterSubmenu,
-              onClose,
-              onOpen,
-              inSubmenuRef,
-              ideMessenger,
-            ),
-            renderHTML: (props) => {
-              return `@${props.node.attrs.label || props.node.attrs.id}`;
+            suggestion: {
+              ...getContextProviderDropdownOptions(
+                availableContextProvidersRef,
+                getSubmenuContextItemsRef,
+                enterSubmenu,
+                onClose,
+                onOpen,
+                inSubmenuRef,
+                ideMessenger,
+              ),
+              char: "@",
+              pluginKey: new PluginKey("defaultContextProviders"),
+            },
+          })
+        : undefined,
+      isMultifileEdit
+        ? Mention.configure({
+            HTMLAttributes: {
+              class: "mention",
+            },
+            suggestion: {
+              ...getContextProviderDropdownOptions(
+                availableContextProvidersRef,
+                getSubmenuContextItemsRef,
+                enterSubmenu,
+                onClose,
+                onOpen,
+                inSubmenuRef,
+                ideMessenger,
+              ),
+              char: "#",
+              pluginKey: new PluginKey("fileOnlyContextProviders"),
+              items: async ({ query }) => {
+                // Only display files in the dropdown
+                const results = getSubmenuContextItemsRef.current(
+                  "file",
+                  query,
+                );
+                return results.map((result) => ({
+                  ...result,
+                  label: result.title,
+                  type: "file",
+                  query: result.id,
+                  icon: result.icon,
+                }));
+              },
             },
           })
         : undefined,

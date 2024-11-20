@@ -35,6 +35,8 @@ export default function MultifileEditActions({
   const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
   const hasPendingApplies = pendingApplyStates.length > 0;
 
+  console.log({ isCurCheckpoint, curCheckpointIndex, index });
+
   return (
     <div
       className={`mx-2 mb-2 mt-2 flex h-7 items-center justify-between pb-0 text-xs text-gray-400`}
