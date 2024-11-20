@@ -14,6 +14,7 @@ import {
   setIsGatheringContext,
   updateFileSymbols,
 } from "../../redux/slices/stateSlice";
+import { updateFileSymbolsFromContextItems } from "../../util/symbols";
 
 interface MentionAttrs {
   label: string;
@@ -174,23 +175,7 @@ async function resolveEditorContent(
   );
   contextItems.push(...defaultContextItems.flat());
 
-  const contextItemFileUris = Array.from(
-    new Set(
-      contextItems
-        .filter((item) => item.uri?.type === "file" && item?.uri?.value)
-        .map((item) => item.uri.value),
-    ),
-  );
-
-  const symbolsResult = await ideMessenger.request(
-    "context/getSymbolsForFiles",
-    {
-      uris: contextItemFileUris,
-    },
-  );
-  if (symbolsResult.status === "success") {
-    dispatch(updateFileSymbols(symbolsResult.content));
-  }
+  await updateFileSymbolsFromContextItems(contextItems, ideMessenger, dispatch);
 
   if (contextItemsText !== "") {
     contextItemsText += "\n";

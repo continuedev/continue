@@ -4,7 +4,6 @@ import {
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
-  ContextItemId,
   ContextItemWithId,
   FileSymbolMap,
   PersistedSessionInfo,
@@ -146,7 +145,6 @@ export const stateSlice = createSlice({
       state.mainEditorContent = undefined;
     },
     updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
-      console.log("UPDATE SYMBOLS", action.payload);
       state.symbols = Object.assign(state.symbols, action.payload);
     },
     setContextItemsAtIndex: (
@@ -379,7 +377,7 @@ export const stateSlice = createSlice({
         curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
         curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
       }
-      if(payload.status === "done"){
+      if (payload.status === "done") {
         state.nextCodeBlockToApplyIndex++;
       }
     },

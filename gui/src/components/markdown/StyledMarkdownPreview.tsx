@@ -164,28 +164,18 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
-  const symbolsForContextItems = useRef<SymbolWithRange[]>([]);
+  const symbolsRef = useRef<SymbolWithRange[]>([]);
   const contextItemsRef = useRef<ContextItemWithId[]>([]);
+  
   useEffect(() => {
     contextItemsRef.current = contextItems || [];
-    if (!contextItems) {
-      symbolsForContextItems.current = [];
-    }
-    // Get unique URIs and then find relevant symbols
-    const contextUris = Array.from(
-      new Set(
-        contextItems.filter((item) => item?.uri).map((item) => item.uri!.value),
-      ),
-    );
-    const contextSymbols: SymbolWithRange[] = [];
-    contextUris.forEach((uri) => {
-      const fileSymbols = symbols[uri];
-      if (fileSymbols) {
-        contextSymbols.push(...fileSymbols);
-      }
-    });
-    symbolsForContextItems.current = contextSymbols;
-  }, [contextItems, symbols]);
+  }, [contextItems]);
+  useEffect(() => {
+    // Note, before I was only looking for symbols that matched
+    // Context item files on current history item
+    // but in practice global symbols for session makes way more sense
+    symbolsRef.current = Object.values(symbols).flat();
+  }, [symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [remarkMath, () => processCodeBlocks],
@@ -278,7 +268,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               return <FilenameLink rif={rif} />;
             }
 
-            const exactSymbol = symbolsForContextItems.current.find(
+            const exactSymbol = symbolsRef.current.find(
               (s) => s.name === content,
             );
             if (exactSymbol) {
@@ -286,7 +276,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             }
 
             // PARTIAL - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
-            const partialSymbol = symbolsForContextItems.current.find((s) =>
+            const partialSymbol = symbolsRef.current.find((s) =>
               content.startsWith(s.name),
             );
             if (partialSymbol) {
