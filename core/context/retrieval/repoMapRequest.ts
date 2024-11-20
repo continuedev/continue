@@ -61,7 +61,7 @@ This is the question that you should select relevant files for: "${input}"`;
     const response = await llm.chat([
       { role: "user", content: prompt },
       { role: "assistant", content: "<reasoning>" },
-    ]);
+    ], new AbortController().signal);
     const content = stripImages(response.content);
     console.debug("Repo map retrieval response: ", content);
 

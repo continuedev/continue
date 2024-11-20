@@ -52,6 +52,7 @@ export class ChatDescriber {
           content: ChatDescriber.prompt + message,
         },
       ],
+      new AbortController().signal,
       completionOptions,
     );
 

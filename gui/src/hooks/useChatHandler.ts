@@ -23,6 +23,7 @@ import resolveEditorContent, {
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
+  abortStream,
   addPromptCompletionPair,
   clearLastResponse,
   initNewActiveMessage,
@@ -52,6 +53,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
   const history = useSelector((store: RootState) => store.state.history);
   const active = useSelector((store: RootState) => store.state.active);
+  const streamAborter = useSelector(
+    (store: RootState) => store.state.streamAborter,
+  );
   const activeRef = useRef(active);
 
   const { saveSession } = useHistory(dispatch);
@@ -66,23 +70,20 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    const abortController = new AbortController();
-    const cancelToken = abortController.signal;
-
     try {
       if (!defaultModel) {
         throw new Error("Default model not defined");
       }
       const gen = ideMessenger.llmStreamChat(
         defaultModel.title,
-        cancelToken,
+        streamAborter.signal,
         messages,
       );
       let next = await gen.next();
 
       while (!next.done) {
         if (!activeRef.current) {
-          abortController.abort();
+          dispatch(abortStream());
           break;
         }
         dispatch(streamUpdate(next.value as ChatMessage));
@@ -132,9 +133,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     selectedCode: RangeInFile[],
     contextItems: ContextItemWithId[],
   ) {
-    const abortController = new AbortController();
-    const cancelToken = abortController.signal;
-
     if (!defaultModel) {
       throw new Error("Default model not defined");
     }
@@ -143,7 +141,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
     const checkActiveInterval = setInterval(() => {
       if (!activeRef.current) {
-        abortController.abort();
+        dispatch(abortStream());
         clearInterval(checkActiveInterval);
       }
     }, 100);
@@ -160,10 +158,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         historyIndex,
         selectedCode,
       },
-      cancelToken,
+      streamAborter.signal,
     )) {
       if (!activeRef.current) {
-        abortController.abort();
+        dispatch(abortStream());
         break;
       }
       if (typeof update === "string") {
@@ -322,7 +320,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     }
   }
 
-  return { streamResponse };
+  return {
+    streamResponse,
+  };
 }
 
 export default useChatHandler;

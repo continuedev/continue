@@ -1,4 +1,17 @@
+binary/bin
+binary/build
+binary/out
+binary/tmp
+core/.continue-test
+docs/.docusaurus
+extensions/.continue-debug
 extensions/vscode/continue_rc_schema.json
+extensions/vscode/.vscode-test
+extensions/vscode/bin
+extensions/vscode/build
+extensions/vscode/out
+gui/dist
 **/.continueignore
 CHANGELOG.md
 **/continue_tutorial.py
+**/node_modules

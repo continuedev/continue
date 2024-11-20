@@ -46,10 +46,12 @@ class Gemini extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const message of this._streamChat(
       [{ content: prompt, role: "user" }],
+      signal,
       options,
     )) {
       yield stripImages(message.content);
@@ -72,6 +74,7 @@ class Gemini extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     // Ensure this.apiBase is used if available, otherwise use default
@@ -89,6 +92,7 @@ class Gemini extends BaseLLM {
     if (options.model.includes("gemini")) {
       for await (const message of this.streamChatGemini(
         convertedMsgs,
+        signal,
         options,
       )) {
         yield message;
@@ -96,6 +100,7 @@ class Gemini extends BaseLLM {
     } else {
       for await (const message of this.streamChatBison(
         convertedMsgs,
+        signal,
         options,
       )) {
         yield message;
@@ -118,6 +123,7 @@ class Gemini extends BaseLLM {
 
   private async *streamChatGemini(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const apiURL = new URL(
@@ -159,6 +165,7 @@ class Gemini extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal
     });
 
     let buffer = "";
@@ -211,6 +218,7 @@ class Gemini extends BaseLLM {
   }
   private async *streamChatBison(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const msgList = [];
@@ -226,6 +234,7 @@ class Gemini extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
+      signal
     });
     const data = await response.json();
     yield { role: "assistant", content: data.candidates[0].content };
