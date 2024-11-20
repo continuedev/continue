@@ -9,6 +9,9 @@ export const viewDiffTool: Tool = {
   function: {
     name: "view_diff",
     description: "View the current diff of working changes",
-    parameters: {},
+    parameters: {
+      type: "object",
+      properties: {},
+    },
   },
 };

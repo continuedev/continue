@@ -19,8 +19,8 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { IDE } from "core";
+import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -42,7 +42,7 @@ export class ContinueCompletionProvider
         e.message,
         this.configHandler.reloadConfig.bind(this.configHandler),
         () => {
-          void this.webviewProtocol.request("openOnboardingCard", undefined)
+          void this.webviewProtocol.request("openOnboardingCard", undefined);
         },
       );
       return;

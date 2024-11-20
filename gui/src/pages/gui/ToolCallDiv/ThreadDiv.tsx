@@ -31,7 +31,14 @@ export function ThreadDiv(props: ThreadDivProps) {
   return (
     <Container>
       <HeaderDiv>
-        <div style={{ width: `${W}px`, height: `${W}px`, fontWeight: "bold" }}>
+        <div
+          style={{
+            width: `${W}px`,
+            height: `${W}px`,
+            fontWeight: "bold",
+            marginTop: "1px",
+          }}
+        >
           {props.icon}
         </div>
         Continue wants to create a new file

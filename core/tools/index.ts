@@ -9,7 +9,6 @@ import { viewSubdirectoryTool } from "./viewSubdirectory";
 export const allTools = [
   createNewFileTool,
   runTerminalCommandTool,
-  runTerminalCommandTool,
   viewSubdirectoryTool,
   viewFileTreeTool,
   exactSearchTool,
