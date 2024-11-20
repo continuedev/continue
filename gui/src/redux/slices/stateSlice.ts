@@ -145,7 +145,10 @@ export const stateSlice = createSlice({
       state.mainEditorContent = undefined;
     },
     updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
-      state.symbols = Object.assign(state.symbols, action.payload);
+      state.symbols = {
+        ...state.symbols,
+        ...action.payload,
+      };
     },
     setContextItemsAtIndex: (
       state,
@@ -290,7 +293,7 @@ export const stateSlice = createSlice({
       state.streamAborter = new AbortController();
 
       state.active = false;
-      state.isGatheringContext = false;
+      state.context.isGathering = false;
       state.isMultifileEdit = false;
       if (payload) {
         state.history = payload.history as any;

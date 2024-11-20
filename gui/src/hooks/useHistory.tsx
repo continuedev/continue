@@ -9,7 +9,6 @@ import { useLastSessionContext } from "../context/LastSessionContext";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -123,14 +122,6 @@ function useHistory(dispatch: Dispatch) {
     }
 
     const sessionContent = result.content;
-
-    // Update file symbols on session load for all context items
-    await updateFileSymbolsFromContextItems(
-      sessionContent.history.map((item) => item.contextItems ?? []).flat(),
-      ideMessenger,
-      dispatch,
-    );
-
     dispatch(newSession(sessionContent));
     return sessionContent;
   }

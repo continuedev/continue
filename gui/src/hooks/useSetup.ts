@@ -61,16 +61,19 @@ function useSetup(dispatch: Dispatch) {
     return () => clearInterval(interval);
   }, [initialConfigLoad, loadConfig]);
 
+  // Load symbols for chat on any session change
+  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const sessionIdRef = useRef("");
   useEffect(() => {
-    // currently persist gate ensures that
-    // State.history is loaded before this is called
-    // Load symbols for chat on startup
-    updateFileSymbolsFromContextItems(
-      history.flatMap((item) => item.contextItems),
-      ideMessenger,
-      dispatch,
-    );
-  }, []);
+    if (sessionIdRef.current !== sessionId) {
+      updateFileSymbolsFromContextItems(
+        history.flatMap((item) => item.contextItems),
+        ideMessenger,
+        dispatch,
+      );
+    }
+    sessionIdRef.current = sessionId;
+  }, [sessionId, history, ideMessenger, dispatch]);
 
   useEffect(() => {
     // Override persisted state
