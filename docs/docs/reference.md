@@ -1,5 +1,5 @@
 ---
-title: Reference
+title: `config.json` Reference
 description: Reference for the Continue _config.json_ configuration file
 keywords: [config, config_schema.json, json]
 ---
