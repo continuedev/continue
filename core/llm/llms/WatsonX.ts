@@ -140,11 +140,13 @@ class WatsonX extends BaseLLM {
 
   protected async _complete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): Promise<string> {
     let completion = "";
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
+      signal,
       options,
     )) {
       completion += chunk.content;
@@ -155,10 +157,12 @@ class WatsonX extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
+      signal,
       options,
     )) {
       yield stripImages(chunk.content);
@@ -167,6 +171,7 @@ class WatsonX extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     var now = new Date().getTime() / 1000;
@@ -219,6 +224,7 @@ class WatsonX extends BaseLLM {
       method: "POST",
       headers: headers,
       body: JSON.stringify(payload),
+      signal
     });
 
     if (!response.ok || response.body === null) {

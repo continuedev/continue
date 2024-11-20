@@ -26,6 +26,7 @@ class LlamaCpp extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const headers = {
@@ -42,6 +43,7 @@ class LlamaCpp extends BaseLLM {
         stream: true,
         ...this._convertArgs(options, prompt),
       }),
+      signal
     });
 
     for await (const value of streamSse(resp)) {

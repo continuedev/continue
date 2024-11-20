@@ -95,16 +95,18 @@ class Anthropic extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
-    for await (const update of this._streamChat(messages, options)) {
+    for await (const update of this._streamChat(messages, signal, options)) {
       yield stripImages(update.content);
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage =
@@ -137,6 +139,7 @@ class Anthropic extends BaseLLM {
             ]
           : systemMessage,
       }),
+      signal
     });
 
     if (options.stream === false) {

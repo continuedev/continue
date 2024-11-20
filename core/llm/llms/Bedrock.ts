@@ -42,16 +42,18 @@ class Bedrock extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
-    for await (const update of this._streamChat(messages, options)) {
+    for await (const update of this._streamChat(messages, signal, options)) {
       yield stripImages(update.content);
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const credentials = await this._getCredentials();
@@ -89,7 +91,7 @@ class Bedrock extends BaseLLM {
 
     const input = this._generateConverseInput(messages, options);
     const command = new ConverseStreamCommand(input);
-    const response = await client.send(command);
+    const response = await client.send(command, { abortSignal: signal});
 
     if (response.stream) {
       for await (const chunk of response.stream) {

@@ -478,7 +478,7 @@ const EditSlashCommand: SlashCommand = {
         messages = rendered;
       }
 
-      const completion = llm.streamComplete(rendered as string, {
+      const completion = llm.streamComplete(rendered as string,  new AbortController().signal, {
         maxTokens: Math.min(maxTokens, Math.floor(llm.contextLength / 2), 4096),
         raw: true,
       });
@@ -494,7 +494,7 @@ const EditSlashCommand: SlashCommand = {
       );
     } else {
       async function* gen() {
-        for await (const chunk of llm.streamChat(messages, {
+        for await (const chunk of llm.streamChat(messages,  new AbortController().signal,{
           temperature: 0.5, // TODO
           maxTokens: Math.min(
             maxTokens,
@@ -609,7 +609,7 @@ ${lines.join("\n")}
 
 Please briefly explain the changes made to the code above. Give no more than 2-3 sentences, and use markdown bullet points:`;
 
-      for await (const update of llm.streamComplete(prompt)) {
+      for await (const update of llm.streamComplete(prompt, new AbortController().signal)) {
         yield update;
       }
     }
