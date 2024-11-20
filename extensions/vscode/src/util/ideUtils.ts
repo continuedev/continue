@@ -21,7 +21,6 @@ import {
   uriFromFilePath,
 } from "./vscode";
 
-
 import type { FileEdit, RangeInFile, Thread } from "core";
 
 const util = require("node:util");
@@ -181,7 +180,8 @@ export class VsCodeIdeUtils {
     vscode.workspace
       .openTextDocument(
         vscode.Uri.parse(
-          `${VsCodeExtension.continueVirtualDocumentScheme
+          `${
+            VsCodeExtension.continueVirtualDocumentScheme
           }:${encodeURIComponent(name)}?${encodeURIComponent(contents)}`,
         ),
       )
@@ -305,8 +305,8 @@ export class VsCodeIdeUtils {
     return `${lines
       .slice(range.start.line, range.end.line)
       .join("\n")}\n${lines[
-        range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
-      ].slice(0, range.end.character)}`;
+      range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
+    ].slice(0, range.end.character)}`;
   }
 
   async getTerminalContents(commands = -1): Promise<string> {
@@ -572,7 +572,6 @@ export class VsCodeIdeUtils {
 
   async getDiff(includeUnstaged: boolean): Promise<string> {
     let diffs: string[] = [];
-    let repos = [];
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));
@@ -580,20 +579,16 @@ export class VsCodeIdeUtils {
         continue;
       }
 
-      repos.push(repo.state.HEAD?.name);
-
       const staged = await repo.diff(true);
-      diffs.push(`${staged}`);
+      diffs.push(staged);
       if (includeUnstaged) {
         const unstaged = await repo.diff(false);
-        diffs.push(`\n${unstaged}`);
+        diffs.push(unstaged);
       }
     }
 
     const fullDiff = diffs.join("\n\n");
-    if (fullDiff.trim() === "") {
-      console.log(`Diff empty for repos: ${repos}`);
-    }
+
     return fullDiff;
   }
 

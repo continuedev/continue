@@ -138,6 +138,7 @@ function useSetup(dispatch: Dispatch) {
     dispatch(setConfigError(error));
   });
 
+  // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
     streamResponse(
       data.message,

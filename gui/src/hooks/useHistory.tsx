@@ -122,19 +122,17 @@ function useHistory(dispatch: Dispatch) {
       throw new Error(result.error);
     }
 
-    const persistedSessionInfo = result.content;
+    const sessionContent = result.content;
 
     // Update file symbols on session load for all context items
     await updateFileSymbolsFromContextItems(
-      persistedSessionInfo.history
-        .map((item) => item.contextItems ?? [])
-        .flat(),
+      sessionContent.history.map((item) => item.contextItems ?? []).flat(),
       ideMessenger,
       dispatch,
     );
 
-    dispatch(newSession(persistedSessionInfo));
-    return persistedSessionInfo;
+    dispatch(newSession(sessionContent));
+    return sessionContent;
   }
 
   async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {
