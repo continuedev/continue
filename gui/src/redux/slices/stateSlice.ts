@@ -5,6 +5,7 @@ import {
   ChatMessage,
   Checkpoint,
   ContextItemWithId,
+  FileSymbolMap,
   IndexingStatus,
   PersistedSessionInfo,
   PromptLog,
@@ -12,8 +13,8 @@ import {
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
-import { v4 as uuidv4, v4 } from "uuid";
 import { ApplyState } from "core/protocol/ideWebview";
+import { v4 as uuidv4, v4 } from "uuid";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -22,9 +23,13 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 };
 type State = {
   history: ChatHistoryItemWithMessageId[];
+  symbols: FileSymbolMap;
+  context: {
+    isGathering: boolean;
+    gatheringMessage: string;
+  };
   ttsActive: boolean;
   active: boolean;
-  isGatheringContext: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
   sessionId: string;
@@ -46,9 +51,13 @@ type State = {
 
 const initialState: State = {
   history: [],
+  symbols: {},
+  context: {
+    isGathering: false,
+    gatheringMessage: "Gathering Context",
+  },
   ttsActive: false,
   active: false,
-  isGatheringContext: false,
   configError: undefined,
   config: {
     slashCommands: [
@@ -123,8 +132,17 @@ export const stateSlice = createSlice({
     setActive: (state) => {
       state.active = true;
     },
-    setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
-      state.isGatheringContext = payload;
+    setIsGatheringContext: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        isGathering: boolean;
+        gatheringMessage: string;
+      }>,
+    ) => {
+      state.context.isGathering = payload.isGathering;
+      state.context.gatheringMessage = payload.gatheringMessage;
     },
     clearLastResponse: (state) => {
       if (state.history.length < 2) {
@@ -136,6 +154,12 @@ export const stateSlice = createSlice({
     },
     consumeMainEditorContent: (state) => {
       state.mainEditorContent = undefined;
+    },
+    updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
+      state.symbols = {
+        ...state.symbols,
+        ...action.payload,
+      };
     },
     setContextItemsAtIndex: (
       state,
@@ -253,10 +277,13 @@ export const stateSlice = createSlice({
       if (!historyItem) {
         return;
       }
-      historyItem.contextItems.push(...payload.contextItems);
+      historyItem.contextItems = [
+        ...historyItem.contextItems,
+        ...payload.contextItems,
+      ];
     },
     setInactive: (state) => {
-      state.isGatheringContext = false;
+      state.context.isGathering = false;
       state.active = false;
     },
     abortStream: (state) => {
@@ -277,8 +304,9 @@ export const stateSlice = createSlice({
       state.streamAborter = new AbortController();
 
       state.active = false;
-      state.isGatheringContext = false;
+      state.context.isGathering = false;
       state.isMultifileEdit = false;
+      state.symbols = {};
       if (payload) {
         state.history = payload.history as any;
         state.title = payload.title;
@@ -420,6 +448,7 @@ export const stateSlice = createSlice({
 });
 
 export const {
+  updateFileSymbols,
   setContextItemsAtIndex,
   addContextItemsAtIndex,
   setInactive,

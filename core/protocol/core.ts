@@ -7,6 +7,7 @@ import type {
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
+  FileSymbolMap,
   IdeSettings,
   IndexingStatusMap,
   LLMFullCompletionOptions,
@@ -77,6 +78,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
+  "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];

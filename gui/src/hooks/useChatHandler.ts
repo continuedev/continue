@@ -38,6 +38,7 @@ import {
 import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -197,7 +198,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
 
       if (shouldGatherContext) {
-        dispatch(setIsGatheringContext(true));
+        dispatch(
+          setIsGatheringContext({
+            isGathering: true,
+            gatheringMessage: "Gathering Context",
+          }),
+        );
       }
 
       // Resolve context providers and construct new history
@@ -207,9 +213,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           modifiers,
           ideMessenger,
           defaultContextProviders,
+          dispatch,
         );
-
-      dispatch(setIsGatheringContext(false));
 
       // Automatically use currently open file
       if (!modifiers.noContext) {
@@ -250,7 +255,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         }
       }
 
-      // dispatch(addContextItems(contextItems));
+      await updateFileSymbolsFromContextItems(
+        selectedContextItems,
+        ideMessenger,
+        dispatch,
+      );
 
       const message: ChatMessage = {
         role: "user",

@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -20,7 +20,10 @@ import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { ContextItemWithId } from "core";
+import { RootState } from "../../redux/store";
+import { ContextItemWithId, SymbolWithRange } from "core";
+import SymbolLink from "./SymbolLink";
+import { useSelector } from "react-redux";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -93,7 +96,7 @@ interface StyledMarkdownPreviewProps {
   className?: string;
   isRenderingInStepContainer?: boolean; // Currently only used to control the rendering of codeblocks
   scrollLocked?: boolean;
-  contextItems?: ContextItemWithId[];
+  itemIndex?: number;
 }
 
 const HLJS_LANGUAGE_CLASSNAME_PREFIX = "language-";
@@ -117,12 +120,10 @@ function getCodeChildrenContent(children: any) {
   } else if (
     Array.isArray(children) &&
     children.length > 0 &&
-    typeof children[0] === "string" &&
-    children[0] !== ""
+    typeof children[0] === "string"
   ) {
     return children[0];
   }
-
   return undefined;
 }
 
@@ -154,6 +155,28 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
+  const contextItems = useSelector(
+    (state: RootState) =>
+      state.state.history[props.itemIndex - 1]?.contextItems,
+  );
+  const symbols = useSelector((state: RootState) => state.state.symbols);
+
+  // The refs are a workaround because rehype options are stored on initiation
+  // So they won't use the most up-to-date state values
+  // So in this case we just put them in refs
+  const symbolsRef = useRef<SymbolWithRange[]>([]);
+  const contextItemsRef = useRef<ContextItemWithId[]>([]);
+  
+  useEffect(() => {
+    contextItemsRef.current = contextItems || [];
+  }, [contextItems]);
+  useEffect(() => {
+    // Note, before I was only looking for symbols that matched
+    // Context item files on current history item
+    // but in practice global symbols for session makes way more sense
+    symbolsRef.current = Object.values(symbols).flat();
+  }, [symbols]);
+
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [remarkMath, () => processCodeBlocks],
     rehypePlugins: [
@@ -236,16 +259,30 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         code: ({ node, ...codeProps }) => {
           const content = getCodeChildrenContent(codeProps.children);
 
-          if (props.contextItems) {
-            const ctxItem = props.contextItems.find((ctxItem) =>
+          if (content && contextItemsRef.current) {
+            const ctxItem = contextItemsRef.current.find((ctxItem) =>
               ctxItem.uri?.value.includes(content),
             );
             if (ctxItem) {
               const rif = ctxItemToRifWithContents(ctxItem);
               return <FilenameLink rif={rif} />;
             }
-          }
 
+            const exactSymbol = symbolsRef.current.find(
+              (s) => s.name === content,
+            );
+            if (exactSymbol) {
+              return <SymbolLink content={content} symbol={exactSymbol} />;
+            }
+
+            // PARTIAL - this is the case where the llm returns e.g. `subtract(number)` instead of `subtract`
+            const partialSymbol = symbolsRef.current.find((s) =>
+              content.startsWith(s.name),
+            );
+            if (partialSymbol) {
+              return <SymbolLink content={content} symbol={partialSymbol} />;
+            }
+          }
           return <code {...codeProps}>{codeProps.children}</code>;
         },
       },

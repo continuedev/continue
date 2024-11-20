@@ -1,11 +1,12 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionInfo } from "core";
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import useHistory from "../../hooks/useHistory";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { RootState } from "../../redux/store";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -28,6 +29,9 @@ export function HistoryTableRow({
   const [editing, setEditing] = useState(false);
   const [sessionTitleEditValue, setSessionTitleEditValue] = useState(
     session.title,
+  );
+  const currentSessionId = useSelector(
+    (state: RootState) => state.state.sessionId,
   );
 
   const { saveSession, deleteSession, loadSession, getSession, updateSession } =
@@ -59,8 +63,11 @@ export function HistoryTableRow({
           className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
           onClick={async () => {
             // Save current session
-            await saveSession();
-            await loadSession(session.sessionId);
+            if (session.sessionId !== currentSessionId) {
+              await saveSession();
+              await loadSession(session.sessionId);
+            }
+
             navigate("/");
           }}
         >

@@ -14,6 +14,11 @@ import {
 import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 
+/**
+ * Bedrock class implements AWS Bedrock LLM integration.
+ * It handles streaming completions and chat messages using AWS Bedrock runtime.
+ * Supports both text and image inputs through Claude 3 models.
+ */
 class Bedrock extends BaseLLM {
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
@@ -122,7 +127,9 @@ class Bedrock extends BaseLLM {
         // TODO: Additionally, consider implementing a global exception handler for the providers to give users clearer feedback.
         // For example, differentiate between client-side errors (4XX status codes) and server-side issues (5XX status codes),
         // providing meaningful error messages to improve the user experience.
-        stopSequences: options.stop?.filter((stop) => stop.trim() !== "").slice(0, 4),
+        stopSequences: options.stop
+          ?.filter((stop) => stop.trim() !== "")
+          .slice(0, 4),
       },
     };
   }
@@ -164,7 +171,7 @@ class Bedrock extends BaseLLM {
     try {
       return await fromIni({
         profile: this.profile,
-        ignoreCache: true
+        ignoreCache: true,
       })();
     } catch (e) {
       console.warn(

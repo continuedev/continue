@@ -20,9 +20,11 @@ import { isJetBrains } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
-function useSetup(dispatch: Dispatch<any>) {
+function useSetup(dispatch: Dispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const history = useSelector((store: RootState) => store.state.history);
 
   const initialConfigLoad = useRef(false);
   const loadConfig = useCallback(async () => {
@@ -66,6 +68,20 @@ function useSetup(dispatch: Dispatch<any>) {
     await loadConfig();
   });
 
+  // Load symbols for chat on any session change
+  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const sessionIdRef = useRef("");
+  useEffect(() => {
+    if (sessionIdRef.current !== sessionId) {
+      updateFileSymbolsFromContextItems(
+        history.flatMap((item) => item.contextItems),
+        ideMessenger,
+        dispatch,
+      );
+    }
+    sessionIdRef.current = sessionId;
+  }, [sessionId, history, ideMessenger, dispatch]);
+
   useEffect(() => {
     // Override persisted state
     dispatch(setInactive());
@@ -93,7 +109,6 @@ function useSetup(dispatch: Dispatch<any>) {
   );
 
   // IDE event listeners
-  const history = useSelector((store: RootState) => store.state.history);
   useWebviewListener(
     "getWebviewHistoryLength",
     async () => {
