@@ -63,6 +63,7 @@ import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
+import ToolOutput from "./ToolCallDiv/ToolOutput";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -348,7 +349,10 @@ export function Chat() {
                   contextItems={item.contextItems}
                 />
               ) : item.message.role === "tool" ? (
-                <div>{stripImages(item.message.content)}</div>
+                <ToolOutput
+                  output={stripImages(item.message.content)}
+                  toolCallId={item.message.toolCallId}
+                />
               ) : item.message.role === "assistant" &&
                 item.message.toolCalls ? (
                 <div>

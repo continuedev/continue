@@ -32,10 +32,11 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   useEffect(() => {
     // Once the JSON can successfully parse, then set state to "generated"
     if (props.toolCall.function.arguments.length === 0) {
+      dispatch(setGeneratedOutput(props.toolCall));
       return;
     }
 
-    const [done, _] = incrementalParseJson(props.toolCall.function.arguments);
+    const [done, j] = incrementalParseJson(props.toolCall.function.arguments);
     if (done) {
       dispatch(setGeneratedOutput(props.toolCall));
     }

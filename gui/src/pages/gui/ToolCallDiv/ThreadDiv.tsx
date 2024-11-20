@@ -18,7 +18,6 @@ const Container = styled.div`
 
 const ChildrenDiv = styled.div`
   margin: 8px;
-  margin-left: 0;
 `;
 
 const W = 16;

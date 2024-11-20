@@ -12,13 +12,7 @@ export const viewRepoMapTool: Tool = {
     description: "View the repository map",
     parameters: {
       type: "object",
-      required: ["repo_url"],
-      properties: {
-        repo_url: {
-          type: "string",
-          description: "The URL of the repository to view",
-        },
-      },
+      properties: {},
     },
   },
 };

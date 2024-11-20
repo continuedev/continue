@@ -25,16 +25,7 @@ function FunctionSpecificToolCallDiv({
     case "run_terminal_command":
       return <RunTerminalCommand command={args.command} state={state} />;
     default:
-      return (
-        <>
-          <div>{toolCall.function.name}</div>
-          {Object.entries(args)?.map(([key, value]) => (
-            <div key={key}>
-              {key}: {JSON.stringify(value)}
-            </div>
-          ))}
-        </>
-      );
+      return null;
   }
 }
 

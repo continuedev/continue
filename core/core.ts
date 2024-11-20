@@ -763,7 +763,7 @@ export class Core {
       const llm = await this.getSelectedModel();
 
       const result = await tool.action(
-        JSON.parse(toolCall.function.arguments),
+        JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
           llm,
