@@ -24,6 +24,9 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
 
     const octokit = new Octokit({
       auth: this.options?.githubToken,
+      baseUrl: this.options?.domain
+        ? `https://${this.options.domain}/api/v3`
+        : undefined,
       request: {
         fetch: extras.fetch,
       },
