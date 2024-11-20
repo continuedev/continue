@@ -20,7 +20,7 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
 
   return (
     <span
-      className="hover: mb-[0.25em] inline-flex cursor-pointer flex-row items-center gap-[0.2rem] align-middle hover:opacity-70"
+      className="hover: mb-[0.25em] mr-[0.1em] inline-flex cursor-pointer flex-row items-center gap-[0.2rem] rounded-md align-middle hover:ring-1"
       onClick={onClick}
     >
       <code className="align-middle underline underline-offset-2">

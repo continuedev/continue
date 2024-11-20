@@ -21,7 +21,7 @@ function FilenameLink({ rif }: FilenameLinkProps) {
 
   return (
     <span
-      className="mb-[0.25em] inline-flex cursor-pointer items-center pr-[0.1em] align-middle hover:opacity-70"
+      className="mb-[0.25em] mr-[0.1em] inline-flex cursor-pointer items-center gap-0.5 rounded-md pr-[0.3em] align-middle hover:ring-1"
       onClick={onClick}
     >
       <FileIcon filename={rif.filepath} height="20px" width="20px" />
