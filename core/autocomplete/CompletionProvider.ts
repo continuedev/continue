@@ -177,13 +177,9 @@ export class CompletionProvider {
       const extraSnippets = await this._getExtraSnippets(helper);
 
       const [snippets, diff, workspaceDirs] = await Promise.all([
-        await aggregateSnippets(
-          helper,
-          extraSnippets,
-          this.contextRetrievalService,
-        ),
-        await this.ide.getDiff(true),
-        await this.ide.getWorkspaceDirs(),
+        aggregateSnippets(helper, extraSnippets, this.contextRetrievalService),
+        this.ide.getDiff(true),
+        this.ide.getWorkspaceDirs(),
       ]);
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
