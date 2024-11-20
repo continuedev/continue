@@ -1,15 +1,18 @@
-import { Tool } from "..";
-import { makeCreateNewFileTool } from "./createNewFile";
+import { createNewFileTool } from "./createNewFile";
+import { exactSearchTool } from "./exactSearch";
 import { runTerminalCommandTool } from "./runTerminalCommand";
-import { ToolParams } from "./types";
+import { searchWebTool } from "./searchWeb";
+import { viewDiffTool } from "./viewDiff";
+import { viewFileTreeTool } from "./viewFileTree";
+import { viewSubdirectoryTool } from "./viewSubdirectory";
 
-export function instantiateTool(name: string, { ide }: ToolParams): Tool {
-  switch (name) {
-    case "create_new_file":
-      return makeCreateNewFileTool({ ide });
-    case "run_terminal_command":
-      return runTerminalCommandTool({ ide });
-    default:
-      throw new Error(`Unknown tool ${name}`);
-  }
-}
+export const allTools = [
+  createNewFileTool,
+  runTerminalCommandTool,
+  runTerminalCommandTool,
+  viewSubdirectoryTool,
+  viewFileTreeTool,
+  exactSearchTool,
+  searchWebTool,
+  viewDiffTool,
+];

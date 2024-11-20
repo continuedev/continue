@@ -34,7 +34,7 @@ import { TTS } from "./util/tts";
 
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { instantiateTool } from "./tools";
+import { allTools } from "./tools";
 import type { IMessenger, Message } from "./util/messenger";
 
 export class Core {
@@ -751,8 +751,26 @@ export class Core {
     });
 
     on("tools/call", async ({ data: { toolCall } }) => {
-      const tool = instantiateTool(toolCall.function.name, { ide: this.ide });
-      const result = await tool.action(JSON.parse(toolCall.function.arguments));
+      const tool = allTools.find(
+        (t) => t.function.name === toolCall.function.name,
+      );
+
+      if (!tool) {
+        return { error: "Tool not found", result: undefined };
+      }
+
+      const config = await this.configHandler.loadConfig();
+      const llm = await this.getSelectedModel();
+
+      const result = await tool.action(
+        JSON.parse(toolCall.function.arguments),
+        {
+          ide: this.ide,
+          llm,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        },
+      );
       return { result };
     });
   }

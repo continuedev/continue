@@ -81,7 +81,7 @@ export interface ILLM extends LLMOptions {
   complete(
     prompt: string,
     signal: AbortSignal,
-    options?: LLMFullCompletionOptions
+    options?: LLMFullCompletionOptions,
   ): Promise<string>;
 
   streamComplete(
@@ -846,6 +846,12 @@ interface Prediction {
       }[];
 }
 
+export interface ToolExtras {
+  ide: IDE;
+  llm: ILLM;
+  fetch: FetchFunction;
+}
+
 export interface Tool {
   type: "function";
   function: {
@@ -854,7 +860,7 @@ export interface Tool {
     parameters?: Record<string, any>;
     strict?: boolean | null;
   };
-  action: (parameters: any) => Promise<any>;
+  action: (parameters: any, extras: ToolExtras) => Promise<any>;
 }
 
 interface BaseCompletionOptions {

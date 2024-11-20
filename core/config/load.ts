@@ -1,10 +1,11 @@
 import { execSync } from "child_process";
-import * as JSONC from "comment-json";
 import * as fs from "fs";
 import os from "os";
 import path from "path";
 
+import * as JSONC from "comment-json";
 import * as tar from "tar";
+
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -58,7 +59,7 @@ import {
   readAllGlobalPromptFiles,
 } from "../util/paths";
 
-import { makeCreateNewFileTool, runTerminalCommandTool } from "../tools";
+import { allTools } from "../tools";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -336,10 +337,7 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
-    model.completionOptions.tools = [
-      makeCreateNewFileTool({ ide }),
-      runTerminalCommandTool({ ide }),
-    ];
+    model.completionOptions.tools = allTools;
   }
 
   if (allowFreeTrial) {

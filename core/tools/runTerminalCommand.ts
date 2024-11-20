@@ -1,10 +1,9 @@
 import { Tool } from "..";
-import { ToolParams } from "./types";
 
-export const runTerminalCommandTool = ({ ide }: ToolParams): Tool => ({
+export const runTerminalCommandTool: Tool = {
   type: "function",
-  action: async (args) => {
-    await ide.runCommand(args.command);
+  action: async (args, extras) => {
+    await extras.ide.runCommand(args.command);
   },
   function: {
     name: "run_terminal_command",
@@ -21,4 +20,4 @@ export const runTerminalCommandTool = ({ ide }: ToolParams): Tool => ({
       },
     },
   },
-});
+};
