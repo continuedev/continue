@@ -36,8 +36,8 @@ export default function StepContainer(props: StepContainerProps) {
   );
   const uiConfig = useUIConfig();
   const shouldHideActions = active && props.isLast;
-  const isStepAheadOfCurCheckpoint =
-    isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
+  // const isStepAheadOfCurCheckpoint =
+  //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
     if (!active) {
@@ -76,7 +76,7 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div
-      className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
+      // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
       style={{
         minHeight: props.isLast ? "50vh" : 0,
       }}

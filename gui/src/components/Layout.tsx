@@ -12,7 +12,6 @@ import {
   setEditStatus,
   addCodeToEdit,
   focusEdit,
-  setIsInEditMode,
 } from "../redux/slices/editModeState";
 import { setShowDialog } from "../redux/slices/uiStateSlice";
 import {
@@ -193,9 +192,8 @@ const Layout = () => {
 
   useWebviewListener(
     "focusEdit",
-    async (payload) => {
-      dispatch(setIsInEditMode(true));
-      dispatch(focusEdit(payload));
+    async () => {
+      dispatch(focusEdit());
       navigate("/edit");
     },
     [navigate],

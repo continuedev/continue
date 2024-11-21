@@ -13,9 +13,11 @@ export interface EditActionsProps {
 }
 
 export default function EditActions({ index, item }: EditActionsProps) {
-  const curCheckpointIndex = useSelector(
-    (store: RootState) => store.state.curCheckpointIndex,
-  );
+  // const curCheckpointIndex = useSelector(
+  //   (store: RootState) => store.state.curCheckpointIndex,
+  // );
+
+  const active = useSelector((state: RootState) => state.state.active);
 
   const applyStates = useSelector(
     (state: RootState) => state.state.applyStates,
@@ -29,10 +31,10 @@ export default function EditActions({ index, item }: EditActionsProps) {
     (state) => state.status === "closed",
   );
 
-  const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
+  // const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
   const hasPendingApplies = pendingApplyStates.length > 0;
 
-  console.log({ isCurCheckpoint, curCheckpointIndex, index });
+  if (active) return;
 
   return (
     <div
@@ -40,14 +42,21 @@ export default function EditActions({ index, item }: EditActionsProps) {
     >
       <div className="flex-1" />
 
-      {isCurCheckpoint && (
+      {/* {isCurCheckpoint && (
         <div className="flex-2 flex justify-center">
           {hasPendingApplies && (
             <AcceptRejectAllButtons pendingApplyStates={pendingApplyStates} />
           )}
           {hasClosedAllStreams && <UndoAndRedoButtons />}
         </div>
-      )}
+      )} */}
+
+      <div className="flex-2 flex justify-center">
+        {hasPendingApplies && (
+          <AcceptRejectAllButtons pendingApplyStates={pendingApplyStates} />
+        )}
+        {/* {hasClosedAllStreams && <UndoAndRedoButtons />} */}
+      </div>
 
       <div className="flex flex-1 justify-end">
         <CopyIconButton

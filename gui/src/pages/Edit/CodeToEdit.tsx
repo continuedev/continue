@@ -36,14 +36,16 @@ export default function WorkingSet() {
     }
   }
 
-  const codeToEditItems = editModeState.codeToEdit.map((code, i) => (
-    <CodeToEditListItem
-      key={code.filepath + i}
-      code={code}
-      onDelete={onDelete}
-      onClickFilename={onClickFilename}
-    />
-  ));
+  const codeToEditItems = [...editModeState.codeToEdit]
+    .reverse()
+    .map((code, i) => (
+      <CodeToEditListItem
+        key={code.filepath + i}
+        code={code}
+        onDelete={onDelete}
+        onClickFilename={onClickFilename}
+      />
+    ));
 
   return (
     <div

@@ -25,7 +25,7 @@ function FilenameLink({ rif }: FilenameLinkProps) {
       onClick={onClick}
     >
       <FileIcon filename={rif.filepath} height="20px" width="20px" />
-      <span className="align-middle underline underline-offset-2">
+      <span className="align-baseline underline underline-offset-2 mb-0.5">
         {getBasename(rif.filepath)}
       </span>
     </span>

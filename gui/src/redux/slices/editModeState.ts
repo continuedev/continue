@@ -31,6 +31,7 @@ export const editModeStateSlice = createSlice({
       state.fileAfterEdit = undefined;
     },
     focusEdit: (state) => {
+      state.isInEditMode = true;
       state.editStatus = "not-started";
       state.previousInputs = [];
       state.fileAfterEdit = undefined;
@@ -40,7 +41,6 @@ export const editModeStateSlice = createSlice({
       state.editStatus = "streaming";
     },
     removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      // Remove entry from codeToEdit that doesn't match the payload's filepath and contents
       state.codeToEdit = state.codeToEdit.filter(
         (entry) =>
           !(
@@ -96,9 +96,6 @@ export const editModeStateSlice = createSlice({
       state.editStatus = "done";
       state.previousInputs = [];
     },
-    setIsInEditMode: (state, { payload }: PayloadAction<boolean>) => {
-      state.isInEditMode = payload;
-    },
   },
 });
 
@@ -111,6 +108,5 @@ export const {
   removeCodeToEdit,
   focusEdit,
   clearCodeToEdit,
-  setIsInEditMode,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;
