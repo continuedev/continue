@@ -3,7 +3,7 @@ import { HelperVars } from "../util/HelperVars";
 import { RecentlyEditedRange } from "../util/types";
 
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
-import { AutocompleteSnippet, getSymbolsForSnippet } from "./ranking";
+import { AutocompleteSnippetDeprecated, getSymbolsForSnippet } from "./ranking";
 import { RootPathContextService } from "./root-path-context/RootPathContextService";
 
 export class ContextRetrievalService {
@@ -20,13 +20,13 @@ export class ContextRetrievalService {
 
   public async retrieveCandidateSnippets(
     helper: HelperVars,
-    extraSnippets: AutocompleteSnippet[],
+    extraSnippets: AutocompleteSnippetDeprecated[],
   ) {
     if (helper.options.useOtherFiles === false) {
       return [];
     }
 
-    let snippets: AutocompleteSnippet[] = [];
+    let snippets: AutocompleteSnippetDeprecated[] = [];
 
     // Snippets injected by the IDE for IDE-specific reasons
     snippets.push(...extraSnippets);
@@ -52,7 +52,7 @@ export class ContextRetrievalService {
 
   private getSnippetsFromRecentlyEditedRanges(
     helper: HelperVars,
-  ): AutocompleteSnippet[] {
+  ): AutocompleteSnippetDeprecated[] {
     if (helper.options.useRecentlyEdited === false) {
       return [];
     }
@@ -85,7 +85,7 @@ export class ContextRetrievalService {
 
   private async getSnippetsFromImportDefinitions(
     helper: HelperVars,
-  ): Promise<AutocompleteSnippet[]> {
+  ): Promise<AutocompleteSnippetDeprecated[]> {
     if (helper.options.useImports === false) {
       return [];
     }

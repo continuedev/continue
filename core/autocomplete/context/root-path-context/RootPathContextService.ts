@@ -12,7 +12,7 @@ import {
 } from "../../../util/treeSitter";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
-import { AutocompleteSnippet } from "../ranking";
+import { AutocompleteSnippetDeprecated } from "../ranking";
 
 function getSyntaxTreeString(
   node: Parser.SyntaxNode,
@@ -30,7 +30,7 @@ function getSyntaxTreeString(
 }
 
 export class RootPathContextService {
-  private cache = new LRUCache<string, AutocompleteSnippet[]>({
+  private cache = new LRUCache<string, AutocompleteSnippetDeprecated[]>({
     max: 100,
   });
 
@@ -72,8 +72,8 @@ export class RootPathContextService {
   private async getSnippetsForNode(
     filepath: string,
     node: Parser.SyntaxNode,
-  ): Promise<AutocompleteSnippet[]> {
-    const snippets: AutocompleteSnippet[] = [];
+  ): Promise<AutocompleteSnippetDeprecated[]> {
+    const snippets: AutocompleteSnippetDeprecated[] = [];
     const language = getFullLanguageName(filepath);
 
     let query: Parser.Query | undefined;
@@ -123,7 +123,7 @@ export class RootPathContextService {
     filepath: string,
     endPosition: Parser.Point,
     language: LanguageName,
-  ): Promise<AutocompleteSnippet[]> {
+  ): Promise<AutocompleteSnippetDeprecated[]> {
     const definitions = await this.ide.gotoDefinition({
       filepath,
       position: {
@@ -153,8 +153,8 @@ export class RootPathContextService {
     filepath: string,
     astPath: AstPath,
     // cursorIndex: number,
-  ): Promise<AutocompleteSnippet[]> {
-    const snippets: AutocompleteSnippet[] = [];
+  ): Promise<AutocompleteSnippetDeprecated[]> {
+    const snippets: AutocompleteSnippetDeprecated[] = [];
 
     let parentKey = filepath;
     for (const astNode of astPath.filter((node) =>

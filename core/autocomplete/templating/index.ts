@@ -3,7 +3,7 @@ import Handlebars from "handlebars";
 import { CompletionOptions } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
-import { AutocompleteSnippet } from "../context/ranking";
+import { AutocompleteSnippetDeprecated } from "../context/ranking";
 import { HelperVars } from "../util/HelperVars";
 
 import {
@@ -34,7 +34,7 @@ export function formatExternalSnippet(
 }
 
 function getContextComments(
-  snippets: AutocompleteSnippet[],
+  snippets: AutocompleteSnippetDeprecated[],
   lang: AutocompleteLanguageInfo,
   filepath: string,
 ) {
@@ -137,7 +137,7 @@ export function renderPrompt({
   diff,
   clipboardContent,
 }: {
-  snippets: AutocompleteSnippet[];
+  snippets: AutocompleteSnippetDeprecated[];
   workspaceDirs: string[];
   helper: HelperVars;
   diff?: string;

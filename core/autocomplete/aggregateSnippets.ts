@@ -2,14 +2,14 @@ import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 import {
   fillPromptWithSnippets,
   rankAndOrderSnippets,
-  type AutocompleteSnippet,
+  type AutocompleteSnippetDeprecated,
 } from "./context/ranking/index.js";
 import { HelperVars } from "./util/HelperVars.js";
 
 function filterSnippetsAlreadyInCaretWindow(
-  snippets: AutocompleteSnippet[],
+  snippets: AutocompleteSnippetDeprecated[],
   caretWindow: string,
-): AutocompleteSnippet[] {
+): AutocompleteSnippetDeprecated[] {
   return snippets
     .map((snippet) => ({ ...snippet }))
     .filter(
@@ -20,9 +20,9 @@ function filterSnippetsAlreadyInCaretWindow(
 
 export async function aggregateSnippets(
   helper: HelperVars,
-  extraSnippets: AutocompleteSnippet[],
+  extraSnippets: AutocompleteSnippetDeprecated[],
   contextRetrievalService: ContextRetrievalService,
-): Promise<AutocompleteSnippet[]> {
+): Promise<AutocompleteSnippetDeprecated[]> {
   let snippets = await contextRetrievalService.retrieveCandidateSnippets(
     helper,
     extraSnippets,

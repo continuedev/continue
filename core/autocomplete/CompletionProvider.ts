@@ -10,7 +10,7 @@ import { aggregateSnippets } from "./aggregateSnippets";
 // @prettier-ignore
 
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
-import { AutocompleteSnippet } from "./context/ranking/index.js";
+import { AutocompleteSnippetDeprecated } from "./context/ranking/index.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
@@ -38,7 +38,7 @@ export type GetLspDefinitionsFunction = (
   cursorIndex: number,
   ide: IDE,
   lang: AutocompleteLanguageInfo,
-) => Promise<AutocompleteSnippet[]>;
+) => Promise<AutocompleteSnippetDeprecated[]>;
 
 export class CompletionProvider {
   private autocompleteCache = AutocompleteLruCache.get();
@@ -291,7 +291,7 @@ export class CompletionProvider {
 
   private async _getExtraSnippets(
     helper: HelperVars,
-  ): Promise<AutocompleteSnippet[]> {
+  ): Promise<AutocompleteSnippetDeprecated[]> {
     let extraSnippets = helper.options.useOtherFiles
       ? ((await Promise.race([
           this.getDefinitionsFromLsp(
@@ -304,7 +304,7 @@ export class CompletionProvider {
           new Promise((resolve) => {
             setTimeout(() => resolve([]), 100);
           }),
-        ])) as AutocompleteSnippet[])
+        ])) as AutocompleteSnippetDeprecated[])
       : [];
 
     const workspaceDirs = await this.ide.getWorkspaceDirs();

@@ -1565,7 +1565,19 @@ interface User {
   age: number;
 }`,
   },
+  {
+    description: "Should autocomplete TypeScript interface declarations",
+    filename: "autocomplete.ts",
+    input: `interface AutocompleteDiffSnippet extends BaseAutocompleteSnippet {}
 
+interface AutocompleteCodeSnippet`,
+    llmOutput: ` extends BaseAutocompleteSnippet {
+  filepath: string;
+}`,
+    expectedCompletion: ` extends BaseAutocompleteSnippet {
+  filepath: string;
+}`,
+  },
   {
     description:
       "Should autocomplete a TypeScript arrow function inside a variable assignment",

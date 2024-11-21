@@ -2,7 +2,7 @@
 
 import { CompletionOptions } from "../../index.js";
 import { getLastNPathParts, shortestRelativePaths } from "../../util/index.js";
-import { AutocompleteSnippet } from "../context/ranking/index.js";
+import { AutocompleteSnippetDeprecated } from "../context/ranking/index.js";
 
 export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
@@ -10,7 +10,7 @@ export interface AutocompleteTemplate {
     suffix: string,
     filepath: string,
     reponame: string,
-    snippets: AutocompleteSnippet[],
+    snippets: AutocompleteSnippetDeprecated[],
   ) => [string, string];
   template:
     | string
@@ -20,7 +20,7 @@ export interface AutocompleteTemplate {
         filepath: string,
         reponame: string,
         language: string,
-        snippets: AutocompleteSnippet[],
+        snippets: AutocompleteSnippetDeprecated[],
       ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
@@ -73,7 +73,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     suffix: string,
     filepath: string,
     reponame: string,
-    snippets: AutocompleteSnippet[],
+    snippets: AutocompleteSnippetDeprecated[],
   ): [string, string] => {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
@@ -101,7 +101,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     filepath: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippet[],
+    snippets: AutocompleteSnippetDeprecated[],
   ): string => {
     return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
@@ -133,7 +133,7 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
     filename: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippet[],
+    snippets: AutocompleteSnippetDeprecated[],
   ): string => {
     const otherFiles =
       snippets.length === 0
@@ -187,7 +187,7 @@ const codegeexFimTemplate: AutocompleteTemplate = {
     filepath: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippet[],
+    snippets: AutocompleteSnippetDeprecated[],
   ): string => {
     const relativePaths = shortestRelativePaths([
       ...snippets.map((snippet) => snippet.filepath),
@@ -233,7 +233,7 @@ const holeFillerTemplate: AutocompleteTemplate = {
     filename: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippet[],
+    snippets: AutocompleteSnippetDeprecated[],
   ) => {
     // From https://github.com/VictorTaelin/AI-scripts
     const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
