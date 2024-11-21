@@ -95,11 +95,8 @@ class OpenAI extends BaseLLM {
     );
   }
 
-  private supportsPrediction(model: string): boolean {
-    return [
-      "gpt-4o-mini",
-      "gpt-4o"
-    ].includes(model);
+  protected supportsPrediction(model: string): boolean {
+    return ["gpt-4o-mini", "gpt-4o"].includes(model);
   }
 
   protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
@@ -120,9 +117,9 @@ class OpenAI extends BaseLLM {
           : url.host === "api.deepseek.com"
             ? options.stop?.slice(0, 16)
             : url.port === "1337" ||
-              url.host === "api.openai.com" ||
-              url.host === "api.groq.com" ||
-              this.apiType === "azure"
+                url.host === "api.openai.com" ||
+                url.host === "api.groq.com" ||
+                this.apiType === "azure"
               ? options.stop?.slice(0, 4)
               : options.stop,
     };
@@ -143,10 +140,12 @@ class OpenAI extends BaseLLM {
     }
 
     if (options.prediction && this.supportsPrediction(options.model)) {
-      if (finalOptions.presence_penalty) { // prediction doesn't support > 0
+      if (finalOptions.presence_penalty) {
+        // prediction doesn't support > 0
         finalOptions.presence_penalty = undefined;
       }
-      if (finalOptions.frequency_penalty) { // prediction doesn't support > 0
+      if (finalOptions.frequency_penalty) {
+        // prediction doesn't support > 0
         finalOptions.frequency_penalty = undefined;
       }
       finalOptions.max_completion_tokens = undefined;
@@ -167,11 +166,13 @@ class OpenAI extends BaseLLM {
 
   protected async _complete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): Promise<string> {
     let completion = "";
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
+      signal,
       options,
     )) {
       completion += chunk.content;
@@ -200,10 +201,12 @@ class OpenAI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
+      signal,
       options,
     )) {
       yield stripImages(chunk.content);
@@ -212,6 +215,7 @@ class OpenAI extends BaseLLM {
 
   protected async *_legacystreamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args: any = this._convertArgs(options, []);
@@ -225,6 +229,7 @@ class OpenAI extends BaseLLM {
         ...args,
         stream: true,
       }),
+      signal
     });
 
     for await (const value of streamSse(response)) {
@@ -236,6 +241,7 @@ class OpenAI extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (
@@ -247,6 +253,7 @@ class OpenAI extends BaseLLM {
     ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),
+        signal,
         options,
       )) {
         yield {
@@ -267,6 +274,7 @@ class OpenAI extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify(body),
+      signal
     });
 
     // Handle non-streaming response
@@ -286,6 +294,7 @@ class OpenAI extends BaseLLM {
   protected async *_streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const endpoint = this.apiBase?.includes("completions") ? new URL(this.apiBase) : new URL("fim/completions", this.apiBase);
@@ -309,6 +318,7 @@ class OpenAI extends BaseLLM {
         "x-api-key": this.apiKey ?? "",
         Authorization: `Bearer ${this.apiKey}`,
       },
+      signal
     });
     for await (const chunk of streamSse(resp)) {
       yield chunk.choices[0].delta.content;

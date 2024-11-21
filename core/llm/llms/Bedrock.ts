@@ -14,6 +14,11 @@ import {
 import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 
+/**
+ * Bedrock class implements AWS Bedrock LLM integration.
+ * It handles streaming completions and chat messages using AWS Bedrock runtime.
+ * Supports both text and image inputs through Claude 3 models.
+ */
 class Bedrock extends BaseLLM {
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
@@ -37,16 +42,18 @@ class Bedrock extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
-    for await (const update of this._streamChat(messages, options)) {
+    for await (const update of this._streamChat(messages, signal, options)) {
       yield stripImages(update.content);
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const credentials = await this._getCredentials();
@@ -84,7 +91,7 @@ class Bedrock extends BaseLLM {
 
     const input = this._generateConverseInput(messages, options);
     const command = new ConverseStreamCommand(input);
-    const response = await client.send(command);
+    const response = await client.send(command, { abortSignal: signal});
 
     if (response.stream) {
       for await (const chunk of response.stream) {
@@ -120,7 +127,9 @@ class Bedrock extends BaseLLM {
         // TODO: Additionally, consider implementing a global exception handler for the providers to give users clearer feedback.
         // For example, differentiate between client-side errors (4XX status codes) and server-side issues (5XX status codes),
         // providing meaningful error messages to improve the user experience.
-        stopSequences: options.stop?.filter((stop) => stop.trim() !== "").slice(0, 4),
+        stopSequences: options.stop
+          ?.filter((stop) => stop.trim() !== "")
+          .slice(0, 4),
       },
     };
   }
@@ -162,7 +171,7 @@ class Bedrock extends BaseLLM {
     try {
       return await fromIni({
         profile: this.profile,
-        ignoreCache: true
+        ignoreCache: true,
       })();
     } catch (e) {
       console.warn(

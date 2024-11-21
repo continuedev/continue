@@ -60,6 +60,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
@@ -73,6 +74,7 @@ class FreeTrial extends BaseLLM {
         prompt,
         ...args,
       }),
+      signal
     });
 
     let completion = "";
@@ -103,6 +105,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
@@ -120,6 +123,7 @@ class FreeTrial extends BaseLLM {
         messages: messages.map(this._convertMessage),
         ...args,
       }),
+      signal
     });
 
     let completion = "";
@@ -140,6 +144,7 @@ class FreeTrial extends BaseLLM {
   async *_streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
@@ -153,6 +158,7 @@ class FreeTrial extends BaseLLM {
           suffix,
           ...args,
         }),
+        signal
       });
 
       let completion = "";

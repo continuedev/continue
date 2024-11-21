@@ -1,8 +1,12 @@
 {
   "devDependencies": {
-    "prettier": "^3.3.3",
-    "prettier-plugin-tailwindcss": "^0.6.8",
     "@typescript-eslint/parser": "^7.8.0",
-    "eslint-plugin-import": "^2.29.1"
+    "eslint-plugin-import": "^2.29.1",
+    "husky": "^9.1.7",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.8"
+  },
+  "scripts": {
+    "prepare": "husky"
   }
 }

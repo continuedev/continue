@@ -21,11 +21,12 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     const issueId = query;
     const { Octokit } = await import("@octokit/rest");
-    const domain = this.options?.domain ?? "github.com";
 
     const octokit = new Octokit({
       auth: this.options?.githubToken,
-      baseUrl: `https://${domain}/api/v3`,
+      baseUrl: this.options?.domain
+        ? `https://${this.options.domain}/api/v3`
+        : undefined,
       request: {
         fetch: extras.fetch,
       },

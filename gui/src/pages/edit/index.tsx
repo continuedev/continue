@@ -174,7 +174,10 @@ function Edit() {
                     },
                     ideMessenger,
                     [],
+                    dispatch,
                   );
+
+                // Note, not currently updating file symbols in edit mode
 
                 const prompt = [
                   ...contextItems.map((item) => item.content),
