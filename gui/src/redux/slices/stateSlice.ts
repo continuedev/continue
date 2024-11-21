@@ -5,6 +5,7 @@ import {
   ChatMessage,
   Checkpoint,
   ContextItemWithId,
+  DocsSuggestions,
   FileSymbolMap,
   IndexingStatus,
   PersistedSessionInfo,
@@ -47,6 +48,7 @@ type State = {
   };
   streamAborter: AbortController;
   isMultifileEdit: boolean;
+  docsSuggestions: DocsSuggestions;
 };
 
 const initialState: State = {
@@ -89,6 +91,7 @@ const initialState: State = {
     },
   },
   streamAborter: new AbortController(),
+  docsSuggestions: {},
 };
 
 export const stateSlice = createSlice({
@@ -447,6 +450,13 @@ export const stateSlice = createSlice({
         [payload.type]: payload.hidden,
       };
     },
+    updateDocsSuggestions: (
+      state,
+      { payload }: PayloadAction<DocsSuggestions>,
+    ) => {
+      console.log("FROM REDUX", payload);
+      state.docsSuggestions = payload;
+    },
   },
 });
 
@@ -480,6 +490,7 @@ export const {
   updateIndexingStatus,
   setIndexingChatPeekHidden,
   abortStream,
+  updateDocsSuggestions,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

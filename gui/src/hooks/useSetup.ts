@@ -11,6 +11,7 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  updateDocsSuggestions,
   updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
@@ -85,6 +86,7 @@ function useSetup(dispatch: Dispatch) {
   // ON LOAD
   useEffect(() => {
     ideMessenger.post("docs/getSuggestedDocs", undefined);
+
     // Override persisted state
     dispatch(setInactive());
 
@@ -115,6 +117,10 @@ function useSetup(dispatch: Dispatch) {
       }
     }
   }, []);
+
+  useWebviewListener("docs/suggestions", async (data) => {
+    dispatch(updateDocsSuggestions(data));
+  });
 
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
 

@@ -739,7 +739,8 @@ export class Core {
       return this.docsService.initStatuses();
     });
     on("docs/getSuggestedDocs", async (msg) => {
-      getAllSuggestedDocs(this.ide);
+      const suggestedDocs = await getAllSuggestedDocs(this.ide);
+      this.messenger.send("docs/suggestions", suggestedDocs);
     });
     //
 

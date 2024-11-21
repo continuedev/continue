@@ -1219,3 +1219,6 @@ export type PackageDocsResult = {
   | { error: string; details?: never }
   | { details: PackageDetailsSuccess; error?: never }
 );
+
+// language -> package -> package info
+export type DocsSuggestions = Record<string, PackageDocsResult[]>;

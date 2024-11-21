@@ -1,4 +1,5 @@
 import {
+  DocsSuggestions,
   FilePathAndName,
   IDE,
   PackageDetails,
@@ -80,7 +81,7 @@ export async function getAllSuggestedDocs(ide: IDE) {
   });
 
   // Get documentation links for all packages
-  const docsByLanguage: Record<string, PackageDocsResult[]> = {};
+  const docsByLanguage: DocsSuggestions = {};
   await Promise.all(
     PACKAGE_CRAWLERS.map(async (Crawler) => {
       const crawler = new Crawler();
@@ -112,7 +113,6 @@ export async function getAllSuggestedDocs(ide: IDE) {
       );
     }),
   );
-
   return docsByLanguage;
 }
 

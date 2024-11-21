@@ -5,7 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
-import { useContext, useLayoutEffect, useRef, useState } from "react";
+import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Button, HelperText, Input, lightGray, SecondaryButton } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -15,6 +15,7 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import IndexingStatusViewer from "../indexing/IndexingStatus";
+import { C } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -33,6 +34,21 @@ function AddDocsDialog() {
   const indexingStatuses = useSelector(
     (store: RootState) => store.state.indexing.statuses,
   );
+
+  const docsSuggestions = useSelector(
+    (store: RootState) => store.state.docsSuggestions,
+  );
+
+  const docsByLanguage = useMemo(() => {
+    console.log(docsSuggestions);
+    const languages = Object.keys(docsSuggestions);
+    return languages.map((language) => {
+      return {
+        language,
+        packages: docsSuggestions[language],
+      };
+    });
+  }, [docsSuggestions]);
 
   const isFormValid = startUrl && title;
 
@@ -118,8 +134,23 @@ function AddDocsDialog() {
   return (
     <div className="p-4">
       <div className="mb-8">
-        <h1>Add a documentation site</h1>
-
+        <h1>Add documentation</h1>
+        {docsByLanguage.map(({ language, packages }) => {
+          return (
+            <div key={language}>
+              <h1>{language}</h1>
+              <div>
+                {packages.map((pkg) => {
+                  return (
+                    <div>
+                      <p>{pkg.packageInfo.name}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
         <p>
           Continue pre-indexes many common documentation sites, but if there's
           one you don't see in the dropdown, enter the URL here.

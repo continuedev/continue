@@ -75,4 +75,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "getWebviewHistoryLength",
     "signInToControlPlane",
     "openDialogMessage",
+    "docs/suggestions",
   ];

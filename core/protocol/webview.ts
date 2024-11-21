@@ -2,6 +2,7 @@ import { ConfigValidationError } from "../config/validation.js";
 
 import type {
   ContextItemWithId,
+  DocsSuggestions,
   IndexingProgressUpdate,
   IndexingStatus,
 } from "../index.js";
@@ -25,4 +26,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   getWebviewHistoryLength: [undefined, number];
   signInToControlPlane: [undefined, void];
   openDialogMessage: ["account", void];
+  "docs/suggestions": [DocsSuggestions, void];
 };
