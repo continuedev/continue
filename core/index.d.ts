@@ -106,7 +106,7 @@ export interface ILLM extends LLMOptions {
   complete(
     prompt: string,
     signal: AbortSignal,
-    options?: LLMFullCompletionOptions
+    options?: LLMFullCompletionOptions,
   ): Promise<string>;
 
   streamComplete(
@@ -508,6 +508,7 @@ export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
   getDiff(includeUnstaged: boolean): Promise<string>;
+  getClipboardContent(): Promise<{ text: string; copiedAt: string }>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
@@ -525,6 +526,7 @@ export interface IDE {
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
   openFile(path: string): Promise<void>;
+  openUrl(url: string): Promise<void>;
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
@@ -979,6 +981,7 @@ export interface TabAutocompleteOptions {
   slidingWindowSize: number;
   maxSnippetPercentage: number;
   maxDiffPercentage: number;
+  maxClipboardPercentage: number;
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;

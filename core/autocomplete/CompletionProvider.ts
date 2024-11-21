@@ -29,7 +29,7 @@ const autocompleteCache = AutocompleteLruCache.get();
 const ERRORS_TO_IGNORE = [
   // From Ollama
   "unexpected server status",
-  "operation was aborted"
+  "operation was aborted",
 ];
 
 export type GetLspDefinitionsFunction = (
@@ -177,15 +177,22 @@ export class CompletionProvider {
       // or they might separately track recently edited ranges)
       const extraSnippets = await this._getExtraSnippets(helper);
 
-      const [snippets, diff, workspaceDirs] = await Promise.all([
-        aggregateSnippets(helper, extraSnippets, this.contextRetrievalService),
-        this.ide.getDiff(true),
-        this.ide.getWorkspaceDirs(),
-      ]);
+      const [snippets, diff, clipboardContent, workspaceDirs] =
+        await Promise.all([
+          aggregateSnippets(
+            helper,
+            extraSnippets,
+            this.contextRetrievalService,
+          ),
+          this.ide.getDiff(true),
+          this.ide.getClipboardContent(),
+          this.ide.getWorkspaceDirs(),
+        ]);
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
         snippets,
         diff,
+        clipboardContent,
         workspaceDirs,
         helper,
       });

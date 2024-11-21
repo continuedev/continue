@@ -37,7 +37,7 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
     return (
       <>
         <div
-          className="flex cursor-default items-center gap-1"
+          className="flex flex-1 cursor-default select-none items-center justify-center gap-1"
           data-tooltip-id="usage_progress_bar"
         >
           <ExclamationCircleIcon width="18px" height="18px" color="red" />
@@ -54,21 +54,14 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
   return (
     <>
       <div
-        className="flex cursor-pointer flex-col text-[10px] text-gray-400"
+        className="flex flex-1 cursor-pointer flex-row items-center gap-2 text-[10px] text-gray-400 sm:gap-3"
         data-tooltip-id="usage_progress_bar"
         onClick={onClick}
       >
-        <div className="xs:flex mb-0 hidden justify-between">
-          <span>
-            Free trial <span className="hidden sm:inline">requests</span>
-          </span>
-
-          <span>
-            {completed} / {total}
-          </span>
-        </div>
-
-        <div className="my-1.5 flex h-1.5 w-[40vw] rounded-md border border-solid border-gray-400">
+        <span>
+          Free trial <span className="hidden sm:inline">requests</span>
+        </span>
+        <div className="flex h-1.5 flex-1 rounded-md border border-solid border-gray-400">
           <div
             className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
               completed / total > 0.75 ? "bg-amber-500" : "bg-stone-500"
@@ -78,6 +71,9 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
             }}
           />
         </div>
+        <span>
+          {completed} / {total}
+        </span>
       </div>
       <ToolTip id="usage_progress_bar" place="top">
         {`Click to use your own API key or local LLM (required after ${FREE_TRIAL_LIMIT_REQUESTS} inputs)`}

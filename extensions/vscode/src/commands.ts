@@ -204,7 +204,7 @@ function hideGUI() {
 }
 
 // Copy everything over from extension.ts
-const commandsMap: (
+const getCommandsMap: (
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
@@ -580,10 +580,6 @@ const commandsMap: (
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
-    "continue.openSettingsUI": () => {
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
-      sidebar.webviewProtocol?.request("openSettings", undefined);
-    },
     "continue.sendMainUserInput": (text: string) => {
       sidebar.webviewProtocol?.request("userInput", {
         input: text,
@@ -683,8 +679,10 @@ const commandsMap: (
 
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
     },
-    "continue.openConfigJson": () => {
-      ide.openFile(getConfigJsonPath());
+    "continue.openConfig": () => {
+      core.invoke("config/openProfile", {
+        profileId: undefined,
+      });
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
@@ -857,7 +855,7 @@ const commandsMap: (
           vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(question) Open help center") {
           focusGUI();
-          vscode.commands.executeCommand("continue.navigateTo", "/more");
+          vscode.commands.executeCommand("continue.navigateTo", "/more", true);
         }
         quickPick.dispose();
       });
@@ -877,11 +875,49 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
-    "continue.navigateTo": (path: string) => {
-      sidebar.webviewProtocol?.request("navigateTo", { path });
+    "continue.openMorePage": () => {
+      vscode.commands.executeCommand("continue.navigateTo", "/more", true);
+    },
+    "continue.navigateTo": (path: string, toggle: boolean) => {
+      sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
       focusGUI();
     },
+    "continue.signInToControlPlane": () => {
+      sidebar.webviewProtocol?.request("signInToControlPlane", undefined);
+    },
+    "continue.openAccountDialog": () => {
+      sidebar.webviewProtocol?.request("openDialogMessage", "account");
+    },
   };
+};
+
+const registerCopyBufferSpy = (context: vscode.ExtensionContext) => {
+  const typeDisposable = vscode.commands.registerCommand(
+    "editor.action.clipboardCopyAction",
+    async (arg) => doCopy(typeDisposable),
+  );
+
+  async function doCopy(typeDisposable: any) {
+    typeDisposable.dispose(); // must dispose to avoid endless loops
+
+    await vscode.commands.executeCommand("editor.action.clipboardCopyAction");
+
+    const clipboardText = await vscode.env.clipboard.readText();
+
+    await context.workspaceState.update("continue.copyBuffer", {
+      text: clipboardText,
+      copiedAt: new Date().toISOString(),
+    });
+
+    // re-register to continue intercepting copy commands
+    typeDisposable = vscode.commands.registerCommand(
+      "editor.action.clipboardCopyAction",
+      async () => doCopy(typeDisposable),
+    );
+    context.subscriptions.push(typeDisposable);
+  }
+
+  context.subscriptions.push(typeDisposable);
 };
 
 export function registerAllCommands(
@@ -898,8 +934,10 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
+  registerCopyBufferSpy(context);
+
   for (const [command, callback] of Object.entries(
-    commandsMap(
+    getCommandsMap(
       ide,
       extensionContext,
       sidebar,

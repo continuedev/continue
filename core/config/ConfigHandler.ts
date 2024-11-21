@@ -12,6 +12,7 @@ import {
 } from "../index.js";
 import Ollama from "../llm/llms/Ollama.js";
 import { GlobalContext } from "../util/GlobalContext.js";
+import { getConfigJsonPath } from "../util/paths.js";
 
 import { ConfigResult } from "./load.js";
 import {
@@ -82,6 +83,18 @@ export class ConfigHandler {
 
   get inactiveProfiles() {
     return this.profiles.filter((p) => p.profileId !== this.selectedProfileId);
+  }
+
+  async openConfigProfile(profileId?: string) {
+    let openProfileId = profileId || this.selectedProfileId;
+    if (openProfileId === "local") {
+      await this.ide.openFile(getConfigJsonPath());
+    } else {
+      await this.ide.openUrl(
+        "https://app.continue.dev/",
+        // `https://app.continue.dev/workspaces/${openProfileId}/chat`,
+      );
+    }
   }
 
   private async fetchControlPlaneProfiles() {

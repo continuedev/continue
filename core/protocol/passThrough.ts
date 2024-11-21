@@ -21,6 +21,8 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/getSerializedProfileInfo",
     "config/deleteModel",
     "config/reload",
+    "config/listProfiles",
+    "config/openProfile",
     "context/getContextItems",
     "context/getSymbolsForFiles",
     "context/loadSubmenuItems",
@@ -53,7 +55,6 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     //
     "completeOnboarding",
     "addAutocompleteModel",
-    "config/listProfiles",
     "profiles/switch",
     "didChangeSelectedProfile",
   ];
@@ -71,4 +72,6 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "didChangeAvailableProfiles",
     "setTTSActive",
     "getWebviewHistoryLength",
+    "signInToControlPlane",
+    "openDialogMessage",
   ];

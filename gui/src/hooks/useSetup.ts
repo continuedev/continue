@@ -82,6 +82,7 @@ function useSetup(dispatch: Dispatch) {
     sessionIdRef.current = sessionId;
   }, [sessionId, history, ideMessenger, dispatch]);
 
+  // ON LOAD
   useEffect(() => {
     // Override persisted state
     dispatch(setInactive());
@@ -100,6 +101,18 @@ function useSetup(dispatch: Dispatch) {
       dispatch(setVscMachineId(msg.vscMachineId));
       // dispatch(setVscMediaUrl(msg.vscMediaUrl));
     });
+
+    // Save theme colors to local storage for immediate loading in JetBrains
+    if (isJetBrains()) {
+      for (const colorVar of VSC_THEME_COLOR_VARS) {
+        if (document.body.style.getPropertyValue(colorVar)) {
+          localStorage.setItem(
+            colorVar,
+            document.body.style.getPropertyValue(colorVar),
+          );
+        }
+      }
+    }
   }, []);
 
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
@@ -166,19 +179,7 @@ function useSetup(dispatch: Dispatch) {
     [defaultModelTitle],
   );
 
-  // Save theme colors to local storage for immediate loading in JetBrains
-  useEffect(() => {
-    if (isJetBrains()) {
-      for (const colorVar of VSC_THEME_COLOR_VARS) {
-        if (document.body.style.getPropertyValue(colorVar)) {
-          localStorage.setItem(
-            colorVar,
-            document.body.style.getPropertyValue(colorVar),
-          );
-        }
-      }
-    }
-  }, []);
+
 }
 
 export default useSetup;

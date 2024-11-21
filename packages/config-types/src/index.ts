@@ -143,6 +143,7 @@ export const tabAutocompleteOptionsSchema = z.object({
   slidingWindowSize: z.number(),
   maxSnippetPercentage: z.number(),
   maxDiffPercentage: z.number(),
+  maxClipboardPercentage: z.number(),
   useCache: z.boolean(),
   onlyMyCode: z.boolean(),
   useOtherFiles: z.boolean(),

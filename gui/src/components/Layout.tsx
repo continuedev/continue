@@ -12,7 +12,7 @@ import {
   setEditStatus,
   startEditMode,
 } from "../redux/slices/editModeState";
-import { setShowDialog } from "../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
 import {
   updateApplyState,
   updateCurCheckpoint,
@@ -25,6 +25,8 @@ import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import PostHogPageView from "./PosthogPageView";
+import AccountDialog from "./AccountDialog";
+import { AuthProvider } from "../context/Auth";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -48,22 +50,6 @@ const GridDiv = styled.div`
   grid-template-rows: 1fr auto;
   height: 100vh;
   overflow-x: visible;
-`;
-
-const ModelDropdownPortalDiv = styled.div`
-  background-color: ${vscInputBackground};
-  position: relative;
-  margin-left: 8px;
-  z-index: 200;
-  font-size: ${getFontSize()};
-`;
-
-const ProfileDropdownPortalDiv = styled.div`
-  background-color: ${vscInputBackground};
-  position: relative;
-  margin-left: 8px;
-  z-index: 200;
-  font-size: ${getFontSize() - 2};
 `;
 
 const Layout = () => {
@@ -110,16 +96,23 @@ const Layout = () => {
   }, [timeline]);
 
   useWebviewListener(
+    "openDialogMessage",
+    async (message) => {
+      if (message === "account") {
+        dispatch(setShowDialog(true));
+        dispatch(setDialogMessage(<AccountDialog />));
+      }
+    },
+    [],
+  );
+
+  useWebviewListener(
     "addModel",
     async () => {
       navigate("/models");
     },
     [navigate],
   );
-
-  useWebviewListener("openSettings", async () => {
-    ideMessenger.post("openConfigJson", undefined);
-  });
 
   useWebviewListener(
     "viewHistory",
@@ -217,56 +210,55 @@ const Layout = () => {
   }, [location]);
 
   return (
-    <LastSessionProvider>
-      <LayoutTopDiv>
-        <div
-          style={{
-            scrollbarGutter: "stable both-edges",
-            minHeight: "100%",
-            display: "grid",
-            gridTemplateRows: "1fr auto",
-          }}
-        >
-          <TextDialog
-            showDialog={showDialog}
-            onEnter={() => {
-              dispatch(setShowDialog(false));
+    <AuthProvider>
+      <LastSessionProvider>
+        <LayoutTopDiv>
+          <div
+            style={{
+              scrollbarGutter: "stable both-edges",
+              minHeight: "100%",
+              display: "grid",
+              gridTemplateRows: "1fr auto",
             }}
-            onClose={() => {
-              dispatch(setShowDialog(false));
-            }}
-            message={dialogMessage}
+          >
+            <TextDialog
+              showDialog={showDialog}
+              onEnter={() => {
+                dispatch(setShowDialog(false));
+              }}
+              onClose={() => {
+                dispatch(setShowDialog(false));
+              }}
+              message={dialogMessage}
+            />
+
+            <GridDiv className="">
+              <PostHogPageView />
+              <Outlet />
+
+              {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
+                <div
+                  className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+                  role="alert"
+                  onClick={() => navigate(ROUTES.CONFIG_ERROR)}
+                >
+                  <strong className="font-bold">Error!</strong>{" "}
+                  <span className="block sm:inline">
+                    Could not load config.json
+                  </span>
+                  <div className="mt-2 underline">Learn More</div>
+                </div>
+              )}
+              <Footer />
+            </GridDiv>
+          </div>
+          <div
+            style={{ fontSize: `${getFontSize() - 4}px` }}
+            id="tooltip-portal-div"
           />
-
-          <GridDiv className="">
-            <PostHogPageView />
-            <Outlet />
-
-            {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-              <div
-                className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-                role="alert"
-                onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-              >
-                <strong className="font-bold">Error!</strong>{" "}
-                <span className="block sm:inline">
-                  Could not load config.json
-                </span>
-                <div className="mt-2 underline">Learn More</div>
-              </div>
-            )}
-
-            <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
-            <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
-            <Footer />
-          </GridDiv>
-        </div>
-        <div
-          style={{ fontSize: `${getFontSize() - 4}px` }}
-          id="tooltip-portal-div"
-        />
-      </LayoutTopDiv>
-    </LastSessionProvider>
+        </LayoutTopDiv>
+      </LastSessionProvider>
+    </AuthProvider>
   );
 };
 

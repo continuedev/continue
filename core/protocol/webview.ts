@@ -23,4 +23,6 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   ];
   setTTSActive: [boolean, void];
   getWebviewHistoryLength: [undefined, number];
+  signInToControlPlane: [undefined, void];
+  openDialogMessage: ["account", void];
 };

@@ -69,6 +69,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, BrowserSerializedContinueConfig];
   "config/listProfiles": [undefined, ProfileDescription[]];
+  "config/openProfile": [{ profileId: string | undefined }, void];
   "context/getContextItems": [
     {
       name: string;

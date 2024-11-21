@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.232",
+  "version": "0.9.233",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -219,9 +219,10 @@
         "group": "Continue"
       },
       {
-        "command": "continue.openConfigJson",
+        "command": "continue.openConfig",
         "category": "Continue",
-        "title": "Open config.json",
+        "title": "Open Continue Config",
+        "icon": "$(gear)",
         "group": "Continue"
       },
       {
@@ -251,9 +252,22 @@
         "group": "Continue"
       },
       {
+        "command": "continue.viewLogs",
+        "category": "Continue",
+        "title": "View History",
+        "group": "Continue"
+      },
+      {
         "command": "continue.navigateTo",
         "category": "Continue",
         "title": "Navigate to a path",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.openMorePage",
+        "category": "Continue",
+        "title": "More",
+        "icon": "$(ellipsis)",
         "group": "Continue"
       },
       {
@@ -315,6 +329,20 @@
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
+      },
+      {
+        "command": "continue.signInToControlPlane",
+        "title": "Sign In",
+        "category": "Continue",
+        "group": "Continue",
+        "icon": "$(account)"
+      },
+      {
+        "command": "continue.openAccountDialog",
+        "title": "Account",
+        "category": "Continue",
+        "group": "Continue",
+        "icon": "$(account)"
       }
     ],
     "keybindings": [
@@ -491,6 +519,26 @@
         {
           "command": "continue.toggleFullScreen",
           "group": "navigation@3",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.openConfig",
+          "group": "navigation@4",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.signInToControlPlane",
+          "group": "navigation@5",
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && !continue.isSignedInToControlPlane"
+        },
+        {
+          "command": "continue.openAccountDialog",
+          "group": "navigation@5",
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && continue.isSignedInToControlPlane"
+        },
+        {
+          "command": "continue.openMorePage",
+          "group": "navigation@6",
           "when": "view == continue.continueGUIView"
         }
       ],
