@@ -70,7 +70,7 @@ export function getTheme() {
         break;
       case vscode.ColorThemeKind.HighContrastLight:
         colorTheme = workbenchConfig.get<string>(
-          "workbench.preferredHighContrastColorTheme",
+          "workbench.preferredHighContrastLightColorTheme",
         );
         break;
       default:
