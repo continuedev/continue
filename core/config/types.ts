@@ -604,7 +604,8 @@ declare global {
     | "openrouter"
     | "sambanova"
     | "nvidia"
-    | "nebius";
+    | "nebius"
+    | "siliconflow";
 
   export type ModelName =
     | "AUTODETECT"
