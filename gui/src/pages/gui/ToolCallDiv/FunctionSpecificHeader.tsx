@@ -14,7 +14,7 @@ export function FunctionSpecificHeader(props: FunctionSpecificHeaderProps) {
     case "create_new_file":
       return "Continue wants to create a new file";
     case "run_terminal_command":
-      return "Continue wantsto run a terminal command.";
+      return "Continue wants to run a terminal command.";
     case "exact_search":
       return "Continue wants to search your codebase";
     case "search_web":

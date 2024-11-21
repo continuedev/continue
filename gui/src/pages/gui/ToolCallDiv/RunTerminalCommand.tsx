@@ -1,5 +1,4 @@
-import StepContainerPreToolbar from "../../../components/markdown/StepContainerPreToolbar";
-import { SyntaxHighlightedPre } from "../../../components/markdown/SyntaxHighlightedPre";
+import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
 import { ToolState } from "./types";
 
 interface RunTerminalCommandToolCallProps {
@@ -10,22 +9,10 @@ interface RunTerminalCommandToolCallProps {
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
   return (
     <>
-      <p>Continue wants to run a terminal command:</p>
-
-      <StepContainerPreToolbar
-        codeBlockContent={props.command ?? ""}
-        codeBlockIndex={0}
-        language={"bash"}
-        filepath={"bash"}
-        isGeneratingCodeBlock={false}
-        expanded={false}
-        hideApply={true}
-      >
-        <SyntaxHighlightedPre>
-          <span></span>
-          {props.command}
-        </SyntaxHighlightedPre>
-      </StepContainerPreToolbar>
+      <StyledMarkdownPreview
+        isRenderingInStepContainer={true}
+        source={`\`\`\bash terminal\n${props.command}\n\`\`\``}
+      />
     </>
   );
 }

@@ -1,5 +1,5 @@
-import StepContainerPreToolbar from "../../../components/markdown/StepContainerPreToolbar";
-import { SyntaxHighlightedPre } from "../../../components/markdown/SyntaxHighlightedPre";
+import { getMarkdownLanguageTagForFile } from "core/util";
+import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
 import { ToolState } from "./types";
 
 interface CreateFileToolCallProps {
@@ -11,20 +11,10 @@ interface CreateFileToolCallProps {
 export function CreateFile(props: CreateFileToolCallProps) {
   return (
     <>
-      <StepContainerPreToolbar
-        codeBlockContent={props.fileContents ?? "New File"}
-        codeBlockIndex={0}
-        language={"javascript"}
-        filepath={props.filepath ?? "Loading"}
-        isGeneratingCodeBlock={false}
-        expanded={false}
-        hideApply={true}
-      >
-        <SyntaxHighlightedPre>
-          <span></span>
-          {props.fileContents}
-        </SyntaxHighlightedPre>
-      </StepContainerPreToolbar>
+      <StyledMarkdownPreview
+        isRenderingInStepContainer={true}
+        source={`\`\`\`${getMarkdownLanguageTagForFile(props.filepath ?? ".txt")} ${props.filepath}\n${props.fileContents ?? ""}\n\`\`\``}
+      />
     </>
   );
 }
