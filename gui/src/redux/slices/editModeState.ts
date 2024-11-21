@@ -1,9 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { FileWithContents, MessageContent } from "core";
-import { RangeInFileWithContents } from "core/commands/util";
-import { EditStatus } from "core/protocol/ideWebview";
-
-export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+import { CodeToEdit, EditStatus, MessageContent } from "core";
 
 interface EditModeState {
   editStatus: EditStatus;
@@ -20,15 +16,22 @@ const initialState: EditModeState = {
   isInEditMode: false,
 };
 
+function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
+  return a.filepath === b.filepath && a.contents === b.contents;
+}
+
 export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
     addCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      state.codeToEdit.push(payload);
-      state.editStatus = "not-started";
-      state.previousInputs = [];
-      state.fileAfterEdit = undefined;
+      const entryExists = state.codeToEdit.some((entry) =>
+        isCodeToEditEqual(entry, payload),
+      );
+
+      if (!entryExists) {
+        state.codeToEdit.push(payload);
+      }
     },
     focusEdit: (state) => {
       state.isInEditMode = true;
@@ -42,11 +45,7 @@ export const editModeStateSlice = createSlice({
     },
     removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
       state.codeToEdit = state.codeToEdit.filter(
-        (entry) =>
-          !(
-            entry.filepath === payload.filepath &&
-            entry.contents === payload.contents
-          ),
+        (entry) => !isCodeToEditEqual(entry, payload),
       );
     },
     clearCodeToEdit: (state) => {

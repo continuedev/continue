@@ -25,6 +25,7 @@ module.exports = {
         "spin-slow": "spin 6s linear infinite",
       },
       colors: {
+        lightgray: "#999998",
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
         "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
         "vsc-input-background": "var(--vscode-input-background, rgb(45 45 45))",

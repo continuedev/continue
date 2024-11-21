@@ -9,12 +9,12 @@ import { useState } from "react";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
-import { CodeToEdit } from "../../redux/slices/editModeState";
+import { CodeToEdit } from "core";
 
 export interface CodeToEditListItemProps {
   code: CodeToEdit;
-  onDelete: (code: CodeToEdit) => void;
-  onClickFilename: (code: CodeToEdit) => void;
+  onDelete: (codeToEdit: CodeToEdit) => void;
+  onClickFilename: (codeToEdit: CodeToEdit) => void;
 }
 
 // Easiest method to overwrite the top level styling of the markdown preview
@@ -26,7 +26,7 @@ const NoPaddingWrapper = styled.div`
 
   pre {
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 0px 0px 0px 10px !important;
   }
 `;
 
@@ -35,13 +35,13 @@ export default function CodeToEditListItem({
   onDelete,
   onClickFilename,
 }: CodeToEditListItemProps) {
-  const [showCodeSnippet, setShowCodeSnippet] = useState(true);
+  const [showCodeSnippet, setShowCodeSnippet] = useState(false);
 
   const filepath = code.filepath.split("/").pop() || code.filepath;
   let title = filepath;
 
   if ("range" in code) {
-    title += `(${code.range.start.line + 1} - ${code.range.end.line + 1})`;
+    title += ` (${code.range.start.line + 1} - ${code.range.end.line + 1})`;
   }
 
   const source =
@@ -54,11 +54,11 @@ export default function CodeToEditListItem({
 
   return (
     <li
-      className="flex cursor-pointer flex-col rounded border border-solid border-neutral-500 shadow-sm transition-transform"
+      className="flex cursor-pointer flex-col"
       onClick={() => setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet)}
     >
       <div
-        className={`flex justify-between px-2 py-1 ${showCodeSnippet ? "border-x-0 border-b border-t-0 border-solid border-neutral-500" : ""}`}
+        className={`hover:bg-lightgray hover:text-vsc-foreground flex justify-between rounded px-2 py-1 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
       >
         <div className="flex items-center gap-0.5">
           {showCodeSnippet ? (
@@ -67,7 +67,7 @@ export default function CodeToEditListItem({
                 e.stopPropagation();
                 setShowCodeSnippet(false);
               }}
-              className="h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 text-gray-400 transition-colors hover:bg-white/10"
+              className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
             />
           ) : (
             <ChevronRightIcon
@@ -75,7 +75,7 @@ export default function CodeToEditListItem({
                 e.stopPropagation();
                 setShowCodeSnippet(true);
               }}
-              className="h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 text-gray-400 transition-colors hover:bg-white/10"
+              className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
             />
           )}
           <FileIcon filename={code.filepath} height={"18px"} width={"18px"} />
@@ -95,7 +95,7 @@ export default function CodeToEditListItem({
               e.stopPropagation();
               onDelete(code);
             }}
-            className="h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 text-gray-400 transition-colors hover:bg-white/10"
+            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
           />
         </div>
       </div>

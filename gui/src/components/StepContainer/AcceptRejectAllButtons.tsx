@@ -13,6 +13,8 @@ export default function AcceptRejectAllButtons({
   onAcceptOrReject,
 }: AcceptRejectAllButtonsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
+
+  // To handle the case of a single-range edit
   const hasSinglePendingApplyStates = pendingApplyStates.length === 1;
 
   async function handleAcceptOrReject(status: "acceptDiff" | "rejectDiff") {

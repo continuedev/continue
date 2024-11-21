@@ -1,8 +1,14 @@
-import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
-import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
+import { ToIdeFromWebviewOrCoreProtocol } from "./ide";
+import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
 
-import type { RangeInFileWithContents } from "../commands/util.js";
-import type { ContextSubmenuItem, MessageContent } from "../index.js";
+import type {
+  ApplyState,
+  CodeToEdit,
+  ContextSubmenuItem,
+  EditStatus,
+  MessageContent,
+  RangeInFileWithContents,
+} from "../";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   onLoad: [
@@ -54,26 +60,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "edit/escape": [undefined, void];
 };
 
-export type EditStatus =
-  | "not-started"
-  | "streaming"
-  | "accepting"
-  | "accepting:full-diff"
-  | "done";
-
-export type ApplyStateStatus =
-  | "streaming" // Changes are being applied to the file
-  | "done" // All changes have been applied, awaiting user to accept/reject
-  | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
-
-export interface ApplyState {
-  streamId: string;
-  status?: ApplyStateStatus;
-  numDiffs?: number;
-  filepath?: string;
-  fileContent?: string;
-}
-
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setInactive: [undefined, void];
   submitMessage: [{ message: any }, void]; // any -> JSONContent from TipTap
@@ -94,7 +80,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
     },
     void,
   ];
-  addCodeToEdit: [RangeInFileWithContents, void];
+  addCodeToEdit: [CodeToEdit, void];
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 
@@ -118,4 +104,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setEditStatus: [{ status: EditStatus; fileAfterEdit?: string }, void];
   exitEditMode: [undefined, void];
   focusEdit: [undefined, void];
+  focusEditWithoutClear: [undefined, void];
 };

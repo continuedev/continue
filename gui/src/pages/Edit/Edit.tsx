@@ -20,7 +20,6 @@ import useChatHandler from "../../hooks/useChatHandler";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import StepContainer from "../../components/StepContainer";
-import styled from "styled-components";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
 import { RangeInFileWithContents } from "core/commands/util";
 
@@ -120,14 +119,6 @@ export default function Edit() {
       ...contextItems.map((item) => item.content),
       stripImages(userInstructions),
     ].join("\n\n");
-
-    const codeToEdit = editModeState.codeToEdit[0];
-
-    let rif: RangeInFileWithContents = {
-      filepath: codeToEdit.filepath,
-      contents: codeToEdit.contents,
-      range: "range" in codeToEdit ? codeToEdit.range : undefined,
-    };
 
     ideMessenger.post("edit/sendPrompt", {
       prompt,

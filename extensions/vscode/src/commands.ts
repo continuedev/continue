@@ -3,9 +3,8 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 
-import { ContextMenuConfig } from "core";
+import { ContextMenuConfig, RangeInFileWithContents } from "core";
 import { CompletionProvider } from "core/autocomplete/CompletionProvider";
-import { RangeInFileWithContents } from "core/commands/util";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
@@ -201,6 +200,58 @@ function hideGUI() {
   }
 }
 
+async function processDiff(
+  action: "accept" | "reject",
+  sidebar: ContinueGUIWebviewViewProvider,
+  diffManager: DiffManager,
+  ide: VsCodeIde,
+  verticalDiffManager: VerticalDiffManager,
+  newFilepath?: string | vscode.Uri,
+  streamId?: string,
+) {
+  captureCommandTelemetry(`${action}Diff`);
+
+  let fullPath = newFilepath;
+
+  if (fullPath instanceof vscode.Uri) {
+    fullPath = fullPath.fsPath;
+  } else if (fullPath) {
+    fullPath = getFullyQualifiedPath(ide, fullPath);
+  } else {
+    console.warn(`Unable to resolve filepath: ${newFilepath}`);
+  }
+
+  if (!fullPath) return;
+
+  await ide.openFile(fullPath);
+
+  // Clear vertical diffs depending on action
+  verticalDiffManager.clearForFilepath(fullPath, action === "accept");
+
+  // Accept or reject the diff
+  if (action === "accept") {
+    await diffManager.acceptDiff(fullPath);
+  } else {
+    await diffManager.rejectDiff(fullPath);
+  }
+
+  void sidebar.webviewProtocol.request("setEditStatus", {
+    status: "done",
+  });
+
+  if (streamId) {
+    const fileContent = await ide.readFile(fullPath);
+
+    await sidebar.webviewProtocol.request("updateApplyState", {
+      fileContent,
+      filepath: fullPath,
+      streamId,
+      status: "closed",
+      numDiffs: 0,
+    });
+  }
+}
+
 // Copy everything over from extension.ts
 const commandsMap: (
   ide: VsCodeIde,
@@ -267,77 +318,34 @@ const commandsMap: (
       range,
     );
   }
-
   return {
     "continue.acceptDiff": async (
       newFilepath?: string | vscode.Uri,
       streamId?: string,
-    ) => {
-      captureCommandTelemetry("acceptDiff");
+    ) =>
+      processDiff(
+        "accept",
+        sidebar,
+        diffManager,
+        ide,
+        verticalDiffManager,
+        newFilepath,
+        streamId,
+      ),
 
-      let fullPath = newFilepath;
-
-      if (fullPath instanceof vscode.Uri) {
-        fullPath = fullPath.fsPath;
-      } else if (fullPath) {
-        fullPath = getFullyQualifiedPath(ide, fullPath);
-      } else {
-        console.warn(`Unable to resolve filepath: ${newFilepath}`);
-      }
-
-      verticalDiffManager.clearForFilepath(fullPath, true);
-      await diffManager.acceptDiff(fullPath);
-
-      void sidebar.webviewProtocol.request("setEditStatus", {
-        status: "done",
-      });
-
-      if (streamId && fullPath) {
-        const fileContent = await ide.readFile(fullPath);
-
-        await sidebar.webviewProtocol.request("updateApplyState", {
-          fileContent,
-          filepath: fullPath,
-          streamId: streamId,
-          status: "closed",
-          numDiffs: 0,
-        });
-      }
-    },
     "continue.rejectDiff": async (
       newFilepath?: string | vscode.Uri,
       streamId?: string,
-    ) => {
-      captureCommandTelemetry("rejectDiff");
-
-      let fullPath = newFilepath;
-
-      if (fullPath instanceof vscode.Uri) {
-        fullPath = fullPath.fsPath;
-      } else if (fullPath) {
-        fullPath = getFullyQualifiedPath(ide, fullPath);
-      } else {
-        console.warn(`Unable to resolve filepath: ${newFilepath}`);
-      }
-
-      verticalDiffManager.clearForFilepath(fullPath, false);
-      await diffManager.rejectDiff(fullPath);
-      void sidebar.webviewProtocol.request("setEditStatus", {
-        status: "done",
-      });
-
-      if (streamId && fullPath) {
-        const fileContent = await ide.readFile(fullPath);
-
-        await sidebar.webviewProtocol.request("updateApplyState", {
-          fileContent,
-          filepath: fullPath,
-          streamId: streamId,
-          status: "closed",
-          numDiffs: 0,
-        });
-      }
-    },
+    ) =>
+      processDiff(
+        "reject",
+        sidebar,
+        diffManager,
+        ide,
+        verticalDiffManager,
+        newFilepath,
+        streamId,
+      ),
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
       captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
@@ -453,8 +461,6 @@ const commandsMap: (
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    // TODO
-    "continue.focusEditWithoutClear": async () => {},
     "continue.focusEdit": async () => {
       captureCommandTelemetry("focusEdit");
       focusGUI();
@@ -495,6 +501,51 @@ const commandsMap: (
           editor.selection.anchor,
           editor.selection.anchor,
         );
+      }
+
+      setTimeout(() => {
+        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+      }, 30);
+    },
+    "continue.focusEditWithoutClear": async () => {
+      captureCommandTelemetry("focusEditWithoutClear");
+      focusGUI();
+
+      sidebar.webviewProtocol?.request("focusEditWithoutClear", undefined);
+
+      const editor = vscode.window.activeTextEditor;
+
+      if (!editor) {
+        return;
+      }
+
+      const document = editor.document;
+
+      const existingDiff = verticalDiffManager.getHandlerForFile(
+        document.fileName,
+      );
+
+      // If there's a diff currently being applied, then we just toggle focus back to the input
+      if (existingDiff) {
+        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+        return;
+      }
+
+      const rangeInFileWithContents = getCurrentlyHighlightedCode(false);
+
+      if (rangeInFileWithContents) {
+        sidebar.webviewProtocol?.request(
+          "addCodeToEdit",
+          rangeInFileWithContents,
+        );
+      } else {
+        const filepath = document.uri.fsPath;
+        const contents = document.getText();
+
+        sidebar.webviewProtocol?.request("addCodeToEdit", {
+          filepath,
+          contents,
+        });
       }
 
       setTimeout(() => {

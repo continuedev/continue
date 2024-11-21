@@ -1,6 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
+  ApplyState,
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
@@ -13,7 +14,6 @@ import {
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
-import { ApplyState } from "core/protocol/ideWebview";
 import { v4 as uuidv4, v4 } from "uuid";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
