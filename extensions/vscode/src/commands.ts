@@ -64,7 +64,6 @@ function addCodeToContextFromRange(
   range: vscode.Range,
   webviewProtocol: VsCodeWebviewProtocol,
   prompt?: string,
-  store: 
 ) {
   const document = vscode.window.activeTextEditor?.document;
 
