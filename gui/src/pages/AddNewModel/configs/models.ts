@@ -182,6 +182,42 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["nebius"],
     isOpenSource: true,
   },
+  moonshotChat: {
+    title: "Moonshot Chat",
+    description: "Moonshot AI provides high-performance large language models",
+    refUrl: "https://platform.moonshot.cn/",
+    params: {
+      title: "Moonshot-v1-8k",
+      model: "moonshot-v1-8k",
+      contextLength: 8192,
+    },
+    icon: "moonshot.png",
+    dimensions: [
+      {
+        name: "Context Window",
+        description: "The size of the model's context window",
+        options: {
+          "8K": {
+            model: "moonshot-v1-8k",
+            title: "Moonshot-v1-8k",
+            contextLength: 8192,
+          },
+          "32K": {
+            model: "moonshot-v1-32k",
+            title: "Moonshot-v1-32k",
+            contextLength: 32768,
+          },
+          "128K": {
+            model: "moonshot-v1-128k",
+            title: "Moonshot-v1-128k",
+            contextLength: 131072,
+          },
+        },
+      },
+    ],
+    providerOptions: ["moonshot"],
+    isOpenSource: false,
+  },
   mistralOs: {
     title: "Mistral",
     description:

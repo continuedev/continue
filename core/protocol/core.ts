@@ -7,7 +7,9 @@ import type {
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
+  FileSymbolMap,
   IdeSettings,
+  IndexingStatusMap,
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
@@ -77,6 +79,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
+  "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
@@ -143,6 +146,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
   "tts/kill": [undefined, void];
+
+  // Codebase indexing
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [
     undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
@@ -156,6 +161,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+
+  // Docs etc. Indexing. TODO move codebase to this
+  "indexing/reindex": [{ type: string; id: string }, void];
+  "indexing/abort": [{ type: string; id: string }, void];
+  "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
+  "indexing/initStatuses": [undefined, void];
+
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];

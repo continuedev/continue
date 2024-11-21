@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.231",
+  "version": "0.9.232",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -391,11 +391,6 @@
         "key": "alt+ctrl+n"
       },
       {
-        "command": "continue.quickEdit",
-        "mac": "cmd+shift+i",
-        "key": "ctrl+shift+i"
-      },
-      {
         "command": "continue.edit",
         "mac": "cmd+i",
         "key": "ctrl+i"
@@ -437,9 +432,6 @@
     ],
     "menus": {
       "commandPalette": [
-        {
-          "command": "continue.quickEdit"
-        },
         {
           "command": "continue.focusContinueInput"
         },

@@ -27,6 +27,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     },
     void,
   ];
+  overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
   toggleDevTools: [undefined, void];
@@ -39,8 +40,8 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   "jetbrains/isOSREnabled": [undefined, void];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
-  acceptDiff: [{ filepath: string }, void];
-  rejectDiff: [{ filepath: string }, void];
+  acceptDiff: [{ filepath: string; streamId?: string }, void];
+  rejectDiff: [{ filepath: string; streamId?: string }, void];
   "edit/sendPrompt": [
     { prompt: MessageContent; range: RangeInFileWithContents },
     void,
@@ -63,11 +64,17 @@ export type EditStatus =
   | "accepting:full-diff"
   | "done";
 
+export type ApplyStateStatus =
+  | "streaming" // Changes are being applied to the file
+  | "done" // All changes have been applied, awaiting user to accept/reject
+  | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
+
 export interface ApplyState {
   streamId: string;
-  status?: "streaming" | "done" | "closed";
+  status?: ApplyStateStatus;
   numDiffs?: number;
   filepath?: string;
+  fileContent?: string;
 }
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

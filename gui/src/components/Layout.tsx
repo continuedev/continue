@@ -12,11 +12,11 @@ import {
   setEditStatus,
   startEditMode,
 } from "../redux/slices/editModeState";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
 import {
-  setDialogMessage,
-  setShowDialog,
   updateApplyState,
-} from "../redux/slices/uiStateSlice";
+  updateCurCheckpoint,
+} from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -171,6 +171,12 @@ const Layout = () => {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
+      dispatch(
+        updateCurCheckpoint({
+          filepath: state.filepath,
+          content: state.fileContent,
+        }),
+      );
       dispatch(updateApplyState(state));
     },
     [],

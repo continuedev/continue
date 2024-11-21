@@ -154,7 +154,6 @@ export const Button = styled.button`
 export const SecondaryButton = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
-  height: 2.5rem;
   border-radius: ${defaultBorderRadius};
 
   border: 1px solid ${vscForeground};

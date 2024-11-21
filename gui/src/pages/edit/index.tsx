@@ -105,7 +105,7 @@ function Edit() {
 
   const applyState = useSelector(
     (store: RootState) =>
-      store.uiState.applyStates.find((state) => state.streamId === "edit")
+      store.state.applyStates.find((state) => state.streamId === "edit")
         ?.status ?? "closed",
   );
 
@@ -174,7 +174,10 @@ function Edit() {
                     },
                     ideMessenger,
                     [],
+                    dispatch,
                   );
+
+                // Note, not currently updating file symbols in edit mode
 
                 const prompt = [
                   ...contextItems.map((item) => item.content),

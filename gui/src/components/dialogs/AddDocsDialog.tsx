@@ -1,11 +1,20 @@
-import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+import {
+  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "@heroicons/react/24/outline";
 import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useRef, useState } from "react";
-import { useDispatch } from "react-redux";
-import { Button, HelperText, Input, lightGray } from "..";
+import { useDispatch, useSelector } from "react-redux";
+import { Button, HelperText, Input, lightGray, SecondaryButton } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
+import { RootState } from "../../redux/store";
+import IndexingStatusViewer from "../indexing/IndexingStatus";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -18,7 +27,12 @@ function AddDocsDialog() {
   const [faviconUrl, setFaviconUrl] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
+  const [submittedConfig, setSubmittedConfig] = useState<SiteIndexingConfig>();
+
   const ideMessenger = useContext(IdeMessengerContext);
+  const indexingStatuses = useSelector(
+    (store: RootState) => store.state.indexing.statuses,
+  );
 
   const isFormValid = startUrl && title;
 
@@ -41,13 +55,64 @@ function AddDocsDialog() {
 
     ideMessenger.post("context/addDocs", siteIndexingConfig);
 
+    setSubmittedConfig(siteIndexingConfig);
     setTitle("");
     setStartUrl("");
     setFaviconUrl("");
 
-    dispatch(setShowDialog(false));
-
     posthog.capture("add_docs_gui", { url: startUrl });
+  }
+
+  if (submittedConfig) {
+    const status = indexingStatuses[submittedConfig.startUrl];
+    return (
+      <div className="flex flex-col p-4">
+        <div className="flex flex-row items-center gap-2">
+          <CheckCircleIcon className="h-8 w-8" />
+          <h1>{`Docs added`}</h1>
+        </div>
+        <div className="flex flex-col gap-1 text-stone-500">
+          <p className="m-0 p-0">Title: {submittedConfig.title}</p>
+          <p className="m-0 p-0">Start URL: {submittedConfig.startUrl}</p>
+          {submittedConfig.rootUrl && (
+            <p className="m-0 p-0">Root URL: {submittedConfig.rootUrl}</p>
+          )}
+          {submittedConfig.maxDepth && (
+            <p className="m-0 p-0">Max depth: {submittedConfig.maxDepth}</p>
+          )}
+          {submittedConfig.faviconUrl && (
+            <p className="m-0 p-0">Favicon URL: {submittedConfig.faviconUrl}</p>
+          )}
+        </div>
+        {!!status && (
+          <div className="mt-4 flex flex-col divide-x-0 divide-y-2 divide-solid divide-zinc-700">
+            <p className="m-0 mb-5 p-0 leading-snug">{`Type "@docs" and select ${submittedConfig.title} to reference these docs once indexing is complete. Check indexing status from the "More" page.`}</p>
+            <div className="pt-1">
+              <IndexingStatusViewer status={status} />
+            </div>
+          </div>
+        )}
+        <div className="mt-4 flex flex-row items-center justify-end gap-4">
+          <SecondaryButton
+            className=""
+            onClick={() => {
+              setSubmittedConfig(undefined);
+            }}
+          >
+            Add another
+          </SecondaryButton>
+          <Button
+            className=""
+            onClick={() => {
+              dispatch(setDialogMessage(undefined));
+              dispatch(setShowDialog(false));
+            }}
+          >
+            Done
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

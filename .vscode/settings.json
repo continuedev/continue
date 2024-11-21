@@ -20,6 +20,7 @@
     "binary/build/**": true,
     "binary/out/**": true,
     "binary/tmp/**": true,
+    "core/edit/lazy/test-examples/**": true,
     "core/llm/llamaTokenizer.js": true,
     "core/llm/llamaTokenizer.mjs": true,
     "core/vendor/**": true,

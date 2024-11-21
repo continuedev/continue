@@ -58,7 +58,7 @@ export function slashFromCustomCommand(
         }
       }
 
-      for await (const chunk of llm.streamChat(messages)) {
+      for await (const chunk of llm.streamChat(messages, new AbortController().signal)) {
         yield stripImages(chunk.content);
       }
     },

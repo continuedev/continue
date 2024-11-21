@@ -142,7 +142,7 @@ codeql
 .tiktoken_cache
 
 
-# IntelliJ Plugin 
+# IntelliJ Plugin
 **/**/.gradle
 **/**/.qodana
 **/**/build
@@ -169,3 +169,5 @@ extensions/intellij/.idea/**
 
 extensions/intellij/bin
 extensions/.continue-debug/
+
+*.vsix

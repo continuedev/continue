@@ -1,3 +1,4 @@
+import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -45,6 +46,30 @@ export interface IndexingProgressUpdate {
   debugInfo?: string;
 }
 
+// This is more or less a V2 of IndexingProgressUpdate
+export interface IndexingStatus {
+  id: string;
+  type: "docs";
+  progress: number;
+  description: string;
+  status:
+    | "indexing"
+    | "complete"
+    | "paused"
+    | "failed"
+    | "aborted"
+    | "deleted"
+    | "pending";
+  embeddingsProviderId: string;
+  isReindexing?: boolean;
+  debugInfo?: string;
+  title: string;
+  icon?: string;
+  url?: string;
+}
+
+export type IndexingStatusMap = Map<string, IndexingStatus>;
+
 export type PromptTemplateFunction = (
   history: ChatMessage[],
   otherData: Record<string, string>,
@@ -78,26 +103,34 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
-  complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
+  complete(
+    prompt: string,
+    signal: AbortSignal,
+    options?: LLMFullCompletionOptions
+  ): Promise<string>;
 
   streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
   streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
   streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
 
@@ -200,11 +233,16 @@ export interface IContextProvider {
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
+export interface Checkpoint {
+  [filepath: string]: string;
+}
+
 export interface PersistedSessionInfo {
   history: ChatHistory;
   title: string;
   workspaceDirectory: string;
   sessionId: string;
+  checkpoints?: Checkpoint[];
 }
 
 export interface SessionInfo {
@@ -298,13 +336,19 @@ export interface InputModifiers {
   noContext: boolean;
 }
 
+export interface SymbolWithRange extends RangeInFile {
+  name: string;
+  type: Parser.SyntaxNode["type"];
+}
+
+export type FileSymbolMap = Record<string, SymbolWithRange[]>;
+
 export interface PromptLog {
   modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
 }
-
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
@@ -383,11 +427,13 @@ export interface CustomLLMWithOptionals {
   options: LLMOptions;
   streamCompletion?: (
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
   streamChat?: (
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
@@ -654,7 +700,8 @@ type ModelProvider =
   | "askSage"
   | "vertexai"
   | "nebius"
-  | "xAI";
+  | "xAI"
+  | "moonshot";
 
 export type ModelName =
   | "AUTODETECT"
@@ -749,7 +796,11 @@ export type ModelName =
   | "starcoder-1b"
   | "starcoder-3b"
   | "starcoder2-3b"
-  | "stable-code-3b";
+  | "stable-code-3b"
+  // Moonshot
+  | "moonshot-v1-8k"
+  | "moonshot-v1-32k"
+  | "moonshot-v1-128k";
 
 export interface RequestOptions {
   timeout?: number;
@@ -927,7 +978,7 @@ export interface TabAutocompleteOptions {
   slidingWindowPrefixPercentage: number;
   slidingWindowSize: number;
   maxSnippetPercentage: number;
-  recentlyEditedSimilarityThreshold: number;
+  maxDiffPercentage: number;
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;

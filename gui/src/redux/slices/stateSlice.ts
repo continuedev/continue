@@ -3,29 +3,33 @@ import { JSONContent } from "@tiptap/react";
 import {
   ChatHistoryItem,
   ChatMessage,
-  ContextItemId,
+  Checkpoint,
   ContextItemWithId,
+  FileSymbolMap,
+  IndexingStatus,
   PersistedSessionInfo,
   PromptLog,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
-import { createSelector } from "reselect";
+import { ApplyState } from "core/protocol/ideWebview";
 import { v4 as uuidv4, v4 } from "uuid";
-import { RootState } from "../store";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
-
 type State = {
   history: ChatHistoryItemWithMessageId[];
+  symbols: FileSymbolMap;
+  context: {
+    isGathering: boolean;
+    gatheringMessage: string;
+  };
   ttsActive: boolean;
   active: boolean;
-  isGatheringContext: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
   sessionId: string;
@@ -33,14 +37,27 @@ type State = {
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
-  isInMultifileEdit: boolean;
+  checkpoints: Checkpoint[];
+  curCheckpointIndex: number;
+  applyStates: ApplyState[];
+  nextCodeBlockToApplyIndex: number;
+  indexing: {
+    hiddenChatPeekTypes: Record<IndexingStatus["type"], boolean>;
+    statuses: Record<string, IndexingStatus>;
+  };
+  streamAborter: AbortController;
+  isMultifileEdit: boolean;
 };
 
 const initialState: State = {
   history: [],
+  symbols: {},
+  context: {
+    isGathering: false,
+    gatheringMessage: "Gathering Context",
+  },
   ttsActive: false,
   active: false,
-  isGatheringContext: false,
   configError: undefined,
   config: {
     slashCommands: [
@@ -60,7 +77,18 @@ const initialState: State = {
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
-  isInMultifileEdit: false,
+  checkpoints: [],
+  isMultifileEdit: false,
+  curCheckpointIndex: 0,
+  nextCodeBlockToApplyIndex: 0,
+  applyStates: [],
+  indexing: {
+    statuses: {},
+    hiddenChatPeekTypes: {
+      docs: false,
+    },
+  },
+  streamAborter: new AbortController(),
 };
 
 export const stateSlice = createSlice({
@@ -104,19 +132,37 @@ export const stateSlice = createSlice({
     setActive: (state) => {
       state.active = true;
     },
-    setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
-      state.isGatheringContext = payload;
+    setIsGatheringContext: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        isGathering: boolean;
+        gatheringMessage: string;
+      }>,
+    ) => {
+      state.context.isGathering = payload.isGathering;
+      state.context.gatheringMessage = payload.gatheringMessage;
     },
-    clearLastResponse: (state) => {
+    clearLastEmptyResponse: (state) => {
       if (state.history.length < 2) {
         return;
       }
-      state.mainEditorContent =
-        state.history[state.history.length - 2].editorState;
-      state.history = state.history.slice(0, -2);
+      // Only clear in the case of an empty message
+      if (!state.history[state.history.length - 1]?.message.content.length) {
+        state.mainEditorContent =
+          state.history[state.history.length - 2].editorState;
+        state.history = state.history.slice(0, -2);
+      }
     },
     consumeMainEditorContent: (state) => {
       state.mainEditorContent = undefined;
+    },
+    updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
+      state.symbols = {
+        ...state.symbols,
+        ...action.payload,
+      };
     },
     setContextItemsAtIndex: (
       state,
@@ -187,6 +233,7 @@ export const stateSlice = createSlice({
       });
 
       state.active = true;
+      state.curCheckpointIndex = state.curCheckpointIndex + 1;
     },
     setMessageAtIndex: (
       state,
@@ -233,11 +280,18 @@ export const stateSlice = createSlice({
       if (!historyItem) {
         return;
       }
-      historyItem.contextItems.push(...payload.contextItems);
+      historyItem.contextItems = [
+        ...historyItem.contextItems,
+        ...payload.contextItems,
+      ];
     },
     setInactive: (state) => {
-      state.isGatheringContext = false;
+      state.context.isGathering = false;
       state.active = false;
+    },
+    abortStream: (state) => {
+      state.streamAborter.abort();
+      state.streamAborter = new AbortController();
     },
     streamUpdate: (state, action: PayloadAction<string>) => {
       if (state.history.length) {
@@ -249,16 +303,25 @@ export const stateSlice = createSlice({
       state,
       { payload }: PayloadAction<PersistedSessionInfo | undefined>,
     ) => {
+      state.streamAborter.abort();
+      state.streamAborter = new AbortController();
+
+      state.active = false;
+      state.context.isGathering = false;
+      state.isMultifileEdit = false;
+      state.symbols = {};
       if (payload) {
         state.history = payload.history as any;
         state.title = payload.title;
         state.sessionId = payload.sessionId;
+        state.checkpoints = payload.checkpoints;
+        state.curCheckpointIndex = 0;
       } else {
         state.history = [];
-        state.active = false;
         state.title = "New Session";
         state.sessionId = v4();
-        state.isInMultifileEdit = false;
+        state.checkpoints = [];
+        state.curCheckpointIndex = 0;
       }
     },
     addHighlightedCode: (
@@ -311,13 +374,84 @@ export const stateSlice = createSlice({
         selectedProfileId: payload,
       };
     },
-    setIsInMultifileEdit: (state, action: PayloadAction<boolean>) => {
-      state.isInMultifileEdit = action.payload;
+
+    setIsInMultifileEdit: (state, { payload }: PayloadAction<boolean>) => {
+      state.isMultifileEdit = payload;
+    },
+    setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
+      state.curCheckpointIndex = payload;
+    },
+    updateCurCheckpoint: (
+      state,
+      { payload }: PayloadAction<{ filepath: string; content: string }>,
+    ) => {
+      state.checkpoints[state.curCheckpointIndex] = {
+        ...state.checkpoints[state.curCheckpointIndex],
+        [payload.filepath]: payload.content,
+      };
+    },
+    updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
+      const index = state.applyStates.findIndex(
+        (applyState) => applyState.streamId === payload.streamId,
+      );
+
+      const curApplyState = state.applyStates[index];
+
+      if (index === -1) {
+        state.applyStates.push(payload);
+      } else {
+        curApplyState.status = payload.status ?? curApplyState.status;
+        curApplyState.numDiffs = payload.numDiffs ?? curApplyState.numDiffs;
+        curApplyState.filepath = payload.filepath ?? curApplyState.filepath;
+      }
+      if (payload.status === "done") {
+        state.nextCodeBlockToApplyIndex++;
+      }
+    },
+    resetNextCodeBlockToApplyIndex: (state) => {
+      state.nextCodeBlockToApplyIndex = 0;
+    },
+    updateIndexingStatus: (
+      state,
+      { payload }: PayloadAction<IndexingStatus>,
+    ) => {
+      state.indexing.statuses = {
+        ...state.indexing.statuses,
+        [payload.id]: payload,
+      };
+
+      // This check is so that if all indexing is stopped for e.g. docs
+      // The next time docs indexing starts the peek will show again
+      const indexingThisType = Object.values(state.indexing.statuses).filter(
+        (status) =>
+          status.type === payload.type && status.status === "indexing",
+      );
+      if (indexingThisType.length === 0) {
+        state.indexing.hiddenChatPeekTypes = {
+          ...state.indexing.hiddenChatPeekTypes,
+          [payload.type]: false,
+        };
+      }
+    },
+    setIndexingChatPeekHidden: (
+      state,
+      {
+        payload,
+      }: PayloadAction<{
+        type: IndexingStatus["type"];
+        hidden: boolean;
+      }>,
+    ) => {
+      state.indexing.hiddenChatPeekTypes = {
+        ...state.indexing.hiddenChatPeekTypes,
+        [payload.type]: payload.hidden,
+      };
     },
   },
 });
 
 export const {
+  updateFileSymbols,
   setContextItemsAtIndex,
   addContextItemsAtIndex,
   setInactive,
@@ -333,12 +467,19 @@ export const {
   setActive,
   initNewActiveMessage,
   setMessageAtIndex,
-  clearLastResponse,
+  clearLastEmptyResponse,
   consumeMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,
   setIsInMultifileEdit,
+  updateCurCheckpoint,
+  setCurCheckpointIndex,
+  resetNextCodeBlockToApplyIndex,
+  updateApplyState,
+  updateIndexingStatus,
+  setIndexingChatPeekHidden,
+  abortStream,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

@@ -2,8 +2,6 @@ import { NodeViewWrapper } from "@tiptap/react";
 import { ContextItemWithId } from "core";
 import { vscBadgeBackground } from "..";
 import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
 
 export const CodeBlockComponent = (props: any) => {
   const { node, deleteNode, selected, editor, updateAttributes } = props;
@@ -13,7 +11,7 @@ export const CodeBlockComponent = (props: any) => {
   //     store.state.history[store.state.history.length - 1].contextItems,
   // );
   // const isFirstContextItem = item.id === contextItems[0]?.id;
-  const isFirstContextItem = false;
+  const isFirstContextItem = false; // TODO: fix this, decided not worth the insane renders for now
 
   return (
     <NodeViewWrapper className="code-block-with-content" as="p">

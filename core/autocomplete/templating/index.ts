@@ -11,6 +11,7 @@ import {
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
+import { countTokens } from "../../llm/countTokens";
 
 export function formatExternalSnippet(
   filepath: string,
@@ -28,42 +29,22 @@ export function formatExternalSnippet(
   ];
   return lines.join("\n");
 }
-function renderStringTemplate(
-  template: string,
-  prefix: string,
-  suffix: string,
+
+function getContextComments(
   snippets: AutocompleteSnippet[],
   lang: AutocompleteLanguageInfo,
   filepath: string,
-  reponame: string,
 ) {
-  const filename = getBasename(filepath);
-  const compiledTemplate = Handlebars.compile(template);
+  const fileNameSnippet = `\n\n${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n\n`;
 
-  // Format snippets as comments and prepend to prefix
-  const formattedSnippets = snippets
-    .map((snippet) =>
-      formatExternalSnippet(snippet.filepath, snippet.contents, lang),
-    )
-    .join("\n");
-  if (formattedSnippets.length > 0) {
-    prefix = `${formattedSnippets}\n\n${prefix}`;
-  } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
-    // If it's an empty file, include the file name as a comment
-    prefix = `${lang.singleLineComment} ${getLastNPathParts(
-      filepath,
-      2,
-    )}\n${prefix}`;
-  }
+  const formattedSnippets =
+    snippets
+      .map((snippet) =>
+        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
+      )
+      .join("\n") + fileNameSnippet;
 
-  const prompt = compiledTemplate({
-    prefix,
-    suffix,
-    filename,
-    reponame,
-    language: lang.name,
-  });
-  return prompt;
+  return formattedSnippets;
 }
 
 function getTemplate(helper: HelperVars): AutocompleteTemplate {
@@ -77,29 +58,61 @@ function getTemplate(helper: HelperVars): AutocompleteTemplate {
   return getTemplateForModel(helper.modelName);
 }
 
-export function renderPrompt(
-  snippets: AutocompleteSnippet[],
-  workspaceDirs: string[],
-  helper: HelperVars,
-): {
+function renderStringTemplate(
+  template: string,
+  prefix: string,
+  suffix: string,
+  lang: AutocompleteLanguageInfo,
+  filepath: string,
+  reponame: string,
+) {
+  const filename = getBasename(filepath);
+  const compiledTemplate = Handlebars.compile(template);
+
+  return compiledTemplate({
+    prefix,
+    suffix,
+    filename,
+    reponame,
+    language: lang.name,
+  });
+}
+
+const formatDiff = (helper: HelperVars, diff?: string) => {
+  if (!diff) return "";
+
+  const tokenCount = countTokens(diff, helper.modelName);
+
+  if (tokenCount > helper.maxDiffTokens) {
+    return "";
+  }
+
+  return `${diff}\n\n`;
+};
+
+export function renderPrompt({
+  snippets,
+  workspaceDirs,
+  helper,
+  diff,
+}: {
+  snippets: AutocompleteSnippet[];
+  workspaceDirs: string[];
+  helper: HelperVars;
+  diff?: string;
+}): {
   prompt: string;
   prefix: string;
   suffix: string;
   completionOptions: Partial<CompletionOptions> | undefined;
 } {
   // If prefix is manually passed
-  let prefix = helper.prunedPrefix;
-  let suffix = helper.prunedSuffix;
+  let prefix = helper.input.manuallyPassPrefix || helper.prunedPrefix;
+  let suffix = helper.input.manuallyPassPrefix ? "" : helper.prunedSuffix;
 
-  if (helper.input.manuallyPassPrefix) {
-    prefix = helper.input.manuallyPassPrefix;
-    suffix = "";
-  }
-
-  let prompt: string;
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
 
-  let { template, compilePrefixSuffix, completionOptions } =
+  const { template, compilePrefixSuffix, completionOptions } =
     getTemplate(helper);
 
   // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
@@ -112,29 +125,36 @@ export function renderPrompt(
       reponame,
       snippets,
     );
-  }
-
-  // Templates can be passed as a Handlebars template string or a function
-  if (typeof template === "string") {
-    prompt = renderStringTemplate(
-      template,
-      prefix,
-      suffix,
+  } else {
+    const contextComments = getContextComments(
       snippets,
       helper.lang,
       helper.filepath,
-      reponame,
     );
-  } else {
-    prompt = template(
-      prefix,
-      suffix,
-      helper.filepath,
-      reponame,
-      helper.lang.name,
-      snippets,
-    );
+    const formattedDiff = formatDiff(helper, diff);
+
+    prefix = `${formattedDiff}${contextComments}${prefix}`;
   }
+
+  const prompt =
+    // Templates can be passed as a Handlebars template string or a function
+    typeof template === "string"
+      ? renderStringTemplate(
+          template,
+          prefix,
+          suffix,
+          helper.lang,
+          helper.filepath,
+          reponame,
+        )
+      : template(
+          prefix,
+          suffix,
+          helper.filepath,
+          reponame,
+          helper.lang.name,
+          snippets,
+        );
 
   const stopTokens = getStopTokens(
     completionOptions,
@@ -142,10 +162,13 @@ export function renderPrompt(
     helper.modelName,
   );
 
-  completionOptions = {
-    ...completionOptions,
-    stop: stopTokens,
+  return {
+    prompt,
+    prefix,
+    suffix,
+    completionOptions: {
+      ...completionOptions,
+      stop: stopTokens,
+    },
   };
-
-  return { prompt, prefix, suffix, completionOptions };
 }

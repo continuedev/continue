@@ -6,7 +6,6 @@ import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -22,7 +21,6 @@ function truncateText(text: string, maxLength: number) {
 
 function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootState) => state.state);
-  const defaultModel = useSelector(defaultModelSelector);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
 
@@ -94,6 +92,7 @@ function useHistory(dispatch: Dispatch) {
       title: title,
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
+      checkpoints: stateCopy.checkpoints,
     };
 
     return await ideMessenger.request("history/save", sessionInfo);
@@ -121,9 +120,10 @@ function useHistory(dispatch: Dispatch) {
     if (result.status === "error") {
       throw new Error(result.error);
     }
-    const persistedSessionInfo = result.content;
-    dispatch(newSession(persistedSessionInfo));
-    return persistedSessionInfo;
+
+    const sessionContent = result.content;
+    dispatch(newSession(sessionContent));
+    return sessionContent;
   }
 
   async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {

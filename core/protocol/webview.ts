@@ -1,13 +1,18 @@
 import { ConfigValidationError } from "../config/validation.js";
 
-import type { ContextItemWithId, IndexingProgressUpdate } from "../index.js";
+import type {
+  ContextItemWithId,
+  IndexingProgressUpdate,
+  IndexingStatus,
+} from "../index.js";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];
   configError: [ConfigValidationError[] | undefined, void];
   openSelectedConfigProfile: [undefined, void];
   getDefaultModelTitle: [undefined, string];
-  indexProgress: [IndexingProgressUpdate, void];
+  indexProgress: [IndexingProgressUpdate, void]; // Codebase
+  "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
   refreshSubmenuItems: [undefined, void];
   isContinueInputFocused: [undefined, boolean];
   addContextItem: [

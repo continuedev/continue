@@ -16,6 +16,7 @@ export default class Cloudflare extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage, any, unknown> {
     const headers = {
@@ -35,6 +36,7 @@ export default class Cloudflare extends BaseLLM {
         model: this.model,
         ...this._convertArgs(options),
       }),
+      signal
     });
 
     for await (const value of streamSse(resp)) {
@@ -46,10 +48,12 @@ export default class Cloudflare extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
+      signal,
       options,
     )) {
       yield stripImages(chunk.content);

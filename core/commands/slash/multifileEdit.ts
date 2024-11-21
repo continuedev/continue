@@ -39,7 +39,7 @@ const MultiFileEditSlashCommand: SlashCommand = {
 
     const content = createPrompt(filesToEditStr, additionalContextStr, input);
 
-    for await (const chunk of llm.streamChat([{ role: "user", content }])) {
+    for await (const chunk of llm.streamChat([{ role: "user", content }], new AbortController().signal)) {
       yield stripImages(chunk.content);
     }
   },

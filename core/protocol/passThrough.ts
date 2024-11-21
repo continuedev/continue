@@ -24,6 +24,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/listProfiles",
     "config/openLocalConfigFile",
     "context/getContextItems",
+    "context/getSymbolsForFiles",
     "context/loadSubmenuItems",
     "context/addDocs",
     "context/removeDocs",
@@ -41,10 +42,17 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "chatDescriber/describe",
     "stats/getTokensPerDay",
     "stats/getTokensPerModel",
+    // Codebase
     "index/setPaused",
     "index/forceReIndex",
     "index/forceReIndexFiles",
     "index/indexingProgressBarInitialized",
+    // Docs, etc.
+    "indexing/initStatuses",
+    "indexing/reindex",
+    "indexing/abort",
+    "indexing/setPaused",
+    //
     "completeOnboarding",
     "addAutocompleteModel",
     "profiles/switch",
@@ -56,7 +64,8 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
   [
     "configUpdate",
     "getDefaultModelTitle",
-    "indexProgress",
+    "indexProgress", // Codebase
+    "indexing/statusUpdate", // Docs, etc.
     "addContextItem",
     "refreshSubmenuItems",
     "isContinueInputFocused",
