@@ -52,14 +52,6 @@ const GridDiv = styled.div`
   overflow-x: visible;
 `;
 
-const ModelDropdownPortalDiv = styled.div`
-  background-color: ${vscInputBackground};
-  position: relative;
-  margin-left: 8px;
-  z-index: 200;
-  font-size: ${getFontSize()};
-`;
-
 const ProfileDropdownPortalDiv = styled.div`
   background-color: ${vscInputBackground};
   position: relative;
@@ -266,7 +258,6 @@ const Layout = () => {
                 </div>
               )}
 
-              <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
               <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
               <Footer />
             </GridDiv>

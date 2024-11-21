@@ -5,10 +5,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { UserCircleIcon as UserCircleIconSolid } from "@heroicons/react/24/solid";
 import { ProfileDescription } from "core/config/ConfigHandler";
-import { Fragment, useContext, useState } from "react";
+import { Fragment, useContext, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import {
+  Button,
   defaultBorderRadius,
   lightGray,
   vscBackground,
@@ -118,102 +119,97 @@ function AccountDialog() {
     controlServerBetaEnabled,
   } = useAuth();
 
-  const topDiv = document.getElementById("profile-select-top-div");
+  // These shouldn't usually show but just to be safe
+  if (!session?.account?.id) {
+    return (
+      <div className="p-4">
+        <h1>Account</h1>
+        <p>Not signed in</p>
+        <Button onClick={login}>Login</Button>
+      </div>
+    );
+  }
+
+  if (!controlServerBetaEnabled) {
+    return (
+      <div className="p-4">
+        <h1>Account</h1>
+        <p>
+          Continue for teams is not enabled. You can enable it in your IDE
+          settings
+        </p>
+        <p>Using local config.</p>
+        <Button>Close</Button>
+      </div>
+    );
+  }
+
+  const topDiv = useRef<HTMLDivElement>(null);
 
   return (
     <div className="p-4">
-      <div className="mb-8">
-        <h1>Profiles</h1>
-        {/* 
-      <p>
-        Continue pre-indexes many common documentation sites, but if there's
-        one you don't see in the dropdown, enter the URL here.
-      </p>
-
-      <p>
-        Continue's indexing engine will crawl the site and generate embeddings
-        so that you can ask questions.
-      </p> */}
-      </div>
-
-      {controlServerBetaEnabled && session?.account?.id && (
-        <StyledListbox
-          value={"GPT-4"}
-          onChange={(id: string) => {
-            ideMessenger.post("didChangeSelectedProfile", { id });
-          }}
-        >
-          <div className="relative">
-            <StyledListboxButton>
-              <span className="truncate">{selectedProfile?.title}</span>
-              <div className="pointer-events-none flex items-center">
-                <ChevronUpDownIcon
-                  className="h-4 w-4 text-gray-400"
-                  aria-hidden="true"
+      <h1>Account</h1>
+      {!!topDiv.current &&
+        ReactDOM.createPortal(
+          <Transition
+            as={Fragment}
+            leave="transition ease-in duration-100"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+            show={true}
+          >
+            <StyledListboxOptions>
+              {profiles.map((option, idx) => (
+                <ListBoxOption
+                  selected={option.id === selectedProfile.id}
+                  option={option}
+                  idx={idx}
+                  key={idx}
+                  showDelete={profiles.length > 1}
                 />
+              ))}
+              <div
+                className="px-2 py-1"
+                style={{
+                  color: lightGray,
+                  fontSize: getFontSize() - 2,
+                }}
+              >
+                {profiles.length === 0 ? (
+                  <i>No workspaces found</i>
+                ) : (
+                  "Select workspace"
+                )}
               </div>
-            </StyledListboxButton>
-            {topDiv &&
-              ReactDOM.createPortal(
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <StyledListboxOptions>
-                    {profiles.map((option, idx) => (
-                      <ListBoxOption
-                        selected={option.id === selectedProfile?.id}
-                        option={option}
-                        idx={idx}
-                        key={idx}
-                        showDelete={profiles.length > 1}
-                      />
-                    ))}
-                    <div
-                      className="px-2 py-1"
-                      style={{
-                        color: lightGray,
-                        fontSize: getFontSize() - 2,
-                      }}
-                    >
-                      {profiles.length === 0 ? (
-                        <i>No workspaces found</i>
-                      ) : (
-                        "Select workspace"
-                      )}
-                    </div>
-                  </StyledListboxOptions>
-                </Transition>,
-                topDiv,
-              )}
-          </div>
-        </StyledListbox>
-      )}
-
-      {controlServerBetaEnabled &&
-        (session?.account ? (
-          <HeaderButtonWithToolTip
-            tooltipPlacement="top-end"
-            text={
-              session.account.label === ""
-                ? "Logged in"
-                : `Logged in as ${session.account.label}`
-            }
-            onClick={logout}
-          >
-            <UserCircleIconSolid className="h-4 w-4" />
-          </HeaderButtonWithToolTip>
-        ) : (
-          <HeaderButtonWithToolTip
-            tooltipPlacement="top-end"
-            text="Click to login to Continue"
-            onClick={login}
-          >
-            <UserCircleIconOutline className="h-4 w-4" />
-          </HeaderButtonWithToolTip>
-        ))}
+            </StyledListboxOptions>
+          </Transition>,
+          topDiv.current,
+        )}
+      <StyledListbox
+        ref={topDiv}
+        value={"GPT-4"}
+        onChange={(id: string) => {
+          ideMessenger.post("didChangeSelectedProfile", { id });
+        }}
+      >
+        <div className="relative">
+          <StyledListboxButton>
+            <span className="truncate">{selectedProfile?.title}</span>
+            <div className="pointer-events-none flex items-center">
+              <ChevronUpDownIcon
+                className="h-4 w-4 text-gray-400"
+                aria-hidden="true"
+              />
+            </div>
+          </StyledListboxButton>
+        </div>
+      </StyledListbox>
+      <div className="mt-4 flex flex-col items-start gap-2">
+        {session.account.label === ""
+          ? "Signed in"
+          : `Signed in as ${session.account.label}`}
+        <Button onClick={logout}>Sign out</Button>
+      </div>
     </div>
   );
 }
