@@ -9,12 +9,8 @@ import {
 } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import {
-  acceptToolCall,
-  cancelToolCall,
-  setCalling,
-  streamUpdate,
-} from "../../../redux/slices/stateSlice";
+import useChatHandler from "../../../hooks/useChatHandler";
+import { cancelToolCall, setCalling } from "../../../redux/slices/stateSlice";
 import { RootState } from "../../../redux/store";
 
 const ButtonContainer = styled.div`
@@ -61,6 +57,11 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
   );
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const { streamResponseAfterToolCall } = useChatHandler(
+    dispatch,
+    ideMessenger,
+  );
+
   async function callTool() {
     // If it goes "generated" -> "calling" -> "done" really quickly
     // we don't want an abrupt flash so just skip "calling"
@@ -84,15 +85,11 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
     clearTimeout(timer);
 
     if (result.status === "success") {
-      dispatch(
-        streamUpdate({
-          role: "tool",
-          content: JSON.stringify(result.content.result),
-          toolCallId: toolCallState.toolCall.id,
-        }),
+      // Send to the LLM to continue the conversation
+      streamResponseAfterToolCall(
+        toolCallState.toolCall.id,
+        result.content.result,
       );
-
-      dispatch(acceptToolCall());
     }
   }
 

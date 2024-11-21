@@ -17,18 +17,18 @@ import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import resolveEditorContent, {
-  hasSlashCommandOrContextProvider,
-} from "../components/mainInput/resolveInput";
+import resolveEditorContent from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   abortStream,
+  acceptToolCall,
   addPromptCompletionPair,
   clearLastResponse,
   initNewActiveMessage,
   resetNextCodeBlockToApplyIndex,
   resubmitAtIndex,
+  setActive,
   setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
@@ -171,136 +171,73 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     clearInterval(checkActiveInterval);
   }
 
-  async function streamResponse(
+  function resetStateForNewMessage() {
+    // Reset current code block index
+    dispatch(resetNextCodeBlockToApplyIndex());
+  }
+
+  async function gatherContext(
     editorState: JSONContent,
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
-    index?: number,
   ) {
-    try {
-      if (typeof index === "number") {
-        dispatch(resubmitAtIndex({ index, editorState }));
-      } else {
-        dispatch(initNewActiveMessage({ editorState }));
-      }
-
-      // Reset current code block index
-      dispatch(resetNextCodeBlockToApplyIndex());
-
-      if (index) {
-        dispatch(setCurCheckpointIndex(Math.floor(index / 2)));
-      }
-
-      dispatch(setIsGatheringContext(true));
-      // Resolve context providers and construct new history
-      const [selectedContextItems, selectedCode, content] =
-        await resolveEditorContent(
-          editorState,
-          modifiers,
-          ideMessenger,
-          defaultContextProviders,
-        );
-
-      dispatch(setIsGatheringContext(false));
-
-      // Automatically use currently open file
-      if (!modifiers.noContext) {
-        const usingFreeTrial = defaultModel?.provider === "free-trial";
-        const currentFile = await ideMessenger.ide.getCurrentFile();
-        if (currentFile) {
-          let currentFileContents = currentFile.contents;
-          if (usingFreeTrial) {
-            currentFileContents = currentFile.contents
-              .split("\n")
-              .slice(0, 1000)
-              .join("\n");
-          }
-          if (
-            !selectedContextItems.find(
-              (item) => item.uri?.value === currentFile.path,
-            )
-          ) {
-            // don't add the file if it's already in the context items
-            selectedContextItems.unshift({
-              content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
-                currentFile.path,
-                await ideMessenger.ide.getWorkspaceDirs(),
-              )}\n${currentFileContents}\n\`\`\``,
-              name: `Active file: ${getBasename(currentFile.path)}`,
-              description: currentFile.path,
-              id: {
-                itemId: currentFile.path,
-                providerTitle: "file",
-              },
-              uri: {
-                type: "file",
-                value: currentFile.path,
-              },
-            });
-          }
-        }
-      }
-
-      // dispatch(addContextItems(contextItems));
-
-      const message: ChatMessage = {
-        role: "user",
-        content,
-      };
-
-      const historyItem: ChatHistoryItem = {
-        message,
-        contextItems: selectedContextItems,
+    // Resolve context providers and construct new history
+    dispatch(setIsGatheringContext(true));
+    const [selectedContextItems, selectedCode, content] =
+      await resolveEditorContent(
         editorState,
-      };
-
-      let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
-      const historyIndex = index || newHistory.length - 1;
-      dispatch(
-        setMessageAtIndex({
-          message,
-          index: historyIndex,
-          contextItems: selectedContextItems,
-        }),
+        modifiers,
+        ideMessenger,
+        defaultContextProviders,
       );
+    dispatch(setIsGatheringContext(false));
 
-      // TODO: hacky way to allow rerender
-      await new Promise((resolve) => setTimeout(resolve, 0));
+    // Automatically use currently open file
+    if (!modifiers.noContext) {
+      const usingFreeTrial = defaultModel?.provider === "free-trial";
 
-      posthog.capture("step run", {
-        step_name: "User Input",
-        params: {},
-      });
-      posthog.capture("userInput", {});
-
-      const messages = constructMessages(newHistory, defaultModel.model);
-
-      // Determine if the input is a slash command
-      let commandAndInput = getSlashCommandForInput(content);
-
-      if (!commandAndInput) {
-        await _streamNormalInput(messages);
-      } else {
-        const [slashCommand, commandInput] = commandAndInput;
-        let updatedContextItems = [];
-        posthog.capture("step run", {
-          step_name: slashCommand.name,
-          params: {},
-        });
-
-        if (slashCommand.name === "multifile-edit") {
-          dispatch(setIsInMultifileEdit(true));
+      const currentFile = await ideMessenger.ide.getCurrentFile();
+      if (currentFile) {
+        let currentFileContents = currentFile.contents;
+        if (usingFreeTrial) {
+          currentFileContents = currentFile.contents
+            .split("\n")
+            .slice(0, 1000)
+            .join("\n");
         }
-
-        await _streamSlashCommand(
-          messages,
-          slashCommand,
-          commandInput,
-          historyIndex,
-          selectedCode,
-          updatedContextItems,
-        );
+        if (
+          !selectedContextItems.find(
+            (item) => item.uri?.value === currentFile.path,
+          )
+        ) {
+          // don't add the file if it's already in the context items
+          selectedContextItems.unshift({
+            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
+              currentFile.path,
+              await ideMessenger.ide.getWorkspaceDirs(),
+            )}\n${currentFileContents}\n\`\`\``,
+            name: `Active file: ${getBasename(currentFile.path)}`,
+            description: currentFile.path,
+            id: {
+              itemId: currentFile.path,
+              providerTitle: "file",
+            },
+            uri: {
+              type: "file",
+              value: currentFile.path,
+            },
+          });
+        }
       }
+    }
+
+    // dispatch(addContextItems(contextItems));
+    return { selectedContextItems, selectedCode, content };
+  }
+
+  async function handleErrors(runStream: () => any): Promise<void> {
+    try {
+      await runStream();
     } catch (e: any) {
       console.debug("Error streaming response: ", e);
       ideMessenger.post("showToast", [
@@ -313,8 +250,143 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     }
   }
 
+  async function streamResponseWithoutErrorHandling(
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    ideMessenger: IIdeMessenger,
+    index?: number,
+  ) {
+    if (typeof index === "number") {
+      dispatch(resubmitAtIndex({ index, editorState }));
+    } else {
+      dispatch(initNewActiveMessage({ editorState }));
+    }
+
+    resetStateForNewMessage();
+
+    if (index) {
+      dispatch(setCurCheckpointIndex(Math.floor(index / 2)));
+    }
+
+    const { selectedContextItems, selectedCode, content } = await gatherContext(
+      editorState,
+      modifiers,
+      ideMessenger,
+    );
+
+    const message: ChatMessage = {
+      role: "user",
+      content,
+    };
+
+    const historyItem: ChatHistoryItem = {
+      message,
+      contextItems: selectedContextItems,
+      editorState,
+    };
+
+    let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
+    const historyIndex = index || newHistory.length - 1;
+    dispatch(
+      setMessageAtIndex({
+        message,
+        index: historyIndex,
+        contextItems: selectedContextItems,
+      }),
+    );
+
+    // TODO: hacky way to allow rerender
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    posthog.capture("step run", {
+      step_name: "User Input",
+      params: {},
+    });
+    posthog.capture("userInput", {});
+
+    const messages = constructMessages(newHistory, defaultModel.model);
+
+    // Determine if the input is a slash command
+    let commandAndInput = getSlashCommandForInput(content);
+
+    if (!commandAndInput) {
+      await _streamNormalInput(messages);
+    } else {
+      const [slashCommand, commandInput] = commandAndInput;
+      let updatedContextItems = [];
+      posthog.capture("step run", {
+        step_name: slashCommand.name,
+        params: {},
+      });
+
+      if (slashCommand.name === "multifile-edit") {
+        dispatch(setIsInMultifileEdit(true));
+      }
+
+      await _streamSlashCommand(
+        messages,
+        slashCommand,
+        commandInput,
+        historyIndex,
+        selectedCode,
+        updatedContextItems,
+      );
+    }
+  }
+
+  async function streamResponse(
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    ideMessenger: IIdeMessenger,
+    index?: number,
+  ) {
+    await handleErrors(() =>
+      streamResponseWithoutErrorHandling(
+        editorState,
+        modifiers,
+        ideMessenger,
+        index,
+      ),
+    );
+  }
+
+  async function streamResponseAfterToolCall(
+    toolCallId: string,
+    toolOutput: string,
+  ) {
+    await handleErrors(async () => {
+      resetStateForNewMessage();
+
+      const newMessage: ChatMessage = {
+        role: "tool",
+        content: toolOutput,
+        toolCallId,
+      };
+
+      dispatch(streamUpdate(newMessage));
+      dispatch(acceptToolCall());
+      activeRef.current = true;
+      dispatch(setActive());
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      const messages = constructMessages(
+        [
+          ...history,
+          {
+            message: newMessage,
+            contextItems: [],
+          },
+        ],
+        defaultModel.model,
+      );
+      await _streamNormalInput(messages);
+    });
+  }
+
   return {
     streamResponse,
+    streamResponseAfterToolCall,
   };
 }
 
