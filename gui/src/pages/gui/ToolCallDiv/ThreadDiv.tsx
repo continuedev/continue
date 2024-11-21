@@ -14,11 +14,10 @@ const Container = styled.div`
   justify-content: center;
   position: relative;
   padding: 8px;
+  padding-bottom: 0;
 `;
 
-const ChildrenDiv = styled.div`
-  margin: 8px;
-`;
+const ChildrenDiv = styled.div``;
 
 const W = 16;
 
@@ -37,7 +36,7 @@ export function ThreadDiv(props: ThreadDivProps) {
           style={{
             width: `${W}px`,
             height: `${W}px`,
-            fontWeight: "bold",
+            fontWeight: "bolder",
             marginTop: "1px",
           }}
         >

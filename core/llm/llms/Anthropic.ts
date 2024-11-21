@@ -59,7 +59,7 @@ class Anthropic extends BaseLLM {
           type: "tool_use",
           id: toolCall.id,
           name: toolCall.function?.name,
-          input: JSON.parse(toolCall.function?.arguments ?? "{}"),
+          input: JSON.parse(toolCall.function?.arguments || "{}"),
         })),
       };
     }
@@ -173,7 +173,7 @@ class Anthropic extends BaseLLM {
             ]
           : systemMessage,
       }),
-      signal
+      signal,
     });
 
     if (options.stream === false) {
