@@ -486,7 +486,7 @@ const commandsMap: (
 
       if (rangeInFileWithContents) {
         sidebar.webviewProtocol?.request(
-          "addRIFToCodeToEdit",
+          "addCodeToEdit",
           rangeInFileWithContents,
         );
 

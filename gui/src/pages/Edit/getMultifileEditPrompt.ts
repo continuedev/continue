@@ -1,13 +1,14 @@
 import { RangeInFileWithContents } from "core/commands/util";
+import { CodeToEdit } from "../../redux/slices/editModeState";
 
 export default function getMultifileEditPrompt(
-  rifs: RangeInFileWithContents[],
+  codeToEdit: CodeToEdit[],
 ): string {
-  const filesToEditStr = rifs
+  const codeToEditStr = codeToEdit
     .map(
-      (rif) => `
-\`\`\` ${rif.filepath}
-${rif.contents}
+      (code) => `
+\`\`\` ${code.filepath}
+${code.contents}
 \`\`\`
   `,
     )
@@ -48,7 +49,7 @@ Summary:
 Here are the files to base your edits on:
 
 <files>
-${filesToEditStr}
+${codeToEditStr}
 </files>
 
 Please provide the multi-file edit details based on the engineer's request below:

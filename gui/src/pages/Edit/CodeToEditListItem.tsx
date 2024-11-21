@@ -9,11 +9,12 @@ import { useState } from "react";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
+import { CodeToEdit } from "../../redux/slices/editModeState";
 
 export interface CodeToEditListItemProps {
-  rif: RangeInFileWithContents;
-  onDelete: (rif: RangeInFileWithContents) => void;
-  onClickFilename: (rif: RangeInFileWithContents) => void;
+  code: CodeToEdit;
+  onDelete: (code: CodeToEdit) => void;
+  onClickFilename: (code: CodeToEdit) => void;
 }
 
 // Easiest method to overwrite the top level styling of the markdown preview
@@ -30,20 +31,24 @@ const NoPaddingWrapper = styled.div`
 `;
 
 export default function CodeToEditListItem({
-  rif,
+  code,
   onDelete,
   onClickFilename,
 }: CodeToEditListItemProps) {
   const [showCodeSnippet, setShowCodeSnippet] = useState(true);
 
-  const filepath = rif.filepath.split("/").pop() || rif.filepath;
-  const title = `${filepath} (${rif.range.start.line + 1} - ${rif.range.end.line + 1})`;
+  const filepath = code.filepath.split("/").pop() || code.filepath;
+  let title = filepath;
+
+  if ("range" in code) {
+    title += `(${code.range.start.line + 1} - ${code.range.end.line + 1})`;
+  }
 
   const source =
     "```" +
-    getMarkdownLanguageTagForFile(rif.filepath) +
+    getMarkdownLanguageTagForFile(code.filepath) +
     "\n" +
-    rif.contents +
+    code.contents +
     "\n" +
     "```";
 
@@ -73,12 +78,12 @@ export default function CodeToEditListItem({
               className="h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 text-gray-400 transition-colors hover:bg-white/10"
             />
           )}
-          <FileIcon filename={rif.filepath} height={"18px"} width={"18px"} />
+          <FileIcon filename={code.filepath} height={"18px"} width={"18px"} />
           <span
             className="text-xs hover:underline"
             onClick={(e) => {
               e.stopPropagation();
-              onClickFilename(rif);
+              onClickFilename(code);
             }}
           >
             {title}
@@ -88,7 +93,7 @@ export default function CodeToEditListItem({
           <XMarkIcon
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(rif);
+              onDelete(code);
             }}
             className="h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 text-gray-400 transition-colors hover:bg-white/10"
           />

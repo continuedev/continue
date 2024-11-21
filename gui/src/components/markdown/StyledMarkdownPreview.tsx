@@ -141,8 +141,8 @@ function processCodeBlocks(tree: any) {
     node.data = node.data || {};
     node.data.hProperties = node.data.hProperties || {};
 
-    node.data.hProperties.isGeneratingCodeBlock = lastCodeNode === node;
-    node.data.hProperties.codeBlockContent = node.value;
+    node.data.hProperties["data-isgeneratingcodeblock"] = lastCodeNode === node;
+    node.data.hProperties["data-codeblockcontent"] = node.value;
 
     if (node.meta) {
       let meta = node.meta.split(" ");
@@ -212,13 +212,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const {
-            className,
-            filepath,
-            isGeneratingCodeBlock,
-            codeBlockContent,
-            range,
-          } = preProps?.children?.[0]?.props;
+          const preChildProps = preProps?.children?.[0]?.props;
+          const { className, filepath, range } = preProps?.children?.[0]?.props;
+
+          const codeBlockContent = preChildProps["data-codeblockcontent"];
+          const isGeneratingCodeBlock =
+            preChildProps["data-isgeneratingcodeblock"];
 
           if (!props.isRenderingInStepContainer) {
             return <SyntaxHighlightedPre {...preProps} />;

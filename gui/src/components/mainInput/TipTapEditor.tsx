@@ -66,6 +66,8 @@ import {
 import { ComboBoxItem } from "./types";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
+import { AddCodeToEdit } from "./AddCodeToEditExtension";
+import { addCodeToEdit } from "../../redux/slices/editModeState";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -462,25 +464,24 @@ function TipTapEditor(props: TipTapEditorProps) {
             HTMLAttributes: {
               class: "mention",
             },
-            suggestion: {
-              ...getContextProviderDropdownOptions(
-                availableContextProvidersRef,
-                getSubmenuContextItemsRef,
-                enterSubmenu,
-                onClose,
-                onOpen,
-                inSubmenuRef,
-                ideMessenger,
-              ),
-              char: "@",
-              pluginKey: new PluginKey("defaultContextProviders"),
+            suggestion: getContextProviderDropdownOptions(
+              availableContextProvidersRef,
+              getSubmenuContextItemsRef,
+              enterSubmenu,
+              onClose,
+              onOpen,
+              inSubmenuRef,
+              ideMessenger,
+            ),
+            renderHTML: (props) => {
+              return `@${props.node.attrs.label || props.node.attrs.id}`;
             },
           })
         : undefined,
       isInEditMode
-        ? Mention.configure({
+        ? AddCodeToEdit.configure({
             HTMLAttributes: {
-              class: "mention",
+              class: "add-code-to-edit",
             },
             suggestion: {
               ...getContextProviderDropdownOptions(
@@ -492,8 +493,17 @@ function TipTapEditor(props: TipTapEditorProps) {
                 inSubmenuRef,
                 ideMessenger,
               ),
-              char: "#",
-              pluginKey: new PluginKey("fileOnlyContextProviders"),
+              command: async ({ editor, range, props }) => {
+                editor.chain().focus().insertContentAt(range, "").run();
+                const filepath = props.id;
+                const contents = await ideMessenger.ide.readFile(filepath);
+                dispatch(
+                  addCodeToEdit({
+                    filepath,
+                    contents,
+                  }),
+                );
+              },
               items: async ({ query }) => {
                 // Only display files in the dropdown
                 const results = getSubmenuContextItemsRef.current(

@@ -94,7 +94,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
     },
     void,
   ];
-  addRIFToCodeToEdit: [RangeInFileWithContents, void];
+  addCodeToEdit: [RangeInFileWithContents, void];
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 

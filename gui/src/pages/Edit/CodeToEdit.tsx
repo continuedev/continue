@@ -2,12 +2,11 @@ import { InformationCircleIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { useContext } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { removeEntryFromCodeToEdit } from "../../redux/slices/editModeState";
+import { CodeToEdit, removeCodeToEdit } from "../../redux/slices/editModeState";
 import { RootState } from "../../redux/store";
 import CodeToEditListItem from "./CodeToEditListItem";
 import { RangeInFileWithContents } from "core/commands/util";
 import { vscEditorBackground } from "../../components";
-import { ToolTip } from "../../components/gui/Tooltip";
 import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
 
 export default function WorkingSet() {
@@ -18,25 +17,29 @@ export default function WorkingSet() {
   const hasCodeToEdit = editModeState.codeToEdit.length > 0;
 
   function onDelete(rif: RangeInFileWithContents) {
-    dispatch(removeEntryFromCodeToEdit(rif));
+    dispatch(removeCodeToEdit(rif));
   }
 
   function onClickAddFileToCodeToEdit() {
     dispatch(setShouldAddFileForEditing(true));
   }
 
-  function onClickFilename(rif: RangeInFileWithContents) {
-    const { filepath, range } = editModeState.codeToEdit.find(
-      (codeToEdit) => codeToEdit === rif,
-    );
-
-    ideMessenger.ide.showLines(filepath, range.start.line, range.end.line);
+  function onClickFilename(code: CodeToEdit) {
+    if ("range" in code) {
+      ideMessenger.ide.showLines(
+        code.filepath,
+        code.range.start.line,
+        code.range.end.line,
+      );
+    } else {
+      ideMessenger.ide.openFile(code.filepath);
+    }
   }
 
-  const codeToEditItems = editModeState.codeToEdit.map((rif) => (
+  const codeToEditItems = editModeState.codeToEdit.map((code, i) => (
     <CodeToEditListItem
-      key={rif.filepath + rif.range.start.line + rif.range.end.line}
-      rif={rif}
+      key={code.filepath + i}
+      code={code}
       onDelete={onDelete}
       onClickFilename={onClickFilename}
     />
@@ -47,7 +50,7 @@ export default function WorkingSet() {
       className="mx-1 flex flex-col rounded-t-lg px-1 pb-1"
       style={{ backgroundColor: vscEditorBackground }}
     >
-      <div className="flex items-center justify-between gap-1.5 border-0 border-b border-solid border-neutral-500 px-1 py-1.5 text-xs text-neutral-500">
+      <div className="flex items-center justify-between gap-1.5 px-1 py-1.5 text-xs text-neutral-500">
         <span>Code to edit</span>
 
         <span

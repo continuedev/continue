@@ -7,15 +7,12 @@ import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/images";
 import { CopyIconButton } from "../gui/CopyIconButton";
 
-export interface MultifileEditActionsProps {
+export interface EditActionsProps {
   index: number;
   item: ChatHistoryItem;
 }
 
-export default function EditActions({
-  index,
-  item,
-}: MultifileEditActionsProps) {
+export default function EditActions({ index, item }: EditActionsProps) {
   const curCheckpointIndex = useSelector(
     (store: RootState) => store.state.curCheckpointIndex,
   );

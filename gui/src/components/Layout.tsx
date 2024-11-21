@@ -10,12 +10,12 @@ import { useConfigError } from "../redux/hooks";
 import {
   setEditDone,
   setEditStatus,
-  addRIFToCodeToEdit,
+  addCodeToEdit,
   focusEdit,
+  setIsInEditMode,
 } from "../redux/slices/editModeState";
 import { setShowDialog } from "../redux/slices/uiStateSlice";
 import {
-  setIsInEditMode,
   updateApplyState,
   updateCurCheckpoint,
 } from "../redux/slices/stateSlice";
@@ -194,9 +194,7 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async (payload) => {
-      // TODO: Move into edit state
       dispatch(setIsInEditMode(true));
-
       dispatch(focusEdit(payload));
       navigate("/edit");
     },
@@ -204,9 +202,9 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "addRIFToCodeToEdit",
+    "addCodeToEdit",
     async (payload) => {
-      dispatch(addRIFToCodeToEdit(payload));
+      dispatch(addCodeToEdit(payload));
     },
     [navigate],
   );

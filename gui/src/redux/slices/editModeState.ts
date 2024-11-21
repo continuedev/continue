@@ -1,13 +1,15 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { MessageContent } from "core";
+import { FileWithContents, MessageContent } from "core";
 import { RangeInFileWithContents } from "core/commands/util";
 import { EditStatus } from "core/protocol/ideWebview";
+
+export type CodeToEdit = RangeInFileWithContents | FileWithContents;
 
 interface EditModeState {
   editStatus: EditStatus;
   previousInputs: MessageContent[];
   fileAfterEdit?: string;
-  codeToEdit: RangeInFileWithContents[];
+  codeToEdit: CodeToEdit[];
   isInEditMode: boolean;
 }
 
@@ -22,10 +24,7 @@ export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    addRIFToCodeToEdit: (
-      state,
-      { payload }: PayloadAction<RangeInFileWithContents>,
-    ) => {
+    addCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
       state.codeToEdit.push(payload);
       state.editStatus = "not-started";
       state.previousInputs = [];
@@ -40,10 +39,7 @@ export const editModeStateSlice = createSlice({
       state.previousInputs.push(payload);
       state.editStatus = "streaming";
     },
-    removeEntryFromCodeToEdit: (
-      state,
-      { payload }: PayloadAction<RangeInFileWithContents>,
-    ) => {
+    removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
       // Remove entry from codeToEdit that doesn't match the payload's filepath and contents
       state.codeToEdit = state.codeToEdit.filter(
         (entry) =>
@@ -107,12 +103,12 @@ export const editModeStateSlice = createSlice({
 });
 
 export const {
-  addRIFToCodeToEdit,
+  addCodeToEdit,
   setEditStatus,
   addPreviousInput,
   setEditDone,
   submitEdit,
-  removeEntryFromCodeToEdit,
+  removeCodeToEdit,
   focusEdit,
   clearCodeToEdit,
   setIsInEditMode,

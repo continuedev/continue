@@ -22,19 +22,7 @@ import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import StepContainer from "../../components/StepContainer";
 import styled from "styled-components";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
-
-const StepsDiv = styled.div`
-  position: relative;
-  background-color: transparent;
-
-  & > * {
-    position: relative;
-  }
-
-  .thread-message {
-    margin: 8px 4px 0 4px;
-  }
-`;
+import { RangeInFileWithContents } from "core/commands/util";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "codebase",
@@ -70,9 +58,10 @@ export default function Edit() {
         ?.status ?? "closed",
   );
 
-  const isSingleFileEdit =
-    editModeState.codeToEdit.map((codeToEdit) => codeToEdit.filepath).length <=
-    1;
+  const isSingleRangeEdit =
+    editModeState.codeToEdit.length === 0 ||
+    (editModeState.codeToEdit.length === 1 &&
+      "range" in editModeState.codeToEdit[0]);
 
   useEffect(() => {
     if (editModeState.editStatus === "done") {
@@ -132,9 +121,17 @@ export default function Edit() {
       stripImages(userInstructions),
     ].join("\n\n");
 
+    const codeToEdit = editModeState.codeToEdit[0];
+
+    let rif: RangeInFileWithContents = {
+      filepath: codeToEdit.filepath,
+      contents: codeToEdit.contents,
+      range: "range" in codeToEdit ? codeToEdit.range : undefined,
+    };
+
     ideMessenger.post("edit/sendPrompt", {
       prompt,
-      range: editModeState.codeToEdit[0],
+      range: editModeState.codeToEdit[0] as RangeInFileWithContents,
     });
 
     dispatch(submitEdit(prompt));
@@ -146,7 +143,7 @@ export default function Edit() {
     modifiers: InputModifiers,
     editor: Editor,
   ) {
-    if (isSingleFileEdit) {
+    if (isSingleRangeEdit) {
       handleSingleRangeEdit(editorState, modifiers, editor);
     } else {
       const promptPreamble = getMultifileEditPrompt(editModeState.codeToEdit);
@@ -190,7 +187,7 @@ export default function Edit() {
           />
         </div>
 
-        {!isSingleFileEdit && history.length > 1 && (
+        {!isSingleRangeEdit && history.length > 1 && (
           <div>
             {history.slice(1).map((item, index: number) => (
               <div>
@@ -230,14 +227,14 @@ export default function Edit() {
         )}
 
         <div className="mt-2">
-          {hasPendingApplies && isSingleFileEdit && (
+          {hasPendingApplies && isSingleRangeEdit && (
             <AcceptRejectAllButtons
               pendingApplyStates={pendingApplyStates}
               onAcceptOrReject={() => dispatch(clearCodeToEdit())}
             />
           )}
 
-          {!hasPendingApplies && isSingleFileEdit && (
+          {!hasPendingApplies && isSingleRangeEdit && (
             <NewSessionButton
               onClick={handleBackClick}
               className="mr-auto flex items-center gap-2"
