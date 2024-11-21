@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+
 import { Chunk, Reranker } from "../../index.js";
 
 export class CohereReranker implements Reranker {

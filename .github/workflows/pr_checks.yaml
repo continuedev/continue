@@ -1,0 +1,113 @@
+name: PR checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  tsc-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check-out repository
+      - name: Check-out repository
+        uses: actions/checkout@v4
+
+      # 2. Install npm dependencies
+      - name: Use Node.js from .nvmrc
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+
+      - name: Cache root node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+
+      - name: Cache extension node_modules
+        uses: actions/cache@v3
+        with:
+          path: extensions/vscode/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
+
+      - name: Cache core node_modules
+        uses: actions/cache@v3
+        with:
+          path: core/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
+
+      - name: Cache gui node_modules
+        uses: actions/cache@v3
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+
+      - name: Cache binary node_modules
+        uses: actions/cache@v3
+        with:
+          path: binary/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
+
+      - name: root install
+        run: |
+          npm ci
+
+      - name: extensions/vscode install
+        run: |
+          cd extensions/vscode
+          npm ci
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - name: core install
+        run: |
+          cd core
+          npm ci
+
+      - name: gui install
+        run: |
+          cd gui
+          npm ci
+
+      - name: binary install
+        run: |
+          cd binary
+          npm ci
+
+      - name: extensions/vscode checks
+        run: |
+          cd extensions/vscode
+          npx tsc --noEmit
+          npm run lint
+
+      - name: core checks
+        run: |
+          cd core
+          npm ci
+          npx tsc --noEmit
+          npm run lint
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: gui checks
+        run: |
+          cd gui
+          npx tsc --noEmit
+
+      - name: binary checks
+        run: |
+          cd binary
+          npx tsc --noEmit
+
+      - name: Run core tests
+        run: |
+          cd core
+          npm test
+
+      - name: Run gui tests
+        run: |
+          cd gui
+          npm test

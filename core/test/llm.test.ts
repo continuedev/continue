@@ -26,9 +26,10 @@ function testLLM(llm: BaseLLM) {
   describe(llm.providerName, () => {
     test("Stream Chat works", async () => {
       let total = "";
-      for await (const chunk of llm.streamChat([
-        { role: "user", content: "Hi" },
-      ])) {
+      for await (const chunk of llm.streamChat(
+        [{ role: "user", content: "Hi" }],
+        new AbortController().signal,
+      )) {
         total += chunk.content;
       }
 
@@ -38,7 +39,10 @@ function testLLM(llm: BaseLLM) {
 
     test("Stream Complete works", async () => {
       let total = "";
-      for await (const chunk of llm.streamComplete("Hi")) {
+      for await (const chunk of llm.streamComplete(
+        "Hi",
+        new AbortController().signal,
+      )) {
         total += chunk;
       }
 
@@ -47,7 +51,7 @@ function testLLM(llm: BaseLLM) {
     });
 
     test("Complete works", async () => {
-      const completion = await llm.complete("Hi");
+      const completion = await llm.complete("Hi", new AbortController().signal);
 
       expect(completion.length).toBeGreaterThan(0);
       return;
@@ -55,7 +59,7 @@ function testLLM(llm: BaseLLM) {
   });
 }
 
-describe("LLM", () => {
+describe.skip("LLM", () => {
   // testLLM(
   //   new FreeTrial({
   //     model: "gpt-3.5-turbo",
@@ -106,5 +110,8 @@ describe("LLM", () => {
   // );
   // testLLM(
   //   new Flowise({ apiKey: process.env.FLOWISE_API_KEY, model: "gpt-3.5-turbo" })
+  // );
+  // testLLM(
+  //   new Nebius({ apiKey: process.env.NEBIUS_API_KEY, model: "llama3.1-8b" })
   // );
 });

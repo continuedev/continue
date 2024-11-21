@@ -6,42 +6,30 @@ Prompt files provide a convenient way to standardize common patterns and share a
 
 ## Quick start
 
-:::tip[Prompt library]
+<!-- :::tip[Prompt library]
 To assist you in getting started, [we've curated a small library of `.prompt` files](https://github.com/continuedev/prompt-file-examples). We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
-:::
+::: -->
 
-Below is a quick example of setting up a prompt file to write unit tests using Jest.
+Below is a quick example of setting up a prompt file to de
 
-1. Create a folder called `.prompts/` at the top level of your workspace.
-2. Add a file called `test.prompt` to this folder. The name of this file will be the name of the slash command you will use to generate your prompt.
-3. Write the following contents to `test.prompt` and save.
+1. Create a folder called `.continue/prompts` at the top level of your workspace (or you can use the button in the UI by typing @, selecting "Prompt Files", and selecting "New Prompt File").
+2. Add a file called `rails.prompt` to this folder.
+3. Write the following contents to `rails.prompt` and save.
 
 ```
-temperature: 0.5
-maxTokens: 4096
+name: Rails Project
+description: Information about this project
 ---
-<system>
-You are an expert programmer
-</system>
-
-{{{ input }}}
-
-Write unit tests for the above selected code, following each of these instructions:
-- Use `jest`
-- Properly set up and tear down
-- Include important edge cases
-- The tests should be complete and sophisticated
-- Give the tests just as chat output, don't edit any file
-- Don't explain how to set up `jest`
+Attached is a summary of the current Ruby on Rails application, including the @Gemfile and database schema in @db/schema.rb
 ```
 
-Now to use this prompt, you can highlight code and use `cmd/ctrl + L` to select it in the Continue sidebar.
+Now to use this prompt, you can highlight code and use <kbd>cmd/ctrl</kbd> + <kbd>L</kbd> to select it in the Continue sidebar.
 
-Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
+Then, type "@", select "Prompt files", and choose the one called "Rails Project". You can now ask any question as usual and the LLM will have the information from your .prompt file.
 
 ## Format
 
-The format is inspired by [HumanLoops's .prompt file](https://docs.humanloop.com/docs/prompt-file-format), with additional templating to use context providers and built-in variables using [Handlebars syntax](https://handlebarsjs.com/guide/).
+The format is inspired by [HumanLoops's .prompt file](https://docs.humanloop.com/docs/prompt-file-format), with additional templating to reference files, URLs, and context providers.
 
 :::info
 The current state of this format is experimental and subject to change
@@ -51,38 +39,19 @@ The current state of this format is experimental and subject to change
 
 The "preamble" is everything above the `---` separator, and lets you specify model parameters. It uses YAML syntax and currently supports the following parameters:
 
-- `name`
-- `temperature`
-- `topP`
-- `topK`
-- `minP`
-- `presencePenalty`
-- `frequencyPenalty`
-- `mirostat`
-- `stop`
-- `maxTokens`
-- `description`
+- `name` - The display title
+- `description` - The description you will see in the dropdown
+- `version` - Can be either "1" (for legacy prompt files) or "2" (this is the default and does not need to be set)
 
 If you don't need any of these parameters, you can leave out the preamble and do not need to include the `---` separator.
 
-### System message
+### Context
 
-To add a system message, start the body with `<system></system>` tags like in the example above and place your system message inside.
+Many [context provider](../context-providers.md) can be referenced by typing "@" followed by the name of the context provider.
 
-### Built-in variables
-
-The following built-in variables are currently available:
-
-- `{{{ input }}}` - The full text from the input box in the sidebar that is sent along with the slash command
-- `{{{ currentFile }}}` - The currently open file in your IDE
-- `{{{ ./path/to/file.js }}}` - Any file can be directly referenced
-
-### Context providers
-
-Any [context provider](../context-providers.md) that you have added to your config can be referenced using the name of the context provider. Context providers that receive an input are also supported.
-
-- `{{{ terminal }}}` - The contents of the terminal
-- `{{{ url "https://github.com/continuedev/continue" }}}` - The contents of a URL
+- `@terminal` - The contents of the terminal
+- `@https://github.com/continuedev/continue` - The contents of a URL
+- `@src/index.ts` - The contents of a file
 
 ## Feedback
 

@@ -48,6 +48,7 @@ class HuggingFaceTGI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(options, prompt);
@@ -60,6 +61,7 @@ class HuggingFaceTGI extends BaseLLM {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ inputs: prompt, parameters: args }),
+        signal
       },
     );
 

@@ -1,5 +1,7 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
+
 import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+
 import {
   AsyncEncoder,
   GPTAsyncEncoder,
@@ -321,6 +323,27 @@ function pruneChatHistory(
   return chatHistory;
 }
 
+function messageIsEmpty(message: ChatMessage): boolean {
+  if (typeof message.content === "string") {
+    return message.content.trim() === "";
+  }
+  if (Array.isArray(message.content)) {
+    return message.content.every(
+      (item) => !item.imageUrl && item.text?.trim() === "",
+    );
+  }
+  return false;
+}
+
+function addSpaceToAnyEmptyMessages(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((message) => {
+    if (messageIsEmpty(message)) {
+      message.content = " ";
+    }
+    return message;
+  });
+}
+
 function compileChatMessages(
   modelName: string,
   msgs: ChatMessage[] | undefined,
@@ -331,11 +354,13 @@ function compileChatMessages(
   functions: any[] | undefined = undefined,
   systemMessage: string | undefined = undefined,
 ): ChatMessage[] {
-  const msgsCopy = msgs
+  let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
         .filter((msg) => msg.content !== "" && msg.role !== "system")
     : [];
+
+  msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
 
   if (prompt) {
     const promptMsg: ChatMessage = {

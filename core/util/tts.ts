@@ -1,5 +1,6 @@
-import os from "node:os";
 import { exec, ChildProcess } from "child_process";
+import os from "node:os";
+
 import type { IMessenger } from "./messenger";
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 
@@ -81,10 +82,10 @@ export class TTS {
         return;
     }
 
-    TTS.messenger.request("setTTSActive", true);
+    void TTS.messenger.request("setTTSActive", true);
 
     TTS.handle?.once("exit", () => {
-      TTS.messenger.request("setTTSActive", false);
+      void TTS.messenger.request("setTTSActive", false);
     });
   }
 

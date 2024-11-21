@@ -1,6 +1,7 @@
 import { CustomCommand, SlashCommand, SlashCommandDescription } from "../";
 import { stripImages } from "../llm/images";
-import { renderTemplatedString } from "../promptFiles/renderTemplatedString";
+import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
+
 import SlashCommands from "./slash";
 
 export function slashFromCustomCommand(
@@ -57,7 +58,7 @@ export function slashFromCustomCommand(
         }
       }
 
-      for await (const chunk of llm.streamChat(messages)) {
+      for await (const chunk of llm.streamChat(messages, new AbortController().signal)) {
         yield stripImages(chunk.content);
       }
     },

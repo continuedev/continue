@@ -1,5 +1,7 @@
-import * as cheerio from "cheerio";
 import { URL } from "node:url";
+
+import * as cheerio from "cheerio";
+
 import { PageData } from "../DocsCrawler";
 
 export default class CheerioCrawler {

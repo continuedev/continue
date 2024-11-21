@@ -30,6 +30,7 @@ interface ModelFileParams {
   min_p?: number;
   // deprecated?
   num_thread?: number;
+  use_mmap?: boolean;
   num_gqa?: number;
   num_gpu?: number;
 }
@@ -76,7 +77,6 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
-
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: {
@@ -191,6 +191,7 @@ class Ollama extends BaseLLM {
       num_ctx: this.contextLength,
       mirostat: options.mirostat,
       num_thread: options.numThreads,
+      use_mmap: options.useMmap,
       min_p: options.minP,
     };
   }
@@ -260,6 +261,7 @@ class Ollama extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const response = await this.fetch(this.getEndpoint("api/generate"), {
@@ -269,6 +271,7 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getGenerateOptions(options, prompt)),
+      signal
     });
 
     let buffer = "";
@@ -299,6 +302,7 @@ class Ollama extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const response = await this.fetch(this.getEndpoint("api/chat"), {
@@ -308,6 +312,7 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getChatOptions(options, messages)),
+      signal
     });
 
     let buffer = "";
@@ -346,8 +351,10 @@ class Ollama extends BaseLLM {
   protected async *_streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
+
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: {
@@ -355,6 +362,7 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getGenerateOptions(options, prefix, suffix)),
+      signal
     });
 
     let buffer = "";

@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.225",
+  "version": "0.9.232",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -64,6 +64,23 @@
           ".continuerc.json"
         ],
         "id": "jsonc"
+      },
+      {
+        "id": "promptLanguage",
+        "extensions": [
+          ".prompt"
+        ],
+        "aliases": [
+          "Prompt Language"
+        ],
+        "configuration": "./prompt-file-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "promptLanguage",
+        "scopeName": "source.prompt",
+        "path": "./media/prompt.tmLanguage.json"
       }
     ],
     "configuration": {
@@ -202,9 +219,10 @@
         "group": "Continue"
       },
       {
-        "command": "continue.openConfigJson",
+        "command": "continue.openConfig",
         "category": "Continue",
-        "title": "Open config.json",
+        "title": "Open Continue Config",
+        "icon": "$(gear)",
         "group": "Continue"
       },
       {
@@ -234,9 +252,22 @@
         "group": "Continue"
       },
       {
+        "command": "continue.viewLogs",
+        "category": "Continue",
+        "title": "View History",
+        "group": "Continue"
+      },
+      {
         "command": "continue.navigateTo",
         "category": "Continue",
         "title": "Navigate to a path",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.openMorePage",
+        "category": "Continue",
+        "title": "More",
+        "icon": "$(ellipsis)",
         "group": "Continue"
       },
       {
@@ -298,6 +329,20 @@
         "category": "Continue",
         "title": "Focus Continue Chat",
         "group": "Continue"
+      },
+      {
+        "command": "continue.signInToControlPlane",
+        "title": "Sign In",
+        "category": "Continue",
+        "group": "Continue",
+        "icon": "$(account)"
+      },
+      {
+        "command": "continue.openAccountDialog",
+        "title": "Account",
+        "category": "Continue",
+        "group": "Continue",
+        "icon": "$(account)"
       }
     ],
     "keybindings": [
@@ -314,12 +359,14 @@
       {
         "command": "continue.acceptDiff",
         "mac": "shift+cmd+enter",
-        "key": "shift+ctrl+enter"
+        "key": "shift+ctrl+enter",
+        "when": "continue.diffVisible"
       },
       {
         "command": "continue.rejectDiff",
         "mac": "shift+cmd+backspace",
-        "key": "shift+ctrl+backspace"
+        "key": "shift+ctrl+backspace",
+        "when": "continue.diffVisible"
       },
       {
         "command": "continue.rejectDiff",
@@ -348,11 +395,6 @@
         "command": "continue.rejectVerticalDiffBlock",
         "mac": "alt+cmd+n",
         "key": "alt+ctrl+n"
-      },
-      {
-        "command": "continue.quickEdit",
-        "mac": "cmd+shift+i",
-        "key": "ctrl+shift+i"
       },
       {
         "command": "continue.edit",
@@ -396,9 +438,6 @@
     ],
     "menus": {
       "commandPalette": [
-        {
-          "command": "continue.quickEdit"
-        },
         {
           "command": "continue.focusContinueInput"
         },
@@ -481,6 +520,26 @@
           "command": "continue.toggleFullScreen",
           "group": "navigation@3",
           "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.openConfig",
+          "group": "navigation@4",
+          "when": "view == continue.continueGUIView"
+        },
+        {
+          "command": "continue.signInToControlPlane",
+          "group": "navigation@5",
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && !continue.isSignedInToControlPlane"
+        },
+        {
+          "command": "continue.openAccountDialog",
+          "group": "navigation@5",
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && continue.isSignedInToControlPlane"
+        },
+        {
+          "command": "continue.openMorePage",
+          "group": "navigation@6",
+          "when": "view == continue.continueGUIView"
         }
       ],
       "editor/title": [
@@ -523,7 +582,7 @@
     },
     "jsonValidation": [
       {
-        "fileMatch": "**/.continue/config.json",
+        "fileMatch": "**/.continue*/config.json",
         "url": "./config_schema.json"
       },
       {
@@ -542,6 +601,7 @@
     "tsc-watch": "tsc -watch -p ./",
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
+    "lint:fix": "eslint . --ext ts --fix",
     "build-test": "npm run esbuild && node esbuild.test.mjs",
     "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
@@ -591,7 +651,7 @@
     "axios": "^1.2.5",
     "core": "file:../../core",
     "cors": "^2.8.5",
-    "dbinfoz": "^0.11.0",
+    "dbinfoz": "^0.14.0",
     "downshift": "^7.6.0",
     "esbuild": "^0.17.19",
     "express": "^4.18.2",

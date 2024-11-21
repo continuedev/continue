@@ -75,7 +75,7 @@ Continue also supports a **global** `.continueignore` file that will be respecte
 
 If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
 
-If you need to force a refresh of the index, reload the VS Code window with `cmd/ctrl + shift + p` + "Reload Window".
+If you need to force a refresh of the index, reload the VS Code window with <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>p</kbd> + "Reload Window".
 
 ## Repository map
 

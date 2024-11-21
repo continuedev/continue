@@ -1,7 +1,9 @@
 import { URL } from "node:url";
+
 // @ts-ignore
 // @prettier-ignore
 import { ContinueConfig, IDE } from "../..";
+
 import CheerioCrawler from "./crawlers/CheerioCrawler";
 import { ChromiumCrawler, ChromiumInstaller } from "./crawlers/ChromiumCrawler";
 import { DefaultCrawler } from "./crawlers/DefaultCrawler";
@@ -77,7 +79,7 @@ class DocsCrawler {
           );
 
         if (didInstall) {
-          await this.ide.showToast(
+          void this.ide.showToast(
             "info",
             `Successfully installed Chromium! Retrying crawl of: ${startUrl.toString()}`,
           );
@@ -93,6 +95,6 @@ export default DocsCrawler;
 export {
   CheerioCrawler,
   ChromiumCrawler,
-  ChromiumInstaller as ChromiumInstaller,
+  ChromiumInstaller,
   GitHubCrawler,
 };

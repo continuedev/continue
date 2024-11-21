@@ -1,10 +1,13 @@
 import crypto from "node:crypto";
 import * as fs from "node:fs";
+
 import plimit from "p-limit";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
+
 import { IndexTag, IndexingProgressUpdate } from "../index.js";
 import { getIndexSqlitePath } from "../util/paths.js";
+
 import {
   CodebaseIndex,
   IndexResultType,

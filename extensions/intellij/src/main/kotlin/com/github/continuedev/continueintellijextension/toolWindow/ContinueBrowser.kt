@@ -1,10 +1,12 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
+import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.constants.MessageTypes
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -17,8 +19,6 @@ import kotlinx.coroutines.*
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import com.intellij.openapi.application.ApplicationInfo
-import com.intellij.openapi.util.SystemInfo
 
 class ContinueBrowser(val project: Project, url: String) {
     private val coroutineScope = CoroutineScope(
@@ -59,6 +59,7 @@ class ContinueBrowser(val project: Project, url: String) {
         "stats/getTokensPerModel",
         "index/setPaused",
         "index/forceReIndex",
+        "index/forceReIndexFiles",
         "index/indexingProgressBarInitialized",
         "completeOnboarding",
         "addAutocompleteModel",
@@ -78,7 +79,8 @@ class ContinueBrowser(val project: Project, url: String) {
     val browser: JBCefBrowser
 
     init {
-        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(shouldRenderOffScreen()).build()
+        val isOSREnabled = ServiceManager.getService(ContinueExtensionSettings::class.java).continueState.enableOSR
+        this.browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOSREnabled).build()
 
 
         browser.jbCefClient.setProperty(
@@ -88,7 +90,7 @@ class ContinueBrowser(val project: Project, url: String) {
 
         registerAppSchemeHandler()
         browser.loadURL(url);
-        Disposer.register(project, browser)
+        Disposer.register(ContinuePluginDisposable.getInstance(project), browser)
 
         // Listen for events sent from browser
         val myJSQueryOpenInBrowser = JBCefJSQuery.create((browser as JBCefBrowserBase?)!!)
@@ -132,6 +134,10 @@ class ContinueBrowser(val project: Project, url: String) {
                 "jetbrains/editorInsetHeight" -> {
                     val height = data.asJsonObject.get("height").asInt
                     heightChangeListeners.forEach { it(height) }
+                }
+
+                "jetbrains/isOSREnabled" -> {
+                    sendToWebview( "jetbrains/isOSREnabled", isOSREnabled)
                 }
 
                 "onLoad" -> {
@@ -186,9 +192,6 @@ class ContinueBrowser(val project: Project, url: String) {
                 }
 
                 "reloadWindow" -> {}
-                "openConfigJson" -> {
-                    ide?.setFileOpen(getConfigJsonPath())
-                }
 
                 "readRangeInFile" -> {
                     val data = data.asJsonObject
@@ -274,34 +277,4 @@ class ContinueBrowser(val project: Project, url: String) {
         return """window.postMessage($jsonData, "*");"""
     }
 
-    /**
-     * This function checks if the pluginSinceBuild is greater than or equal to 233, which corresponds
-     * to IntelliJ platform version 2023.3 and later.
-     *
-     * Setting `setOffScreenRendering` to `false` causes a number of issues such as a white screen flash when loading
-     * the GUI and the inability to set `cursor: pointer`. However, setting `setOffScreenRendering` to `true` on
-     * platform versions prior to 2023.3.4 causes larger issues such as an inability to type input for certain langauges,
-     * e.g. Korean.
-     *
-     * References:
-     * 1. https://youtrack.jetbrains.com/issue/IDEA-347828/JCEF-white-flash-when-tool-window-show#focus=Comments-27-9334070.0-0
-     *    This issue mentions that white screen flash problems were resolved in platformVersion 2023.3.4.
-     * 2. https://www.jetbrains.com/idea/download/other.html
-     *    This documentation shows mappings from platformVersion to branchNumber.
-     *
-     * We use the branchNumber (e.g., 233) instead of the full version number (e.g., 2023.3.4) because
-     * it's a simple integer without dot notation, making it easier to compare.
-     */
-    private fun shouldRenderOffScreen(): Boolean {
-        // With the 0.0.77 release, non-Mac users have been reporting issues with paste functionality
-        // in the browser. Disabling OSR for all non-Mac users for now.
-        if (!SystemInfo.isMac) {
-            return false
-        }
-
-        val minBuildNumber = 233
-        val applicationInfo = ApplicationInfo.getInstance()
-        val currentBuildNumber = applicationInfo.build.baselineVersion
-        return currentBuildNumber >= minBuildNumber
-    }
 }

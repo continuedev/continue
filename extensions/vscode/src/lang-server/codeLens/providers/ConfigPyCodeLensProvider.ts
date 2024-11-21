@@ -1,5 +1,6 @@
-import * as vscode from "vscode";
 import * as os from "os";
+
+import * as vscode from "vscode";
 
 export class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
@@ -34,7 +35,7 @@ export class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "✏️ Edit in UI",
-          command: "continue.openSettingsUI",
+          command: "continue.openConfigUI", // command likely doesn't exist anymore, check
         }),
       );
     }

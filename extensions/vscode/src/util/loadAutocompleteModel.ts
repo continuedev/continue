@@ -1,11 +1,12 @@
-import type { ILLM } from "core";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import Ollama from "core/llm/llms/Ollama";
 import { GlobalContext } from "core/util/GlobalContext";
 
+import type { ILLM } from "core";
+
 export class TabAutocompleteModel {
   private _llm: ILLM | undefined;
-  private defaultTag = "starcoder2:3b";
+  private defaultTag = "qwen2.5-coder:1.5b";
   private globalContext: GlobalContext = new GlobalContext();
 
   constructor(private configHandler: ConfigHandler) {}

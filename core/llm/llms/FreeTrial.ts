@@ -60,6 +60,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
@@ -73,6 +74,7 @@ class FreeTrial extends BaseLLM {
         prompt,
         ...args,
       }),
+      signal
     });
 
     let completion = "";
@@ -103,6 +105,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
@@ -120,6 +123,7 @@ class FreeTrial extends BaseLLM {
         messages: messages.map(this._convertMessage),
         ...args,
       }),
+      signal
     });
 
     let completion = "";
@@ -140,25 +144,37 @@ class FreeTrial extends BaseLLM {
   async *_streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
-    const resp = await this.fetch(`${TRIAL_PROXY_URL}/stream_fim`, {
-      method: "POST",
-      headers: await this._getHeaders(),
-      body: JSON.stringify({
-        prefix,
-        suffix,
-        ...args,
-      }),
-    });
 
-    let completion = "";
-    for await (const value of streamResponse(resp)) {
-      yield value;
-      completion += value;
+    try {
+      const resp = await this.fetch(`${TRIAL_PROXY_URL}/stream_fim`, {
+        method: "POST",
+        headers: await this._getHeaders(),
+        body: JSON.stringify({
+          prefix,
+          suffix,
+          ...args,
+        }),
+        signal
+      });
+
+      let completion = "";
+      for await (const value of streamResponse(resp)) {
+        yield value;
+        completion += value;
+      }
+      this._countTokens(completion, args.model, false);
+    } catch (e: any) {
+      if (e.message.startsWith("HTTP 429")) {
+        throw new Error(
+          "You have reached the 2000 request limit for the autocomplete free trial. To continue using autocomplete, please set up a local model or your own Codestral API key.",
+        );
+      }
+      throw e;
     }
-    this._countTokens(completion, args.model, false);
   }
 
   async listModels(): Promise<string[]> {

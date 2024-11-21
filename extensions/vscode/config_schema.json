@@ -61,6 +61,11 @@
           "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
           "type": "integer"
         },
+        "useMmap": {
+          "title": "Use Memory Map",
+          "description": "Allows the model to be mapped into memory. If disabled can enhance response time on low end devices. Only available for Ollama (this is the use_mmap parameter)",
+          "type": "boolean"
+        },
         "keepAlive": {
           "title": "Ollama keep_alive",
           "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
@@ -198,7 +203,10 @@
             "cerebras",
             "askSage",
             "nebius",
-            "vertexai"
+            "vertexai",
+            "xAI",
+            "kindo",
+            "moonshot"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -233,7 +241,10 @@
             "### NVIDIA NIMs\nNVIDIA offers a single API to access almost any language model. To find out more, visit the [LLM APIs Documentation](https://docs.api.nvidia.com/nim/reference/llm-apis).\nFor information specific to getting a key, please check out the [docs here](https://docs.nvidia.com/nim/large-language-models/latest/getting-started.html#option-1-from-api-catalog)",
             "### vLLM\nvLLM is a highly performant way of hosting LLMs for a team. To get started, follow their [quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html) to set up your server.",
             "### Cerebras\nCerebras Inference uses specialized silicon to provides superfast inference. To get started, get your API keys from [their console](https://cloud.cerebras.ai/).",
-            "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)"
+            "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
+            "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
+            "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
+            "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)"
           ],
           "type": "string"
         },
@@ -459,7 +470,9 @@
                   "together",
                   "cloudflare",
                   "sambanova",
-                  "nebius"
+                  "nebius",
+                  "xAI",
+                  "kindo"
                 ]
               }
             },
@@ -618,6 +631,30 @@
           "if": {
             "properties": {
               "provider": {
+                "enum": ["xAI"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": ["grok-beta", "AUTODETECT"]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
                 "enum": ["replicate"]
               }
             },
@@ -737,6 +774,11 @@
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b",
                       "AUTODETECT"
                     ]
                   },
@@ -993,7 +1035,12 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
-                      "starcoder2-3b"
+                      "starcoder2-3b",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b"
                     ]
                   },
                   {
@@ -1046,6 +1093,11 @@
                       "starcoder-1b",
                       "starcoder-3b",
                       "starcoder2-3b",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b",
                       "AUTODETECT"
                     ]
                   },
@@ -1095,6 +1147,35 @@
           },
           "then": {
             "required": ["projectId", "region"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["moonshot"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "moonshot-v1-8k",
+                      "moonshot-v1-32k",
+                      "moonshot-v1-128k",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
           }
         },
         {
@@ -1365,7 +1446,12 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
-                      "starcoder2-3b"
+                      "starcoder2-3b",
+                      "qwen2.5-coder:1.5b",
+                      "qwen2.5-coder:3b",
+                      "qwen2.5-coder:7b",
+                      "qwen2.5-coder:14b",
+                      "qwen2.5-coder:32b"
                     ]
                   },
                   {
@@ -1957,7 +2043,7 @@
                         "connection_type": {
                           "type": "string",
                           "description": "The type of database (e.g., 'postgres', 'mysql')",
-                          "enum": ["postgres", "mysql", "sqlite"]
+                          "enum": ["postgres", "mysql", "sqlite", "mssql"]
                         },
                         "connection": {
                           "type": "object",
@@ -2270,7 +2356,7 @@
                 "type": "integer",
                 "description": "The maximum depth to crawl the documentation site"
               },
-              "favicon": {
+              "faviconUrl": {
                 "type": "string",
                 "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }
@@ -2403,13 +2489,18 @@
                 "openai",
                 "cohere",
                 "free-trial",
+                "continue-proxy",
                 "gemini",
                 "voyage",
                 "nvidia",
                 "bedrock",
                 "sagemaker",
                 "nebius",
-                "vertexai"
+                "vertexai",
+                "deepinfra",
+                "mistral",
+                "watsonx",
+                "lmstudio"
               ]
             },
             "model": {
@@ -2637,6 +2728,9 @@
                         "type": "string",
                         "default": "http://localhost:8080"
                       },
+                      "apiKey": {
+                        "type": "string"
+                      },
                       "truncate": {
                         "type": "boolean",
                         "description": "Whether to truncate long sequences to the maximum allowed context length.",
@@ -2667,8 +2761,8 @@
         },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
-          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "x-intellij-html-description": "The model used for tab autocompletion. If undefined, Continue will default to using qwen2.5-coder:1.5b on a local Ollama instance.<br><br><i>IMPORTANT</i>:<br><br>If you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
@@ -2924,6 +3018,11 @@
                   "default": "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
                 }
               }
+            },
+            "useChromiumForDocsCrawling": {
+              "type": "boolean",
+              "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`.",
+              "default": false
             }
           }
         }

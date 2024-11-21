@@ -1,3 +1,5 @@
+import { ControlPlaneSessionInfo } from "../control-plane/client";
+
 import type {
   ContinueRcJson,
   DiffLine,
@@ -12,7 +14,6 @@ import type {
   RangeInFile,
   Thread,
 } from "../";
-import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export interface GetGhTokenArgs {
   force?: boolean;
@@ -27,6 +28,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   showVirtualFile: [{ name: string; content: string }, void];
   getContinueDir: [undefined, string];
   openFile: [{ path: string }, void];
+  openUrl: [string, void];
   runCommand: [{ command: string }, void];
   getSearchResults: [{ query: string }, string];
   subprocess: [{ command: string; cwd?: string }, [string, string]];
@@ -48,7 +50,17 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getProblems: [{ filepath: string }, Problem[]];
   getOpenFiles: [undefined, string[]];
-  getCurrentFile: [undefined, string | undefined];
+  getCurrentFile: [
+    undefined,
+    (
+      | undefined
+      | {
+          isUntitled: boolean;
+          path: string;
+          contents: string;
+        }
+    ),
+  ];
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];

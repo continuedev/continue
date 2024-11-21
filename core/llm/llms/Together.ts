@@ -1,10 +1,11 @@
+import OpenAI from "./OpenAI.js";
+
 import type {
   CompletionOptions,
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
 
-import OpenAI from "./OpenAI.js";
 
 class Together extends OpenAI {
   static providerName: ModelProvider = "together";
@@ -40,9 +41,10 @@ class Together extends OpenAI {
 
   protected async *_streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    for await (const chunk of this._legacystreamComplete(prompt, options)) {
+    for await (const chunk of this._legacystreamComplete(prompt,signal, options)) {
       yield chunk;
     }
   }

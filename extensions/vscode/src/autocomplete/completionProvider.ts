@@ -1,15 +1,15 @@
-import type { IDE } from "core";
+import { CompletionProvider } from "core/autocomplete/CompletionProvider";
 import {
-  AutocompleteOutcome,
-  CompletionProvider,
   type AutocompleteInput,
-} from "core/autocomplete/completionProvider";
+  type AutocompleteOutcome,
+} from "core/autocomplete/util/types";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+
 import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import {
@@ -18,6 +18,9 @@ import {
   setupStatusBar,
   stopStatusBarLoading,
 } from "./statusBar";
+
+import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import type { IDE } from "core";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -38,7 +41,9 @@ export class ContinueCompletionProvider
       showFreeTrialLoginMessage(
         e.message,
         this.configHandler.reloadConfig.bind(this.configHandler),
-        () => this.webviewProtocol.request("openOnboardingCard", undefined),
+        () => {
+          void this.webviewProtocol.request("openOnboardingCard", undefined)
+        },
       );
       return;
     }

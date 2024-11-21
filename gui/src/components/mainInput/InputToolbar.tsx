@@ -22,7 +22,7 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
-  padding: 4px 0;
+  padding-top: 4px;
   justify-content: space-between;
   gap: 1px;
   background-color: ${vscInputBackground};
@@ -103,7 +103,7 @@ function InputToolbar(props: InputToolbarProps) {
         isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
-        className="flex"
+        className="find-widget-skip flex"
       >
         <div className="flex items-center justify-start gap-2 whitespace-nowrap">
           <ModelSelect />

@@ -1,10 +1,15 @@
+import { AutocompleteInput } from "../autocomplete/util/types";
+import { ProfileDescription } from "../config/ConfigHandler";
+
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
+  FileSymbolMap,
   IdeSettings,
+  IndexingStatusMap,
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
@@ -15,8 +20,6 @@ import type {
   SessionInfo,
   SiteIndexingConfig,
 } from "../";
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import { ProfileDescription } from "../config/ConfigHandler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -66,6 +69,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, BrowserSerializedContinueConfig];
   "config/listProfiles": [undefined, ProfileDescription[]];
+  "config/openProfile": [{ profileId: string | undefined }, void];
   "context/getContextItems": [
     {
       name: string;
@@ -75,6 +79,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
+  "context/getSymbolsForFiles": [{ uris: string[] }, FileSymbolMap];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
@@ -141,11 +146,14 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { model: string; promptTokens: number; generatedTokens: number }[],
   ];
   "tts/kill": [undefined, void];
+
+  // Codebase indexing
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [
-    undefined | { dir?: string; shouldClearIndexes?: boolean },
+    undefined | { dirs?: string[]; shouldClearIndexes?: boolean },
     void,
   ];
+  "index/forceReIndexFiles": [undefined | { files?: string[] }, void];
   "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {
@@ -153,6 +161,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+
+  // Docs etc. Indexing. TODO move codebase to this
+  "indexing/reindex": [{ type: string; id: string }, void];
+  "indexing/abort": [{ type: string; id: string }, void];
+  "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
+  "indexing/initStatuses": [undefined, void];
+
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];

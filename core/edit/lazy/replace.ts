@@ -2,7 +2,7 @@ import { ILLM } from "../..";
 import {
   filterLeadingNewline,
   stopAtLines,
-} from "../../autocomplete/streamTransforms/lineStream";
+} from "../../autocomplete/filtering/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
 import { dedent } from "../../util";
 
@@ -86,7 +86,7 @@ export async function* getReplacementWithLlm(
   const completion = await llm.streamChat([
     { role: "user", content: userPrompt },
     { role: "assistant", content: assistantPrompt },
-  ]);
+  ], new AbortController().signal);
 
   let lines = streamLines(completion);
   lines = filterLeadingNewline(lines);

@@ -27,7 +27,6 @@ We recommend configuring **Claude 3.5 Sonnet** as your chat model.
 }
 ```
 
-
 ## Autocomplete model
 
 We recommend configuring **Codestral** or **code-gecko** as your autocomplete model.
@@ -43,6 +42,7 @@ We recommend configuring **Codestral** or **code-gecko** as your autocomplete mo
   }
 }
 ```
+
 ## Embeddings model
 
 We recommend configuring **text-embedding-004** as your embeddings model.

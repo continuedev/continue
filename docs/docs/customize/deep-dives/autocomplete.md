@@ -23,7 +23,7 @@ If you want to have the best autocomplete experience, we recommend using Codestr
 If you'd like to run your autocomplete model locally, we recommend using Ollama. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
 
 ```bash
-ollama run starcoder2:3b
+ollama run qwen2.5-coder:1.5b
 ```
 
 Once it has been downloaded, you should begin to see completions in VS Code.
@@ -37,14 +37,14 @@ All of the configuration options available for chat models are available to use 
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
         "provider": "ollama",
-        "model": "starcoder2:3b",
+        "model": "qwen2.5-coder:1.5b",
         "apiBase": "https://<my endpoint>"
     },
     ...
 }
 ```
 
-If you aren't yet familiar with the available options, you can find the full reference [here](./ways-to-configure.md).
+If you aren't yet familiar with the available options, you can find the full reference [here](./configuration.md).
 
 ## Configuration Options
 
@@ -52,7 +52,7 @@ The following can be configured in `config.json`:
 
 ### `tabAutocompleteModel`
 
-This is just another object like the ones in the `"models"` array of `config.json`. You can choose and configure any model you would like, but we strongly suggest using a small model made for tab-autocomplete, such as `deepseek-1b`, `starcoder-1b`, or `starcoder2-3b`.
+This is just another object like the ones in the `"models"` array of `config.json`. You can choose and configure any model you would like, but we strongly suggest using a small model made for tab-autocomplete, such as `deepseek-1b`, `qwen2.5-coder:1.5b`, or `starcoder2-3b`.
 
 ### `tabAutocompleteOptions`
 
@@ -78,7 +78,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",
     "provider": "ollama",
-    "model": "starcoder2:3b",
+    "model": "qwen2.5-coder:1.5b",
     "apiBase": "https://<my endpoint>"
   },
   "tabAutocompleteOptions": {
@@ -101,15 +101,11 @@ Follow these steps to ensure that everything is set up correctly:
 
 1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar, and in JetBrains by going to Settings -> Tools -> Continue).
 2. Make sure you have downloaded Ollama.
-3. Run `ollama run starcoder2:3b` to verify that the model is downloaded.
+3. Run `ollama run qwen2.5-coder:1.5b` to verify that the model is downloaded.
 4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
-5. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains).
-6. Check VS Code settings to make sure that `"editor.inlineSuggest.enabled"` is set to `true` (use cmd/ctrl+, then search for this and check the box)
+5. Check the output of the logs to find any potential errors: <kbd>cmd/ctrl</kbd> + <kbd>shift</kbd> + <kbd>P</kbd> -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains.
+6. Check VS Code settings to make sure that `"editor.inlineSuggest.enabled"` is set to `true` (use <kbd>cmd/ctrl</kbd> + <kbd>,</kbd> then search for this and check the box)
 7. If you are still having issues, please let us know in our [Discord](https://discord.gg/vapESyrFmJ) and we'll help as soon as possible.
-
-### Completions are slow
-
-Depending on your hardware, you may want to try a smaller, faster model. If 3b isn't working for you we recommend trying `deepseek-coder:1.3b-base`.
 
 ### Completions are only ever single-line
 
@@ -122,8 +118,8 @@ Yes, in VS Code, if you don't want to be shown suggestions automatically you can
 1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disable automatic suggestions
 2. Open "Keyboard Shortcuts" (cmd/ctrl+k, cmd/ctrl+s) and search for `editor.action.inlineSuggest.trigger`
 3. Click the "+" icon to add a new keybinding
-4. Press the key combination you want to use to trigger suggestions (e.g. `ctrl+space`)
-5. Now whenever you want to see a suggestion, you can press your key binding (e.g. `ctrl+space`) to trigger suggestions manually
+4. Press the key combination you want to use to trigger suggestions (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>)
+5. Now whenever you want to see a suggestion, you can press your key binding (e.g. <kbd>cmd/ctrl</kbd> + <kbd>space</kbd>) to trigger suggestions manually
 
 ### Is there a shortcut to accept one line at a time?
 
@@ -137,7 +133,7 @@ Click the "Continue" button in the status panel at the bottom right of the scree
 
 Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
 
-You can also use the default shortcut to disable autocomplete directly: press `ctrl/cmd + K`, `ctrl/cmd + A`. This will turn off autocomplete without navigating through settings.
+You can also use the default shortcut to disable autocomplete directly using a chord: press and hold <kbd>ctrl/cmd</kbd> + <kbd>K</kbd> (continue holding <kbd>ctrl/cmd</kbd>) and press <kbd>ctrl/cmd</kbd> + <kbd>A</kbd>. This will turn off autocomplete without navigating through settings.
 
 #### JetBrains
 

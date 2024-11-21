@@ -1,7 +1,8 @@
-import type { RangeInFileWithContents } from "../commands/util.js";
-import type { ContextSubmenuItem, MessageContent } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
+
+import type { RangeInFileWithContents } from "../commands/util.js";
+import type { ContextSubmenuItem, MessageContent } from "../index.js";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   onLoad: [
@@ -17,13 +18,18 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   openUrl: [string, void];
   // We pass the `curSelectedModel` because we currently cannot access the
   // default model title in the GUI from JB
-  applyToCurrentFile: [
-    { text: string; streamId: string; curSelectedModelTitle: string },
+  applyToFile: [
+    {
+      text: string;
+      streamId: string;
+      curSelectedModelTitle: string;
+      filepath?: string;
+    },
     void,
   ];
+  overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
-  openConfigJson: [undefined, void];
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
   focusEditor: [undefined, void];
@@ -31,10 +37,11 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
+  "jetbrains/isOSREnabled": [undefined, void];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
-  acceptDiff: [{ filepath: string }, void];
-  rejectDiff: [{ filepath: string }, void];
+  acceptDiff: [{ filepath: string; streamId?: string }, void];
+  rejectDiff: [{ filepath: string; streamId?: string }, void];
   "edit/sendPrompt": [
     { prompt: MessageContent; range: RangeInFileWithContents },
     void,
@@ -50,16 +57,28 @@ export interface EditModeArgs {
   highlightedCode: RangeInFileWithContents;
 }
 
-export type EditStatus = "not-started" | "streaming" | "accepting" | "done";
+export type EditStatus =
+  | "not-started"
+  | "streaming"
+  | "accepting"
+  | "accepting:full-diff"
+  | "done";
+
+export type ApplyStateStatus =
+  | "streaming" // Changes are being applied to the file
+  | "done" // All changes have been applied, awaiting user to accept/reject
+  | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
 
 export interface ApplyState {
   streamId: string;
-  status: "streaming" | "done" | "closed";
+  status?: ApplyStateStatus;
+  numDiffs?: number;
+  filepath?: string;
+  fileContent?: string;
 }
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setInactive: [undefined, void];
-  setTTSActive: [boolean, void];
   submitMessage: [{ message: any }, void]; // any -> JSONContent from TipTap
   updateSubmenuItems: [
     { provider: string; submenuItems: ContextSubmenuItem[] },
@@ -81,7 +100,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 
-  openSettings: [undefined, void];
   /**
    * @deprecated Use navigateTo with a path instead.
    */
@@ -91,6 +109,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
+  "jetbrains/isOSREnabled": [boolean, void];
   addApiKey: [undefined, void];
   setupLocalConfig: [undefined, void];
   incrementFtc: [undefined, void];
@@ -98,6 +117,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   applyCodeFromChat: [undefined, void];
   updateApplyState: [ApplyState, void];
   startEditMode: [EditModeArgs, void];
-  setEditStatus: [{ status: EditStatus }, void];
+  setEditStatus: [{ status: EditStatus; fileAfterEdit?: string }, void];
   exitEditMode: [undefined, void];
 };

@@ -71,7 +71,7 @@ export function OnboardingCardTabs({
 }: OnboardingCardTabsProps) {
   return (
     <div>
-      <div className="hidden xs:block">
+      <div className="xs:block hidden">
         <TabList>
           {Object.entries(TabTitles).map(([tabType, titles]) => {
             if (hasPassedFTL() && tabType === "Quickstart") {
@@ -80,21 +80,21 @@ export function OnboardingCardTabs({
 
             return (
               <TabButton
-                className="px-6 py-2 xs:py-2 xs:px-3 sm:px-5"
+                className="xs:py-2 xs:px-3 px-6 py-2 sm:px-5"
                 key={tabType}
                 isActive={activeTab === tabType}
                 onClick={() => onTabClick(tabType as TabTitle)}
               >
-                <p className="hidden md:block m-0 font-medium">
+                <p className="m-0 hidden font-medium md:block">
                   {titles.default}
                 </p>
-                <p className="block md:hidden m-0 font-medium">{titles.md}</p>
+                <p className="m-0 block font-medium md:hidden">{titles.md}</p>
               </TabButton>
             );
           })}
         </TabList>
       </div>
-      <div className="block xs:hidden">
+      <div className="xs:hidden block">
         <StyledSelect
           value={activeTab}
           onChange={(e) => onTabClick(e.target.value as TabTitle)}

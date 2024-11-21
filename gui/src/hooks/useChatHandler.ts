@@ -23,19 +23,22 @@ import resolveEditorContent, {
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addContextItems,
+  abortStream,
   addPromptCompletionPair,
-  clearLastResponse,
+  clearLastEmptyResponse,
   initNewActiveMessage,
   resubmitAtIndex,
+  setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
+  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import { resetNextCodeBlockToApplyIndex } from "../redux/slices/uiStateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -49,59 +52,46 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     (store: RootState) => store.state.config.slashCommands || [],
   );
 
-  const contextItems = useSelector(
-    (state: RootState) => state.state.contextItems,
-  );
-
   const history = useSelector((store: RootState) => store.state.history);
   const active = useSelector((store: RootState) => store.state.active);
+  const streamAborter = useSelector(
+    (store: RootState) => store.state.streamAborter,
+  );
   const activeRef = useRef(active);
 
-  const {saveSession} = useHistory(dispatch);
+  const { saveSession } = useHistory(dispatch);
   const [save, triggerSave] = useState(false);
 
   useEffect(() => {
     saveSession(false);
   }, [save]);
-  
 
   useEffect(() => {
     activeRef.current = active;
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    const abortController = new AbortController();
-    const cancelToken = abortController.signal;
-
-    try {
-      if (!defaultModel) {
-        throw new Error("Default model not defined");
+    if (!defaultModel) {
+      throw new Error("Default model not defined");
+    }
+    const gen = ideMessenger.llmStreamChat(
+      defaultModel.title,
+      streamAborter.signal,
+      messages,
+    );
+    let next = await gen.next();
+    while (!next.done) {
+      if (!activeRef.current) {
+        dispatch(abortStream());
+        break;
       }
-      const gen = ideMessenger.llmStreamChat(
-        defaultModel.title,
-        cancelToken,
-        messages,
-      );
-      let next = await gen.next();
+      dispatch(streamUpdate(stripImages((next.value as ChatMessage).content)));
+      next = await gen.next();
+    }
 
-      while (!next.done) {
-        if (!activeRef.current) {
-          abortController.abort();
-          break;
-        }
-        dispatch(
-          streamUpdate(stripImages((next.value as ChatMessage).content)),
-        );
-        next = await gen.next();
-      }
-
-      let returnVal = next.value as PromptLog;
-      if (returnVal) {
-        dispatch(addPromptCompletionPair([returnVal]));
-      }
-    } catch (e) {
-      // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
+    let returnVal = next.value as PromptLog;
+    if (returnVal) {
+      dispatch(addPromptCompletionPair([returnVal]));
     }
   }
 
@@ -138,9 +128,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     selectedCode: RangeInFile[],
     contextItems: ContextItemWithId[],
   ) {
-    const abortController = new AbortController();
-    const cancelToken = abortController.signal;
-
     if (!defaultModel) {
       throw new Error("Default model not defined");
     }
@@ -149,34 +136,40 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
     const checkActiveInterval = setInterval(() => {
       if (!activeRef.current) {
-        abortController.abort();
+        dispatch(abortStream());
         clearInterval(checkActiveInterval);
       }
     }, 100);
 
-    for await (const update of ideMessenger.streamRequest(
-      "command/run",
-      {
-        input,
-        history: messages,
-        modelTitle,
-        slashCommandName: slashCommand.name,
-        contextItems,
-        params: slashCommand.params,
-        historyIndex,
-        selectedCode,
-      },
-      cancelToken,
-    )) {
-      if (!activeRef.current) {
-        abortController.abort();
-        break;
+    try {
+      for await (const update of ideMessenger.streamRequest(
+        "command/run",
+        {
+          input,
+          history: messages,
+          modelTitle,
+          slashCommandName: slashCommand.name,
+          contextItems,
+          params: slashCommand.params,
+          historyIndex,
+          selectedCode,
+        },
+        streamAborter.signal,
+      )) {
+        if (!activeRef.current) {
+          dispatch(abortStream());
+          clearInterval(checkActiveInterval);
+          break;
+        }
+        if (typeof update === "string") {
+          dispatch(streamUpdate(update));
+        }
       }
-      if (typeof update === "string") {
-        dispatch(streamUpdate(update));
-      }
+    } catch (e) {
+      throw e;
+    } finally {
+      clearInterval(checkActiveInterval);
     }
-    clearInterval(checkActiveInterval);
   }
 
   async function streamResponse(
@@ -195,11 +188,20 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       // Reset current code block index
       dispatch(resetNextCodeBlockToApplyIndex());
 
+      if (index) {
+        dispatch(setCurCheckpointIndex(Math.floor(index / 2)));
+      }
+
       const shouldGatherContext =
         modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
 
       if (shouldGatherContext) {
-        dispatch(setIsGatheringContext(true));
+        dispatch(
+          setIsGatheringContext({
+            isGathering: true,
+            gatheringMessage: "Gathering Context",
+          }),
+        );
       }
 
       // Resolve context providers and construct new history
@@ -209,45 +211,53 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           modifiers,
           ideMessenger,
           defaultContextProviders,
+          dispatch,
         );
-
-      dispatch(setIsGatheringContext(false));
 
       // Automatically use currently open file
       if (!modifiers.noContext) {
         const usingFreeTrial = defaultModel?.provider === "free-trial";
 
-        const currentFilePath = await ideMessenger.ide.getCurrentFile();
-        if (typeof currentFilePath === "string") {
-          let currentFileContents = await ideMessenger.ide.readFile(
-            currentFilePath,
-          );
+        const currentFile = await ideMessenger.ide.getCurrentFile();
+        if (currentFile) {
+          let currentFileContents = currentFile.contents;
           if (usingFreeTrial) {
-            currentFileContents = currentFileContents
+            currentFileContents = currentFile.contents
               .split("\n")
               .slice(0, 1000)
               .join("\n");
           }
-          selectedContextItems.unshift({
-            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
-              currentFilePath,
-              await ideMessenger.ide.getWorkspaceDirs(),
-            )}\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getBasename(currentFilePath)}`,
-            description: currentFilePath,
-            id: {
-              itemId: currentFilePath,
-              providerTitle: "file",
-            },
-            uri: {
-              type: "file",
-              value: currentFilePath,
-            },
-          });
+          if (
+            !selectedContextItems.find(
+              (item) => item.uri?.value === currentFile.path,
+            )
+          ) {
+            // don't add the file if it's already in the context items
+            selectedContextItems.unshift({
+              content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
+                currentFile.path,
+                await ideMessenger.ide.getWorkspaceDirs(),
+              )}\n${currentFileContents}\n\`\`\``,
+              name: `Active file: ${getBasename(currentFile.path)}`,
+              description: currentFile.path,
+              id: {
+                itemId: currentFile.path,
+                providerTitle: "file",
+              },
+              uri: {
+                type: "file",
+                value: currentFile.path,
+              },
+            });
+          }
         }
       }
 
-      dispatch(addContextItems(contextItems));
+      await updateFileSymbolsFromContextItems(
+        selectedContextItems,
+        ideMessenger,
+        dispatch,
+      );
 
       const message: ChatMessage = {
         role: "user",
@@ -294,11 +304,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           params: {},
         });
 
-        // For edit and comment slash commands, including the selected code in the context from store and for other commands, including the selected context alone
-        if (slashCommand.name === "edit" || slashCommand.name === "comment") {
-          updatedContextItems = [...contextItems];
-        } else {
-          updatedContextItems = [...selectedContextItems];
+        if (slashCommand.name === "multifile-edit") {
+          dispatch(setIsInMultifileEdit(true));
         }
 
         await _streamSlashCommand(
@@ -311,6 +318,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         );
       }
     } catch (e: any) {
+      dispatch(clearLastEmptyResponse());
       console.debug("Error streaming response: ", e);
       ideMessenger.post("showToast", [
         "error",
@@ -322,7 +330,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     }
   }
 
-  return { streamResponse };
+  return {
+    streamResponse,
+  };
 }
 
 export default useChatHandler;

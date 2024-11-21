@@ -4,8 +4,10 @@ import { streamDiffLines } from "core/edit/streamDiffLines";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import * as vscode from "vscode";
+
 import EditDecorationManager from "../../quickEdit/EditDecorationManager";
 import { VsCodeWebviewProtocol } from "../../webviewProtocol";
+
 import { VerticalDiffHandler, VerticalDiffHandlerOptions } from "./handler";
 
 export interface VerticalDiffCodeLens {
@@ -178,6 +180,8 @@ export class VerticalDiffManager {
       // Re-enable listener for user changes to file
       this.enableDocumentChangeListener();
     }
+
+    this.refreshCodeLens();
   }
 
   async streamDiffLines(
@@ -213,10 +217,13 @@ export class VerticalDiffManager {
       endLine,
       {
         instant,
-        onStatusUpdate: (status) =>
-          this.webviewProtocol.request("updateApplyState", {
+        onStatusUpdate: (status, numDiffs, fileContent) =>
+          void this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
+            numDiffs,
+            fileContent,
+            filepath,
           }),
       },
     );
@@ -257,30 +264,6 @@ export class VerticalDiffManager {
     }
   }
 
-  /**
-   * Streams an edit to the current document based on user input and model output.
-   *
-   * @param input - The user's input or instruction for the edit.
-   * @param modelTitle - The title of the language model to be used.
-   * @param [onlyOneInsertion] - Optional flag to limit the edit to a single insertion.
-   * @param [quickEdit] - Optional string indicating if this is a quick edit.
-   * @param [range] - Optional range to use instead of the highlighted text. Note that the `quickEdit`
-   *                  property currently can't be passed with `range` since it assumes there is an
-   *                  active selection.
-   *
-   * This method performs the following steps:
-   * 1. Sets up the editor context for the diff.
-   * 2. Determines the range of text to be edited.
-   * 3. Clears any existing diff handlers for the file.
-   * 4. Creates a new vertical diff handler.
-   * 5. Prepares the context (prefix and suffix) for the language model.
-   * 6. Streams the diff lines from the language model.
-   * 7. Applies the changes to the document.
-   * 8. Sets up a listener for subsequent user edits.
-   *
-   * The method handles various edge cases, such as quick edits and existing diffs,
-   * and manages the lifecycle of diff handlers and document change listeners.
-   */
   async streamEdit(
     input: string,
     modelTitle: string | undefined,
@@ -288,13 +271,13 @@ export class VerticalDiffManager {
     onlyOneInsertion?: boolean,
     quickEdit?: string,
     range?: vscode.Range,
-  ) {
+  ): Promise<string | undefined> {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     let editor = vscode.window.activeTextEditor;
 
     if (!editor) {
-      return;
+      return undefined;
     }
 
     const filepath = editor.document.uri.fsPath;
@@ -355,18 +338,21 @@ export class VerticalDiffManager {
       endLine,
       {
         input,
-        onStatusUpdate: (status) =>
+        onStatusUpdate: (status, numDiffs, fileContent) =>
           streamId &&
-          this.webviewProtocol.request("updateApplyState", {
+          void this.webviewProtocol.request("updateApplyState", {
             streamId,
             status,
+            numDiffs,
+            fileContent,
+            filepath,
           }),
       },
     );
 
     if (!diffHandler) {
       console.warn("Issue occured while creating new vertical diff handler");
-      return;
+      return undefined;
     }
 
     let selectedRange = diffHandler.range;
@@ -416,8 +402,10 @@ export class VerticalDiffManager {
     this.editDecorationManager.clear();
 
     try {
-      this.logDiffs = await diffHandler.run(
-        streamDiffLines(
+      const streamedLines: string[] = [];
+
+      async function* recordedStream() {
+        const stream = streamDiffLines(
           prefix,
           rangeContent,
           suffix,
@@ -425,14 +413,26 @@ export class VerticalDiffManager {
           input,
           getMarkdownLanguageTagForFile(filepath),
           onlyOneInsertion,
-        ),
-      );
+        );
+
+        for await (const line of stream) {
+          if (line.type === "new" || line.type === "same") {
+            streamedLines.push(line.line);
+          }
+          yield line;
+        }
+      }
+
+      this.logDiffs = await diffHandler.run(recordedStream());
 
       // enable a listener for user edits to file while diff is open
       this.enableDocumentChangeListener();
+
+      return `${prefix}${streamedLines.join("\n")}${suffix}`;
     } catch (e) {
       this.disableDocumentChangeListener();
       vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
+      return undefined;
     } finally {
       vscode.commands.executeCommand(
         "setContext",

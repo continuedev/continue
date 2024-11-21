@@ -79,14 +79,6 @@ export const defaultContextProvidersJetBrains: ContextProviderWithParams[] = [
 
 export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
   {
-    name: "edit",
-    description: "Edit selected code",
-  },
-  {
-    name: "comment",
-    description: "Write comments for the selected code",
-  },
-  {
     name: "share",
     description: "Export the current chat session to markdown",
   },
@@ -101,14 +93,6 @@ export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
 ];
 
 export const defaultSlashCommandsJetBrains = [
-  {
-    name: "edit",
-    description: "Edit selected code",
-  },
-  {
-    name: "comment",
-    description: "Write comments for the selected code",
-  },
   {
     name: "share",
     description: "Export the current chat session to markdown",

@@ -1,16 +1,10 @@
+import { execSync } from "child_process";
 import * as JSONC from "comment-json";
 import * as fs from "fs";
+import os from "os";
 import path from "path";
+
 import * as tar from "tar";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands/index.js";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import FileContextProvider from "../context/providers/FileContextProvider";
-import { contextProviderClassFromName } from "../context/providers/index";
-import { AllRerankers } from "../context/rerankers/index";
-import { LLMReranker } from "../context/rerankers/llm";
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -30,18 +24,27 @@ import {
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { allEmbeddingsProviders } from "../indexing/embeddings";
-import { BaseLLM } from "../llm";
-import CustomLLMClass from "../llm/llms/CustomLLM";
-import FreeTrial from "../llm/llms/FreeTrial";
-import { llmFromDescription } from "../llm/llms";
-import os from "os";
-import { execSync } from "child_process";
+import {
+  slashCommandFromDescription,
+  slashFromCustomCommand,
+} from "../commands/index.js";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+import FileContextProvider from "../context/providers/FileContextProvider";
+import { contextProviderClassFromName } from "../context/providers/index";
+import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
+import { AllRerankers } from "../context/rerankers/index";
+import { LLMReranker } from "../context/rerankers/llm";
+import { allEmbeddingsProviders } from "../indexing/embeddings";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { BaseLLM } from "../llm";
+import { llmFromDescription } from "../llm/llms";
+import CustomLLMClass from "../llm/llms/CustomLLM";
+import FreeTrial from "../llm/llms/FreeTrial";
 import { copyOf } from "../util";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
+import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
 import {
   DEFAULT_CONFIG_TS_CONTENTS,
@@ -54,20 +57,20 @@ import {
   getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
 } from "../util/paths";
+
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
 } from "./default";
+import { getSystemPromptDotFile } from "./getSystemPromptDotFile";
 import {
   DEFAULT_PROMPTS_FOLDER,
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-import { validateConfig, ConfigValidationError } from "./validation.js";
-
-import { GlobalContext } from "../util/GlobalContext";
+import { ConfigValidationError, validateConfig } from "./validation.js";
 
 export interface ConfigResult<T> {
   config: T | undefined;
@@ -134,6 +137,13 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
+  if (config.ui?.getChatTitles === undefined) {
+    config.ui = {
+      ...config.ui,
+      getChatTitles: true,
+    };
+  }
+
   if (ideSettings.remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
@@ -187,6 +197,7 @@ async function serializedToIntermediateConfig(
   const promptFolder = initial.experimental?.promptPath;
 
   if (loadPromptFiles) {
+    // v1 prompt files
     let promptFiles: { path: string; content: string }[] = [];
     promptFiles = (
       await Promise.all(
@@ -205,7 +216,10 @@ async function serializedToIntermediateConfig(
     promptFiles.push(...readAllGlobalPromptFiles());
 
     for (const file of promptFiles) {
-      slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+      const slashCommand = slashCommandFromPromptFile(file.path, file.content);
+      if (slashCommand) {
+        slashCommands.push(slashCommand);
+      }
     }
   }
 
@@ -238,6 +252,7 @@ async function intermediateToFinalConfig(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   workOsAccessToken: string | undefined,
+  loadPromptFiles: boolean = true,
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   // Auto-detect models
@@ -392,6 +407,7 @@ async function intermediateToFinalConfig(
   const DEFAULT_CONTEXT_PROVIDERS = [
     new FileContextProvider({}),
     new CodebaseContextProvider(codebaseContextParams),
+    ...(loadPromptFiles ? [new PromptFilesContextProvider({})] : []),
   ];
 
   const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
@@ -721,6 +737,11 @@ async function loadFullConfigNode(
 
   if (!serialized || configLoadInterrupted) {
     return { errors, config: undefined, configLoadInterrupted: true };
+  }
+
+  const systemPromptDotFile = await getSystemPromptDotFile(ide);
+  if (systemPromptDotFile) {
+    serialized.systemMessage = systemPromptDotFile;
   }
 
   // Convert serialized to intermediate config

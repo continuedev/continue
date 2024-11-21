@@ -116,6 +116,29 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
+  moonshot: {
+    title: "Moonshot",
+    provider: "moonshot",
+    description: "Use the Moonshot API for LLMs",
+    longDescription: `[Visit our documentation](https://docs.continue.dev/reference/Model%20Providers/moonshot) for information on obtaining an API key.`,
+    icon: "moonshot.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    refPage: "moonshot",
+    apiKeyUrl: "https://docs.moonshot.cn/docs/getting-started",
+    packages: [
+      models.moonshotChat,
+    ],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Moonshot API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+  },
   azure: {
     title: "Azure OpenAI",
     provider: "azure",
@@ -351,6 +374,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     packages: [models.gemini15Pro, models.geminiPro, models.gemini15Flash],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
+  },
+  xAI: {
+    title: "xAI",
+    provider: "xAI",
+    icon: "xAI.png",
+    description:
+      "xAI is a company working on building artificial intelligence to accelerate human scientific discovery",
+    longDescription:
+      "To get started with xAI, obtain an API key from their [console](https://console.x.ai/).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your xAI API key",
+        required: true,
+      },
+    ],
+    packages: [models.grokBeta],
+    apiKeyUrl: "https://console.x.ai/",
   },
   lmstudio: {
     title: "LM Studio",
@@ -636,8 +680,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     packages: [
       models.VertexGemini15Pro,
       models.VertexGemini15Flash,
-      models.mistralLarge
-
+      models.mistralLarge,
     ],
     collectInputFor: [
       {
@@ -706,7 +749,7 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
   nebius: {
     title: "Nebius AI Studio",
     provider: "nebius",
-    refPage: "nebiusllm",
+    refPage: "nebius",
     description: "Use the Nebius API to run open-source models",
     longDescription: `Nebius AI Studio is a cheap hosted service with $100 trial. To get started with Nebius AI Studio:\n1. Obtain an API key from [here](https://studio.nebius.ai)\n2. Paste below\n3. Select a model preset`,
     params: {
@@ -724,7 +767,22 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
     ],
     icon: "nebius.png",
     tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
-    packages: [models.MetaLlama3Large, models.Qwen2Coder],
+    packages: [
+      models.llama318bChat,
+      models.llama3170bChat,
+      models.llama31405bChat,
+      models.llama3170bNemotron,
+      models.mistral8x7b,
+      models.mistral8x22b,
+      models.mistralNemo,
+      models.phi3mini,
+      models.phi3medium,
+      models.gemma2_2b,
+      models.gemma2_9b,
+      models.Qwen2Coder,
+      models.deepseekCoder2Lite,
+      models.olmo7b,
+    ],
     apiKeyUrl: "https://studio.nebius.ai/settings/api-keys",
   },
 };

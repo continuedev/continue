@@ -41,7 +41,7 @@
           "background": {
             "activeOnStart": true,
             "beginsPattern": ">",
-            "endsPattern": "node scripts/esbuild.js --sourcemap --watch"
+            "endsPattern": "VS Code Extension esbuild complete"
           }
         }
       ]

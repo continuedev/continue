@@ -22,7 +22,7 @@ module.exports = {
     },
     extend: {
       animation: {
-        "spin-slow": "spin 10s linear infinite",
+        "spin-slow": "spin 6s linear infinite",
       },
       colors: {
         "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
@@ -46,6 +46,8 @@ module.exports = {
         "vsc-badge-background": "var(--vscode-badge-background, #1bbe84)",
         "vsc-badge-foreground": "var(--vscode-badge-foreground, #fff)",
         "vsc-sidebar-border": "var(--vscode-sideBar-border, transparent)",
+        "vsc-find-match": "var(--vscode-editor-findMatchBackground, rgba(255, 255, 0, 0.6))",
+        "vsc-find-match-selected": "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0, 0.8))",
       },
     },
   },

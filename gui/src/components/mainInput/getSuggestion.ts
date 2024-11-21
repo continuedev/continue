@@ -89,7 +89,7 @@ function getSubActionsForSubmenuItem(
         label: "Open in new tab",
         icon: "trash",
         action: () => {
-          ideMessenger.request("context/removeDocs", { startUrl: item.id });
+          ideMessenger.post("context/removeDocs", { startUrl: item.id });
         },
       },
     ];
@@ -166,7 +166,7 @@ export function getContextProviderDropdownOptions(
         title: "Add more context providers",
         type: "action",
         action: () => {
-          ideMessenger.request(
+          ideMessenger.post(
             "openUrl",
             "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
           );
@@ -189,18 +189,17 @@ export function getSlashCommandDropdownOptions(
   const items = async ({ query }: { query: string }) => {
     const options = [
       ...availableSlashCommandsRef.current,
-      {
-        title: "Build a custom prompt",
-        description: "Build a custom prompt",
-        type: "action",
-        id: "createPromptFile",
-        label: "Create Prompt File",
-        action: () => {
-          console.log("I", ideMessenger.request);
-          ideMessenger.request("config/newPromptFile", undefined);
-        },
-        name: "Create Prompt File",
-      },
+      // {
+      //   title: "Build a custom prompt",
+      //   description: "Build a custom prompt",
+      //   type: "action",
+      //   id: "createPromptFile",
+      //   label: "Create Prompt File",
+      //   action: () => {
+      //     ideMessenger.post("config/newPromptFile", undefined);
+      //   },
+      //   name: "Create Prompt File",
+      // },
     ];
     return (
       options.filter((slashCommand) => {

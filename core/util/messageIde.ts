@@ -1,3 +1,9 @@
+import {
+  GetGhTokenArgs,
+  ToIdeFromWebviewOrCoreProtocol,
+} from "../protocol/ide.js";
+import { FromIdeProtocol } from "../protocol/index.js";
+
 import type {
   ContinueRcJson,
   FileType,
@@ -11,11 +17,6 @@ import type {
   RangeInFile,
   Thread,
 } from "../index.js";
-import {
-  GetGhTokenArgs,
-  ToIdeFromWebviewOrCoreProtocol,
-} from "../protocol/ide.js";
-import { FromIdeProtocol } from "../protocol/index.js";
 
 export class MessageIde implements IDE {
   constructor(
@@ -112,6 +113,13 @@ export class MessageIde implements IDE {
     return await this.request("getDiff", { includeUnstaged });
   }
 
+  async getClipboardContent(): Promise<{ text: string; copiedAt: string }> {
+    return {
+      text: "",
+      copiedAt: new Date().toISOString(),
+    };
+  }
+
   async getTerminalContents() {
     return await this.request("getTerminalContents", undefined);
   }
@@ -155,6 +163,10 @@ export class MessageIde implements IDE {
     await this.request("openFile", { path });
   }
 
+  async openUrl(url: string): Promise<void> {
+    await this.request("openUrl", url);
+  }
+
   async runCommand(command: string): Promise<void> {
     await this.request("runCommand", { command });
   }
@@ -177,7 +189,7 @@ export class MessageIde implements IDE {
     return this.request("getOpenFiles", undefined);
   }
 
-  getCurrentFile(): Promise<string | undefined> {
+  getCurrentFile() {
     return this.request("getCurrentFile", undefined);
   }
 

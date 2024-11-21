@@ -98,7 +98,9 @@ function IndexingProgress() {
         }
         break;
       case "disabled":
-        ideMessenger.post("openConfigJson", undefined);
+        ideMessenger.post("config/openProfile", {
+          profileId: undefined,
+        });
         break;
       case "done":
         ideMessenger.post("index/forceReIndex", undefined);
@@ -108,8 +110,8 @@ function IndexingProgress() {
   }
 
   return (
-    <div className="flex flex-col mt-6">
-      <div className="flex justify-between mb-0 text-sm">
+    <div className="mt-6 flex flex-col">
+      <div className="mb-0 flex justify-between text-sm">
         <IndexingProgressTitleText update={update} />
         {update.status !== "loading" && (
           <IndexingProgressIndicator update={update} />

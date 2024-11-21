@@ -13,7 +13,7 @@ We will always include the code from your file prior to and after the cursor pos
 
 ### Definitions from the Language Server Protocol
 
-Similar to how you can use `cmd/ctrl + click` in your editor, we use the same tool (the LSP) to power "go to definition". For example, if you are typing out a function call, we will include the function definition. Or, if you are writing code inside of a method, we will include the type definitions for any parameters or the return type.
+Similar to how you can use <kbd>cmd/ctrl</kbd> + `click` in your editor, we use the same tool (the LSP) to power "go to definition". For example, if you are typing out a function call, we will include the function definition. Or, if you are writing code inside of a method, we will include the type definitions for any parameters or the return type.
 
 ### Imported files
 

@@ -44,15 +44,12 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
-  isWebEnvironment,
 } from "../../util";
-import { handleMetaKeyPressJetBrains } from "../../util/handleMetaKeyPressJetBrains";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
@@ -62,7 +59,12 @@ import {
   getContextProviderDropdownOptions,
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
+import {
+  handleJetBrainsOSRMetaKeyIssues,
+  handleVSCMetaKeyIssues,
+} from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
+import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -78,6 +80,7 @@ const InputBoxDiv = styled.div<{ border?: string }>`
     props.border ? props.border : `0.5px solid ${vscInputBorder}`};
   outline: none;
   font-size: ${getFontSize()}px;
+
   &:focus {
     outline: none;
 
@@ -179,6 +182,8 @@ function TipTapEditor(props: TipTapEditorProps) {
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
 
+  const isOSREnabled = useIsOSREnabled();
+
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
     const indexOfAt = contents.lastIndexOf("@");
@@ -219,10 +224,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   const onOpen = () => {
     inDropdownRef.current = true;
   };
-
-  const contextItems = useSelector(
-    (store: RootState) => store.state.contextItems,
-  );
 
   const defaultModel = useSelector(defaultModelSelector);
   const defaultModelRef = useUpdatingRef(defaultModel);
@@ -493,43 +494,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     content: props.editorState || mainEditorContent || "",
     onFocus: () => setIsEditorFocused(true),
     onBlur: () => setIsEditorFocused(false),
-    onUpdate: ({ editor, transaction }) => {
-      // If /edit is typed and no context items are selected, select the first
-
-      if (contextItems.length > 0) {
-        return;
-      }
-
-      const json = editor.getJSON();
-      let codeBlock = json.content?.find((el) => el.type === "codeBlock");
-      if (!codeBlock) {
-        return;
-      }
-
-      // Search for slashcommand type
-      for (const p of json.content) {
-        if (
-          p.type !== "paragraph" ||
-          !p.content ||
-          typeof p.content === "string"
-        ) {
-          continue;
-        }
-        for (const node of p.content) {
-          if (
-            node.type === "slashcommand" &&
-            ["/edit", "/comment"].includes(node.attrs.label)
-          ) {
-            // Update context items
-            dispatch(
-              setEditingContextItemAtIndex({ item: codeBlock.attrs.item }),
-            );
-            return;
-          }
-        }
-      }
-    },
-    editable: !active,
+    // onUpdate
+    editable: !active || props.isMainInput,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
@@ -561,86 +527,25 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   /**
    * This handles various issues with meta key actions
-   * - In JetBrains, when using "off screen rendering", there is a bug where using the meta key to
+   * - In JetBrains, when using OSR in JCEF, there is a bug where using the meta key to
    *   highlight code using arrow keys is not working
    * - In VS Code, while working with .ipynb files there is a problem where copy/paste/cut will affect
    *   the actual notebook cells, even when performing them in our GUI
+   *
+   *  Currently keydown events for a number of keys are not registering if the
+   *  meta/shift key is pressed, for example "x", "c", "v", "z", etc.
+   *  Until this is resolved we can't turn on OSR for non-Mac users due to issues
+   *  with those key actions.
    */
   const handleKeyDown = async (e: KeyboardEvent<HTMLDivElement>) => {
-    if (!editor || !editorFocusedRef.current) return;
-
     setActiveKey(e.key);
 
-    if (isMetaEquivalentKeyPressed(e)) {
-      const { key, code } = e;
-      const isWebEnv = isWebEnvironment();
-      const text = editor.state.doc.textBetween(
-        editor.state.selection.from,
-        editor.state.selection.to,
-      );
+    if (!editorFocusedRef?.current || !isMetaEquivalentKeyPressed(e)) return;
 
-      if (isJetBrains()) {
-        if (code === "KeyJ") {
-          e.stopPropagation();
-          e.preventDefault();
-          setIgnoreHighlightedCode(true);
-          setTimeout(() => {
-            setIgnoreHighlightedCode(false);
-          }, 100);
-        }
-
-        if (isMetaEquivalentKeyPressed(e)) {
-          e.stopPropagation();
-          e.preventDefault();
-          handleMetaKeyPressJetBrains(e, text, editor.commands.setContent);
-        }
-      } else {
-        if (code === "KeyL") {
-          e.stopPropagation();
-          e.preventDefault();
-          setIgnoreHighlightedCode(true);
-          setTimeout(() => {
-            setIgnoreHighlightedCode(false);
-          }, 100);
-          return;
-        }
-
-        switch (key) {
-          case "x":
-            e.stopPropagation();
-            e.preventDefault();
-            if (isWebEnv) {
-              await navigator.clipboard.writeText(text);
-              editor.commands.deleteSelection();
-            } else {
-              document.execCommand("cut");
-            }
-            break;
-          case "c":
-            e.stopPropagation();
-            e.preventDefault();
-            if (isWebEnv) {
-              await navigator.clipboard.writeText(text);
-            } else {
-              document.execCommand("copy");
-            }
-            break;
-          case "v":
-            e.stopPropagation();
-            e.preventDefault();
-            if (isWebEnv) {
-              const clipboardText = await navigator.clipboard.readText();
-              editor.commands.insertContent(clipboardText);
-            } else {
-              document.execCommand("paste");
-            }
-            break;
-        }
-      }
-    } else if (e.key === "Escape") {
-      e.stopPropagation();
-      e.preventDefault();
-      ideMessenger.post("focusEditor", undefined);
+    if (isOSREnabled) {
+      handleJetBrainsOSRMetaKeyIssues(e, editor);
+    } else {
+      await handleVSCMetaKeyIssues(e, editor);
     }
   };
 
@@ -670,9 +575,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
     [props.onEnter, editor, props.isMainInput],
   );
-
-  // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
-  const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
 
   // Re-focus main input after done generating
   useEffect(() => {
@@ -705,7 +607,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       if (historyLength > 0) {
-        saveSession();
+        await saveSession();
       }
       setTimeout(() => {
         editor?.commands.blur();
@@ -734,12 +636,12 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      saveSession();
+      await saveSession();
       setTimeout(() => {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput],
+    [editor, props.isMainInput, saveSession],
   );
 
   useWebviewListener(
@@ -748,71 +650,73 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput || !editor) {
         return;
       }
-      if (!ignoreHighlightedCode) {
-        const rif: RangeInFile & { contents: string } =
-          data.rangeInFileWithContents;
-        const basename = getBasename(rif.filepath);
-        const relativePath = getRelativePath(
-          rif.filepath,
-          await ideMessenger.ide.getWorkspaceDirs(),
-        );
-        const rangeStr = `(${rif.range.start.line + 1}-${
-          rif.range.end.line + 1
-        })`;
-        const item: ContextItemWithId = {
-          content: rif.contents,
-          name: `${basename} ${rangeStr}`,
-          // Description is passed on to the LLM to give more context on file path
-          description: `${relativePath} ${rangeStr}`,
-          id: {
-            providerTitle: "code",
-            itemId: v4(),
-          },
-          uri: {
-            type: "file",
-            value: rif.filepath,
-          },
-        };
 
-        let index = 0;
-        for (const el of editor.getJSON().content) {
-          if (el.type === "codeBlock") {
-            index += 2;
-          } else {
-            break;
-          }
+      const rif: RangeInFile & { contents: string } =
+        data.rangeInFileWithContents;
+      const basename = getBasename(rif.filepath);
+      const relativePath = getRelativePath(
+        rif.filepath,
+        await ideMessenger.ide.getWorkspaceDirs(),
+      );
+      const rangeStr = `(${rif.range.start.line + 1}-${
+        rif.range.end.line + 1
+      })`;
+
+      const itemName = `${basename} ${rangeStr}`;
+      const item: ContextItemWithId = {
+        content: rif.contents,
+        name: itemName,
+        // Description is passed on to the LLM to give more context on file path
+        description: `${relativePath} ${rangeStr}`,
+        id: {
+          providerTitle: "code",
+          itemId: v4(),
+        },
+        uri: {
+          type: "file",
+          value: rif.filepath,
+        },
+      };
+
+      let index = 0;
+      for (const el of editor.getJSON().content) {
+        if (el.attrs?.item?.name === itemName) {
+          return; // Prevent duplicate code blocks
         }
-        editor
-          .chain()
-          .insertContentAt(index, {
-            type: "codeBlock",
-            attrs: {
-              item,
-            },
-          })
-          .run();
-
-        if (data.prompt) {
-          editor.commands.focus("end");
-          editor.commands.insertContent(data.prompt);
+        if (el.type === "codeBlock") {
+          index += 2;
+        } else {
+          break;
         }
-
-        if (data.shouldRun) {
-          onEnterRef.current({ useCodebase: false, noContext: true });
-        }
-
-        setTimeout(() => {
-          editor.commands.blur();
-          editor.commands.focus("end");
-        }, 20);
       }
-      setIgnoreHighlightedCode(false);
+      editor
+        .chain()
+        .insertContentAt(index, {
+          type: "codeBlock",
+          attrs: {
+            item,
+          },
+        })
+        .run();
+
+      if (data.prompt) {
+        editor.commands.focus("end");
+        editor.commands.insertContent(data.prompt);
+      }
+
+      if (data.shouldRun) {
+        onEnterRef.current({ useCodebase: false, noContext: true });
+      }
+
+      setTimeout(() => {
+        editor.commands.blur();
+        editor.commands.focus("end");
+      }, 20);
     },
     [
       editor,
       props.isMainInput,
       historyLength,
-      ignoreHighlightedCode,
       props.isMainInput,
       onEnterRef.current,
     ],

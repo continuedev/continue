@@ -1,3 +1,6 @@
+import * as fs from "node:fs";
+import * as path from "node:path";
+
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
@@ -16,10 +19,8 @@ import {
 } from "core/protocol/passThrough";
 import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
-import { getConfigJsonPath } from "core/util/paths";
-import * as fs from "node:fs";
-import * as path from "node:path";
 import * as vscode from "vscode";
+
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -27,6 +28,7 @@ import {
   setControlPlaneSessionInfo,
   WorkOsAuthProvider,
 } from "../stubs/WorkOsAuthProvider";
+import { getFullyQualifiedPath } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -46,7 +48,7 @@ export class VsCodeMessenger {
       message: Message<FromWebviewProtocol[T][0]>,
     ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
-    this.webviewProtocol.on(messageType, handler);
+    void this.webviewProtocol.on(messageType, handler);
   }
 
   onCore<T extends keyof ToIdeOrWebviewFromCoreProtocol>(
@@ -86,7 +88,11 @@ export class VsCodeMessenger {
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
-      this.ide.openFile(msg.data.filepath);
+      const fullPath = getFullyQualifiedPath(this.ide, msg.data.filepath);
+
+      if (fullPath) {
+        this.ide.openFile(fullPath);
+      }
     });
 
     this.onWebview("vscode/openMoveRightMarkdown", (msg) => {
@@ -100,10 +106,6 @@ export class VsCodeMessenger {
           ),
         ),
       );
-    });
-
-    this.onWebview("openConfigJson", (msg) => {
-      this.ide.openFile(getConfigJsonPath());
     });
 
     this.onWebview("readRangeInFile", async (msg) => {
@@ -146,17 +148,59 @@ export class VsCodeMessenger {
       );
     });
 
-    webviewProtocol.on("acceptDiff", async ({ data: { filepath } }) => {
-      await vscode.commands.executeCommand("continue.acceptDiff", filepath);
-    });
+    webviewProtocol.on(
+      "acceptDiff",
+      async ({ data: { filepath, streamId } }) => {
+        await vscode.commands.executeCommand(
+          "continue.acceptDiff",
+          filepath,
+          streamId,
+        );
+      },
+    );
 
-    webviewProtocol.on("rejectDiff", async ({ data: { filepath } }) => {
-      await vscode.commands.executeCommand("continue.rejectDiff", filepath);
-    });
+    webviewProtocol.on(
+      "rejectDiff",
+      async ({ data: { filepath, streamId } }) => {
+        await vscode.commands.executeCommand(
+          "continue.rejectDiff",
+          filepath,
+          streamId,
+        );
+      },
+    );
 
-    this.onWebview("applyToCurrentFile", async ({ data }) => {
+    this.onWebview("applyToFile", async ({ data }) => {
+      webviewProtocol.request("updateApplyState", {
+        streamId: data.streamId,
+        status: "streaming",
+        fileContent: data.text,
+      });
+
+      let filepath = data.filepath;
+
+      // If there is a filepath, verify it exists and then open the file
+      if (filepath) {
+        const fullPath = getFullyQualifiedPath(ide, filepath);
+
+        if (!fullPath) {
+          return;
+        }
+
+        const fileExists = await this.ide.fileExists(fullPath);
+
+        // If there is no existing file at the path, create it
+        if (!fileExists) {
+          await this.ide.writeFile(fullPath, "");
+          await this.ide.openFile(fullPath);
+        }
+
+        await this.ide.openFile(fullPath);
+      }
+
       // Get active text editor
       const editor = vscode.window.activeTextEditor;
+
       if (!editor) {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
@@ -167,10 +211,14 @@ export class VsCodeMessenger {
         editor.edit((builder) =>
           builder.insert(new vscode.Position(0, 0), data.text),
         );
-        await webviewProtocol.request("updateApplyState", {
+
+        void webviewProtocol.request("updateApplyState", {
           streamId: data.streamId,
-          status: "done",
+          status: "closed",
+          numDiffs: 0,
+          fileContent: data.text,
         });
+
         return;
       }
 
@@ -258,6 +306,37 @@ export class VsCodeMessenger {
     this.onWebview("openUrl", (msg) => {
       vscode.env.openExternal(vscode.Uri.parse(msg.data));
     });
+
+    this.onWebview(
+      "overwriteFile",
+      async ({ data: { prevFileContent, filepath } }) => {
+        if (prevFileContent === null) {
+          // TODO: Delete the file
+          return;
+        }
+
+        await this.ide.openFile(filepath);
+
+        // Get active text editor
+        const editor = vscode.window.activeTextEditor;
+
+        if (!editor) {
+          vscode.window.showErrorMessage("No active editor to apply edits to");
+          return;
+        }
+
+        editor.edit((builder) =>
+          builder.replace(
+            new vscode.Range(
+              editor.document.positionAt(0),
+              editor.document.positionAt(editor.document.getText().length),
+            ),
+            prevFileContent,
+          ),
+        );
+      },
+    );
+
     this.onWebview("insertAtCursor", async (msg) => {
       const editor = vscode.window.activeTextEditor;
       if (editor === undefined || !editor.selection) {
@@ -279,7 +358,7 @@ export class VsCodeMessenger {
         "getDefaultModelTitle",
         undefined,
       );
-      await verticalDiffManager.streamEdit(
+      const fileAfterEdit = await verticalDiffManager.streamEdit(
         stripImages(prompt),
         modelTitle,
         "edit",
@@ -291,8 +370,9 @@ export class VsCodeMessenger {
         ),
       );
 
-      this.webviewProtocol.request("setEditStatus", {
+      void this.webviewProtocol.request("setEditStatus", {
         status: "accepting",
+        fileAfterEdit,
       });
     });
     this.onWebview("edit/acceptReject", async (msg) => {

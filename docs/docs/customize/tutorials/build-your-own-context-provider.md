@@ -203,26 +203,48 @@ The `"options"` property can be used to send additional parameters to your endpo
 
 Continue exposes an API for registering context providers from a 3rd party VSCode extension. This is useful if you have a VSCode extension that provides some additional context that you would like to use in Continue. To use this API, add the following to your `package.json`:
 
-```json
+```json title="package.json"
 {
   "extensionDependencies": ["continue.continue"]
 }
 ```
 
-Or copy `~/.continue/type/core/index.d.ts` to your extension repository.
+Or install the Continue Core module from npm:
+
+```bash
+npm i @continuedev/core
+```
+
+You can add the Continue core module as a dev dependency in your `package.json`:
+
+```json title="package.json"
+{
+  "devDependencies": {
+    "@continuedev/core": "^0.0.1"
+  }
+}
+```
 
 Then, you can use the `registerCustomContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface.
 Here is an example:
 
-```typescript
+```typescript title="myCustomContextProvider.ts"
 import * as vscode from "vscode";
+import {
+  IContextProvider,
+  ContextProviderDescription,
+  ContextProviderExtras,
+  ContextItem,
+  LoadSubmenuItemsArgs,
+  ContextSubmenuItem,
+} from "@continuedev/core";
 
 class MyCustomProvider implements IContextProvider {
   get description(): ContextProviderDescription {
     return {
-      title: "custom",
+      title: "Custom",
       displayTitle: "Custom",
-      description: "Custom description",
+      description: "my custom context provider",
       type: "normal",
     };
   }
@@ -251,7 +273,7 @@ class MyCustomProvider implements IContextProvider {
 const customProvider = new MyCustomProvider();
 
 // get Continue extension using vscode API
-const continueExt = vscode.extensions.getExtension("continue.continue");
+const continueExt = vscode.extensions.getExtension("Continue.continue");
 
 // get the API from the extension
 const continueApi = continueExt?.exports;
@@ -259,3 +281,7 @@ const continueApi = continueExt?.exports;
 // register your custom provider
 continueApi?.registerCustomContextProvider(customProvider);
 ```
+
+This will register `MyCustomProvider` with Continue!
+
+![alt text](./assets/image.png)

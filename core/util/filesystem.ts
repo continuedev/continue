@@ -1,5 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+
 import {
   ContinueRcJson,
   FileType,
@@ -14,8 +15,8 @@ import {
   Thread,
   ToastType,
 } from "../index.d.js";
-
 import { GetGhTokenArgs } from "../protocol/ide.js";
+
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
@@ -35,7 +36,7 @@ class FileSystemIde implements IDE {
   }
 
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
-    throw new Error("Method not implemented.");
+    return Promise.resolve([]);
   }
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
     return;
@@ -128,6 +129,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve("");
   }
 
+  getClipboardContent(): Promise<{ text: string; copiedAt: string }> {
+    return Promise.resolve({ text: "", copiedAt: new Date().toISOString() });
+  }
+
   getTerminalContents(): Promise<string> {
     return Promise.resolve("");
   }
@@ -186,6 +191,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
+  openUrl(url: string): Promise<void> {
+    return Promise.resolve();
+  }
+
   runCommand(command: string): Promise<void> {
     return Promise.resolve();
   }
@@ -205,6 +214,10 @@ class FileSystemIde implements IDE {
     });
   }
 
+  getCurrentFile(): Promise<undefined> {
+    return Promise.resolve(undefined);
+  }
+
   showDiff(
     filepath: string,
     newContents: string,
@@ -219,10 +232,6 @@ class FileSystemIde implements IDE {
 
   getOpenFiles(): Promise<string[]> {
     return Promise.resolve([]);
-  }
-
-  getCurrentFile(): Promise<string | undefined> {
-    return Promise.resolve("");
   }
 
   getPinnedFiles(): Promise<string[]> {

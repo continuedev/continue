@@ -24,7 +24,7 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
-import ButtonWithTooltip from "./ButtonWithTooltip";
+import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
 import LoginForm from "../forms/LoginForm";
 import {
   setDialogMessage,
@@ -215,7 +215,7 @@ function ProfileSwitcher() {
         <StyledListbox
           value={"GPT-4"}
           onChange={(id: string) => {
-            ideMessenger.request("didChangeSelectedProfile", { id });
+            ideMessenger.post("didChangeSelectedProfile", { id });
           }}
         >
           <div className="relative">
@@ -270,7 +270,7 @@ function ProfileSwitcher() {
       {/* {controlServerBetaEnabled && */}
       {true &&
         (session?.account ? (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             tooltipPlacement="top-end"
             text={
               session.account.label === ""
@@ -280,16 +280,16 @@ function ProfileSwitcher() {
             onClick={logout}
           >
             <UserCircleIconSolid className="h-4 w-4" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         ) : (
-          <ButtonWithTooltip
+          <HeaderButtonWithToolTip
             tooltipPlacement="top-end"
             text="Click to login to Continue"
             // onClick={login}
             onClick={openLogin}
           >
             <UserCircleIconOutline className="h-4 w-4" />
-          </ButtonWithTooltip>
+          </HeaderButtonWithToolTip>
         ))}
     </>
   );

@@ -8,12 +8,13 @@ import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getIconFromDropdownItem } from "./MentionList";
-import styled from "styled-components";
 import { getBasename } from "core/util";
+import { RootState } from "../../redux/store";
+import { useSelector } from "react-redux";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
-  isGatheringContext: boolean;
+  isCurrentContextPeek: boolean;
 }
 
 interface ContextItemsPeekItemProps {
@@ -52,7 +53,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
     if (contextItem.icon) {
       return (
         <SafeImg
-          className="flex-shrink-0 mr-2 rounded-md p-1"
+          className="mr-2 flex-shrink-0 rounded-md p-1"
           src={contextItem.icon}
           height={dimensions}
           width={dimensions}
@@ -66,7 +67,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
 
     if (shouldShowFileIcon) {
       return (
-        <div className="flex-shrink-0 mr-2">
+        <div className="mr-2 flex-shrink-0">
           <FileIcon
             filename={
               contextItem.description.split(" ").shift()?.split("#").shift() ||
@@ -86,7 +87,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
 
     return (
       <ProviderIcon
-        className="flex-shrink-0 mr-2"
+        className="mr-2 flex-shrink-0"
         height={dimensions}
         width={dimensions}
       />
@@ -96,16 +97,16 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   return (
     <div
       onClick={openContextItem}
-      className="text-xs cursor-pointer px-1.5 py-1 flex items-center rounded hover:bg-white/10 overflow-hidden whitespace-nowrap text-ellipsis mr-2"
+      className="mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
     >
-      <div className="flex items-center w-full">
+      <div className="flex w-full items-center">
         {getContextItemIcon()}
         <div className="flex min-w-0 flex-1 gap-2 text-xs">
-          <div className="truncate max-w-[50%] flex-shrink-0">
+          <div className="max-w-[50%] flex-shrink-0 truncate">
             {contextItem.name}
           </div>
           <div
-            className={`text-xs text-gray-400 overflow-hidden truncate whitespace-nowrap text-xs flex-1 min-w-0`}
+            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400`}
           >
             {contextItem.uri?.type === "file"
               ? getBasename(contextItem.description)
@@ -119,7 +120,7 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
 
 function ContextItemsPeek({
   contextItems,
-  isGatheringContext,
+  isCurrentContextPeek,
 }: ContextItemsPeekProps) {
   const [open, setOpen] = useState(false);
 
@@ -127,32 +128,41 @@ function ContextItemsPeek({
     (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
   );
 
-  if ((!ctxItems || ctxItems.length === 0) && !isGatheringContext) {
+  const isGatheringContext = useSelector(
+    (store: RootState) => store.state.context.isGathering,
+  );
+  const gatheringMessage = useSelector(
+    (store: RootState) => store.state.context.gatheringMessage,
+  );
+
+  const indicateIsGathering = isCurrentContextPeek && isGatheringContext;
+
+  if ((!ctxItems || ctxItems.length === 0) && !indicateIsGathering) {
     return null;
   }
 
   return (
     <div className={`pl-2 pt-2 bg-[${vscBackground}]`}>
       <div
-        className="text-gray-300 cursor-pointer flex justify-start items-center text-xs"
+        className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
         onClick={() => setOpen((prev) => !prev)}
       >
-        <div className="relative w-4 h-4 mr-1">
+        <div className="relative mr-1 h-4 w-4">
           <ChevronRightIcon
             className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-              open ? "opacity-0 rotate-90" : "opacity-100 rotate-0"
+              open ? "rotate-90 opacity-0" : "rotate-0 opacity-100"
             }`}
           />
           <ChevronDownIcon
             className={`absolute h-4 w-4 transition-all duration-200 ease-in-out text-[${lightGray}] ${
-              open ? "opacity-100 rotate-0" : "opacity-0 -rotate-90"
+              open ? "rotate-0 opacity-100" : "-rotate-90 opacity-0"
             }`}
           />
         </div>
         <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
           {isGatheringContext ? (
             <>
-              Gathering context
+              {gatheringMessage}
               <AnimatedEllipsis />
             </>
           ) : (

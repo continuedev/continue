@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.auth.AuthListener
 import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
@@ -105,7 +106,7 @@ class AsyncFileSaveListener(private val ideProtocolClient: IdeProtocolClient) : 
         for (event in events) {
             if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(
                     ".continue\\config.json"
-                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json")
+                ) || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json") || event.path.endsWith(".continuerc.json")
             ) {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
@@ -132,9 +133,9 @@ class IdeProtocolClient(
         initIdeProtocol()
 
         // Setup config.json / config.ts save listeners
-        VirtualFileManager.getInstance().addAsyncFileListener(AsyncFileSaveListener(this), object : Disposable {
-            override fun dispose() {}
-        })
+        VirtualFileManager.getInstance().addAsyncFileListener(
+            AsyncFileSaveListener(this), ContinuePluginDisposable.getInstance(project)
+        )
 
         val myPluginId = "com.github.continuedev.continueintellijextension"
         val pluginDescriptor =
@@ -632,7 +633,7 @@ class IdeProtocolClient(
                         }
                     }
 
-                    "applyToCurrentFile" -> {
+                    "applyToFile" -> {
                         val msg = data as Map<String, String>;
                         val text = msg["text"] as String
                         val curSelectedModelTitle = msg["curSelectedModelTitle"] as String
@@ -1006,11 +1007,17 @@ class IdeProtocolClient(
 //        return openFiles.intersect(pinnedFiles).toList()
     }
 
-    private fun currentFile(): String? {
+    private fun currentFile(): Map<String, Any?>? {
         val fileEditorManager = FileEditorManager.getInstance(project)
         val editor = fileEditorManager.selectedTextEditor
         val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
-        return virtualFile?.path
+        return virtualFile?.let {
+            mapOf(
+                "path" to it.path,
+                "contents" to editor.document.text,
+                "isUntitled" to false
+            )
+        }
     }
 
     suspend fun showToast(type: String, content: String, buttonTexts: Array<String> = emptyArray()): String? =

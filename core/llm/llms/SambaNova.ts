@@ -1,6 +1,7 @@
+import OpenAI from "./OpenAI.js";
+
 import type { LLMOptions, ModelProvider } from "../../index.js";
 
-import OpenAI from "./OpenAI.js";
 
 class SambaNova extends OpenAI {
   static providerName: ModelProvider = "sambanova";

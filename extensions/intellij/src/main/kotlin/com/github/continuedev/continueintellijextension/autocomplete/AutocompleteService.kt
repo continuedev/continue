@@ -129,6 +129,13 @@ class AutocompleteService(private val project: Project) {
                 document.getText(com.intellij.openapi.util.TextRange(caretOffset, document.textLength))
             }
 
+            // Determine the index of a newline character within the text following the cursor.
+            val newlineIndex = textAfterCursor.indexOf("\r\n").takeIf { it >= 0 } ?: textAfterCursor.indexOf('\n')
+            // If a newline character is found and the current line is not empty, truncate the text at that point.
+            if (newlineIndex > 0) {
+                textAfterCursor = textAfterCursor.substring(0, newlineIndex)
+            }
+
             val indexOfTextAfterCursorInCompletion = completion.indexOf(textAfterCursor)
             if (indexOfTextAfterCursorInCompletion > 0) {
                 return@runReadAction completion.slice(0..indexOfTextAfterCursorInCompletion - 1)
@@ -192,10 +199,9 @@ class AutocompleteService(private val project: Project) {
 
         editor.caretModel.moveToOffset(offset + text.length)
 
-
         project.service<ContinuePluginService>().coreMessenger?.request(
             "autocomplete/accept",
-            completion.completionId,
+            hashMapOf("completionId" to completion.completionId),
             null,
             ({})
         )

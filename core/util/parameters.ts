@@ -11,8 +11,9 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   multilineCompletions: "auto",
   slidingWindowPrefixPercentage: 0.75,
   slidingWindowSize: 500,
-  maxSnippetPercentage: 0.6,
-  recentlyEditedSimilarityThreshold: 0.3,
+  maxSnippetPercentage: 0.5,
+  maxDiffPercentage: 0.5,
+  maxClipboardPercentage: 0.5, // yes the percentages do not add up
   useCache: true,
   onlyMyCode: true,
   useOtherFiles: true,
@@ -22,6 +23,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useImports: true,
   useRootPathContext: true,
   transform: true,
+  showWhateverWeHaveAtXMs: 300,
 };
 
 export const COUNT_COMPLETION_REJECTED_AFTER = 10_000;

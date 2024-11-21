@@ -1,3 +1,4 @@
+import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
 
 declare global {
@@ -45,12 +46,36 @@ export interface IndexingProgressUpdate {
   debugInfo?: string;
 }
 
-export type PromptTemplate =
-  | string
-  | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
+// This is more or less a V2 of IndexingProgressUpdate
+export interface IndexingStatus {
+  id: string;
+  type: "docs";
+  progress: number;
+  description: string;
+  status:
+    | "indexing"
+    | "complete"
+    | "paused"
+    | "failed"
+    | "aborted"
+    | "deleted"
+    | "pending";
+  embeddingsProviderId: string;
+  isReindexing?: boolean;
+  debugInfo?: string;
+  title: string;
+  icon?: string;
+  url?: string;
+}
+
+export type IndexingStatusMap = Map<string, IndexingStatus>;
+
+export type PromptTemplateFunction = (
+  history: ChatMessage[],
+  otherData: Record<string, string>,
+) => string | ChatMessage[];
+
+export type PromptTemplate = string | PromptTemplateFunction;
 
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
@@ -78,26 +103,34 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
-  complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
+  complete(
+    prompt: string,
+    signal: AbortSignal,
+    options?: LLMFullCompletionOptions,
+  ): Promise<string>;
 
   streamComplete(
     prompt: string,
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
   streamFim(
     prefix: string,
     suffix: string,
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
   streamChat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
     messages: ChatMessage[],
+    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
 
@@ -200,11 +233,16 @@ export interface IContextProvider {
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
+export interface Checkpoint {
+  [filepath: string]: string;
+}
+
 export interface PersistedSessionInfo {
   history: ChatHistory;
   title: string;
   workspaceDirectory: string;
   sessionId: string;
+  checkpoints?: Checkpoint[];
 }
 
 export interface SessionInfo {
@@ -298,13 +336,19 @@ export interface InputModifiers {
   noContext: boolean;
 }
 
+export interface SymbolWithRange extends RangeInFile {
+  name: string;
+  type: Parser.SyntaxNode["type"];
+}
+
+export type FileSymbolMap = Record<string, SymbolWithRange[]>;
+
 export interface PromptLog {
   modelTitle: string;
   completionOptions: CompletionOptions;
   prompt: string;
   completion: string;
 }
-
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
@@ -385,11 +429,13 @@ export interface CustomLLMWithOptionals {
   options: LLMOptions;
   streamCompletion?: (
     prompt: string,
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
   streamChat?: (
     messages: ChatMessage[],
+    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
@@ -464,6 +510,7 @@ export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
   getDiff(includeUnstaged: boolean): Promise<string>;
+  getClipboardContent(): Promise<{ text: string; copiedAt: string }>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
@@ -481,6 +528,7 @@ export interface IDE {
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
   openFile(path: string): Promise<void>;
+  openUrl(url: string): Promise<void>;
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
@@ -496,7 +544,14 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
-  getCurrentFile(): Promise<string | undefined>;
+  getCurrentFile(): Promise<
+    | undefined
+    | {
+        isUntitled: boolean;
+        path: string;
+        contents: string;
+      }
+  >;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
@@ -653,7 +708,9 @@ type ModelProvider =
   | "cerebras"
   | "askSage"
   | "vertexai"
-  | "nebius";
+  | "nebius"
+  | "xAI"
+  | "moonshot";
 
 export type ModelName =
   | "AUTODETECT"
@@ -679,10 +736,12 @@ export type ModelName =
   | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
+  | "mistral-8x22b"
   | "mistral-tiny"
   | "mistral-small"
   | "mistral-medium"
   | "mistral-embed"
+  | "mistral-nemo"
   // Llama 2
   | "llama2-7b"
   | "llama2-13b"
@@ -703,8 +762,12 @@ export type ModelName =
   | "llama3.2-3b"
   | "llama3.2-11b"
   | "llama3.2-90b"
+  // xAI
+  | "grok-beta"
   // Other Open-source
   | "phi2"
+  | "phi-3-mini"
+  | "phi-3-medium"
   | "phind-codellama-34b"
   | "wizardcoder-7b"
   | "wizardcoder-13b"
@@ -713,9 +776,13 @@ export type ModelName =
   | "codeup-13b"
   | "deepseek-7b"
   | "deepseek-33b"
+  | "deepseek-2-lite"
   | "neural-chat-7b"
   | "gemma-7b-it"
+  | "gemma2-2b-it"
   | "gemma2-9b-it"
+  | "olmo-7b"
+  | "qwen-coder2.5-7b"
   // Anthropic
   | "claude-3-5-sonnet-latest"
   | "claude-3-5-sonnet-20240620"
@@ -738,7 +805,11 @@ export type ModelName =
   | "starcoder-1b"
   | "starcoder-3b"
   | "starcoder2-3b"
-  | "stable-code-3b";
+  | "stable-code-3b"
+  // Moonshot
+  | "moonshot-v1-8k"
+  | "moonshot-v1-32k"
+  | "moonshot-v1-128k";
 
 export interface RequestOptions {
   timeout?: number;
@@ -784,6 +855,16 @@ export interface CustomCommand {
   description: string;
 }
 
+interface Prediction {
+  type: "content";
+  content:
+    | string
+    | {
+        type: "text";
+        text: string;
+      }[];
+}
+
 interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -795,9 +876,11 @@ interface BaseCompletionOptions {
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;
+  useMmap?: boolean;
   keepAlive?: number;
   raw?: boolean;
   stream?: boolean;
+  prediction?: Prediction;
 }
 
 export interface ModelCapability {
@@ -829,6 +912,7 @@ export type EmbeddingsProviderName =
   | "ollama"
   | "openai"
   | "cohere"
+  | "lmstudio"
   | "free-trial"
   | "gemini"
   | "continue-proxy"
@@ -903,7 +987,8 @@ export interface TabAutocompleteOptions {
   slidingWindowPrefixPercentage: number;
   slidingWindowSize: number;
   maxSnippetPercentage: number;
-  recentlyEditedSimilarityThreshold: number;
+  maxDiffPercentage: number;
+  maxClipboardPercentage: number;
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;
@@ -912,6 +997,7 @@ export interface TabAutocompleteOptions {
   disableInFiles?: string[];
   useImports?: boolean;
   useRootPathContext?: boolean;
+  showWhateverWeHaveAtXMs?: number;
 }
 
 export interface ContinueUIConfig {
@@ -919,6 +1005,7 @@ export interface ContinueUIConfig {
   fontSize?: number;
   displayRawMarkdown?: boolean;
   showChatScrollbar?: boolean;
+  getChatTitles?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -980,11 +1067,6 @@ interface ExperimentalConfig {
    * Automatically read LLM chat responses aloud using system TTS models
    */
   readResponseTTS?: boolean;
-
-  /**
-   * Prompt the user's LLM for a title given the current chat content
-   */
-  getChatTitles?: boolean;
 
   /**
    * If set to true, we will attempt to pull down and install an instance of Chromium

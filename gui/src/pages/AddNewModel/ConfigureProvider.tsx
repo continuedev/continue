@@ -86,7 +86,7 @@ function ConfigureProvider() {
     <FormProvider {...formMethods}>
       <div className="overflow-y-scroll">
         <div
-          className="items-center flex m-0 p-0 sticky top-0"
+          className="sticky top-0 m-0 flex items-center p-0"
           style={{
             borderBottom: `0.5px solid ${lightGray}`,
             backgroundColor: vscBackground,
@@ -97,9 +97,9 @@ function ConfigureProvider() {
             width="1.2em"
             height="1.2em"
             onClick={() => navigate("/addModel")}
-            className="inline-block ml-4 cursor-pointer"
+            className="ml-4 inline-block cursor-pointer"
           />
-          <h3 className="text-lg font-bold m-2 inline-block">
+          <h3 className="m-2 inline-block text-lg font-bold">
             Configure provider
           </h3>
         </div>
@@ -139,7 +139,7 @@ function ConfigureProvider() {
                     <Input
                       type={d.inputType}
                       id={d.key}
-                      className="border-2 border-gray-200 rounded-md p-2 m-2"
+                      className="m-2 rounded-md border-2 border-gray-200 p-2"
                       placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
@@ -169,7 +169,7 @@ function ConfigureProvider() {
                     <Input
                       type={d.inputType}
                       id={d.key}
-                      className="border-2 border-gray-200 rounded-md p-2 m-2"
+                      className="m-2 rounded-md border-2 border-gray-200 p-2"
                       placeholder={d.placeholder ?? d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}

@@ -7,7 +7,7 @@ Continue now provides support for tab autocomplete in [VS Code](https://marketpl
 We recommend setting up tab-autocomplete with a local Ollama instance. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
 
 ```bash
-ollama run starcoder:3b
+ollama run qwen2.5-coder:1.5b
 ```
 
 Once it has been downloaded, you should begin to see completions in VS Code.
@@ -17,9 +17,9 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 You can also set up tab-autocomplete with a local LM Studio instance by following these steps:
 
 1. Download the latest version of LM Studio from [here](https://lmstudio.ai/)
-2. Download a model (e.g. search for `second-state/StarCoder2-3B-GGUF` and choose one of the options there)
+2. Download a model (e.g. search for `Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF` and choose one of the options there)
 3. Go to the server section (button is on the left), select your model from the dropdown at the top, and click "Start Server"
-4. Go to the "My Models" section (button is on the left), find your selected model, and copy the name the path (example: `second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf`); this will be used as the "model" attribute in Continue
+4. Go to the "My Models" section (button is on the left), find your selected model, and copy the name the path (example: `Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF/qwen2.5-coder-1.5b-instruct-q4_k_m.gguf`); this will be used as the "model" attribute in Continue
 5. Go to Continue and modify the configurations for a [custom model](#setting-up-a-custom-model)
 6. Set the "provider" to `lmstudio` and the "model" to the path copied earlier
 
@@ -28,8 +28,8 @@ Example:
 ```json title="config.json"
 {
   "tabAutocompleteModel": {
-      "title": "Starcoder2 3b",
-      "model": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
+      "title": "Qwen2.5-Coder 1.5b",
+      "model": "Qwen/Qwen2.5-Coder-1.5B-Instruct-GGUF",
       "provider": "lmstudio",
   },
   ...
@@ -69,11 +69,9 @@ If you aren't yet familiar with the available options, you can learn more in our
 
 ### What model should I use?
 
-If you are running the model locally, we recommend `starcoder:3b`.
+If you are running the model locally, we recommend `qwen2.5-coder:1.5b`.
 
-If you find it to be too slow, you should try `deepseek-coder:1.3b-base`.
-
-If you have a bit more compute, or are running a model in the cloud, you can upgrade to `deepseek-coder:6.7b-base`.
+If you have a bit more compute, or are running a model in the cloud, you can upgrade to `qwen2.5-coder:7b`.
 
 Regardless of what you are willing to spend, we do not recommend using GPT or Claude for autocomplete. Learn why [below](#i-want-better-completions-should-i-use-gpt-4).
 
@@ -83,7 +81,7 @@ The following can be configured in `config.json`:
 
 ### `tabAutocompleteModel`
 
-This is just another object like the ones in the `"models"` array of `config.json`. You can choose and configure any model you would like, but we strongly suggest using a small model made for tab-autocomplete, such as `deepseek-1b`, `starcoder-1b`, or `starcoder-3b`.
+This is just another object like the ones in the `"models"` array of `config.json`. You can choose and configure any model you would like, but we strongly suggest using a small model made for tab-autocomplete, such as `deepseek-1b`, `qwen2.5-coder:1.5b`, or `starcoder-3b`.
 
 ### `tabAutocompleteOptions`
 
@@ -105,7 +103,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",
     "provider": "ollama",
-    "model": "starcoder:3b",
+    "model": "qwen2.5-coder:1.5b",
     "apiBase": "https://<my endpoint>"
   },
   "tabAutocompleteOptions": {
@@ -128,7 +126,7 @@ Follow these steps to ensure that everything is set up correctly:
 
 1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar).
 2. Make sure you have downloaded Ollama.
-3. Run `ollama run starcoder:3b` to verify that the model is downloaded.
+3. Run `ollama run qwen2.5-coder:1.5b` to verify that the model is downloaded.
 4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
 5. Make sure that you aren't also using another Ollama model for chat. This will cause Ollama to constantly load and unload the models from memory, resulting in slow responses (or none at all) for both.
 6. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/logs/core.log in JetBrains).

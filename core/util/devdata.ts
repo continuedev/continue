@@ -1,4 +1,5 @@
 import { writeFileSync } from "fs";
+
 import { getDevDataFilePath } from "./paths.js";
 
 export function logDevData(tableName: string, data: any) {

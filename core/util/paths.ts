@@ -1,8 +1,10 @@
-import * as JSONC from "comment-json";
-import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
+import { pathToFileURL } from "url";
 import * as path from "path";
+import * as JSONC from "comment-json";
+import dotenv from "dotenv";
+
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
@@ -28,6 +30,20 @@ export function getContinueUtilsPath(): string {
   return utilsPath;
 }
 
+export function getGlobalContinueIgnorePath(): string {
+  const continueIgnorePath = path.join(
+    getContinueGlobalPath(),
+    ".continueignore",
+  );
+  if (!fs.existsSync(continueIgnorePath)) {
+    fs.writeFileSync(continueIgnorePath, "");
+  }
+  return continueIgnorePath;
+}
+
+/*
+  Deprecated, replace with getContinueGlobalUri where possible
+*/
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
   const continuePath = CONTINUE_GLOBAL_DIR;
@@ -35,6 +51,10 @@ export function getContinueGlobalPath(): string {
     fs.mkdirSync(continuePath);
   }
   return continuePath;
+}
+
+export function getContinueGlobalUri(): string {
+  return pathToFileURL(CONTINUE_GLOBAL_DIR).href;
 }
 
 export function getSessionsFolderPath(): string {
@@ -79,6 +99,10 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
     }
   }
   return p;
+}
+
+export function getConfigJsonUri(): string {
+  return getContinueGlobalUri() + "/config.json";
 }
 
 export function getConfigTsPath(): string {
@@ -314,7 +338,7 @@ export function getPromptLogsPath(): string {
 }
 
 export function getGlobalPromptsPath(): string {
-  return path.join(getContinueGlobalPath(), ".prompts");
+  return path.join(getContinueGlobalPath(), "prompts");
 }
 
 export function readAllGlobalPromptFiles(

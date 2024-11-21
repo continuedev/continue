@@ -37,7 +37,7 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
     return (
       <>
         <div
-          className="flex items-center gap-1 cursor-default"
+          className="flex flex-1 cursor-default select-none items-center justify-center gap-1"
           data-tooltip-id="usage_progress_bar"
         >
           <ExclamationCircleIcon width="18px" height="18px" color="red" />
@@ -54,23 +54,16 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
   return (
     <>
       <div
-        className="flex flex-col cursor-pointer text-gray-400 text-[10px]"
+        className="flex flex-1 cursor-pointer flex-row items-center gap-2 text-[10px] text-gray-400 sm:gap-3"
         data-tooltip-id="usage_progress_bar"
         onClick={onClick}
       >
-        <div className="hidden xs:flex justify-between mb-0">
-          <span>
-            Free trial <span className="hidden sm:inline">requests</span>
-          </span>
-
-          <span>
-            {completed} / {total}
-          </span>
-        </div>
-
-        <div className="w-[40vw] h-1.5 rounded-md border border-gray-400 border-solid my-1.5 flex">
+        <span>
+          Free trial <span className="hidden sm:inline">requests</span>
+        </span>
+        <div className="flex h-1.5 flex-1 rounded-md border border-solid border-gray-400">
           <div
-            className={`transition-all duration-200 ease-in-out h-full rounded-lg ${
+            className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
               completed / total > 0.75 ? "bg-amber-500" : "bg-stone-500"
             }`}
             style={{
@@ -78,6 +71,9 @@ function FreeTrialProgressBar({ completed, total }: FreeTrialProgressBarProps) {
             }}
           />
         </div>
+        <span>
+          {completed} / {total}
+        </span>
       </div>
       <ToolTip id="usage_progress_bar" place="top">
         {`Click to use your own API key or local LLM (required after ${FREE_TRIAL_LIMIT_REQUESTS} inputs)`}

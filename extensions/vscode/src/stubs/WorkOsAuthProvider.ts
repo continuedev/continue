@@ -15,6 +15,7 @@ import {
   window,
   workspace,
 } from "vscode";
+
 import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
 const AUTH_NAME = "Continue";
@@ -29,7 +30,9 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
 
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import { controlPlaneEnv } from "core/control-plane/env";
+
 import crypto from "crypto";
+
 import { SecretStorage } from "./SecretStorage";
 
 // Function to generate a random string of specified length

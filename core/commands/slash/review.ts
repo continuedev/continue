@@ -45,7 +45,7 @@ const ReviewMessageCommand: SlashCommand = {
 
     for await (const chunk of llm.streamChat([
       { role: "user", content: content },
-    ])) {
+    ], new AbortController().signal)) {
       yield stripImages(chunk.content);
     }
   },
