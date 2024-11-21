@@ -84,6 +84,7 @@ function useSetup(dispatch: Dispatch) {
 
   // ON LOAD
   useEffect(() => {
+    ideMessenger.post("docs/getSuggestedDocs", undefined);
     // Override persisted state
     dispatch(setInactive());
 
@@ -178,8 +179,6 @@ function useSetup(dispatch: Dispatch) {
     },
     [defaultModelTitle],
   );
-
-
 }
 
 export default useSetup;

@@ -40,6 +40,7 @@ import { TTS } from "./util/tts";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./util/messenger";
+import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -736,6 +737,9 @@ export class Core {
     });
     on("indexing/initStatuses", async (msg) => {
       return this.docsService.initStatuses();
+    });
+    on("docs/getSuggestedDocs", async (msg) => {
+      getAllSuggestedDocs(this.ide);
     });
     //
 

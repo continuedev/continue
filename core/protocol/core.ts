@@ -167,6 +167,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "indexing/abort": [{ type: string; id: string }, void];
   "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
   "indexing/initStatuses": [undefined, void];
+  "docs/getSuggestedDocs": [undefined, void];
 
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
