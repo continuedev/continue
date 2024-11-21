@@ -11,7 +11,9 @@ function AddModelButtonSubtext() {
       <span
         className="cursor-pointer underline"
         onClick={() =>
-          ideMessenger.post("config/openLocalConfigFile", undefined)
+          ideMessenger.post("config/openProfile", {
+            profileId: "local",
+          })
         }
       >
         config file
