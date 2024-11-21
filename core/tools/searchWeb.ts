@@ -9,7 +9,8 @@ export const searchWebTool: Tool = {
   },
   function: {
     name: "search_web",
-    description: "Perform a web search and get back top results",
+    description:
+      "Performs a web search, returning top results. This tool should only be called for questions that require external knowledge. Common programming questions do not require web search.",
     parameters: {
       type: "object",
       required: ["query"],

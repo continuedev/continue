@@ -56,7 +56,10 @@ function helloWorld() {
 }
 \`\`\`
 
-Always follow these guidelines when generating code responses.`;
+Always follow these guidelines when generating code responses.
+
+Other rules:
+- Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
 
 function hasCodeBlockWithFilename(content: ChatMessage["content"]): boolean {
   const contentStr = typeof content === "string" ? content : content[0].text;
