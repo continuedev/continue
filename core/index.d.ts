@@ -1190,3 +1190,32 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
 }
+
+// DOCS SUGGESTIONS AND PACKAGE INFO
+export interface FilePathAndName {
+  path: string;
+  name: string;
+}
+export type ParsedPackageInfo = {
+  language: string;
+  name: string;
+  version: string;
+  packageFile: FilePathAndName;
+};
+
+export type PackageDetails = {
+  docsLink?: string;
+  title?: string;
+  description?: string;
+};
+
+export type PackageDetailsSuccess = PackageDetails & {
+  docsLink: string;
+};
+
+export type PackageDocsResult = {
+  packageInfo: ParsedPackageInfo;
+} & (
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);

@@ -1,12 +1,12 @@
-// write me an interface PackageCrawler that contains:
-// 1. property `language` to store a given language like "python" or "typescript"
-// 2. has a method `getPackageFiles` which takes a list of file names and decides which ones match package/dependency files (e.g. package.json for typescript, requirements.txt for python, etc)
-// 3. has a method `parsePackageFile` which returns a list of package name and version from a relevant package file, in a standardized format like semver
-// 4. has a method `getDocumentationLink` to check for documentation link for a given package (e.g. GET `https://registry.npmjs.org/<package>` and find docs field for typescript, documentation link in the package metadata for PyPi, etc.)
-// Then, write typescript classes to implement this typescript interface for the languages "python" and "typescript"
-
-import { IDE } from "../../..";
+import {
+  FilePathAndName,
+  IDE,
+  PackageDetails,
+  PackageDocsResult,
+  ParsedPackageInfo,
+} from "../../..";
 import { walkDir } from "../../walkDir";
+
 import { PythonPackageCrawler } from "./packageCrawlers/Python";
 import { TypeScriptPackageCrawler } from "./packageCrawlers/TsJs";
 
@@ -14,18 +14,13 @@ const PACKAGE_CRAWLERS = [TypeScriptPackageCrawler, PythonPackageCrawler];
 
 export interface PackageCrawler {
   language: string;
-  getPackageFiles(fileNames: string[]): string[];
-  parsePackageFile(fileContent: string, filePath: string): PackageInfo[];
-  getDocumentationLink(packageName: string): Promise<PackageDocsResult>;
+  getPackageFiles(files: FilePathAndName[]): FilePathAndName[];
+  parsePackageFile(
+    file: FilePathAndName,
+    contents: string,
+  ): ParsedPackageInfo[];
+  getPackageDetails(packageInfo: ParsedPackageInfo): Promise<PackageDetails>;
 }
-
-export type PackageInfo = {
-  name: string;
-  version: string;
-  foundInFilepath: string;
-};
-export type PackageDocsResult = PackageInfo &
-  ({ error: string; link?: never } | { link: string; error?: never });
 
 export async function getAllSuggestedDocs(ide: IDE) {
   const workspaceDirs = await ide.getWorkspaceDirs();
@@ -35,16 +30,26 @@ export async function getAllSuggestedDocs(ide: IDE) {
     }),
   );
   const allPaths = results.flat(); // TODO only get files, not dirs. Not critical for now
-  const allFiles = allPaths.map((path) => path.split("/").pop()!);
-  const packageFilesByLanguage: Record<string, string[]> = {};
+  const allFiles = allPaths.map((path) => ({
+    path,
+    name: path.split(/[\\/]/).pop()!,
+  }));
+
+  // Build map of language -> package files
+  const packageFilesByLanguage: Record<string, FilePathAndName[]> = {};
   for (const Crawler of PACKAGE_CRAWLERS) {
     const crawler = new Crawler();
     const packageFilePaths = crawler.getPackageFiles(allFiles);
     packageFilesByLanguage[crawler.language] = packageFilePaths;
   }
 
+  // Get file contents for all unique package files
   const uniqueFilePaths = Array.from(
-    new Set(Object.values(packageFilesByLanguage).flat()),
+    new Set(
+      Object.values(packageFilesByLanguage).flatMap((files) =>
+        files.map((file) => file.path),
+      ),
+    ),
   );
   const fileContentsArray = await Promise.all(
     uniqueFilePaths.map(async (path) => {
@@ -56,39 +61,67 @@ export async function getAllSuggestedDocs(ide: IDE) {
     fileContentsArray.map(({ path, contents }) => [path, contents]),
   );
 
-  const packagesByLanguage: Record<string, PackageInfo[]> = {};
+  // Parse package files and build map of language -> packages
+  const packagesByLanguage: Record<string, ParsedPackageInfo[]> = {};
   PACKAGE_CRAWLERS.forEach((Crawler) => {
     const crawler = new Crawler();
     const packageFiles = packageFilesByLanguage[crawler.language];
     packageFiles.forEach((file) => {
-      const contents = fileContents.get(file);
+      const contents = fileContents.get(file.path);
       if (!contents) {
         return;
       }
-      const packages = crawler.parsePackageFile(contents, file);
+      const packages = crawler.parsePackageFile(file, contents);
       if (!packagesByLanguage[crawler.language]) {
         packagesByLanguage[crawler.language] = [];
       }
       packagesByLanguage[crawler.language].push(...packages);
     });
   });
-  console.log(packagesByLanguage);
-  //   const allPackages = await Promise.all(
-  //     PACKAGE_CRAWLERS.map(async (Crawler) => {
-  //         const crawler = new Crawler();
-  //         const packageInfos = uniqueFileContents
-  //             .filter(({ path }) => languageToFilePaths[crawler.language].includes(path))
-  //             .map(({ path, contents }) => crawler.parsePackageFile(contents, path))
-  //             .flat();
-  //         return packageInfos;
-  //     })
-  //   );
-  //   for (const Crawler of PACKAGE_CRAWLERS) {
-  //     const crawler = new Crawler();
-  //     const packages = crawler.parsePackageFile()
-  //     languageToFilePaths[crawler.language] = packageFilePaths;
-  //   }
+
+  // Get documentation links for all packages
+  const docsByLanguage: Record<string, PackageDocsResult[]> = {};
+  await Promise.all(
+    PACKAGE_CRAWLERS.map(async (Crawler) => {
+      const crawler = new Crawler();
+      const packages = packagesByLanguage[crawler.language];
+      docsByLanguage[crawler.language] = await Promise.all(
+        packages.map(async (packageInfo) => {
+          try {
+            const details = await crawler.getPackageDetails(packageInfo);
+            if (!details.docsLink) {
+              return {
+                packageInfo,
+                error: `No documentation link found for ${packageInfo.name}`,
+              };
+            }
+            return {
+              packageInfo,
+              details: {
+                ...details,
+                docsLink: details.docsLink,
+              },
+            };
+          } catch (error) {
+            return {
+              packageInfo,
+              error: `Error getting package details for ${name}`,
+            };
+          }
+        }),
+      );
+    }),
+  );
+
+  return docsByLanguage;
 }
+
+// write me an interface PackageCrawler that contains:
+// 1. property `language` to store a given language like "python" or "typescript"
+// 2. has a method `getPackageFiles` which takes a list of file names and decides which ones match package/dependency files (e.g. package.json for typescript, requirements.txt for python, etc)
+// 3. has a method `parsePackageFile` which returns a list of package name and version from a relevant package file, in a standardized format like semver
+// 4. has a method `getDocumentationLink` to check for documentation link for a given package (e.g. GET `https://registry.npmjs.org/<package>` and find docs field for typescript, documentation link in the package metadata for PyPi, etc.)
+// Then, write typescript classes to implement this typescript interface for the languages "python" and "typescript"
 
 // I want to present the user with a list of dependencies and allow them to select which ones to index (embed) documentation for.
 // In order to prevent duplicate file reads, the process will be like this:
