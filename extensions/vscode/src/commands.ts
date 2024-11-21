@@ -883,8 +883,8 @@ const commandsMap: (
     "continue.signInToControlPlane": () => {
       sidebar.webviewProtocol?.request("signInToControlPlane", undefined);
     },
-    "continue.openProfileSwitcherDialog": () => {
-      sidebar.webviewProtocol?.request("openDialogMessage", "profileSwitcher");
+    "continue.openAccountDialog": () => {
+      sidebar.webviewProtocol?.request("openDialogMessage", "account");
     },
   };
 };

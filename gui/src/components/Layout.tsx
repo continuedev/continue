@@ -25,7 +25,7 @@ import TextDialog from "./dialogs";
 import Footer from "./Footer";
 import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import PostHogPageView from "./PosthogPageView";
-import ProfileSwitcherDialog from "./ProfileSwitcherDialog";
+import AccountDialog from "./AccountDialog";
 import { AuthProvider } from "../context/Auth";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
@@ -114,9 +114,9 @@ const Layout = () => {
   useWebviewListener(
     "openDialogMessage",
     async (message) => {
-      if (message === "profileSwitcher") {
+      if (message === "account") {
         dispatch(setShowDialog(true));
-        dispatch(setDialogMessage(<ProfileSwitcherDialog />));
+        dispatch(setDialogMessage(<AccountDialog />));
       }
     },
     [],

@@ -25,5 +25,5 @@ export type ToWebviewFromIdeOrCoreProtocol = {
   setTTSActive: [boolean, void];
   getWebviewHistoryLength: [undefined, number];
   signInToControlPlane: [undefined, void];
-  openDialogMessage: ["profileSwitcher", void];
+  openDialogMessage: ["account", void];
 };

@@ -98,20 +98,8 @@ function ListBoxOption({
   showDelete?: boolean;
   selected: boolean;
 }) {
-  const [hovered, setHovered] = useState(false);
-
   return (
-    <StyledListboxOption
-      key={idx}
-      selected={selected}
-      value={option.id}
-      onMouseEnter={() => {
-        setHovered(true);
-      }}
-      onMouseLeave={() => {
-        setHovered(false);
-      }}
-    >
+    <StyledListboxOption key={idx} selected={selected} value={option.id}>
       <div className="relative flex h-5 items-center justify-between gap-3">
         {option.title}
       </div>
@@ -119,7 +107,7 @@ function ListBoxOption({
   );
 }
 
-function ProfileSwitcherDialog() {
+function AccountDialog() {
   const ideMessenger = useContext(IdeMessengerContext);
   const {
     session,
@@ -230,4 +218,4 @@ function ProfileSwitcherDialog() {
   );
 }
 
-export default ProfileSwitcherDialog;
+export default AccountDialog;

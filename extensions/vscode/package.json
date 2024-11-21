@@ -332,8 +332,8 @@
         "icon": "$(account)"
       },
       {
-        "command": "continue.openProfileSwitcherDialog",
-        "title": "Profiles",
+        "command": "continue.openAccountDialog",
+        "title": "Account",
         "category": "Continue",
         "group": "Continue",
         "icon": "$(account)"
@@ -526,7 +526,7 @@
           "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && !continue.isSignedInToControlPlane"
         },
         {
-          "command": "continue.openProfileSwitcherDialog",
+          "command": "continue.openAccountDialog",
           "group": "navigation@5",
           "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && continue.isSignedInToControlPlane"
         },
