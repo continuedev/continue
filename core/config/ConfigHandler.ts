@@ -91,7 +91,8 @@ export class ConfigHandler {
       await this.ide.openFile(getConfigJsonPath());
     } else {
       await this.ide.openUrl(
-        `http://app.continue.dev/workspaces/${openProfileId}/chat`,
+        "https://app.continue.dev/",
+        // `https://app.continue.dev/workspaces/${openProfileId}/chat`,
       );
     }
   }
