@@ -35,7 +35,7 @@ export class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: "✏️ Edit in UI",
-          command: "continue.openSettingsUI",
+          command: "continue.openConfigUI", // command likely doesn't exist anymore, check
         }),
       );
     }

@@ -30,7 +30,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   overwriteFile: [{ filepath: string; prevFileContent: string | null }, void];
   showTutorial: [undefined, void];
   showFile: [{ filepath: string }, void];
-  openConfigJson: [undefined, void];
   toggleDevTools: [undefined, void];
   reloadWindow: [undefined, void];
   focusEditor: [undefined, void];
@@ -101,7 +100,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   navigateTo: [{ path: string; toggle?: boolean }, void];
   addModel: [undefined, void];
 
-  openSettings: [undefined, void];
   /**
    * @deprecated Use navigateTo with a path instead.
    */

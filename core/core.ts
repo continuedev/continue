@@ -28,7 +28,11 @@ import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
+import {
+  editConfigJson,
+  getConfigJsonPath,
+  setupInitialDotContinueDirectory,
+} from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -262,6 +266,10 @@ export class Core {
         (await this.config()).experimental?.promptPath,
       );
       await this.configHandler.reloadConfig();
+    });
+
+    on("config/openProfile", async (msg) => {
+      await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
     on("config/reload", (msg) => {

@@ -192,9 +192,6 @@ class ContinueBrowser(val project: Project, url: String) {
                 }
 
                 "reloadWindow" -> {}
-                "openConfigJson" -> {
-                    ide?.setFileOpen(getConfigJsonPath())
-                }
 
                 "readRangeInFile" -> {
                     val data = data.asJsonObject

@@ -321,9 +321,13 @@ export class VsCodeExtension {
 
     // When GitHub sign-in status changes, reload config
     vscode.authentication.onDidChangeSessions(async (e) => {
-      if (e.provider.id === "github") {
-        this.configHandler.reloadConfig();
-      } else if (e.provider.id === controlPlaneEnv.AUTH_TYPE) {
+      if (e.provider.id === controlPlaneEnv.AUTH_TYPE) {
+        vscode.commands.executeCommand(
+          "setContext",
+          "continue.isSignedInToControlPlane",
+          true,
+        );
+
         const sessionInfo = await getControlPlaneSessionInfo(true);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
           void webviewProtocol.request("didChangeControlPlaneSessionInfo", {
@@ -336,6 +340,16 @@ export class VsCodeExtension {
         void this.core.invoke("didChangeControlPlaneSessionInfo", {
           sessionInfo,
         });
+      } else {
+        vscode.commands.executeCommand(
+          "setContext",
+          "continue.isSignedInToControlPlane",
+          false,
+        );
+
+        if (e.provider.id === "github") {
+          this.configHandler.reloadConfig();
+        }
       }
     });
 

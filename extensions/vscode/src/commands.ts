@@ -580,10 +580,6 @@ const getCommandsMap: (
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
-    "continue.openSettingsUI": () => {
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
-      sidebar.webviewProtocol?.request("openSettings", undefined);
-    },
     "continue.sendMainUserInput": (text: string) => {
       sidebar.webviewProtocol?.request("userInput", {
         input: text,
@@ -683,8 +679,10 @@ const getCommandsMap: (
 
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
     },
-    "continue.openConfigJson": () => {
-      ide.openFile(getConfigJsonPath());
+    "continue.openConfig": () => {
+      core.invoke("config/openProfile", {
+        profileId: undefined,
+      });
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
@@ -857,7 +855,7 @@ const getCommandsMap: (
           vscode.commands.executeCommand("continue.toggleFullScreen");
         } else if (selectedOption === "$(question) Open help center") {
           focusGUI();
-          vscode.commands.executeCommand("continue.navigateTo", "/more");
+          vscode.commands.executeCommand("continue.navigateTo", "/more", true);
         }
         quickPick.dispose();
       });
@@ -877,9 +875,18 @@ const getCommandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
-    "continue.navigateTo": (path: string) => {
-      sidebar.webviewProtocol?.request("navigateTo", { path });
+    "continue.openMorePage": () => {
+      vscode.commands.executeCommand("continue.navigateTo", "/more", true);
+    },
+    "continue.navigateTo": (path: string, toggle: boolean) => {
+      sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
       focusGUI();
+    },
+    "continue.signInToControlPlane": () => {
+      sidebar.webviewProtocol?.request("signInToControlPlane", undefined);
+    },
+    "continue.openAccountDialog": () => {
+      sidebar.webviewProtocol?.request("openDialogMessage", "account");
     },
   };
 };

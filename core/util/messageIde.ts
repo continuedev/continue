@@ -163,6 +163,10 @@ export class MessageIde implements IDE {
     await this.request("openFile", { path });
   }
 
+  async openUrl(url: string): Promise<void> {
+    await this.request("openUrl", url);
+  }
+
   async runCommand(command: string): Promise<void> {
     await this.request("runCommand", { command });
   }

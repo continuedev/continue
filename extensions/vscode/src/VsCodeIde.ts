@@ -485,6 +485,11 @@ class VsCodeIde implements IDE {
       return "";
     }
   }
+
+  async openUrl(url: string): Promise<void> {
+    await vscode.env.openExternal(vscode.Uri.parse(url));
+  }
+
   async showDiff(
     filepath: string,
     newContents: string,

@@ -526,6 +526,7 @@ export interface IDE {
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
   openFile(path: string): Promise<void>;
+  openUrl(url: string): Promise<void>;
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
