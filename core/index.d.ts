@@ -777,8 +777,6 @@ export type ModelName =
   | "gemma2-9b-it"
   | "olmo-7b"
   | "qwen-coder2.5-7b"
-  | "qwen2.5-coder-7b"
-  | "qwen2.5-coder-32b"
   // Anthropic
   | "claude-3-5-sonnet-latest"
   | "claude-3-5-sonnet-20240620"
