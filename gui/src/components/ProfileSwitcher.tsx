@@ -18,8 +18,8 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from ".";
+import { useAuth } from "../context/Auth";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { RootState } from "../redux/store";
