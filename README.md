@@ -1,3 +1,37 @@
+# 🚀 Continue w/ [Granite](https://huggingface.co/ibm-granite)
+
+## 🛠️ A [Continue](https://github.com/continuedev/continue) fork supporting the [Granite model series](https://huggingface.co/ibm-granite)
+
+This repository started as an experimental side-project to integrate the open-source WatsonX Granite models into Continue
+
+Initially a side-project to understand LLM implementations, it was later re-packaged to integrate with an internal model research tool
+
+Upstream support for Granite via the [watsonx provider API](https://docs.continue.dev/customize/model-providers/more/watsonx) has since been implemented - this repository exists as an archive
+
+- 🤖 Full implementation of the Granite model series with proper context handling and limits
+- 📷 Tailored onboarding flow for quick and easy configuration (below)
+- 🔄 Streaming and Chat implemenatations for the [watsonx API specification](https://cloud.ibm.com/apidocs/watsonx-ai-cp)
+- 🏗️ Tokenizer and template modifications to enable streaming Granite responses
+- 🧩 Ollama model support for local Granite demonstration and testing
+- 📊 Privacy-focused implementation with telemetry removal
+
+<div align="center">
+
+### Getting Started
+
+<table>
+    <tr>
+        <td><img src="media/ui-example-1.png" alt="UI Example 1" width="200"/></td>
+        <td><img src="media/ui-example-2.png" alt="UI Example 2" width="200"/></td>
+        <td><img src="media/ui-example-3.png" alt="UI Example 3" width="200"/></td>
+        <td><img src="media/ui-example-4.png" alt="UI Example 4" width="200"/></td>
+    </tr>
+</table>
+
+</div>
+
+---
+
 <div align="center">
 
 ![Continue logo](media/readme.png)
