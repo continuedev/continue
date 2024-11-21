@@ -113,6 +113,13 @@ export class MessageIde implements IDE {
     return await this.request("getDiff", { includeUnstaged });
   }
 
+  async getClipboardContent(): Promise<{ text: string; copiedAt: string }> {
+    return {
+      text: "",
+      copiedAt: new Date().toISOString(),
+    };
+  }
+
   async getTerminalContents() {
     return await this.request("getTerminalContents", undefined);
   }

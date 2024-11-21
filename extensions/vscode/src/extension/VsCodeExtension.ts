@@ -73,7 +73,11 @@ export class VsCodeExtension {
       },
     );
     this.diffManager = new DiffManager(context);
-    this.ide = new VsCodeIde(this.diffManager, this.webviewProtocolPromise);
+    this.ide = new VsCodeIde(
+      this.diffManager,
+      this.webviewProtocolPromise,
+      context,
+    );
     this.extensionContext = context;
     this.windowId = uuidv4();
 

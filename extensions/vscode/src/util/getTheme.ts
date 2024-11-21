@@ -36,9 +36,55 @@ function parseThemeString(themeString: string | undefined): any {
 
 export function getTheme() {
   let currentTheme = undefined;
-  const colorTheme =
-    vscode.workspace.getConfiguration("workbench").get<string>("colorTheme") ||
-    "Default Dark Modern";
+  // Get color theme from settings
+  // use user settings if available
+  // otherwise use default
+  let colorTheme: string | undefined = undefined;
+
+  // Get color theme from settings
+  const workbenchConfig = vscode.workspace.getConfiguration();
+  const autoDetectColorScheme = workbenchConfig.get<boolean>(
+    "window.autoDetectColorScheme",
+  );
+  const autoDetectHighContrast = workbenchConfig.get<boolean>(
+    "window.autoDetectHighContrast",
+  );
+  const activeColorTheme = vscode.window.activeColorTheme.kind;
+
+  if (autoDetectHighContrast || autoDetectColorScheme) {
+    switch (activeColorTheme) {
+      case vscode.ColorThemeKind.Dark:
+        colorTheme = workbenchConfig.get<string>(
+          "workbench.preferredDarkColorTheme",
+        );
+        break;
+      case vscode.ColorThemeKind.Light:
+        colorTheme = workbenchConfig.get<string>(
+          "workbench.preferredLightColorTheme",
+        );
+        break;
+      case vscode.ColorThemeKind.HighContrast:
+        colorTheme = workbenchConfig.get<string>(
+          "workbench.preferredHighContrastColorTheme",
+        );
+        break;
+      case vscode.ColorThemeKind.HighContrastLight:
+        colorTheme = workbenchConfig.get<string>(
+          "workbench.preferredHighContrastLightColorTheme",
+        );
+        break;
+      default:
+        console.log("unknown color theme kind", activeColorTheme);
+        colorTheme = workbenchConfig.get<string>("workbench.colorTheme");
+        break;
+    }
+  }
+
+  if (!colorTheme) {
+    colorTheme =
+      workbenchConfig.get<string>("workbench.colorTheme") ??
+      "Default Dark Modern";
+  }
 
   try {
     // Pass color theme to webview for syntax highlighting
@@ -85,7 +131,8 @@ export function getTheme() {
     converted.base = (
       ["vs", "hc-black"].includes(converted.base)
         ? converted.base
-        : colorTheme.includes("Light")
+        : activeColorTheme === vscode.ColorThemeKind.Light ||
+            activeColorTheme === vscode.ColorThemeKind.HighContrastLight
           ? "vs"
           : "vs-dark"
     ) as any;

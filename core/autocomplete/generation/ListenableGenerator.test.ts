@@ -17,7 +17,11 @@ describe("ListenableGenerator", () => {
     const source = asyncGenerator(values);
     const onError = jest.fn();
 
-    const lg = new ListenableGenerator<number>(source, onError);
+    const lg = new ListenableGenerator<number>(
+      source,
+      onError,
+      new AbortController(),
+    );
 
     const result: number[] = [];
     for await (const value of lg.tee()) {
@@ -33,7 +37,11 @@ describe("ListenableGenerator", () => {
     const source = asyncGenerator(values, 10); // Introduce delay to simulate async behavior
     const onError = jest.fn();
 
-    const lg = new ListenableGenerator<number>(source, onError);
+    const lg = new ListenableGenerator<number>(
+      source,
+      onError,
+      new AbortController(),
+    );
 
     const listener = jest.fn();
 
@@ -57,7 +65,11 @@ describe("ListenableGenerator", () => {
     const source = asyncGenerator(values, 10);
     const onError = jest.fn();
 
-    const lg = new ListenableGenerator<number>(source, onError);
+    const lg = new ListenableGenerator<number>(
+      source,
+      onError,
+      new AbortController(),
+    );
 
     const initialListener = jest.fn();
 
@@ -87,7 +99,11 @@ describe("ListenableGenerator", () => {
     const source = asyncGenerator(values, 10);
     const onError = jest.fn();
 
-    const lg = new ListenableGenerator<number>(source, onError);
+    const lg = new ListenableGenerator<number>(
+      source,
+      onError,
+      new AbortController(),
+    );
 
     const result: number[] = [];
     const teeIterator = lg.tee();
@@ -116,7 +132,11 @@ describe("ListenableGenerator", () => {
     const source = errorGenerator();
     const onError = jest.fn();
 
-    const lg = new ListenableGenerator<number>(source, onError);
+    const lg = new ListenableGenerator<number>(
+      source,
+      onError,
+      new AbortController(),
+    );
 
     const result: number[] = [];
     for await (const value of lg.tee()) {
@@ -133,7 +153,11 @@ describe("ListenableGenerator", () => {
     const source = asyncGenerator(values);
     const onError = jest.fn();
 
-    const lg = new ListenableGenerator<number>(source, onError);
+    const lg = new ListenableGenerator<number>(
+      source,
+      onError,
+      new AbortController(),
+    );
 
     const listener = jest.fn();
     lg.listen(listener);

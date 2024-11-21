@@ -36,6 +36,7 @@ import type {
   RangeInFile,
   Thread,
 } from "core";
+import { text } from "stream/consumers";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -43,6 +44,7 @@ class VsCodeIde implements IDE {
   constructor(
     private readonly diffManager: DiffManager,
     private readonly vscodeWebviewProtocolPromise: Promise<VsCodeWebviewProtocol>,
+    private readonly context: vscode.ExtensionContext,
   ) {
     this.ideUtils = new VsCodeIdeUtils();
   }
@@ -312,6 +314,13 @@ class VsCodeIde implements IDE {
 
   async getDiff(includeUnstaged: boolean): Promise<string> {
     return await this.ideUtils.getDiff(includeUnstaged);
+  }
+
+  async getClipboardContent() {
+    return this.context.workspaceState.get("continue.copyBuffer", {
+      text: "",
+      copiedAt: new Date("1900-01-01").toISOString(),
+    });
   }
 
   async getTerminalContents(): Promise<string> {
