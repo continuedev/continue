@@ -268,8 +268,8 @@ export class Core {
       await this.configHandler.reloadConfig();
     });
 
-    on("config/openLocalConfigFile", async (msg) => {
-      await this.ide.openFile(getConfigJsonPath());
+    on("config/openProfile", async (msg) => {
+      await this.configHandler.openConfigProfile(msg.data.profileId);
     });
 
     on("config/reload", (msg) => {

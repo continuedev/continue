@@ -52,14 +52,6 @@ const GridDiv = styled.div`
   overflow-x: visible;
 `;
 
-const ProfileDropdownPortalDiv = styled.div`
-  background-color: ${vscInputBackground};
-  position: relative;
-  margin-left: 8px;
-  z-index: 200;
-  font-size: ${getFontSize() - 2};
-`;
-
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -257,8 +249,6 @@ const Layout = () => {
                   <div className="mt-2 underline">Learn More</div>
                 </div>
               )}
-
-              <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
               <Footer />
             </GridDiv>
           </div>

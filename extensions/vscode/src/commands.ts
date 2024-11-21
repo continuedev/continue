@@ -680,7 +680,9 @@ const commandsMap: (
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
     },
     "continue.openConfig": () => {
-      sidebar.webviewProtocol?.request("openSelectedConfigProfile", undefined);
+      core.invoke("config/openProfile", {
+        profileId: undefined,
+      });
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,

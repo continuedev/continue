@@ -28,7 +28,7 @@ export class MessageIde implements IDE {
       messageType: T,
       callback: (data: FromIdeProtocol[T][0]) => FromIdeProtocol[T][1],
     ) => void,
-  ) { }
+  ) {}
 
   pathSep(): Promise<string> {
     return this.request("pathSep", undefined);
@@ -154,6 +154,10 @@ export class MessageIde implements IDE {
 
   async openFile(path: string): Promise<void> {
     await this.request("openFile", { path });
+  }
+
+  async openUrl(url: string): Promise<void> {
+    await this.request("openUrl", url);
   }
 
   async runCommand(command: string): Promise<void> {

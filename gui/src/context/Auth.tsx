@@ -16,6 +16,7 @@ import { RootState } from "../redux/store";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import AccountDialog from "../components/AccountDialog";
 
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
@@ -89,6 +90,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           onConfirm={() => {
             ideMessenger.post("logoutOfControlPlane", undefined);
           }}
+          onCancel={() => {
+            dispatch(setDialogMessage(<AccountDialog />));
+            dispatch(setShowDialog(true));
+          }}
         />,
       ),
     );
@@ -154,20 +159,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
-  useWebviewListener(
-    "openSelectedConfigProfile",
-    async (data) => {
-      if (selectedProfileId === "local") {
-        ideMessenger.post("config/openLocalConfigFile", undefined);
-      } else {
-        ideMessenger.post(
-          "openUrl",
-          `http://app.continue.dev/workspaces/${selectedProfileId}/chat`,
-        );
-      }
-    },
-    [],
-  );
+  // useWebviewListener(
+  //   "openSelectedConfigProfile",
+  //   async (data) => {
+  //     if (selectedProfileId === "local") {
+  //       ideMessenger.post("config/openLocalConfigFile", undefined);
+  //     } else {
+  //       ideMessenger.post(
+  //         "openUrl",
+  //         `http://app.continue.dev/workspaces/${selectedProfileId}/chat`,
+  //       );
+  //     }
+  //   },
+  //   [],
+  // );
 
   return (
     <AuthContext.Provider

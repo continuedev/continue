@@ -22,7 +22,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/deleteModel",
     "config/reload",
     "config/listProfiles",
-    "config/openLocalConfigFile",
+    "config/openProfile",
     "context/getContextItems",
     "context/getSymbolsForFiles",
     "context/loadSubmenuItems",
@@ -74,5 +74,4 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "getWebviewHistoryLength",
     "signInToControlPlane",
     "openDialogMessage",
-    "openSelectedConfigProfile",
   ];

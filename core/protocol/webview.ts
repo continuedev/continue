@@ -9,7 +9,6 @@ import type {
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];
   configError: [ConfigValidationError[] | undefined, void];
-  openSelectedConfigProfile: [undefined, void];
   getDefaultModelTitle: [undefined, string];
   indexProgress: [IndexingProgressUpdate, void]; // Codebase
   "indexing/statusUpdate": [IndexingStatus, void]; // Docs, etc.
