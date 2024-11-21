@@ -159,21 +159,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [],
   );
 
-  // useWebviewListener(
-  //   "openSelectedConfigProfile",
-  //   async (data) => {
-  //     if (selectedProfileId === "local") {
-  //       ideMessenger.post("config/openLocalConfigFile", undefined);
-  //     } else {
-  //       ideMessenger.post(
-  //         "openUrl",
-  //         `http://app.continue.dev/workspaces/${selectedProfileId}/chat`,
-  //       );
-  //     }
-  //   },
-  //   [],
-  // );
-
   return (
     <AuthContext.Provider
       value={{
