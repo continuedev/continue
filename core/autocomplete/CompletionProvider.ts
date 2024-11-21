@@ -185,7 +185,7 @@ export class CompletionProvider {
             extraSnippets,
             this.contextRetrievalService,
           ),
-          "",
+          this.ide.getDiff(true),
           this.ide.getClipboardContent(),
           this.ide.getWorkspaceDirs(),
         ]);
