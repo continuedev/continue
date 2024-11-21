@@ -3,7 +3,6 @@ import Handlebars from "handlebars";
 import { CompletionOptions } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
-import { AutocompleteSnippetDeprecated } from "../context/ranking";
 import { HelperVars } from "../util/HelperVars";
 
 import {
@@ -12,6 +11,11 @@ import {
 } from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
 import { countTokens } from "../../llm/countTokens";
+import { AutocompleteSnippetDeprecated } from "../types";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippet,
+} from "../snippets/types";
 
 const addCommentMarks = (text: string, language: AutocompleteLanguageInfo) => {
   const comment = language.singleLineComment;
@@ -34,7 +38,7 @@ export function formatExternalSnippet(
 }
 
 function getContextComments(
-  snippets: AutocompleteSnippetDeprecated[],
+  snippets: AutocompleteCodeSnippet[],
   lang: AutocompleteLanguageInfo,
   filepath: string,
 ) {
@@ -49,7 +53,7 @@ function getContextComments(
     headerSnipper +
     snippets
       .map((snippet) =>
-        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
+        formatExternalSnippet(snippet.filepath, snippet.content, lang),
       )
       .join("\n") +
     fileNameSnippet;
@@ -122,6 +126,11 @@ const formatClipboardContent = (
     return "";
   }
 
+  const isEmpty = text.trim() === "";
+  if (isEmpty) {
+    return "";
+  }
+
   return (
     addCommentMarks(
       `Recently copied by user:${text.includes("\n") ? "\n" : ""} ${text}`,
@@ -137,7 +146,7 @@ export function renderPrompt({
   diff,
   clipboardContent,
 }: {
-  snippets: AutocompleteSnippetDeprecated[];
+  snippets: AutocompleteCodeSnippet[];
   workspaceDirs: string[];
   helper: HelperVars;
   diff?: string;

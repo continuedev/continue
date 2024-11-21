@@ -148,7 +148,6 @@ export const tabAutocompleteOptionsSchema = z.object({
   onlyMyCode: z.boolean(),
   useOtherFiles: z.boolean(),
   useRecentlyEdited: z.boolean(),
-  recentLinePrefixMatchMinLength: z.number(),
   disableInFiles: z.array(z.string()).optional(),
   useImports: z.boolean().optional(),
 });

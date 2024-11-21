@@ -1,16 +1,8 @@
 import { RangeInFileWithContents } from "../../../commands/util.js";
 import { Range } from "../../../index.js";
 import { countTokens } from "../../../llm/countTokens.js";
+import { AutocompleteSnippetDeprecated } from "../../types.js";
 import { HelperVars } from "../../util/HelperVars.js";
-
-/**
- * @deprecated This type should be removed in the future or renamed.
- * We have a new interface called AutocompleteSnippet which is more
- * general.
- */
-export type AutocompleteSnippetDeprecated = RangeInFileWithContents & {
-  score?: number;
-};
 
 const rx = /[\s.,\/#!$%\^&\*;:{}=\-_`~()\[\]]/g;
 export function getSymbolsForSnippet(snippet: string): Set<string> {
@@ -24,7 +16,7 @@ export function getSymbolsForSnippet(snippet: string): Set<string> {
 /**
  * Calculate similarity as number of shared symbols divided by total number of unique symbols between both.
  */
-export function jaccardSimilarity(a: string, b: string): number {
+function jaccardSimilarity(a: string, b: string): number {
   const aSet = getSymbolsForSnippet(a);
   const bSet = getSymbolsForSnippet(b);
   const union = new Set([...aSet, ...bSet]).size;
@@ -76,7 +68,7 @@ export function rankAndOrderSnippets(
 /**
  * Deduplicate code snippets by merging overlapping ranges into a single range.
  */
-export function deduplicateSnippets(
+function deduplicateSnippets(
   snippets: Required<AutocompleteSnippetDeprecated>[],
 ): Required<AutocompleteSnippetDeprecated>[] {
   // Group by file
@@ -166,54 +158,54 @@ export function fillPromptWithSnippets(
 /**
  * Remove one range from another range, which may lead to returning two disjoint ranges
  */
-function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
-  if (
-    orig.start.line >= remove.start.line &&
-    orig.end.line <= remove.end.line
-  ) {
-    // / | | /
-    return [];
-  }
-  if (
-    orig.start.line <= remove.start.line &&
-    orig.end.line >= remove.end.line
-  ) {
-    // | / / |
-    // Splits the range
-    return [
-      {
-        start: orig.start,
-        end: remove.start,
-      },
-      {
-        start: remove.end,
-        end: orig.end,
-      },
-    ];
-  }
-  if (
-    orig.start.line >= remove.start.line &&
-    orig.end.line >= remove.end.line
-  ) {
-    // \ | / |
-    return [
-      {
-        start: remove.end,
-        end: orig.end,
-      },
-    ];
-  }
-  if (
-    orig.start.line <= remove.start.line &&
-    orig.end.line <= remove.end.line
-  ) {
-    // | / | /
-    return [
-      {
-        start: orig.start,
-        end: remove.start,
-      },
-    ];
-  }
-  return [orig];
-}
+// function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
+//   if (
+//     orig.start.line >= remove.start.line &&
+//     orig.end.line <= remove.end.line
+//   ) {
+//     // / | | /
+//     return [];
+//   }
+//   if (
+//     orig.start.line <= remove.start.line &&
+//     orig.end.line >= remove.end.line
+//   ) {
+//     // | / / |
+//     // Splits the range
+//     return [
+//       {
+//         start: orig.start,
+//         end: remove.start,
+//       },
+//       {
+//         start: remove.end,
+//         end: orig.end,
+//       },
+//     ];
+//   }
+//   if (
+//     orig.start.line >= remove.start.line &&
+//     orig.end.line >= remove.end.line
+//   ) {
+//     // \ | / |
+//     return [
+//       {
+//         start: remove.end,
+//         end: orig.end,
+//       },
+//     ];
+//   }
+//   if (
+//     orig.start.line <= remove.start.line &&
+//     orig.end.line <= remove.end.line
+//   ) {
+//     // | / | /
+//     return [
+//       {
+//         start: orig.start,
+//         end: remove.start,
+//       },
+//     ];
+//   }
+//   return [orig];
+// }

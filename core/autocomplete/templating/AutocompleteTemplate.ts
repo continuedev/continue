@@ -2,7 +2,8 @@
 
 import { CompletionOptions } from "../../index.js";
 import { getLastNPathParts, shortestRelativePaths } from "../../util/index.js";
-import { AutocompleteSnippetDeprecated } from "../context/ranking/index.js";
+import { AutocompleteCodeSnippet } from "../snippets/types.js";
+import { AutocompleteSnippetDeprecated } from "../types.js";
 
 export interface AutocompleteTemplate {
   compilePrefixSuffix?: (
@@ -10,7 +11,7 @@ export interface AutocompleteTemplate {
     suffix: string,
     filepath: string,
     reponame: string,
-    snippets: AutocompleteSnippetDeprecated[],
+    snippets: AutocompleteCodeSnippet[],
   ) => [string, string];
   template:
     | string
@@ -20,7 +21,7 @@ export interface AutocompleteTemplate {
         filepath: string,
         reponame: string,
         language: string,
-        snippets: AutocompleteSnippetDeprecated[],
+        snippets: AutocompleteCodeSnippet[],
       ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
@@ -73,7 +74,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     suffix: string,
     filepath: string,
     reponame: string,
-    snippets: AutocompleteSnippetDeprecated[],
+    snippets: AutocompleteCodeSnippet[],
   ): [string, string] => {
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
@@ -86,7 +87,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
       filepath,
     ]);
     const otherFiles = snippets
-      .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
+      .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.content}`)
       .join("\n\n");
     return [
       `${otherFiles}\n\n+++++ ${
@@ -101,7 +102,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     filepath: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippetDeprecated[],
+    snippets: AutocompleteCodeSnippet[],
   ): string => {
     return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
@@ -133,15 +134,14 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
     filename: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippetDeprecated[],
+    snippets: AutocompleteCodeSnippet[],
   ): string => {
     const otherFiles =
       snippets.length === 0
         ? ""
         : `<file_sep>${snippets
             .map((snippet) => {
-              return snippet.contents;
-              // return `${getBasename(snippet.filepath)}\n${snippet.contents}`;
+              return snippet.content;
             })
             .join("<file_sep>")}<file_sep>`;
 
@@ -187,7 +187,7 @@ const codegeexFimTemplate: AutocompleteTemplate = {
     filepath: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippetDeprecated[],
+    snippets: AutocompleteCodeSnippet[],
   ): string => {
     const relativePaths = shortestRelativePaths([
       ...snippets.map((snippet) => snippet.filepath),
@@ -200,7 +200,7 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
     const references = `###REFERENCE:\n${snippets
-      .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.contents}\n`)
+      .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.content}\n`)
       .join("###REFERENCE:\n")}`;
     const prompt = `<|user|>\n${references}\n${baseTemplate}<|assistant|>\n`;
     return prompt;
@@ -233,7 +233,7 @@ const holeFillerTemplate: AutocompleteTemplate = {
     filename: string,
     reponame: string,
     language: string,
-    snippets: AutocompleteSnippetDeprecated[],
+    snippets: AutocompleteCodeSnippet[],
   ) => {
     // From https://github.com/VictorTaelin/AI-scripts
     const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.

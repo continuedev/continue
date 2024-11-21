@@ -842,7 +842,6 @@ declare global {
     onlyMyCode: boolean;
     useOtherFiles: boolean;
     useRecentlyEdited: boolean;
-    recentLinePrefixMatchMinLength: number;
     disableInFiles?: string[];
     useImports?: boolean;
   }

@@ -12,7 +12,11 @@ import {
 } from "../../../util/treeSitter";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
-import { AutocompleteSnippetDeprecated } from "../ranking";
+import { AutocompleteSnippetDeprecated } from "../../types";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippetType,
+} from "../../snippets/types";
 
 function getSyntaxTreeString(
   node: Parser.SyntaxNode,
@@ -153,8 +157,8 @@ export class RootPathContextService {
     filepath: string,
     astPath: AstPath,
     // cursorIndex: number,
-  ): Promise<AutocompleteSnippetDeprecated[]> {
-    const snippets: AutocompleteSnippetDeprecated[] = [];
+  ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
 
     let parentKey = filepath;
     for (const astNode of astPath.filter((node) =>
@@ -167,7 +171,16 @@ export class RootPathContextService {
       const foundInCache = this.cache.get(key);
       const newSnippets =
         foundInCache ?? (await this.getSnippetsForNode(filepath, astNode));
-      snippets.push(...newSnippets);
+
+      const formattedSnippets: AutocompleteCodeSnippet[] = newSnippets.map(
+        (item) => ({
+          filepath: item.filepath,
+          content: item.contents,
+          type: AutocompleteSnippetType.Code,
+        }),
+      );
+
+      snippets.push(...formattedSnippets);
 
       if (!foundInCache) {
         this.cache.set(key, newSnippets);
