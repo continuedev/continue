@@ -550,10 +550,6 @@ const commandsMap: (
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
-    "continue.openSettingsUI": () => {
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
-      sidebar.webviewProtocol?.request("openSettings", undefined);
-    },
     "continue.sendMainUserInput": (text: string) => {
       sidebar.webviewProtocol?.request("userInput", {
         input: text,
@@ -654,7 +650,7 @@ const commandsMap: (
       vscode.commands.executeCommand("workbench.action.copyEditorToNewWindow");
     },
     "continue.openConfig": () => {
-      ide.openFile(getConfigJsonPath());
+      sidebar.webviewProtocol?.request("openSelectedConfigProfile", undefined);
     },
     "continue.selectFilesAsContext": async (
       firstUri: vscode.Uri,
@@ -853,6 +849,12 @@ const commandsMap: (
     "continue.navigateTo": (path: string, toggle: boolean) => {
       sidebar.webviewProtocol?.request("navigateTo", { path, toggle });
       focusGUI();
+    },
+    "continue.signInToControlPlane": () => {
+      sidebar.webviewProtocol?.request("signInToControlPlane", undefined);
+    },
+    "continue.openProfileSwitcherDialog": () => {
+      sidebar.webviewProtocol?.request("openDialogMessage", "profileSwitcher");
     },
   };
 };

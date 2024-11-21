@@ -19,7 +19,6 @@ import {
 } from "core/protocol/passThrough";
 import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
-import { getConfigJsonPath } from "core/util/paths";
 import * as vscode from "vscode";
 
 import { VerticalDiffManager } from "../diff/vertical/manager";
@@ -106,10 +105,6 @@ export class VsCodeMessenger {
           ),
         ),
       );
-    });
-
-    this.onWebview("openConfig", (msg) => {
-      this.ide.openFile(getConfigJsonPath());
     });
 
     this.onWebview("readRangeInFile", async (msg) => {

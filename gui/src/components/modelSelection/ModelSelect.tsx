@@ -169,7 +169,7 @@ function ModelOption({
     e.stopPropagation();
     e.preventDefault();
 
-    ideMessenger.post("openConfig", undefined);
+    ideMessenger.post("config/openLocalConfigFile", undefined);
   }
 
   function handleOptionClick(e) {

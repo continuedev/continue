@@ -5,9 +5,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { UserCircleIcon as UserCircleIconSolid } from "@heroicons/react/24/solid";
 import { ProfileDescription } from "core/config/ConfigHandler";
-import { Fragment, useContext, useEffect, useState } from "react";
+import { Fragment, useContext, useState } from "react";
 import ReactDOM from "react-dom";
-import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -19,12 +18,9 @@ import {
   vscListActiveForeground,
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useAuth } from "../hooks/useAuth";
-import { useWebviewListener } from "../hooks/useWebviewListener";
-import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
-import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
+import { useAuth } from "../context/Auth";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -125,67 +121,16 @@ function ListBoxOption({
 
 function ProfileSwitcherDialog() {
   const ideMessenger = useContext(IdeMessengerContext);
-  const { session, logout, login } = useAuth();
-  const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
-
-  const dispatch = useDispatch();
-  const lastControlServerBetaEnabledStatus = useSelector(
-    (state: RootState) => state.misc.lastControlServerBetaEnabledStatus,
-  );
-
-  const selectedProfileId = useSelector(
-    (store: RootState) => store.state.selectedProfileId,
-  );
-
-  const [controlServerBetaEnabled, setControlServerBetaEnabled] =
-    useState(false);
-
-  useEffect(() => {
-    ideMessenger.ide.getIdeSettings().then(({ enableControlServerBeta }) => {
-      setControlServerBetaEnabled(enableControlServerBeta);
-      dispatch(setLastControlServerBetaEnabledStatus(enableControlServerBeta));
-
-      const shouldShowPopup =
-        !lastControlServerBetaEnabledStatus && enableControlServerBeta;
-      if (shouldShowPopup) {
-        ideMessenger.ide.showToast("info", "Continue for Teams enabled");
-      }
-    });
-  }, []);
-
-  useWebviewListener(
-    "didChangeIdeSettings",
-    async (msg) => {
-      const { settings } = msg;
-      setControlServerBetaEnabled(settings.enableControlServerBeta);
-      dispatch(
-        setLastControlServerBetaEnabledStatus(settings.enableControlServerBeta),
-      );
-    },
-    [],
-  );
-
-  useEffect(() => {
-    ideMessenger
-      .request("config/listProfiles", undefined)
-      .then(
-        (result) => result.status === "success" && setProfiles(result.content),
-      );
-  }, []);
-
-  useWebviewListener(
-    "didChangeAvailableProfiles",
-    async (data) => {
-      setProfiles(data.profiles);
-    },
-    [],
-  );
+  const {
+    session,
+    logout,
+    login,
+    profiles,
+    selectedProfile,
+    controlServerBetaEnabled,
+  } = useAuth();
 
   const topDiv = document.getElementById("profile-select-top-div");
-
-  function selectedProfile() {
-    return profiles.find((p) => p.id === selectedProfileId);
-  }
 
   return (
     <div className="p-4">
@@ -212,7 +157,7 @@ function ProfileSwitcherDialog() {
         >
           <div className="relative">
             <StyledListboxButton>
-              <span className="truncate">{selectedProfile()?.title}</span>
+              <span className="truncate">{selectedProfile?.title}</span>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon
                   className="h-4 w-4 text-gray-400"
@@ -231,7 +176,7 @@ function ProfileSwitcherDialog() {
                   <StyledListboxOptions>
                     {profiles.map((option, idx) => (
                       <ListBoxOption
-                        selected={option.id === selectedProfileId}
+                        selected={option.id === selectedProfile?.id}
                         option={option}
                         idx={idx}
                         key={idx}

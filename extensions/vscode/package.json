@@ -325,16 +325,18 @@
         "group": "Continue"
       },
       {
-        "command": "continue.signIn",
+        "command": "continue.signInToControlPlane",
         "title": "Sign In",
         "category": "Continue",
-        "group": "Continue"
+        "group": "Continue",
+        "icon": "$(account)"
       },
       {
-        "command": "continue.openProfileSwitcher",
+        "command": "continue.openProfileSwitcherDialog",
         "title": "Profiles",
         "category": "Continue",
-        "group": "Continue"
+        "group": "Continue",
+        "icon": "$(account)"
       }
     ],
     "keybindings": [
@@ -527,14 +529,14 @@
           "when": "view == continue.continueGUIView"
         },
         {
-          "submenu": "continue.signIn",
+          "command": "continue.signInToControlPlane",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && !config.continue.userToken"
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && !continue.isSignedInToControlPlane"
         },
         {
-          "submenu": "continue.openProfileSwitcher",
+          "command": "continue.openProfileSwitcherDialog",
           "group": "navigation@5",
-          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && config.continue.userToken"
+          "when": "(view == continue.continueGUIView) && config.continue.enableContinueForTeams && continue.isSignedInToControlPlane"
         },
         {
           "command": "continue.openMorePage",

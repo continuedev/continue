@@ -87,7 +87,7 @@ function AddModelForm({
     };
 
     ideMessenger.post("config/addModel", { model });
-    ideMessenger.post("openConfig", undefined);
+    ideMessenger.post("config/openLocalConfigFile", undefined);
 
     dispatch(setDefaultModel({ title: model.title, force: true }));
 
