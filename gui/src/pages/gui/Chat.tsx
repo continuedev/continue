@@ -180,7 +180,7 @@ export function Chat() {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        dispatch(setInactive());
+        dispatch(cancelGeneration());
       }
     };
     window.addEventListener("keydown", listener);
@@ -501,4 +501,7 @@ export function Chat() {
       </div>
     </>
   );
+}
+function cancelGeneration(): any {
+  throw new Error("Function not implemented.");
 }

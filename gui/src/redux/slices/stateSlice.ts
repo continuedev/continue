@@ -178,6 +178,8 @@ export const stateSlice = createSlice({
         contextItems: [],
       });
 
+      state.currentToolCallState = {};
+
       // https://github.com/continuedev/continue/pull/1021
       state.active = true;
     },
@@ -261,6 +263,11 @@ export const stateSlice = createSlice({
       state.isGatheringContext = false;
       state.active = false;
     },
+    cancelGeneration: (state) => {
+      state.isGatheringContext = false;
+      state.active = false;
+      state.currentToolCallState = {};
+    },
     abortStream: (state) => {
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
@@ -312,6 +319,7 @@ export const stateSlice = createSlice({
       state.active = false;
       state.isGatheringContext = false;
       state.isMultifileEdit = false;
+      state.currentToolCallState = {};
       if (payload) {
         state.history = payload.history as any;
         state.title = payload.title;
