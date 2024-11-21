@@ -28,7 +28,7 @@ export class MessageIde implements IDE {
       messageType: T,
       callback: (data: FromIdeProtocol[T][0]) => FromIdeProtocol[T][1],
     ) => void,
-  ) { }
+  ) {}
 
   pathSep(): Promise<string> {
     return this.request("pathSep", undefined);
@@ -111,6 +111,13 @@ export class MessageIde implements IDE {
 
   async getDiff(includeUnstaged: boolean) {
     return await this.request("getDiff", { includeUnstaged });
+  }
+
+  async getClipboardContent(): Promise<{ text: string; copiedAt: string }> {
+    return {
+      text: "",
+      copiedAt: new Date().toISOString(),
+    };
   }
 
   async getTerminalContents() {

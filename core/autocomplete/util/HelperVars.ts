@@ -122,6 +122,10 @@ export class HelperVars {
     return this.options.maxPromptTokens * this.options.maxDiffPercentage;
   }
 
+  get maxClipboardTokens() {
+    return this.options.maxPromptTokens * this.options.maxClipboardPercentage;
+  }
+
   get prunedCaretWindow() {
     return this.prunedPrefix + this.prunedSuffix;
   }

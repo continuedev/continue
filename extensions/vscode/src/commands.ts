@@ -204,7 +204,7 @@ function hideGUI() {
 }
 
 // Copy everything over from extension.ts
-const commandsMap: (
+const getCommandsMap: (
   ide: VsCodeIde,
   extensionContext: vscode.ExtensionContext,
   sidebar: ContinueGUIWebviewViewProvider,
@@ -884,6 +884,35 @@ const commandsMap: (
   };
 };
 
+const registerCopyBufferSpy = (context: vscode.ExtensionContext) => {
+  const typeDisposable = vscode.commands.registerCommand(
+    "editor.action.clipboardCopyAction",
+    async (arg) => doCopy(typeDisposable),
+  );
+
+  async function doCopy(typeDisposable: any) {
+    typeDisposable.dispose(); // must dispose to avoid endless loops
+
+    await vscode.commands.executeCommand("editor.action.clipboardCopyAction");
+
+    const clipboardText = await vscode.env.clipboard.readText();
+
+    await context.workspaceState.update("continue.copyBuffer", {
+      text: clipboardText,
+      copiedAt: new Date().toISOString(),
+    });
+
+    // re-register to continue intercepting copy commands
+    typeDisposable = vscode.commands.registerCommand(
+      "editor.action.clipboardCopyAction",
+      async () => doCopy(typeDisposable),
+    );
+    context.subscriptions.push(typeDisposable);
+  }
+
+  context.subscriptions.push(typeDisposable);
+};
+
 export function registerAllCommands(
   context: vscode.ExtensionContext,
   ide: VsCodeIde,
@@ -898,8 +927,10 @@ export function registerAllCommands(
   core: Core,
   editDecorationManager: EditDecorationManager,
 ) {
+  registerCopyBufferSpy(context);
+
   for (const [command, callback] of Object.entries(
-    commandsMap(
+    getCommandsMap(
       ide,
       extensionContext,
       sidebar,

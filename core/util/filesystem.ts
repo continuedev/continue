@@ -129,6 +129,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve("");
   }
 
+  getClipboardContent(): Promise<{ text: string; copiedAt: string }> {
+    return Promise.resolve({ text: "", copiedAt: new Date().toISOString() });
+  }
+
   getTerminalContents(): Promise<string> {
     return Promise.resolve("");
   }

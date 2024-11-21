@@ -13,6 +13,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   slidingWindowSize: 500,
   maxSnippetPercentage: 0.5,
   maxDiffPercentage: 0.5,
+  maxClipboardPercentage: 0.5, // yes the percentages do not add up
   useCache: true,
   onlyMyCode: true,
   useOtherFiles: true,
