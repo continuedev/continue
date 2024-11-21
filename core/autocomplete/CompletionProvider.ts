@@ -176,7 +176,6 @@ export class CompletionProvider {
       // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
       // or they might separately track recently edited ranges)
       const extraSnippets = await this._getExtraSnippets(helper);
-      // debugger;
 
       const [snippets, diff, clipboardContent, workspaceDirs] =
         await Promise.all([
@@ -189,7 +188,6 @@ export class CompletionProvider {
           this.ide.getClipboardContent(),
           this.ide.getWorkspaceDirs(),
         ]);
-      // debugger;
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
         snippets,
