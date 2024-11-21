@@ -179,7 +179,7 @@ export default function Edit() {
           <TipTapEditor
             isMainInput
             toolbarOptions={toolbarOptions}
-            placeholder="Describe how to modify the code - use '#' to add files to 'Code to edit'"
+            placeholder="Describe how to modify the code - use '#' to add files"
             availableContextProviders={filteredContextProviders}
             historyKey="edit"
             availableSlashCommands={[]}

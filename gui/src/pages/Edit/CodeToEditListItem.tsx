@@ -100,7 +100,7 @@ export default function CodeToEditListItem({
         </div>
       </div>
       {showCodeSnippet && (
-        <div className="max-h-[15vh] overflow-y-auto px-1 py-2">
+        <div className="max-h-[25vh] overflow-y-auto px-1 py-2">
           <NoPaddingWrapper>
             <StyledMarkdownPreview source={source} />
           </NoPaddingWrapper>

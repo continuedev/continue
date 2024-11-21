@@ -64,9 +64,9 @@ export default function WorkingSet() {
         </span>
       </div>
 
-      <div className="scrollbar-hide max-h-[25vh] overflow-y-auto">
+      <div className="scrollbar-hide max-h-[50vh] overflow-y-auto">
         {hasCodeToEdit ? (
-          <ul className="my-1.5 list-outside list-none space-y-1.5 pl-0">
+          <ul className="mb-1.5 mt-0 list-outside list-none space-y-1.5 pl-0">
             {codeToEditItems}
           </ul>
         ) : (

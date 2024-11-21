@@ -21,6 +21,7 @@ import { v4 as uuidv4, v4 } from "uuid";
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
+
 type State = {
   history: ChatHistoryItemWithMessageId[];
   symbols: FileSymbolMap;
