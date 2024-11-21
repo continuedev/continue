@@ -67,6 +67,10 @@ export class CompletionProvider {
       return undefined;
     }
 
+    if (llm.model === undefined && llm.completionOptions?.model !== undefined) {
+      llm.model = llm.completionOptions.model
+    }
+
     // Ignore empty API keys for Mistral since we currently write
     // a template provider without one during onboarding
     if (llm.providerName === "mistral" && llm.apiKey === "") {
