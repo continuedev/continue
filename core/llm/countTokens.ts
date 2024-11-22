@@ -350,6 +350,24 @@ function addSpaceToAnyEmptyMessages(messages: ChatMessage[]): ChatMessage[] {
   });
 }
 
+function chatMessageIsEmpty(message: ChatMessage): boolean {
+  switch (message.role) {
+    case "system":
+    case "user":
+      return (
+        typeof message.content === "string" && message.content.trim() === ""
+      );
+    case "assistant":
+      return (
+        typeof message.content === "string" &&
+        message.content.trim() === "" &&
+        !message.toolCalls
+      );
+    case "tool":
+      return false;
+  }
+}
+
 function compileChatMessages(
   modelName: string,
   msgs: ChatMessage[] | undefined,
@@ -363,7 +381,7 @@ function compileChatMessages(
   let msgsCopy = msgs
     ? msgs
         .map((msg) => ({ ...msg }))
-        .filter((msg) => msg.content !== "" && msg.role !== "system")
+        .filter((msg) => !chatMessageIsEmpty(msg) && msg.role !== "system")
     : [];
 
   msgsCopy = addSpaceToAnyEmptyMessages(msgsCopy);
