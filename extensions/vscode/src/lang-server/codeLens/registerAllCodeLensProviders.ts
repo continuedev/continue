@@ -132,7 +132,9 @@ export function registerAllCodeLensProviders(
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
   context.subscriptions.push(diffsCodeLensDisposable);
-  context.subscriptions.push(configPyCodeLensDisposable);
+
+  // was opening config UI from config.json. Not currently applicable.
+  // context.subscriptions.push(configPyCodeLensDisposable);
 
   return { verticalDiffCodeLens };
 }

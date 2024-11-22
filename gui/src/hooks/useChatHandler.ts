@@ -25,19 +25,19 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   abortStream,
   addPromptCompletionPair,
-  clearLastResponse,
+  clearLastEmptyResponse,
   initNewActiveMessage,
   resubmitAtIndex,
   setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
-  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -70,35 +70,27 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    try {
-      if (!defaultModel) {
-        throw new Error("Default model not defined");
+    if (!defaultModel) {
+      throw new Error("Default model not defined");
+    }
+    const gen = ideMessenger.llmStreamChat(
+      defaultModel.title,
+      streamAborter.signal,
+      messages,
+    );
+    let next = await gen.next();
+    while (!next.done) {
+      if (!activeRef.current) {
+        dispatch(abortStream());
+        break;
       }
-      const gen = ideMessenger.llmStreamChat(
-        defaultModel.title,
-        streamAborter.signal,
-        messages,
-      );
-      let next = await gen.next();
+      dispatch(streamUpdate(stripImages((next.value as ChatMessage).content)));
+      next = await gen.next();
+    }
 
-      while (!next.done) {
-        if (!activeRef.current) {
-          dispatch(abortStream());
-          break;
-        }
-        dispatch(
-          streamUpdate(stripImages((next.value as ChatMessage).content)),
-        );
-        next = await gen.next();
-      }
-
-      let returnVal = next.value as PromptLog;
-      if (returnVal) {
-        dispatch(addPromptCompletionPair([returnVal]));
-      }
-    } catch (e) {
-      // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
+    let returnVal = next.value as PromptLog;
+    if (returnVal) {
+      dispatch(addPromptCompletionPair([returnVal]));
     }
   }
 
@@ -148,29 +140,35 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
     }, 100);
 
-    for await (const update of ideMessenger.streamRequest(
-      "command/run",
-      {
-        input,
-        history: messages,
-        modelTitle,
-        slashCommandName: slashCommand.name,
-        contextItems,
-        params: slashCommand.params,
-        historyIndex,
-        selectedCode,
-      },
-      streamAborter.signal,
-    )) {
-      if (!activeRef.current) {
-        dispatch(abortStream());
-        break;
+    try {
+      for await (const update of ideMessenger.streamRequest(
+        "command/run",
+        {
+          input,
+          history: messages,
+          modelTitle,
+          slashCommandName: slashCommand.name,
+          contextItems,
+          params: slashCommand.params,
+          historyIndex,
+          selectedCode,
+        },
+        streamAborter.signal,
+      )) {
+        if (!activeRef.current) {
+          dispatch(abortStream());
+          clearInterval(checkActiveInterval);
+          break;
+        }
+        if (typeof update === "string") {
+          dispatch(streamUpdate(update));
+        }
       }
-      if (typeof update === "string") {
-        dispatch(streamUpdate(update));
-      }
+    } catch (e) {
+      throw e;
+    } finally {
+      clearInterval(checkActiveInterval);
     }
-    clearInterval(checkActiveInterval);
   }
 
   async function streamResponse(
@@ -178,6 +176,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
     index?: number,
+    promptPreamble?: string,
   ) {
     try {
       if (typeof index === "number") {
@@ -197,19 +196,23 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
 
       if (shouldGatherContext) {
-        dispatch(setIsGatheringContext(true));
+        dispatch(
+          setIsGatheringContext({
+            isGathering: true,
+            gatheringMessage: "Gathering Context",
+          }),
+        );
       }
 
       // Resolve context providers and construct new history
-      const [selectedContextItems, selectedCode, content] =
+      let [selectedContextItems, selectedCode, content] =
         await resolveEditorContent(
           editorState,
           modifiers,
           ideMessenger,
           defaultContextProviders,
+          dispatch,
         );
-
-      dispatch(setIsGatheringContext(false));
 
       // Automatically use currently open file
       if (!modifiers.noContext) {
@@ -250,7 +253,17 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         }
       }
 
-      // dispatch(addContextItems(contextItems));
+      await updateFileSymbolsFromContextItems(
+        selectedContextItems,
+        ideMessenger,
+        dispatch,
+      );
+
+      if (promptPreamble) {
+        typeof content === "string"
+          ? (content += promptPreamble)
+          : (content.at(-1).text += promptPreamble);
+      }
 
       const message: ChatMessage = {
         role: "user",
@@ -291,15 +304,13 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
+
         let updatedContextItems = [];
+
         posthog.capture("step run", {
           step_name: slashCommand.name,
           params: {},
         });
-
-        if (slashCommand.name === "multifile-edit") {
-          dispatch(setIsInMultifileEdit(true));
-        }
 
         await _streamSlashCommand(
           messages,
@@ -311,6 +322,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         );
       }
     } catch (e: any) {
+      dispatch(clearLastEmptyResponse());
       console.debug("Error streaming response: ", e);
       ideMessenger.post("showToast", [
         "error",

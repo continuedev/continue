@@ -83,6 +83,7 @@ export const LINES_TO_REMOVE_BEFORE_START = [
   "<COMPLETION>",
   "[CODE]",
   "<START EDITING HERE>",
+  "{{FILL_HERE}}"
 ];
 
 export const ENGLISH_START_PHRASES = [

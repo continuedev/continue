@@ -26,9 +26,10 @@ function testLLM(llm: BaseLLM) {
   describe(llm.providerName, () => {
     test("Stream Chat works", async () => {
       let total = "";
-      for await (const chunk of llm.streamChat([
-        { role: "user", content: "Hi" },
-      ])) {
+      for await (const chunk of llm.streamChat(
+        [{ role: "user", content: "Hi" }],
+        new AbortController().signal,
+      )) {
         total += chunk.content;
       }
 
@@ -38,7 +39,10 @@ function testLLM(llm: BaseLLM) {
 
     test("Stream Complete works", async () => {
       let total = "";
-      for await (const chunk of llm.streamComplete("Hi")) {
+      for await (const chunk of llm.streamComplete(
+        "Hi",
+        new AbortController().signal,
+      )) {
         total += chunk;
       }
 
@@ -47,7 +51,7 @@ function testLLM(llm: BaseLLM) {
     });
 
     test("Complete works", async () => {
-      const completion = await llm.complete("Hi");
+      const completion = await llm.complete("Hi", new AbortController().signal);
 
       expect(completion.length).toBeGreaterThan(0);
       return;

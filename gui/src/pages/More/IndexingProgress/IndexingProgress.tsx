@@ -98,7 +98,9 @@ function IndexingProgress() {
         }
         break;
       case "disabled":
-        ideMessenger.post("openConfigJson", undefined);
+        ideMessenger.post("config/openProfile", {
+          profileId: undefined,
+        });
         break;
       case "done":
         ideMessenger.post("index/forceReIndex", undefined);

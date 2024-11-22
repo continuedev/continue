@@ -168,7 +168,15 @@ export class ContinueGUIWebviewViewProvider
 
     const currentTheme = getTheme();
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("workbench.colorTheme")) {
+      if (
+        e.affectsConfiguration("workbench.colorTheme") ||
+        e.affectsConfiguration("window.autoDetectColorScheme") ||
+        e.affectsConfiguration("window.autoDetectHighContrast") ||
+        e.affectsConfiguration("workbench.preferredDarkColorTheme") ||
+        e.affectsConfiguration("workbench.preferredLightColorTheme") ||
+        e.affectsConfiguration("workbench.preferredHighContrastColorTheme") ||
+        e.affectsConfiguration("workbench.preferredHighContrastLightColorTheme")
+      ) {
         // Send new theme to GUI to update embedded Monaco themes
         this.webviewProtocol?.request("setTheme", { theme: getTheme() });
       }
@@ -188,7 +196,7 @@ export class ContinueGUIWebviewViewProvider
       </head>
       <body>
         <div id="root"></div>
-        
+
         ${
           inDevelopmentMode
             ? `<script type="module">

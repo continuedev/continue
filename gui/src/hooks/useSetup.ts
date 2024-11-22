@@ -11,6 +11,7 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -19,9 +20,11 @@ import { isJetBrains } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
-function useSetup(dispatch: Dispatch<any>) {
+function useSetup(dispatch: Dispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const history = useSelector((store: RootState) => store.state.history);
 
   const initialConfigLoad = useRef(false);
   const loadConfig = useCallback(async () => {
@@ -50,15 +53,36 @@ function useSetup(dispatch: Dispatch<any>) {
     loadConfig();
     const interval = setInterval(() => {
       if (initialConfigLoad.current) {
+        // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
+        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
       loadConfig();
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig]);
+  }, [initialConfigLoad, loadConfig, ideMessenger]);
 
+  useWebviewListener("configUpdate", async () => {
+    await loadConfig();
+  });
+
+  // Load symbols for chat on any session change
+  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const sessionIdRef = useRef("");
+  useEffect(() => {
+    if (sessionIdRef.current !== sessionId) {
+      updateFileSymbolsFromContextItems(
+        history.flatMap((item) => item.contextItems),
+        ideMessenger,
+        dispatch,
+      );
+    }
+    sessionIdRef.current = sessionId;
+  }, [sessionId, history, ideMessenger, dispatch]);
+
+  // ON LOAD
   useEffect(() => {
     // Override persisted state
     dispatch(setInactive());
@@ -77,6 +101,18 @@ function useSetup(dispatch: Dispatch<any>) {
       dispatch(setVscMachineId(msg.vscMachineId));
       // dispatch(setVscMediaUrl(msg.vscMediaUrl));
     });
+
+    // Save theme colors to local storage for immediate loading in JetBrains
+    if (isJetBrains()) {
+      for (const colorVar of VSC_THEME_COLOR_VARS) {
+        if (document.body.style.getPropertyValue(colorVar)) {
+          localStorage.setItem(
+            colorVar,
+            document.body.style.getPropertyValue(colorVar),
+          );
+        }
+      }
+    }
   }, []);
 
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
@@ -86,7 +122,6 @@ function useSetup(dispatch: Dispatch<any>) {
   );
 
   // IDE event listeners
-  const history = useSelector((store: RootState) => store.state.history);
   useWebviewListener(
     "getWebviewHistoryLength",
     async () => {
@@ -108,18 +143,6 @@ function useSetup(dispatch: Dispatch<any>) {
       document.body.style.setProperty(key, colors[key]);
       document.documentElement.style.setProperty(key, colors[key]);
     });
-  });
-
-  const debouncedIndexDocs = debounce(() => {
-    ideMessenger.post("context/indexDocs", { reIndex: false });
-  }, 1000);
-
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-
-    if (!isJetBrains && !getLocalStorage("disableIndexing")) {
-      debouncedIndexDocs();
-    }
   });
 
   useWebviewListener("configError", async (error) => {
@@ -144,6 +167,10 @@ function useSetup(dispatch: Dispatch<any>) {
     );
   });
 
+  useWebviewListener("indexing/statusUpdate", async (data) => {
+    dispatch(updateIndexingStatus(data));
+  });
+
   useWebviewListener(
     "getDefaultModelTitle",
     async () => {
@@ -152,19 +179,7 @@ function useSetup(dispatch: Dispatch<any>) {
     [defaultModelTitle],
   );
 
-  // Save theme colors to local storage for immediate loading in JetBrains
-  useEffect(() => {
-    if (isJetBrains()) {
-      for (const colorVar of VSC_THEME_COLOR_VARS) {
-        if (document.body.style.getPropertyValue(colorVar)) {
-          localStorage.setItem(
-            colorVar,
-            document.body.style.getPropertyValue(colorVar),
-          );
-        }
-      }
-    }
-  }, []);
+
 }
 
 export default useSetup;
