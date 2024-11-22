@@ -200,12 +200,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.focusEdit",
-        "category": "Continue",
-        "title": "Edit code with natural language",
-        "group": "Continue"
-      },
-      {
         "command": "continue.exitEditMode",
         "category": "Continue",
         "title": "Exit Edit Mode",
@@ -370,6 +364,7 @@
       },
       {
         "command": "continue.focusEdit",
+        "title": "Edit code with natural language",
         "mac": "cmd+i",
         "key": "ctrl+i"
       },

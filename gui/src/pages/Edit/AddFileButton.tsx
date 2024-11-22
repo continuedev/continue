@@ -29,7 +29,7 @@ export default function AddFileButton() {
       <div className="relative">
         <Listbox.Button
           ref={buttonRef}
-          className="bg-lightgray/10 border-lightgray flex cursor-pointer items-center justify-between rounded-md border border-solid px-0 shadow-sm transition-colors"
+          className="bg-lightgray/10 border-lightgray flex cursor-pointer items-center justify-between rounded-md border-[0.5px] border-solid px-0 shadow-sm transition-colors"
         >
           <div
             className="flex items-center gap-1 px-1.5 hover:brightness-125"
@@ -39,13 +39,15 @@ export default function AddFileButton() {
               onClickAddFileToCodeToEdit();
             }}
           >
-            <PlusIcon className="text-vsc-foreground inline h-2.5 w-2.5" />
-            <span className="text-vsc-foreground text-[10px]">Add file</span>
+            <PlusIcon className="text-vsc-foreground inline h-2.5 w-2.5 brightness-75" />
+            <span className="text-vsc-foreground text-[10px] brightness-75">
+              Add file
+            </span>
           </div>
 
           <div className="border-lightgray h-4 w-[1px] border-y-0 border-l-0 border-r border-solid" />
 
-          <ChevronDownIcon className="text-vsc-foreground h-2.5 w-2.5 cursor-pointer px-1 hover:brightness-125" />
+          <ChevronDownIcon className="text-vsc-foreground h-2.5 w-2.5 cursor-pointer px-1 brightness-75 hover:brightness-125" />
         </Listbox.Button>
 
         <Listbox.Options
@@ -53,7 +55,7 @@ export default function AddFileButton() {
         >
           <Listbox.Option
             value="addAllFiles"
-            className="text-vsc-foreground hover:bg-lightgray/33 block w-full cursor-pointer px-2 py-1 text-left text-[10px]"
+            className="text-vsc-foreground hover:bg-lightgray/33 block w-full cursor-pointer px-2 py-1 text-left text-[10px] brightness-75 hover:brightness-125"
           >
             Add all open files
           </Listbox.Option>
