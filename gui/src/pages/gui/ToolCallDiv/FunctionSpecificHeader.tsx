@@ -14,7 +14,7 @@ export function FunctionSpecificHeader(props: FunctionSpecificHeaderProps) {
 
   switch (props.toolCall.function.name) {
     case "create_new_file":
-      message = "Continue wants to create a new file";
+      message = "Continue wants to write to a file";
       break;
     case "run_terminal_command":
       message = "Continue wants to run a terminal command.";

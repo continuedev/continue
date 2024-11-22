@@ -6,16 +6,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
-import { renderChatMessage } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
-import {
-  Fragment,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -28,6 +20,7 @@ import {
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
+import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
@@ -60,11 +53,10 @@ import {
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import ConfigErrorIndicator from "./ConfigError";
-import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -332,7 +324,12 @@ export function Chat() {
       >
         {highlights}
         {state.history.map((item, index: number) => (
-          <Fragment key={item.message.id}>
+          <div
+            key={item.message.id}
+            style={{
+              minHeight: index === state.history.length - 1 ? "50vh" : 0,
+            }}
+          >
             <ErrorBoundary
               FallbackComponent={fallbackRender}
               onReset={() => {
@@ -351,7 +348,7 @@ export function Chat() {
                 />
               ) : item.message.role === "tool" ? (
                 <ToolOutput
-                  output={renderChatMessage(item.message)}
+                  contextItems={item.contextItems}
                   toolCallId={item.message.toolCallId}
                 />
               ) : item.message.role === "assistant" &&
@@ -401,7 +398,7 @@ export function Chat() {
                 </div>
               )}
             </ErrorBoundary>
-          </Fragment>
+          </div>
         ))}
         <ChatScrollAnchor
           scrollAreaRef={stepsDivRef}

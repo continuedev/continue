@@ -29,6 +29,7 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   abortStream,
   acceptToolCall,
+  addContextItemsAtIndex,
   addPromptCompletionPair,
   clearLastEmptyResponse,
   initNewActiveMessage,
@@ -398,6 +399,18 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       };
 
       dispatch(streamUpdate(newMessage));
+      dispatch(
+        addContextItemsAtIndex({
+          index: history.length,
+          contextItems: toolOutput.map((contextItem) => ({
+            ...contextItem,
+            id: {
+              providerTitle: "toolCall",
+              itemId: toolCallId,
+            },
+          })),
+        }),
+      );
       dispatch(acceptToolCall());
       activeRef.current = true;
       dispatch(setActive());

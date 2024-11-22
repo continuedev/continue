@@ -77,10 +77,7 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div
-      // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
-      style={{
-        minHeight: props.isLast ? "50vh" : 0,
-      }}
+    // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
     >
       <ContentDiv>
         {uiConfig?.displayRawMarkdown ? (
