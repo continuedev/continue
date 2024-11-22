@@ -40,7 +40,10 @@ export default function CodeToEditListItem({
   let title = filepath;
 
   if ("range" in code) {
-    title += ` (${code.range.start.line + 1} - ${code.range.end.line + 1})`;
+    const start = code.range.start.line + 1;
+    const end = code.range.end.line + 1;
+    title +=
+      start === end ? ` - Inserting at line ${start}` : ` (${start} - ${end})`;
   }
 
   const source =

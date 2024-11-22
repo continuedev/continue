@@ -218,10 +218,16 @@ async function processDiff(
   } else if (fullPath) {
     fullPath = getFullyQualifiedPath(ide, fullPath);
   } else {
-    console.warn(`Unable to resolve filepath: ${newFilepath}`);
+    const curFile = await ide.getCurrentFile();
+    fullPath = curFile?.path;
   }
 
-  if (!fullPath) return;
+  if (!fullPath) {
+    console.warn(
+      `Unable to resolve filepath while attempting to resolve diff: ${newFilepath}`,
+    );
+    return;
+  }
 
   await ide.openFile(fullPath);
 

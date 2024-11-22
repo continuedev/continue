@@ -11,6 +11,7 @@ public class Calculator {
         return this;
     }
 
+
     public double getResult() {
         return result;
     }

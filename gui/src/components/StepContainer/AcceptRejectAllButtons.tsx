@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
+import { getMetaKeyLabel } from "../../util";
 
 export interface AcceptRejectAllButtonsProps {
   pendingApplyStates: ApplyState[];
@@ -37,7 +38,7 @@ export default function AcceptRejectAllButtons({
       >
         <XMarkIcon className="mr-1 h-4 w-4 text-red-600" />
         {hasSinglePendingApplyStates ? (
-          <span>Reject</span>
+          <span>Reject ({getMetaKeyLabel()}⇧⌫)</span>
         ) : (
           <>
             <span className="sm:hidden">Reject</span>
@@ -52,7 +53,7 @@ export default function AcceptRejectAllButtons({
       >
         <CheckIcon className="mr-1 h-4 w-4 text-green-600" />
         {hasSinglePendingApplyStates ? (
-          <span>Accept</span>
+          <span>Accept ({getMetaKeyLabel()}⇧⏎)</span>
         ) : (
           <>
             <span className="sm:hidden">Accept</span>
