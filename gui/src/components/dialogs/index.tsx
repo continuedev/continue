@@ -71,7 +71,7 @@ const TextDialog = (props: TextDialogProps) => {
   return (
     <ScreenCover onClick={props.onClose} hidden={!props.showDialog}>
       <DialogContainer
-        className="xs:w-[85%] w-[92%] sm:w-[75%]"
+        className="xs:w-[90%] no-scrollbar max-h-full w-[92%] max-w-[600px] overflow-auto sm:w-[88%] md:w-[80%]"
         onClick={(e) => {
           e.stopPropagation();
         }}

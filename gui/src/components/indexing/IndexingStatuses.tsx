@@ -8,6 +8,8 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
+import { PlusCircleIcon } from "@heroicons/react/24/outline";
+import { ToolTip } from "../gui/Tooltip";
 
 function IndexingStatuses() {
   const indexingStatuses = useSelector(
@@ -25,30 +27,35 @@ function IndexingStatuses() {
     <div className="flex flex-col gap-1">
       <div className="flex flex-row items-center justify-between">
         <h3 className="mb-1 mt-0 text-xl">@docs indexes</h3>
-        {/* <div className="border-1 rounded-full border">
-          <ChevronUpIcon className="h-8 w-8" />
-        </div> */}
-        {/* TODO add some way to hide, scroll, etc. */}
+        {docsStatuses.length ? (
+          <>
+            <PlusCircleIcon
+              data-tooltip-id={"more-add-docs-button"}
+              className="text-vsc-foreground-muted h-5 w-5 cursor-pointer focus:ring-0"
+              onClick={() => {
+                dispatch(setShowDialog(true));
+                dispatch(setDialogMessage(<AddDocsDialog />));
+              }}
+            />
+            <ToolTip id={"more-add-docs-button"} place="top">
+              Add Docs
+            </ToolTip>
+          </>
+        ) : null}
       </div>
       <span className="text-xs text-stone-500">
         Manage your documentation sources
       </span>
-      {/* <div className="flex max-h-[170px] flex-col gap-1 overflow-x-hidden overflow-y-scroll pr-2"> */}
-      {docsStatuses.length
-        ? docsStatuses.map((status) => {
+      <div className="flex max-h-[170px] flex-col gap-1 overflow-x-hidden overflow-y-scroll pr-2">
+        {docsStatuses.length ? (
+          docsStatuses.map((status) => {
             return <IndexingStatusViewer key={status.id} status={status} />;
           })
-        : null}
-      <SecondaryButton
-        onClick={() => {
-          dispatch(setShowDialog(true));
-          dispatch(setDialogMessage(<AddDocsDialog />));
-        }}
-      >
-        Add Docs
-      </SecondaryButton>
+        ) : (
+          <SecondaryButton>Add Docs</SecondaryButton>
+        )}
+      </div>
     </div>
-    // </div>
   );
 }
 

@@ -9,7 +9,6 @@ import type {
   DiffLine,
   FileSymbolMap,
   IdeSettings,
-  IndexingStatusMap,
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,

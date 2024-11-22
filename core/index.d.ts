@@ -1189,6 +1189,7 @@ export interface BrowserSerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO
@@ -1210,6 +1211,7 @@ export type ParsedPackageInfo = {
 
 export type PackageDetails = {
   docsLink?: string;
+  docsLinkWarning?: string;
   title?: string;
   description?: string;
   repo?: string;

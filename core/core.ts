@@ -735,6 +735,10 @@ export class Core {
       return this.docsService.initStatuses();
     });
     on("docs/getSuggestedDocs", async (msg) => {
+      if (hasRequestedDocs) {
+        return;
+      } // TODO, remove, hack because of rerendering
+      hasRequestedDocs = true;
       const suggestedDocs = await getAllSuggestedDocs(this.ide);
       this.messenger.send("docs/suggestions", suggestedDocs);
     });
@@ -842,3 +846,5 @@ export class Core {
 
   // private
 }
+
+let hasRequestedDocs = false;

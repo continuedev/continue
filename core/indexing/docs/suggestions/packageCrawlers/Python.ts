@@ -30,7 +30,7 @@ export class PythonPackageCrawler implements PackageCrawler {
       .split("\n")
       .map((line) => {
         const [name, version] = line.split("==");
-        return { name, version, packageFile: file, language: "python" };
+        return { name, version, packageFile: file, language: "py" };
       })
       .filter((pkg) => pkg.name && pkg.version);
   }

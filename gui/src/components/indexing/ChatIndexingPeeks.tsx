@@ -104,7 +104,7 @@ function ChatIndexingPeeks() {
   return (
     <div className="flex flex-col gap-1">
       {mergedIndexingStates.map((state) => {
-        return <ChatIndexingPeek state={state} />;
+        return <ChatIndexingPeek key={state.type} state={state} />;
       })}
     </div>
   );
