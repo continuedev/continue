@@ -22,7 +22,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
-import IndexingStatusViewer from "../indexing/IndexingStatus";
+import IndexingStatusViewer from "../indexing/DocsIndexingStatus";
 
 import { ToolTip } from "../gui/Tooltip";
 import FileIcon from "../FileIcon";

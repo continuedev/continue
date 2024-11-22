@@ -68,8 +68,6 @@ export interface IndexingStatus {
   url?: string;
 }
 
-export type IndexingStatusMap = Map<string, IndexingStatus>;
-
 export type PromptTemplateFunction = (
   history: ChatMessage[],
   otherData: Record<string, string>,

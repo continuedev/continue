@@ -731,9 +731,6 @@ export class Core {
         this.docsService.setPaused(msg.data.id, msg.data.paused);
       }
     });
-    on("indexing/initStatuses", async (msg) => {
-      return this.docsService.initStatuses();
-    });
     on("docs/getSuggestedDocs", async (msg) => {
       if (hasRequestedDocs) {
         return;
@@ -741,6 +738,9 @@ export class Core {
       hasRequestedDocs = true;
       const suggestedDocs = await getAllSuggestedDocs(this.ide);
       this.messenger.send("docs/suggestions", suggestedDocs);
+    });
+    on("docs/initStatuses", async (msg) => {
+      void this.docsService.initStatuses();
     });
     //
 

@@ -45,7 +45,7 @@ type State = {
   nextCodeBlockToApplyIndex: number;
   indexing: {
     hiddenChatPeekTypes: Record<IndexingStatus["type"], boolean>;
-    statuses: Record<string, IndexingStatus>;
+    statuses: Record<string, IndexingStatus>; // status id -> status
   };
   streamAborter: AbortController;
   docsSuggestions: PackageDocsResult[];

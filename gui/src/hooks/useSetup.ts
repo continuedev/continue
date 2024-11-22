@@ -54,9 +54,12 @@ function useSetup(dispatch: Dispatch) {
     loadConfig();
     const interval = setInterval(() => {
       if (initialConfigLoad.current) {
+        // Docs init on config load
+        ideMessenger.post("docs/getSuggestedDocs", undefined);
+        ideMessenger.post("docs/initStatuses", undefined);
+
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
-        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
       loadConfig();
@@ -85,8 +88,6 @@ function useSetup(dispatch: Dispatch) {
 
   // ON LOAD
   useEffect(() => {
-    ideMessenger.post("docs/getSuggestedDocs", undefined);
-
     // Override persisted state
     dispatch(setInactive());
 
