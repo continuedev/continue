@@ -1,5 +1,4 @@
-import { getBasename, getLastNPathParts } from "../../util";
-import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
+import { getLastNPathParts } from "../../util";
 import {
   AutocompleteClipboardSnippet,
   AutocompleteCodeSnippet,
@@ -25,11 +24,12 @@ const addCommentMarks = (text: string, helper: HelperVars) => {
 
 const formatClipboardSnippet = (
   snippet: AutocompleteClipboardSnippet,
-): AutocompleteClipboardSnippet => {
-  return {
-    ...snippet,
-    content: `Recently copied by user:${snippet.content.includes("\n") ? "\n" : ""} ${snippet.content}`,
-  };
+): AutocompleteCodeSnippet => {
+  return formatCodeSnippet({
+    filepath: "Untitled.txt",
+    content: snippet.content,
+    type: AutocompleteSnippetType.Code,
+  });
 };
 
 const formatCodeSnippet = (
@@ -37,7 +37,7 @@ const formatCodeSnippet = (
 ): AutocompleteCodeSnippet => {
   return {
     ...snippet,
-    content: `Path: ${getBasename(snippet.filepath)}\n${snippet.content}`,
+    content: `Path: ${getLastNPathParts(snippet.filepath, 2)}\n${snippet.content}`,
   };
 };
 
@@ -47,9 +47,8 @@ const formatDiffSnippet = (
   return snippet;
 };
 
-// TODO: Insert this somewhere
-const getCurrentFilepathSnippet = (helper: HelperVars) => {
-  const currentFilePath = `\n\n${getLastNPathParts(helper.filepath, 2)}\n\n`;
+const getCurrentFilepath = (helper: HelperVars) => {
+  return getLastNPathParts(helper.filepath, 2);
 };
 
 const commentifySnippet = (
@@ -71,30 +70,38 @@ export const formatSnippets = (
   helper: HelperVars,
   snippets: AutocompleteSnippet[],
 ): string => {
-  return snippets
-    .map((snippet) => {
-      switch (snippet.type) {
-        case AutocompleteSnippetType.Code:
-          return formatCodeSnippet(snippet);
-        case AutocompleteSnippetType.Diff:
-          return formatDiffSnippet(snippet);
-        case AutocompleteSnippetType.Clipboard:
-          return formatClipboardSnippet(snippet);
-      }
-    })
-    .map((item) => {
-      if (SNIPPET_TYPES_TO_COMMENT.includes(item.type)) {
-        return commentifySnippet(helper, item);
-      }
+  const currentFilepathComment = addCommentMarks(
+    getCurrentFilepath(helper),
+    helper,
+  );
 
-      return item;
-    })
-    .map((item) => {
-      if (SNIPPET_TYPES_TO_COMMENT.includes(item.type)) {
-        return item.content + `\n${getCommentMark}\n${getCommentMark}`;
-      }
+  return (
+    snippets
+      .map((snippet) => {
+        switch (snippet.type) {
+          case AutocompleteSnippetType.Code:
+            return formatCodeSnippet(snippet);
+          case AutocompleteSnippetType.Diff:
+            return formatDiffSnippet(snippet);
+          case AutocompleteSnippetType.Clipboard:
+            return formatClipboardSnippet(snippet);
+        }
+      })
+      .map((item) => {
+        if (SNIPPET_TYPES_TO_COMMENT.includes(item.type)) {
+          return commentifySnippet(helper, item);
+        }
 
-      return item.content + "\n\n";
-    })
-    .join("");
+        return item;
+      })
+      .map((item) => {
+        if (SNIPPET_TYPES_TO_COMMENT.includes(item.type)) {
+          const commentMark = getCommentMark(helper);
+          return item.content + `\n${commentMark}\n${commentMark}`;
+        }
+
+        return item.content + "\n\n";
+      })
+      .join("\n") + `\n${currentFilepathComment}`
+  );
 };
