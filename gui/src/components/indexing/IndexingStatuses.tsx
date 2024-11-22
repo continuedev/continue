@@ -28,20 +28,29 @@ function IndexingStatuses() {
       <div className="flex flex-row items-center justify-between">
         <h3 className="mb-1 mt-0 text-xl">@docs indexes</h3>
         {docsStatuses.length ? (
-          <>
-            <PlusCircleIcon
-              data-tooltip-id={"more-add-docs-button"}
-              className="text-vsc-foreground-muted h-5 w-5 cursor-pointer focus:ring-0"
-              onClick={() => {
-                dispatch(setShowDialog(true));
-                dispatch(setDialogMessage(<AddDocsDialog />));
-              }}
-            />
-            <ToolTip id={"more-add-docs-button"} place="top">
-              Add Docs
-            </ToolTip>
-          </>
-        ) : null}
+          <div
+            className="border-vsc-foreground text-vsc-foreground enabled:hover:bg-vsc-background m-2 rounded border border-solid bg-inherit px-3 py-2 enabled:hover:cursor-pointer enabled:hover:opacity-90 disabled:text-gray-500"
+            onClick={() => {
+              dispatch(setShowDialog(true));
+              dispatch(setDialogMessage(<AddDocsDialog />));
+            }}
+          >
+            Add
+          </div>
+        ) : // <div>
+        //   <PlusCircleIcon
+        //     data-tooltip-id={"more-add-docs-button"}
+        //     className="text-vsc-foreground-muted h-5 w-5 cursor-pointer focus:ring-0"
+        //     onClick={() => {
+        //       dispatch(setShowDialog(true));
+        //       dispatch(setDialogMessage(<AddDocsDialog />));
+        //     }}
+        //   />
+        //   <ToolTip id={"more-add-docs-button"} place="top">
+        //     Add Docs
+        //   </ToolTip>
+        // </div>
+        null}
       </div>
       <span className="text-xs text-stone-500">
         Manage your documentation sources

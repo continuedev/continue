@@ -45,9 +45,9 @@ function DocsIndexingPeek({ status }: DocsIndexingPeekProps) {
         <span className="text-xs no-underline">
           {progressPercentage.toFixed(0)}%
         </span>
-        <ArrowPathIcon
+        {/* <ArrowPathIcon
           className={`animate-spin-slow inline-block h-4 w-4 text-stone-500`}
-        ></ArrowPathIcon>
+        ></ArrowPathIcon> */}
       </div>
     </div>
   );
@@ -58,17 +58,19 @@ interface DocsIndexingPeeksProps {
 }
 
 function DocsIndexingPeekList({ statuses }: DocsIndexingPeeksProps) {
-  if (!statuses.length) return null;
-
   return (
-    <div className="flex flex-col">
+    <div className="border-vsc-input-border mt-2 flex flex-col border-0 border-t border-solid pt-2">
       <p className="mx-0 my-1.5 p-0 px-1 font-semibold text-stone-500">
-        Currently Indexing
+        Currently Indexing:
       </p>
       <div className="max-h-[100px] overflow-y-auto pr-2">
-        {statuses.map((status) => {
-          return <DocsIndexingPeek key={status.id} status={status} />;
-        })}
+        {statuses.length ? (
+          statuses.map((status) => {
+            return <DocsIndexingPeek key={status.id} status={status} />;
+          })
+        ) : (
+          <p className="m-0 pl-1 font-semibold text-stone-500">None</p>
+        )}
       </div>
     </div>
   );

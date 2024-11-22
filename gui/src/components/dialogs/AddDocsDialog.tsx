@@ -7,7 +7,9 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
   LinkIcon,
+  PencilIcon,
   PlusCircleIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import { IndexingStatus, PackageDocsResult, SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
@@ -27,6 +29,7 @@ import FileIcon from "../FileIcon";
 import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
 import { updateIndexingStatus } from "../../redux/slices/stateSlice";
 import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
+import { NewSessionButton } from "../mainInput/NewSessionButton";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -168,13 +171,13 @@ function AddDocsDialog() {
 
   return (
     <div className="px-2 pt-4 sm:px-4">
-      <div className="mb-2">
+      <div className="">
         <h1 className="mb-0 hidden sm:block">Add documentation</h1>
         <h1 className="sm:hidden">Add docs</h1>
         <p className="m-0 mt-2 p-0 text-stone-500">
           For the @docs context provider
         </p>
-        {sortedDocsSuggestions.length && (
+        {!!sortedDocsSuggestions.length && (
           <p className="m-0 mb-1 mt-4 p-0 font-semibold">Suggestions</p>
         )}
         <div className="border-vsc-foreground-muted max-h-[145px] overflow-y-scroll rounded-sm py-1 pr-2">
@@ -183,80 +186,65 @@ function AddDocsDialog() {
             const { language, name, version } = docsResult.packageInfo;
             const id = `${language}-${name}-${version}`;
             return (
-              <>
-                <div
-                  key={id}
-                  className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] items-center px-1 py-1 hover:bg-gray-200/10"
-                  onClick={() => {
-                    handleSelectSuggestion(docsResult);
-                  }}
-                >
-                  <div className="pr-1">
-                    {error ? (
-                      <div>
-                        <ExclamationTriangleIcon
-                          data-tooltip-id={id + "-error"}
-                          className="h-4 w-4 text-red-500"
-                        />
-                        <ToolTip id={id + "-error"} place="bottom">
-                          Docs URL not found
-                        </ToolTip>
-                      </div>
-                    ) : details.docsLinkWarning ? (
-                      <div>
-                        <ExclamationTriangleIcon
-                          data-tooltip-id={id + "-warning"}
-                          className="h-4 w-4 text-yellow-600"
-                        />
-                        <ToolTip id={id + "-warning"} place="bottom">
-                          Start URL might not lead to docs
-                        </ToolTip>
-                      </div>
-                    ) : (
-                      <PlusCircleIcon className="h-4 w-4 text-green-600" />
-                    )}
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    <div className="hidden sm:block">
-                      <FileIcon
-                        filename={`x.${language}`}
-                        height="1rem"
-                        width="1rem"
+              <div
+                key={id}
+                className="grid cursor-pointer grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] items-center px-1 py-1 hover:bg-gray-200/10"
+                onClick={() => {
+                  handleSelectSuggestion(docsResult);
+                }}
+              >
+                <div className="pr-1">
+                  {error || details.docsLinkWarning ? (
+                    <div>
+                      <PencilIcon
+                        data-tooltip-id={id + "-edit"}
+                        className="vsc-foreground-muted h-3 w-3"
                       />
+                      <ToolTip id={id + "-edit"} place="bottom">
+                        This may not be a docs page
+                      </ToolTip>
                     </div>
-                    <span className="lines lines-1">{name}</span>
+                  ) : (
+                    <PlusIcon className="text-foreground-muted h-3.5 w-3.5" />
+                  )}
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <div className="hidden sm:block">
+                    <FileIcon
+                      filename={`x.${language}`}
+                      height="1rem"
+                      width="1rem"
+                    />
                   </div>
-                  <div>
-                    {error ? (
-                      <span className="text-vsc-input-border italic">
-                        No docs link found
-                      </span>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        {/* <div>
+                  <span className="lines lines-1">{name}</span>
+                </div>
+                <div>
+                  {error ? (
+                    <span className="text-vsc-foreground-muted italic">
+                      No docs link found
+                    </span>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {/* <div>
                         <LinkIcon className="h-2 w-2" />
                       </div> */}
-                        <p className="lines lines-1 m-0 p-0">
-                          {details.docsLink}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <InformationCircleIcon
-                      data-tooltip-id={id + "-info"}
-                      className="text-vsc-foreground-muted h-3.5 w-3.5 select-none"
-                    />
-                    <ToolTip id={id + "-info"} place="bottom">
-                      <p className="m-0 p-0">{`Version: ${version}`}</p>
-                      <p className="m-0 p-0">{`Found in ${docsResult.packageInfo.packageFile.path}`}</p>
-                    </ToolTip>
-                  </div>
+                      <p className="lines lines-1 m-0 p-0">
+                        {details.docsLink}
+                      </p>
+                    </div>
+                  )}
                 </div>
-                <ToolTip id={id} place="bottom">
-                  {error ? "Add to form" : "Index these docs"}
-                </ToolTip>
-              </>
+                <div>
+                  <InformationCircleIcon
+                    data-tooltip-id={id + "-info"}
+                    className="text-vsc-foreground-muted h-3.5 w-3.5 select-none"
+                  />
+                  <ToolTip id={id + "-info"} place="bottom">
+                    <p className="m-0 p-0">{`Version: ${version}`}</p>
+                    <p className="m-0 p-0">{`Found in ${docsResult.packageInfo.packageFile.path}`}</p>
+                  </ToolTip>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -313,31 +301,36 @@ function AddDocsDialog() {
                   }}
                 />
               </label>
+              {/* <div>
+                <PlusCircleIcon className="h-5 w-5 self-end" />
+              </div> */}
             </div>
             <div className="flex flex-row justify-end gap-2">
-              <SecondaryButton className="min-w-16" onClick={closeDialog}>
-                Done
-              </SecondaryButton>
-              <Button
+              <SecondaryButton
                 className="min-w-16"
                 disabled={!isFormValid}
                 type="submit"
               >
-                Go
-              </Button>
+                Add
+              </SecondaryButton>
             </div>
           </form>
         </div>
       </div>
 
       <DocsIndexingPeeks statuses={docsIndexingStatuses} />
-      <div className="flex flex-row items-end justify-start gap-2">
-        {docsIndexingStatuses.length ? (
-          <p className="mt-2 flex flex-row items-center gap-1 p-0 px-1 text-xs text-stone-500">
-            <CheckIcon className="h-3 w-3" />
-            It is safe to close this form while indexing
-          </p>
-        ) : null}
+      <div className="flex flex-row items-end justify-between pb-3">
+        <div>
+          {docsIndexingStatuses.length ? (
+            <p className="mt-2 flex flex-row items-center gap-1 p-0 px-1 text-xs text-stone-500">
+              <CheckIcon className="h-3 w-3" />
+              It is safe to close this form while indexing
+            </p>
+          ) : null}
+        </div>
+        {/* <Button className="min-w-16" onClick={closeDialog}>
+          Done
+        </Button> */}
       </div>
     </div>
   );

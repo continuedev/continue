@@ -59,6 +59,11 @@ export class NodePackageCrawler implements PackageCrawler {
       throw new Error(`Could not fetch data for package ${name}`);
     }
     const data = await response.json();
+
+    //   const dependencies = Object.keys(packageContentData.dependencies || {})
+    //   .concat(Object.keys(packageContentData.devDependencies || {}));
+    // const usesTypescript = dependencies.includes("typescript");
+
     return {
       docsLink: data.homepage as string | undefined,
       title: name, // package.json doesn't have specific title field

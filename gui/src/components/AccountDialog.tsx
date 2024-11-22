@@ -65,8 +65,6 @@ function AccountDialog() {
     );
   }
 
-  const dispatch = useDispatch();
-
   const changeProfileId = (id: string) => {
     ideMessenger.post("didChangeSelectedProfile", { id });
     dispatch(setSelectedProfileId(id));
