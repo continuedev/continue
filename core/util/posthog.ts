@@ -1,7 +1,7 @@
 import os from "node:os";
 
 import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
-import { IdeInfo } from "../index.js";
+import { IDE, IdeInfo } from "../index.js";
 
 export class Telemetry {
   // Set to undefined whenever telemetry is disabled
@@ -9,6 +9,7 @@ export class Telemetry {
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
   static ideInfo: IdeInfo | undefined = undefined;
+  static ide: IDE | undefined = undefined;
 
   static async capture(
     event: string,
@@ -17,19 +18,25 @@ export class Telemetry {
     isExtensionActivationError: boolean = false,
   ) {
     try {
+      const setting = await Telemetry.ide?.getIdeSettings();
+      const userToken = setting?.userToken;
+      let userName = "";
+      if (userToken) {
+        userName = JSON.parse(userToken).account?.label;
+      }
       const augmentedProperties = {
         ...properties,
         os: Telemetry.os,
         extensionVersion: Telemetry.ideInfo?.extensionVersion,
         ideName: Telemetry.ideInfo?.name,
         ideType: Telemetry.ideInfo?.ideType,
+        eastcomEnName: userName
       };
       const payload = {
         distinctId: Telemetry.uniqueId,
         event,
         properties: augmentedProperties,
       };
-
       // In cases where an extremely early fatal error occurs, we may not have initialized yet
       if (isExtensionActivationError && !Telemetry.client) {
         const client = await Telemetry.getTelemetryClient();
@@ -67,10 +74,11 @@ export class Telemetry {
     }
   }
 
-  static async setup(allow: boolean, uniqueId: string, ideInfo: IdeInfo) {
+  static async setup(allow: boolean, uniqueId: string, ideInfo: IdeInfo, ide: IDE) {
     Telemetry.uniqueId = uniqueId;
     Telemetry.os = os.platform();
     Telemetry.ideInfo = ideInfo;
+    Telemetry.ide = ide;
 
     if (!allow || process.env.NODE_ENV === "test") {
       Telemetry.client = undefined;

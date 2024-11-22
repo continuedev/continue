@@ -57,6 +57,7 @@ export default async function doLoadConfig(
     newConfig.allowAnonymousTelemetry ?? true,
     await ide.getUniqueId(),
     ideInfo,
+    ide
   );
 
   // TODO: pass config to pre-load non-system TTS models
