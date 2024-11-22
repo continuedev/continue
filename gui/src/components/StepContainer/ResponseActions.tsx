@@ -6,7 +6,7 @@ import { RootState } from "../../redux/store";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import FeedbackButtons from "./FeedbackButtons";
-import MultifileEditActions from "./MultifileEditActions";
+import EditActions from "./EditActions";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -23,15 +23,15 @@ export default function ResponseActions({
   isTruncated,
   onDelete,
 }: ResponseActionsProps) {
-  const isInMultifileEdit = useSelector(
-    (store: RootState) => store.state.isMultifileEdit,
+  const isInEditMode = useSelector(
+    (store: RootState) => store.editModeState.isInEditMode,
   );
 
   // Only render delete button if there is more than one message
   const shouldRenderDelete = index !== 1;
 
-  if (isInMultifileEdit) {
-    return <MultifileEditActions index={index} item={item} />;
+  if (isInEditMode) {
+    return <EditActions index={index} item={item} />;
   }
 
   return (

@@ -4,7 +4,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { renderChatMessage } from "../../util/messageContent.js";
+import { renderChatMessage, stripImages } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
@@ -105,7 +105,9 @@ class Anthropic extends BaseLLM {
 
   public convertMessages(msgs: ChatMessage[]): any[] {
     // should be public for use within VertexAI
-    const filteredmessages = msgs.filter((m) => m.role !== "system");
+    const filteredmessages = msgs.filter(
+      (m) => m.role !== "system" && !!m.content,
+    );
     const lastTwoUserMsgIndices = filteredmessages
       .map((msg, index) => (msg.role === "user" ? index : -1))
       .filter((index) => index !== -1)
@@ -144,8 +146,9 @@ class Anthropic extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage =
       !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const systemMessage: string =
-      messages.filter((m) => m.role === "system")[0]?.content ?? "";
+    const systemMessage: string = stripImages(
+      messages.filter((m) => m.role === "system")[0]?.content ?? "",
+    );
 
     const msgs = this.convertMessages(messages);
     const response = await this.fetch(new URL("messages", this.apiBase), {

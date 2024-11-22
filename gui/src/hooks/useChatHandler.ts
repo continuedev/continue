@@ -21,14 +21,16 @@ import {
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import resolveEditorContent from "../components/mainInput/resolveInput";
+import resolveEditorContent, {
+  hasSlashCommandOrContextProvider,
+} from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   abortStream,
   acceptToolCall,
   addPromptCompletionPair,
-  clearLastResponse,
+  clearLastEmptyResponse,
   initNewActiveMessage,
   resetNextCodeBlockToApplyIndex,
   resubmitAtIndex,
@@ -36,11 +38,11 @@ import {
   setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
-  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 import useHistory from "./useHistory";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
@@ -100,7 +102,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
     } catch (e) {
       // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
+      dispatch(clearLastEmptyResponse());
     }
   }
 
@@ -184,17 +186,29 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     editorState: JSONContent,
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
+    promptPreamble?: string,
   ) {
     // Resolve context providers and construct new history
-    dispatch(setIsGatheringContext(true));
-    const [selectedContextItems, selectedCode, content] =
+    const shouldGatherContext =
+      modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
+
+    if (shouldGatherContext) {
+      dispatch(
+        setIsGatheringContext({
+          isGathering: true,
+          gatheringMessage: "Gathering Context",
+        }),
+      );
+    }
+
+    let [selectedContextItems, selectedCode, content] =
       await resolveEditorContent(
         editorState,
         modifiers,
         ideMessenger,
         defaultContextProviders,
+        dispatch,
       );
-    dispatch(setIsGatheringContext(false));
 
     // Automatically use currently open file
     if (!modifiers.noContext) {
@@ -235,6 +249,18 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
     }
 
+    await updateFileSymbolsFromContextItems(
+      selectedContextItems,
+      ideMessenger,
+      dispatch,
+    );
+
+    if (promptPreamble) {
+      typeof content === "string"
+        ? (content += promptPreamble)
+        : (content.at(-1).text += promptPreamble);
+    }
+
     // dispatch(addContextItems(contextItems));
     return { selectedContextItems, selectedCode, content };
   }
@@ -259,6 +285,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
     index?: number,
+    promptPreamble?: string,
   ) {
     if (typeof index === "number") {
       dispatch(resubmitAtIndex({ index, editorState }));
@@ -276,6 +303,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       editorState,
       modifiers,
       ideMessenger,
+      promptPreamble,
     );
 
     const message: ChatMessage = {
@@ -323,9 +351,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         params: {},
       });
 
-      if (slashCommand.name === "multifile-edit") {
-        dispatch(setIsInMultifileEdit(true));
-      }
+      // if (slashCommand.name === "multifile-edit") {
+      //   dispatch(setIsInMultifileEdit(true));
+      // }
 
       await _streamSlashCommand(
         messages,
@@ -343,6 +371,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
     index?: number,
+    promptPreamble?: string,
   ) {
     await handleErrors(() =>
       streamResponseWithoutErrorHandling(
@@ -350,6 +379,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers,
         ideMessenger,
         index,
+        promptPreamble,
       ),
     );
   }

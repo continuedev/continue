@@ -16,6 +16,7 @@ import {
   vscInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import AddModelForm from "../../forms/AddModelForm";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import {
@@ -29,7 +30,6 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
-import AddModelForm from "../../forms/AddModelForm";
 
 interface ModelOptionProps {
   option: Option;
@@ -169,7 +169,9 @@ function ModelOption({
     e.stopPropagation();
     e.preventDefault();
 
-    ideMessenger.post("openConfigJson", undefined);
+    ideMessenger.post("config/openProfile", {
+      profileId: "local",
+    });
   }
 
   function handleOptionClick(e) {

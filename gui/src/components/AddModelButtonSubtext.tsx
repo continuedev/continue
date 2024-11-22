@@ -10,7 +10,11 @@ function AddModelButtonSubtext() {
       This will update your{" "}
       <span
         className="cursor-pointer underline"
-        onClick={() => ideMessenger.post("openConfigJson", undefined)}
+        onClick={() =>
+          ideMessenger.post("config/openProfile", {
+            profileId: "local",
+          })
+        }
       >
         config file
       </span>

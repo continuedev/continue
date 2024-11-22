@@ -83,6 +83,24 @@ export function postprocessCompletion({
     }
   }
 
+  if (llm.model.includes("granite")) {
+    // Granite tends to repeat the start of the line in the completion output
+    let prefixEnd = prefix.split("\n").pop();
+    if (prefixEnd) {
+      if (completion.startsWith(prefixEnd)) {
+        completion = completion.slice(prefixEnd.length);
+      } else {
+        const trimmedPrefix = prefixEnd.trim();
+        const lastWord = trimmedPrefix.split(/\s+/).pop();
+        if (lastWord && completion.startsWith(lastWord)) {
+          completion = completion.slice(lastWord.length);
+        } else if (completion.startsWith(trimmedPrefix)) {
+          completion = completion.slice(trimmedPrefix.length);
+        }
+      }
+    }
+  }
+
   // // If completion starts with multiple whitespaces, but the cursor is at the end of the line
   // // then it should probably be on a new line
   // if (
@@ -99,7 +117,6 @@ export function postprocessCompletion({
     prefix.endsWith(" ") &&
     completion.startsWith(" ")
   ) {
-    const test = prefix.split("\n").pop()?.trim() !== "";
     completion = completion.slice(1);
   }
 

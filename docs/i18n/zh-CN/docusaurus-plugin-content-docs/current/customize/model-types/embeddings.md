@@ -13,7 +13,7 @@ sidebar_position: 3
 
 如果你有使用任何模型的能力，我们推荐 `voyage-code-2` ，它独立列在下面，和其他的嵌入模型选项一起。
 
-如果你想本地生成嵌入，我们推荐通过 [Ollama](../model-providers/top-level/ollama.md#embeddings-model) 使用 `nomic-embed-text` 。
+如果你想本地生成嵌入，我们推荐通过 [Ollama](../model-providers/top-level/ollama.md#嵌入模型) 使用 `nomic-embed-text` 。
 
 ### Voyage AI
 
@@ -31,7 +31,7 @@ sidebar_position: 3
 
 ### Ollama
 
-查看 [这个](../model-providers/top-level/ollama.md#embeddings-model) 获取如何使用 Ollama 来嵌入的指令。
+查看 [这个](../model-providers/top-level/ollama.md#嵌入模型) 获取如何使用 Ollama 来嵌入的指令。
 
 ### Transformers.js (当前只有 VS Code)
 
@@ -60,12 +60,12 @@ sidebar_position: 3
 
 ### OpenAI
 
-查看 [这里](../model-providers/top-level/openai.md#embeddings-model) 获取如何使用 OpenAI 嵌入的指令。
+查看 [这里](../model-providers/top-level/openai.md#嵌入模型) 获取如何使用 OpenAI 嵌入的指令。
 
 ### Cohere
 
-查看 [这里](../model-providers/more/cohere.md#embeddings-model) 获取如何使用 Cohere 嵌入的指令。
+查看 [这里](../model-providers/more/cohere.md#嵌入模型) 获取如何使用 Cohere 嵌入的指令。
 
 ### Gemini
 
-查看 [这里](../model-providers/top-level/gemini.md#embeddings-model) 获取如何使用 Gemini 嵌入的指令。
+查看 [这里](../model-providers/top-level/gemini.md#嵌入模型) 获取如何使用 Gemini 嵌入的指令。
