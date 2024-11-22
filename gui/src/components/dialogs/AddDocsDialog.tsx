@@ -167,14 +167,17 @@ function AddDocsDialog() {
   };
 
   return (
-    <div className="px-2 py-4 sm:px-4">
-      <div className="">
+    <div className="px-2 pt-4 sm:px-4">
+      <div className="mb-2">
         <h1 className="mb-0 hidden sm:block">Add documentation</h1>
         <h1 className="sm:hidden">Add docs</h1>
+        <p className="m-0 mt-2 p-0 text-stone-500">
+          For the @docs context provider
+        </p>
         {sortedDocsSuggestions.length && (
           <p className="m-0 mb-1 mt-4 p-0 font-semibold">Suggestions</p>
         )}
-        <div className="border-vsc-foreground-muted max-h-[175px] overflow-y-scroll rounded-sm py-1 pr-2">
+        <div className="border-vsc-foreground-muted max-h-[145px] overflow-y-scroll rounded-sm py-1 pr-2">
           {sortedDocsSuggestions.map((docsResult) => {
             const { error, details } = docsResult;
             const { language, name, version } = docsResult.packageInfo;
@@ -328,14 +331,13 @@ function AddDocsDialog() {
       </div>
 
       <DocsIndexingPeeks statuses={docsIndexingStatuses} />
-      <div className="flex flex-row items-end justify-between gap-2">
-        <div>
-          {docsIndexingStatuses.length ? (
-            <p className="mt-2 p-0 text-xs text-stone-500">
-              It is safe to close this form while indexing
-            </p>
-          ) : null}
-        </div>
+      <div className="flex flex-row items-end justify-start gap-2">
+        {docsIndexingStatuses.length ? (
+          <p className="mt-2 flex flex-row items-center gap-1 p-0 px-1 text-xs text-stone-500">
+            <CheckIcon className="h-3 w-3" />
+            It is safe to close this form while indexing
+          </p>
+        ) : null}
       </div>
     </div>
   );

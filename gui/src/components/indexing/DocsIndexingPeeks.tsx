@@ -1,10 +1,9 @@
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { useDispatch } from "react-redux";
 
 import { IndexingStatus } from "core";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowPathIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
+import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import {
   setDialogMessage,
   setShowDialog,
@@ -63,7 +62,9 @@ function DocsIndexingPeekList({ statuses }: DocsIndexingPeeksProps) {
 
   return (
     <div className="flex flex-col">
-      <p className="mx-0 my-1.5 p-0 text-stone-500">Currently Indexing</p>
+      <p className="mx-0 my-1.5 p-0 px-1 font-semibold text-stone-500">
+        Currently Indexing
+      </p>
       <div className="max-h-[100px] overflow-y-auto pr-2">
         {statuses.map((status) => {
           return <DocsIndexingPeek key={status.id} status={status} />;

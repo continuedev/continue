@@ -39,7 +39,6 @@ export class PythonPackageCrawler implements PackageCrawler {
     packageInfo: ParsedPackageInfo,
   ): Promise<PackageDetails> {
     // Fetch metadata from PyPI to find the documentation link
-
     const response = await fetch(
       `https://pypi.org/pypi/${packageInfo.name}/json`,
     );
