@@ -65,6 +65,9 @@ import {
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
+import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
+import { AddCodeToEdit } from "./AddCodeToEditExtension";
+import { addCodeToEdit } from "../../redux/slices/editModeState";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -158,7 +161,6 @@ interface TipTapEditorProps {
   toolbarOptions?: ToolbarOptions;
   border?: string;
   placeholder?: string;
-  header?: React.ReactNode;
   historyKey: string;
 }
 
@@ -171,6 +173,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useSelector(
     (store: RootState) => store.state.history.length,
   );
+
   const useActiveFile = useSelector(selectUseActiveFile);
 
   const { saveSession, loadSession } = useHistory(dispatch);
@@ -183,6 +186,14 @@ function TipTapEditor(props: TipTapEditorProps) {
   const inDropdownRef = useRef(false);
 
   const isOSREnabled = useIsOSREnabled();
+
+  const isInEditMode = useSelector(
+    (state: RootState) => state.editModeState.isInEditMode,
+  );
+
+  const shouldAddFileForEditing = useSelector(
+    (state: RootState) => state.uiState.shouldAddFileForEditing,
+  );
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
@@ -464,6 +475,49 @@ function TipTapEditor(props: TipTapEditorProps) {
             ),
             renderHTML: (props) => {
               return `@${props.node.attrs.label || props.node.attrs.id}`;
+            },
+          })
+        : undefined,
+      isInEditMode
+        ? AddCodeToEdit.configure({
+            HTMLAttributes: {
+              class: "add-code-to-edit",
+            },
+            suggestion: {
+              ...getContextProviderDropdownOptions(
+                availableContextProvidersRef,
+                getSubmenuContextItemsRef,
+                enterSubmenu,
+                onClose,
+                onOpen,
+                inSubmenuRef,
+                ideMessenger,
+              ),
+              command: async ({ editor, range, props }) => {
+                editor.chain().focus().insertContentAt(range, "").run();
+                const filepath = props.id;
+                const contents = await ideMessenger.ide.readFile(filepath);
+                dispatch(
+                  addCodeToEdit({
+                    filepath,
+                    contents,
+                  }),
+                );
+              },
+              items: async ({ query }) => {
+                // Only display files in the dropdown
+                const results = getSubmenuContextItemsRef.current(
+                  "file",
+                  query,
+                );
+                return results.map((result) => ({
+                  ...result,
+                  label: result.title,
+                  type: "file",
+                  query: result.id,
+                  icon: result.icon,
+                }));
+              },
             },
           })
         : undefined,
@@ -768,6 +822,13 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (shouldAddFileForEditing && props.isMainInput) {
+      insertCharacterWithWhitespace("#");
+      dispatch(setShouldAddFileForEditing(false));
+    }
+  }, [shouldAddFileForEditing]);
+
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
       const text = editor.getText();
@@ -829,8 +890,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         event.preventDefault();
       }}
     >
-      <div>{props.header}</div>
-
       <PaddingDiv>
         <EditorContent
           spellCheck={false}

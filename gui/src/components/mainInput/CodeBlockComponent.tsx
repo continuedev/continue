@@ -14,7 +14,7 @@ export const CodeBlockComponent = (props: any) => {
   const isFirstContextItem = false; // TODO: fix this, decided not worth the insane renders for now
 
   return (
-    <NodeViewWrapper className="code-block-with-content" as="p">
+    <NodeViewWrapper className="code-block-with-content" as="div">
       <CodeSnippetPreview
         borderColor={
           isFirstContextItem
