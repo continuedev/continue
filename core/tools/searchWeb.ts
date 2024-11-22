@@ -5,7 +5,7 @@ export const searchWebTool: Tool = {
   type: "function",
   action: async (args, extras) => {
     const webResults = await fetchSearchResults(args.query, 5, extras.fetch);
-    return webResults.map((result) => result.content).join("\n\n");
+    return webResults;
   },
   function: {
     name: "search_web",

@@ -85,11 +85,9 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
     clearTimeout(timer);
 
     if (result.status === "success") {
+      const contextItems = result.content.contextItems;
       // Send to the LLM to continue the conversation
-      streamResponseAfterToolCall(
-        toolCallState.toolCall.id,
-        result.content.result,
-      );
+      streamResponseAfterToolCall(toolCallState.toolCall.id, contextItems);
     }
   }
 

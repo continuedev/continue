@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
-import { stripImages } from "core/llm/images";
+import { renderChatMessage } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import {
   Fragment,
@@ -350,7 +350,7 @@ export function Chat() {
                 />
               ) : item.message.role === "tool" ? (
                 <ToolOutput
-                  output={stripImages(item.message.content)}
+                  output={renderChatMessage(item.message)}
                   toolCallId={item.message.toolCallId}
                 />
               ) : item.message.role === "assistant" &&

@@ -4,6 +4,7 @@ import {
   ChatHistory,
   ChatHistoryItem,
   ChatMessage,
+  ContextItem,
   ContextItemWithId,
   InputModifiers,
   MessageContent,
@@ -12,8 +13,11 @@ import {
   SlashCommandDescription,
 } from "core";
 import { constructMessages } from "core/llm/constructMessages";
-import { stripImages } from "core/llm/images";
 import { getBasename, getRelativePath } from "core/util";
+import {
+  renderChatMessage,
+  renderContextItems,
+} from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -122,7 +126,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     }
 
     // Convert to actual slash command object with runnable function
-    return [slashCommand, stripImages(input)];
+    return [slashCommand, renderChatMessage({ role: "user", content: input })];
   };
 
   async function _streamSlashCommand(
@@ -352,14 +356,14 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
   async function streamResponseAfterToolCall(
     toolCallId: string,
-    toolOutput: string,
+    toolOutput: ContextItem[],
   ) {
     await handleErrors(async () => {
       resetStateForNewMessage();
 
       const newMessage: ChatMessage = {
         role: "tool",
-        content: toolOutput,
+        content: renderContextItems(toolOutput),
         toolCallId,
       };
 

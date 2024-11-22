@@ -11,7 +11,7 @@ import {
   MessageContent,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 class Bedrock extends BaseLLM {
@@ -42,7 +42,7 @@ class Bedrock extends BaseLLM {
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
     for await (const update of this._streamChat(messages, signal, options)) {
-      yield stripImages(update.content);
+      yield renderChatMessage(update);
     }
   }
 
@@ -86,7 +86,7 @@ class Bedrock extends BaseLLM {
 
     const input = this._generateConverseInput(messages, options);
     const command = new ConverseStreamCommand(input);
-    const response = await client.send(command, { abortSignal: signal});
+    const response = await client.send(command, { abortSignal: signal });
 
     if (response.stream) {
       for await (const chunk of response.stream) {
@@ -122,7 +122,9 @@ class Bedrock extends BaseLLM {
         // TODO: Additionally, consider implementing a global exception handler for the providers to give users clearer feedback.
         // For example, differentiate between client-side errors (4XX status codes) and server-side issues (5XX status codes),
         // providing meaningful error messages to improve the user experience.
-        stopSequences: options.stop?.filter((stop) => stop.trim() !== "").slice(0, 4),
+        stopSequences: options.stop
+          ?.filter((stop) => stop.trim() !== "")
+          .slice(0, 4),
       },
     };
   }
@@ -164,7 +166,7 @@ class Bedrock extends BaseLLM {
     try {
       return await fromIni({
         profile: this.profile,
-        ignoreCache: true
+        ignoreCache: true,
       })();
     } catch (e) {
       console.warn(

@@ -4,6 +4,7 @@ import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
+  ContextItem,
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
@@ -160,5 +161,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "profiles/switch": [{ id: string }, undefined];
 
   "auth/getAuthUrl": [undefined, { url: string }];
-  "tools/call": [{ toolCall: ToolCall }, { result: any }];
+  "tools/call": [{ toolCall: ToolCall }, { contextItems: ContextItem[] }];
 };

@@ -756,13 +756,13 @@ export class Core {
       );
 
       if (!tool) {
-        return { error: "Tool not found", result: undefined };
+        throw new Error(`Tool ${toolCall.function.name} not found`);
       }
 
       const config = await this.configHandler.loadConfig();
       const llm = await this.getSelectedModel();
 
-      const result = await tool.action(
+      const contextItems = await tool.action(
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
@@ -771,7 +771,7 @@ export class Core {
             fetchwithRequestOptions(url, init, config.requestOptions),
         },
       );
-      return { result };
+      return { contextItems };
     });
   }
 

@@ -1,10 +1,11 @@
+import { ChatHistoryItem } from "core";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import AcceptRejectAllButtons from "./AcceptRejectAllButtons";
 import FeedbackButtons from "./FeedbackButtons";
 import UndoAndRedoButtons from "./UndoAndRedoButtons";
-import { ChatHistoryItem } from "core";
-import { stripImages } from "core/llm/images";
+
+import { renderChatMessage } from "core/util/messageContent";
 import { CopyIconButton } from "../gui/CopyIconButton";
 
 export interface MultifileEditActionsProps {
@@ -53,7 +54,7 @@ export default function MultifileEditActions({
       <div className="flex flex-1 justify-end">
         <CopyIconButton
           tabIndex={-1}
-          text={stripImages(item.message.content)}
+          text={renderChatMessage(item.message)}
           clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
           checkIconClassName="h-3.5 w-3.5 text-green-400"
         />

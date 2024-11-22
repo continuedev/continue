@@ -11,8 +11,8 @@ import {
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
-import { stripImages } from "core/llm/images";
 import { ApplyState } from "core/protocol/ideWebview";
+import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4, v4 } from "uuid";
 import { ToolState } from "../../pages/gui/ToolCallDiv/types";
 
@@ -30,9 +30,15 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 type State = {
   currentToolCallState: CurrentToolCallState;
   history: ChatHistoryItemWithMessageId[];
-  ttsActive: boolean;
   active: boolean;
   isGatheringContext: boolean;
+  checkpoints: Checkpoint[];
+  applyStates: ApplyState[];
+  nextCodeBlockToApplyIndex: number;
+  streamAborter: AbortController;
+  curCheckpointIndex: number;
+
+  ttsActive: boolean;
   config: BrowserSerializedContinueConfig;
   title: string;
   sessionId: string;
@@ -40,11 +46,6 @@ type State = {
   mainEditorContent?: JSONContent;
   selectedProfileId: string;
   configError: ConfigValidationError[] | undefined;
-  checkpoints: Checkpoint[];
-  curCheckpointIndex: number;
-  applyStates: ApplyState[];
-  nextCodeBlockToApplyIndex: number;
-  streamAborter: AbortController;
   isMultifileEdit: boolean;
 };
 
@@ -227,7 +228,7 @@ export const stateSlice = createSlice({
           message: { ...payload.message, id: uuidv4() },
           editorState: {
             type: "doc",
-            content: stripImages(payload.message.content)
+            content: renderChatMessage(payload.message)
               .split("\n")
               .map((line) => ({
                 type: "paragraph",
@@ -281,6 +282,7 @@ export const stateSlice = createSlice({
           (lastMessage.message.role !== action.payload.role ||
             // This is when a tool call comes after assistant text
             (lastMessage.message.content !== "" &&
+              action.payload.role === "assistant" &&
               action.payload.toolCalls?.length))
         ) {
           // Create a new message
@@ -292,8 +294,12 @@ export const stateSlice = createSlice({
           // Add to the existing message
           const msg = state.history[state.history.length - 1].message;
           if (action.payload.content) {
-            msg.content += stripImages(action.payload.content);
-          } else if (action.payload.toolCalls) {
+            msg.content += renderChatMessage(action.payload);
+          } else if (
+            action.payload.role === "assistant" &&
+            action.payload.toolCalls &&
+            msg.role === "assistant"
+          ) {
             if (!msg.toolCalls) {
               msg.toolCalls = [];
             }

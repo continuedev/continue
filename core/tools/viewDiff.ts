@@ -4,7 +4,13 @@ export const viewDiffTool: Tool = {
   type: "function",
   action: async (args, extras) => {
     const diff = await extras.ide.getDiff(true);
-    return diff;
+    return [
+      {
+        name: "Diff",
+        description: "The current git diff",
+        content: diff,
+      },
+    ];
   },
   function: {
     name: "view_diff",

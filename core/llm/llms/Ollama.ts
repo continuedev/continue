@@ -4,13 +4,11 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
-interface OllamaChatMessage extends ChatMessage {
-  images?: string[];
-}
+type OllamaChatMessage = ChatMessage & { images?: string[] };
 
 // See https://github.com/ollama/ollama/blob/main/docs/modelfile.md for details on each parameter
 interface ModelFileParams {
@@ -37,30 +35,28 @@ interface ModelFileParams {
 
 // See https://github.com/ollama/ollama/blob/main/docs/api.md
 interface BaseOptions {
-  model: string;              // the model name
+  model: string; // the model name
   options?: ModelFileParams; // additional model parameters listed in the documentation for the Modelfile such as temperature
-  format?: "json";            // the format to return a response in. Currently, the only accepted value is json
-  stream?: boolean;           // if false the response will be returned as a single response object, rather than a stream of objects
-  keep_alive?: number;       // controls how long the model will stay loaded into memory following the request (default: 5m)
+  format?: "json"; // the format to return a response in. Currently, the only accepted value is json
+  stream?: boolean; // if false the response will be returned as a single response object, rather than a stream of objects
+  keep_alive?: number; // controls how long the model will stay loaded into memory following the request (default: 5m)
 }
 
 interface GenerateOptions extends BaseOptions {
-  prompt: string;             // the prompt to generate a response for
-  suffix?: string;            // the text after the model response
-  images?: string[];          // a list of base64-encoded images (for multimodal models such as llava)
-  system?: string;            // system message to (overrides what is defined in the Modelfile)
-  template?: string;          // the prompt template to use (overrides what is defined in the Modelfile)
-  context?: string;           // the context parameter returned from a previous request to /generate, this can be used to keep a short conversational memory
-  raw?: boolean;              // if true no formatting will be applied to the prompt. You may choose to use the raw parameter if you are specifying a full templated prompt in your request to the API
+  prompt: string; // the prompt to generate a response for
+  suffix?: string; // the text after the model response
+  images?: string[]; // a list of base64-encoded images (for multimodal models such as llava)
+  system?: string; // system message to (overrides what is defined in the Modelfile)
+  template?: string; // the prompt template to use (overrides what is defined in the Modelfile)
+  context?: string; // the context parameter returned from a previous request to /generate, this can be used to keep a short conversational memory
+  raw?: boolean; // if true no formatting will be applied to the prompt. You may choose to use the raw parameter if you are specifying a full templated prompt in your request to the API
 }
 
 interface ChatOptions extends BaseOptions {
-  messages: OllamaChatMessage[];      // the messages of the chat, this can be used to keep a chat memory
+  messages: OllamaChatMessage[]; // the messages of the chat, this can be used to keep a chat memory
   // Not supported yet - tools: tools for the model to use if supported. Requires stream to be set to false
   // And correspondingly, tool calls in OllamaChatMessage
 }
-
-
 
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
@@ -196,9 +192,11 @@ class Ollama extends BaseLLM {
     };
   }
 
-  private _convertMessage(
-    message: ChatMessage
-  ) {
+  private _convertMessage(message: ChatMessage) {
+    if (message.role === "tool") {
+      return null;
+    }
+
     if (typeof message.content === "string") {
       return message;
     }
@@ -214,18 +212,18 @@ class Ollama extends BaseLLM {
 
     return {
       role: message.role,
-      content: stripImages(message.content),
-      images
+      content: renderChatMessage(message),
+      images,
     };
   }
 
   private _getChatOptions(
     options: CompletionOptions,
-    messages: ChatMessage[]
+    messages: ChatMessage[],
   ): ChatOptions {
     return {
       model: this._getModel(),
-      messages: messages.map(this._convertMessage),
+      messages: messages.map(this._convertMessage).filter(Boolean) as any,
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,
@@ -236,7 +234,7 @@ class Ollama extends BaseLLM {
   private _getGenerateOptions(
     options: CompletionOptions,
     prompt: string,
-    suffix?: string
+    suffix?: string,
   ): GenerateOptions {
     return {
       model: this._getModel(),
@@ -271,7 +269,7 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getGenerateOptions(options, prompt)),
-      signal
+      signal,
     });
 
     let buffer = "";
@@ -312,7 +310,7 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getChatOptions(options, messages)),
-      signal
+      signal,
     });
 
     let buffer = "";
@@ -354,7 +352,6 @@ class Ollama extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-
     const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: {
@@ -362,7 +359,7 @@ class Ollama extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._getGenerateOptions(options, prefix, suffix)),
-      signal
+      signal,
     });
 
     let buffer = "";

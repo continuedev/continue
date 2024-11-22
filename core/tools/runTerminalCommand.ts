@@ -3,7 +3,16 @@ import { Tool } from "..";
 export const runTerminalCommandTool: Tool = {
   type: "function",
   action: async (args, extras) => {
-    await extras.ide.runCommand(args.command);
+    const output = await extras.ide.runCommand(args.command);
+
+    return [];
+    // return [
+    //   {
+    //     description: "The contents of the terminal",
+    //     content: output,
+    //     name: "Terminal",
+    //   },
+    // ];
   },
   function: {
     name: "run_terminal_command",

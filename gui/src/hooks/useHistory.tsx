@@ -1,7 +1,6 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 
-import { stripImages } from "core/llm/images";
 import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
@@ -10,6 +9,7 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { renderChatMessage } from "core/util/messageContent";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -79,7 +79,7 @@ function useHistory(dispatch: Dispatch) {
     let title =
       stateCopy.title === "New Session"
         ? truncateText(
-            stripImages(stateCopy.history[0].message.content)
+            renderChatMessage(stateCopy.history[0].message)
               .split("\n")
               .filter((l) => l.trim() !== "")
               .slice(-1)[0] || "",

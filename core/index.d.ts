@@ -293,12 +293,33 @@ export interface ToolCallDelta {
   };
 }
 
-export interface ChatMessage {
-  role: ChatMessageRole;
-  content: MessageContent;
-  toolCalls?: ToolCallDelta[];
+export interface ToolResultChatMessage {
+  role: "tool";
+  content: string;
   toolCallId?: string;
 }
+
+export interface UserChatMessage {
+  role: "user";
+  content: MessageContent;
+}
+
+export interface AssistantChatMessage {
+  role: "assistant";
+  content: MessageContent;
+  toolCalls?: ToolCallDelta[];
+}
+
+export interface SystemChatMessage {
+  role: "system";
+  content: string;
+}
+
+export type ChatMessage =
+  | UserChatMessage
+  | AssistantChatMessage
+  | SystemChatMessage
+  | ToolResultChatMessage;
 
 export interface ContextItemId {
   providerTitle: string;
@@ -860,7 +881,7 @@ export interface Tool {
     parameters?: Record<string, any>;
     strict?: boolean | null;
   };
-  action: (parameters: any, extras: ToolExtras) => Promise<any>;
+  action: (parameters: any, extras: ToolExtras) => Promise<ContextItem[]>;
 }
 
 interface BaseCompletionOptions {

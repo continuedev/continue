@@ -1,4 +1,5 @@
 import { ChatHistory, ChatMessage, MessagePart } from "../index.js";
+import { normalizeToMessageParts } from "../util/messageContent.js";
 
 const SYSTEM_MESSAGE = `When generating new code:
 
@@ -61,17 +62,6 @@ Always follow these guidelines when generating code responses.
 Other rules:
 - Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
 
-function hasCodeBlockWithFilename(content: ChatMessage["content"]): boolean {
-  const contentStr = typeof content === "string" ? content : content[0].text;
-
-  if (!contentStr) {
-    return false;
-  }
-
-  const codeBlockRegex = /```[\w\W]*?\.[\w\W]*/;
-  return codeBlockRegex.test(contentStr);
-}
-
 export function constructMessages(
   history: ChatHistory,
   model: string,
@@ -92,28 +82,27 @@ export function constructMessages(
   for (let i = 0; i < history.length; i++) {
     const historyItem = history[i];
 
-    let content = Array.isArray(historyItem.message.content)
-      ? historyItem.message.content
-      : [{ type: "text", text: historyItem.message.content } as MessagePart];
+    if (historyItem.message.role === "user") {
+      // Gather context items for user messages
+      let content = normalizeToMessageParts(historyItem.message);
 
-    const ctxItems = historyItem.contextItems.map((ctxItem) => {
-      return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
-    });
+      const ctxItems = historyItem.contextItems.map((ctxItem) => {
+        return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
+      });
 
-    content = [...ctxItems, ...content];
-
-    msgs.push({
-      ...historyItem.message,
-      content,
-    });
-
-    // Remove the "id" from all of the messages
-    msgs.forEach((msg: any) => {
-      if (msg.id !== undefined) {
-        delete msg.id;
-      }
-    });
+      content = [...ctxItems, ...content];
+      msgs.push({
+        ...historyItem.message,
+        content,
+      });
+    } else {
+      msgs.push(historyItem.message);
+    }
   }
 
-  return msgs;
+  // Remove the "id" from all of the messages
+  return msgs.map((msg) => {
+    const { id, ...rest } = msg as any;
+    return rest;
+  });
 }

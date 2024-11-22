@@ -14,6 +14,7 @@ export const createNewFileTool: Tool = {
     }
     await extras.ide.writeFile(filepath, args.contents);
     await extras.ide.openFile(filepath);
+    return [];
   },
   function: {
     name: "create_new_file",

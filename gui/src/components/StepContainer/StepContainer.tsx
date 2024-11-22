@@ -1,5 +1,5 @@
 import { ChatHistoryItem } from "core";
-import { stripImages } from "core/llm/images";
+import { renderChatMessage } from "core/util/messageContent";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -42,7 +42,7 @@ export default function StepContainer(props: StepContainerProps) {
 
   useEffect(() => {
     if (!active) {
-      const content = stripImages(props.item.message.content).trim();
+      const content = renderChatMessage(props.item.message).trim();
       const endingPunctuation = [".", "?", "!", "```", ":"];
 
       // If not ending in punctuation or emoji, we assume the response got truncated
@@ -88,12 +88,12 @@ export default function StepContainer(props: StepContainerProps) {
             className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4"
             style={{ fontSize: getFontSize() - 2 }}
           >
-            {stripImages(props.item.message.content)}
+            {renderChatMessage(props.item.message)}
           </pre>
         ) : (
           <StyledMarkdownPreview
             isRenderingInStepContainer
-            source={stripImages(props.item.message.content)}
+            source={renderChatMessage(props.item.message)}
           />
         )}
       </ContentDiv>

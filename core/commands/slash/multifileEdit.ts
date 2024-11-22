@@ -1,5 +1,5 @@
 import { SlashCommand } from "../..";
-import { stripImages } from "../../llm/images";
+import { renderChatMessage } from "../../util/messageContent";
 
 const MultiFileEditSlashCommand: SlashCommand = {
   name: "multifile-edit",
@@ -39,8 +39,11 @@ const MultiFileEditSlashCommand: SlashCommand = {
 
     const content = createPrompt(filesToEditStr, additionalContextStr, input);
 
-    for await (const chunk of llm.streamChat([{ role: "user", content }], new AbortController().signal)) {
-      yield stripImages(chunk.content);
+    for await (const chunk of llm.streamChat(
+      [{ role: "user", content }],
+      new AbortController().signal,
+    )) {
+      yield renderChatMessage(chunk);
     }
   },
 };

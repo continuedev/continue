@@ -8,7 +8,13 @@ export const viewSubdirectoryTool: Tool = {
     const repoMap = await generateRepoMap(extras.llm, extras.ide, {
       dirs: [directory_path],
     });
-    return repoMap;
+    return [
+      {
+        name: "Repo map",
+        description: `Map of ${directory_path}`,
+        content: repoMap,
+      },
+    ];
   },
   function: {
     name: "view_subdirectory",

@@ -4,7 +4,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
@@ -56,6 +56,14 @@ class OpenAI extends BaseLLM {
   };
 
   protected _convertMessage(message: ChatMessage) {
+    if (message.role === "tool") {
+      return {
+        role: "tool",
+        content: message.content,
+        tool_call_id: message.toolCallId,
+      };
+    }
+
     if (typeof message.content === "string") {
       return message;
     } else if (!message.content.some((item) => item.type !== "text")) {
@@ -215,7 +223,7 @@ class OpenAI extends BaseLLM {
       signal,
       options,
     )) {
-      yield stripImages(chunk.content);
+      yield renderChatMessage(chunk);
     }
   }
 
@@ -258,7 +266,7 @@ class OpenAI extends BaseLLM {
         options.raw)
     ) {
       for await (const content of this._legacystreamComplete(
-        stripImages(messages[messages.length - 1]?.content || ""),
+        renderChatMessage(messages[messages.length - 1]),
         signal,
         options,
       )) {

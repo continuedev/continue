@@ -1,5 +1,5 @@
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
@@ -36,7 +36,7 @@ export default class Cloudflare extends BaseLLM {
         model: this.model,
         ...this._convertArgs(options),
       }),
-      signal
+      signal,
     });
 
     for await (const value of streamSse(resp)) {
@@ -56,7 +56,7 @@ export default class Cloudflare extends BaseLLM {
       signal,
       options,
     )) {
-      yield stripImages(chunk.content);
+      yield renderChatMessage(chunk);
     }
   }
 }

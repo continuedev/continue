@@ -10,22 +10,33 @@ export function FunctionSpecificHeader(props: FunctionSpecificHeaderProps) {
     props.toolCall.function.arguments,
   );
 
+  let message;
+
   switch (props.toolCall.function.name) {
     case "create_new_file":
-      return "Continue wants to create a new file";
+      message = "Continue wants to create a new file";
+      break;
     case "run_terminal_command":
-      return "Continue wants to run a terminal command.";
+      message = "Continue wants to run a terminal command.";
+      break;
     case "exact_search":
-      return "Continue wants to search your codebase";
+      message = "Continue wants to search your codebase";
+      break;
     case "search_web":
-      return "Continue wants to search the internet";
+      message = "Continue wants to search the internet";
+      break;
     case "view_diff":
-      return "Continue wants to view the current git diff";
+      message = "Continue wants to view the current git diff";
+      break;
     case "view_repo_map":
-      return "Continue wants to view a map of your repository";
+      message = "Continue wants to view a map of your repository";
+      break;
     case "view_subdirectory":
-      return `Continue wants to view the contents of ${incrementalJson.directory_path ?? "a subdirectory"}`;
+      message = `Continue wants to view the contents of ${incrementalJson.directory_path ?? "a subdirectory"}`;
+      break;
     default:
-      return `Continue wants to use the ${props.toolCall.function.name} function.`;
+      message = `Continue wants to use the ${props.toolCall.function.name} function.`;
   }
+
+  return <div>{message}</div>;
 }

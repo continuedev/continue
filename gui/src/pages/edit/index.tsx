@@ -1,7 +1,7 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers } from "core";
-import { stripImages } from "core/llm/images";
+import { renderChatMessage } from "core/util/messageContent";
 import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -178,7 +178,10 @@ function Edit() {
 
                 const prompt = [
                   ...contextItems.map((item) => item.content),
-                  stripImages(userInstructions),
+                  renderChatMessage({
+                    role: "user",
+                    content: userInstructions,
+                  }),
                 ].join("\n\n");
                 ideMessenger.post("edit/sendPrompt", {
                   prompt,

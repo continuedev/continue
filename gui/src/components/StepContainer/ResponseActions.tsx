@@ -1,6 +1,6 @@
 import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { stripImages } from "core/llm/images";
+import { renderChatMessage } from "core/util/messageContent";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { CopyIconButton } from "../gui/CopyIconButton";
@@ -54,7 +54,7 @@ export default function ResponseActions({
 
       <CopyIconButton
         tabIndex={-1}
-        text={stripImages(item.message.content)}
+        text={renderChatMessage(item.message)}
         clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
         checkIconClassName="h-3.5 w-3.5 text-green-400"
       />

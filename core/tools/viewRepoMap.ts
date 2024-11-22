@@ -5,7 +5,13 @@ export const viewRepoMapTool: Tool = {
   type: "function",
   action: async (args, extras) => {
     const repoMap = await generateRepoMap(extras.llm, extras.ide, {});
-    return repoMap;
+    return [
+      {
+        name: "Repo map",
+        description: "Overview of the repository structure",
+        content: repoMap,
+      },
+    ];
   },
   function: {
     name: "view_repo_map",

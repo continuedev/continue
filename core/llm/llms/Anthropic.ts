@@ -4,7 +4,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
@@ -48,7 +48,7 @@ class Anthropic extends BaseLLM {
           {
             type: "tool_result",
             tool_use_id: message.toolCallId,
-            content: stripImages(message.content) || undefined,
+            content: renderChatMessage(message) || undefined,
           },
         ],
       };
@@ -133,7 +133,7 @@ class Anthropic extends BaseLLM {
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
     for await (const update of this._streamChat(messages, signal, options)) {
-      yield stripImages(update.content);
+      yield renderChatMessage(update);
     }
   }
 
@@ -144,9 +144,8 @@ class Anthropic extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage =
       !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
-    const systemMessage: string = stripImages(
-      messages.filter((m) => m.role === "system")[0]?.content,
-    );
+    const systemMessage: string =
+      messages.filter((m) => m.role === "system")[0]?.content ?? "";
 
     const msgs = this.convertMessages(messages);
     const response = await this.fetch(new URL("messages", this.apiBase), {
