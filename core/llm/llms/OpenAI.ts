@@ -297,7 +297,7 @@ class OpenAI extends BaseLLM {
     signal: AbortSignal,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const endpoint = this.apiBase?.includes("completions") ? new URL(this.apiBase) : new URL("fim/completions", this.apiBase);
+    const endpoint = new URL("fim/completions", this.apiBase);
     const resp = await this.fetch(endpoint, {
       method: "POST",
       body: JSON.stringify({
