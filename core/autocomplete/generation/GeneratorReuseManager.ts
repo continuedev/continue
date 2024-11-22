@@ -5,6 +5,8 @@ export class GeneratorReuseManager {
   pendingGeneratorPrefix: string | undefined;
   pendingCompletion = "";
 
+  private _abortController: AbortController | null = null;
+
   constructor(private readonly onError: (err: any) => void) {}
 
   private _createListenableGenerator(
@@ -35,13 +37,15 @@ export class GeneratorReuseManager {
 
   async *getGenerator(
     prefix: string,
-    newGenerator: () => AsyncGenerator<string>,
+    newGenerator: (token: AbortSignal) => AsyncGenerator<string>,
     multiline: boolean,
   ): AsyncGenerator<string> {
     // If we can't reuse, then create a new generator
     if (!this.shouldReuseExistingGenerator(prefix)) {
+      this._abortController?.abort();
+      this._abortController = new AbortController();
       // Create a wrapper over the current generator to fix the prompt
-      this._createListenableGenerator(newGenerator(), prefix);
+      this._createListenableGenerator(newGenerator(this._abortController.signal), prefix);
     }
 
     // Already typed characters are those that are new in the prefix from the old generator

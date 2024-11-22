@@ -25,13 +25,13 @@ export class CompletionStreamer {
     // Try to reuse pending requests if what the user typed matches start of completion
     const generator = this.generatorReuseManager.getGenerator(
       prefix,
-      () =>
+      (generatorToken) =>
         llm.supportsFim()
-          ? llm.streamFim(prefix, suffix, completionOptions, token)
+          ? llm.streamFim(prefix, suffix, completionOptions, generatorToken)
           : llm.streamComplete(prompt, {
             ...completionOptions,
             raw: true,
-          }, token),
+          }, generatorToken),
       multiline,
     );
 
