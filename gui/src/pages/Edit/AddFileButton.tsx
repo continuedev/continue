@@ -7,7 +7,6 @@ import { addCodeToEdit } from "../../redux/slices/editModeState";
 import { Listbox } from "@headlessui/react";
 
 export default function AddFileButton() {
-  const [showAbove, setShowAbove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
@@ -21,27 +20,15 @@ export default function AddFileButton() {
 
     for (const filepath of openFiles) {
       const contents = await ideMessenger.ide.readFile(filepath);
-      console.log({ filepath, contents });
       dispatch(addCodeToEdit({ filepath, contents }));
     }
   }
-
-  //   function calculatePosition() {
-  //     const rect = buttonRef.current?.getBoundingClientRect();
-  //     if (!rect) return;
-  //     const spaceBelow = window.innerHeight - rect.bottom;
-  //     const spaceAbove = rect.top;
-  //     const dropdownHeight = 300;
-
-  //     setShowAbove(spaceBelow < dropdownHeight && spaceAbove > spaceBelow);
-  //   }
 
   return (
     <Listbox onChange={handleAddAllOpenFiles}>
       <div className="relative">
         <Listbox.Button
           ref={buttonRef}
-          //   onClick={calculatePosition}
           className="bg-lightgray/10 border-lightgray flex cursor-pointer items-center justify-between rounded-md border border-solid px-0 shadow-sm transition-colors"
         >
           <div
@@ -62,9 +49,7 @@ export default function AddFileButton() {
         </Listbox.Button>
 
         <Listbox.Options
-          className={`bg-vsc-input-background border-lightgray absolute right-0 z-50 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${
-            showAbove ? "bottom-full mb-1" : "top-full mt-1"
-          }`}
+          className={`bg-vsc-input-background border-lightgray absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg`}
         >
           <Listbox.Option
             value="addAllFiles"
