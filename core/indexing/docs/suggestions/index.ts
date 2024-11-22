@@ -1,9 +1,9 @@
 import {
-  DocsSuggestions,
+  PackageDocsResult,
   FilePathAndName,
+  PackageFilePathAndName,
   IDE,
   PackageDetails,
-  PackageDocsResult,
   ParsedPackageInfo,
 } from "../../..";
 import { walkDir } from "../../walkDir";
@@ -15,9 +15,9 @@ const PACKAGE_CRAWLERS = [TypeScriptPackageCrawler, PythonPackageCrawler];
 
 export interface PackageCrawler {
   language: string;
-  getPackageFiles(files: FilePathAndName[]): FilePathAndName[];
+  getPackageFiles(files: FilePathAndName[]): PackageFilePathAndName[];
   parsePackageFile(
-    file: FilePathAndName,
+    file: PackageFilePathAndName,
     contents: string,
   ): ParsedPackageInfo[];
   getPackageDetails(packageInfo: ParsedPackageInfo): Promise<PackageDetails>;
@@ -37,7 +37,7 @@ export async function getAllSuggestedDocs(ide: IDE) {
   }));
 
   // Build map of language -> package files
-  const packageFilesByLanguage: Record<string, FilePathAndName[]> = {};
+  const packageFilesByLanguage: Record<string, PackageFilePathAndName[]> = {};
   for (const Crawler of PACKAGE_CRAWLERS) {
     const crawler = new Crawler();
     const packageFilePaths = crawler.getPackageFiles(allFiles);
@@ -80,13 +80,26 @@ export async function getAllSuggestedDocs(ide: IDE) {
     });
   });
 
+  // Deduplicate packages per language
+  // TODO - this is where you would allow docs for different versions
+  // by e.g. using "name-version" as the map key instead of just name
+  // For now have not allowed
+  const languages = Object.keys(packagesByLanguage);
+  languages.forEach((language) => {
+    const packages = packagesByLanguage[language];
+    const uniquePackages = Array.from(
+      new Map(packages.map((pkg) => [pkg.name, pkg])).values(),
+    );
+    packagesByLanguage[language] = uniquePackages;
+  });
+
   // Get documentation links for all packages
-  const docsByLanguage: DocsSuggestions = {};
+  const allDocsResults: PackageDocsResult[] = [];
   await Promise.all(
     PACKAGE_CRAWLERS.map(async (Crawler) => {
       const crawler = new Crawler();
       const packages = packagesByLanguage[crawler.language];
-      docsByLanguage[crawler.language] = await Promise.all(
+      const docsByLanguage = await Promise.all(
         packages.map(async (packageInfo) => {
           try {
             const details = await crawler.getPackageDetails(packageInfo);
@@ -111,9 +124,10 @@ export async function getAllSuggestedDocs(ide: IDE) {
           }
         }),
       );
+      allDocsResults.push(...docsByLanguage);
     }),
   );
-  return docsByLanguage;
+  return allDocsResults;
 }
 
 // write me an interface PackageCrawler that contains:

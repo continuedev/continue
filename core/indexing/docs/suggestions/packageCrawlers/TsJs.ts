@@ -2,15 +2,22 @@ import { PackageCrawler } from "..";
 import {
   FilePathAndName,
   PackageDetails,
+  PackageFilePathAndName,
   ParsedPackageInfo,
 } from "../../../..";
 
 export class TypeScriptPackageCrawler implements PackageCrawler {
   language = "js-ts";
 
-  getPackageFiles(files: FilePathAndName[]): FilePathAndName[] {
+  getPackageFiles(files: FilePathAndName[]): PackageFilePathAndName[] {
     // For Javascript/TypeScript, we look for package.json file
-    return files.filter((file) => file.name === "package.json");
+    return files
+      .filter((file) => file.name === "package.json")
+      .map((file) => ({
+        ...file,
+        language: this.language,
+        registry: "npm",
+      }));
   }
 
   parsePackageFile(
@@ -22,7 +29,10 @@ export class TypeScriptPackageCrawler implements PackageCrawler {
     const dependencies = Object.entries(jsonData.dependencies || {}).concat(
       Object.entries(jsonData.devDependencies || {}),
     );
-    return dependencies.map(([name, version]) => ({
+    const filtered = dependencies.filter(
+      ([name, version]) => !name.startsWith("@types/"),
+    );
+    return filtered.map(([name, version]) => ({
       name,
       version,
       packageFile: file,
@@ -42,8 +52,12 @@ export class TypeScriptPackageCrawler implements PackageCrawler {
     const data = await response.json();
     return {
       docsLink: data.homepage as string | undefined,
-      // title: data.name,
-      // description: data.description as string | undefined,
+      title: name, // package.json doesn't have specific title field
+      description: data.description as string | undefined,
+      repo: Array.isArray(data.repository)
+        ? (data.respository[0]?.url as string | undefined)
+        : undefined,
+      license: data.license as string | undefined,
     };
   }
 }

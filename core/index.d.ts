@@ -1196,6 +1196,12 @@ export interface FilePathAndName {
   path: string;
   name: string;
 }
+
+export interface PackageFilePathAndName extends FilePathAndName {
+  language: string; // e.g. javascript
+  registry: string; // e.g. npm
+}
+
 export type ParsedPackageInfo = {
   language: string;
   name: string;
@@ -1207,6 +1213,8 @@ export type PackageDetails = {
   docsLink?: string;
   title?: string;
   description?: string;
+  repo?: string;
+  license?: string;
 };
 
 export type PackageDetailsSuccess = PackageDetails & {
@@ -1219,6 +1227,3 @@ export type PackageDocsResult = {
   | { error: string; details?: never }
   | { details: PackageDetailsSuccess; error?: never }
 );
-
-// language -> package -> package info
-export type DocsSuggestions = Record<string, PackageDocsResult[]>;

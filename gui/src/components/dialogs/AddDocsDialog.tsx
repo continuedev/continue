@@ -15,7 +15,6 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import IndexingStatusViewer from "../indexing/IndexingStatus";
-import { C } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -38,17 +37,6 @@ function AddDocsDialog() {
   const docsSuggestions = useSelector(
     (store: RootState) => store.state.docsSuggestions,
   );
-
-  const docsByLanguage = useMemo(() => {
-    console.log(docsSuggestions);
-    const languages = Object.keys(docsSuggestions);
-    return languages.map((language) => {
-      return {
-        language,
-        packages: docsSuggestions[language],
-      };
-    });
-  }, [docsSuggestions]);
 
   const isFormValid = startUrl && title;
 
@@ -135,22 +123,16 @@ function AddDocsDialog() {
     <div className="p-4">
       <div className="mb-8">
         <h1>Add documentation</h1>
-        {docsByLanguage.map(({ language, packages }) => {
+        {/* {docsSuggestions.map((docsResult) => {
+          const { error, details } = docsResult;
+          const { language, name, version } = docsResult.packageInfo;
           return (
-            <div key={language}>
-              <h1>{language}</h1>
-              <div>
-                {packages.map((pkg) => {
-                  return (
-                    <div>
-                      <p>{pkg.packageInfo.name}</p>
-                    </div>
-                  );
-                })}
-              </div>
+            <div key={`${language}-${name}-${version}`}>
+              <p className="m-0 p-0">{`${name}`}</p>
+              <p className="m-0 p-0">{error ? "error" : details.docsLink}</p>
             </div>
           );
-        })}
+        })} */}
         <p>
           Continue pre-indexes many common documentation sites, but if there's
           one you don't see in the dropdown, enter the URL here.

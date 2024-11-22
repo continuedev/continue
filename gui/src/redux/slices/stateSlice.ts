@@ -5,7 +5,7 @@ import {
   ChatMessage,
   Checkpoint,
   ContextItemWithId,
-  DocsSuggestions,
+  PackageDocsResult,
   FileSymbolMap,
   IndexingStatus,
   PersistedSessionInfo,
@@ -48,7 +48,7 @@ type State = {
   };
   streamAborter: AbortController;
   isMultifileEdit: boolean;
-  docsSuggestions: DocsSuggestions;
+  docsSuggestions: PackageDocsResult[];
 };
 
 const initialState: State = {
@@ -91,7 +91,7 @@ const initialState: State = {
     },
   },
   streamAborter: new AbortController(),
-  docsSuggestions: {},
+  docsSuggestions: [],
 };
 
 export const stateSlice = createSlice({
@@ -452,9 +452,8 @@ export const stateSlice = createSlice({
     },
     updateDocsSuggestions: (
       state,
-      { payload }: PayloadAction<DocsSuggestions>,
+      { payload }: PayloadAction<PackageDocsResult[]>,
     ) => {
-      console.log("FROM REDUX", payload);
       state.docsSuggestions = payload;
     },
   },
