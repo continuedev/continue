@@ -43,6 +43,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   }, [props.toolCall.function.arguments]);
 
   function getIcon(state: ToolState) {
+    console.log("State: ", state);
     if (props.acceptedToolCall === true) {
       return <CheckIcon className="text-green-500" color={lightGray} />;
     } else if (props.acceptedToolCall === false) {
@@ -68,6 +69,7 @@ export function ToolCallDiv(props: ToolCallDivProps) {
       icon={getIcon(toolCallState.currentToolCallState)}
       toolCall={props.toolCall}
     >
+      {toolCallState.currentToolCallState}
       <FunctionSpecificToolCallDiv
         toolCall={props.toolCall}
         state={toolCallState.currentToolCallState}

@@ -59,7 +59,6 @@ import {
   readAllGlobalPromptFiles,
 } from "../util/paths";
 
-import { allTools } from "../tools";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -337,7 +336,6 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
-    model.completionOptions.tools = allTools;
   }
 
   if (allowFreeTrial) {

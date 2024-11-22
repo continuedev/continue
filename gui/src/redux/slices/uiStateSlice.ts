@@ -10,6 +10,7 @@ type UiState = {
   dialogEntryOn: boolean;
   onboardingCard: OnboardingCardState;
   shouldAddFileForEditing: boolean;
+  useTools: boolean;
 };
 
 export const uiStateSlice = createSlice({
@@ -20,6 +21,7 @@ export const uiStateSlice = createSlice({
     dialogEntryOn: false,
     onboardingCard: defaultOnboardingCardState,
     shouldAddFileForEditing: false,
+    useTools: false,
   } as UiState,
   reducers: {
     setOnboardingCard: (
@@ -49,6 +51,9 @@ export const uiStateSlice = createSlice({
     ) => {
       state.shouldAddFileForEditing = action.payload;
     },
+    toggleUseTools: (state) => {
+      state.useTools = !state.useTools;
+    },
   },
 });
 
@@ -58,6 +63,7 @@ export const {
   setDialogEntryOn,
   setShowDialog,
   setShouldAddFileForEditing,
+  toggleUseTools,
 } = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;

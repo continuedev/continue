@@ -107,6 +107,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}
             historyKey="chat"
+            toolbarOptions={{
+              hideTools: true,
+            }}
           />
         </GradientBorder>
       </div>

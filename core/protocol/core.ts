@@ -10,7 +10,6 @@ import type {
   DiffLine,
   FileSymbolMap,
   IdeSettings,
-  IndexingStatusMap,
   LLMFullCompletionOptions,
   ModelDescription,
   ModelRoles,
@@ -123,6 +122,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
+      useTools?: boolean;
     },
     ProtocolGeneratorType<ChatMessage>,
   ];

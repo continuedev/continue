@@ -1,8 +1,12 @@
-import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import {
+  AtSymbolIcon,
+  PhotoIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { useRef } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -12,6 +16,8 @@ import {
 } from "..";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { toggleUseTools } from "../../redux/slices/uiStateSlice";
+import { RootState } from "../../redux/store";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -69,6 +75,7 @@ export interface ToolbarOptions {
   hideAddContext?: boolean;
   enterText?: string;
   hideSelectModel?: boolean;
+  hideTools?: boolean;
 }
 
 interface InputToolbarProps {
@@ -87,6 +94,9 @@ function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
+  const dispatch = useDispatch();
+
+  const useTools = useSelector((store: RootState) => store.uiState.useTools);
 
   const supportsImages =
     defaultModel &&
@@ -141,6 +151,23 @@ function InputToolbar(props: InputToolbarProps) {
 
                 <ToolTip id="add-context-item-tooltip" place="top-start">
                   Add context (files, docs, urls, etc.)
+                </ToolTip>
+              </HoverItem>
+            )}
+
+            {props.toolbarOptions?.hideTools || (
+              <HoverItem onClick={() => dispatch(toggleUseTools())}>
+                <WrenchScrewdriverIcon
+                  data-tooltip-id="tools-tooltip"
+                  className="h-4 w-4"
+                  style={{
+                    color: useTools ? vscForeground : lightGray,
+                    padding: "1px",
+                    transition: "background-color 200ms",
+                  }}
+                />
+                <ToolTip id="tools-tooltip" place="top-start">
+                  Tools
                 </ToolTip>
               </HoverItem>
             )}

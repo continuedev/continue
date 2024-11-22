@@ -28,11 +28,7 @@ import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  setupInitialDotContinueDirectory,
-} from "./util/paths";
+import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -386,6 +382,12 @@ export class Core {
       }
 
       const model = await configHandler.llmFromTitle(msg.data.title);
+
+      if (msg.data.useTools) {
+        // Array.isArray(config.experimental?.allowTools)) {
+        msg.data.completionOptions.tools = allTools;
+      }
+
       const gen = model.streamChat(
         msg.data.messages,
         new AbortController().signal,
