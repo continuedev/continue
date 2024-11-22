@@ -59,11 +59,12 @@ class VerticalDiffBlock(
 
     fun deleteLineAt(line: Int) {
         val startOffset = editor.document.getLineStartOffset(line)
-        val endOffset = editor.document.getLineEndOffset(line) + 1
+        val endOffset = min(editor.document.getLineEndOffset(line) + 1, editor.document.textLength)
         val deletedText = editor.document.getText(TextRange(startOffset, endOffset))
 
         deletedLines.add(deletedText.trimEnd())
 
+        // Unable to ensure that text length has not changed, so we need to get it again
         editor.document.deleteString(startOffset, min(endOffset, editor.document.textLength))
     }
 
