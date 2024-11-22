@@ -1,6 +1,7 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
+  ApplyState,
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
@@ -14,7 +15,6 @@ import {
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { stripImages } from "core/llm/images";
-import { ApplyState } from "core/protocol/ideWebview";
 import { v4 as uuidv4, v4 } from "uuid";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
@@ -22,6 +22,7 @@ import { v4 as uuidv4, v4 } from "uuid";
 type ChatHistoryItemWithMessageId = ChatHistoryItem & {
   message: ChatMessage & { id: string };
 };
+
 type State = {
   history: ChatHistoryItemWithMessageId[];
   symbols: FileSymbolMap;
@@ -47,7 +48,6 @@ type State = {
     statuses: Record<string, IndexingStatus>;
   };
   streamAborter: AbortController;
-  isMultifileEdit: boolean;
   docsSuggestions: PackageDocsResult[];
 };
 
@@ -80,7 +80,6 @@ const initialState: State = {
   defaultModelTitle: "GPT-4",
   selectedProfileId: "local",
   checkpoints: [],
-  isMultifileEdit: false,
   curCheckpointIndex: 0,
   nextCodeBlockToApplyIndex: 0,
   applyStates: [],
@@ -311,7 +310,6 @@ export const stateSlice = createSlice({
 
       state.active = false;
       state.context.isGathering = false;
-      state.isMultifileEdit = false;
       state.symbols = {};
       if (payload) {
         state.history = payload.history as any;
@@ -376,10 +374,6 @@ export const stateSlice = createSlice({
         ...state,
         selectedProfileId: payload,
       };
-    },
-
-    setIsInMultifileEdit: (state, { payload }: PayloadAction<boolean>) => {
-      state.isMultifileEdit = payload;
     },
     setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
       state.curCheckpointIndex = payload;
@@ -481,7 +475,6 @@ export const {
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,
-  setIsInMultifileEdit,
   updateCurCheckpoint,
   setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,

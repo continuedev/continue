@@ -7,18 +7,17 @@ import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/images";
 import { CopyIconButton } from "../gui/CopyIconButton";
 
-export interface MultifileEditActionsProps {
+export interface EditActionsProps {
   index: number;
   item: ChatHistoryItem;
 }
 
-export default function MultifileEditActions({
-  index,
-  item,
-}: MultifileEditActionsProps) {
-  const curCheckpointIndex = useSelector(
-    (store: RootState) => store.state.curCheckpointIndex,
-  );
+export default function EditActions({ index, item }: EditActionsProps) {
+  // const curCheckpointIndex = useSelector(
+  //   (store: RootState) => store.state.curCheckpointIndex,
+  // );
+
+  const active = useSelector((state: RootState) => state.state.active);
 
   const applyStates = useSelector(
     (state: RootState) => state.state.applyStates,
@@ -32,8 +31,10 @@ export default function MultifileEditActions({
     (state) => state.status === "closed",
   );
 
-  const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
+  // const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
   const hasPendingApplies = pendingApplyStates.length > 0;
+
+  if (active) return;
 
   return (
     <div
@@ -41,14 +42,21 @@ export default function MultifileEditActions({
     >
       <div className="flex-1" />
 
-      {isCurCheckpoint && (
+      {/* {isCurCheckpoint && (
         <div className="flex-2 flex justify-center">
           {hasPendingApplies && (
             <AcceptRejectAllButtons pendingApplyStates={pendingApplyStates} />
           )}
           {hasClosedAllStreams && <UndoAndRedoButtons />}
         </div>
-      )}
+      )} */}
+
+      <div className="flex-2 flex justify-center">
+        {hasPendingApplies && (
+          <AcceptRejectAllButtons pendingApplyStates={pendingApplyStates} />
+        )}
+        {/* {hasClosedAllStreams && <UndoAndRedoButtons />} */}
+      </div>
 
       <div className="flex flex-1 justify-end">
         <CopyIconButton

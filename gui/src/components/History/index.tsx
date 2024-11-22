@@ -129,18 +129,26 @@ export function History() {
             return (
               <Fragment key={index}>
                 {index === 0 && date > yesterday && (
-                  <tr className={HEADER_CLASS}>Today</tr>
+                  <tr className={HEADER_CLASS}>
+                    <td colSpan={3}>Today</td>
+                  </tr>
                 )}
                 {date < yesterday &&
                   date > lastWeek &&
                   prevDate > yesterday && (
-                    <tr className={HEADER_CLASS}>This Week</tr>
+                    <tr className={HEADER_CLASS}>
+                      <td colSpan={3}>This Week</td>
+                    </tr>
                   )}
                 {date < lastWeek && date > lastMonth && prevDate > lastWeek && (
-                  <tr className={HEADER_CLASS}>This Month</tr>
+                  <tr className={HEADER_CLASS}>
+                    <td colSpan={3}>This Month</td>
+                  </tr>
                 )}
                 {date < lastMonth && prevDate > lastMonth && (
-                  <tr className={HEADER_CLASS}>Older</tr>
+                  <tr className={HEADER_CLASS}>
+                    <td colSpan={3}>Older</td>
+                  </tr>
                 )}
 
                 <HistoryTableRow

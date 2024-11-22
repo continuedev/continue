@@ -469,7 +469,7 @@ export abstract class BaseLLM implements ILLM {
     );
 
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return {
@@ -521,7 +521,7 @@ export abstract class BaseLLM implements ILLM {
       this._logTokensGenerated(completionOptions.model, prompt, completion);
 
       if (log && this.writeLog) {
-        await this.writeLog(`Completion:\n\n${completion}\n\n`);
+        await this.writeLog(`Completion:\n${completion}\n\n`);
       }
     }
 
@@ -562,7 +562,7 @@ export abstract class BaseLLM implements ILLM {
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return completion;
@@ -628,7 +628,7 @@ export abstract class BaseLLM implements ILLM {
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+      await this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return {

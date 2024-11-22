@@ -1,13 +1,4 @@
-import { ContextItemWithId } from "../";
-
-export interface RangeInFileWithContents {
-  filepath: string;
-  range: {
-    start: { line: number; character: number };
-    end: { line: number; character: number };
-  };
-  contents: string;
-}
+import { ContextItemWithId, RangeInFileWithContents } from "../";
 
 export function ctxItemToRifWithContents(
   item: ContextItemWithId,

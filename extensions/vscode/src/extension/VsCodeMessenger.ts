@@ -250,7 +250,9 @@ export class VsCodeMessenger {
         llm,
         fastLlm,
       );
+
       const verticalDiffManager = await this.verticalDiffManagerPromise;
+
       if (instant) {
         await verticalDiffManager.streamDiffLines(
           diffLines,

@@ -10,7 +10,9 @@ import { useConfigError } from "../redux/hooks";
 import {
   setEditDone,
   setEditStatus,
-  startEditMode,
+  addCodeToEdit,
+  focusEdit,
+  clearCodeToEdit,
 } from "../redux/slices/editModeState";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
 import {
@@ -183,10 +185,28 @@ const Layout = () => {
   );
 
   useWebviewListener(
-    "startEditMode",
-    async (args) => {
-      dispatch(startEditMode(args));
+    "focusEdit",
+    async () => {
+      dispatch(focusEdit());
+      dispatch(clearCodeToEdit());
       navigate("/edit");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "focusEditWithoutClear",
+    async () => {
+      dispatch(focusEdit());
+      navigate("/edit");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "addCodeToEdit",
+    async (payload) => {
+      dispatch(addCodeToEdit(payload));
     },
     [navigate],
   );
