@@ -1198,15 +1198,14 @@ export interface FilePathAndName {
 }
 
 export interface PackageFilePathAndName extends FilePathAndName {
-  language: string; // e.g. javascript
-  registry: string; // e.g. npm
+  packageRegistry: string; // e.g. npm, pypi
 }
 
 export type ParsedPackageInfo = {
-  language: string;
   name: string;
+  packageFile: PackageFilePathAndName;
+  language: string;
   version: string;
-  packageFile: FilePathAndName;
 };
 
 export type PackageDetails = {

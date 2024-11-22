@@ -6,8 +6,8 @@ import {
   ParsedPackageInfo,
 } from "../../../..";
 
-export class TypeScriptPackageCrawler implements PackageCrawler {
-  language = "js-ts";
+export class NodePackageCrawler implements PackageCrawler {
+  packageRegistry = "npm";
 
   getPackageFiles(files: FilePathAndName[]): PackageFilePathAndName[] {
     // For Javascript/TypeScript, we look for package.json file
@@ -15,13 +15,12 @@ export class TypeScriptPackageCrawler implements PackageCrawler {
       .filter((file) => file.name === "package.json")
       .map((file) => ({
         ...file,
-        language: this.language,
-        registry: "npm",
+        packageRegistry: this.packageRegistry,
       }));
   }
 
   parsePackageFile(
-    file: FilePathAndName,
+    file: PackageFilePathAndName,
     contents: string,
   ): ParsedPackageInfo[] {
     // Parse the package.json content
@@ -29,14 +28,24 @@ export class TypeScriptPackageCrawler implements PackageCrawler {
     const dependencies = Object.entries(jsonData.dependencies || {}).concat(
       Object.entries(jsonData.devDependencies || {}),
     );
-    const filtered = dependencies.filter(
-      ([name, version]) => !name.startsWith("@types/"),
-    );
+
+    // Filter out types packages and check if typescript is present
+    let foundTypes = false;
+    const filtered = dependencies.filter(([name, _]) => {
+      if (name.startsWith("@types/")) {
+        foundTypes = true;
+        return false;
+      }
+      if (name.includes("typescript")) {
+        foundTypes = true;
+      }
+      return true;
+    });
     return filtered.map(([name, version]) => ({
       name,
       version,
       packageFile: file,
-      language: this.language,
+      language: foundTypes ? "ts" : "js",
     }));
   }
 

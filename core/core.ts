@@ -19,6 +19,7 @@ import { ControlPlaneClient } from "./control-plane/client";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
+import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
@@ -28,11 +29,7 @@ import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  setupInitialDotContinueDirectory,
-} from "./util/paths";
+import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -40,7 +37,6 @@ import { TTS } from "./util/tts";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./util/messenger";
-import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>

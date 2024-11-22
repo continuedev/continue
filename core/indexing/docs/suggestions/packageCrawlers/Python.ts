@@ -7,7 +7,7 @@ import {
 } from "../../../..";
 
 export class PythonPackageCrawler implements PackageCrawler {
-  language = "python";
+  packageRegistry = "pypi";
 
   getPackageFiles(files: FilePathAndName[]): PackageFilePathAndName[] {
     // For Python, we typically look for files like requirements.txt or Pipfile
@@ -17,13 +17,12 @@ export class PythonPackageCrawler implements PackageCrawler {
       )
       .map((file) => ({
         ...file,
-        language: this.language,
-        registry: "pypi",
+        packageRegistry: "pypi",
       }));
   }
 
   parsePackageFile(
-    file: FilePathAndName,
+    file: PackageFilePathAndName,
     contents: string,
   ): ParsedPackageInfo[] {
     // Assume the fileContent is a string from a requirements.txt formatted file
@@ -31,7 +30,7 @@ export class PythonPackageCrawler implements PackageCrawler {
       .split("\n")
       .map((line) => {
         const [name, version] = line.split("==");
-        return { name, version, packageFile: file, language: this.language };
+        return { name, version, packageFile: file, language: "python" };
       })
       .filter((pkg) => pkg.name && pkg.version);
   }

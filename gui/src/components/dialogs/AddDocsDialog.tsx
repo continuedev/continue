@@ -2,8 +2,11 @@ import {
   CheckCircleIcon,
   ChevronDownIcon,
   ChevronUpIcon,
+  CodeBracketIcon,
+  InformationCircleIcon,
+  LinkIcon,
 } from "@heroicons/react/24/outline";
-import { SiteIndexingConfig } from "core";
+import { PackageDocsResult, SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,6 +18,8 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import IndexingStatusViewer from "../indexing/IndexingStatus";
+
+import { ToolTip } from "../gui/Tooltip";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -67,72 +72,125 @@ function AddDocsDialog() {
     posthog.capture("add_docs_gui", { url: startUrl });
   }
 
-  if (submittedConfig) {
-    const status = indexingStatuses[submittedConfig.startUrl];
-    return (
-      <div className="flex flex-col p-4">
-        <div className="flex flex-row items-center gap-2">
-          <CheckCircleIcon className="h-8 w-8" />
-          <h1>{`Docs added`}</h1>
-        </div>
-        <div className="flex flex-col gap-1 text-stone-500">
-          <p className="m-0 p-0">Title: {submittedConfig.title}</p>
-          <p className="m-0 p-0">Start URL: {submittedConfig.startUrl}</p>
-          {submittedConfig.rootUrl && (
-            <p className="m-0 p-0">Root URL: {submittedConfig.rootUrl}</p>
-          )}
-          {submittedConfig.maxDepth && (
-            <p className="m-0 p-0">Max depth: {submittedConfig.maxDepth}</p>
-          )}
-          {submittedConfig.faviconUrl && (
-            <p className="m-0 p-0">Favicon URL: {submittedConfig.faviconUrl}</p>
-          )}
-        </div>
-        {!!status && (
-          <div className="mt-4 flex flex-col divide-x-0 divide-y-2 divide-solid divide-zinc-700">
-            <p className="m-0 mb-5 p-0 leading-snug">{`Type "@docs" and select ${submittedConfig.title} to reference these docs once indexing is complete. Check indexing status from the "More" page.`}</p>
-            <div className="pt-1">
-              <IndexingStatusViewer status={status} />
-            </div>
-          </div>
-        )}
-        <div className="mt-4 flex flex-row items-center justify-end gap-4">
-          <SecondaryButton
-            className=""
-            onClick={() => {
-              setSubmittedConfig(undefined);
-            }}
-          >
-            Add another
-          </SecondaryButton>
-          <Button
-            className=""
-            onClick={() => {
-              dispatch(setDialogMessage(undefined));
-              dispatch(setShowDialog(false));
-            }}
-          >
-            Done
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const handleSelectSuggestion = (docsResult: PackageDocsResult) => {};
+
+  // if (submittedConfig) {
+  //   const status = indexingStatuses[submittedConfig.startUrl];
+  //   return (
+  //     <div className="flex flex-col p-4">
+  //       <div className="flex flex-row items-center gap-2">
+  //         <CheckCircleIcon className="h-8 w-8" />
+  //         <h1>{`Docs added`}</h1>
+  //       </div>
+  //       <div className="flex flex-col gap-1 text-stone-500">
+  //         <p className="m-0 p-0">Title: {submittedConfig.title}</p>
+  //         <p className="m-0 p-0">Start URL: {submittedConfig.startUrl}</p>
+  //         {submittedConfig.rootUrl && (
+  //           <p className="m-0 p-0">Root URL: {submittedConfig.rootUrl}</p>
+  //         )}
+  //         {submittedConfig.maxDepth && (
+  //           <p className="m-0 p-0">Max depth: {submittedConfig.maxDepth}</p>
+  //         )}
+  //         {submittedConfig.faviconUrl && (
+  //           <p className="m-0 p-0">Favicon URL: {submittedConfig.faviconUrl}</p>
+  //         )}
+  //       </div>
+  //       {!!status && (
+  //         <div className="mt-4 flex flex-col divide-x-0 divide-y-2 divide-solid divide-zinc-700">
+  //           <p className="m-0 mb-5 p-0 leading-snug">{`Type "@docs" and select ${submittedConfig.title} to reference these docs once indexing is complete. Check indexing status from the "More" page.`}</p>
+  //           <div className="pt-1">
+  //             <IndexingStatusViewer status={status} />
+  //           </div>
+  //         </div>
+  //       )}
+  //       <div className="mt-4 flex flex-row items-center justify-end gap-4">
+  //         <SecondaryButton
+  //           className=""
+  //           onClick={() => {
+  //             setSubmittedConfig(undefined);
+  //           }}
+  //         >
+  //           Add another
+  //         </SecondaryButton>
+  //         <Button
+  //           className=""
+  //           onClick={() => {
+  //             dispatch(setDialogMessage(undefined));
+  //             dispatch(setShowDialog(false));
+  //           }}
+  //         >
+  //           Done
+  //         </Button>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="p-4">
       <div className="mb-8">
         <h1>Add documentation</h1>
-        {/* {docsSuggestions.map((docsResult) => {
-          const { error, details } = docsResult;
-          const { language, name, version } = docsResult.packageInfo;
-          return (
-            <div key={`${language}-${name}-${version}`}>
-              <p className="m-0 p-0">{`${name}`}</p>
-              <p className="m-0 p-0">{error ? "error" : details.docsLink}</p>
-            </div>
-          );
-        })} */}
+        {docsSuggestions.length ? (
+          <div className="no-scrollbar max-h-[300px] overflow-y-auto">
+            <table className="border-collapse p-0">
+              <thead className="bg-vsc-background sticky -top-1 font-bold">
+                <tr className="">
+                  <td className="pr-1">
+                    <CodeBracketIcon className="h-3.5 w-3.5" />
+                  </td>
+                  <td className="pr-1">Title</td>
+                  {/* <td className="pr-1">Version</td> */}
+                  <td className="pr-1">Start Link</td>
+                  <td></td>
+                </tr>
+              </thead>
+              <tbody className="p-0">
+                <tr className="whitespace-nowrap">Add docs</tr>
+                {docsSuggestions.map((docsResult) => {
+                  const { error, details } = docsResult;
+                  const { language, name, version } = docsResult.packageInfo;
+                  const id = `${language}-${name}-${version}`;
+                  return (
+                    <tr key={id} className="p-0">
+                      <td>
+                        <input type="checkbox"></input>
+                      </td>
+                      <td>{name}</td>
+                      {/* <td>{version}</td> */}
+                      <td className="">
+                        {error ? (
+                          <span className="text-vsc-input-border italic">
+                            No docs link found
+                          </span>
+                        ) : (
+                          <span className="flex flex-row items-center gap-2">
+                            <div>
+                              <LinkIcon className="h-2 w-2" />
+                            </div>
+                            <p className="lines lines-1 m-0 p-0">
+                              {details.docsLink}
+                            </p>
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <InformationCircleIcon
+                          data-tooltip-id={id}
+                          className="text-vsc-foreground-muted h-3.5 w-3.5 cursor-help"
+                        />
+
+                        <ToolTip id={id} place="bottom">
+                          <p className="m-0 p-0">{`Version: ${version}`}</p>
+                          <p className="m-0 p-0">{`Found in ${docsResult.packageInfo.packageFile.path}`}</p>
+                        </ToolTip>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
         <p>
           Continue pre-indexes many common documentation sites, but if there's
           one you don't see in the dropdown, enter the URL here.
@@ -143,7 +201,7 @@ function AddDocsDialog() {
           so that you can ask questions.
         </p>
       </div>
-
+      {/* 
       <form onSubmit={onSubmit} className="flex flex-col space-y-4">
         <label>
           Title
@@ -219,7 +277,7 @@ function AddDocsDialog() {
             Submit
           </Button>
         </div>
-      </form>
+      </form> */}
     </div>
   );
 }

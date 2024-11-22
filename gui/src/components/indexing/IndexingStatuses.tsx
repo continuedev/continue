@@ -34,20 +34,19 @@ function IndexingStatuses() {
         Manage your documentation sources
       </span>
       {/* <div className="flex max-h-[170px] flex-col gap-1 overflow-x-hidden overflow-y-scroll pr-2"> */}
-      {docsStatuses.length ? (
-        docsStatuses.map((status) => {
-          return <IndexingStatusViewer key={status.id} status={status} />;
-        })
-      ) : (
-        <SecondaryButton
-          onClick={() => {
-            dispatch(setShowDialog(true));
-            dispatch(setDialogMessage(<AddDocsDialog />));
-          }}
-        >
-          Add Docs
-        </SecondaryButton>
-      )}
+      {docsStatuses.length
+        ? docsStatuses.map((status) => {
+            return <IndexingStatusViewer key={status.id} status={status} />;
+          })
+        : null}
+      <SecondaryButton
+        onClick={() => {
+          dispatch(setShowDialog(true));
+          dispatch(setDialogMessage(<AddDocsDialog />));
+        }}
+      >
+        Add Docs
+      </SecondaryButton>
     </div>
     // </div>
   );

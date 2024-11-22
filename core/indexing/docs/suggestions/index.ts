@@ -9,12 +9,12 @@ import {
 import { walkDir } from "../../walkDir";
 
 import { PythonPackageCrawler } from "./packageCrawlers/Python";
-import { TypeScriptPackageCrawler } from "./packageCrawlers/TsJs";
+import { NodePackageCrawler } from "./packageCrawlers/TsJs";
 
-const PACKAGE_CRAWLERS = [TypeScriptPackageCrawler, PythonPackageCrawler];
+const PACKAGE_CRAWLERS = [NodePackageCrawler, PythonPackageCrawler];
 
 export interface PackageCrawler {
-  language: string;
+  packageRegistry: string;
   getPackageFiles(files: FilePathAndName[]): PackageFilePathAndName[];
   parsePackageFile(
     file: PackageFilePathAndName,
@@ -37,17 +37,17 @@ export async function getAllSuggestedDocs(ide: IDE) {
   }));
 
   // Build map of language -> package files
-  const packageFilesByLanguage: Record<string, PackageFilePathAndName[]> = {};
+  const packageFilesByRegistry: Record<string, PackageFilePathAndName[]> = {};
   for (const Crawler of PACKAGE_CRAWLERS) {
     const crawler = new Crawler();
     const packageFilePaths = crawler.getPackageFiles(allFiles);
-    packageFilesByLanguage[crawler.language] = packageFilePaths;
+    packageFilesByRegistry[crawler.packageRegistry] = packageFilePaths;
   }
 
   // Get file contents for all unique package files
   const uniqueFilePaths = Array.from(
     new Set(
-      Object.values(packageFilesByLanguage).flatMap((files) =>
+      Object.values(packageFilesByRegistry).flatMap((files) =>
         files.map((file) => file.path),
       ),
     ),
@@ -63,20 +63,20 @@ export async function getAllSuggestedDocs(ide: IDE) {
   );
 
   // Parse package files and build map of language -> packages
-  const packagesByLanguage: Record<string, ParsedPackageInfo[]> = {};
+  const packagesByRegistry: Record<string, ParsedPackageInfo[]> = {};
   PACKAGE_CRAWLERS.forEach((Crawler) => {
     const crawler = new Crawler();
-    const packageFiles = packageFilesByLanguage[crawler.language];
+    const packageFiles = packageFilesByRegistry[crawler.packageRegistry];
     packageFiles.forEach((file) => {
       const contents = fileContents.get(file.path);
       if (!contents) {
         return;
       }
       const packages = crawler.parsePackageFile(file, contents);
-      if (!packagesByLanguage[crawler.language]) {
-        packagesByLanguage[crawler.language] = [];
+      if (!packagesByRegistry[crawler.packageRegistry]) {
+        packagesByRegistry[crawler.packageRegistry] = [];
       }
-      packagesByLanguage[crawler.language].push(...packages);
+      packagesByRegistry[crawler.packageRegistry].push(...packages);
     });
   });
 
@@ -84,13 +84,13 @@ export async function getAllSuggestedDocs(ide: IDE) {
   // TODO - this is where you would allow docs for different versions
   // by e.g. using "name-version" as the map key instead of just name
   // For now have not allowed
-  const languages = Object.keys(packagesByLanguage);
+  const languages = Object.keys(packagesByRegistry);
   languages.forEach((language) => {
-    const packages = packagesByLanguage[language];
+    const packages = packagesByRegistry[language];
     const uniquePackages = Array.from(
       new Map(packages.map((pkg) => [pkg.name, pkg])).values(),
     );
-    packagesByLanguage[language] = uniquePackages;
+    packagesByRegistry[language] = uniquePackages;
   });
 
   // Get documentation links for all packages
@@ -98,8 +98,8 @@ export async function getAllSuggestedDocs(ide: IDE) {
   await Promise.all(
     PACKAGE_CRAWLERS.map(async (Crawler) => {
       const crawler = new Crawler();
-      const packages = packagesByLanguage[crawler.language];
-      const docsByLanguage = await Promise.all(
+      const packages = packagesByRegistry[crawler.packageRegistry];
+      const docsByRegistry = await Promise.all(
         packages.map(async (packageInfo) => {
           try {
             const details = await crawler.getPackageDetails(packageInfo);
@@ -119,12 +119,12 @@ export async function getAllSuggestedDocs(ide: IDE) {
           } catch (error) {
             return {
               packageInfo,
-              error: `Error getting package details for ${name}`,
+              error: `Error getting package details for ${packageInfo.name}`,
             };
           }
         }),
       );
-      allDocsResults.push(...docsByLanguage);
+      allDocsResults.push(...docsByRegistry);
     }),
   );
   return allDocsResults;
