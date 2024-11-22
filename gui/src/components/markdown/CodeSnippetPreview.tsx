@@ -44,6 +44,7 @@ interface CodeSnippetPreviewProps {
   item: ContextItemWithId;
   onDelete?: () => void;
   borderColor?: string;
+  hideHeader?: boolean;
 }
 
 const MAX_PREVIEW_HEIGHT = 300;
@@ -74,47 +75,49 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       borderColor={props.borderColor}
       className="find-widget-skip"
     >
-      <PreviewMarkdownHeader
-        className="flex cursor-pointer justify-between"
-        onClick={() => {
-          if (props.item.id.providerTitle === "file") {
-            ideMessenger.post("showFile", {
-              filepath: props.item.description,
-            });
-          } else if (props.item.id.providerTitle === "code") {
-            const lines = props.item.name
-              .split("(")[1]
-              .split(")")[0]
-              .split("-");
-            ideMessenger.ide.showLines(
-              props.item.description.split(" ")[0],
-              parseInt(lines[0]) - 1,
-              parseInt(lines[1]) - 1,
-            );
-          } else {
-            ideMessenger.post("showVirtualFile", {
-              content,
-              name: props.item.name,
-            });
-          }
-        }}
-      >
-        <div className="flex items-center gap-1">
-          <FileIcon height="16px" width="16px" filename={props.item.name} />
-          {props.item.name}
-        </div>
-        <div className="flex items-center gap-1">
-          <HeaderButtonWithToolTip
-            text="Delete"
-            onClick={(e) => {
-              e.stopPropagation();
-              props.onDelete?.();
-            }}
-          >
-            <XMarkIcon width="1em" height="1em" />
-          </HeaderButtonWithToolTip>
-        </div>
-      </PreviewMarkdownHeader>
+      {!props.hideHeader && (
+        <PreviewMarkdownHeader
+          className="flex cursor-pointer justify-between"
+          onClick={() => {
+            if (props.item.id.providerTitle === "file") {
+              ideMessenger.post("showFile", {
+                filepath: props.item.description,
+              });
+            } else if (props.item.id.providerTitle === "code") {
+              const lines = props.item.name
+                .split("(")[1]
+                .split(")")[0]
+                .split("-");
+              ideMessenger.ide.showLines(
+                props.item.description.split(" ")[0],
+                parseInt(lines[0]) - 1,
+                parseInt(lines[1]) - 1,
+              );
+            } else {
+              ideMessenger.post("showVirtualFile", {
+                content,
+                name: props.item.name,
+              });
+            }
+          }}
+        >
+          <div className="flex items-center gap-1">
+            <FileIcon height="16px" width="16px" filename={props.item.name} />
+            {props.item.name}
+          </div>
+          <div className="flex items-center gap-1">
+            <HeaderButtonWithToolTip
+              text="Delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                props.onDelete?.();
+              }}
+            >
+              <XMarkIcon width="1em" height="1em" />
+            </HeaderButtonWithToolTip>
+          </div>
+        </PreviewMarkdownHeader>
+      )}
       <div
         contentEditable={false}
         className={`m-0 ${collapsed ? "max-h-[33vh] overflow-hidden" : "overflow-auto"}`}
@@ -124,7 +127,6 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description.split(" ")[0],
           )} ${props.item.description}\n${content}\n${fence}`}
-          contextItems={[props.item]}
         />
       </div>
 

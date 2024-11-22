@@ -1,5 +1,5 @@
 import { ChatHistoryItem } from "core";
-import { renderChatMessage } from "core/util/messageContent";
+import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -32,13 +32,13 @@ export default function StepContainer(props: StepContainerProps) {
   const curCheckpointIndex = useSelector(
     (store: RootState) => store.state.curCheckpointIndex,
   );
-  const isMultifileEdit = useSelector(
-    (store: RootState) => store.state.isMultifileEdit,
+  const isInEditMode = useSelector(
+    (store: RootState) => store.editModeState.isInEditMode,
   );
   const uiConfig = useUIConfig();
   const shouldHideActions = active && props.isLast;
-  const isStepAheadOfCurCheckpoint =
-    isMultifileEdit && Math.floor(props.index / 2) > curCheckpointIndex;
+  // const isStepAheadOfCurCheckpoint =
+  //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
     if (!active) {
@@ -77,7 +77,7 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div
-      className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
+      // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
       style={{
         minHeight: props.isLast ? "50vh" : 0,
       }}
@@ -93,7 +93,8 @@ export default function StepContainer(props: StepContainerProps) {
         ) : (
           <StyledMarkdownPreview
             isRenderingInStepContainer
-            source={renderChatMessage(props.item.message)}
+            source={stripImages(props.item.message.content)}
+            itemIndex={props.index}
           />
         )}
       </ContentDiv>

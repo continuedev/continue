@@ -291,7 +291,7 @@ Reference the conversation in a Jira issue.
       "name": "jira",
       "params": {
         "domain": "company.atlassian.net",
-        "token ": "ATATT..."
+        "token": "ATATT..."
       }
     }
   ]

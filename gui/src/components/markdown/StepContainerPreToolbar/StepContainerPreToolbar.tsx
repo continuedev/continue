@@ -70,11 +70,11 @@ export default function StepContainerPreToolbar(
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
-  const isMultifileEdit = useSelector(
-    (state: RootState) => state.state.isMultifileEdit,
+  const isInEditMode = useSelector(
+    (state: RootState) => state.editModeState.isInEditMode,
   );
   const [isExpanded, setIsExpanded] = useState(
-    props.expanded ?? (isMultifileEdit ? false : true),
+    props.expanded ?? (isInEditMode ? false : true),
   );
   const active = useSelector((state: RootState) => state.state.active);
   const [codeBlockContent, setCodeBlockContent] = useState("");
@@ -139,7 +139,7 @@ export default function StepContainerPreToolbar(
   useEffect(() => {
     const hasCompletedGenerating =
       wasGeneratingRef.current && !isGeneratingCodeBlock;
-    const shouldAutoApply = hasCompletedGenerating && isMultifileEdit;
+    const shouldAutoApply = hasCompletedGenerating && isInEditMode;
 
     if (shouldAutoApply) {
       onClickApply();
@@ -178,7 +178,7 @@ export default function StepContainerPreToolbar(
         <div className="flex min-w-0 max-w-[45%] items-center">
           <ChevronDownIcon
             onClick={onClickExpand}
-            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 hover:bg-gray-800 hover:brightness-125 ${
+            className={`h-3.5 w-3.5 shrink-0 cursor-pointer text-gray-400 transition-colors hover:bg-white/10 ${
               isExpanded ? "rotate-0" : "-rotate-90"
             }`}
           />

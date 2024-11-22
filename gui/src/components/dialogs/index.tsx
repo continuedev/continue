@@ -34,7 +34,6 @@ const DialogContainer = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 75%;
 `;
 
 const Dialog = styled.div`
@@ -72,6 +71,7 @@ const TextDialog = (props: TextDialogProps) => {
   return (
     <ScreenCover onClick={props.onClose} hidden={!props.showDialog}>
       <DialogContainer
+        className="xs:w-[85%] w-[92%] sm:w-[75%]"
         onClick={(e) => {
           e.stopPropagation();
         }}

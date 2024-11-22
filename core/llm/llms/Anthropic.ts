@@ -105,7 +105,9 @@ class Anthropic extends BaseLLM {
 
   public convertMessages(msgs: ChatMessage[]): any[] {
     // should be public for use within VertexAI
-    const filteredmessages = msgs.filter((m) => m.role !== "system");
+    const filteredmessages = msgs.filter(
+      (m) => m.role !== "system" && !!m.content,
+    );
     const lastTwoUserMsgIndices = filteredmessages
       .map((msg, index) => (msg.role === "user" ? index : -1))
       .filter((index) => index !== -1)

@@ -13,6 +13,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
 import { getLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
+import { RootState } from "../redux/store";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -37,6 +38,8 @@ function useSubmenuContextProviders() {
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
+
+  const config = useSelector((store: RootState) => store.state.config);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -213,12 +216,10 @@ function useSubmenuContextProviders() {
 
     const loadSubmenuItems = async () => {
       try {
-        const disableIndexing = getLocalStorage("disableIndexing") ?? false;
-
         await Promise.all(
           contextProviderDescriptions.map(async (description) => {
             const shouldSkipProvider =
-              description.dependsOnIndexing && disableIndexing;
+              description.dependsOnIndexing && config.disableIndexing;
 
             if (shouldSkipProvider) {
               console.debug(

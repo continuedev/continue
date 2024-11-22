@@ -14,6 +14,11 @@ import {
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
+/**
+ * Bedrock class implements AWS Bedrock LLM integration.
+ * It handles streaming completions and chat messages using AWS Bedrock runtime.
+ * Supports both text and image inputs through Claude 3 models.
+ */
 class Bedrock extends BaseLLM {
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {

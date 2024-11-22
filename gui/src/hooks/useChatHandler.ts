@@ -21,7 +21,9 @@ import {
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-import resolveEditorContent from "../components/mainInput/resolveInput";
+import resolveEditorContent, {
+  hasSlashCommandOrContextProvider,
+} from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -42,6 +44,7 @@ import {
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
+import { updateFileSymbolsFromContextItems } from "../util/symbols";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -184,17 +187,29 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     editorState: JSONContent,
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
+    promptPreamble?: string,
   ) {
     // Resolve context providers and construct new history
-    dispatch(setIsGatheringContext(true));
-    const [selectedContextItems, selectedCode, content] =
+    const shouldGatherContext =
+      modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
+
+    if (shouldGatherContext) {
+      dispatch(
+        setIsGatheringContext({
+          isGathering: true,
+          gatheringMessage: "Gathering Context",
+        }),
+      );
+    }
+
+    let [selectedContextItems, selectedCode, content] =
       await resolveEditorContent(
         editorState,
         modifiers,
         ideMessenger,
         defaultContextProviders,
+        dispatch,
       );
-    dispatch(setIsGatheringContext(false));
 
     // Automatically use currently open file
     if (!modifiers.noContext) {
@@ -235,6 +250,18 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
     }
 
+    await updateFileSymbolsFromContextItems(
+      selectedContextItems,
+      ideMessenger,
+      dispatch,
+    );
+
+    if (promptPreamble) {
+      typeof content === "string"
+        ? (content += promptPreamble)
+        : (content.at(-1).text += promptPreamble);
+    }
+
     // dispatch(addContextItems(contextItems));
     return { selectedContextItems, selectedCode, content };
   }
@@ -259,6 +286,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
     index?: number,
+    promptPreamble?: string,
   ) {
     if (typeof index === "number") {
       dispatch(resubmitAtIndex({ index, editorState }));
@@ -276,6 +304,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       editorState,
       modifiers,
       ideMessenger,
+      promptPreamble,
     );
 
     const message: ChatMessage = {
@@ -343,6 +372,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     modifiers: InputModifiers,
     ideMessenger: IIdeMessenger,
     index?: number,
+    promptPreamble?: string,
   ) {
     await handleErrors(() =>
       streamResponseWithoutErrorHandling(
@@ -350,6 +380,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers,
         ideMessenger,
         index,
+        promptPreamble,
       ),
     );
   }

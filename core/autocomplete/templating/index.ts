@@ -13,21 +13,24 @@ import {
 import { getStopTokens } from "./getStopTokens";
 import { countTokens } from "../../llm/countTokens";
 
+const addCommentMarks = (text: string, language: AutocompleteLanguageInfo) => {
+  const comment = language.singleLineComment;
+  const lines = [
+    ...text
+      .trim()
+      .split("\n")
+      .map((line) => `${comment} ${line}`),
+  ];
+  return lines.join("\n");
+};
+
 export function formatExternalSnippet(
   filepath: string,
   snippet: string,
   language: AutocompleteLanguageInfo,
 ) {
-  const comment = language.singleLineComment;
-  const lines = [
-    `${comment} Path: ${getBasename(filepath)}`,
-    ...snippet
-      .trim()
-      .split("\n")
-      .map((line) => `${comment} ${line}`),
-    comment,
-  ];
-  return lines.join("\n");
+  const filePathString = `Path: ${getBasename(filepath)}\n`;
+  return addCommentMarks(`${filePathString}${snippet}`, language);
 }
 
 function getContextComments(
@@ -35,14 +38,21 @@ function getContextComments(
   lang: AutocompleteLanguageInfo,
   filepath: string,
 ) {
+  if (snippets.length === 0) {
+    return "";
+  }
+
+  const headerSnipper = `\n\n${lang.singleLineComment} Related code:\n`;
   const fileNameSnippet = `\n\n${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n\n`;
 
   const formattedSnippets =
+    headerSnipper +
     snippets
       .map((snippet) =>
         formatExternalSnippet(snippet.filepath, snippet.contents, lang),
       )
-      .join("\n") + fileNameSnippet;
+      .join("\n") +
+    fileNameSnippet;
 
   return formattedSnippets;
 }
@@ -90,16 +100,51 @@ const formatDiff = (helper: HelperVars, diff?: string) => {
   return `${diff}\n\n`;
 };
 
+const MAX_CLIPBOARD_AGE = 5 * 60 * 1000;
+
+const formatClipboardContent = (
+  helper: HelperVars,
+  { text, copiedAt }: { text: string; copiedAt: string },
+) => {
+  const currDate = new Date();
+
+  const isTooOld =
+    currDate.getTime() - new Date(copiedAt).getTime() > MAX_CLIPBOARD_AGE;
+
+  if (isTooOld) {
+    return "";
+  }
+
+  const tokenCount = countTokens(text, helper.modelName);
+  const isTooLong = tokenCount > helper.maxClipboardTokens;
+
+  if (isTooLong) {
+    return "";
+  }
+
+  return (
+    addCommentMarks(
+      `Recently copied by user:${text.includes("\n") ? "\n" : ""} ${text}`,
+      helper.lang,
+    ) + "\n"
+  );
+};
+
 export function renderPrompt({
   snippets,
   workspaceDirs,
   helper,
   diff,
+  clipboardContent,
 }: {
   snippets: AutocompleteSnippet[];
   workspaceDirs: string[];
   helper: HelperVars;
   diff?: string;
+  clipboardContent: {
+    text: string;
+    copiedAt: string;
+  };
 }): {
   prompt: string;
   prefix: string;
@@ -132,8 +177,11 @@ export function renderPrompt({
       helper.filepath,
     );
     const formattedDiff = formatDiff(helper, diff);
+    const formattedClipboard = formatClipboardContent(helper, clipboardContent);
 
-    prefix = `${formattedDiff}${contextComments}${prefix}`;
+    prefix = [formattedClipboard, formattedDiff, contextComments, prefix].join(
+      "",
+    );
   }
 
   const prompt =

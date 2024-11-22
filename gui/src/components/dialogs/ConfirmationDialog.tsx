@@ -43,9 +43,9 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
           <SecondaryButton
             style={{ color: lightGray }}
             onClick={() => {
-              props.onCancel?.();
               dispatch(setShowDialog(false));
               dispatch(setDialogMessage(undefined));
+              props.onCancel?.();
             }}
           >
             Cancel

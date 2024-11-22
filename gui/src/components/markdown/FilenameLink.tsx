@@ -20,15 +20,15 @@ function FilenameLink({ rif }: FilenameLinkProps) {
   }
 
   return (
-    <div
-      className="mb-0.5 inline-flex cursor-pointer items-center gap-0.5 rounded-md py-0.5 pl-0 pr-1 align-middle hover:bg-stone-800"
+    <span
+      className="mx-[0.1em] mb-[0.15em] inline-flex cursor-pointer items-center gap-0.5 rounded-md pr-[0.2em] align-middle hover:ring-1"
       onClick={onClick}
     >
       <FileIcon filename={rif.filepath} height="20px" width="20px" />
-      <span className="align-middle underline decoration-gray-600 underline-offset-2">
+      <span className="align-baseline underline underline-offset-2 mb-0.5">
         {getBasename(rif.filepath)}
       </span>
-    </div>
+    </span>
   );
 }
 
