@@ -2523,7 +2523,8 @@
                 "deepinfra",
                 "mistral",
                 "watsonx",
-                "lmstudio"
+                "lmstudio",
+                "siliconflow"
               ]
             },
             "model": {
@@ -2571,7 +2572,7 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "nvidia", "gemini"]
+                    "enum": ["cohere", "voyage", "nvidia", "gemini", "siliconflow"]
                   }
                 },
                 "required": ["provider"]

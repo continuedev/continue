@@ -916,7 +916,8 @@ export type EmbeddingsProviderName =
   | "mistral"
   | "nebius"
   | "vertexai"
-  | "watsonx";
+  | "watsonx"
+  | "siliconflow";
 
 export interface EmbedOptions {
   apiBase?: string;
