@@ -11,7 +11,7 @@ export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
     <>
       <StyledMarkdownPreview
         isRenderingInStepContainer={true}
-        source={`\`\`\`bash .sh\n${props.command}\n\`\`\``}
+        source={`\`\`\`bash .sh\n${props.command ?? ""}\n\`\`\``}
       />
     </>
   );

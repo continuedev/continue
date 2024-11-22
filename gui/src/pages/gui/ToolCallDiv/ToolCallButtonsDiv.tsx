@@ -91,6 +91,18 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
     }
   }
 
+  async function cancelTool() {
+    dispatch(cancelToolCall());
+    streamResponseAfterToolCall(toolCallState.toolCall.id, [
+      {
+        name: "Cancelled",
+        description: "Cancelled",
+        content:
+          "This tool call was cancelled by the user. You should try something else, likely just chatting instead of using another tool.",
+      },
+    ]);
+  }
+
   return (
     <>
       <ButtonContainer>
@@ -106,9 +118,7 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
           </div>
         ) : toolCallState.currentToolCallState === "generated" ? (
           <>
-            <RejectButton onClick={() => dispatch(cancelToolCall())}>
-              Cancel
-            </RejectButton>
+            <RejectButton onClick={cancelTool}>Cancel</RejectButton>
             <AcceptButton onClick={callTool}>Continue</AcceptButton>
           </>
         ) : toolCallState.currentToolCallState === "calling" ? (

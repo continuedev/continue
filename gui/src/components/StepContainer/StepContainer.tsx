@@ -96,18 +96,15 @@ export default function StepContainer(props: StepContainerProps) {
         )}
       </ContentDiv>
       {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on */}
-      <div
-        className={`${shouldHideActions && "hidden"} transition-opacity duration-300 ease-in-out`}
-      >
-        {!shouldHideActions && (
-          <ResponseActions
-            isTruncated={isTruncated}
-            onDelete={onDelete}
-            onContinueGeneration={onContinueGeneration}
-            index={props.index}
-            item={props.item}
-          />
-        )}
+      <div className={`transition-opacity duration-300 ease-in-out`}>
+        <ResponseActions
+          isTruncated={isTruncated}
+          onDelete={onDelete}
+          onContinueGeneration={onContinueGeneration}
+          index={props.index}
+          item={props.item}
+          shouldHideActions={shouldHideActions}
+        />
       </div>
     </div>
   );
