@@ -12,7 +12,7 @@ import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
-import { getAllSnippets, TEMP__Snippets } from "./snippets/index.js";
+import { getAllSnippets } from "./snippets/index.js";
 import { renderPrompt } from "./templating/index.js";
 import { GetLspDefinitionsFunction } from "./types.js";
 import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
@@ -162,19 +162,22 @@ export class CompletionProvider {
         token = controller.signal;
       }
 
-      const [{ snippets, diff, clipboardContent }, workspaceDirs] =
-        await Promise.all([
-          getAllSnippets({
-            helper,
-            ide: this.ide,
-            getDefinitionsFromLsp: this.getDefinitionsFromLsp,
-            contextRetrievalService: this.contextRetrievalService,
-          }),
-          this.ide.getWorkspaceDirs(),
-        ]);
+      const [
+        { snippets, diff, clipboardContent, payload: snippetPayload },
+        workspaceDirs,
+      ] = await Promise.all([
+        getAllSnippets({
+          helper,
+          ide: this.ide,
+          getDefinitionsFromLsp: this.getDefinitionsFromLsp,
+          contextRetrievalService: this.contextRetrievalService,
+        }),
+        this.ide.getWorkspaceDirs(),
+      ]);
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
         snippets,
+        snippetPayload,
         diff,
         clipboardContent,
         workspaceDirs,

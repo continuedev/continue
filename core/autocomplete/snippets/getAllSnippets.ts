@@ -57,6 +57,15 @@ function getSnippetsFromRecentlyEditedRanges(
   });
 }
 
+export interface SnippetPayload {
+  rootPathSnippets: AutocompleteCodeSnippet[];
+  importDefinitionSnippets: AutocompleteCodeSnippet[];
+  ideSnippets: AutocompleteCodeSnippet[];
+  recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
+  diffSnippets: AutocompleteDiffSnippet[];
+  clipboardSnippets: AutocompleteClipboardSnippet[];
+}
+
 export type TEMP__Snippets = {
   snippets: AutocompleteCodeSnippet[];
   diff: string | undefined;
@@ -64,14 +73,7 @@ export type TEMP__Snippets = {
     text: string;
     copiedAt: string;
   };
-  new: {
-    rootPathSnippets: AutocompleteCodeSnippet[];
-    importDefinitionSnippets: AutocompleteCodeSnippet[];
-    ideSnippets: AutocompleteCodeSnippet[];
-    recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
-    diffSnippets: AutocompleteDiffSnippet[];
-    clipboardSnippets: AutocompleteClipboardSnippet[];
-  };
+  payload: SnippetPayload;
 };
 
 export const getAllSnippets = async ({
@@ -111,7 +113,7 @@ export const getAllSnippets = async ({
     ],
     diff,
     clipboardContent,
-    new: {
+    payload: {
       rootPathSnippets,
       importDefinitionSnippets,
       ideSnippets,

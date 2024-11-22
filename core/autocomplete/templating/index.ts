@@ -1,7 +1,7 @@
 import Handlebars from "handlebars";
 
 import { CompletionOptions } from "../..";
-import { getBasename, getLastNPathParts } from "../../util";
+import { getBasename } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
 import { HelperVars } from "../util/HelperVars";
 
@@ -10,56 +10,10 @@ import {
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
-import { countTokens } from "../../llm/countTokens";
-import { AutocompleteSnippetDeprecated } from "../types";
-import {
-  AutocompleteCodeSnippet,
-  AutocompleteSnippet,
-} from "../snippets/types";
-
-const addCommentMarks = (text: string, language: AutocompleteLanguageInfo) => {
-  const comment = language.singleLineComment;
-  const lines = [
-    ...text
-      .trim()
-      .split("\n")
-      .map((line) => `${comment} ${line}`),
-  ];
-  return lines.join("\n");
-};
-
-export function formatExternalSnippet(
-  filepath: string,
-  snippet: string,
-  language: AutocompleteLanguageInfo,
-) {
-  const filePathString = `Path: ${getBasename(filepath)}\n`;
-  return addCommentMarks(`${filePathString}${snippet}`, language);
-}
-
-function getContextComments(
-  snippets: AutocompleteCodeSnippet[],
-  lang: AutocompleteLanguageInfo,
-  filepath: string,
-) {
-  if (snippets.length === 0) {
-    return "";
-  }
-
-  const headerSnipper = `\n\n${lang.singleLineComment} Related code:\n`;
-  const fileNameSnippet = `\n\n${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n\n`;
-
-  const formattedSnippets =
-    headerSnipper +
-    snippets
-      .map((snippet) =>
-        formatExternalSnippet(snippet.filepath, snippet.content, lang),
-      )
-      .join("\n") +
-    fileNameSnippet;
-
-  return formattedSnippets;
-}
+import { AutocompleteCodeSnippet } from "../snippets/types";
+import { SnippetPayload } from "../snippets";
+import { formatSnippets } from "./formatting";
+import { getSnippets } from "./filtering";
 
 function getTemplate(helper: HelperVars): AutocompleteTemplate {
   if (helper.options.template) {
@@ -92,61 +46,14 @@ function renderStringTemplate(
   });
 }
 
-const formatDiff = (helper: HelperVars, diff?: string) => {
-  if (!diff) return "";
-
-  const tokenCount = countTokens(diff, helper.modelName);
-
-  if (tokenCount > helper.maxDiffTokens) {
-    return "";
-  }
-
-  return `${diff}\n\n`;
-};
-
-const MAX_CLIPBOARD_AGE = 5 * 60 * 1000;
-
-const formatClipboardContent = (
-  helper: HelperVars,
-  { text, copiedAt }: { text: string; copiedAt: string },
-) => {
-  const currDate = new Date();
-
-  const isTooOld =
-    currDate.getTime() - new Date(copiedAt).getTime() > MAX_CLIPBOARD_AGE;
-
-  if (isTooOld) {
-    return "";
-  }
-
-  const tokenCount = countTokens(text, helper.modelName);
-  const isTooLong = tokenCount > helper.maxClipboardTokens;
-
-  if (isTooLong) {
-    return "";
-  }
-
-  const isEmpty = text.trim() === "";
-  if (isEmpty) {
-    return "";
-  }
-
-  return (
-    addCommentMarks(
-      `Recently copied by user:${text.includes("\n") ? "\n" : ""} ${text}`,
-      helper.lang,
-    ) + "\n"
-  );
-};
-
 export function renderPrompt({
   snippets,
+  snippetPayload,
   workspaceDirs,
   helper,
-  diff,
-  clipboardContent,
 }: {
   snippets: AutocompleteCodeSnippet[];
+  snippetPayload: SnippetPayload;
   workspaceDirs: string[];
   helper: HelperVars;
   diff?: string;
@@ -180,17 +87,10 @@ export function renderPrompt({
       snippets,
     );
   } else {
-    const contextComments = getContextComments(
-      snippets,
-      helper.lang,
-      helper.filepath,
-    );
-    const formattedDiff = formatDiff(helper, diff);
-    const formattedClipboard = formatClipboardContent(helper, clipboardContent);
+    const finalSnippets = getSnippets(helper, snippetPayload);
+    const formattedSnippets = formatSnippets(helper, finalSnippets);
 
-    prefix = [formattedClipboard, formattedDiff, contextComments, prefix].join(
-      "",
-    );
+    prefix = [formattedSnippets, prefix].join("\n");
   }
 
   const prompt =
