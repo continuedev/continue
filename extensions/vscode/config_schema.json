@@ -1251,7 +1251,8 @@
               "model": {
                 "enum": [
                   "Qwen/Qwen2.5-Coder-32B-Instruct",
-                  "Qwen/Qwen2.5-Coder-7B-Instruct"
+                  "Qwen/Qwen2.5-Coder-7B-Instruct",
+                  "Pro/Qwen/Qwen2.5-Coder-7B-Instruct"
                 ]
               }
             }
