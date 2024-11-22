@@ -16,7 +16,7 @@ function ToolOutput(props: ToolOutputProps) {
   return (
     <div>
       <ContextItemsPeek
-        isGatheringContext={false}
+        isCurrentContextPeek={false}
         contextItems={[
           {
             content: props.output,

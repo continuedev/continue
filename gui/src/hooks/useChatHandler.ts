@@ -30,7 +30,7 @@ import {
   abortStream,
   acceptToolCall,
   addPromptCompletionPair,
-  clearLastResponse,
+  clearLastEmptyResponse,
   initNewActiveMessage,
   resetNextCodeBlockToApplyIndex,
   resubmitAtIndex,
@@ -38,13 +38,12 @@ import {
   setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
-  setIsInMultifileEdit,
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import useHistory from "./useHistory";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import useHistory from "./useHistory";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -103,7 +102,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
     } catch (e) {
       // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
+      dispatch(clearLastEmptyResponse());
     }
   }
 
@@ -352,9 +351,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         params: {},
       });
 
-      if (slashCommand.name === "multifile-edit") {
-        dispatch(setIsInMultifileEdit(true));
-      }
+      // if (slashCommand.name === "multifile-edit") {
+      //   dispatch(setIsInMultifileEdit(true));
+      // }
 
       await _streamSlashCommand(
         messages,

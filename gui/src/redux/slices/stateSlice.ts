@@ -549,6 +549,11 @@ export const {
   abortStream,
   updateIndexingStatus,
   setIndexingChatPeekHidden,
+  setCalling,
+  cancelToolCall,
+  registerCurrentToolCall,
+  setGeneratedOutput,
+  acceptToolCall,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

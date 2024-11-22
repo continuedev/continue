@@ -1,14 +1,18 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers, RangeInFileWithContents } from "core";
-import { stripImages } from "core/llm/images";
+import { stripImages } from "core/util/messageContent";
 import { useCallback, useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import TipTapEditor from "../../components/mainInput/TipTapEditor";
+import StepContainer from "../../components/StepContainer";
+import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import useChatHandler from "../../hooks/useChatHandler";
 import {
   clearCodeToEdit,
   setEditDone,
@@ -16,10 +20,6 @@ import {
 } from "../../redux/slices/editModeState";
 import { RootState } from "../../redux/store";
 import CodeToEdit from "./CodeToEdit";
-import useChatHandler from "../../hooks/useChatHandler";
-import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
-import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import StepContainer from "../../components/StepContainer";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
