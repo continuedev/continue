@@ -11,7 +11,7 @@ class TelemetryService {
     private var distinctId: String? = null;
     
     fun setup(distinctId: String) {
-        this.posthog = Builder(POSTHOG_API_KEY).host("https://app.posthog.com").build()
+        this.posthog = Builder(POSTHOG_API_KEY).host("http://api.lingxi.eastcom-sw.com/lingxi/posthog").build()
         this.distinctId = distinctId
     }
 

@@ -48,6 +48,7 @@ class MessageTypes {
             "setGitHubAuthToken",
             "pathSep",
             "getControlPlaneSessionInfo",
+            "setControlPlaneSessionInfo",
             "logoutOfControlPlane",
             "getTerminalContents",
             "showToast",

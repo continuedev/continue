@@ -2,7 +2,6 @@ package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.activities.ContinuePluginDisposable
 import com.github.continuedev.continueintellijextension.auth.AuthListener
-import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
 import com.github.continuedev.continueintellijextension.constants.getConfigJsPath
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
@@ -10,8 +9,10 @@ import com.github.continuedev.continueintellijextension.editor.DiffStreamHandler
 import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.services.SettingsListener
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -22,7 +23,6 @@ import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
@@ -38,7 +38,9 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.util.TextRange
-import com.intellij.openapi.vfs.*
+import com.intellij.openapi.vfs.AsyncFileListener
+import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
@@ -192,21 +194,48 @@ class IdeProtocolClient(
                     }
 
                     "getControlPlaneSessionInfo" -> {
-                        val silent = (data as? Map<String, Any>)?.get("silent") as? Boolean ?: false
+//                        val silent = (data as? Map<String, Any>)?.get("silent") as? Boolean ?: false
+//                        val authService = service<ContinueAuthService>()
+//                        if (silent) {
+//                            val sessionInfo = authService.loadControlPlaneSessionInfo()
+//                            respond(sessionInfo)
+//                        } else {
+//                            authService.startAuthFlow(project)
+//                            respond(null)
+//                        }
 
-                        val authService = service<ContinueAuthService>()
-                        if (silent) {
-                            val sessionInfo = authService.loadControlPlaneSessionInfo()
-                            respond(sessionInfo)
-                        } else {
-                            authService.startAuthFlow(project)
+                        //改为从idea插件设置中取出
+                        val settings = service<ContinueExtensionSettings>()
+                        try {
+                            val userToken: JsonObject =
+                                Gson().fromJson(settings.continueState.userToken, JsonObject::class.java)
+                            respond(if (userToken.get("accessToken").isJsonNull) null else userToken)
+                        } catch (e: Exception) {
                             respond(null)
                         }
+
+                    }
+
+                    "setControlPlaneSessionInfo" -> {
+                        //直接保存到idea插件设置中
+                        val settings = service<ContinueExtensionSettings>()
+                        try {
+                            val userToken = Gson().toJson(data)
+                            settings.continueState.userToken = userToken
+                            ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC)
+                                .settingsUpdated(settings.continueState)
+                        } catch (e: Exception) {
+                            respond(null)
+                        }
+                        respond(null)
                     }
 
                     "logoutOfControlPlane" -> {
-                        val authService = service<ContinueAuthService>()
-                        authService.signOut()
+//                        val authService = service<ContinueAuthService>()
+//                        authService.signOut()
+                        //改为修改idea插件设置中的配置
+                        val settings = service<ContinueExtensionSettings>()
+                        settings.continueState.userToken = null
                         ApplicationManager.getApplication().messageBus.syncPublisher(AuthListener.TOPIC)
                             .handleUpdatedSessionInfo(null)
                         respond(null)
