@@ -1,5 +1,4 @@
-import { IDE } from "../..";
-import { RangeInFileWithContents } from "../../commands/util";
+import { IDE, RangeInFileWithContents } from "../..";
 import { PrecalculatedLruCache } from "../../util/LruCache";
 import {
   getFullLanguageName,

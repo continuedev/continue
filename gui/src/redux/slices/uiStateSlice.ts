@@ -9,6 +9,7 @@ type UiState = {
   dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
   onboardingCard: OnboardingCardState;
+  shouldAddFileForEditing: boolean;
 };
 
 export const uiStateSlice = createSlice({
@@ -18,6 +19,7 @@ export const uiStateSlice = createSlice({
     dialogMessage: "",
     dialogEntryOn: false,
     onboardingCard: defaultOnboardingCardState,
+    shouldAddFileForEditing: false,
   } as UiState,
   reducers: {
     setOnboardingCard: (
@@ -41,6 +43,12 @@ export const uiStateSlice = createSlice({
     setShowDialog: (state, action: PayloadAction<UiState["showDialog"]>) => {
       state.showDialog = action.payload;
     },
+    setShouldAddFileForEditing: (
+      state,
+      action: PayloadAction<UiState["shouldAddFileForEditing"]>,
+    ) => {
+      state.shouldAddFileForEditing = action.payload;
+    },
   },
 });
 
@@ -49,6 +57,7 @@ export const {
   setDialogMessage,
   setDialogEntryOn,
   setShowDialog,
+  setShouldAddFileForEditing,
 } = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;
