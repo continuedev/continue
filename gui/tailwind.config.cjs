@@ -54,7 +54,7 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwind-scrollbar-hide")],
+  plugins: [],
   corePlugins: {
     preflight: false,
   },
