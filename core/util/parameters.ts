@@ -2,7 +2,6 @@ import { TabAutocompleteOptions } from "../index.js";
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
-  useCopyBuffer: false,
   useFileSuffix: true,
   maxPromptTokens: 1024,
   prefixPercentage: 0.85,
@@ -16,11 +15,9 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   maxClipboardPercentage: 0.5, // yes the percentages do not add up
   useCache: true,
   onlyMyCode: true,
-  useOtherFiles: true,
   useRecentlyEdited: true,
   disableInFiles: undefined,
   useImports: true,
-  useRootPathContext: true,
   transform: true,
   showWhateverWeHaveAtXMs: 300,
 };

@@ -5,7 +5,6 @@ export enum AutocompleteSnippetType {
 }
 
 interface BaseAutocompleteSnippet {
-  score?: number;
   content: string;
   type: AutocompleteSnippetType;
 }

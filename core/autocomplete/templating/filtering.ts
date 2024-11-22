@@ -1,6 +1,9 @@
 import { countTokens } from "../../llm/countTokens";
 import { SnippetPayload } from "../snippets";
-import { AutocompleteSnippet } from "../snippets/types";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippet,
+} from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
 import { isValidSnippet } from "./validation";
 
@@ -12,6 +15,28 @@ const getRemainingTokenCount = (helper: HelperVars): number => {
 
 const TOKEN_BUFFER = 10; // We may need extra tokens for snippet description etc.
 
+/**
+ * Shuffles an array in place using the Fisher-Yates algorithm.
+ * @param array The array to shuffle.
+ * @returns The shuffled array.
+ */
+const shuffleArray = <T>(array: T[]): T[] => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
+function filterSnippetsAlreadyInCaretWindow(
+  snippets: AutocompleteCodeSnippet[],
+  caretWindow: string,
+): AutocompleteCodeSnippet[] {
+  return snippets.filter(
+    (s) => s.content.trim() !== "" && !caretWindow.includes(s.content.trim()),
+  );
+}
+
 export const getSnippets = (
   helper: HelperVars,
   payload: SnippetPayload,
@@ -19,7 +44,12 @@ export const getSnippets = (
   const snippets = [
     ...payload.diffSnippets,
     ...payload.clipboardSnippets,
-    ...payload.rootPathSnippets,
+    ...shuffleArray(
+      filterSnippetsAlreadyInCaretWindow(
+        [...payload.rootPathSnippets],
+        helper.prunedCaretWindow,
+      ),
+    ),
   ];
 
   const finalSnippets = [];

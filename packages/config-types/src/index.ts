@@ -130,7 +130,6 @@ export type UiOptions = z.infer<typeof uiOptionsSchema>;
 
 export const tabAutocompleteOptionsSchema = z.object({
   disable: z.boolean(),
-  useCopyBuffer: z.boolean(),
   useFileSuffix: z.boolean(),
   maxPromptTokens: z.number(),
   debounceDelay: z.number(),
@@ -146,7 +145,6 @@ export const tabAutocompleteOptionsSchema = z.object({
   maxClipboardPercentage: z.number(),
   useCache: z.boolean(),
   onlyMyCode: z.boolean(),
-  useOtherFiles: z.boolean(),
   useRecentlyEdited: z.boolean(),
   disableInFiles: z.array(z.string()).optional(),
   useImports: z.boolean().optional(),

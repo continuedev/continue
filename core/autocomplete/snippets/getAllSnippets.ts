@@ -51,7 +51,6 @@ function getSnippetsFromRecentlyEditedRanges(
     return {
       filepath: range.filepath,
       content: range.lines.join("\n"),
-      score: 0.8,
       type: AutocompleteSnippetType.Code,
     };
   });

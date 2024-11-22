@@ -825,7 +825,6 @@ declare global {
 
   export interface TabAutocompleteOptions {
     disable: boolean;
-    useCopyBuffer: boolean;
     useFileSuffix: boolean;
     maxPromptTokens: number;
     debounceDelay: number;
@@ -840,7 +839,6 @@ declare global {
     maxClipboardPercentage: number;
     useCache: boolean;
     onlyMyCode: boolean;
-    useOtherFiles: boolean;
     useRecentlyEdited: boolean;
     disableInFiles?: string[];
     useImports?: boolean;

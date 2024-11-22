@@ -9,14 +9,12 @@ Continue offers a handful of parameters in [`config.json`](../reference.md) that
 
 ```json title="config.json"
  "tabAutocompleteOptions": {
-   "useCopyBuffer": false,
    "maxPromptTokens": 400,
    "prefixPercentage": 0.5,
    "multilineCompletions": "always"
  }
 ```
 
-- `useCopyBuffer`: Determines if the clipboard content should be considered in prompt construction.
 - `maxPromptTokens`: Sets the maximum number of tokens for the prompt, balancing context and speed.
 - `prefixPercentage`: Defines the proportion of the prompt dedicated to the code before the cursor.
 - `multilineCompletions`: Controls whether suggestions can span multiple lines ("always", "never", or "auto").

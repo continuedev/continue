@@ -374,7 +374,6 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
     return results.map((result) => ({
       filepath: result.filepath,
       content: result.contents,
-      score: 0.8,
       type: AutocompleteSnippetType.Code,
     }));
   } catch (e) {

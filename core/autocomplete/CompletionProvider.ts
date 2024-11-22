@@ -275,32 +275,4 @@ export class CompletionProvider {
       this.loggingService.deleteAbortController(input.completionId);
     }
   }
-
-  // private async _getExtraSnippets(
-  //   helper: HelperVars,
-  // ): Promise<AutocompleteSnippetDeprecated[]> {
-  //   let extraSnippets = helper.options.useOtherFiles
-  //     ? ((await Promise.race([
-  //         this.getDefinitionsFromLsp(
-  //           helper.input.filepath,
-  //           helper.fullPrefix + helper.fullSuffix,
-  //           helper.fullPrefix.length,
-  //           this.ide,
-  //           helper.lang,
-  //         ),
-  //         new Promise((resolve) => {
-  //           setTimeout(() => resolve([]), 100);
-  //         }),
-  //       ])) as AutocompleteSnippetDeprecated[])
-  //     : [];
-
-  //   const workspaceDirs = await this.ide.getWorkspaceDirs();
-  //   if (helper.options.onlyMyCode) {
-  //     extraSnippets = extraSnippets.filter((snippet) => {
-  //       return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
-  //     });
-  //   }
-
-  //   return extraSnippets;
-  // }
 }
