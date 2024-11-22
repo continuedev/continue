@@ -548,32 +548,21 @@ export async function* showWhateverWeHaveAtXMs(
   }
 }
 
-export async function* noDoubleNewlineAfterClosingBracket(
+export async function* stopNCharsAfterClosingBracket(
   lines: LineStream,
+  n: number = 20,
 ): LineStream {
   const bracketTypeCounts = new Map<string, number>();
+  let charsToStopAt: number | null = null;
 
   for await (const line of lines) {
-    if (line.trim() === "") {
-      // Double newline detected
-      // Check if any bracket counts are negative
-      let hasNegativeCount = false;
-      for (const count of bracketTypeCounts.values()) {
-        if (count < 0) {
-          hasNegativeCount = true;
-          break;
-        }
-      }
-      if (hasNegativeCount) {
-        // Stop the generator if we've closed brackets we didn't open
-        return;
-      }
-    }
+    let outputLine = "";
+    let i = 0;
 
-    yield line;
+    while (i < line.length) {
+      const char = line[i];
 
-    // Update bracket counts
-    for (const char of line) {
+      // Update bracket counts
       if (BRACKETS[char]) {
         // It's an opening bracket
         const count = bracketTypeCounts.get(char) || 0;
@@ -582,8 +571,32 @@ export async function* noDoubleNewlineAfterClosingBracket(
         // It's a closing bracket
         const openingBracket = BRACKETS_REVERSE[char];
         const count = bracketTypeCounts.get(openingBracket) || 0;
-        bracketTypeCounts.set(openingBracket, count - 1);
+        const newCount = count - 1;
+        bracketTypeCounts.set(openingBracket, newCount);
+
+        if (newCount < 0 && charsToStopAt === null) {
+          // Unmatched closing bracket detected
+          charsToStopAt = n;
+        }
       }
+
+      // Add the character to the output line
+      outputLine += char;
+
+      // If we've started counting down, decrement the remaining characters
+      if (charsToStopAt !== null) {
+        charsToStopAt -= 1;
+        if (charsToStopAt <= 0) {
+          // Yield the output line up to this point and stop the generator
+          yield outputLine;
+          return;
+        }
+      }
+
+      i += 1;
     }
+
+    // Yield whatever we've accumulated for this line
+    yield outputLine;
   }
 }
