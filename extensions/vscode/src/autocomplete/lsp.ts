@@ -1,6 +1,5 @@
 import { AutocompleteLanguageInfo } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/util/ast";
-import { RangeInFileWithContents } from "core/commands/util";
 import {
   FUNCTION_BLOCK_NODE_TYPES,
   FUNCTION_DECLARATION_NODE_TYPEs,
@@ -8,7 +7,7 @@ import {
 import { intersection } from "core/util/ranges";
 import * as vscode from "vscode";
 
-import type { IDE, Range, RangeInFile } from "core";
+import type { IDE, Range, RangeInFile, RangeInFileWithContents } from "core";
 import type Parser from "web-tree-sitter";
 import {
   AutocompleteSnippetDeprecated,

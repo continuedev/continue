@@ -1,4 +1,3 @@
-import { ApplyState } from "core/protocol/ideWebview";
 import * as vscode from "vscode";
 
 import {
@@ -10,7 +9,7 @@ import {
 } from "./decorations";
 
 import type { VerticalDiffCodeLens } from "./manager";
-import type { DiffLine } from "core";
+import type { ApplyState, DiffLine } from "core";
 
 export interface VerticalDiffHandlerOptions {
   input?: string;

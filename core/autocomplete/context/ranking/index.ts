@@ -1,8 +1,7 @@
-import { RangeInFileWithContents } from "../../../commands/util.js";
-import { Range } from "../../../index.js";
-import { countTokens } from "../../../llm/countTokens.js";
-import { AutocompleteSnippetDeprecated } from "../../types.js";
-import { HelperVars } from "../../util/HelperVars.js";
+import { RangeInFileWithContents } from "../../../";
+import { countTokens } from "../../../llm/countTokens";
+import { AutocompleteSnippetDeprecated } from "../../types";
+import { HelperVars } from "../../util/HelperVars";
 
 const rx = /[\s.,\/#!$%\^&\*;:{}=\-_`~()\[\]]/g;
 export function getSymbolsForSnippet(snippet: string): Set<string> {

@@ -1,26 +1,40 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { MessageContent } from "core";
-import { RangeInFileWithContents } from "core/commands/util";
-import { EditModeArgs, EditStatus } from "core/protocol/ideWebview";
+import { CodeToEdit, EditStatus, MessageContent } from "core";
 
 interface EditModeState {
-  highlightedCode?: RangeInFileWithContents;
   editStatus: EditStatus;
   previousInputs: MessageContent[];
   fileAfterEdit?: string;
+  codeToEdit: CodeToEdit[];
+  isInEditMode: boolean;
 }
 
 const initialState: EditModeState = {
   editStatus: "not-started",
   previousInputs: [],
+  codeToEdit: [],
+  isInEditMode: false,
 };
+
+function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
+  return a.filepath === b.filepath && a.contents === b.contents;
+}
 
 export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    startEditMode: (state, { payload }: PayloadAction<EditModeArgs>) => {
-      state.highlightedCode = payload.highlightedCode;
+    addCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
+      const entryExists = state.codeToEdit.some((entry) =>
+        isCodeToEditEqual(entry, payload),
+      );
+
+      if (!entryExists) {
+        state.codeToEdit.push(payload);
+      }
+    },
+    focusEdit: (state) => {
+      state.isInEditMode = true;
       state.editStatus = "not-started";
       state.previousInputs = [];
       state.fileAfterEdit = undefined;
@@ -28,6 +42,14 @@ export const editModeStateSlice = createSlice({
     submitEdit: (state, { payload }: PayloadAction<MessageContent>) => {
       state.previousInputs.push(payload);
       state.editStatus = "streaming";
+    },
+    removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
+      state.codeToEdit = state.codeToEdit.filter(
+        (entry) => !isCodeToEditEqual(entry, payload),
+      );
+    },
+    clearCodeToEdit: (state) => {
+      state.codeToEdit = [];
     },
     setEditStatus: (
       state,
@@ -77,10 +99,13 @@ export const editModeStateSlice = createSlice({
 });
 
 export const {
-  startEditMode,
+  addCodeToEdit,
   setEditStatus,
   addPreviousInput,
   setEditDone,
   submitEdit,
+  removeCodeToEdit,
+  focusEdit,
+  clearCodeToEdit,
 } = editModeStateSlice.actions;
 export default editModeStateSlice.reducer;

@@ -200,12 +200,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.edit",
-        "category": "Continue",
-        "title": "Edit code with natural language",
-        "group": "Continue"
-      },
-      {
         "command": "continue.exitEditMode",
         "category": "Continue",
         "title": "Exit Edit Mode",
@@ -397,9 +391,15 @@
         "key": "alt+ctrl+n"
       },
       {
-        "command": "continue.edit",
+        "command": "continue.focusEdit",
+        "title": "Edit code with natural language",
         "mac": "cmd+i",
         "key": "ctrl+i"
+      },
+      {
+        "command": "continue.focusEditWithoutClear",
+        "mac": "cmd+shift+i",
+        "key": "ctrl+shift+i"
       },
       {
         "command": "continue.exitEditMode",

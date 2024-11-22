@@ -1,5 +1,10 @@
-import { Position, Range, RangeInFile, TabAutocompleteOptions } from "../..";
-import { RangeInFileWithContents } from "../../commands/util";
+import {
+  Position,
+  Range,
+  RangeInFile,
+  RangeInFileWithContents,
+  TabAutocompleteOptions,
+} from "../..";
 
 export type RecentlyEditedRange = RangeInFile & {
   timestamp: number;

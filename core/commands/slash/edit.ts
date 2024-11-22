@@ -1,4 +1,9 @@
-import { ContextItemWithId, ILLM, SlashCommand } from "../../";
+import {
+  ContextItemWithId,
+  ILLM,
+  RangeInFileWithContents,
+  SlashCommand,
+} from "../../";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -13,10 +18,7 @@ import {
   dedentAndGetCommonWhitespace,
   getMarkdownLanguageTagForFile,
 } from "../../util/";
-import {
-  ctxItemToRifWithContents,
-  type RangeInFileWithContents,
-} from "../util";
+import { ctxItemToRifWithContents } from "../util";
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -478,10 +480,18 @@ const EditSlashCommand: SlashCommand = {
         messages = rendered;
       }
 
-      const completion = llm.streamComplete(rendered as string,  new AbortController().signal, {
-        maxTokens: Math.min(maxTokens, Math.floor(llm.contextLength / 2), 4096),
-        raw: true,
-      });
+      const completion = llm.streamComplete(
+        rendered as string,
+        new AbortController().signal,
+        {
+          maxTokens: Math.min(
+            maxTokens,
+            Math.floor(llm.contextLength / 2),
+            4096,
+          ),
+          raw: true,
+        },
+      );
       let lineStream = streamLines(completion);
 
       lineStream = filterEnglishLinesAtStart(lineStream);
@@ -494,14 +504,18 @@ const EditSlashCommand: SlashCommand = {
       );
     } else {
       async function* gen() {
-        for await (const chunk of llm.streamChat(messages,  new AbortController().signal,{
-          temperature: 0.5, // TODO
-          maxTokens: Math.min(
-            maxTokens,
-            Math.floor(llm.contextLength / 2),
-            4096,
-          ),
-        })) {
+        for await (const chunk of llm.streamChat(
+          messages,
+          new AbortController().signal,
+          {
+            temperature: 0.5, // TODO
+            maxTokens: Math.min(
+              maxTokens,
+              Math.floor(llm.contextLength / 2),
+              4096,
+            ),
+          },
+        )) {
           yield stripImages(chunk.content);
         }
       }
@@ -609,7 +623,10 @@ ${lines.join("\n")}
 
 Please briefly explain the changes made to the code above. Give no more than 2-3 sentences, and use markdown bullet points:`;
 
-      for await (const update of llm.streamComplete(prompt, new AbortController().signal)) {
+      for await (const update of llm.streamComplete(
+        prompt,
+        new AbortController().signal,
+      )) {
         yield update;
       }
     }

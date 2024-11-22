@@ -1008,6 +1008,37 @@ interface ModelRoles {
   repoMapFileSelection?: string;
 }
 
+export type EditStatus =
+  | "not-started"
+  | "streaming"
+  | "accepting"
+  | "accepting:full-diff"
+  | "done";
+
+export type ApplyStateStatus =
+  | "streaming" // Changes are being applied to the file
+  | "done" // All changes have been applied, awaiting user to accept/reject
+  | "closed"; // All changes have been applied. Note that for new files, we immediately set the status to "closed"
+
+export interface ApplyState {
+  streamId: string;
+  status?: ApplyStateStatus;
+  numDiffs?: number;
+  filepath?: string;
+  fileContent?: string;
+}
+
+export interface RangeInFileWithContents {
+  filepath: string;
+  range: {
+    start: { line: number; character: number };
+    end: { line: number; character: number };
+  };
+  contents: string;
+}
+
+export type CodeToEdit = RangeInFileWithContents | FileWithContents;
+
 /**
  * Represents the configuration for a quick action in the Code Lens.
  * Quick actions are custom commands that can be added to function and class declarations.
