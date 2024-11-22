@@ -92,7 +92,7 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
-  "jetbrains/isOSREnabled": [boolean, void];
+  "jetbrains/jcefOSREnabled": [boolean, void];
   addApiKey: [undefined, void];
   setupLocalConfig: [undefined, void];
   incrementFtc: [undefined, void];
