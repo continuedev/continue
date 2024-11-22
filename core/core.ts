@@ -384,7 +384,6 @@ export class Core {
       const model = await configHandler.llmFromTitle(msg.data.title);
 
       if (msg.data.useTools) {
-        // Array.isArray(config.experimental?.allowTools)) {
         msg.data.completionOptions.tools = allTools;
       }
 

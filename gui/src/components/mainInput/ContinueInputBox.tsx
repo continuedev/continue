@@ -68,6 +68,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
   );
+  const useTools = useSelector(
+    (store: RootState) => store.state.config.experimental?.useTools,
+  );
 
   useWebviewListener(
     "newSessionWithPrompt",
@@ -108,7 +111,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             availableSlashCommands={availableSlashCommands}
             historyKey="chat"
             toolbarOptions={{
-              hideTools: true,
+              hideTools: !useTools,
             }}
           />
         </GradientBorder>

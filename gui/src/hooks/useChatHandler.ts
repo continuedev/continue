@@ -63,6 +63,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const streamAborter = useSelector(
     (store: RootState) => store.state.streamAborter,
   );
+  const useTools = useSelector((store: RootState) => store.uiState.useTools);
+
   const activeRef = useRef(active);
 
   const { saveSession } = useHistory(dispatch);
@@ -85,6 +87,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         defaultModel.title,
         streamAborter.signal,
         messages,
+        {},
+        useTools,
       );
       let next = await gen.next();
 

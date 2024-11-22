@@ -44,6 +44,7 @@ export interface IIdeMessenger {
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
+    useTools?: boolean,
   ): AsyncGenerator<ChatMessage, PromptLog, unknown>;
 
   ide: IDE;
@@ -202,6 +203,7 @@ export class IdeMessenger implements IIdeMessenger {
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
+    useTools?: boolean,
   ): AsyncGenerator<ChatMessage, PromptLog> {
     const gen = this.streamRequest(
       "llm/streamChat",
@@ -209,6 +211,7 @@ export class IdeMessenger implements IIdeMessenger {
         messages,
         title: modelTitle,
         completionOptions: options,
+        useTools,
       },
       cancelToken,
     );
