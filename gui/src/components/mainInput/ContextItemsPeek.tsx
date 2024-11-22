@@ -104,11 +104,13 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
       <div className="flex w-full items-center">
         {getContextItemIcon()}
         <div className="flex min-w-0 flex-1 gap-2 text-xs">
-          <div className="max-w-[50%] flex-shrink-0 truncate">
+          <div
+            className={`max-w-[50%] flex-shrink-0 truncate ${isUrl ? "hover:underline" : ""}`}
+          >
             {contextItem.name}
           </div>
           <div
-            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400`}
+            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
           >
             {contextItem.uri?.type === "file"
               ? getBasename(contextItem.description)
