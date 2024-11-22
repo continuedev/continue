@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { ApplyState } from "core/protocol/ideWebview";
+import { ApplyState } from "core";
 
 export interface AcceptRejectAllButtonsProps {
   pendingApplyStates: ApplyState[];

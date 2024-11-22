@@ -1,5 +1,4 @@
-import { RangeInFileWithContents } from "core/commands/util";
-import { CodeToEdit } from "../../redux/slices/editModeState";
+import { CodeToEdit } from "core";
 
 export default function getMultifileEditPrompt(
   codeToEdit: CodeToEdit[],

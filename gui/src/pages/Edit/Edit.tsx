@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
-import { InputModifiers } from "core";
+import { InputModifiers, RangeInFileWithContents } from "core";
 import { stripImages } from "core/llm/images";
 import { useCallback, useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -21,7 +21,6 @@ import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectA
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import StepContainer from "../../components/StepContainer";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
-import { RangeInFileWithContents } from "core/commands/util";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "codebase",

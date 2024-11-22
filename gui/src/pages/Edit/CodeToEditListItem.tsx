@@ -1,4 +1,3 @@
-import { RangeInFileWithContents } from "core/commands/util";
 import FileIcon from "../../components/FileIcon";
 import {
   ChevronDownIcon,
