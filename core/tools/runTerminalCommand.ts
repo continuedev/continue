@@ -9,12 +9,14 @@ export const runTerminalCommandTool: Tool = {
     const ideInfo = await extras.ide.getIdeInfo();
     if (ideInfo.remoteName === "local" || ideInfo.remoteName === "") {
       // If we're local, can just run the terminal command with child_process
-      const output = asyncExec(args.command);
+      const output = await asyncExec(args.command, {
+        cwd: (await extras.ide.getWorkspaceDirs())[0],
+      });
       return [
         {
           name: "Terminal",
           description: "Terminal command output",
-          content: output.stdout,
+          content: output.stdout ?? "",
         },
       ];
     }
