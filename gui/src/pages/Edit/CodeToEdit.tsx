@@ -57,7 +57,7 @@ export default function WorkingSet() {
       </div>
 
       {hasCodeToEdit && (
-        <ul className="no-scrollbar mb-1.5 mt-1 max-h-[50vh] list-outside list-none space-y-1.5 overflow-y-auto pl-0">
+        <ul className="no-scrollbar mb-1.5 mt-1 max-h-[50vh] list-outside list-none overflow-y-auto pl-0">
           {codeToEditItems}
         </ul>
       )}

@@ -53,7 +53,7 @@ export default function CodeToEditListItem({
 
   return (
     <li
-      className="flex cursor-pointer flex-col"
+      className="group flex cursor-pointer flex-col"
       onClick={() => setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet)}
     >
       <div
@@ -88,7 +88,7 @@ export default function CodeToEditListItem({
             {title}
           </span>
         </div>
-        <div className="flex gap-1.5">
+        <div className="invisible flex gap-1.5 group-hover:visible">
           <XMarkIcon
             onClick={(e) => {
               e.stopPropagation();
@@ -98,6 +98,7 @@ export default function CodeToEditListItem({
           />
         </div>
       </div>
+
       {showCodeSnippet && (
         <div className="max-h-[25vh] overflow-y-auto px-1 py-2">
           <NoPaddingWrapper>
