@@ -834,9 +834,6 @@ declare global {
     multilineCompletions: "always" | "never" | "auto";
     slidingWindowPrefixPercentage: number;
     slidingWindowSize: number;
-    maxSnippetPercentage: number;
-    maxDiffPercentage: number;
-    maxClipboardPercentage: number;
     useCache: boolean;
     onlyMyCode: boolean;
     useRecentlyEdited: boolean;
