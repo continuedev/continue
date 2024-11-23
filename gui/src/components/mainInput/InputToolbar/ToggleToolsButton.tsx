@@ -4,11 +4,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
-import {
-  defaultBorderRadius,
-  vscForeground,
-  vscListActiveBackground,
-} from "../..";
+import { defaultBorderRadius, lightGray, vscForeground } from "../..";
+import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 import { toggleUseTools } from "../../../redux/slices/uiStateSlice";
 import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
@@ -17,7 +14,7 @@ import HoverItem from "./HoverItem";
 
 const BackgroundDiv = styled.div<{ useTools: boolean }>`
   background-color: ${(props) =>
-    props.useTools ? vscListActiveBackground : "transparent"};
+    props.useTools ? `${lightGray}33` : "transparent"};
   border-radius: ${defaultBorderRadius};
   padding: 1px;
 
@@ -37,6 +34,19 @@ function ToggleToolsButton(props: ToggleToolsButtonProps) {
   const dispatch = useDispatch();
 
   const useTools = useSelector((store: RootState) => store.uiState.useTools);
+  const defaultModel = useSelector(defaultModelSelector);
+
+  function toolUseAllowed() {
+    return (
+      defaultModel.model.includes("claude") &&
+      (defaultModel.model.includes("3-5") || defaultModel.model.includes("3.5"))
+    );
+  }
+
+  if (!toolUseAllowed()) {
+    return null;
+  }
+
   return (
     <HoverItem onClick={() => dispatch(toggleUseTools())}>
       <BackgroundDiv useTools={useTools}>
