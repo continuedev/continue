@@ -1,8 +1,10 @@
+import { Listbox } from "@headlessui/react";
 import {
   ChevronDownIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { modelSupportsTools } from "core/llm/autodetect";
+import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscForeground } from "../..";
@@ -28,9 +30,8 @@ const BackgroundDiv = styled.div<{ useTools: boolean }>`
   transition: background-color 200ms;
 `;
 
-interface ToggleToolsButtonProps {}
-
-function ToggleToolsButton(props: ToggleToolsButtonProps) {
+export default function ToolDropdown() {
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dispatch = useDispatch();
 
   const useTools = useSelector((store: RootState) => store.uiState.useTools);
@@ -44,7 +45,6 @@ function ToggleToolsButton(props: ToggleToolsButtonProps) {
     <HoverItem onClick={() => dispatch(toggleUseTools())}>
       <BackgroundDiv useTools={useTools}>
         <WrenchScrewdriverIcon
-          data-tooltip-id="tools-tooltip"
           className="h-4 w-4 text-gray-400"
           style={{
             color: useTools && vscForeground,
@@ -55,15 +55,31 @@ function ToggleToolsButton(props: ToggleToolsButtonProps) {
         {useTools && (
           <>
             <span>Tools</span>
-            <ChevronDownIcon
-              data-tooltip-id="tools-tooltip"
-              className="h-3 w-3"
-            />
+
+            <div className="relative">
+              <Listbox onChange={() => {}}>
+                <Listbox.Button
+                  ref={buttonRef}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="text-lightgray flex cursor-pointer items-center border-none bg-transparent outline-none"
+                >
+                  <ChevronDownIcon className="h-3 w-3" />
+                </Listbox.Button>
+                <Listbox.Options className="bg-vsc-editor-background border-lightgray/50 absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg">
+                  <Listbox.Option
+                    value="addAllFiles"
+                    className="text-vsc-foreground block w-full cursor-pointer px-2 py-1 text-left text-[10px] brightness-75 hover:brightness-125"
+                  >
+                    Add all open files
+                  </Listbox.Option>
+                </Listbox.Options>
+              </Listbox>
+            </div>
           </>
         )}
       </BackgroundDiv>
     </HoverItem>
   );
 }
-
-export default ToggleToolsButton;
