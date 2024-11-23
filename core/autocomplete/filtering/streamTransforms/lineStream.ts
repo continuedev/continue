@@ -255,13 +255,31 @@ export async function* stopAtSimilarLine(
  * @param {() => void} fullStop - Function to call when stopping.
  * @yields {string} Filtered lines until a stop phrase is encountered.
  */
-export async function* stopAtLines(
+export async function* stopAtLinesIncluding(
   stream: LineStream,
   fullStop: () => void,
   linesToStopAt: string[] = LINES_TO_STOP_AT,
 ): LineStream {
   for await (const line of stream) {
     if (linesToStopAt.some((stopAt) => line.trim().includes(stopAt))) {
+      fullStop();
+      break;
+    }
+    yield line;
+  }
+}
+
+export async function* stopAtLines(
+  stream: LineStream,
+  fullStop: () => void,
+  linesToStopAt: string[],
+  minLength: number = 2,
+): LineStream {
+  for await (const line of stream) {
+    if (
+      line.trim().length >= minLength &&
+      linesToStopAt.some((stopAt) => line === stopAt)
+    ) {
       fullStop();
       break;
     }

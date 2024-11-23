@@ -4,7 +4,7 @@ import {
   filterEnglishLinesAtStart,
   filterLeadingAndTrailingNewLineInsertion,
   skipLines,
-  stopAtLines,
+  stopAtLinesIncluding,
 } from "../autocomplete/filtering/streamTransforms/lineStream.js";
 import { streamDiff } from "../diff/streamDiff.js";
 import { streamLines } from "../diff/util.js";
@@ -96,8 +96,11 @@ export async function* streamDiffLines(
 
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt,  new AbortController().signal, { raw: true, prediction })
-      : llm.streamChat(prompt,  new AbortController().signal, {
+      ? llm.streamComplete(prompt, new AbortController().signal, {
+          raw: true,
+          prediction,
+        })
+      : llm.streamChat(prompt, new AbortController().signal, {
           prediction,
         });
 
@@ -105,7 +108,7 @@ export async function* streamDiffLines(
 
   lines = filterEnglishLinesAtStart(lines);
   lines = filterCodeBlockLines(lines);
-  lines = stopAtLines(lines, () => {});
+  lines = stopAtLinesIncluding(lines, () => {});
   lines = skipLines(lines);
   if (inept) {
     // lines = fixCodeLlamaFirstLineIndentation(lines);

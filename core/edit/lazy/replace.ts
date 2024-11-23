@@ -1,7 +1,7 @@
 import { ILLM } from "../..";
 import {
   filterLeadingNewline,
-  stopAtLines,
+  stopAtLinesIncluding,
 } from "../../autocomplete/filtering/streamTransforms/lineStream";
 import { streamLines } from "../../diff/util";
 import { dedent } from "../../util";
@@ -83,14 +83,17 @@ export async function* getReplacementWithLlm(
     \`\`\`
   `;
 
-  const completion = await llm.streamChat([
-    { role: "user", content: userPrompt },
-    { role: "assistant", content: assistantPrompt },
-  ], new AbortController().signal);
+  const completion = await llm.streamChat(
+    [
+      { role: "user", content: userPrompt },
+      { role: "assistant", content: assistantPrompt },
+    ],
+    new AbortController().signal,
+  );
 
   let lines = streamLines(completion);
   lines = filterLeadingNewline(lines);
-  lines = stopAtLines(lines, () => {}, ["```"]);
+  lines = stopAtLinesIncluding(lines, () => {}, ["```"]);
 
   for await (const line of lines) {
     yield line;

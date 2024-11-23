@@ -1,7 +1,7 @@
 import {
   filterLeadingAndTrailingNewLineInsertion,
   filterLeadingNewline,
-  stopAtLines,
+  stopAtLinesIncluding,
 } from "../../autocomplete/filtering/streamTransforms/lineStream.js";
 import { streamDiff } from "../../diff/streamDiff.js";
 import { LineStream, streamLines } from "../../diff/util.js";
@@ -23,7 +23,10 @@ export async function* streamLazyApply(
   }
 
   const promptMessages = promptFactory(oldCode, filename, newCode);
-  const lazyCompletion = llm.streamChat(promptMessages, new AbortController().signal);
+  const lazyCompletion = llm.streamChat(
+    promptMessages,
+    new AbortController().signal,
+  );
 
   // Do find and replace over the lazy edit response
   async function* replacementFunction(
@@ -44,7 +47,9 @@ export async function* streamLazyApply(
   let lazyCompletionLines = streamLines(lazyCompletion, true);
   // Process line output
   // lazyCompletionLines = filterEnglishLinesAtStart(lazyCompletionLines);
-  lazyCompletionLines = stopAtLines(lazyCompletionLines, () => {}, ["```"]);
+  lazyCompletionLines = stopAtLinesIncluding(lazyCompletionLines, () => {}, [
+    "```",
+  ]);
   lazyCompletionLines = filterLeadingNewline(lazyCompletionLines);
 
   // Fill in unchanged code

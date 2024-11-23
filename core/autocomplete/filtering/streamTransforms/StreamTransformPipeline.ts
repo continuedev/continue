@@ -10,6 +10,7 @@ import {
   showWhateverWeHaveAtXMs,
   skipPrefixes,
   stopAtLines,
+  stopAtLinesIncluding,
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
@@ -25,6 +26,8 @@ export class StreamTransformPipeline {
     fullStop: () => void,
     helper: HelperVars,
   ): AsyncGenerator<string> {
+    const lineBelowCursor = this.getLineBelowCursor(helper);
+
     let charGenerator = generator;
 
     charGenerator = stopAtStopTokens(generator, stopTokens);
@@ -40,7 +43,8 @@ export class StreamTransformPipeline {
 
     let lineGenerator = streamLines(charGenerator);
 
-    lineGenerator = stopAtLines(lineGenerator, fullStop);
+    lineGenerator = stopAtLinesIncluding(lineGenerator, fullStop);
+    lineGenerator = stopAtLines(lineGenerator, fullStop, [lineBelowCursor]);
     lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
     lineGenerator = avoidEmptyComments(
       lineGenerator,
@@ -54,11 +58,7 @@ export class StreamTransformPipeline {
       lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
     }
 
-    lineGenerator = stopAtSimilarLine(
-      lineGenerator,
-      this.getLineBelowCursor(helper),
-      fullStop,
-    );
+    lineGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor, fullStop);
 
     lineGenerator = showWhateverWeHaveAtXMs(
       lineGenerator,

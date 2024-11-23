@@ -167,7 +167,10 @@ describe("lineStream", () => {
         "const z = 15;",
       ]);
 
-      const result = lineStream.stopAtLines(linesGenerator, mockFullStop);
+      const result = lineStream.stopAtLinesIncluding(
+        linesGenerator,
+        mockFullStop,
+      );
       const filteredLines = await getFilteredLines(result);
 
       expect(filteredLines).toEqual(["const x = 5;", "let y = 10;"]);
