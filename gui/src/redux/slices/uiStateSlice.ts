@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
   OnboardingCardState,
@@ -31,7 +32,15 @@ export const uiStateSlice = createSlice({
     shouldAddFileForEditing: false,
 
     useTools: false,
-    toolSettings: {},
+    toolSettings: {
+      [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
+      [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
+      [BuiltInToolNames.ViewSubdirectory]: "allowedWithoutPermission",
+      [BuiltInToolNames.ViewRepoMap]: "allowedWithoutPermission",
+      [BuiltInToolNames.ExactSearch]: "allowedWithoutPermission",
+      [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
+      [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
+    },
   } as UiState,
   reducers: {
     setOnboardingCard: (

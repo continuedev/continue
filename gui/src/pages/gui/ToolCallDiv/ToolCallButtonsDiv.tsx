@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -55,7 +55,21 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
   const toolCallState = useSelector(
     (store: RootState) => store.state.currentToolCallState,
   );
+  const toolSetting = useSelector(
+    (store: RootState) =>
+      store.uiState.toolSettings[toolCallState.toolCall.function.name],
+  );
+
   const ideMessenger = useContext(IdeMessengerContext);
+
+  useEffect(() => {
+    if (
+      toolCallState.currentToolCallState === "generated" &&
+      toolSetting === "allowedWithoutPermission"
+    ) {
+      callTool();
+    }
+  }, [toolCallState.currentToolCallState, toolSetting]);
 
   const { streamResponseAfterToolCall } = useChatHandler(
     dispatch,
