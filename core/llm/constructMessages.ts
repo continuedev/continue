@@ -1,5 +1,6 @@
 import { ChatHistory, ChatMessage, MessagePart } from "../index.js";
 import { normalizeToMessageParts } from "../util/messageContent.js";
+import { modelSupportsTools } from "./autodetect.js";
 
 const SYSTEM_MESSAGE = `When generating new code:
 
@@ -57,10 +58,21 @@ function helloWorld() {
 }
 \`\`\`
 
-Always follow these guidelines when generating code responses.
+Always follow these guidelines when generating code responses.`;
 
-Other rules:
+const TOOL_USE_RULES = `When using tools, follow the following guidelines:
 - Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
+
+function constructSystemPrompt(model: string): string | null {
+  if (model.includes("sonnet")) {
+    return SYSTEM_MESSAGE + "\n\n" + TOOL_USE_RULES;
+  }
+  if (modelSupportsTools(model)) {
+    return TOOL_USE_RULES;
+  }
+
+  return null;
+}
 
 export function constructMessages(
   history: ChatHistory,
@@ -68,14 +80,11 @@ export function constructMessages(
 ): ChatMessage[] {
   const msgs: ChatMessage[] = [];
 
-  // Only using this system message with Sonnet right now
-  if (
-    // hasCodeBlockWithFilename(history[0].message.content) &&
-    model.includes("sonnet")
-  ) {
+  const systemMessage = constructSystemPrompt(model);
+  if (systemMessage) {
     msgs.push({
       role: "system" as const,
-      content: SYSTEM_MESSAGE,
+      content: systemMessage,
     });
   }
 

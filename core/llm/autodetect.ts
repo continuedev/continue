@@ -84,6 +84,13 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
 ];
 
+function modelSupportsTools(modelName: string) {
+  return (
+    modelName.includes("claude") &&
+    (modelName.includes("3-5") || modelName.includes("3.5"))
+  );
+}
+
 function modelSupportsImages(
   provider: ModelProvider,
   model: string,
@@ -150,10 +157,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini") ||
-    lower.includes("grok")||
+    lower.includes("grok") ||
     lower.includes("moonshot")
   ) {
-    return undefined; 
+    return undefined;
   }
 
   if (lower.includes("llama3")) {
@@ -354,4 +361,5 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
+  modelSupportsTools,
 };

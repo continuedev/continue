@@ -2,6 +2,7 @@ import {
   ChevronDownIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
+import { modelSupportsTools } from "core/llm/autodetect";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscForeground } from "../..";
@@ -36,14 +37,7 @@ function ToggleToolsButton(props: ToggleToolsButtonProps) {
   const useTools = useSelector((store: RootState) => store.uiState.useTools);
   const defaultModel = useSelector(defaultModelSelector);
 
-  function toolUseAllowed() {
-    return (
-      defaultModel.model.includes("claude") &&
-      (defaultModel.model.includes("3-5") || defaultModel.model.includes("3.5"))
-    );
-  }
-
-  if (!toolUseAllowed()) {
+  if (!modelSupportsTools(defaultModel.model)) {
     return null;
   }
 
