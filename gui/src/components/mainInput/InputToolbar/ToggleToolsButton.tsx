@@ -14,6 +14,7 @@ import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 import { toggleUseTools } from "../../../redux/slices/uiStateSlice";
 import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
+import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
 import ToolDropdownItem from "./ToolDropdownItem";
 
@@ -77,6 +78,21 @@ export default function ToolDropdown() {
                   )}
                 </Listbox.Button>
                 <Listbox.Options className="bg-vsc-editor-background border-lightgray/50 absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg">
+                  <div
+                    className="mb-1 flex items-center gap-2 px-2 py-1"
+                    style={{
+                      color: vscForeground,
+                      borderBottom: `1px solid ${lightGray}`,
+                    }}
+                  >
+                    Tool policies{" "}
+                    <InfoHover
+                      size={"3"}
+                      msg={
+                        "Allowed: Can be used with permission. Automatic: Can be used without permission. Disabled: Cannot be used."
+                      }
+                    />
+                  </div>
                   {allTools.map((tool) => (
                     <Listbox.Option
                       key={tool.function.name}

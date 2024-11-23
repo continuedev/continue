@@ -122,7 +122,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       messages: ChatMessage[];
       completionOptions: LLMFullCompletionOptions;
       title: string;
-      useTools?: boolean;
     },
     ProtocolGeneratorType<ChatMessage>,
   ];

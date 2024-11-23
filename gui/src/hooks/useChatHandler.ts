@@ -13,6 +13,7 @@ import {
   SlashCommandDescription,
 } from "core";
 import { constructMessages } from "core/llm/constructMessages";
+import { allTools } from "core/tools";
 import { getBasename, getRelativePath } from "core/util";
 import {
   renderChatMessage,
@@ -64,6 +65,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     (store: RootState) => store.state.streamAborter,
   );
   const useTools = useSelector((store: RootState) => store.uiState.useTools);
+  const toolSettings = useSelector(
+    (store: RootState) => store.uiState.toolSettings,
+  );
 
   const activeRef = useRef(active);
 
@@ -87,8 +91,15 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         defaultModel.title,
         streamAborter.signal,
         messages,
-        {},
-        useTools,
+        {
+          tools: useTools
+            ? Object.keys(toolSettings)
+                .filter((tool) => toolSettings[tool] !== "disabled")
+                .map((toolName) =>
+                  allTools.find((tool) => tool.function.name === toolName),
+                )
+            : undefined,
+        },
       );
       let next = await gen.next();
 

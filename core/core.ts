@@ -384,10 +384,6 @@ export class Core {
 
       const model = await configHandler.llmFromTitle(msg.data.title);
 
-      if (msg.data.useTools) {
-        msg.data.completionOptions.tools = allTools;
-      }
-
       const gen = model.streamChat(
         msg.data.messages,
         new AbortController().signal,
