@@ -87,9 +87,26 @@ export default function ToolDropdown() {
                   >
                     Tool policies{" "}
                     <InfoHover
+                      id={"tool-policies"}
                       size={"3"}
                       msg={
-                        "Allowed: Can be used with permission. Automatic: Can be used without permission. Disabled: Cannot be used."
+                        <div
+                          className="gap-0 *:m-1 *:text-left"
+                          style={{ fontSize: "10px" }}
+                        >
+                          <p>
+                            <span className="text-green-500">Automatic:</span>{" "}
+                            Can be used without asking
+                          </p>
+                          <p>
+                            <span className="text-yellow-500">Allowed:</span>{" "}
+                            Will ask before using
+                          </p>
+                          <p>
+                            <span className="text-red-500">Disabled:</span>{" "}
+                            Cannot be used
+                          </p>
+                        </div>
                       }
                     />
                   </div>

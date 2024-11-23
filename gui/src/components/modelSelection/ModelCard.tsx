@@ -176,7 +176,10 @@ function ModelCard(props: ModelCardProps) {
               <>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <InfoHover msg={dimension.description} />
+                    <InfoHover
+                      id={dimension.name}
+                      msg={dimension.description}
+                    />
                     <p className="mx-2 my-0 py-0 text-sm">{dimension.name}</p>
                   </div>
                   <div className="flex items-center">
@@ -205,6 +208,7 @@ function ModelCard(props: ModelCardProps) {
             <div className="rtl flex flex-wrap items-center justify-end">
               <div className="flex items-center">
                 <InfoHover
+                  id={"provider-info"}
                   msg={
                     "Select the provider through which you will access the model"
                   }
