@@ -4,6 +4,7 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { modelSupportsTools } from "core/llm/autodetect";
+import { allTools } from "core/tools/index";
 import { useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -68,12 +69,14 @@ export default function ToolDropdown() {
                   <ChevronDownIcon className="h-3 w-3" />
                 </Listbox.Button>
                 <Listbox.Options className="bg-vsc-editor-background border-lightgray/50 absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg">
-                  <Listbox.Option
-                    value="addAllFiles"
-                    className="text-vsc-foreground block w-full cursor-pointer px-2 py-1 text-left text-[10px] brightness-75 hover:brightness-125"
-                  >
-                    Add all open files
-                  </Listbox.Option>
+                  {allTools.map((tool) => (
+                    <Listbox.Option
+                      value="addAllFiles"
+                      className="text-vsc-foreground block w-full cursor-pointer px-2 py-1 text-left text-[10px] brightness-75 hover:brightness-125"
+                    >
+                      {tool.function.name}
+                    </Listbox.Option>
+                  ))}
                 </Listbox.Options>
               </Listbox>
             </div>

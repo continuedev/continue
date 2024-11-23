@@ -1,10 +1,10 @@
-import { createNewFileTool } from "./createNewFile";
-import { exactSearchTool } from "./exactSearch";
-import { runTerminalCommandTool } from "./runTerminalCommand";
-import { searchWebTool } from "./searchWeb";
-import { viewDiffTool } from "./viewDiff";
-import { viewRepoMapTool } from "./viewRepoMap";
-import { viewSubdirectoryTool } from "./viewSubdirectory";
+import { createNewFileTool } from "./definitions/createNewFile";
+import { exactSearchTool } from "./definitions/exactSearch";
+import { runTerminalCommandTool } from "./definitions/runTerminalCommand";
+import { searchWebTool } from "./definitions/searchWeb";
+import { viewDiffTool } from "./definitions/viewDiff";
+import { viewRepoMapTool } from "./definitions/viewRepoMap";
+import { viewSubdirectoryTool } from "./definitions/viewSubdirectory";
 
 export const allTools = [
   createNewFileTool,

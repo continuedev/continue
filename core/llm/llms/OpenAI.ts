@@ -3,6 +3,7 @@ import {
   CompletionOptions,
   LLMOptions,
   ModelProvider,
+  Tool,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -107,12 +108,21 @@ class OpenAI extends BaseLLM {
     return ["gpt-4o-mini", "gpt-4o"].includes(model);
   }
 
+  private convertTool(tool: Tool): any {
+    return {
+      type: tool.type,
+      function: {
+        name: tool.function.name,
+        description: tool.function.description,
+        parameters: tool.function.parameters,
+        strict: tool.function.strict,
+      },
+    };
+  }
+
   protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
     const url = new URL(this.apiBase!);
-    const tools = options.tools?.map((tool) => {
-      const { action, ...restOfTool } = tool;
-      return restOfTool;
-    });
+    const tools = options.tools?.map(this.convertTool);
 
     const finalOptions: any = {
       messages: messages.map(this._convertMessage),

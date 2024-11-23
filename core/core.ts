@@ -36,6 +36,7 @@ import { TTS } from "./util/tts";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { allTools } from "./tools";
+import { callTool } from "./tools/callTool";
 import type { IMessenger, Message } from "./util/messenger";
 
 export class Core {
@@ -795,7 +796,8 @@ export class Core {
       const config = await this.configHandler.loadConfig();
       const llm = await this.getSelectedModel();
 
-      const contextItems = await tool.action(
+      const contextItems = await callTool(
+        tool.function.name,
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,
@@ -804,6 +806,7 @@ export class Core {
             fetchwithRequestOptions(url, init, config.requestOptions),
         },
       );
+
       return { contextItems };
     });
   }

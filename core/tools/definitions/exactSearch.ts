@@ -1,19 +1,10 @@
-import { Tool } from "..";
+import { Tool } from "../..";
+import { BuiltInToolNames } from "../builtIn";
 
 export const exactSearchTool: Tool = {
   type: "function",
-  action: async (args, extras) => {
-    const content = await extras.ide.getSearchResults(args.query);
-    return [
-      {
-        name: "Search results",
-        description: "Results from exact search",
-        content,
-      },
-    ];
-  },
   function: {
-    name: "exact_search",
+    name: BuiltInToolNames.ExactSearch,
     description: "Perform an exact search over the repository using ripgrep",
     parameters: {
       type: "object",

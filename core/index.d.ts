@@ -914,7 +914,6 @@ export interface Tool {
     parameters?: Record<string, any>;
     strict?: boolean | null;
   };
-  action: (parameters: any, extras: ToolExtras) => Promise<ContextItem[]>;
 }
 
 interface BaseCompletionOptions {

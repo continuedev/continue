@@ -1,14 +1,11 @@
-import { Tool } from "..";
-import { fetchSearchResults } from "../context/providers/WebContextProvider";
+import { Tool } from "../..";
+
+import { BuiltInToolNames } from "../builtIn";
 
 export const searchWebTool: Tool = {
   type: "function",
-  action: async (args, extras) => {
-    const webResults = await fetchSearchResults(args.query, 5, extras.fetch);
-    return webResults;
-  },
   function: {
-    name: "search_web",
+    name: BuiltInToolNames.SearchWeb,
     description:
       "Performs a web search, returning top results. This tool should only be called for questions that require external knowledge. Common programming questions do not require web search.",
     parameters: {
