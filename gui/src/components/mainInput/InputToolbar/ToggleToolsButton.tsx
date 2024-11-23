@@ -10,7 +10,6 @@ import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 import { toggleUseTools } from "../../../redux/slices/uiStateSlice";
 import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
-import { ToolTip } from "../../gui/Tooltip";
 import HoverItem from "./HoverItem";
 
 const BackgroundDiv = styled.div<{ useTools: boolean }>`
@@ -62,9 +61,6 @@ function ToggleToolsButton(props: ToggleToolsButtonProps) {
             />
           </>
         )}
-        <ToolTip id="tools-tooltip" place="top-start">
-          Tools
-        </ToolTip>
       </BackgroundDiv>
     </HoverItem>
   );
