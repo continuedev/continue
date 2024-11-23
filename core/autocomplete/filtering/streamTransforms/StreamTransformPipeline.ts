@@ -12,7 +12,7 @@ import {
   stopAtLines,
   stopAtRepeatingLines,
   stopAtSimilarLine,
-  stopNCharsAfterClosingBracket,
+  stopAfterNCharacterOverlapAfterBracket,
   streamWithNewLines,
 } from "./lineStream";
 
@@ -49,7 +49,7 @@ export class StreamTransformPipeline {
     );
     lineGenerator = avoidPathLine(lineGenerator, helper.lang.singleLineComment);
     lineGenerator = skipPrefixes(lineGenerator);
-    lineGenerator = stopNCharsAfterClosingBracket(
+    lineGenerator = stopAfterNCharacterOverlapAfterBracket(
       lineGenerator,
       helper.prunedSuffix,
     );

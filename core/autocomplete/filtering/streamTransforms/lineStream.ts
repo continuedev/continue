@@ -548,7 +548,7 @@ export async function* showWhateverWeHaveAtXMs(
   }
 }
 
-export async function* stopNCharsAfterClosingBracket(
+export async function* stopAfterNCharacterOverlapAfterBracket(
   lines: LineStream,
   prunedSuffix: string,
   n: number = 10,
