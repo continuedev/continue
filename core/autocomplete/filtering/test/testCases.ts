@@ -181,7 +181,7 @@ public class Calculator {
     "state": "California",
     "city": "San BERNARDINO",
     "coordinates": {
-      <FIM>
+      <|fim|>
     }
   },
   "employees": [
@@ -232,6 +232,47 @@ public class Calculator {
     expectedCompletion: `"latitude": 34.10834,
       "longitude": -117.28977
     `,
+  },
+  {
+    description:
+      "Should return nothing when output is duplicated lines in TypeScript",
+    filename: "file.ts",
+    input: `
+async getContextForPath(
+    filepath: string,
+    astPath: AstPatt,
+    language: LanguageName,
+    options: ContextOptions = {},
+<|fim|>
+  ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
+    let parentKey = filepath;
+`,
+    llmOutput: `  ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
+    `,
+    expectedCompletion: undefined,
+  },
+  {
+    description:
+      "Should return partial result when output is duplicated lines in TypeScript",
+    filename: "file.ts",
+    input: `
+async getContextForPath(
+    filepath: string,
+    astPath: AstPatt,
+    language: LanguageName,
+    options: ContextOptions = {},
+<|fim|>
+  ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
+    let parentKey = filepath;
+`,
+    llmOutput: `console.log('TEST');
+      ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
+    `,
+    expectedCompletion: "console.log('TEST');",
   },
 ];
 
@@ -746,7 +787,7 @@ func main() {
   CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
-    price DECIMAL(8,2) NOT NULL<FIM> '0.00',
+    price DECIMAL(8,2) NOT NULL<|fim|> '0.00',
     quantity INT NOT NULL DEFAULT '0'
   );
   
@@ -1565,7 +1606,6 @@ interface User {
   age: number;
 }`,
   },
-
   {
     description:
       "Should autocomplete a TypeScript arrow function inside a variable assignment",

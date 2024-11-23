@@ -6,6 +6,7 @@ import { stopAtStopTokens } from "./charStream";
 import {
   avoidEmptyComments,
   avoidPathLine,
+  noDoubleNewlineAfterClosingBracket,
   showWhateverWeHaveAtXMs,
   skipPrefixes,
   stopAtLines,
@@ -48,7 +49,11 @@ export class StreamTransformPipeline {
     );
     lineGenerator = avoidPathLine(lineGenerator, helper.lang.singleLineComment);
     lineGenerator = skipPrefixes(lineGenerator);
-    lineGenerator = stopNCharsAfterClosingBracket(lineGenerator);
+    lineGenerator = stopNCharsAfterClosingBracket(
+      lineGenerator,
+      helper.prunedSuffix,
+    );
+    lineGenerator = noDoubleNewlineAfterClosingBracket(lineGenerator);
 
     for (const lineFilter of helper.lang.lineFilters ?? []) {
       lineGenerator = lineFilter({ lines: lineGenerator, fullStop });

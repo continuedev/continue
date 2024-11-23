@@ -83,7 +83,7 @@ export const LINES_TO_REMOVE_BEFORE_START = [
   "<COMPLETION>",
   "[CODE]",
   "<START EDITING HERE>",
-  "{{FILL_HERE}}"
+  "{{FILL_HERE}}",
 ];
 
 export const ENGLISH_START_PHRASES = [
@@ -550,10 +550,13 @@ export async function* showWhateverWeHaveAtXMs(
 
 export async function* stopNCharsAfterClosingBracket(
   lines: LineStream,
-  n: number = 20,
+  prunedSuffix: string,
+  n: number = 10,
 ): LineStream {
   const bracketTypeCounts = new Map<string, number>();
   let charsToStopAt: number | null = null;
+
+  let lastNCharacters: string = "";
 
   for await (const line of lines) {
     let outputLine = "";
@@ -585,11 +588,15 @@ export async function* stopNCharsAfterClosingBracket(
 
       // If we've started counting down, decrement the remaining characters
       if (charsToStopAt !== null) {
+        lastNCharacters += char;
         charsToStopAt -= 1;
+
         if (charsToStopAt <= 0) {
-          // Yield the output line up to this point and stop the generator
-          yield outputLine;
-          return;
+          const trimmedLastNCharacters = lastNCharacters.trim();
+          const trimmedSuffix = prunedSuffix.trim();
+          if (trimmedSuffix.startsWith(trimmedLastNCharacters)) {
+            return;
+          }
         }
       }
 
@@ -598,5 +605,45 @@ export async function* stopNCharsAfterClosingBracket(
 
     // Yield whatever we've accumulated for this line
     yield outputLine;
+  }
+}
+
+export async function* noDoubleNewlineAfterClosingBracket(
+  lines: LineStream,
+): LineStream {
+  const bracketTypeCounts = new Map<string, number>();
+
+  for await (const line of lines) {
+    if (line.trim() === "") {
+      // Double newline detected
+      // Check if any bracket counts are negative
+      let hasNegativeCount = false;
+      for (const count of bracketTypeCounts.values()) {
+        if (count < 0) {
+          hasNegativeCount = true;
+          break;
+        }
+      }
+      if (hasNegativeCount) {
+        // Stop the generator if we've closed brackets we didn't open
+        return;
+      }
+    }
+
+    yield line;
+
+    // Update bracket counts
+    for (const char of line) {
+      if (BRACKETS[char]) {
+        // It's an opening bracket
+        const count = bracketTypeCounts.get(char) || 0;
+        bracketTypeCounts.set(char, count + 1);
+      } else if (BRACKETS_REVERSE[char]) {
+        // It's a closing bracket
+        const openingBracket = BRACKETS_REVERSE[char];
+        const count = bracketTypeCounts.get(openingBracket) || 0;
+        bracketTypeCounts.set(openingBracket, count - 1);
+      }
+    }
   }
 }
