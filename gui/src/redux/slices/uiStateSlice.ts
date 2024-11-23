@@ -4,6 +4,11 @@ import {
   OnboardingCardState,
 } from "../../components/OnboardingCard";
 
+type ToolSetting =
+  | "allowedWithPermission"
+  | "allowedWithoutPermission"
+  | "disabled";
+
 type UiState = {
   showDialog: boolean;
   dialogMessage: string | JSX.Element | undefined;
@@ -11,7 +16,10 @@ type UiState = {
   onboardingCard: OnboardingCardState;
   shouldAddFileForEditing: boolean;
   useTools: boolean;
+  toolSettings: { [toolName: string]: ToolSetting };
 };
+
+export const DEFAULT_TOOL_SETTING: ToolSetting = "allowedWithPermission";
 
 export const uiStateSlice = createSlice({
   name: "uiState",
@@ -21,7 +29,9 @@ export const uiStateSlice = createSlice({
     dialogEntryOn: false,
     onboardingCard: defaultOnboardingCardState,
     shouldAddFileForEditing: false,
+
     useTools: false,
+    toolSettings: {},
   } as UiState,
   reducers: {
     setOnboardingCard: (
@@ -51,8 +61,28 @@ export const uiStateSlice = createSlice({
     ) => {
       state.shouldAddFileForEditing = action.payload;
     },
+
+    // Tools
     toggleUseTools: (state) => {
       state.useTools = !state.useTools;
+    },
+    toggleToolSetting: (state, action: PayloadAction<string>) => {
+      const setting = state.toolSettings[action.payload];
+
+      switch (setting) {
+        case "allowedWithPermission":
+          state.toolSettings[action.payload] = "allowedWithoutPermission";
+          break;
+        case "allowedWithoutPermission":
+          state.toolSettings[action.payload] = "disabled";
+          break;
+        case "disabled":
+          state.toolSettings[action.payload] = "allowedWithPermission";
+          break;
+        default:
+          state.toolSettings[action.payload] = DEFAULT_TOOL_SETTING;
+          break;
+      }
     },
   },
 });
@@ -64,6 +94,7 @@ export const {
   setShowDialog,
   setShouldAddFileForEditing,
   toggleUseTools,
+  toggleToolSetting,
 } = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;

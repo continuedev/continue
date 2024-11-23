@@ -1,6 +1,6 @@
 import { ToolCall } from "core";
+import { allTools } from "core/tools";
 import styled from "styled-components";
-import { FunctionSpecificHeader } from "./FunctionSpecificHeader";
 
 interface ThreadDivProps {
   children: React.ReactNode;
@@ -42,7 +42,12 @@ export function ThreadDiv(props: ThreadDivProps) {
         >
           {props.icon}
         </div>
-        <FunctionSpecificHeader toolCall={props.toolCall} />
+        Continue wants to{" "}
+        {
+          allTools.find(
+            (tool) => props.toolCall.function.name === tool.function.name,
+          )?.wouldLikeTo
+        }
       </HeaderDiv>
       <ChildrenDiv>{props.children}</ChildrenDiv>
     </Container>

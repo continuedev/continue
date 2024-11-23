@@ -1,11 +1,12 @@
 import { Listbox } from "@headlessui/react";
 import {
   ChevronDownIcon,
+  ChevronUpIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { allTools } from "core/tools/index";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscForeground } from "../..";
@@ -14,6 +15,7 @@ import { toggleUseTools } from "../../../redux/slices/uiStateSlice";
 import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
 import HoverItem from "./HoverItem";
+import ToolDropdownItem from "./ToolDropdownItem";
 
 const BackgroundDiv = styled.div<{ useTools: boolean }>`
   background-color: ${(props) =>
@@ -34,6 +36,7 @@ const BackgroundDiv = styled.div<{ useTools: boolean }>`
 export default function ToolDropdown() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dispatch = useDispatch();
+  const [isDropdownOpen, setDropdownOpen] = useState(false);
 
   const useTools = useSelector((store: RootState) => store.uiState.useTools);
   const defaultModel = useSelector(defaultModelSelector);
@@ -63,18 +66,24 @@ export default function ToolDropdown() {
                   ref={buttonRef}
                   onClick={(e) => {
                     e.stopPropagation();
+                    setDropdownOpen((prev) => !prev);
                   }}
                   className="text-lightgray flex cursor-pointer items-center border-none bg-transparent outline-none"
                 >
-                  <ChevronDownIcon className="h-3 w-3" />
+                  {isDropdownOpen ? (
+                    <ChevronUpIcon className="h-3 w-3" />
+                  ) : (
+                    <ChevronDownIcon className="h-3 w-3" />
+                  )}
                 </Listbox.Button>
                 <Listbox.Options className="bg-vsc-editor-background border-lightgray/50 absolute right-0 top-full z-50 mt-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg">
                   {allTools.map((tool) => (
                     <Listbox.Option
+                      key={tool.function.name}
                       value="addAllFiles"
-                      className="text-vsc-foreground block w-full cursor-pointer px-2 py-1 text-left text-[10px] brightness-75 hover:brightness-125"
+                      className="text-vsc-foreground block w-full cursor-pointer text-left text-[10px] brightness-75 hover:brightness-125"
                     >
-                      {tool.function.name}
+                      <ToolDropdownItem tool={tool} />
                     </Listbox.Option>
                   ))}
                 </Listbox.Options>

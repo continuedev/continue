@@ -4,6 +4,8 @@ import { BuiltInToolNames } from "../builtIn";
 
 export const viewDiffTool: Tool = {
   type: "function",
+  displayTitle: "View Diff",
+  wouldLikeTo: "view a diff",
   function: {
     name: BuiltInToolNames.ViewDiff,
     description: "View the current diff of working changes",
