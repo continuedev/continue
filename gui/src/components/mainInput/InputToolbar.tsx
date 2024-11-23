@@ -1,12 +1,8 @@
-import {
-  AtSymbolIcon,
-  PhotoIcon,
-  WrenchScrewdriverIcon,
-} from "@heroicons/react/24/outline";
+import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { useRef } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -16,8 +12,6 @@ import {
 } from "..";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { toggleUseTools } from "../../redux/slices/uiStateSlice";
-import { RootState } from "../../redux/store";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -26,6 +20,8 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
+import HoverItem from "./InputToolbar/HoverItem";
+import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
   padding-top: 4px;
@@ -42,17 +38,6 @@ const StyledDiv = styled.div<{ isHidden: boolean }>`
   & > * {
     flex: 0 0 auto;
   }
-`;
-
-const HoverItem = styled.span<{ isActive?: boolean }>`
-  padding: 0 4px;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  cursor: pointer;
-  transition:
-    color 200ms,
-    background-color 200ms,
-    box-shadow 200ms;
 `;
 
 const EnterButton = styled.button`
@@ -94,9 +79,6 @@ function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useSelector(defaultModelSelector);
   const useActiveFile = useSelector(selectUseActiveFile);
-  const dispatch = useDispatch();
-
-  const useTools = useSelector((store: RootState) => store.uiState.useTools);
 
   const supportsImages =
     defaultModel &&
@@ -155,22 +137,7 @@ function InputToolbar(props: InputToolbarProps) {
               </HoverItem>
             )}
 
-            {props.toolbarOptions?.hideTools || (
-              <HoverItem onClick={() => dispatch(toggleUseTools())}>
-                <WrenchScrewdriverIcon
-                  data-tooltip-id="tools-tooltip"
-                  className="h-4 w-4"
-                  style={{
-                    color: useTools ? vscForeground : lightGray,
-                    padding: "1px",
-                    transition: "background-color 200ms",
-                  }}
-                />
-                <ToolTip id="tools-tooltip" place="top-start">
-                  Tools
-                </ToolTip>
-              </HoverItem>
-            )}
+            {props.toolbarOptions?.hideTools || <ToggleToolsButton />}
           </div>
         </div>
 
