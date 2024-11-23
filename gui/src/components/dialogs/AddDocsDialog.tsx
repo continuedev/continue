@@ -1,35 +1,25 @@
 import {
-  CheckCircleIcon,
   CheckIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-  CodeBracketIcon,
-  ExclamationTriangleIcon,
   InformationCircleIcon,
-  LinkIcon,
   PencilIcon,
-  PlusCircleIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
 import { IndexingStatus, PackageDocsResult, SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Button, HelperText, Input, lightGray, SecondaryButton } from "..";
+import { Input, SecondaryButton } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
-import IndexingStatusViewer from "../indexing/DocsIndexingStatus";
-
 import { ToolTip } from "../gui/Tooltip";
 import FileIcon from "../FileIcon";
 import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
 import { updateIndexingStatus } from "../../redux/slices/stateSlice";
 import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
-import { NewSessionButton } from "../mainInput/NewSessionButton";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -99,6 +89,7 @@ function AddDocsDialog() {
     dispatch(setShowDialog(false));
     dispatch(setDialogMessage(undefined));
   };
+
   function onSubmit(e: any) {
     e.preventDefault();
 
