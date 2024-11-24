@@ -5,7 +5,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
-import { InputModifiers } from "core";
+import { InputModifiers, ToolCallState } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -35,6 +35,7 @@ import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { selectLastToolCall } from "../../redux/selectors/selectLastToolCall";
 import {
   clearLastEmptyResponse,
   newSession,
@@ -132,8 +133,8 @@ export function Chat() {
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
-  const toolCallState = useSelector(
-    (store: RootState) => store.state.currentToolCallState,
+  const toolCallState = useSelector<RootState, ToolCallState | undefined>(
+    selectLastToolCall,
   );
 
   const snapToBottom = useCallback(() => {
@@ -352,13 +353,14 @@ export function Chat() {
                   toolCallId={item.message.toolCallId}
                 />
               ) : item.message.role === "assistant" &&
-                item.message.toolCalls ? (
+                item.message.toolCalls &&
+                item.toolCallState ? (
                 <div>
                   {item.message.toolCalls?.map((toolCall) => {
                     return (
                       <ToolCallDiv
                         toolCall={toolCall as any}
-                        acceptedToolCall={item.acceptedToolCall}
+                        status={item.toolCallState!.status}
                       />
                     );
                   })}
@@ -431,9 +433,7 @@ export function Chat() {
           )}
         </div>
 
-        {toolCallState.currentToolCallState === "generated" && (
-          <ToolCallButtons />
-        )}
+        {toolCallState?.status === "generated" && <ToolCallButtons />}
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}

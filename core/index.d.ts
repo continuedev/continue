@@ -321,7 +321,7 @@ export interface ToolCallDelta {
 export interface ToolResultChatMessage {
   role: "tool";
   content: string;
-  toolCallId?: string;
+  toolCallId: string;
 }
 
 export interface UserChatMessage {
@@ -390,13 +390,28 @@ export interface PromptLog {
   prompt: string;
   completion: string;
 }
+
+export type ToolStatus =
+  | "generating"
+  | "generated"
+  | "calling"
+  | "done"
+  | "canceled";
+
+// Will exist only on "assistant" messages with tool calls
+interface ToolCallState {
+  toolCallId: string;
+  toolCall: ToolCall;
+  status: ToolStatus;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
   promptLogs?: PromptLog[];
-  acceptedToolCall?: boolean;
+  toolCallState?: ToolCallState;
 }
 
 export type ChatHistory = ChatHistoryItem[];

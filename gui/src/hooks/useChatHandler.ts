@@ -27,6 +27,7 @@ import resolveEditorContent, {
 } from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
+import { selectLastToolCall } from "../redux/selectors/selectLastToolCall";
 import {
   abortStream,
   acceptToolCall,
@@ -37,6 +38,7 @@ import {
   resetNextCodeBlockToApplyIndex,
   resubmitAtIndex,
   setActive,
+  setCalling,
   setCurCheckpointIndex,
   setInactive,
   setIsGatheringContext,
@@ -68,6 +70,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const toolSettings = useSelector(
     (store: RootState) => store.uiState.toolSettings,
   );
+  const toolCallState = useSelector(selectLastToolCall);
 
   const activeRef = useRef(active);
 
@@ -116,7 +119,16 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       if (returnVal) {
         dispatch(addPromptCompletionPair([returnVal]));
       }
+
+      // If it's a tool call that is automatically accepted, we should call it
+      if (
+        toolSettings[toolCallState?.toolCall.function.name] ===
+        "allowedWithoutPermission"
+      ) {
+        await callTool();
+      }
     } catch (e) {
+      debugger;
       // If there's an error, we should clear the response so there aren't two input boxes
       dispatch(clearLastEmptyResponse());
     }
@@ -446,9 +458,40 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     });
   }
 
+  async function callTool() {
+    console.log("calling tool", toolCallState.toolCall);
+    // If it goes "generated" -> "calling" -> "done" really quickly
+    // we don't want an abrupt flash so just skip "calling"
+    let setCallingState = true;
+
+    const timer = setTimeout(() => {
+      if (setCallingState) {
+        dispatch(setCalling());
+      }
+    }, 800);
+
+    if (toolCallState.status !== "generated") {
+      return;
+    }
+
+    const result = await ideMessenger.request("tools/call", {
+      toolCall: toolCallState.toolCall,
+    });
+
+    setCallingState = false;
+    clearTimeout(timer);
+
+    if (result.status === "success") {
+      const contextItems = result.content.contextItems;
+      // Send to the LLM to continue the conversation
+      streamResponseAfterToolCall(toolCallState.toolCall.id, contextItems);
+    }
+  }
+
   return {
     streamResponse,
     streamResponseAfterToolCall,
+    callTool,
   };
 }
 

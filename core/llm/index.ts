@@ -4,7 +4,6 @@ import Handlebars from "handlebars";
 import {
   CacheBehavior,
   ChatMessage,
-  ChatMessageRole,
   CompletionOptions,
   ILLM,
   LLMFullCompletionOptions,
@@ -582,7 +581,7 @@ export abstract class BaseLLM implements ILLM {
     for await (const chunk of this.streamChat(messages, signal, options)) {
       completion += chunk.content;
     }
-    return { role: "assistant" as ChatMessageRole, content: completion };
+    return { role: "assistant" as const, content: completion };
   }
 
   async *streamChat(

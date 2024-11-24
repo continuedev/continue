@@ -1,33 +1,21 @@
 import { CheckIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/outline";
-import { ToolCall } from "core";
+import { ToolCall, ToolStatus } from "core";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { lightGray } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
-import {
-  registerCurrentToolCall,
-  setGeneratedOutput,
-} from "../../../redux/slices/stateSlice";
-import { RootState } from "../../../redux/store";
+import { setGeneratedOutput } from "../../../redux/slices/stateSlice";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { ThreadDiv } from "./ThreadDiv";
-import { ToolState } from "./types";
 
 interface ToolCallDivProps {
   toolCall: ToolCall;
-  acceptedToolCall?: boolean;
+  status: ToolStatus;
 }
 
 export function ToolCallDiv(props: ToolCallDivProps) {
   const dispatch = useDispatch();
-  const toolCallState = useSelector(
-    (store: RootState) => store.state.currentToolCallState,
-  );
-
-  useEffect(() => {
-    dispatch(registerCurrentToolCall());
-  }, []);
 
   useEffect(() => {
     // Once the JSON can successfully parse, then set state to "generated"
@@ -42,13 +30,8 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     }
   }, [props.toolCall.function.arguments]);
 
-  function getIcon(state: ToolState) {
+  function getIcon(state: ToolStatus) {
     console.log("State: ", state);
-    if (props.acceptedToolCall === true) {
-      return <CheckIcon className="text-green-500" color={lightGray} />;
-    } else if (props.acceptedToolCall === false) {
-      return <XMarkIcon className="text-red-500" />;
-    }
 
     switch (state) {
       case "generating":
@@ -65,15 +48,9 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   }
 
   return (
-    <ThreadDiv
-      icon={getIcon(toolCallState.currentToolCallState)}
-      toolCall={props.toolCall}
-    >
-      {toolCallState.currentToolCallState}
-      <FunctionSpecificToolCallDiv
-        toolCall={props.toolCall}
-        state={toolCallState.currentToolCallState}
-      />
+    <ThreadDiv icon={getIcon(props.status)} toolCall={props.toolCall}>
+      {props.status}
+      <FunctionSpecificToolCallDiv toolCall={props.toolCall} />
     </ThreadDiv>
   );
 }

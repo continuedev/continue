@@ -16,13 +16,7 @@ import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4, v4 } from "uuid";
-import { ToolState } from "../../pages/gui/ToolCallDiv/types";
-
-interface CurrentToolCallState {
-  currentToolCallId?: string;
-  currentToolCallState?: ToolState;
-  toolCall?: ToolCall;
-}
+import { findLastToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -31,7 +25,6 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 };
 
 type State = {
-  currentToolCallState: CurrentToolCallState;
   history: ChatHistoryItemWithMessageId[];
   symbols: FileSymbolMap;
   context: {
@@ -59,10 +52,6 @@ type State = {
 };
 
 const initialState: State = {
-  currentToolCallState: {
-    currentToolCallId: undefined,
-    currentToolCallState: undefined,
-  },
   history: [],
   symbols: {},
   context: {
@@ -215,8 +204,6 @@ export const stateSlice = createSlice({
         contextItems: [],
       });
 
-      state.currentToolCallState = {};
-
       // https://github.com/continuedev/continue/pull/1021
       state.active = true;
     },
@@ -320,10 +307,20 @@ export const stateSlice = createSlice({
               action.payload.toolCalls?.length))
         ) {
           // Create a new message
-          state.history.push({
+          const historyItem: ChatHistoryItemWithMessageId = {
             contextItems: [],
-            message: { id: "NONE", ...action.payload },
-          });
+            message: { id: uuidv4(), ...action.payload },
+          };
+
+          if (action.payload.role === "assistant" && action.payload.toolCalls) {
+            historyItem.toolCallState = {
+              status: "generating",
+              toolCall: action.payload.toolCalls[0] as ToolCall,
+              toolCallId: action.payload.toolCalls[0].id,
+            };
+          }
+
+          state.history.push(historyItem);
         } else {
           // Add to the existing message
           const msg = state.history[state.history.length - 1].message;
@@ -359,7 +356,6 @@ export const stateSlice = createSlice({
       state.active = false;
       state.context.isGathering = false;
       state.symbols = {};
-      state.currentToolCallState = {};
 
       if (payload) {
         state.history = payload.history as any;
@@ -460,26 +456,30 @@ export const stateSlice = createSlice({
     },
 
     // Related to currentToolCallState
-    registerCurrentToolCall: (state, { payload }: PayloadAction<string>) => {
-      state.currentToolCallState.currentToolCallId = payload;
-      state.currentToolCallState.currentToolCallState = "generating";
-    },
     cancelToolCall: (state) => {
-      state.currentToolCallState.currentToolCallId = undefined;
-      state.currentToolCallState.currentToolCallState = undefined;
-      state.history[state.history.length - 1].acceptedToolCall = false;
+      const toolCallState = findLastToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "canceled";
     },
     acceptToolCall: (state) => {
-      state.currentToolCallState.currentToolCallId = undefined;
-      state.currentToolCallState.currentToolCallState = undefined;
-      state.history[state.history.length - 1].acceptedToolCall = true;
+      const toolCallState = findLastToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "done";
     },
     setGeneratedOutput: (state, { payload }: PayloadAction<ToolCall>) => {
-      state.currentToolCallState.currentToolCallState = "generated";
-      state.currentToolCallState.toolCall = payload;
+      const toolCallState = findLastToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.toolCall = payload;
+      toolCallState.status = "generated";
     },
     setCalling: (state) => {
-      state.currentToolCallState.currentToolCallState = "calling";
+      const toolCallState = findLastToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "calling";
     },
     updateIndexingStatus: (
       state,
@@ -551,7 +551,6 @@ export const {
   setIndexingChatPeekHidden,
   setCalling,
   cancelToolCall,
-  registerCurrentToolCall,
   setGeneratedOutput,
   acceptToolCall,
 } = stateSlice.actions;

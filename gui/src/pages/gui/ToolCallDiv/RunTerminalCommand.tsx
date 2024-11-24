@@ -1,9 +1,7 @@
 import StyledMarkdownPreview from "../../../components/markdown/StyledMarkdownPreview";
-import { ToolState } from "./types";
 
 interface RunTerminalCommandToolCallProps {
   command: string;
-  state: ToolState;
 }
 
 export function RunTerminalCommand(props: RunTerminalCommandToolCallProps) {
