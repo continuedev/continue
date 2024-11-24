@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -9,9 +9,11 @@ import {
 } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import useChatHandler from "../../../hooks/useChatHandler";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
 import { cancelToolCall } from "../../../redux/slices/stateSlice";
+import { useAppDispatch } from "../../../redux/store";
+import { callTool } from "../../../redux/thunks/callTool";
+import { streamResponseAfterToolCall } from "../../../redux/thunks/streamResponseAfterToolCall";
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -51,26 +53,26 @@ const RejectButton = styled(Button)`
 interface ToolCallButtonsProps {}
 
 export function ToolCallButtons(props: ToolCallButtonsProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const toolCallState = useSelector(selectCurrentToolCall);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const { streamResponseAfterToolCall, callTool } = useChatHandler(
-    dispatch,
-    ideMessenger,
-  );
-
   async function cancelTool() {
     dispatch(cancelToolCall());
-    streamResponseAfterToolCall(toolCallState.toolCallId, [
-      {
-        name: "Cancelled",
-        description: "Cancelled",
-        content:
-          "This tool call was cancelled by the user. You should try something else, likely just chatting instead of using another tool.",
-      },
-    ]);
+    dispatch(
+      streamResponseAfterToolCall({
+        toolCallId: toolCallState.toolCallId,
+        toolOutput: [
+          {
+            name: "Cancelled",
+            description: "Cancelled",
+            content:
+              "This tool call was cancelled by the user. You should try something else, likely just chatting instead of using another tool.",
+          },
+        ],
+      }),
+    );
   }
 
   if (!toolCallState) {
@@ -93,7 +95,9 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
         ) : toolCallState.status === "generated" ? (
           <>
             <RejectButton onClick={cancelTool}>Cancel</RejectButton>
-            <AcceptButton onClick={callTool}>Continue</AcceptButton>
+            <AcceptButton onClick={() => dispatch(callTool())}>
+              Continue
+            </AcceptButton>
           </>
         ) : toolCallState.status === "calling" ? (
           <div className="ml-auto flex items-center gap-4">

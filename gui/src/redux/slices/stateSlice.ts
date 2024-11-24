@@ -1,4 +1,9 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  ActionReducerMapBuilder,
+  AsyncThunk,
+  PayloadAction,
+  createSlice,
+} from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
   ApplyState,
@@ -16,6 +21,7 @@ import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4, v4 } from "uuid";
+import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
@@ -518,8 +524,23 @@ export const stateSlice = createSlice({
       };
     },
   },
+
+  extraReducers: (builder) => {
+    addPassthroughCases(builder, [streamResponseThunk]);
+  },
 });
 
+function addPassthroughCases(
+  builder: ActionReducerMapBuilder<State>,
+  thunks: AsyncThunk<any, any, any>[],
+) {
+  thunks.forEach((thunk) => {
+    builder
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
+  });
+}
 export const {
   updateFileSymbols,
   setContextItemsAtIndex,

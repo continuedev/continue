@@ -1,5 +1,4 @@
-import { Dispatch } from "@reduxjs/toolkit";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
@@ -13,16 +12,15 @@ import {
   setTTSActive,
   updateIndexingStatus,
 } from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
+import { AppDispatch, RootState } from "../redux/store";
 
-import { debounce } from "lodash";
+import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { isJetBrains } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import useChatHandler from "./useChatHandler";
-import { useWebviewListener } from "./useWebviewListener";
+import { setLocalStorage } from "../util/localStorage";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import { useWebviewListener } from "./useWebviewListener";
 
-function useSetup(dispatch: Dispatch) {
+function useSetup(dispatch: AppDispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useSelector((store: RootState) => store.state.history);
 
@@ -115,8 +113,6 @@ function useSetup(dispatch: Dispatch) {
     }
   }, []);
 
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
-
   const defaultModelTitle = useSelector(
     (store: RootState) => store.state.defaultModelTitle,
   );
@@ -151,10 +147,11 @@ function useSetup(dispatch: Dispatch) {
 
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
-    streamResponse(
-      data.message,
-      { useCodebase: false, noContext: true },
-      ideMessenger,
+    dispatch(
+      streamResponseThunk({
+        editorState: data.message,
+        modifiers: { useCodebase: false, noContext: true },
+      }),
     );
   });
 
@@ -178,8 +175,6 @@ function useSetup(dispatch: Dispatch) {
     },
     [defaultModelTitle],
   );
-
-
 }
 
 export default useSetup;

@@ -9,7 +9,7 @@ import { InputModifiers, ToolCallState } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   Button,
@@ -30,7 +30,6 @@ import {
 } from "../../components/OnboardingCard";
 import StepContainer from "../../components/StepContainer";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import useChatHandler from "../../hooks/useChatHandler";
 import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
@@ -46,7 +45,8 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { RootState } from "../../redux/store";
+import { RootState, useAppDispatch } from "../../redux/store";
+import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
   getMetaKeyLabel,
@@ -117,9 +117,8 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 
 export function Chat() {
   const posthog = usePostHog();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const defaultModel = useSelector(defaultModelSelector);
@@ -219,7 +218,7 @@ export function Chat() {
         }
       }
 
-      streamResponse(editorState, modifiers, ideMessenger);
+      dispatch(streamResponseThunk({ editorState, modifiers }));
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -291,7 +290,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [state.history, defaultModel, state, streamResponse],
+    [state.history, defaultModel, state],
   );
 
   useWebviewListener(
@@ -340,7 +339,9 @@ export function Chat() {
               {item.message.role === "user" ? (
                 <ContinueInputBox
                   onEnter={async (editorState, modifiers) => {
-                    streamResponse(editorState, modifiers, ideMessenger, index);
+                    dispatch(
+                      streamResponseThunk({ editorState, modifiers, index }),
+                    );
                   }}
                   isLastUserInput={isLastUserInput(index)}
                   isMainInput={false}
