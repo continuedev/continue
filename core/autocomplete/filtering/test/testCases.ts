@@ -131,6 +131,10 @@ public class Calculator {
     }
 `,
     expectedCompletion: `
+    }
+
+    public void subtract(double number) {
+        result -= number;
     }`,
   },
   {

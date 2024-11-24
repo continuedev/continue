@@ -11,7 +11,6 @@ import {
   stopAtLines,
   stopAtRepeatingLines,
   stopAtSimilarLine,
-  stopNCharsAfterClosingBracket,
   streamWithNewLines,
 } from "./lineStream";
 
@@ -48,7 +47,7 @@ export class StreamTransformPipeline {
     );
     lineGenerator = avoidPathLine(lineGenerator, helper.lang.singleLineComment);
     lineGenerator = skipPrefixes(lineGenerator);
-    lineGenerator = stopNCharsAfterClosingBracket(lineGenerator);
+    // lineGenerator = stopNCharsAfterClosingBracket(lineGenerator);
 
     for (const lineFilter of helper.lang.lineFilters ?? []) {
       lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
