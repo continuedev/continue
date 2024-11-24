@@ -35,7 +35,7 @@ import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { selectLastToolCall } from "../../redux/selectors/selectLastToolCall";
+import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import {
   clearLastEmptyResponse,
   newSession,
@@ -134,7 +134,7 @@ export function Chat() {
     useHistory(dispatch);
 
   const toolCallState = useSelector<RootState, ToolCallState | undefined>(
-    selectLastToolCall,
+    selectCurrentToolCall,
   );
 
   const snapToBottom = useCallback(() => {

@@ -16,7 +16,7 @@ import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4, v4 } from "uuid";
-import { findLastToolCall } from "../util";
+import { findCurrentToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -457,26 +457,26 @@ export const stateSlice = createSlice({
 
     // Related to currentToolCallState
     cancelToolCall: (state) => {
-      const toolCallState = findLastToolCall(state.history);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.status = "canceled";
     },
     acceptToolCall: (state) => {
-      const toolCallState = findLastToolCall(state.history);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.status = "done";
     },
     setGeneratedOutput: (state, { payload }: PayloadAction<ToolCall>) => {
-      const toolCallState = findLastToolCall(state.history);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.toolCall = payload;
       toolCallState.status = "generated";
     },
     setCalling: (state) => {
-      const toolCallState = findLastToolCall(state.history);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.status = "calling";

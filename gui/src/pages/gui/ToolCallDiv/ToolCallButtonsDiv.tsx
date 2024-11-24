@@ -10,7 +10,7 @@ import {
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import useChatHandler from "../../../hooks/useChatHandler";
-import { selectLastToolCall } from "../../../redux/selectors/selectLastToolCall";
+import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
 import { cancelToolCall } from "../../../redux/slices/stateSlice";
 
 const ButtonContainer = styled.div`
@@ -52,7 +52,7 @@ interface ToolCallButtonsProps {}
 
 export function ToolCallButtons(props: ToolCallButtonsProps) {
   const dispatch = useDispatch();
-  const toolCallState = useSelector(selectLastToolCall);
+  const toolCallState = useSelector(selectCurrentToolCall);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -71,6 +71,10 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
           "This tool call was cancelled by the user. You should try something else, likely just chatting instead of using another tool.",
       },
     ]);
+  }
+
+  if (!toolCallState) {
+    return null;
   }
 
   return (

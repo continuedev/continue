@@ -31,8 +31,6 @@ export function ToolCallDiv(props: ToolCallDivProps) {
   }, [props.toolCall.function.arguments]);
 
   function getIcon(state: ToolStatus) {
-    console.log("State: ", state);
-
     switch (state) {
       case "generating":
         return <Spinner />;
@@ -49,7 +47,6 @@ export function ToolCallDiv(props: ToolCallDivProps) {
 
   return (
     <ThreadDiv icon={getIcon(props.status)} toolCall={props.toolCall}>
-      {props.status}
       <FunctionSpecificToolCallDiv toolCall={props.toolCall} />
     </ThreadDiv>
   );

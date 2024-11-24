@@ -27,7 +27,7 @@ import resolveEditorContent, {
 } from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { selectLastToolCall } from "../redux/selectors/selectLastToolCall";
+import { selectCurrentToolCall } from "../redux/selectors/selectCurrentToolCall";
 import {
   abortStream,
   acceptToolCall,
@@ -70,7 +70,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const toolSettings = useSelector(
     (store: RootState) => store.uiState.toolSettings,
   );
-  const toolCallState = useSelector(selectLastToolCall);
+  const toolCallState = useSelector(selectCurrentToolCall);
 
   const activeRef = useRef(active);
 
@@ -121,14 +121,18 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       }
 
       // If it's a tool call that is automatically accepted, we should call it
+
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       if (
-        toolSettings[toolCallState?.toolCall.function.name] ===
-        "allowedWithoutPermission"
+        toolCallState &&
+        toolCallState.status === "generated" &&
+        toolSettings[toolCallState.toolCall.function.name] ===
+          "allowedWithoutPermission"
       ) {
         await callTool();
       }
     } catch (e) {
-      debugger;
       // If there's an error, we should clear the response so there aren't two input boxes
       dispatch(clearLastEmptyResponse());
     }
@@ -419,6 +423,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     await handleErrors(async () => {
       resetStateForNewMessage();
 
+      dispatch(acceptToolCall());
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
       const newMessage: ChatMessage = {
         role: "tool",
         content: renderContextItems(toolOutput),
@@ -438,10 +445,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
           })),
         }),
       );
-      dispatch(acceptToolCall());
       activeRef.current = true;
       dispatch(setActive());
-
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       const messages = constructMessages(
@@ -460,6 +465,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
 
   async function callTool() {
     console.log("calling tool", toolCallState.toolCall);
+    if (!toolCallState) {
+      return;
+    }
+
     // If it goes "generated" -> "calling" -> "done" really quickly
     // we don't want an abrupt flash so just skip "calling"
     let setCallingState = true;
