@@ -20,11 +20,11 @@ class Deepseek extends OpenAI {
     return true;
   }
 
-  async *_streamFim(
+  protected async *_streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const endpoint = new URL("beta/completions", this.apiBase);
     const resp = await this.fetch(endpoint, {
@@ -46,9 +46,8 @@ class Deepseek extends OpenAI {
         Accept: "application/json",
         Authorization: `Bearer ${this.apiKey}`,
       },
-      signal
     });
-    for await (const chunk of streamSse(resp)) {
+    for await (const chunk of streamSse(resp, token ? token : null)) {
       yield chunk.choices[0].text;
     }
   }

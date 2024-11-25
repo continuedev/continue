@@ -46,19 +46,19 @@ class Cohere extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
-    for await (const update of this._streamChat(messages, signal, options)) {
+    for await (const update of this._streamChat(messages, options, token)) {
       yield stripImages(update.content);
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const headers = {
       "Content-Type": "application/json",
@@ -75,7 +75,7 @@ class Cohere extends BaseLLM {
         chat_history: this._convertMessages(messages),
         preamble: this.systemMessage,
       }),
-      signal
+      signal: token
     });
 
     if (options.stream === false) {
@@ -84,7 +84,7 @@ class Cohere extends BaseLLM {
       return;
     }
 
-    for await (const value of streamJSON(resp)) {
+    for await (const value of streamJSON(resp, token ? token : null)) {
       if (value.event_type === "text-generation") {
         yield { role: "assistant", content: value.text };
       }

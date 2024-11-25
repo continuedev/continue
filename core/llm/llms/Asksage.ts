@@ -98,8 +98,8 @@ class Asksage extends BaseLLM {
 
   protected async _complete(
     prompt: string,
-    signal: AbortSignal,
-    options: CompletionOptions
+    options: CompletionOptions,
+    token?: AbortSignal
   ): Promise<string> {
     if (typeof prompt !== "string" || prompt.trim() === "") {
       throw new Error("Prompt must be a non-empty string.");
@@ -113,6 +113,7 @@ class Asksage extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify(args),
+      signal: token
     });
 
     if (!response.ok) {
@@ -127,17 +128,17 @@ class Asksage extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
-    options: CompletionOptions
+    options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
-    const completion = await this._complete(prompt, signal, options);
+    const completion = await this._complete(prompt, options, token);
     yield completion;
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
-    options: CompletionOptions
+    options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(options, messages);
 
@@ -145,7 +146,7 @@ class Asksage extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify(args),
-      signal
+      signal: token
     });
 
     if (!response.ok) {

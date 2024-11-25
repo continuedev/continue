@@ -23,8 +23,8 @@ class Moonshot extends OpenAI {
   async *_streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const endpoint = new URL("v1/chat/completions", this.apiBase);
     const resp = await this.fetch(endpoint, {
@@ -50,9 +50,9 @@ class Moonshot extends OpenAI {
         Accept: "application/json",
         Authorization: `Bearer ${this.apiKey}`,
       },
-      signal
+      signal: token
     });
-    for await (const chunk of streamSse(resp)) {
+    for await (const chunk of streamSse(resp, token ? token : null)) {
       yield chunk.choices[0].delta.content;
     }
   }

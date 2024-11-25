@@ -16,8 +16,8 @@ class HuggingFaceInferenceAPI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     if (!this.apiBase) {
       throw new Error(
@@ -37,11 +37,11 @@ class HuggingFaceInferenceAPI extends BaseLLM {
         stream: true,
         parameters: this._convertArgs(options),
       }),
-      signal
+      signal: token
     });
 
     async function* stream() {
-      for await (const chunk of streamSse(response)) {
+      for await (const chunk of streamSse(response, token ? token : null)) {
         const text = chunk?.token?.text ?? "";
         if (text.endsWith("</s>")) {
           yield text.slice(0, -5);

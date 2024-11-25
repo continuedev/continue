@@ -105,33 +105,33 @@ export interface ILLM extends LLMOptions {
 
   complete(
     prompt: string,
-    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    token?: AbortSignal
   ): Promise<string>;
 
   streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string, PromptLog>;
 
   streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string, PromptLog>;
 
   streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options?: LLMFullCompletionOptions,
+    token?: AbortSignal
   ): Promise<ChatMessage>;
 
   countTokens(text: string): number;
@@ -427,13 +427,11 @@ export interface CustomLLMWithOptionals {
   options: LLMOptions;
   streamCompletion?: (
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
   streamChat?: (
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
@@ -545,10 +543,10 @@ export interface IDE {
   getCurrentFile(): Promise<
     | undefined
     | {
-        isUntitled: boolean;
-        path: string;
-        contents: string;
-      }
+      isUntitled: boolean;
+      path: string;
+      contents: string;
+    }
   >;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
@@ -851,11 +849,11 @@ export interface CustomCommand {
 interface Prediction {
   type: "content";
   content:
-    | string
-    | {
-        type: "text";
-        text: string;
-      }[];
+  | string
+  | {
+    type: "text";
+    text: string;
+  }[];
 }
 
 interface BaseCompletionOptions {
@@ -1167,9 +1165,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

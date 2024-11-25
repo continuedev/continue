@@ -37,8 +37,8 @@ class BedrockImport extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const credentials = await this._getCredentials();
     const client = new BedrockRuntimeClient({
@@ -52,7 +52,7 @@ class BedrockImport extends BaseLLM {
 
     const input = this._generateInvokeModelCommandInput(prompt, options);
     const command = new InvokeModelWithResponseStreamCommand(input);
-    const response = await client.send(command, {abortSignal: signal});
+    const response = await client.send(command, { abortSignal: token });
 
     if (response.body) {
       for await (const item of response.body) {
@@ -83,10 +83,10 @@ class BedrockImport extends BaseLLM {
   private async _getCredentials() {
     try {
       return await
-      fromIni({
-        profile: this.profile,
-        ignoreCache: true
-      })();
+        fromIni({
+          profile: this.profile,
+          ignoreCache: true
+        })();
     } catch (e) {
       console.warn(
         `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,

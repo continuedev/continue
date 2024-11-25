@@ -387,7 +387,6 @@ export class Core {
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
         msg.data.messages,
-        new AbortController().signal,
         msg.data.completionOptions,
       );
       let next = await gen.next();
@@ -429,7 +428,6 @@ export class Core {
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
         msg.data.prompt,
-        new AbortController().signal,
         msg.data.completionOptions,
       );
       let next = await gen.next();
@@ -462,7 +460,6 @@ export class Core {
       const model = await this.configHandler.llmFromTitle(msg.data.title);
       const completion = await model.complete(
         msg.data.prompt,
-        new AbortController().signal,
         msg.data.completionOptions,
       );
       return completion;

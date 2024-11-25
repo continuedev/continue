@@ -26,8 +26,8 @@ class LlamaCpp extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const headers = {
       "Content-Type": "application/json",
@@ -43,10 +43,10 @@ class LlamaCpp extends BaseLLM {
         stream: true,
         ...this._convertArgs(options, prompt),
       }),
-      signal
+      signal: token
     });
 
-    for await (const value of streamSse(resp)) {
+    for await (const value of streamSse(resp, token ? token : null)) {
       if (value.content) {
         yield value.content;
       }

@@ -16,8 +16,8 @@ export default class Cloudflare extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage, any, unknown> {
     const headers = {
       "Content-Type": "application/json",
@@ -36,10 +36,9 @@ export default class Cloudflare extends BaseLLM {
         model: this.model,
         ...this._convertArgs(options),
       }),
-      signal
     });
 
-    for await (const value of streamSse(resp)) {
+    for await (const value of streamSse(resp, token ? token : null)) {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
       }
@@ -48,13 +47,13 @@ export default class Cloudflare extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
-      signal,
       options,
+      token
     )) {
       yield stripImages(chunk.content);
     }

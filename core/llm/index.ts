@@ -43,6 +43,7 @@ import {
 } from "./countTokens.js";
 import { stripImages } from "./images.js";
 import CompletionOptionsForModels from "./templates/options.js";
+import { AbortError } from "node-fetch";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
@@ -151,11 +152,11 @@ export abstract class BaseLLM implements ILLM {
         options.completionOptions?.maxTokens ??
         (llmInfo?.maxCompletionTokens
           ? Math.min(
-              llmInfo.maxCompletionTokens,
-              // Even if the model has a large maxTokens, we don't want to use that every time,
-              // because it takes away from the context length
-              this.contextLength / 4,
-            )
+            llmInfo.maxCompletionTokens,
+            // Even if the model has a large maxTokens, we don't want to use that every time,
+            // because it takes away from the context length
+            this.contextLength / 4,
+          )
           : DEFAULT_MAX_TOKENS),
     };
     if (CompletionOptionsForModels[options.model as ModelName]) {
@@ -364,6 +365,9 @@ export abstract class BaseLLM implements ILLM {
 
         return resp;
       } catch (e: any) {
+        if (e.name === "AbortError") {
+          throw e;
+        }
         // Errors to ignore
         if (e.message.includes("/api/tags")) {
           throw new Error(`Error fetching tags: ${e.message}`);
@@ -372,11 +376,10 @@ export abstract class BaseLLM implements ILLM {
             `HTTP ${e.response.status} ${e.response.statusText} from ${e.response.url}\n\n${e.response.body}`,
           );
         } else {
-          if (e.name !== "AbortError") { // Don't pollute console with abort errors. Check on name instead of instanceof, to avoid importing node-fetch here
-            console.debug(
-              `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
-            );
-          }
+          console.debug(
+            `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
+          );
+
           if (
             e.code === "ECONNREFUSED" &&
             e.message.includes("http://127.0.0.1:11434")
@@ -422,20 +425,20 @@ export abstract class BaseLLM implements ILLM {
     return formatted;
   }
 
-  protected async *_streamFim(
+  protected async * _streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string, PromptLog> {
     throw new Error("Not implemented");
   }
 
-  async *streamFim(
+  async * streamFim(
     prefix: string,
     suffix: string,
-    signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const { completionOptions, log } = this._parseCompletionOptions(options);
 
@@ -452,14 +455,21 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
-    for await (const chunk of this._streamFim(
-      prefix,
-      suffix,
-      signal,
-      completionOptions,
-    )) {
-      completion += chunk;
-      yield chunk;
+
+    try {
+      for await (const chunk of this._streamFim(
+        prefix,
+        suffix,
+        completionOptions,
+        token
+      )) {
+        completion += chunk;
+        yield chunk;
+      }
+    } catch (e: any) {
+      if (e.name !== "AbortError") {
+        throw e;
+      }
     }
 
     this._logTokensGenerated(
@@ -479,10 +489,10 @@ export abstract class BaseLLM implements ILLM {
     };
   }
 
-  async *streamComplete(
+  async * streamComplete(
     _prompt: string,
-    signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
+    token?: AbortSignal
   ) {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
@@ -511,11 +521,15 @@ export abstract class BaseLLM implements ILLM {
     try {
       for await (const chunk of this._streamComplete(
         prompt,
-        signal,
         completionOptions,
+        token
       )) {
         completion += chunk;
         yield chunk;
+      }
+    } catch (e: any) {
+      if (e.name !== "AbortError") {
+        throw e
       }
     } finally {
       this._logTokensGenerated(completionOptions.model, prompt, completion);
@@ -533,7 +547,7 @@ export abstract class BaseLLM implements ILLM {
     };
   }
 
-  async complete(_prompt: string, signal: AbortSignal, options: LLMFullCompletionOptions = {}) {
+  async complete(_prompt: string, options: LLMFullCompletionOptions = {}, token?: AbortSignal) {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -557,7 +571,15 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    const completion = await this._complete(prompt, signal, completionOptions);
+    let completion: string = ""
+
+    try {
+      completion = await this._complete(prompt, completionOptions, token);
+    } catch (e: any) {
+      if (e.name !== "AbortError") {
+        throw e
+      }
+    }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
@@ -568,18 +590,18 @@ export abstract class BaseLLM implements ILLM {
     return completion;
   }
 
-  async chat(messages: ChatMessage[], signal: AbortSignal, options: LLMFullCompletionOptions = {}) {
+  async chat(messages: ChatMessage[], options: LLMFullCompletionOptions = {}, token?: AbortSignal) {
     let completion = "";
-    for await (const chunk of this.streamChat(messages, signal, options)) {
+    for await (const chunk of this.streamChat(messages, options, token)) {
       completion += chunk.content;
     }
     return { role: "assistant" as ChatMessageRole, content: completion };
   }
 
-  async *streamChat(
+  async * streamChat(
     _messages: ChatMessage[],
-    signal: AbortSignal,
     options: LLMFullCompletionOptions = {},
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage, PromptLog> {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
@@ -604,25 +626,29 @@ export abstract class BaseLLM implements ILLM {
       if (this.templateMessages) {
         for await (const chunk of this._streamComplete(
           prompt,
-          signal,
           completionOptions,
+          token
         )) {
           completion += chunk;
-          yield { role: "assistant", content: chunk };
+          yield {
+            role: "assistant", content: chunk
+          };
         }
       } else {
         for await (const chunk of this._streamChat(
           messages,
-          signal,
           completionOptions,
+          token
         )) {
           completion += chunk.content;
           yield chunk;
         }
       }
     } catch (error) {
-      console.log(error);
-      throw error;
+      if (!(error instanceof AbortError)) {
+        console.log(error);
+        throw error;
+      }
     }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
@@ -640,18 +666,18 @@ export abstract class BaseLLM implements ILLM {
   }
 
   // biome-ignore lint/correctness/useYield: Purposefully not implemented
-  protected async *_streamComplete(
+  protected async * _streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     throw new Error("Not implemented");
   }
 
-  protected async *_streamChat(
+  protected async * _streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     if (!this.templateMessages) {
       throw new Error(
@@ -661,16 +687,16 @@ export abstract class BaseLLM implements ILLM {
 
     for await (const chunk of this._streamComplete(
       this.templateMessages(messages),
-      signal,
       options,
+      token
     )) {
       yield { role: "assistant", content: chunk };
     }
   }
 
-  protected async _complete(prompt: string, signal: AbortSignal, options: CompletionOptions) {
+  protected async _complete(prompt: string, options: CompletionOptions, token?: AbortSignal) {
     let completion = "";
-    for await (const chunk of this._streamComplete(prompt, signal, options)) {
+    for await (const chunk of this._streamComplete(prompt, options, token)) {
       completion += chunk;
     }
     return completion;

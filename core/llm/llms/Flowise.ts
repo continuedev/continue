@@ -121,27 +121,27 @@ class Flowise extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const message: ChatMessage = { role: "user", content: prompt };
-    for await (const chunk of this._streamChat([message], signal, options)) {
+    for await (const chunk of this._streamChat([message], options, token)) {
       yield stripImages(chunk.content);
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const requestBody = this._getRequestBody(messages, options);
-    const { socket, socketInfo } = await this._initializeSocket();
+    const { socket, socketInfo } = await this._initializeSocket(token);
     const request = this.fetch(this._getChatUrl(), {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({ ...requestBody, socketIOClientId: socket.id }),
-      signal
+      signal: token
     }).then((res) => res.json());
 
     while (await socketInfo.hasNextToken()) {
@@ -180,18 +180,26 @@ class Flowise extends BaseLLM {
     return requestBody;
   }
 
-  protected _initializeSocket(): Promise<{
+  protected _initializeSocket(token?: AbortSignal): Promise<{
     socket: Socket;
     socketInfo: IFlowiseSocketManager;
   }> {
     return new Promise((res, rej) => {
       const socket = socketIOClient(this._getSocketUrl());
+      const handleAbort = () => {
+        socket.disconnect();
+        token!.removeEventListener('abort', handleAbort)
+      }
+
+      if (token) {
+        token.addEventListener('abort', handleAbort)
+      }
       const socketInfo: IFlowiseSocketManager = {
         isConnected: false,
         hasNextToken: () => Promise.resolve(false),
         internal: {
-          hasNextTokenPromiseResolve: () => {},
-          hasNextTokenPromiseReject: () => {},
+          hasNextTokenPromiseResolve: () => { },
+          hasNextTokenPromiseReject: () => { },
           messageHistory: [],
         },
         getCurrentMessage: () => "",

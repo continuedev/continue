@@ -46,13 +46,13 @@ class Gemini extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     for await (const message of this._streamChat(
       [{ content: prompt, role: "user" }],
-      signal,
       options,
+      token
     )) {
       yield stripImages(message.content);
     }
@@ -74,8 +74,8 @@ class Gemini extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     // Ensure this.apiBase is used if available, otherwise use default
     const apiBase =
@@ -92,16 +92,16 @@ class Gemini extends BaseLLM {
     if (options.model.includes("gemini")) {
       for await (const message of this.streamChatGemini(
         convertedMsgs,
-        signal,
         options,
+        token
       )) {
         yield message;
       }
     } else {
       for await (const message of this.streamChatBison(
         convertedMsgs,
-        signal,
         options,
+        token
       )) {
         yield message;
       }
@@ -111,20 +111,20 @@ class Gemini extends BaseLLM {
   continuePartToGeminiPart(part: MessagePart) {
     return part.type === "text"
       ? {
-          text: part.text,
-        }
+        text: part.text,
+      }
       : {
-          inlineData: {
-            mimeType: "image/jpeg",
-            data: part.imageUrl?.url.split(",")[1],
-          },
-        };
+        inlineData: {
+          mimeType: "image/jpeg",
+          data: part.imageUrl?.url.split(",")[1],
+        },
+      };
   }
 
   private async *streamChatGemini(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const apiURL = new URL(
       `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
@@ -159,17 +159,17 @@ class Gemini extends BaseLLM {
       // if this.systemMessage is defined, reformat it for Gemini API
       ...(this.systemMessage &&
         !isV1API && {
-          systemInstruction: { parts: [{ text: this.systemMessage }] },
-        }),
+        systemInstruction: { parts: [{ text: this.systemMessage }] },
+      }),
     };
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
-      signal
+      signal: token
     });
 
     let buffer = "";
-    for await (const chunk of streamResponse(response)) {
+    for await (const chunk of streamResponse(response, token ? token : null)) {
       buffer += chunk;
       if (buffer.startsWith("[")) {
         buffer = buffer.slice(1);
@@ -218,8 +218,8 @@ class Gemini extends BaseLLM {
   }
   private async *streamChatBison(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const msgList = [];
     for (const message of messages) {
@@ -234,7 +234,7 @@ class Gemini extends BaseLLM {
     const response = await this.fetch(apiURL, {
       method: "POST",
       body: JSON.stringify(body),
-      signal
+      signal: token
     });
     const data = await response.json();
     yield { role: "assistant", content: data.candidates[0].content };

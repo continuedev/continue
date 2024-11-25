@@ -97,19 +97,19 @@ class Anthropic extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
-    for await (const update of this._streamChat(messages, signal, options)) {
+    for await (const update of this._streamChat(messages, options, token)) {
       yield stripImages(update.content);
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    signal: AbortSignal,
     options: CompletionOptions,
+    token?: AbortSignal
   ): AsyncGenerator<ChatMessage> {
     const shouldCacheSystemMessage =
       !!this.systemMessage && this.cacheBehavior?.cacheSystemMessage;
@@ -133,15 +133,15 @@ class Anthropic extends BaseLLM {
         messages: this.convertMessages(messages),
         system: shouldCacheSystemMessage
           ? [
-              {
-                type: "text",
-                text: this.systemMessage,
-                cache_control: { type: "ephemeral" },
-              },
-            ]
+            {
+              type: "text",
+              text: this.systemMessage,
+              cache_control: { type: "ephemeral" },
+            },
+          ]
           : systemMessage,
       }),
-      signal
+      signal: token
     });
 
     if (options.stream === false) {
@@ -150,7 +150,7 @@ class Anthropic extends BaseLLM {
       return;
     }
 
-    for await (const value of streamSse(response)) {
+    for await (const value of streamSse(response, token ? token : null)) {
       if (value.type == "message_start") {
         console.log(value);
       }

@@ -24,9 +24,7 @@ const GenerateTerminalCommand: SlashCommand = {
 
 "${input}"
 
-Please write a shell command that will do what the user requested. Your output should consist of only the command itself, without any explanation or example output. Do not use any newlines. Only output the command that when inserted into the terminal will do precisely what was requested. Here is the command:`,
-        new AbortController().signal
-      );
+Please write a shell command that will do what the user requested. Your output should consist of only the command itself, without any explanation or example output. Do not use any newlines. Only output the command that when inserted into the terminal will do precisely what was requested. Here is the command:`);
 
     const lines = streamLines(gen);
     let cmd = "";
