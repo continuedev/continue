@@ -67,7 +67,10 @@ import { ComboBoxItem } from "./types";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
 import { AddCodeToEdit } from "./AddCodeToEditExtension";
-import { addCodeToEdit } from "../../redux/slices/editModeState";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+} from "../../redux/slices/editModeState";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -598,7 +601,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
-    } else if (!isJetBrains()){
+    } else if (!isJetBrains()) {
       await handleVSCMetaKeyIssues(e, editor);
     }
   };
@@ -657,6 +660,8 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueInput",
     async (data) => {
+      dispatch(clearCodeToEdit());
+
       if (!props.isMainInput) {
         return;
       }
