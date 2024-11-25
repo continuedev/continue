@@ -5,7 +5,6 @@
   "scripts": {
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "tsc:check": "tsc -p ./ --noEmit",
-    "build:npm": "tsc -p ./tsconfig.npm.json",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
   },
