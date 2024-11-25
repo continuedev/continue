@@ -61,6 +61,8 @@ function OnboardingLocalTab() {
           title: ONBOARDING_LOCAL_MODEL_TITLE,
         });
         if (result.status === "success") {
+          // TODO - temporary fix, see notes
+          // https://github.com/continuedev/continue/pull/3059
           if (Array.isArray(result.content)) {
             setDownloadedOllamaModels(result.content);
             setIsOllamaConnected(true);
