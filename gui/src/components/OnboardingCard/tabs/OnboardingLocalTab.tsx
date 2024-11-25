@@ -15,7 +15,7 @@ import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
 
-const OLLAMA_CHECK_INTERVAL_MS = 10000;
+const OLLAMA_CHECK_INTERVAL_MS = 3000;
 
 function OnboardingLocalTab() {
   const dispatch = useDispatch();
