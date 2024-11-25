@@ -341,7 +341,7 @@ export const stateSlice = createSlice({
         payload.rangeInFileWithContents.range.start.line + 1
       }-${payload.rangeInFileWithContents.range.end.line + 1})`;
       contextItems.push({
-        name: `${base} ${lineNums}s`,
+        name: `${base} ${lineNums}`,
         description: payload.rangeInFileWithContents.filepath,
         id: {
           providerTitle: "code",

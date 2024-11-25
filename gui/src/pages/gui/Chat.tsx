@@ -139,8 +139,6 @@ export function Chat() {
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
-  console.log("chat rendering");
-
   const snapToBottom = useCallback(() => {
     if (!stepsDivRef.current) return;
     const elem = stepsDivRef.current;

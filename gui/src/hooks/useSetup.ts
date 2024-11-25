@@ -62,7 +62,7 @@ function useSetup(dispatch: Dispatch) {
         ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
-      // loadConfig(true);
+      loadConfig(true);
     }, 2_000);
 
     return () => clearInterval(interval);
