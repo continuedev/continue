@@ -59,11 +59,17 @@ function OnboardingLocalTab() {
       try {
         const result = await ideMessenger.request("llm/listModels", {
           title: ONBOARDING_LOCAL_MODEL_TITLE,
-        })
-
+        });
         if (result.status === "success") {
-          setDownloadedOllamaModels(result.content);
-          setIsOllamaConnected(true);
+          // TODO - temporary fix, see notes
+          // https://github.com/continuedev/continue/pull/3059
+          if (Array.isArray(result.content)) {
+            setDownloadedOllamaModels(result.content);
+            setIsOllamaConnected(true);
+          } else {
+            setDownloadedOllamaModels([]);
+            setIsOllamaConnected(false);
+          }
         } else {
           throw new Error("Failed to fetch models");
         }
