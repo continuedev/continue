@@ -52,12 +52,13 @@ export const SubmenuContextProvidersProvider = ({
   const contextProviderDescriptions = useSelector(
     selectContextProviderDescriptions,
   );
+  const disableIndexing = useSelector(
+    (store: RootState) => store.state.config.disableIndexing,
+  );
 
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
-
-  const config = useSelector((store: RootState) => store.state.config);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -233,7 +234,7 @@ export const SubmenuContextProvidersProvider = ({
         await Promise.all(
           contextProviderDescriptions.map(async (description) => {
             const shouldSkipProvider =
-              description.dependsOnIndexing && config.disableIndexing;
+              description.dependsOnIndexing && disableIndexing;
 
             if (shouldSkipProvider) {
               console.debug(

@@ -87,6 +87,7 @@ function SetupListeners() {
 }
 
 function App() {
+  console.log("app rendering");
   return (
     <VscThemeProvider>
       <SubmenuContextProvidersProvider>

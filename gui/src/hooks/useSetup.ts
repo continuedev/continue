@@ -25,47 +25,56 @@ function useSetup(dispatch: Dispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useSelector((store: RootState) => store.state.history);
 
-  const initialConfigLoad = useRef(false);
-  const loadConfig = useCallback(async () => {
-    const result = await ideMessenger.request(
-      "config/getSerializedProfileInfo",
-      undefined,
-    );
-    if (result.status === "error") {
-      return;
-    }
-    const { config, profileId } = result.content;
-    dispatch(setConfig(config));
-    dispatch(setSelectedProfileId(profileId));
-    initialConfigLoad.current = true;
-    setLocalStorage("disableIndexing", config.disableIndexing || false);
+  const hasLoadedConfig = useRef(false);
+  const loadConfig = useCallback(
+    async (initial: boolean) => {
+      const result = await ideMessenger.request(
+        "config/getSerializedProfileInfo",
+        undefined,
+      );
+      if (result.status === "error") {
+        return;
+      }
+      const { config, profileId } = result.content;
+      if (initial && hasLoadedConfig.current) {
+        return;
+      }
+      hasLoadedConfig.current = true;
+      dispatch(setConfig(config));
+      dispatch(setSelectedProfileId(profileId));
 
-    // Perform any actions needed with the config
-    if (config.ui?.fontSize) {
-      setLocalStorage("fontSize", config.ui.fontSize);
-      document.body.style.fontSize = `${config.ui.fontSize}px`;
-    }
-  }, [dispatch, ideMessenger, initialConfigLoad]);
+      // Perform any actions needed with the config
+      if (config.ui?.fontSize) {
+        setLocalStorage("fontSize", config.ui.fontSize);
+        document.body.style.fontSize = `${config.ui.fontSize}px`;
+      }
+    },
+    [dispatch, ideMessenger, hasLoadedConfig],
+  );
 
   // Load config from the IDE
   useEffect(() => {
-    loadConfig();
+    loadConfig(true);
     const interval = setInterval(() => {
-      if (initialConfigLoad.current) {
+      if (hasLoadedConfig.current) {
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
         ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
-      loadConfig();
+      // loadConfig(true);
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig, ideMessenger]);
+  }, [hasLoadedConfig, loadConfig, ideMessenger]);
 
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-  });
+  useWebviewListener(
+    "configUpdate",
+    async () => {
+      await loadConfig(false);
+    },
+    [loadConfig],
+  );
 
   // Load symbols for chat on any session change
   const sessionId = useSelector((store: RootState) => store.state.sessionId);
@@ -116,10 +125,6 @@ function useSetup(dispatch: Dispatch) {
 
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
 
-  const defaultModelTitle = useSelector(
-    (store: RootState) => store.state.defaultModelTitle,
-  );
-
   // IDE event listeners
   useWebviewListener(
     "getWebviewHistoryLength",
@@ -169,6 +174,10 @@ function useSetup(dispatch: Dispatch) {
   useWebviewListener("indexing/statusUpdate", async (data) => {
     dispatch(updateIndexingStatus(data));
   });
+
+  const defaultModelTitle = useSelector(
+    (store: RootState) => store.state.defaultModelTitle,
+  );
 
   useWebviewListener(
     "getDefaultModelTitle",
