@@ -18,7 +18,7 @@ export interface AutocompleteFileringTestInput {
   filename: string;
   input: string;
   llmOutput: string;
-  expectedCompletion: string | null;
+  expectedCompletion: string | null | undefined;
   options?: {
     only?: boolean;
   };
@@ -72,5 +72,5 @@ export async function testAutocompleteFiltering(
   );
 
   // Ensure that we return the text that is wanted to be displayed
-  expect(result?.completion ?? null).toEqual(test.expectedCompletion);
+  expect(result?.completion).toEqual(test.expectedCompletion);
 }
