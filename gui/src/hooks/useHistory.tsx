@@ -1,5 +1,5 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { PersistedSessionInfo, SessionInfo } from "core";
+import { Session, SessionMetadata } from "core";
 
 import { stripImages } from "core/llm/images";
 import { useCallback, useContext } from "react";
@@ -32,7 +32,7 @@ function useHistory(dispatch: Dispatch) {
   async function getHistory(
     offset?: number,
     limit?: number,
-  ): Promise<SessionInfo[]> {
+  ): Promise<SessionMetadata[]> {
     const result = await ideMessenger.request("history/list", {
       offset,
       limit,
@@ -87,7 +87,7 @@ function useHistory(dispatch: Dispatch) {
           ? stateCopy.title
           : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
 
-    const sessionInfo: PersistedSessionInfo = {
+    const session: Session = {
       history: stateCopy.history,
       title: title,
       sessionId: stateCopy.sessionId,
@@ -95,10 +95,10 @@ function useHistory(dispatch: Dispatch) {
       checkpoints: stateCopy.checkpoints,
     };
 
-    return await ideMessenger.request("history/save", sessionInfo);
+    return await ideMessenger.request("history/save", session);
   }
 
-  async function getSession(id: string): Promise<PersistedSessionInfo> {
+  async function getSession(id: string): Promise<Session> {
     const result = await ideMessenger.request("history/load", { id });
     if (result.status === "error") {
       throw new Error(result.error);
@@ -106,15 +106,15 @@ function useHistory(dispatch: Dispatch) {
     return result.content;
   }
 
-  async function updateSession(sessionInfo: PersistedSessionInfo) {
-    return await ideMessenger.request("history/save", sessionInfo);
+  async function updateSession(session: Session) {
+    return await ideMessenger.request("history/save", session);
   }
 
   async function deleteSession(id: string) {
     return await ideMessenger.request("history/delete", { id });
   }
 
-  async function loadSession(id: string): Promise<PersistedSessionInfo> {
+  async function loadSession(id: string): Promise<Session> {
     updateLastSessionId(state.sessionId);
     const result = await ideMessenger.request("history/load", { id });
     if (result.status === "error") {
@@ -126,7 +126,7 @@ function useHistory(dispatch: Dispatch) {
     return sessionContent;
   }
 
-  async function loadLastSession(): Promise<PersistedSessionInfo | undefined> {
+  async function loadLastSession(): Promise<Session | undefined> {
     const lastSessionId = getLocalStorage("lastSessionId");
     if (lastSessionId) {
       return await loadSession(lastSessionId);

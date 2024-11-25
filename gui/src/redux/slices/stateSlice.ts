@@ -8,7 +8,7 @@ import {
   ContextItemWithId,
   FileSymbolMap,
   IndexingStatus,
-  PersistedSessionInfo,
+  Session,
   PromptLog,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
@@ -298,10 +298,7 @@ export const stateSlice = createSlice({
           action.payload;
       }
     },
-    newSession: (
-      state,
-      { payload }: PayloadAction<PersistedSessionInfo | undefined>,
-    ) => {
+    newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
 
