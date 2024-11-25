@@ -45,6 +45,7 @@
     "@aws-sdk/credential-providers": "^3.620.1",
     "@continuedev/config-types": "^1.0.13",
     "@continuedev/llm-info": "^1.0.2",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "@mozilla/readability": "^0.5.0",
     "@octokit/rest": "^20.0.2",
     "@typescript-eslint/eslint-plugin": "^7.8.0",
