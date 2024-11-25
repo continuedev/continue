@@ -15,7 +15,7 @@ import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/images";
 import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
@@ -38,18 +38,18 @@ import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import useHistory from "./useHistory";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import {
+  selectDefaultContextProviders,
+  selectSlashCommands,
+} from "../redux/selectors";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
-  const defaultContextProviders = useSelector(
-    (store: RootState) => store.state.config.experimental?.defaultContext ?? [],
-  );
+  const defaultContextProviders = useSelector(selectDefaultContextProviders);
 
-  const slashCommands = useSelector(
-    (store: RootState) => store.state.config.slashCommands || [],
-  );
+  const slashCommands = useSelector(selectSlashCommands);
 
   const history = useSelector((store: RootState) => store.state.history);
   const active = useSelector((store: RootState) => store.state.active);

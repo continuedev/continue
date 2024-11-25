@@ -37,7 +37,7 @@ import {
   vscInputBorderFocus,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
+import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
@@ -168,7 +168,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
-  const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
+  const { getSubmenuContextItems } = useSubmenuContextProviders();
 
   const historyLength = useSelector(
     (store: RootState) => store.state.history.length,
@@ -598,7 +598,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
-    } else if (!isJetBrains()){
+    } else if (!isJetBrains()) {
       await handleVSCMetaKeyIssues(e, editor);
     }
   };
