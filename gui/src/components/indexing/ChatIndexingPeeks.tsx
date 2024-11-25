@@ -44,9 +44,6 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
           <p className="m-0 p-0 text-stone-500 group-hover:underline">
             {state.displayName}
           </p>
-          {/* <p className="no-underline lines lines-1 m-0 max-w-20 p-0 text-xs text-stone-500">
-          {state.titles.join(", ")}
-        </p> */}
         </div>
         <div className="my-2 h-1.5 flex-1 rounded-md border border-solid border-gray-400">
           <div

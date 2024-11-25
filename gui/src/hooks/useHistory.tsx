@@ -6,7 +6,7 @@ import { useCallback, useContext } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
-import { newSession } from "../redux/slices/stateSlice";
+import { newSession, updateSessionTitle } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
@@ -20,7 +20,13 @@ function truncateText(text: string, maxLength: number) {
 }
 
 function useHistory(dispatch: Dispatch) {
-  const state = useSelector((state: RootState) => state.state);
+  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const config = useSelector((store: RootState) => store.state.config);
+  const history = useSelector((store: RootState) => store.state.history);
+  const checkpoints = useSelector(
+    (store: RootState) => store.state.checkpoints,
+  );
+  const title = useSelector((store: RootState) => store.state.title);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
 
@@ -49,24 +55,18 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function saveSession(openNewSession: boolean = true) {
-    if (state.history.length === 0) return;
+    if (history.length === 0) return;
 
-    const stateCopy = { ...state };
-    if (openNewSession) {
-      dispatch(newSession());
-      updateLastSessionId(stateCopy.sessionId);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 10));
-
-    if (state.config?.ui?.getChatTitles && stateCopy.title === "New Session") {
+    let currentTitle = title;
+    if (config?.ui?.getChatTitles && currentTitle === "New Session") {
       try {
         // Check if we have first assistant response
-        let assistantResponse = stateCopy.history
+        let assistantResponse = history
           ?.filter((h) => h.message.role === "assistant")[0]
           ?.message?.content?.toString();
 
         if (assistantResponse) {
-          stateCopy.title = await getChatTitle(assistantResponse);
+          currentTitle = await getChatTitle(assistantResponse);
         }
       } catch (e) {
         throw new Error("Unable to get chat title");
@@ -74,28 +74,35 @@ function useHistory(dispatch: Dispatch) {
     }
 
     // Fallback if we get an error above or if the user has not set getChatTitles
-    let title =
-      stateCopy.title === "New Session"
+    let newTitle =
+      currentTitle === "New Session"
         ? truncateText(
-            stripImages(stateCopy.history[0].message.content)
+            stripImages(history[0].message.content)
               .split("\n")
               .filter((l) => l.trim() !== "")
               .slice(-1)[0] || "",
             MAX_TITLE_LENGTH,
           )
-        : stateCopy.title?.length > 0
-          ? stateCopy.title
-          : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
+        : currentTitle?.length > 0
+          ? currentTitle
+          : (await getSession(sessionId)).title; // to ensure titles are synced with updates from history page.
 
     const session: Session = {
-      history: stateCopy.history,
-      title: title,
-      sessionId: stateCopy.sessionId,
+      sessionId,
+      title: newTitle,
       workspaceDirectory: window.workspacePaths?.[0] || "",
-      checkpoints: stateCopy.checkpoints,
+      history,
+      checkpoints,
     };
 
-    return await ideMessenger.request("history/save", session);
+    await ideMessenger.request("history/save", session);
+
+    if (openNewSession) {
+      dispatch(newSession());
+      updateLastSessionId(sessionId);
+    } else {
+      dispatch(updateSessionTitle(newTitle));
+    }
   }
 
   async function getSession(id: string): Promise<Session> {
@@ -115,7 +122,7 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function loadSession(id: string): Promise<Session> {
-    updateLastSessionId(state.sessionId);
+    updateLastSessionId(sessionId);
     const result = await ideMessenger.request("history/load", { id });
     if (result.status === "error") {
       throw new Error(result.error);
