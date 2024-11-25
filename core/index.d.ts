@@ -403,6 +403,7 @@ interface ToolCallState {
   toolCallId: string;
   toolCall: ToolCall;
   status: ToolStatus;
+  parsedArgs: any;
 }
 
 export interface ChatHistoryItem {

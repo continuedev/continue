@@ -19,6 +19,7 @@ import {
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
+import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4, v4 } from "uuid";
 import { streamResponseThunk } from "../thunks/streamResponse";
@@ -319,10 +320,14 @@ export const stateSlice = createSlice({
           };
 
           if (action.payload.role === "assistant" && action.payload.toolCalls) {
+            const [_, parsedArgs] = incrementalParseJson(
+              action.payload.toolCalls[0].function.arguments,
+            );
             historyItem.toolCallState = {
               status: "generating",
               toolCall: action.payload.toolCalls[0] as ToolCall,
               toolCallId: action.payload.toolCalls[0].id,
+              parsedArgs,
             };
           }
 
@@ -346,6 +351,14 @@ export const stateSlice = createSlice({
               } else {
                 msg.toolCalls[i].function.arguments +=
                   toolCall.function.arguments;
+
+                const [_, parsedArgs] = incrementalParseJson(
+                  msg.toolCalls[i].function.arguments,
+                );
+
+                state.history[
+                  state.history.length - 1
+                ].toolCallState.parsedArgs = parsedArgs;
               }
             });
           }
@@ -462,6 +475,12 @@ export const stateSlice = createSlice({
     },
 
     // Related to currentToolCallState
+    setToolGenerated: (state) => {
+      const toolCallState = findCurrentToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "generated";
+    },
     cancelToolCall: (state) => {
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
@@ -473,13 +492,6 @@ export const stateSlice = createSlice({
       if (!toolCallState) return;
 
       toolCallState.status = "done";
-    },
-    setGeneratedOutput: (state, { payload }: PayloadAction<ToolCall>) => {
-      const toolCallState = findCurrentToolCall(state.history);
-      if (!toolCallState) return;
-
-      toolCallState.toolCall = payload;
-      toolCallState.status = "generated";
     },
     setCalling: (state) => {
       const toolCallState = findCurrentToolCall(state.history);
@@ -572,8 +584,8 @@ export const {
   setIndexingChatPeekHidden,
   setCalling,
   cancelToolCall,
-  setGeneratedOutput,
   acceptToolCall,
+  setToolGenerated,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

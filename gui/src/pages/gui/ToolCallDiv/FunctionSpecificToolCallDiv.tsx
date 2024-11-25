@@ -1,10 +1,15 @@
-import { ToolCall } from "core";
-import { incrementalParseJson } from "core/util/incrementalParseJson";
+import { ToolCall, ToolCallState } from "core";
 import { CreateFile } from "./CreateFile";
 import { RunTerminalCommand } from "./RunTerminalCommand";
 
-function FunctionSpecificToolCallDiv({ toolCall }: { toolCall: ToolCall }) {
-  const [_, args] = incrementalParseJson(toolCall.function.arguments);
+function FunctionSpecificToolCallDiv({
+  toolCall,
+  toolCallState,
+}: {
+  toolCall: ToolCall;
+  toolCallState: ToolCallState;
+}) {
+  const args = toolCallState.parsedArgs;
 
   switch (toolCall.function.name) {
     case "create_new_file":

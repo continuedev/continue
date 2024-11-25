@@ -35,8 +35,16 @@ export default function StepContainer(props: StepContainerProps) {
   const isInEditMode = useSelector(
     (store: RootState) => store.editModeState.isInEditMode,
   );
+
+  const historyItemAfterThis = useSelector(
+    (store: RootState) => store.state.history[props.index + 1],
+  );
+
   const uiConfig = useUIConfig();
-  const shouldHideActions = active && props.isLast;
+  const shouldHideActions =
+    (active && props.isLast) ||
+    historyItemAfterThis?.message.role === "assistant";
+
   // const isStepAheadOfCurCheckpoint =
   //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
@@ -96,15 +104,17 @@ export default function StepContainer(props: StepContainerProps) {
         )}
       </ContentDiv>
       {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on */}
-      <div className={`transition-opacity duration-300 ease-in-out`}>
-        <ResponseActions
-          isTruncated={isTruncated}
-          onDelete={onDelete}
-          onContinueGeneration={onContinueGeneration}
-          index={props.index}
-          item={props.item}
-          shouldHideActions={shouldHideActions}
-        />
+      <div className={`h-7 transition-opacity duration-300 ease-in-out`}>
+        {shouldHideActions ? null : (
+          <ResponseActions
+            isTruncated={isTruncated}
+            onDelete={onDelete}
+            onContinueGeneration={onContinueGeneration}
+            index={props.index}
+            item={props.item}
+            shouldHideActions={shouldHideActions}
+          />
+        )}
       </div>
     </div>
   );

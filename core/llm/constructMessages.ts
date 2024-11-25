@@ -74,6 +74,9 @@ function constructSystemPrompt(model: string): string | null {
   return null;
 }
 
+const CANCELED_TOOL_CALL_MESSAGE =
+  "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
+
 export function constructMessages(
   history: ChatHistory,
   model: string,
@@ -103,6 +106,12 @@ export function constructMessages(
       msgs.push({
         ...historyItem.message,
         content,
+      });
+    } else if (historyItem.toolCallState?.status === "canceled") {
+      // Canceled tool call
+      msgs.push({
+        ...historyItem.message,
+        content: CANCELED_TOOL_CALL_MESSAGE,
       });
     } else {
       msgs.push(historyItem.message);

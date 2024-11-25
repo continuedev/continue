@@ -7,6 +7,7 @@ import {
   abortStream,
   addPromptCompletionPair,
   clearLastEmptyResponse,
+  setToolGenerated,
   streamUpdate,
 } from "../slices/stateSlice";
 import { ThunkApiType } from "../store";
@@ -64,13 +65,15 @@ export const streamNormalInput = createAsyncThunk<
 
     // If it's a tool call that is automatically accepted, we should call it
     const toolCallState = selectCurrentToolCall(getState());
-    if (
-      toolCallState &&
-      toolCallState.status === "generated" &&
-      toolSettings[toolCallState.toolCall.function.name] ===
+    if (toolCallState) {
+      dispatch(setToolGenerated());
+
+      if (
+        toolSettings[toolCallState.toolCall.function.name] ===
         "allowedWithoutPermission"
-    ) {
-      await dispatch(callTool());
+      ) {
+        await dispatch(callTool());
+      }
     }
   } catch (e) {
     // If there's an error, we should clear the response so there aren't two input boxes

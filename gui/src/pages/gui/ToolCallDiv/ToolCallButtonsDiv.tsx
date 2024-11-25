@@ -1,4 +1,3 @@
-import { useContext } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -8,7 +7,6 @@ import {
   vscButtonForeground,
 } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
-import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
 import { cancelToolCall } from "../../../redux/slices/stateSlice";
 import { useAppDispatch } from "../../../redux/store";
@@ -56,21 +54,12 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
   const dispatch = useAppDispatch();
   const toolCallState = useSelector(selectCurrentToolCall);
 
-  const ideMessenger = useContext(IdeMessengerContext);
-
   async function cancelTool() {
     dispatch(cancelToolCall());
     dispatch(
       streamResponseAfterToolCall({
         toolCallId: toolCallState.toolCallId,
-        toolOutput: [
-          {
-            name: "Cancelled",
-            description: "Cancelled",
-            content:
-              "This tool call was cancelled by the user. You should try something else, likely just chatting instead of using another tool.",
-          },
-        ],
+        toolOutput: [],
       }),
     );
   }

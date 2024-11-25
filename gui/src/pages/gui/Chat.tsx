@@ -360,8 +360,8 @@ export function Chat() {
                   {item.message.toolCalls?.map((toolCall) => {
                     return (
                       <ToolCallDiv
+                        toolCallState={item.toolCallState}
                         toolCall={toolCall as any}
-                        status={item.toolCallState!.status}
                       />
                     );
                   })}
