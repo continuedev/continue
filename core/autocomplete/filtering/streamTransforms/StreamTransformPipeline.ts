@@ -2,7 +2,7 @@ import { streamLines } from "../../../diff/util";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../../util/parameters";
 import { HelperVars } from "../../util/HelperVars";
 
-import { stopAtStopTokens } from "./charStream";
+import { stopAtStartOf, stopAtStopTokens } from "./charStream";
 import {
   avoidEmptyComments,
   avoidPathLine,
@@ -27,6 +27,7 @@ export class StreamTransformPipeline {
     let charGenerator = generator;
 
     charGenerator = stopAtStopTokens(generator, stopTokens);
+    charGenerator = stopAtStartOf(charGenerator, suffix);
     for (const charFilter of helper.lang.charFilters ?? []) {
       charGenerator = charFilter({
         chars: charGenerator,
