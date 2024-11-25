@@ -15,7 +15,7 @@ import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
 
-const OLLAMA_CHECK_INTERVAL_MS = 3000;
+const OLLAMA_CHECK_INTERVAL_MS = 10000;
 
 function OnboardingLocalTab() {
   const dispatch = useDispatch();
@@ -59,11 +59,15 @@ function OnboardingLocalTab() {
       try {
         const result = await ideMessenger.request("llm/listModels", {
           title: ONBOARDING_LOCAL_MODEL_TITLE,
-        })
-
+        });
         if (result.status === "success") {
-          setDownloadedOllamaModels(result.content);
-          setIsOllamaConnected(true);
+          if (Array.isArray(result.content)) {
+            setDownloadedOllamaModels(result.content);
+            setIsOllamaConnected(true);
+          } else {
+            setDownloadedOllamaModels([]);
+            setIsOllamaConnected(false);
+          }
         } else {
           throw new Error("Failed to fetch models");
         }
