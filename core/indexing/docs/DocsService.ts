@@ -150,8 +150,13 @@ export default class DocsService {
 
     this.config.docs?.forEach((doc) => {
       if (!doc.startUrl) {
-        console.error("Invalid config docs entry", doc);
+        console.error("Invalid config docs entry, no start");
         return;
+      }
+
+      const currentStatus = this.statuses.get(doc.startUrl);
+      if (currentStatus) {
+        return currentStatus;
       }
 
       const sharedStatus = {
