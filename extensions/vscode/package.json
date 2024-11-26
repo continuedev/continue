@@ -329,7 +329,7 @@
         "title": "Sign In",
         "category": "Continue",
         "group": "Continue",
-        "icon": "$(account)"
+        "icon": "$(key)"
       },
       {
         "command": "continue.openAccountDialog",
