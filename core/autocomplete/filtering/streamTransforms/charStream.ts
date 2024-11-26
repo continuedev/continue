@@ -117,3 +117,57 @@ export async function* stopAtStopTokens(
     yield char;
   }
 }
+
+/**
+ * Asynchronously yields characters from the input stream, stopping if a sequence contained in the beginning of the suffix is encountered.
+ * */
+export async function* stopAtStartOf(
+  stream: AsyncGenerator<string>,
+  suffix: string,
+  sequenceLength: number = 20,
+): AsyncGenerator<string> {
+  if (suffix.length < sequenceLength) {
+    for await (const chunk of stream) {
+      yield chunk;
+    }
+    return;
+  }
+
+  const n = Math.min(suffix.length, 3 * sequenceLength);
+  let prev = new Array(n + 1).fill(0);
+  let res = 0;
+  let buffer = "";
+
+  for await (const chunk of stream) {
+    const s1 = chunk;
+    const m = chunk.length;
+    for (let i = 1; i <= m; i++) {
+      // Create a temporary array to store the current row
+      let curr = new Array(n + 1).fill(0);
+      for (let j = 1; j <= n; j++) {
+        if (s1[i - 1] === suffix[j - 1]) {
+          curr[j] = prev[j - 1] + 1;
+          res = Math.max(res, curr[j]);
+        } else {
+          curr[j] = 0;
+        }
+      }
+
+      // Move the current row's data to the previous row
+      prev = curr;
+
+      if (res > sequenceLength) {
+        return;
+      }
+
+      buffer += s1[i - 1];
+
+      while (buffer.length > sequenceLength) {
+        yield buffer[0];
+        buffer = buffer.slice(1);
+      }
+    }
+  }
+
+  yield buffer;
+}
