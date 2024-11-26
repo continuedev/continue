@@ -326,10 +326,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     } catch (e: any) {
       dispatch(clearLastEmptyResponse());
       console.debug("Error streaming response: ", e);
-      ideMessenger.post("showToast", [
-        "error",
-        `Error streaming response: ${e.message}`,
-      ]);
     } finally {
       dispatch(setInactive());
       triggerSave(!save);
