@@ -313,16 +313,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
-  function getPlaceholder() {
-    if (!hasDefaultModel) {
-      return "Configure a Chat model to get started";
-    }
-
-    return historyLengthRef.current === 0
-      ? "Ask anything, '/' for slash commands, '@' to add context"
-      : "Ask a follow-up";
-  }
-
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -366,7 +356,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         placeholder:
           props.placeholder ??
           (historyLengthRef.current === 0
-            ? "Ask anything, '/' for slash commands, '@' to add context"
+            ? "Ask anything, '@' to add context"
             : "Ask a follow-up"),
       }),
       Paragraph.extend({
