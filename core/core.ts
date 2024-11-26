@@ -19,6 +19,7 @@ import { ControlPlaneClient } from "./control-plane/client";
 import { streamDiffLines } from "./edit/streamDiffLines";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
 import DocsService from "./indexing/docs/DocsService";
+import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
@@ -28,11 +29,7 @@ import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  setupInitialDotContinueDirectory,
-} from "./util/paths";
+import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -734,8 +731,16 @@ export class Core {
         this.docsService.setPaused(msg.data.id, msg.data.paused);
       }
     });
-    on("indexing/initStatuses", async (msg) => {
-      return this.docsService.initStatuses();
+    on("docs/getSuggestedDocs", async (msg) => {
+      if (hasRequestedDocs) {
+        return;
+      } // TODO, remove, hack because of rerendering
+      hasRequestedDocs = true;
+      const suggestedDocs = await getAllSuggestedDocs(this.ide);
+      this.messenger.send("docs/suggestions", suggestedDocs);
+    });
+    on("docs/initStatuses", async (msg) => {
+      void this.docsService.initStatuses();
     });
     //
 
@@ -841,3 +846,5 @@ export class Core {
 
   // private
 }
+
+let hasRequestedDocs = false;

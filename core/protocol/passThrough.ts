@@ -48,10 +48,11 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "index/forceReIndexFiles",
     "index/indexingProgressBarInitialized",
     // Docs, etc.
-    "indexing/initStatuses",
     "indexing/reindex",
     "indexing/abort",
     "indexing/setPaused",
+    "docs/getSuggestedDocs",
+    "docs/initStatuses",
     //
     "completeOnboarding",
     "addAutocompleteModel",
@@ -74,4 +75,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "getWebviewHistoryLength",
     "signInToControlPlane",
     "openDialogMessage",
+    "docs/suggestions",
   ];

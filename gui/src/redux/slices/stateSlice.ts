@@ -6,6 +6,7 @@ import {
   ChatMessage,
   Checkpoint,
   ContextItemWithId,
+  PackageDocsResult,
   FileSymbolMap,
   IndexingStatus,
   Session,
@@ -44,9 +45,10 @@ type State = {
   nextCodeBlockToApplyIndex: number;
   indexing: {
     hiddenChatPeekTypes: Record<IndexingStatus["type"], boolean>;
-    statuses: Record<string, IndexingStatus>;
+    statuses: Record<string, IndexingStatus>; // status id -> status
   };
   streamAborter: AbortController;
+  docsSuggestions: PackageDocsResult[];
 };
 
 const initialState: State = {
@@ -88,6 +90,7 @@ const initialState: State = {
     },
   },
   streamAborter: new AbortController(),
+  docsSuggestions: [],
 };
 
 export const stateSlice = createSlice({
@@ -441,6 +444,12 @@ export const stateSlice = createSlice({
         [payload.type]: payload.hidden,
       };
     },
+    updateDocsSuggestions: (
+      state,
+      { payload }: PayloadAction<PackageDocsResult[]>,
+    ) => {
+      state.docsSuggestions = payload;
+    },
   },
 });
 
@@ -474,6 +483,7 @@ export const {
   updateIndexingStatus,
   setIndexingChatPeekHidden,
   abortStream,
+  updateDocsSuggestions,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

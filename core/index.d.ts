@@ -68,8 +68,6 @@ export interface IndexingStatus {
   url?: string;
 }
 
-export type IndexingStatusMap = Map<string, IndexingStatus>;
-
 export type PromptTemplateFunction = (
   history: ChatMessage[],
   otherData: Record<string, string>,
@@ -1211,4 +1209,42 @@ export interface BrowserSerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
+
+// DOCS SUGGESTIONS AND PACKAGE INFO
+export interface FilePathAndName {
+  path: string;
+  name: string;
+}
+
+export interface PackageFilePathAndName extends FilePathAndName {
+  packageRegistry: string; // e.g. npm, pypi
+}
+
+export type ParsedPackageInfo = {
+  name: string;
+  packageFile: PackageFilePathAndName;
+  language: string;
+  version: string;
+};
+
+export type PackageDetails = {
+  docsLink?: string;
+  docsLinkWarning?: string;
+  title?: string;
+  description?: string;
+  repo?: string;
+  license?: string;
+};
+
+export type PackageDetailsSuccess = PackageDetails & {
+  docsLink: string;
+};
+
+export type PackageDocsResult = {
+  packageInfo: ParsedPackageInfo;
+} & (
+  | { error: string; details?: never }
+  | { details: PackageDetailsSuccess; error?: never }
+);
