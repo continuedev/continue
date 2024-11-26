@@ -313,6 +313,26 @@ export const Timer = () => {
     expectedCompletion: undefined,
     filename: "Timer.tsx",
   },
+  {
+    description: "Should autocomplete simple return statement in TypeScript",
+    filename: "file.ts",
+    input: `
+  multiply(number) {
+    this.result *= number;
+    return <|fim|>
+  }
+
+  divide(number) {
+    if (number === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    this.result /= number;
+    return this;
+  }
+`,
+    llmOutput: ` this;`,
+    expectedCompletion: `this;`,
+  },
 ];
 
 export const TEST_CASES_WITHOUT_DIFF: AutocompleteFileringTestInput[] = [

@@ -9,6 +9,23 @@ import {
   AutocompleteSnippetType,
 } from "./types";
 
+export interface SnippetPayload {
+  rootPathSnippets: AutocompleteCodeSnippet[];
+  importDefinitionSnippets: AutocompleteCodeSnippet[];
+  ideSnippets: AutocompleteCodeSnippet[];
+  recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
+  diffSnippets: AutocompleteDiffSnippet[];
+  clipboardSnippets: AutocompleteClipboardSnippet[];
+}
+
+function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
+  const timeoutPromise = new Promise<T[]>((resolve) => {
+    setTimeout(() => resolve([]), 100);
+  });
+
+  return Promise.race([promise, timeoutPromise]);
+}
+
 // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
 // or they might separately track recently edited ranges)
 async function getIdeSnippets(
@@ -16,18 +33,13 @@ async function getIdeSnippets(
   ide: IDE,
   getDefinitionsFromLsp: GetLspDefinitionsFunction,
 ): Promise<AutocompleteCodeSnippet[]> {
-  const ideSnippets = (await Promise.race([
-    getDefinitionsFromLsp(
-      helper.input.filepath,
-      helper.fullPrefix + helper.fullSuffix,
-      helper.fullPrefix.length,
-      ide,
-      helper.lang,
-    ),
-    new Promise((resolve) => {
-      setTimeout(() => resolve([]), 100);
-    }),
-  ])) as AutocompleteCodeSnippet[];
+  const ideSnippets = await getDefinitionsFromLsp(
+    helper.input.filepath,
+    helper.fullPrefix + helper.fullSuffix,
+    helper.fullPrefix.length,
+    ide,
+    helper.lang,
+  );
 
   if (helper.options.onlyMyCode) {
     const workspaceDirs = await ide.getWorkspaceDirs();
@@ -56,23 +68,31 @@ function getSnippetsFromRecentlyEditedRanges(
   });
 }
 
-export interface SnippetPayload {
-  rootPathSnippets: AutocompleteCodeSnippet[];
-  importDefinitionSnippets: AutocompleteCodeSnippet[];
-  ideSnippets: AutocompleteCodeSnippet[];
-  recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
-  diffSnippets: AutocompleteDiffSnippet[];
-  clipboardSnippets: AutocompleteClipboardSnippet[];
-}
+const getClipboardSnippets = async (
+  ide: IDE,
+): Promise<AutocompleteClipboardSnippet[]> => {
+  const content = await ide.getClipboardContent();
 
-export type TEMP__Snippets = {
-  snippets: AutocompleteCodeSnippet[];
-  diff: string | undefined;
-  clipboardContent: {
-    text: string;
-    copiedAt: string;
-  };
-  payload: SnippetPayload;
+  return [content].map((item) => {
+    return {
+      content: item.text,
+      copiedAt: item.copiedAt,
+      type: AutocompleteSnippetType.Clipboard,
+    };
+  });
+};
+
+const getDiffSnippets = async (
+  ide: IDE,
+): Promise<AutocompleteDiffSnippet[]> => {
+  const diff = await ide.getDiff(true);
+
+  return [diff].map((item) => {
+    return {
+      content: item,
+      type: AutocompleteSnippetType.Diff,
+    };
+  });
 };
 
 export const getAllSnippets = async ({
@@ -85,7 +105,7 @@ export const getAllSnippets = async ({
   ide: IDE;
   getDefinitionsFromLsp: GetLspDefinitionsFunction;
   contextRetrievalService: ContextRetrievalService;
-}): Promise<TEMP__Snippets> => {
+}): Promise<SnippetPayload> => {
   const recentlyEditedRangeSnippets =
     getSnippetsFromRecentlyEditedRanges(helper);
 
@@ -93,43 +113,24 @@ export const getAllSnippets = async ({
     rootPathSnippets,
     importDefinitionSnippets,
     ideSnippets,
-    diff,
-    clipboardContent,
+    diffSnippets,
+    clipboardSnippets,
   ] = await Promise.all([
-    contextRetrievalService.getRootPathSnippets(helper),
-    contextRetrievalService.getSnippetsFromImportDefinitions(helper),
-    getIdeSnippets(helper, ide, getDefinitionsFromLsp),
-    ide.getDiff(true),
-    ide.getClipboardContent(),
+    racePromise(contextRetrievalService.getRootPathSnippets(helper)),
+    racePromise(
+      contextRetrievalService.getSnippetsFromImportDefinitions(helper),
+    ),
+    racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)),
+    racePromise(getDiffSnippets(ide)),
+    racePromise(getClipboardSnippets(ide)),
   ]);
 
   return {
-    snippets: [
-      ...rootPathSnippets,
-      ...importDefinitionSnippets,
-      ...ideSnippets,
-      ...recentlyEditedRangeSnippets,
-    ],
-    diff,
-    clipboardContent,
-    payload: {
-      rootPathSnippets,
-      importDefinitionSnippets,
-      ideSnippets,
-      recentlyEditedRangeSnippets,
-      diffSnippets: [diff].map((item) => {
-        return {
-          content: item,
-          type: AutocompleteSnippetType.Diff,
-        };
-      }),
-      clipboardSnippets: [clipboardContent].map((item) => {
-        return {
-          content: item.text,
-          copiedAt: item.copiedAt,
-          type: AutocompleteSnippetType.Clipboard,
-        };
-      }),
-    },
+    rootPathSnippets,
+    importDefinitionSnippets,
+    ideSnippets,
+    recentlyEditedRangeSnippets,
+    diffSnippets,
+    clipboardSnippets,
   };
 };
