@@ -5,8 +5,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import useHistory from "../../hooks/useHistory";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { RootState } from "../../redux/store";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -119,9 +119,11 @@ export function HistoryTableRow({
               </HeaderButtonWithToolTip>
               <HeaderButtonWithToolTip
                 text="Delete"
-                onClick={async () => {
+                onClick={async (e) => {
                   await deleteSession(session.sessionId);
                   onDelete(session.sessionId);
+                  e.stopPropagation();
+                  e.preventDefault();
                 }}
               >
                 <TrashIcon width="1.3em" height="1.3em" />
