@@ -40,16 +40,20 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
+import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { addCodeToEdit } from "../../redux/slices/editModeState";
+import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../../util";
+import { AddCodeToEdit } from "./AddCodeToEditExtension";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
@@ -64,10 +68,6 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import useIsOSREnabled from "../../hooks/useIsOSREnabled";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
-import { AddCodeToEdit } from "./AddCodeToEditExtension";
-import { addCodeToEdit } from "../../redux/slices/editModeState";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -459,25 +459,23 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Text,
-      props.availableContextProviders.length
-        ? Mention.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getContextProviderDropdownOptions(
-              availableContextProvidersRef,
-              getSubmenuContextItemsRef,
-              enterSubmenu,
-              onClose,
-              onOpen,
-              inSubmenuRef,
-              ideMessenger,
-            ),
-            renderHTML: (props) => {
-              return `@${props.node.attrs.label || props.node.attrs.id}`;
-            },
-          })
-        : undefined,
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: getContextProviderDropdownOptions(
+          availableContextProvidersRef,
+          getSubmenuContextItemsRef,
+          enterSubmenu,
+          onClose,
+          onOpen,
+          inSubmenuRef,
+          ideMessenger,
+        ),
+        renderHTML: (props) => {
+          return `@${props.node.attrs.label || props.node.attrs.id}`;
+        },
+      }),
       isInEditMode
         ? AddCodeToEdit.configure({
             HTMLAttributes: {
@@ -598,7 +596,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
-    } else if (!isJetBrains()){
+    } else if (!isJetBrains()) {
       await handleVSCMetaKeyIssues(e, editor);
     }
   };
