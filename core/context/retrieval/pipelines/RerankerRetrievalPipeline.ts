@@ -28,9 +28,9 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     //   "retrieveEmbeddings - embeddingsChunks: " + JSON.stringify({...embeddingsChunks},null,2) + "\n"
     // );
 
-    const recentlyEditedFilesstartTime = Date.now();
-    const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
-    const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
+    // const recentlyEditedFilesstartTime = Date.now();
+    // const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    // const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
     // this.writeLog( 
     //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n" +
     //   "retrieveAndChunkRecentlyEditedFiles - time: " + recentlyEditedFilestime/1000 + "s\n" +
@@ -53,7 +53,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     // );
 
     retrievalResults.push(
-      ...recentlyEditedFilesChunks,
+      // ...recentlyEditedFilesChunks,
       ...ftsChunks,
       ...embeddingsChunks,
       ...repoMapChunks,
