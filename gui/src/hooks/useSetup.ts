@@ -3,7 +3,6 @@ import { useCallback, useContext, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { setVscMachineId } from "../redux/slices/configSlice";
 import {
   addContextItemsAtIndex,
   setConfig,
@@ -100,7 +99,6 @@ function useSetup(dispatch: Dispatch) {
       (window as any).workspacePaths = msg.workspacePaths;
       (window as any).vscMachineId = msg.vscMachineId;
       (window as any).vscMediaUrl = msg.vscMediaUrl;
-      dispatch(setVscMachineId(msg.vscMachineId));
     });
 
     // Save theme colors to local storage for immediate loading in JetBrains
