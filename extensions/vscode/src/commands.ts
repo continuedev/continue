@@ -93,19 +93,44 @@ function addCodeToContextFromRange(
   });
 }
 
-function getCurrentlyHighlightedCode(
+function getRangeInFileWithContents(
   allowEmpty?: boolean,
+  range?: vscode.Range,
 ): RangeInFileWithContents | null {
   const editor = vscode.window.activeTextEditor;
+
   if (editor) {
     const selection = editor.selection;
+    const filepath = editor.document.uri.fsPath;
+
+    if (range) {
+      const contents = editor.document.getText(range);
+
+      return {
+        range: {
+          start: {
+            line: range.start.line,
+            character: range.start.character,
+          },
+          end: {
+            line: range.end.line,
+            character: range.end.character,
+          },
+        },
+        filepath,
+        contents,
+      };
+    }
+
     if (selection.isEmpty && !allowEmpty) {
       return null;
     }
+
     // adjust starting position to include indentation
     const start = new vscode.Position(selection.start.line, 0);
-    const range = new vscode.Range(start, selection.end);
-    const contents = editor.document.getText(range);
+    const selectionRange = new vscode.Range(start, selection.end);
+    const contents = editor.document.getText(selectionRange);
+
     return {
       filepath: editor.document.uri.fsPath,
       contents,
@@ -121,13 +146,14 @@ function getCurrentlyHighlightedCode(
       },
     };
   }
+
   return null;
 }
 
 async function addHighlightedCodeToContext(
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
-  const rangeInFileWithContents = getCurrentlyHighlightedCode();
+  const rangeInFileWithContents = getRangeInFileWithContents();
   if (rangeInFileWithContents) {
     webviewProtocol?.request("highlightedCode", {
       rangeInFileWithContents,
@@ -375,7 +401,7 @@ const getCommandsMap: (
     // Passthrough for telemetry purposes
     "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
       captureCommandTelemetry("defaultQuickAction");
-      vscode.commands.executeCommand("continue.quickEdit", args);
+      vscode.commands.executeCommand("continue.focusEdit", args);
     },
     "continue.customQuickActionSendToChat": async (
       prompt: string,
@@ -467,7 +493,9 @@ const getCommandsMap: (
         void addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    "continue.focusEdit": async () => {
+    // QuickEditShowParams are passed from CodeLens, temp fix
+    // until we update to new params specific to Edit
+    "continue.focusEdit": async (args?: QuickEditShowParams) => {
       captureCommandTelemetry("focusEdit");
       focusGUI();
 
@@ -489,12 +517,13 @@ const getCommandsMap: (
         return;
       }
 
-      editDecorationManager.setDecoration(
-        editor,
-        new vscode.Range(editor.selection.start, editor.selection.end),
-      );
+      const range =
+        args?.range ??
+        new vscode.Range(editor.selection.start, editor.selection.end);
 
-      const rangeInFileWithContents = getCurrentlyHighlightedCode(true);
+      editDecorationManager.setDecoration(editor, range);
+
+      const rangeInFileWithContents = getRangeInFileWithContents(true, range);
 
       if (rangeInFileWithContents) {
         sidebar.webviewProtocol?.request(
@@ -537,7 +566,7 @@ const getCommandsMap: (
         return;
       }
 
-      const rangeInFileWithContents = getCurrentlyHighlightedCode(false);
+      const rangeInFileWithContents = getRangeInFileWithContents(false);
 
       if (rangeInFileWithContents) {
         sidebar.webviewProtocol?.request(
@@ -562,16 +591,16 @@ const getCommandsMap: (
       captureCommandTelemetry("exitEditMode");
       await sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
-    "continue.quickEdit": async (args: QuickEditShowParams) => {
-      let linesOfCode = undefined;
-      if (args.range) {
-        linesOfCode = args.range.end.line - args.range.start.line;
-      }
-      captureCommandTelemetry("quickEdit", {
-        linesOfCode,
-      });
-      quickEdit.show(args);
-    },
+    // "continue.quickEdit": async (args: QuickEditShowParams) => {
+    //   let linesOfCode = undefined;
+    //   if (args.range) {
+    //     linesOfCode = args.range.end.line - args.range.start.line;
+    //   }
+    //   captureCommandTelemetry("quickEdit", {
+    //     linesOfCode,
+    //   });
+    //   quickEdit.show(args);
+    // },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
 
