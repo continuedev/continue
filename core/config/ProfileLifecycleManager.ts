@@ -1,5 +1,3 @@
-import { config } from "dotenv";
-
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,

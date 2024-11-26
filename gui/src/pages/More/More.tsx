@@ -15,7 +15,7 @@ import { setOnboardingCard } from "../../redux/slices/uiStateSlice";
 import useHistory from "../../hooks/useHistory";
 import MoreHelpRow from "./MoreHelpRow";
 import IndexingProgress from "./IndexingProgress";
-import IndexingStatuses from "../../components/indexing/IndexingStatuses";
+import DocsIndexingStatuses from "../../components/indexing/DocsIndexingStatuses";
 
 function MorePage() {
   useNavigationListener();
@@ -52,7 +52,7 @@ function MorePage() {
           <IndexingProgress />
         </div>
         <div className="flex flex-col py-5">
-          <IndexingStatuses />
+          <DocsIndexingStatuses />
         </div>
 
         <div className="py-5">
