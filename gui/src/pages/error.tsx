@@ -32,7 +32,7 @@ const ErrorPage: React.FC = () => {
   }, []);
   return (
     <div className="bg- flex min-h-screen flex-col items-center justify-center px-8 py-4 text-center">
-      <h1 className="mb-4 text-3xl font-bold">Error in Continue React App</h1>
+      <h1 className="mb-4 text-3xl font-bold">Error in Continue UI</h1>
 
       <pre className="pb-6">
         <code className="px-3 py-2">{error.statusText || error.message}</code>
