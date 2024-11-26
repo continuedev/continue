@@ -40,6 +40,8 @@ const windowIDTransform = (windowID: string) =>
 
 const saveSubsetFilters = [
   createFilter("state", ["history", "sessionId", "defaultModelTitle"]),
+  // Don't persist any of the edit state for now
+  createFilter("editModeState", []),
 ];
 
 const persistConfig = {
