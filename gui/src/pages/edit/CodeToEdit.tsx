@@ -50,7 +50,7 @@ export default function WorkingSet() {
     ));
 
   return (
-    <div className="bg-vsc-editor-background border-vsc-input-border mx-1 flex flex-col rounded-t-lg border border-b-0 border-solid p-1">
+    <div className="bg-vsc-editor-background mx-1 flex flex-col rounded-t-lg p-1">
       <div className="text-lightgray flex items-center justify-between gap-1.5 py-1.5 pl-3 pr-2 text-xs">
         <span>{title}</span>
         <AddFileButton />
