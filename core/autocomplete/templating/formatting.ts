@@ -100,7 +100,7 @@ export const formatSnippets = (
           return item.content + `\n${commentMark}\n${commentMark}`;
         }
 
-        return item.content + "\n\n";
+        return item.content;
       })
       .join("\n") + `\n${currentFilepathComment}`
   );
