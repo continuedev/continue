@@ -966,7 +966,6 @@ export interface Reranker {
 
 export interface TabAutocompleteOptions {
   disable: boolean;
-  useCopyBuffer: boolean;
   useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
@@ -977,17 +976,11 @@ export interface TabAutocompleteOptions {
   multilineCompletions: "always" | "never" | "auto";
   slidingWindowPrefixPercentage: number;
   slidingWindowSize: number;
-  maxSnippetPercentage: number;
-  maxDiffPercentage: number;
-  maxClipboardPercentage: number;
   useCache: boolean;
   onlyMyCode: boolean;
-  useOtherFiles: boolean;
   useRecentlyEdited: boolean;
-  recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
   useImports?: boolean;
-  useRootPathContext?: boolean;
   showWhateverWeHaveAtXMs?: number;
 }
 

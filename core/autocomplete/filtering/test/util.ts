@@ -54,7 +54,6 @@ export async function testAutocompleteFiltering(
   const line = prefix.split("\n").length - 1;
   const character = prefix.split("\n")[line].length;
   const autocompleteInput: AutocompleteInput = {
-    clipboardText: "",
     completionId: "test-completion-id",
     filepath,
     pos: {
