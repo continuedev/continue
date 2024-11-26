@@ -100,6 +100,9 @@ export default function StepContainerPreToolbar(
 
   const defaultModel = useSelector(defaultModelSelector);
   function onClickApply() {
+    if (!defaultModel) {
+      return;
+    }
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: props.filepath,

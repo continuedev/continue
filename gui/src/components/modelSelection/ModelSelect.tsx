@@ -41,7 +41,7 @@ interface ModelOptionProps {
 interface Option {
   value: string;
   title: string;
-  apiKey: string;
+  apiKey?: string;
 }
 
 const MAX_HEIGHT_PX = 300;
@@ -278,6 +278,9 @@ function ModelSelect() {
   }, [options, defaultModel]);
 
   function calculatePosition() {
+    if (!buttonRef.current) {
+      return;
+    }
     const rect = buttonRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
