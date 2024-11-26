@@ -211,10 +211,12 @@ function findLastIndex<T>(
   return -1; // if no element satisfies the predicate
 }
 
-function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
+function resolveParagraph(
+  p: JSONContent,
+): [string, MentionAttrs[], string | undefined] {
   let text = "";
   const contextItems = [];
-  let slashCommand = undefined;
+  let slashCommand: string | undefined = undefined;
   for (const child of p.content || []) {
     if (child.type === "text") {
       text += text === "" ? child.text.trimStart() : child.text;

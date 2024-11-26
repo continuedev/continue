@@ -239,7 +239,7 @@ function useSubmenuContextProviders() {
                 {
                   title: description.title,
                 },
-              )
+              );
 
               if (result.status === "error") {
                 console.error(
