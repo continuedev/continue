@@ -1,5 +1,5 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
@@ -15,10 +15,8 @@ import {
   updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-
-import { debounce } from "lodash";
 import { isJetBrains } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
@@ -103,7 +101,6 @@ function useSetup(dispatch: Dispatch) {
       (window as any).vscMachineId = msg.vscMachineId;
       (window as any).vscMediaUrl = msg.vscMediaUrl;
       dispatch(setVscMachineId(msg.vscMachineId));
-      // dispatch(setVscMediaUrl(msg.vscMediaUrl));
     });
 
     // Save theme colors to local storage for immediate loading in JetBrains
