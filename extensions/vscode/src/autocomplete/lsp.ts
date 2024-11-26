@@ -1,6 +1,4 @@
-import { GetLspDefinitionsFunction } from "core/autocomplete/CompletionProvider";
 import { AutocompleteLanguageInfo } from "core/autocomplete/constants/AutocompleteLanguageInfo";
-import { AutocompleteSnippet } from "core/autocomplete/context/ranking";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/util/ast";
 import {
   FUNCTION_BLOCK_NODE_TYPES,
@@ -11,6 +9,14 @@ import * as vscode from "vscode";
 
 import type { IDE, Range, RangeInFile, RangeInFileWithContents } from "core";
 import type Parser from "web-tree-sitter";
+import {
+  AutocompleteSnippetDeprecated,
+  GetLspDefinitionsFunction,
+} from "core/autocomplete/types";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippetType,
+} from "core/autocomplete/snippets/types";
 
 type GotoProviderName =
   | "vscode.executeDefinitionProvider"
@@ -341,7 +347,7 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
   cursorIndex: number,
   ide: IDE,
   lang: AutocompleteLanguageInfo,
-): Promise<AutocompleteSnippet[]> => {
+): Promise<AutocompleteCodeSnippet[]> => {
   try {
     const ast = await getAst(filepath, contents);
     if (!ast) {
@@ -365,8 +371,9 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
     }
 
     return results.map((result) => ({
-      ...result,
-      score: 0.8,
+      filepath: result.filepath,
+      content: result.contents,
+      type: AutocompleteSnippetType.Code,
     }));
   } catch (e) {
     console.warn("Error getting definitions from LSP: ", e);

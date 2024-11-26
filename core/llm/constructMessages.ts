@@ -1,4 +1,4 @@
-import { ChatHistory, ChatMessage, MessagePart } from "../index.js";
+import { ChatHistoryItem, ChatMessage, MessagePart } from "../index.js";
 
 const SYSTEM_MESSAGE = `When generating new code:
 
@@ -70,7 +70,7 @@ function hasCodeBlockWithFilename(content: ChatMessage["content"]): boolean {
 }
 
 export function constructMessages(
-  history: ChatHistory,
+  history: ChatHistoryItem[],
   model: string,
 ): ChatMessage[] {
   const msgs = [];
