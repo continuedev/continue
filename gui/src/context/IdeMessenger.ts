@@ -138,13 +138,13 @@ export class IdeMessenger implements IIdeMessenger {
       const handler = (event: any) => {
         if (event.data.messageId === messageId) {
           window.removeEventListener("message", handler);
-          resolve(event.data.data);
+          resolve(event.data.data as WebviewMessengerResult<T>);
         }
       };
       window.addEventListener("message", handler);
 
       this.post(messageType, data, messageId);
-    }) as any;
+    });
   }
 
   async *streamRequest<T extends keyof FromWebviewProtocol>(

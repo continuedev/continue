@@ -474,7 +474,7 @@ export class Core {
         config.models.find((model) => model.title?.startsWith(msg.data.title));
       try {
         if (model) {
-          return model.listModels();
+          return await model.listModels();
         } else {
           if (msg.data.title === "Ollama") {
             const models = await new Ollama({ model: "" }).listModels();
