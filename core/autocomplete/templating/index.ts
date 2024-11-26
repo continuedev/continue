@@ -82,9 +82,7 @@ export function renderPrompt({
       snippets,
     );
   } else {
-    const finalSnippets = getSnippets(helper, snippetPayload);
-    const formattedSnippets = formatSnippets(helper, finalSnippets);
-
+    const formattedSnippets = formatSnippets(helper, snippets);
     prefix = [formattedSnippets, prefix].join("\n");
   }
 
