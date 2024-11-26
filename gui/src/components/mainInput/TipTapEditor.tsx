@@ -598,7 +598,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (isOSREnabled) {
       handleJetBrainsOSRMetaKeyIssues(e, editor);
-    } else {
+    } else if (!isJetBrains()){
       await handleVSCMetaKeyIssues(e, editor);
     }
   };

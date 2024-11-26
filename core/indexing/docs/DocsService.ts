@@ -69,6 +69,7 @@ export type AddParams = {
   favicon?: string;
 };
 
+
 /*
   General process:
   - On config update:

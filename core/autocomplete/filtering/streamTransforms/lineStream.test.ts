@@ -98,7 +98,7 @@ describe("lineStream", () => {
 
   describe("stopAtSimilarLine", () => {
     it("should stop at the exact same line", async () => {
-      const lineToTest = "const x = 6;";
+      const lineToTest = "const x = 6";
       const linesGenerator = await getLineGenerator([
         "console.log();",
         "const y = () => {};",
@@ -116,7 +116,7 @@ describe("lineStream", () => {
       expect(mockFullStop).toHaveBeenCalledTimes(1);
     });
 
-    it.only("should stop at a similar line", async () => {
+    it("should stop at a similar line", async () => {
       const lineToTest = "const x = 6;";
       const linesGenerator = await getLineGenerator([
         "console.log();",

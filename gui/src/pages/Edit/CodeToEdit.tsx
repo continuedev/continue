@@ -11,16 +11,16 @@ import AddFileButton from "./AddFileButton";
 export default function WorkingSet() {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const editModeState = useSelector((state: RootState) => state.editModeState);
-
-  const hasCodeToEdit = editModeState.codeToEdit.length > 0;
+  const codeToEdit = useSelector(
+    (state: RootState) => state.editModeState.codeToEdit,
+  );
 
   const title =
-    editModeState.codeToEdit.length === 0
+    codeToEdit.length === 0
       ? "Code to edit"
-      : editModeState.codeToEdit.length === 1
+      : codeToEdit.length === 1
         ? "Code to edit (1 item)"
-        : `Code to edit (${editModeState.codeToEdit.length} items)`;
+        : `Code to edit (${codeToEdit.length} items)`;
 
   function onDelete(rif: RangeInFileWithContents) {
     dispatch(removeCodeToEdit(rif));
@@ -38,7 +38,7 @@ export default function WorkingSet() {
     }
   }
 
-  const codeToEditItems = [...editModeState.codeToEdit]
+  const codeToEditItems = [...codeToEdit]
     .reverse()
     .map((code, i) => (
       <CodeToEditListItem
@@ -51,13 +51,13 @@ export default function WorkingSet() {
 
   return (
     <div className="bg-vsc-editor-background border-vsc-input-border mx-1 flex flex-col rounded-t-lg border border-b-0 border-solid p-1">
-      <div className="text-lightgray flex items-center justify-between gap-1.5 px-1 py-1.5 text-xs">
+      <div className="text-lightgray flex items-center justify-between gap-1.5 py-1.5 pl-3 pr-2 text-xs">
         <span>{title}</span>
         <AddFileButton />
       </div>
 
-      {hasCodeToEdit && (
-        <ul className="no-scrollbar mb-1.5 mt-1 max-h-[50vh] list-outside list-none space-y-1.5 overflow-y-auto pl-0">
+      {codeToEdit.length > 0 && (
+        <ul className="no-scrollbar mb-1.5 mt-1 max-h-[50vh] list-outside list-none overflow-y-auto pl-0">
           {codeToEditItems}
         </ul>
       )}
