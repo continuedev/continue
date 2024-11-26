@@ -120,8 +120,9 @@ function ModelCard(props: ModelCardProps) {
                 if ((e.target as any).closest("a")) {
                   return;
                 }
-
-                props.onClick(e, dimensionChoices, selectedProvider);
+                if (props.onClick) {
+                  props.onClick(e, dimensionChoices, selectedProvider);
+                }
               }
         }
       >

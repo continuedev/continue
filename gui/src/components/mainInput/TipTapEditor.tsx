@@ -131,7 +131,10 @@ const HoverTextDiv = styled.div`
   justify-content: center;
 `;
 
-function getDataUrlForFile(file: File, img): string {
+function getDataUrlForFile(
+  file: File,
+  img: HTMLImageElement,
+): string | undefined {
   const targetWidth = 512;
   const targetHeight = 512;
   const scaleFactor = Math.min(
@@ -144,6 +147,10 @@ function getDataUrlForFile(file: File, img): string {
   canvas.height = img.height * scaleFactor;
 
   const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    console.error("Error getting image data url: 2d context not found");
+    return;
+  }
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
   const downsizedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
@@ -292,6 +299,9 @@ function TipTapEditor(props: TipTapEditorProps) {
       return await new Promise((resolve) => {
         img.onload = function () {
           const dataUrl = getDataUrlForFile(file, img);
+          if (!dataUrl) {
+            return;
+          }
 
           let image = new window.Image();
           image.src = dataUrl;
@@ -326,26 +336,29 @@ function TipTapEditor(props: TipTapEditorProps) {
               handleDOMEvents: {
                 paste(view, event) {
                   const model = defaultModelRef.current;
-                  const items = event.clipboardData.items;
-                  for (const item of items) {
-                    const file = item.getAsFile();
-                    file &&
-                      modelSupportsImages(
-                        model.provider,
-                        model.model,
-                        model.title,
-                        model.capabilities,
-                      ) &&
-                      handleImageFile(file).then((resp) => {
-                        if (!resp) return;
-                        const [img, dataUrl] = resp;
-                        const { schema } = view.state;
-                        const node = schema.nodes.image.create({
-                          src: dataUrl,
+                  if (!model) return;
+                  const items = event.clipboardData?.items;
+                  if (items) {
+                    for (const item of items) {
+                      const file = item.getAsFile();
+                      file &&
+                        modelSupportsImages(
+                          model.provider,
+                          model.model,
+                          model.title,
+                          model.capabilities,
+                        ) &&
+                        handleImageFile(file).then((resp) => {
+                          if (!resp) return;
+                          const [img, dataUrl] = resp;
+                          const { schema } = view.state;
+                          const node = schema.nodes.image.create({
+                            src: dataUrl,
+                          });
+                          const tr = view.state.tr.insert(0, node);
+                          view.dispatch(tr);
                         });
-                        const tr = view.state.tr.insert(0, node);
-                        view.dispatch(tr);
-                      });
+                    }
                   }
                 },
               },
