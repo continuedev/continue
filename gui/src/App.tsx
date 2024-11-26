@@ -84,7 +84,6 @@ function App() {
 
   const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
-  // throw new Error("hahaha");
   return (
     <VscThemeContext.Provider value={vscTheme}>
       <SubmenuContextProvidersContext.Provider
