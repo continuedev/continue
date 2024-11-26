@@ -45,8 +45,10 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { addCodeToEdit } from "../../redux/slices/editModeState";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+} from "../../redux/slices/editModeState";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
@@ -645,6 +647,8 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueInput",
     async (data) => {
+      dispatch(clearCodeToEdit());
+
       if (!props.isMainInput) {
         return;
       }
@@ -809,13 +813,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (shouldAddFileForEditing && props.isMainInput) {
-      insertCharacterWithWhitespace("#");
-      dispatch(setShouldAddFileForEditing(false));
-    }
-  }, [shouldAddFileForEditing]);
 
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
