@@ -176,7 +176,7 @@
         "group": "Continue"
       },
       {
-        "command": "continue.quickEdit",
+        "command": "continue.focusEdit",
         "category": "Continue",
         "title": "Generate Code",
         "group": "Continue"
