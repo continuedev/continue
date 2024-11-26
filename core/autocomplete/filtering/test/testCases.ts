@@ -131,10 +131,6 @@ public class Calculator {
     }
 `,
     expectedCompletion: `
-    }
-
-    public void subtract(double number) {
-        result -= number;
     }`,
   },
   {
@@ -184,7 +180,7 @@ public class Calculator {
   // Add the multiply method
   multiply(number) {
     `,
-    expectedCompletion: null,
+    expectedCompletion: undefined,
   },
   {
     description: "Should enforce bracket matching in JSON files",
@@ -197,7 +193,7 @@ public class Calculator {
     "state": "California",
     "city": "San BERNARDINO",
     "coordinates": {
-      <FIM>
+      <|fim|>
     }
   },
   "employees": [
@@ -246,8 +242,76 @@ public class Calculator {
     "required": ["JavaScript", "React", "Node.js", "Leadership", "Project Management"],
     "optional": ["Photoshop", "Illustrator"]`,
     expectedCompletion: `"latitude": 34.10834,
-      "longitude": -117.28977
+      "longitude": -117.28977`,
+  },
+  {
+    description:
+      "Should return nothing when output is duplicated lines in TypeScript",
+    filename: "file.ts",
+    input: `
+async getContextForPath(
+    filepath: string,
+    astPath: AstPatt,
+    language: LanguageName,
+    options: ContextOptions = {},
+<|fim|>
+  ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
+    let parentKey = filepath;
+`,
+    llmOutput: `  ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
     `,
+    expectedCompletion: undefined,
+  },
+  {
+    description:
+      "Should return partial result when output is duplicated lines in TypeScript",
+    filename: "file.ts",
+    input: `
+async getContextForPath(
+    filepath: string,
+    astPath: AstPatt,
+    language: LanguageName,
+    options: ContextOptions = {},
+<|fim|>
+  ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
+    let parentKey = filepath;
+`,
+    llmOutput: `console.log('TEST');
+      ): Promise<AutocompleteCodeSnippet[]> {
+    const snippets: AutocompleteCodeSnippet[] = [];
+    `,
+    expectedCompletion: `console.log('TEST');
+    `,
+  },
+  {
+    description: "Should autocomplete React effect hook",
+    input: `import React, { useState, useEffect } from "react";
+
+export const Timer = () => {
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeconds(seconds + 1);
+    }, 1000);
+
+    <|fim|>;
+
+    return () => clearInterval(interval);
+  }, [seconds]);
+
+  return (
+    <div>
+      <p>{seconds} seconds have passed.</p>
+    </div>
+  );
+};`,
+    llmOutput: "return () => clearInterval(interval);",
+    expectedCompletion: undefined,
+    filename: "Timer.tsx",
   },
 ];
 
@@ -546,35 +610,6 @@ export const Counter = () => {
     expectedCompletion: "0",
     filename: "Counter.tsx",
   },
-
-  {
-    description: "Should autocomplete React effect hook",
-    input: `import React, { useState, useEffect } from "react";
-
-export const Timer = () => {
-  const [seconds, setSeconds] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSeconds(seconds + 1);
-    }, 1000);
-
-    <|fim|>;
-
-    return () => clearInterval(interval);
-  }, [seconds]);
-
-  return (
-    <div>
-      <p>{seconds} seconds have passed.</p>
-    </div>
-  );
-};`,
-    llmOutput: "return () => clearInterval(interval);",
-    expectedCompletion: null,
-    filename: "Timer.tsx",
-  },
-
   {
     description: "Should autocomplete React component methods",
     input: `import React from "react";
@@ -762,7 +797,7 @@ func main() {
   CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100),
-    price DECIMAL(8,2) NOT NULL<FIM> '0.00',
+    price DECIMAL(8,2) NOT NULL<|fim|> '0.00',
     quantity INT NOT NULL DEFAULT '0'
   );
   
