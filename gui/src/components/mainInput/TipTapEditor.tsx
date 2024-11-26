@@ -65,7 +65,6 @@ import {
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
 import { AddCodeToEdit } from "./AddCodeToEditExtension";
 import {
   addCodeToEdit,
@@ -826,13 +825,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (shouldAddFileForEditing && props.isMainInput) {
-      insertCharacterWithWhitespace("#");
-      dispatch(setShouldAddFileForEditing(false));
-    }
-  }, [shouldAddFileForEditing]);
 
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {
