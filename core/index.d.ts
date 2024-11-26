@@ -237,15 +237,15 @@ export interface Checkpoint {
   [filepath: string]: string;
 }
 
-export interface PersistedSessionInfo {
-  history: ChatHistory;
+export interface Session {
+  sessionId: string;
   title: string;
   workspaceDirectory: string;
-  sessionId: string;
+  history: ChatHistoryItem[];
   checkpoints?: Checkpoint[];
 }
 
-export interface SessionInfo {
+export interface SessionMetadata {
   sessionId: string;
   title: string;
   dateCreated: string;
@@ -356,8 +356,6 @@ export interface ChatHistoryItem {
   contextItems: ContextItemWithId[];
   promptLogs?: PromptLog[];
 }
-
-export type ChatHistory = ChatHistoryItem[];
 
 // LLM
 

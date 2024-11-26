@@ -14,10 +14,10 @@ import type {
   MessageContent,
   ModelDescription,
   ModelRoles,
-  PersistedSessionInfo,
+  Session,
   RangeInFile,
   SerializedContinueConfig,
-  SessionInfo,
+  SessionMetadata,
   SiteIndexingConfig,
 } from "../";
 
@@ -47,10 +47,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   abort: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, SessionInfo[]];
+  "history/list": [ListHistoryOptions, SessionMetadata[]];
   "history/delete": [{ id: string }, void];
-  "history/load": [{ id: string }, PersistedSessionInfo];
-  "history/save": [PersistedSessionInfo, void];
+  "history/load": [{ id: string }, Session];
+  "history/save": [Session, void];
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [

@@ -1,7 +1,6 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
-  ChatHistory,
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
@@ -276,7 +275,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         editorState,
       };
 
-      let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
+      let newHistory: ChatHistoryItem[] = [
+        ...history.slice(0, index),
+        historyItem,
+      ];
       const historyIndex = index || newHistory.length - 1;
       dispatch(
         setMessageAtIndex({

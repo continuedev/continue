@@ -176,7 +176,7 @@ declare global {
     loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
   }
 
-  export interface PersistedSessionInfo {
+  export interface Session {
     history: ChatHistory;
     title: string;
     workspaceDirectory: string;
