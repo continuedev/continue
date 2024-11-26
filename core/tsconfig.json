@@ -16,8 +16,7 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "noEmitOnError": false,
-    "types": ["jest", "node"],
-    "strictNullChecks": true
+    "types": ["jest", "node"]
   },
   "include": ["./**/*.ts", "./**/*.js", "./**/*.d.ts"],
   "exclude": ["dist"]
