@@ -465,14 +465,21 @@ export abstract class BaseLLM implements ILLM {
       suffix,
       completionOptions,
     )) {
-      // 新增
-      // 如果是连续空行不返回
-      if (chunk.trim() === "" && completion[completion.length - 1] === "\n") {
-        continue;
+        let newChunk = chunk;
+        // 新增后处理
+        // 如果第一行为空行，不返回
+        if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+          while (newChunk.startsWith("\n")) {
+            newChunk = newChunk.slice(1);
+          }
+          if (newChunk.length === 0) {
+              continue;
+          }
+        }
+        completion += newChunk;
+        yield newChunk;
       }
-      completion += chunk;
-      yield chunk;
-    }
+      
 
     this._logTokensGenerated(
       completionOptions.model,
@@ -537,8 +544,19 @@ export abstract class BaseLLM implements ILLM {
 
     let completion = "";
     for await (const chunk of this._streamComplete(prompt, completionOptions)) {
-      completion += chunk;
-      yield chunk;
+      let newChunk = chunk;
+      // 新增后处理
+      // 如果第一行为空行，不返回
+      if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+        while (newChunk.startsWith("\n")) {
+          newChunk = newChunk.slice(1);
+        }
+        if (newChunk.length === 0) {
+            continue;
+        }
+      }
+      completion += newChunk;
+      yield newChunk;
     }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
