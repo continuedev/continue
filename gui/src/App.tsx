@@ -84,7 +84,6 @@ function App() {
 
   const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
-
   return (
     <VscThemeContext.Provider value={vscTheme}>
       <SubmenuContextProvidersContext.Provider
