@@ -83,7 +83,6 @@ Specifies options for tab autocompletion behavior.
 **Properties:**
 
 - `disable`: If `true`, disables tab autocomplete (default: `false`).
-- `useCopyBuffer`: If `true`, includes the copy buffer in the prompt.
 - `useFileSuffix`: If `true`, includes file suffix in the prompt.
 - `maxPromptTokens`: Maximum number of tokens for the prompt.
 - `debounceDelay`: Delay (in ms) before triggering autocomplete.
@@ -93,7 +92,6 @@ Specifies options for tab autocompletion behavior.
 - `multilineCompletions`: Controls multiline completions (`"always"`, `"never"`, or `"auto"`).
 - `useCache`: If `true`, caches completions.
 - `onlyMyCode`: If `true`, only includes code within the repository.
-- `useOtherFiles`: If `true`, includes snippets from other files (default: `true`).
 - `disableInFiles`: Array of glob patterns for files where autocomplete is disabled.
 
 Example
