@@ -257,11 +257,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         ideMessenger,
         dispatch,
       );
-
       if (promptPreamble) {
-        typeof content === "string"
-          ? (content += promptPreamble)
-          : (content.at(-1).text += promptPreamble);
+        if (typeof content === "string") {
+          content = promptPreamble + content;
+        } else {
+          content[0].text = promptPreamble + content[0].text;
+        }
       }
 
       const message: ChatMessage = {

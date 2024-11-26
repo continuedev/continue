@@ -537,10 +537,6 @@ const getCommandsMap: (
           editor.selection.anchor,
         );
       }
-
-      setTimeout(() => {
-        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      }, 30);
     },
     "continue.focusEditWithoutClear": async () => {
       captureCommandTelemetry("focusEditWithoutClear");
@@ -582,10 +578,6 @@ const getCommandsMap: (
           contents,
         });
       }
-
-      setTimeout(() => {
-        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      }, 30);
     },
     "continue.exitEditMode": async () => {
       captureCommandTelemetry("exitEditMode");
