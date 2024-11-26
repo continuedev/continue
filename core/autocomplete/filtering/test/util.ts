@@ -18,7 +18,7 @@ export interface AutocompleteFileringTestInput {
   filename: string;
   input: string;
   llmOutput: string;
-  expectedCompletion: string | null;
+  expectedCompletion: string | null | undefined;
   options?: {
     only?: boolean;
   };
