@@ -40,16 +40,22 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
+import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+} from "../../redux/slices/editModeState";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../../util";
+import { AddCodeToEdit } from "./AddCodeToEditExtension";
 import { CodeBlockExtension } from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar, { ToolbarOptions } from "./InputToolbar";
@@ -64,12 +70,6 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import useIsOSREnabled from "../../hooks/useIsOSREnabled";
-import { AddCodeToEdit } from "./AddCodeToEditExtension";
-import {
-  addCodeToEdit,
-  clearCodeToEdit,
-} from "../../redux/slices/editModeState";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -315,16 +315,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
-  function getPlaceholder() {
-    if (!hasDefaultModel) {
-      return "Configure a Chat model to get started";
-    }
-
-    return historyLengthRef.current === 0
-      ? "Ask anything, '/' for slash commands, '@' to add context"
-      : "Ask a follow-up";
-  }
-
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -368,7 +358,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         placeholder:
           props.placeholder ??
           (historyLengthRef.current === 0
-            ? "Ask anything, '/' for slash commands, '@' to add context"
+            ? "Ask anything, '@' to add context"
             : "Ask a follow-up"),
       }),
       Paragraph.extend({
@@ -461,25 +451,23 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Text,
-      props.availableContextProviders.length
-        ? Mention.configure({
-            HTMLAttributes: {
-              class: "mention",
-            },
-            suggestion: getContextProviderDropdownOptions(
-              availableContextProvidersRef,
-              getSubmenuContextItemsRef,
-              enterSubmenu,
-              onClose,
-              onOpen,
-              inSubmenuRef,
-              ideMessenger,
-            ),
-            renderHTML: (props) => {
-              return `@${props.node.attrs.label || props.node.attrs.id}`;
-            },
-          })
-        : undefined,
+      Mention.configure({
+        HTMLAttributes: {
+          class: "mention",
+        },
+        suggestion: getContextProviderDropdownOptions(
+          availableContextProvidersRef,
+          getSubmenuContextItemsRef,
+          enterSubmenu,
+          onClose,
+          onOpen,
+          inSubmenuRef,
+          ideMessenger,
+        ),
+        renderHTML: (props) => {
+          return `@${props.node.attrs.label || props.node.attrs.id}`;
+        },
+      }),
       isInEditMode
         ? AddCodeToEdit.configure({
             HTMLAttributes: {
