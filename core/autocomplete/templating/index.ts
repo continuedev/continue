@@ -47,20 +47,13 @@ function renderStringTemplate(
 }
 
 export function renderPrompt({
-  snippets,
   snippetPayload,
   workspaceDirs,
   helper,
 }: {
-  snippets: AutocompleteCodeSnippet[];
   snippetPayload: SnippetPayload;
   workspaceDirs: string[];
   helper: HelperVars;
-  diff?: string;
-  clipboardContent: {
-    text: string;
-    copiedAt: string;
-  };
 }): {
   prompt: string;
   prefix: string;
@@ -75,6 +68,8 @@ export function renderPrompt({
 
   const { template, compilePrefixSuffix, completionOptions } =
     getTemplate(helper);
+
+  const snippets = getSnippets(helper, snippetPayload);
 
   // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
   // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
