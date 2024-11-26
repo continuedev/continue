@@ -13,10 +13,10 @@ import type {
   LLMFullCompletionOptions,
   ModelDescription,
   ModelRoles,
-  PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
-  SessionInfo,
+  Session,
+  SessionMetadata,
   SiteIndexingConfig,
   ToolCall,
 } from "../";
@@ -47,10 +47,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   abort: [undefined, void];
 
   // History
-  "history/list": [ListHistoryOptions, SessionInfo[]];
+  "history/list": [ListHistoryOptions, SessionMetadata[]];
   "history/delete": [{ id: string }, void];
-  "history/load": [{ id: string }, PersistedSessionInfo];
-  "history/save": [PersistedSessionInfo, void];
+  "history/load": [{ id: string }, Session];
+  "history/save": [Session, void];
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
@@ -166,7 +166,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "indexing/reindex": [{ type: string; id: string }, void];
   "indexing/abort": [{ type: string; id: string }, void];
   "indexing/setPaused": [{ type: string; id: string; paused: boolean }, void];
-  "indexing/initStatuses": [undefined, void];
+  "docs/getSuggestedDocs": [undefined, void];
+  "docs/initStatuses": [undefined, void];
 
   addAutocompleteModel: [{ model: ModelDescription }, void];
 

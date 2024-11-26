@@ -8,6 +8,8 @@ export default {
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
     "^uuid$": "uuid", // https://stackoverflow.com/a/73626360
+    '^@azure/(.*)$': '<rootDir>/node_modules/@azure/$1',
+    '^mssql$': '<rootDir>/node_modules/mssql'
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",

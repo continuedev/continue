@@ -1,12 +1,12 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { SessionInfo } from "core";
+import { SessionMetadata } from "core";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import useHistory from "../../hooks/useHistory";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { RootState } from "../../redux/store";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -14,13 +14,15 @@ function lastPartOfPath(path: string): string {
 }
 
 export function HistoryTableRow({
-  session,
+  sessionMetadata,
   date,
   onDelete,
+  onEdit,
 }: {
-  session: SessionInfo;
+  sessionMetadata: SessionMetadata;
   date: Date;
   onDelete: (sessionId: string) => void;
+  onEdit: (session: SessionMetadata) => void;
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -28,7 +30,7 @@ export function HistoryTableRow({
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(false);
   const [sessionTitleEditValue, setSessionTitleEditValue] = useState(
-    session.title,
+    sessionMetadata.title,
   );
   const currentSessionId = useSelector(
     (state: RootState) => state.state.sessionId,
@@ -39,16 +41,19 @@ export function HistoryTableRow({
 
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      if (sessionTitleEditValue !== session.title) {
-        session.title = sessionTitleEditValue;
-        const persistedSessionInfo = await getSession(session.sessionId);
-        persistedSessionInfo.title = sessionTitleEditValue;
-        await updateSession(persistedSessionInfo);
+      if (sessionTitleEditValue !== sessionMetadata.title) {
+        const sessionData = await getSession(sessionMetadata.sessionId);
+        sessionData.title = sessionTitleEditValue;
+        await updateSession(sessionData);
+        onEdit({
+          ...sessionMetadata,
+          title: sessionTitleEditValue,
+        });
       }
       setEditing(false);
     } else if (e.key === "Escape") {
       setEditing(false);
-      setSessionTitleEditValue(session.title);
+      setSessionTitleEditValue(sessionMetadata.title);
     }
   };
 
@@ -63,9 +68,9 @@ export function HistoryTableRow({
           className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
           onClick={async () => {
             // Save current session
-            if (session.sessionId !== currentSessionId) {
+            if (sessionMetadata.sessionId !== currentSessionId) {
               await saveSession();
-              await loadSession(session.sessionId);
+              await loadSession(sessionMetadata.sessionId);
             }
 
             navigate("/");
@@ -86,12 +91,14 @@ export function HistoryTableRow({
               </div>
             ) : (
               <span className="text-md block max-w-80 truncate text-base font-semibold">
-                {JSON.stringify(session.title).slice(1, -1)}
+                {JSON.stringify(sessionMetadata.title).slice(1, -1)}
               </span>
             )}
 
             <div className="flex" style={{ color: "#9ca3af" }}>
-              <span>{lastPartOfPath(session.workspaceDirectory || "")}</span>
+              <span>
+                {lastPartOfPath(sessionMetadata.workspaceDirectory || "")}
+              </span>
               {/* Uncomment to show the date */}
               {/* <span className="inline-block ml-auto">
                 {date.toLocaleString("en-US", {
@@ -119,9 +126,10 @@ export function HistoryTableRow({
               </HeaderButtonWithToolTip>
               <HeaderButtonWithToolTip
                 text="Delete"
-                onClick={async () => {
-                  await deleteSession(session.sessionId);
-                  onDelete(session.sessionId);
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  await deleteSession(sessionMetadata.sessionId);
+                  onDelete(sessionMetadata.sessionId);
                 }}
               >
                 <TrashIcon width="1.3em" height="1.3em" />

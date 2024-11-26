@@ -397,7 +397,13 @@ class Ollama extends BaseLLM {
       },
     );
     const data = await response.json();
-    return data.models.map((model: any) => model.name);
+    if (response.ok) {
+      return data.models.map((model: any) => model.name);
+    } else {
+      throw new Error(
+        "Failed to list Ollama models. Make sure Ollama is running.",
+      );
+    }
   }
 }
 

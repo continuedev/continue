@@ -10,6 +10,7 @@ import {
   setInactive,
   setSelectedProfileId,
   setTTSActive,
+  updateDocsSuggestions,
   updateIndexingStatus,
 } from "../redux/slices/stateSlice";
 import { AppDispatch, RootState } from "../redux/store";
@@ -51,9 +52,12 @@ function useSetup(dispatch: AppDispatch) {
     loadConfig();
     const interval = setInterval(() => {
       if (initialConfigLoad.current) {
+        // Docs init on config load
+        ideMessenger.post("docs/getSuggestedDocs", undefined);
+        ideMessenger.post("docs/initStatuses", undefined);
+
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);
-        ideMessenger.post("indexing/initStatuses", undefined);
         return;
       }
       loadConfig();
@@ -112,6 +116,10 @@ function useSetup(dispatch: AppDispatch) {
       }
     }
   }, []);
+
+  useWebviewListener("docs/suggestions", async (data) => {
+    dispatch(updateDocsSuggestions(data));
+  });
 
   const defaultModelTitle = useSelector(
     (store: RootState) => store.state.defaultModelTitle,

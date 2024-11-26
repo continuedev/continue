@@ -508,6 +508,11 @@ export class VsCodeMessenger {
       await Promise.all(
         sessions.map((session) => workOsAuthProvider.removeSession(session.id)),
       );
+      vscode.commands.executeCommand(
+        "setContext",
+        "continue.isSignedInToControlPlane",
+        false,
+      );
     });
   }
 }

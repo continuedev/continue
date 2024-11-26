@@ -1,4 +1,4 @@
-import { ChatHistory, ChatMessage, MessagePart } from "../index.js";
+import { ChatHistoryItem, ChatMessage, MessagePart } from "../index.js";
 import { normalizeToMessageParts } from "../util/messageContent.js";
 import { modelSupportsTools } from "./autodetect.js";
 
@@ -78,7 +78,7 @@ const CANCELED_TOOL_CALL_MESSAGE =
   "This tool call was cancelled by the user. You should clarify next steps, as they don't wish for you to use this tool.";
 
 export function constructMessages(
-  history: ChatHistory,
+  history: ChatHistoryItem[],
   model: string,
 ): ChatMessage[] {
   const msgs: ChatMessage[] = [];

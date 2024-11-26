@@ -13,8 +13,9 @@ import {
   ContextItemWithId,
   FileSymbolMap,
   IndexingStatus,
-  PersistedSessionInfo,
+  PackageDocsResult,
   PromptLog,
+  Session,
   ToolCall,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
@@ -53,9 +54,10 @@ type State = {
   nextCodeBlockToApplyIndex: number;
   indexing: {
     hiddenChatPeekTypes: Record<IndexingStatus["type"], boolean>;
-    statuses: Record<string, IndexingStatus>;
+    statuses: Record<string, IndexingStatus>; // status id -> status
   };
   streamAborter: AbortController;
+  docsSuggestions: PackageDocsResult[];
 };
 
 const initialState: State = {
@@ -97,6 +99,7 @@ const initialState: State = {
     },
   },
   streamAborter: new AbortController(),
+  docsSuggestions: [],
 };
 
 export const stateSlice = createSlice({
@@ -365,10 +368,7 @@ export const stateSlice = createSlice({
         }
       }
     },
-    newSession: (
-      state,
-      { payload }: PayloadAction<PersistedSessionInfo | undefined>,
-    ) => {
+    newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
 
@@ -389,6 +389,9 @@ export const stateSlice = createSlice({
         state.checkpoints = [];
         state.curCheckpointIndex = 0;
       }
+    },
+    updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
+      state.title = payload;
     },
     addHighlightedCode: (
       state,
@@ -535,6 +538,12 @@ export const stateSlice = createSlice({
         [payload.type]: payload.hidden,
       };
     },
+    updateDocsSuggestions: (
+      state,
+      { payload }: PayloadAction<PackageDocsResult[]>,
+    ) => {
+      state.docsSuggestions = payload;
+    },
   },
 
   extraReducers: (builder) => {
@@ -560,6 +569,7 @@ export const {
   setInactive,
   streamUpdate,
   newSession,
+  updateSessionTitle,
   resubmitAtIndex,
   addHighlightedCode,
   setDefaultModel,
@@ -586,6 +596,7 @@ export const {
   cancelToolCall,
   acceptToolCall,
   setToolGenerated,
+  updateDocsSuggestions,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

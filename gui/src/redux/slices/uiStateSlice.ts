@@ -64,13 +64,6 @@ export const uiStateSlice = createSlice({
     setShowDialog: (state, action: PayloadAction<UiState["showDialog"]>) => {
       state.showDialog = action.payload;
     },
-    setShouldAddFileForEditing: (
-      state,
-      action: PayloadAction<UiState["shouldAddFileForEditing"]>,
-    ) => {
-      state.shouldAddFileForEditing = action.payload;
-    },
-
     // Tools
     toggleUseTools: (state) => {
       state.useTools = !state.useTools;
@@ -101,7 +94,6 @@ export const {
   setDialogMessage,
   setDialogEntryOn,
   setShowDialog,
-  setShouldAddFileForEditing,
   toggleUseTools,
   toggleToolSetting,
 } = uiStateSlice.actions;

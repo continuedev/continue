@@ -8,6 +8,7 @@ import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
 import ConfigErrorPage from "./pages/config-error";
+import Edit from "./pages/edit";
 import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
 import History from "./pages/history";
@@ -39,6 +40,10 @@ const router = createMemoryRouter([
       {
         path: "/stats",
         element: <Stats />,
+      },
+      {
+        path: "/edit",
+        element: <Edit />,
       },
       {
         path: "/settings",
@@ -79,7 +84,6 @@ function App() {
 
   const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
-
   return (
     <VscThemeContext.Provider value={vscTheme}>
       <SubmenuContextProvidersContext.Provider

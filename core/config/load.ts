@@ -528,6 +528,7 @@ function finalToBrowserConfig(
     embeddingsProvider: final.embeddingsProvider?.id,
     ui: final.ui,
     experimental: final.experimental,
+    docs: final.docs,
   };
 }
 

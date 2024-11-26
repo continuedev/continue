@@ -51,7 +51,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
         }
 
         val wrappedComponent = ComponentWrapper(component)
-        val offset = editor.document.getLineEndOffset(lineIndex)
+        val offset = editor.document.getLineStartOffset(lineIndex)
 
         return EditorEmbeddedComponentManager.getInstance()
             .addComponent(
@@ -59,7 +59,7 @@ class EditorComponentInlaysManager(val editor: EditorImpl, private val onlyOneIn
                 EditorEmbeddedComponentManager.Properties(
                     EditorEmbeddedComponentManager.ResizePolicy.none(),
                     null,
-                    true,
+                    !editor.inlayModel.getBlockElementsInRange(offset,offset).isEmpty(),
                     showAbove,
                     0,
                     offset

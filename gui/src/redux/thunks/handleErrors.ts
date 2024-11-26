@@ -11,10 +11,6 @@ export const handleErrors = createAsyncThunk<
     await runStream();
   } catch (e: any) {
     console.debug("Error streaming response: ", e);
-    extra.ideMessenger.post("showToast", [
-      "error",
-      `Error streaming response: ${e.message}`,
-    ]);
   } finally {
     dispatch(setInactive());
     // triggerSave(!save); TODO
