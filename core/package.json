@@ -55,7 +55,7 @@
     "cheerio": "^1.0.0-rc.12",
     "commander": "^12.0.0",
     "comment-json": "^4.2.3",
-    "dbinfoz": "^0.14.0",
+    "dbinfoz": "^0.11.0",
     "diff": "^7.0.0",
     "dotenv": "^16.4.5",
     "fastest-levenshtein": "^1.0.16",
