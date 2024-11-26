@@ -3,6 +3,7 @@ import { useNavigate, useRouteError } from "react-router-dom";
 import { newSession } from "../redux/slices/stateSlice";
 import ContinueButton from "../components/mainInput/ContinueButton";
 import { vscBackground } from "../components";
+import { GithubIcon } from "../components/svg/Github";
 
 export default function ErrorPage() {
   const error: any = useRouteError();
@@ -11,17 +12,14 @@ export default function ErrorPage() {
   const navigate = useNavigate();
 
   return (
-    <div
-      id="error-page"
-      className="text-center"
-      style={{ backgroundColor: vscBackground }}
-    >
+    <div className="text-center" style={{ backgroundColor: vscBackground }}>
       <h1>Error in Continue React App</h1>
       <p>
         <i>{error.statusText || error.message}</i>
       </p>
       <br />
       <p>Click below to Continue</p>
+      <GithubIcon />
       <br />
       <ContinueButton
         disabled={false}
@@ -29,6 +27,10 @@ export default function ErrorPage() {
         onClick={() => {
           dispatch(newSession());
           localStorage.removeItem("persist:root");
+          localStorage.removeItem("inputHistory_chat");
+          // localStorage.removeItem("showTutorialCard");
+          // localStorage.removeItem("onboardingStatus");
+          // localStorage.removeItem("lastSessionId");
           navigate("/");
         }}
       ></ContinueButton>
