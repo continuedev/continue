@@ -18,7 +18,6 @@ export interface AutocompleteInput {
   pos: Position;
   recentlyEditedFiles: RangeInFileWithContents[];
   recentlyEditedRanges: RecentlyEditedRange[];
-  clipboardText: string;
   // Used for notebook files
   manuallyPassFileContents?: string;
   // Used for VS Code git commit input box

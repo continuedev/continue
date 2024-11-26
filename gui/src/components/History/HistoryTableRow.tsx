@@ -5,8 +5,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import useHistory from "../../hooks/useHistory";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { RootState } from "../../redux/store";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
