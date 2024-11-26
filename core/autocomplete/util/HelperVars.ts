@@ -114,17 +114,6 @@ export class HelperVars {
   get pos() {
     return this.input.pos;
   }
-  get maxSnippetTokens() {
-    return this.options.maxPromptTokens * this.options.maxSnippetPercentage;
-  }
-
-  get maxDiffTokens() {
-    return this.options.maxPromptTokens * this.options.maxDiffPercentage;
-  }
-
-  get maxClipboardTokens() {
-    return this.options.maxPromptTokens * this.options.maxClipboardPercentage;
-  }
 
   get prunedCaretWindow() {
     return this.prunedPrefix + this.prunedSuffix;
