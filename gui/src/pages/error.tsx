@@ -6,10 +6,17 @@ import { newSession } from "../redux/slices/stateSlice";
 import { GithubIcon } from "../components/svg/GithubIcon";
 // import { useState } from "react";
 import { DiscordIcon } from "../components/svg/DiscordIcon";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { Button, SecondaryButton } from "../components";
 import ContinueButton from "../components/mainInput/ContinueButton";
+import {
+  ArrowPathIcon,
+  ArrowPathRoundedSquareIcon,
+  FlagIcon,
+} from "@heroicons/react/24/outline";
+import Loader from "../components/loaders/Loader";
+import RingLoader from "../components/loaders/RingLoader";
 
 // const GITHUB_LINK = "https://github.com/continuedev/continue/issues/new/choose";
 // const DISCORD_LINK = "https://discord.com/invite/EfJEfdFnDQ";
@@ -65,19 +72,23 @@ const ErrorPage: React.FC = () => {
       messenger.post("openUrl", url);
     }
   };
+
+  const [initialLoad, setInitialLoad] = useState(true);
+  useEffect(() => {
+    setTimeout(() => {
+      setInitialLoad(false);
+    }, 500);
+  }, []);
   return (
     <div className="bg- flex min-h-screen flex-col items-center justify-center px-8 py-4 text-center">
       <h1 className="mb-4 text-3xl font-bold">Error in Continue React App</h1>
 
-      <pre className="w-full pb-6">
-        <code className="w-full px-3 py-2">
-          {error.statusText || error.message}
-        </code>
+      <pre className="pb-6">
+        <code className="px-3 py-2">{error.statusText || error.message}</code>
       </pre>
 
-      <ContinueButton
-        disabled={false}
-        showStop={false}
+      <Button
+        className="flex flex-row items-center gap-2"
         onClick={() => {
           dispatch(newSession());
           localStorage.removeItem("persist:root");
@@ -87,7 +98,14 @@ const ErrorPage: React.FC = () => {
           // localStorage.removeItem("lastSessionId");
           navigate("/");
         }}
-      ></ContinueButton>
+      >
+        {initialLoad ? (
+          <FlagIcon className="h-5 w-5 text-red-600" />
+        ) : (
+          <ArrowPathIcon className="h-5 w-5" />
+        )}
+        Continue
+      </Button>
 
       <p className="mb-0 mt-6">Report the issue:</p>
       <div className="mt-4 flex space-x-4">
@@ -96,14 +114,12 @@ const ErrorPage: React.FC = () => {
           className="flex items-center space-x-2 rounded-lg px-4 py-2 text-white"
         >
           <GithubIcon size={20} />
-          {/* <span>Report on GitHub</span> */}
         </SecondaryButton>
         <SecondaryButton
           onClick={() => openUrl(DISCORD_LINK)}
           className="flex items-center rounded-lg"
         >
           <DiscordIcon size={20} />
-          {/* <span>Join Discord</span> */}
         </SecondaryButton>
       </div>
     </div>

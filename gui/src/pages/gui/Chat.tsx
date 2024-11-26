@@ -163,7 +163,6 @@ export function Chat() {
   //     smoothScrollToBottom();
   //   }, 400);
   // }, [smoothScrollToBottom, state.sessionId]);
-  throw new Error("This is an error");
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
