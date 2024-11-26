@@ -152,7 +152,7 @@ export class CompletionProvider {
   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
   private static debouncing = false;
   private static lastUUID: string | undefined = undefined;
-
+  private times: number[];
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
@@ -168,6 +168,7 @@ export class CompletionProvider {
       this.importDefinitionsService,
       this.ide,
     );
+    this.times = [];
   }
 
   private importDefinitionsService: ImportDefinitionsService;
@@ -251,7 +252,6 @@ export class CompletionProvider {
     token: AbortSignal | undefined,
     selectedModelTitle: string | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
-    const startTime = Date.now();
     try {
       // Debounce
       const uuid = uuidv4();
@@ -356,13 +356,6 @@ export class CompletionProvider {
 
       const outcome = await this.getTabCompletion(token, options, llm, input,selectedModelTitle);
 
-      const time = Date.now() - startTime;
-      // console.log()
-      // await this.configHandler.logMessage(
-      //   "Document Path: /continue/core/autocomplete/completionProvider.ts\n"+
-      //   "provideInlineCompletionItems - time："+time/1000+"s\n"
-      // );
-      // "provideInlineCompletionItems 补全结果："+outcome?.completion+"\n"
       if (!outcome?.completion) {
         return undefined;
       }
@@ -834,6 +827,27 @@ export class CompletionProvider {
     }
 
     const time = Date.now() - startTime;
+
+    this.times.push(time);
+    const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+    const sortedTimes = [...this.times].sort((a, b) => a - b);
+    const mid = Math.floor(sortedTimes.length / 2);
+    const medianTime = sortedTimes.length % 2 !== 0
+        ? sortedTimes[mid]
+        : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+    const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+    const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+    await this.configHandler.logMessage(
+      "core/autocomplete/completionProvider.ts\n" + 
+      "getTabCompletion - Time: " + time/1000 + "s\n" + 
+      "getTabCompletion - Completion: " + completion + "\n" + 
+      "getTabCompletion - cacheHit: " + cacheHit + "\n" + 
+      "getTabCompletion - Data Count: " + this.times.length + "\n" + 
+      "getTabCompletion - Mean Time: " + (meanTime / 1000) + "s\n" +
+      "getTabCompletion - Median Time: " + (medianTime / 1000) + "s\n" +
+      "getTabCompletion - P95 Time: " + (p95Time / 1000) + "s\n" +
+      "getTabCompletion - P99 Time: " + (p99Time / 1000) + "s\n"
+    );
     const timestamp = Date.now();
     return {
       time,

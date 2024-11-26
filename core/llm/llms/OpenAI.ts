@@ -301,31 +301,24 @@ class OpenAI extends BaseLLM {
       },
     });
     for await (const chunk of streamSse(resp)) {
-      // chunk 格式
-      // chunk: {
-      //   "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
-      //   "object": "text_completion",
-      //   "created": 1730795368,
-      //   "model": "/models/AI-ModelScope/starcoder2-3b",
-      //   "choices": [
-      //     {
-      //       "index": 0,
-      //       "text": ")\n# merge sort", text就是模型回复的补全结果
-      //       "logprobs": null,
-      //       "finish_reason": "stop",
-      //       "stop_reason": "\ndef"
-      //     }
-      //   ],
-      //   "usage": null
-      // }
-
-
-      // if (this.writeLog){
-      //   await this.writeLog(
-      //     "response: "+JSON.stringify({...resp},null,2)+"\n"
-      //     +"chunk: "+JSON.stringify({...chunk},null,2)+"\n"
-      //   );
-      // }
+      /** DEBUG: api回复格式问题
+       * chunk: {
+       * "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
+       * "object": "text_completion",
+       * "created": 1730795368,
+       * "model": "/models/AI-ModelScope/starcoder2-3b",
+       * "choices": [
+       *   {
+       *     "index": 0,
+       *     "text": ")\n# merge sort", text就是模型回复的补全结果
+       *     "logprobs": null,
+       *     "finish_reason": "stop",
+       *     "stop_reason": "\ndef"
+       *   }
+       *  ],
+       *  "usage": null
+       * }
+       * */ 
       yield chunk.choices[0].text;
     }
   }

@@ -92,8 +92,13 @@ export async function* streamDiffLines(
     input,
     language,
   );
-  const inept = modelIsInept(llm.model);
-
+  /** DEBUG 
+   */
+  let llm_model = llm.model;
+  if (llm.model === undefined){
+    llm_model = llm.completionOptions.model;
+  }
+  const inept = modelIsInept(llm_model); // llm.model -> llm_model
   const options: LLMFullCompletionOptions = {};
   const completion =
     typeof prompt === "string"

@@ -98,10 +98,10 @@ export class CodebaseIndexer {
   }
 
   public async refreshFile(file: string): Promise<void> {
-    this.configHandler.logMessage(
-      "core/indexing/CodebaseIndexer.ts\n" +
-      "refreshFile 函数\n"
-    )
+    // this.configHandler.logMessage(
+    //   "core/indexing/CodebaseIndexer.ts\n" +
+    //   "refreshFile 函数\n"
+    // )
     if (this.pauseToken.paused) {
       // NOTE: by returning here, there is a chance that while paused a file is modified and
       // then after unpausing the file is not reindexed
@@ -402,11 +402,11 @@ export class CodebaseIndexer {
           (filepath,reponame) => this.readFile(filepath,reponame),
           repoName,
         );
-      this.configHandler.logMessage(
-        "core/indexing/CodebaseIndexer.ts" + "\n" +
-        "getComputeDeleteAddRemove - tag: " + JSON.stringify({...tag},null,2) + "\n" +
-        "getComputeDeleteAddRemove - results: " + JSON.stringify({...results},null,2) + "\n" 
-      )
+      // this.configHandler.logMessage(
+      //   "core/indexing/CodebaseIndexer.ts" + "\n" +
+      //   "getComputeDeleteAddRemove - tag: " + JSON.stringify({...tag},null,2) + "\n" +
+      //   "getComputeDeleteAddRemove - results: " + JSON.stringify({...results},null,2) + "\n" 
+      // )
       const totalOps =
         results.compute.length +
         results.del.length +
@@ -423,12 +423,12 @@ export class CodebaseIndexer {
             markComplete,
             repoName,
           )) {
-            this.configHandler.logMessage(
-              "core/indexing/CodebaseIndexer.ts" + "\n" +
-              "indexFiles - tag: " + JSON.stringify({...tag},null,2) + "\n" +
-              "indexFiles - subResult: " + JSON.stringify({...subResult},null,2) + "\n" +
-              "indexFiles - desc: " + desc + "\n" 
-            )
+            // this.configHandler.logMessage(
+            //   "core/indexing/CodebaseIndexer.ts" + "\n" +
+            //   "indexFiles - tag: " + JSON.stringify({...tag},null,2) + "\n" +
+            //   "indexFiles - subResult: " + JSON.stringify({...subResult},null,2) + "\n" +
+            //   "indexFiles - desc: " + desc + "\n" 
+            // )
             yield {
               progress: progress,
               desc,
