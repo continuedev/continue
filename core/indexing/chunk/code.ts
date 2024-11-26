@@ -130,7 +130,6 @@ async function constructFunctionDefinitionChunk(
   const funcText =
     code.slice(node.startIndex, bodyNode.startIndex) +
     collapsedReplacement(bodyNode);
-
   if (
     node.parent &&
     ["block", "declaration_list"].includes(node.parent.type) &&
@@ -187,6 +186,7 @@ async function maybeYieldChunk(
   }
   return undefined;
 }
+
 
 async function* getSmartCollapsedChunks(
   node: SyntaxNode,

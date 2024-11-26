@@ -35,6 +35,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       options.config.embeddingsProvider,
       (path) => options.ide.readFile(path),
       options.pathSep,
+      writeLog,
     );
     this.writeLog = writeLog;
   }

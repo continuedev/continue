@@ -194,37 +194,13 @@ class OpenAI extends BaseLLM {
     }
   }
 
-
-
-
   protected async *_legacystreamComplete(
     prompt: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-
     const args: any = this._convertArgs(options, []);
     args.prompt = prompt;
     args.messages = undefined;
-
-  /** DEBUG
-     * 内网 qwen 模型还未开放 completions 接口
-     * edit 功能使用 chat/completions 接口
-     * 自动补全模型 deepseek 使用 completions 接口
-     * */ 
-
-    // let endpoint: "completions" | "chat/completions" = "chat/completions";
-    // if (options.model.includes("deepseek")) {
-    //   endpoint = "completions";
-    // }
-
-    // if (this.writeLog) {
-    //   await this.writeLog(
-    //     "core/llm/llms/OpenAI.ts\n"+
-    //     "_legacystreamComplete - options.model: " + options.model + "\n" +
-    //     "_legacystreamComplete - options: " + JSON.stringify({...options},null,2) + "\n" +
-    //     "_legacystreamComplete - endpoint: " + endpoint + "\n" 
-    //   );
-    // }
 
     const response = await this.fetch(this._getEndpoint("completions"), {
       method: "POST",
@@ -232,13 +208,9 @@ class OpenAI extends BaseLLM {
       body: JSON.stringify({
         ...args,
         stream: true,
-      }),   
+      }),
     });
-    // if (this.writeLog) {
-    //   await this.writeLog(
-    //     "_legacystreamComplete - response: " + response + "\n"
-    //   );
-    // }
+
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.text && value.finish_reason !== "eos") {
         yield value.choices[0].text;
@@ -250,7 +222,6 @@ class OpenAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    
     if (
       !CHAT_ONLY_MODELS.includes(options.model) &&
       this.supportsCompletions() &&
@@ -302,6 +273,12 @@ class OpenAI extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<string> {
     const endpoint = new URL("completions", this.apiBase);
+    // if (this.writeLog){
+    //   await this.writeLog(
+    //     "文件路径：/ai4math/users/xmlu/continue_env/continue/core/llm/llms/OpenAI.ts\n"+
+    //     "OpenAI接口调用"+options.model+"模型进行_streamFim\n"
+    //   )
+    // }
     const prompt="<fim_prefix>"+prefix+"<fim_suffix>"+suffix+"<fim_middle>";
     const resp = await this.fetch(endpoint, {
       method: "POST",
@@ -324,24 +301,31 @@ class OpenAI extends BaseLLM {
       },
     });
     for await (const chunk of streamSse(resp)) {
-      /** DEBUG: api回复格式问题
-       * chunk: {
-       * "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
-       * "object": "text_completion",
-       * "created": 1730795368,
-       * "model": "/models/AI-ModelScope/starcoder2-3b",
-       * "choices": [
-       *   {
-       *     "index": 0,
-       *     "text": ")\n# merge sort", text就是模型回复的补全结果
-       *     "logprobs": null,
-       *     "finish_reason": "stop",
-       *     "stop_reason": "\ndef"
-       *   }
-       *  ],
-       *  "usage": null
-       * }
-       * */ 
+      // chunk 格式
+      // chunk: {
+      //   "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
+      //   "object": "text_completion",
+      //   "created": 1730795368,
+      //   "model": "/models/AI-ModelScope/starcoder2-3b",
+      //   "choices": [
+      //     {
+      //       "index": 0,
+      //       "text": ")\n# merge sort", text就是模型回复的补全结果
+      //       "logprobs": null,
+      //       "finish_reason": "stop",
+      //       "stop_reason": "\ndef"
+      //     }
+      //   ],
+      //   "usage": null
+      // }
+
+
+      // if (this.writeLog){
+      //   await this.writeLog(
+      //     "response: "+JSON.stringify({...resp},null,2)+"\n"
+      //     +"chunk: "+JSON.stringify({...chunk},null,2)+"\n"
+      //   );
+      // }
       yield chunk.choices[0].text;
     }
   }

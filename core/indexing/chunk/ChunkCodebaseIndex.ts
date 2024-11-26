@@ -19,19 +19,18 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   artifactId: string = ChunkCodebaseIndex.artifactId;
 
   constructor(
-    private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly readFile: (filepath: string, reponame: string) => Promise<string>,
     private readonly pathSep: string,
     private readonly continueServerClient: IContinueServerClient,
     private readonly maxChunkSize: number,
-  ) {
-    this.readFile = readFile;
-  }
+    private readonly writeLog: (log: string) => Promise<void>,
+  ) {}
 
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
-    repoName: string | undefined,
+    repoName: string,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
     await this.createTables(db);
@@ -69,13 +68,26 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         status: "indexing",
         progress: accumulatedProgress,
       };
-      const chunks = await this.computeChunks(results.compute);
+      const chunks = await this.computeChunks(results.compute, repoName);
+      this.writeLog(
+        "core/indexing/chunk/ChunkCodebaseIndex.ts\n" +
+        "update - results.compute: " + JSON.stringify({...results.compute},null,2) + "\n" +
+        "update - chunks: " + JSON.stringify({...chunks},null,2) + "\n"
+      )
       await this.insertChunks(db, tagString, chunks);
       await markComplete(results.compute, IndexResultType.Compute);
     }
 
     // Add tag
     for (const item of results.addTag) {
+      this.writeLog(
+        "core/indexing/chunk/ChunkCodebaseIndex.ts\n" +
+        `
+          INSERT INTO chunk_tags (chunkId, tag)
+          SELECT id, ${tagString} FROM chunks
+          WHERE cacheKey = ${item.cacheKey} AND path = ${item.path}\n
+        `
+      )
       await db.run(
         `
         INSERT INTO chunk_tags (chunkId, tag)
@@ -162,8 +174,8 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     )`);
   }
 
-  private async packToChunks(pack: PathAndCacheKey): Promise<Chunk[]> {
-    const contents = await this.readFile(pack.path);
+  private async packToChunks(pack: PathAndCacheKey, reponame: string): Promise<Chunk[]> {
+    const contents = await this.readFile(pack.path,reponame);
     if (!shouldChunk(this.pathSep, pack.path, contents)) {
       return [];
     }
@@ -180,9 +192,9 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     return chunks;
   }
 
-  private async computeChunks(paths: PathAndCacheKey[]): Promise<Chunk[]> {
+  private async computeChunks(paths: PathAndCacheKey[], reponame: string): Promise<Chunk[]> {
     const chunkLists = await Promise.all(
-      paths.map((p) => this.packToChunks(p)),
+      paths.map((p) => this.packToChunks(p,reponame)),
     );
     return chunkLists.flat();
   }

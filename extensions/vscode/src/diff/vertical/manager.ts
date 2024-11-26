@@ -286,6 +286,7 @@ export class VerticalDiffManager {
     range?: vscode.Range,
   ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
+
     let editor = vscode.window.activeTextEditor;
 
     if (!editor) {
@@ -375,6 +376,7 @@ export class VerticalDiffManager {
     }
 
     const llm = await this.configHandler.llmFromTitle(modelTitle);
+    
     const rangeContent = editor.document.getText(selectedRange);
     const prefix = pruneLinesFromTop(
       editor.document.getText(
@@ -420,6 +422,7 @@ export class VerticalDiffManager {
           onlyOneInsertion,
         ),
       );
+
       // enable a listener for user edits to file while diff is open
       this.enableDocumentChangeListener();
     } catch (e) {

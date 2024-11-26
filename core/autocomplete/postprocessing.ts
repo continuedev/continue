@@ -59,9 +59,8 @@ export function postprocessCompletion({
   // Don't return empty
   if (completion.trim().length <= 0) {
     configHandler.logMessage(
-      "autocomplete/postprocessing.ts\n" 
-      + "completion: "+completion+"\n"
-      + "后处理：补全结果为空，返回 undefined\n"
+      // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+      "后处理：补全结果为空，返回 undefined\n"
     )
     return undefined;
   }
@@ -73,23 +72,21 @@ export function postprocessCompletion({
       .filter((line) => line.trim().length > 0)
       .slice(1)  // 获取第二个及以后的非空行
       .join("\n");  // 将数组转换为字符串，以换行符连接
-    
-    configHandler.logMessage(
-      "autocomplete/postprocessing.ts\n"
-      + "completion: "+completion+"\n"
-      + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
-    )
+    // configHandler.logMessage(
+    //   // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+    //   + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
+    //   + "completion: "+completion+"\n"
+    // )
     if (secondLineAndAfterOfCompletion == undefined) return undefined;
     else completion = secondLineAndAfterOfCompletion;
   }
 
   // Filter out repetitions of many lines in a row
   if (isExtremeRepetition(completion)) {
-    configHandler.logMessage(
-      "autocomplete/postprocessing.ts\n"
-      + "completion: "+completion+"\n"
-      + "后处理：连续多行的重复内容，返回 undefined\n"
-    )
+    // configHandler.logMessage(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+    //   + "后处理：连续多行的重复内容，返回 undefined\n"
+    // )
     return undefined;
   }
 
@@ -114,12 +111,11 @@ export function postprocessCompletion({
     !(prefix.endsWith("\n") ||prefix.endsWith("\t")||prefix.endsWith("  ")) &&
     (suffix.startsWith("\n") || suffix.trim().length === 0)
   ) {
-    configHandler.logMessage(
-      "core/autocomplete/postprocessing.ts\n"
-      + "completion: "+completion+"\n"
-      + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
-      + "前缀以ASCII码" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
-    )
+    // configHandler.logMessage(
+    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+    //   + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
+    //   + "前缀以" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
+    // )
     // completion = "\n" + completion;
     return undefined;
   }

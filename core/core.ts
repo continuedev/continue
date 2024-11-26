@@ -316,6 +316,11 @@ export class Core {
       if (!provider) {
         return [];
       }
+      // this.configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "context/getContextItems\n"+
+      //   "msg: " + JSON.stringify({...msg},null,2)+"\n"
+      // )
       try {
         const id: ContextItemId = {
           providerTitle: provider.description.title,
@@ -367,6 +372,10 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
+      // configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "llm/llmStreamChat\n")
+
       const config = await configHandler.loadConfig();
 
       // Stop TTS on new StreamChat
@@ -413,6 +422,9 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
     ) {
+      // configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "llm/streamComplete\n")
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
         msg.data.prompt,
@@ -569,6 +581,9 @@ export class Core {
 
     // Autocomplete
     on("autocomplete/complete", async (msg) => {
+      // this.configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "autocomplete/complete\n")
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           msg.data,
@@ -589,6 +604,9 @@ export class Core {
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
     ) {
+      // configHandler.logMessage(
+      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+      //   "streamDiffLines\n")
       const data = msg.data;
       const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
       for await (const diffLine of streamDiffLines(

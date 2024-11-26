@@ -63,6 +63,7 @@ export async function insertMockChunks() {
     pathSep,
     mockContinueServerClient,
     1000,
+    async (_log: string): Promise<void> => {},
   );
 
   addToTestDir([[mockFilename, mockFileContents]]);

@@ -10,31 +10,34 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     let retrievalResults: Chunk[] = [];
 
-    // const ftsstartTime = Date.now();
+    const ftsstartTime = Date.now();
     const ftsChunks = await this.retrieveFts(input, nRetrieve);
-    // const ftstime = Date.now() - ftsstartTime;
+    const ftstime = Date.now() - ftsstartTime;
     // this.writeLog(
-    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
-    //   "retrieve ftsChunks 耗时："+ftstime/1000+"s\n"
+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "retrieveFts - time: " + ftstime/1000 + "s\n" +
+    //   "retrieveFts - ftsChunks: " + JSON.stringify({...ftsChunks},null,2) + "\n"
     // );
-
-    // const embeddingsstartTime = Date.now();
+    
+    const embeddingsstartTime = Date.now();
     const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
-    // const embeddingstime = Date.now() - embeddingsstartTime;
+    const embeddingstime = Date.now() - embeddingsstartTime;
     // this.writeLog(
-    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
-    //   "retrieve embeddingsChunks 耗时："+embeddingstime/1000+"s\n"
+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "retrieveEmbeddings - time: " + embeddingstime/1000 + "s\n" +
+    //   "retrieveEmbeddings - embeddingsChunks: " + JSON.stringify({...embeddingsChunks},null,2) + "\n"
     // );
 
-    // const recentlyEditedFilesstartTime = Date.now();
-    // const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
-    // const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
-    // this.writeLog(
-    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
-    //   "retrieve recentlyEditedFilesChunks 耗时："+recentlyEditedFilestime/1000+"s\n"
+    const recentlyEditedFilesstartTime = Date.now();
+    const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+    const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
+    // this.writeLog( 
+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n" +
+    //   "retrieveAndChunkRecentlyEditedFiles - time: " + recentlyEditedFilestime/1000 + "s\n" +
+    //   "retrieveAndChunkRecentlyEditedFiles - recentlyEditedFilesChunks: " + JSON.stringify({...recentlyEditedFilesChunks},null,2) + "\n"
     // );
 
-    // const repoMapstartTime = Date.now();
+    const repoMapstartTime = Date.now();
     const repoMapChunks = await requestFilesFromRepoMap(
       this.options.llm,
       this.options.config,
@@ -42,14 +45,15 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
       input,
       filterDirectory,
     );
-    // const repoMapTime = Date.now() - repoMapstartTime;
+    const repoMapTime = Date.now() - repoMapstartTime;
     // this.writeLog(
-    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
-    //   "retrieve repoMapChunks 耗时："+repoMapTime/1000+"s\n"
+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+    //   "requestFilesFromRepoMap - time: " + repoMapTime/1000 + "s\n" +
+    //   "requestFilesFromRepoMap - repoMapChunks: " + JSON.stringify({...repoMapChunks},null,2) + "\n"
     // );
 
     retrievalResults.push(
-      // ...recentlyEditedFilesChunks,
+      ...recentlyEditedFilesChunks,
       ...ftsChunks,
       ...embeddingsChunks,
       ...repoMapChunks,

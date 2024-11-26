@@ -152,7 +152,7 @@ export class CompletionProvider {
   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
   private static debouncing = false;
   private static lastUUID: string | undefined = undefined;
-  private times: number[];
+
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
@@ -168,7 +168,6 @@ export class CompletionProvider {
       this.importDefinitionsService,
       this.ide,
     );
-    this.times = [];
   }
 
   private importDefinitionsService: ImportDefinitionsService;
@@ -252,6 +251,7 @@ export class CompletionProvider {
     token: AbortSignal | undefined,
     selectedModelTitle: string | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
+    const startTime = Date.now();
     try {
       // Debounce
       const uuid = uuidv4();
@@ -356,6 +356,13 @@ export class CompletionProvider {
 
       const outcome = await this.getTabCompletion(token, options, llm, input,selectedModelTitle);
 
+      const time = Date.now() - startTime;
+      // console.log()
+      // await this.configHandler.logMessage(
+      //   "Document Path: /continue/core/autocomplete/completionProvider.ts\n"+
+      //   "provideInlineCompletionItems - time："+time/1000+"s\n"
+      // );
+      // "provideInlineCompletionItems 补全结果："+outcome?.completion+"\n"
       if (!outcome?.completion) {
         return undefined;
       }
@@ -550,10 +557,7 @@ export class CompletionProvider {
       extrasSnippets = extrasSnippets.filter((snippet) => {
         return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
       });
-
     }
-
-
     let { prefix, suffix, completeMultiline, snippets } =
       await constructAutocompletePrompt(
         filepath,
@@ -569,7 +573,6 @@ export class CompletionProvider {
         extrasSnippets,
         this.importDefinitionsService,
         this.rootPathContextService,
-        this.configHandler
       );
     // If prefix is manually passed
     if (manuallyPassPrefix) {
@@ -620,7 +623,6 @@ export class CompletionProvider {
           2,
         )}\n${prefix}`;
       }
-
       prompt = compiledTemplate({
         prefix,
         suffix,
@@ -664,9 +666,40 @@ export class CompletionProvider {
       if (!processedCompletion) {
         return undefined;
       }
-
       completion = processedCompletion
     } else {
+      if (typeof template === "string") {
+        let modified_prefix = prefix;
+        // // 调用 RAG 
+        // const RAGstartTime = Date.now();
+        // const CodebaseContext = await this.resolveCodebase(prompt,selectedModelTitle);
+        // modified_prefix = CodebaseContext + "```" + filepath + "```" + prefix;
+        // const RAGtime = Date.now() - RAGstartTime;
+        // await this.configHandler.logMessage(
+        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+        //   "获取codebasecontext耗时："+RAGtime/1000+"s\n"
+        // );
+        const compiledTemplate = Handlebars.compile(template);
+        prompt = compiledTemplate({
+          modified_prefix,
+          suffix,
+          filename,
+          reponame,
+          language: lang.name,
+        });
+      }else{
+        // Let the template function format snippets
+        prompt = template(
+          prefix,
+          suffix,
+          filepath,
+          reponame,
+          lang.name,
+          snippets,
+        );
+      }
+      
+
       const stop = [
         ...(completionOptions?.stop || []),
         ...multilineStops,
@@ -688,18 +721,6 @@ export class CompletionProvider {
           options.multilineCompletions !== "never" &&
           (options.multilineCompletions === "always" || completeMultiline);
       }
-      
-      // // 调用 RAG 
-      // const RAGstartTime = Date.now();
-      // const CodebaseContext = await this.resolveCodebase(prompt,selectedModelTitle);
-      // prefix = CodebaseContext + "```" + filepath + "```" + prefix;
-      // const RAGtime = Date.now() - RAGstartTime;
-      // await this.configHandler.logMessage(
-      //   "autocomplete/completionProvider.ts\n" +
-      //   "CodebaseContext - time: " + RAGtime/1000 + "s\n" +
-      //   "CodebaseContext - CodebaseContext: " + CodebaseContext + "\n"
-      // );
-
 
       // Try to reuse pending requests if what the user typed matches start of completion
       const generator = this.generatorReuseManager.getGenerator(
@@ -718,6 +739,13 @@ export class CompletionProvider {
         multiline,
         this.configHandler
       );
+
+
+      // const streamCompleteGenerator = llm.streamComplete(prompt, {
+      //   ...completionOptions,
+      //   raw: true,
+      //   stop,
+      // });
 
       // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
       const fullStop = () =>
@@ -799,7 +827,6 @@ export class CompletionProvider {
         llm,
         configHandler: this.configHandler
       });
-
       if (!processedCompletion) {
         return undefined;
       }
@@ -807,28 +834,6 @@ export class CompletionProvider {
     }
 
     const time = Date.now() - startTime;
-    this.times.push(time);
-    const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
-    const sortedTimes = [...this.times].sort((a, b) => a - b);
-    const mid = Math.floor(sortedTimes.length / 2);
-    const medianTime = sortedTimes.length % 2 !== 0
-        ? sortedTimes[mid]
-        : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
-    const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
-    const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
-    await this.configHandler.logMessage(
-      "core/autocomplete/completionProvider.ts\n" + 
-      "getTabCompletion - Time: " + time/1000 + "s\n" + 
-      "getTabCompletion - Completion: " + completion + "\n" + 
-      "getTabCompletion - cacheHit: " + cacheHit + "\n" + 
-      "getTabCompletion - Data Count: " + this.times.length + "\n" + 
-      "getTabCompletion - Mean Time: " + (meanTime / 1000) + "s\n" +
-      "getTabCompletion - Median Time: " + (medianTime / 1000) + "s\n" +
-      "getTabCompletion - P95 Time: " + (p95Time / 1000) + "s\n" +
-      "getTabCompletion - P99 Time: " + (p99Time / 1000) + "s\n"
-    );
-    
-
     const timestamp = Date.now();
     return {
       time,
@@ -863,6 +868,7 @@ export class CompletionProvider {
     contextItems.push(...codebaseItems);
     for (const codebaseItem of codebaseItems) {
       contextItemsText += codebaseItem.content + "\n\n";
+      
     }
 
     // await this.configHandler.logMessage(

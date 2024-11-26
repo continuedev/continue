@@ -40,7 +40,7 @@ export class ConfigHandler {
   constructor(
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
-    private readonly writeLog: (text: string) => Promise<void>,
+    public readonly writeLog: (text: string) => Promise<void>,
     private controlPlaneClient: ControlPlaneClient,
   ) {
     this.ide = ide;

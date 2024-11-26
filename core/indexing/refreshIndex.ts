@@ -127,7 +127,8 @@ enum AddRemoveResultType {
 async function getAddRemoveForTag(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
-  readFile: (path: string) => Promise<string>,
+  readFile: (path: string,reponame: string) => Promise<string>,
+  reponame: string
 ): Promise<
   [
     PathAndCacheKey[],
@@ -156,7 +157,7 @@ async function getAddRemoveForTag(
       // Exists in old and new, so determine whether it was updated
       if (lastUpdated < files[item.path]) {
         // Change was made after last update
-        const newHash = calculateHash(await readFile(pathAndCacheKey.path));
+        const newHash = calculateHash(await readFile(pathAndCacheKey.path,reponame));
         if (pathAndCacheKey.cacheKey !== newHash) {
           updateNewVersion.push({
             path: pathAndCacheKey.path,
@@ -181,7 +182,7 @@ async function getAddRemoveForTag(
   // amounts of readers generally does not improve performance
   const limit = plimit(10);
   const promises = Object.keys(files).map(async (path) => {
-    const fileContents = await limit(() => readFile(path));
+    const fileContents = await limit(() => readFile(path,reponame));
     return { path, cacheKey: calculateHash(fileContents) };
   });
   const add: PathAndCacheKey[] = await Promise.all(promises);
@@ -343,13 +344,14 @@ function mapIndexResultTypeToAddRemoveResultType(
 export async function getComputeDeleteAddRemove(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
-  readFile: (path: string) => Promise<string>,
-  repoName: string | undefined,
+  readFile: (path: string, reponame:string) => Promise<string>,
+  repoName: string,
 ): Promise<[RefreshIndexResults, PathAndCacheKey[], MarkCompleteCallback]> {
   const [add, remove, lastUpdated, markComplete] = await getAddRemoveForTag(
     tag,
     currentFiles,
     readFile,
+    repoName
   );
 
   const compute: PathAndCacheKey[] = [];

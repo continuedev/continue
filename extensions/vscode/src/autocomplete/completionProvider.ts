@@ -57,7 +57,7 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private recentlyEditedTracker = new RecentlyEditedTracker();
-  private times: number[];
+
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
@@ -71,7 +71,7 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
-    this.times = [];
+
     vscode.workspace.onDidChangeTextDocument((event) => {
       if (event.document.uri.fsPath === this._lastShownCompletion?.filepath) {
         // console.log("updating completion");
@@ -220,24 +220,9 @@ export class ContinueCompletionProvider
         );
 
       const time = Date.now() - startTime;
-      this.times.push(time);
-      const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
-      const sortedTimes = [...this.times].sort((a, b) => a - b);
-      const mid = Math.floor(sortedTimes.length / 2);
-      const medianTime = sortedTimes.length % 2 !== 0
-          ? sortedTimes[mid]
-          : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
-      const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
-      const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
-      await this.configHandler.logMessage(
-        "extensions/vscode/src/autocomplete/completionProvider.ts\n"+ 
-        "ContinueCompletionProvider - time: " + time/1000 + "s\n"+
-        "ContinueCompletionProvider - completion: " + outcome?.completion + "\n"+
-        "ContinueCompletionProvider - Data Count: " + this.times.length + "\n" + 
-        "ContinueCompletionProvider - Mean Time: " + (meanTime / 1000) + "s\n" +
-        "ContinueCompletionProvider - Median Time: " + (medianTime / 1000) + "s\n" +
-        "ContinueCompletionProvider - P95 Time: " + (p95Time / 1000) + "s\n" +
-        "ContinueCompletionProvider - P99 Time: " + (p99Time / 1000) + "s\n"
+      await console.log(
+        `ContinueCompletionProvider - time：`+time/1000 + `s\n`+
+        `ContinueCompletionProvider - completion：`+outcome?.completion + `\n`
       );
       if (!outcome || !outcome.completion) {
         return null;

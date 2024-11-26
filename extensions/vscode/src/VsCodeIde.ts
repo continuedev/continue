@@ -284,7 +284,6 @@ class VsCodeIde implements IDE {
         pathToLastModified[file] = stat.mtime;
       }),
     );
-
     return pathToLastModified;
   }
 
