@@ -77,25 +77,32 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     suffix: string,
     filepath: string,
     reponame: string,
-    allSnippets: AutocompleteSnippet[],
+    snippets: AutocompleteSnippet[],
   ): [string, string] => {
-    const snippets = allSnippets.filter(
-      (snippet) => snippet.type === AutocompleteSnippetType.Code,
-    ) as AutocompleteCodeSnippet[];
-
     if (snippets.length === 0) {
       if (suffix.trim().length === 0 && prefix.trim().length === 0) {
         return [`+++++ ${getLastNPathParts(filepath, 2)}\n${prefix}`, suffix];
       }
       return [prefix, suffix];
     }
+
     const relativePaths = shortestRelativePaths([
-      ...snippets.map((snippet) => snippet.filepath),
+      ...snippets.map((snippet) =>
+        "filepath" in snippet ? snippet.filepath : "PLACEHOLDER",
+      ),
       filepath,
     ]);
+
     const otherFiles = snippets
-      .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.content}`)
+      .map((snippet, i) => {
+        if (snippet.type === AutocompleteSnippetType.Diff) {
+          return snippet.content;
+        }
+
+        return `+++++ ${relativePaths[i]}\n${snippet.content}`;
+      })
       .join("\n\n");
+
     return [
       `${otherFiles}\n\n+++++ ${
         relativePaths[relativePaths.length - 1]
@@ -328,7 +335,7 @@ function hypothenuse(a, b) {
 };
 
 export function getTemplateForModel(model: string): AutocompleteTemplate {
-  const lowerCaseModel = model.toLowerCase();
+  const lowerCaseModel = "codestral";
 
   // if (lowerCaseModel.includes("starcoder2")) {
   //   return starcoder2FimTemplate;
