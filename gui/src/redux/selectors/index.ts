@@ -2,7 +2,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import { ComboBoxItemType } from "../../components/mainInput/types";
 import { RootState } from "../store";
 
-export const selectSlashCommands = createSelector(
+export const selectSlashCommandComboBoxInputs = createSelector(
   [(store: RootState) => store.state.config.slashCommands],
   (slashCommands) => {
     return (
@@ -17,6 +17,13 @@ export const selectSlashCommands = createSelector(
   },
 );
 
+export const selectSlashCommands = createSelector(
+  [(store: RootState) => store.state.config.slashCommands],
+  (slashCommands) => {
+    return slashCommands || [];
+  },
+);
+
 export const selectContextProviderDescriptions = createSelector(
   [(store: RootState) => store.state.config.contextProviders],
   (providers) => {
@@ -24,7 +31,23 @@ export const selectContextProviderDescriptions = createSelector(
   },
 );
 
+export const selectDefaultContextProviders = createSelector(
+  [(store: RootState) => store.state.config.experimental?.defaultContext],
+  (defaultProviders) => {
+    return defaultProviders ?? [];
+  },
+);
+
 export const selectUseActiveFile = createSelector(
   [(store: RootState) => store.state.config.experimental?.defaultContext],
   (defaultContext) => defaultContext?.includes("activeFile" as any),
+);
+
+export const selectApplyState = createSelector(
+  [(store: RootState) => store.state.applyStates],
+  (applyStates) => {
+    return (
+      applyStates.find((state) => state.streamId === "edit")?.status ?? "closed"
+    );
+  },
 );

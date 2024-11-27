@@ -37,7 +37,7 @@ import {
   vscInputBorderFocus,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
+import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
@@ -131,12 +131,13 @@ const HoverTextDiv = styled.div`
   justify-content: center;
 `;
 
+const IMAGE_RESOLUTION = 1024;
 function getDataUrlForFile(
   file: File,
   img: HTMLImageElement,
 ): string | undefined {
-  const targetWidth = 512;
-  const targetHeight = 512;
+  const targetWidth = IMAGE_RESOLUTION;
+  const targetHeight = IMAGE_RESOLUTION;
   const scaleFactor = Math.min(
     targetWidth / img.width,
     targetHeight / img.height,
@@ -177,7 +178,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
-  const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
+  const { getSubmenuContextItems } = useSubmenuContextProviders();
 
   const historyLength = useSelector(
     (store: RootState) => store.state.history.length,
@@ -660,11 +661,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueInput",
     async (data) => {
-      dispatch(clearCodeToEdit());
-
       if (!props.isMainInput) {
         return;
       }
+
+      dispatch(clearCodeToEdit());
+
       if (historyLength > 0) {
         await saveSession();
       }

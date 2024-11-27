@@ -22,9 +22,9 @@ class DiffContextProvider extends BaseContextProvider {
       {
         description: "The current git diff",
         content:
-          diff.trim() === ""
+          diff.length === 0
             ? "Git shows no current changes."
-            : `\`\`\`git diff\n${diff}\n\`\`\``,
+            : `\`\`\`git diff\n${diff.join("\n")}\n\`\`\``,
         name: "Git Diff",
       },
     ];

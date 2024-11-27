@@ -24,6 +24,7 @@ import { RootState } from "../../redux/store";
 import { ContextItemWithId, SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
 import { useSelector } from "react-redux";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -155,21 +156,17 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
+  // The refs are a workaround because rehype options are stored on initiation
+  // So they won't use the most up-to-date state values
+  // So in this case we just put them in refs
   const contextItems = useSelector(
     (state: RootState) =>
       state.state.history[props.itemIndex - 1]?.contextItems,
   );
+  const contextItemsRef = useUpdatingRef(contextItems);
+
   const symbols = useSelector((state: RootState) => state.state.symbols);
-
-  // The refs are a workaround because rehype options are stored on initiation
-  // So they won't use the most up-to-date state values
-  // So in this case we just put them in refs
   const symbolsRef = useRef<SymbolWithRange[]>([]);
-  const contextItemsRef = useRef<ContextItemWithId[]>([]);
-
-  useEffect(() => {
-    contextItemsRef.current = contextItems || [];
-  }, [contextItems]);
   useEffect(() => {
     // Note, before I was only looking for symbols that matched
     // Context item files on current history item

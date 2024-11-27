@@ -21,6 +21,7 @@ import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectA
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import StepContainer from "../../components/StepContainer";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
+import { selectApplyState } from "../../redux/selectors";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "codebase",
@@ -59,11 +60,7 @@ export default function Edit() {
     (state: RootState) => state.state.applyStates,
   );
 
-  const applyState = useSelector(
-    (store: RootState) =>
-      store.state.applyStates.find((state) => state.streamId === "edit")
-        ?.status ?? "closed",
-  );
+  const applyState = useSelector(selectApplyState);
 
   const isSingleRangeEdit =
     editModeState.codeToEdit.length === 0 ||
@@ -82,8 +79,6 @@ export default function Edit() {
       dispatch(setEditDone());
     }
   }, [applyState, editModeState.editStatus]);
-
-  // const active = useSelector((state: RootState) => state.state.active);
 
   const pendingApplyStates = applyStates.filter(
     (state) => state.status === "done",
