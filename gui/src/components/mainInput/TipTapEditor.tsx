@@ -131,9 +131,10 @@ const HoverTextDiv = styled.div`
   justify-content: center;
 `;
 
+const IMAGE_RESOLUTION = 1024;
 function getDataUrlForFile(file: File, img): string {
-  const targetWidth = 512;
-  const targetHeight = 512;
+  const targetWidth = IMAGE_RESOLUTION;
+  const targetHeight = IMAGE_RESOLUTION;
   const scaleFactor = Math.min(
     targetWidth / img.width,
     targetHeight / img.height,
@@ -647,11 +648,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueInput",
     async (data) => {
-      dispatch(clearCodeToEdit());
-
       if (!props.isMainInput) {
         return;
       }
+
+      dispatch(clearCodeToEdit());
+
       if (historyLength > 0) {
         await saveSession();
       }
