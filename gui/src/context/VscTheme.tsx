@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { parseHexColor } from "../components";
-import { useWebviewListener } from "./useWebviewListener";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 
 const hljsToTextMate: Record<string, string[]> = {
   ".hljs-comment": ["comment"],
@@ -149,9 +149,24 @@ function fallbackTheme() {
       };
 }
 
-export function useVscTheme() {
-  const [theme, setTheme] = useState<any>(
-    constructTheme(window.fullColorTheme || {}),
+interface VscThemeContextType {
+  theme: Record<string, string>;
+}
+
+const initialVscThemeContext: VscThemeContextType = {
+  theme: constructTheme(window.fullColorTheme || {}),
+};
+export const VscThemeContext = createContext<VscThemeContextType>(
+  initialVscThemeContext,
+);
+
+export const VscThemeProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const [theme, setTheme] = useState<Record<string, string>>(
+    initialVscThemeContext.theme,
   );
 
   useWebviewListener("setTheme", async (data) => {
@@ -159,5 +174,11 @@ export function useVscTheme() {
     setTheme(constructTheme(data.theme));
   });
 
-  return theme;
-}
+  return (
+    <VscThemeContext.Provider value={{ theme }}>
+      {children}
+    </VscThemeContext.Provider>
+  );
+};
+
+export const useVscTheme = () => useContext(VscThemeContext);

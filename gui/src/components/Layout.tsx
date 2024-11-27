@@ -75,28 +75,6 @@ const Layout = () => {
     (state: RootState) => state.uiState.showDialog,
   );
 
-  const timeline = useSelector((state: RootState) => state.state.history);
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
-        const selection = window.getSelection()?.toString();
-        if (selection) {
-          // Copy to clipboard
-          setTimeout(() => {
-            navigator.clipboard.writeText(selection);
-          }, 100);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [timeline]);
-
   useWebviewListener(
     "openDialogMessage",
     async (message) => {
@@ -211,14 +189,42 @@ const Layout = () => {
     [navigate],
   );
 
-  useWebviewListener("setEditStatus", async ({ status, fileAfterEdit }) => {
-    dispatch(setEditStatus({ status, fileAfterEdit }));
-  });
+  useWebviewListener(
+    "setEditStatus",
+    async ({ status, fileAfterEdit }) => {
+      dispatch(setEditStatus({ status, fileAfterEdit }));
+    },
+    [],
+  );
 
-  useWebviewListener("exitEditMode", async () => {
-    dispatch(setEditDone());
-    navigate("/");
-  });
+  useWebviewListener(
+    "exitEditMode",
+    async () => {
+      dispatch(setEditDone());
+      navigate("/");
+    },
+    [navigate],
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
+        const selection = window.getSelection()?.toString();
+        if (selection) {
+          // Copy to clipboard
+          setTimeout(() => {
+            navigator.clipboard.writeText(selection);
+          }, 100);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (

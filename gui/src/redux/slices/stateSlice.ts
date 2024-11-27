@@ -370,10 +370,7 @@ export const stateSlice = createSlice({
       };
     },
     setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
-      return {
-        ...state,
-        selectedProfileId: payload,
-      };
+      state.selectedProfileId = payload;
     },
     setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
       state.curCheckpointIndex = payload;
