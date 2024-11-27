@@ -24,13 +24,21 @@ export const editModeStateSlice = createSlice({
   name: "editModeState",
   initialState,
   reducers: {
-    addCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      const entryExists = state.codeToEdit.some((entry) =>
-        isCodeToEditEqual(entry, payload),
+    addCodeToEdit: (
+      state,
+      { payload }: PayloadAction<CodeToEdit | CodeToEdit[]>,
+    ) => {
+      const entries = Array.isArray(payload) ? payload : [payload];
+
+      const newEntries = entries.filter(
+        (entry) =>
+          !state.codeToEdit.some((existingEntry) =>
+            isCodeToEditEqual(existingEntry, entry),
+          ),
       );
 
-      if (!entryExists) {
-        state.codeToEdit.push(payload);
+      if (newEntries.length > 0) {
+        state.codeToEdit.push(...newEntries);
       }
     },
     focusEdit: (state) => {

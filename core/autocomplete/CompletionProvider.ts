@@ -252,7 +252,7 @@ export class CompletionProvider {
       //////////
 
       // Save to cache
-      if (!outcome.cacheHit) {
+      if (!outcome.cacheHit && helper.options.useCache) {
         (await this.autocompleteCache).put(outcome.prefix, outcome.completion);
       }
 
