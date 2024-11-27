@@ -1,12 +1,12 @@
 import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/images";
-import { CopyIconButton } from "../gui/CopyIconButton";
-import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { ChatHistoryItem } from "core";
-import FeedbackButtons from "./FeedbackButtons";
+import { CopyIconButton } from "../gui/CopyIconButton";
+import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import EditActions from "./EditActions";
+import FeedbackButtons from "./FeedbackButtons";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -35,7 +35,7 @@ export default function ResponseActions({
   }
 
   return (
-    <div className="mx-2 mb-2 flex h-7 cursor-default items-center justify-end space-x-1 pb-0 text-xs text-gray-400">
+    <div className="mx-2 flex cursor-default items-center justify-end space-x-1 pb-0 text-xs text-gray-400">
       {isTruncated && (
         <HeaderButtonWithToolTip
           tabIndex={-1}
