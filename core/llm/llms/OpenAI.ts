@@ -130,10 +130,7 @@ class OpenAI extends BaseLLM {
       finalOptions.max_completion_tokens = options.maxTokens;
       finalOptions.max_tokens = undefined;
 
-      // b) don't support streaming currently
-      finalOptions.stream = false;
-
-      // c) don't support system message
+      // b) don't support system message
       finalOptions.messages = finalOptions.messages?.filter(
         (message: any) => message?.role !== "system",
       );
@@ -229,7 +226,7 @@ class OpenAI extends BaseLLM {
         ...args,
         stream: true,
       }),
-      signal
+      signal,
     });
 
     for await (const value of streamSse(response)) {
@@ -274,7 +271,7 @@ class OpenAI extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify(body),
-      signal
+      signal,
     });
 
     // Handle non-streaming response
@@ -318,7 +315,7 @@ class OpenAI extends BaseLLM {
         "x-api-key": this.apiKey ?? "",
         Authorization: `Bearer ${this.apiKey}`,
       },
-      signal
+      signal,
     });
     for await (const chunk of streamSse(resp)) {
       yield chunk.choices[0].delta.content;
