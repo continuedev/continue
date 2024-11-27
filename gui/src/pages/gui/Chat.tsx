@@ -16,7 +16,7 @@ import {
   useState,
 } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   Button,
@@ -39,18 +39,16 @@ import useChatHandler from "../../hooks/useChatHandler";
 import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   clearLastEmptyResponse,
   newSession,
   setInactive,
-} from "../../redux/slices/stateSlice";
+} from "../../redux/slices/sessionSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
   setShowDialog,
-} from "../../redux/slices/uiStateSlice";
-import { RootState } from "../../redux/store";
+} from "../../redux/slices/uiSlice";
 import {
   getFontSize,
   getMetaKeyLabel,
@@ -61,6 +59,8 @@ import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import { useFindWidget } from "../../components/find/FindWidget";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { useAppSelector } from "../../redux/hooks";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -124,14 +124,17 @@ export function Chat() {
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const defaultModel = useSelector(defaultModelSelector);
-  const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
-  const active = useSelector((state: RootState) => state.state.active);
+  const defaultModel = useAppSelector(selectDefaultModel);
+  const ttsActive = useAppSelector((state) => state.ui.ttsActive);
+  const active = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
-  const state = useSelector((state: RootState) => state.state);
+  const sessionState = useAppSelector((state) => state.session);
+  const showChatScrollbar = useAppSelector(
+    (state) => state.config.config.ui?.showChatScrollbar,
+  );
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
@@ -289,7 +292,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [state.history, defaultModel, state, streamResponse],
+    [sessionState.messages, defaultModel, sessionState, streamResponse],
   );
 
   useWebviewListener(
@@ -303,26 +306,25 @@ export function Chat() {
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
-      return !state.history
+      return !sessionState.messages
         .slice(index + 1)
         .some((entry) => entry.message.role === "user");
     },
-    [state.history],
+    [sessionState.messages],
   );
 
-  const showScrollbar =
-    state.config.ui?.showChatScrollbar || window.innerHeight > 5000;
+  const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
 
   return (
     <>
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${sessionState.messages.length > 0 ? "flex-1" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}
-        {state.history.map((item, index: number) => (
+        {sessionState.messages.map((item, index: number) => (
           <Fragment key={item.message.id}>
             <ErrorBoundary
               FallbackComponent={fallbackRender}
@@ -368,7 +370,7 @@ export function Chat() {
                   >
                     <StepContainer
                       index={index}
-                      isLast={index === state.history.length - 1}
+                      isLast={index === sessionState.messages.length - 1}
                       item={item}
                     />
                   </TimelineItem>
@@ -421,7 +423,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {state.history.length === 0 && getLastSessionId() ? (
+              {sessionState.messages.length === 0 && getLastSessionId() ? (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
@@ -440,7 +442,7 @@ export function Chat() {
             <ConfigErrorIndicator />
           </div>
 
-          {state.history.length === 0 && (
+          {sessionState.messages.length === 0 && (
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
@@ -458,7 +460,7 @@ export function Chat() {
         </div>
       </div>
       <div
-        className={`${state.history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
+        className={`${sessionState.messages.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
       >
         <ChatIndexingPeeks />
       </div>

@@ -1,13 +1,14 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import miscReducer from "./slices/miscSlice";
-import stateReducer from "./slices/stateSlice";
-import uiStateReducer from "./slices/uiStateSlice";
-
+import sessionReducer from "./slices/sessionSlice";
+import uiReducer from "./slices/uiSlice";
 import { persistReducer, persistStore } from "redux-persist";
 import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
 import editModeStateReducer from "./slices/editModeState";
+import configReducer from "./slices/configSlice";
+import indexingReducer from "./slices/indexingSlice";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -15,22 +16,34 @@ export interface ChatMessage {
 }
 
 const rootReducer = combineReducers({
-  state: stateReducer,
+  session: sessionReducer,
   misc: miscReducer,
-  uiState: uiStateReducer,
+  ui: uiReducer,
   editModeState: editModeStateReducer,
+  config: configReducer,
+  indexing: indexingReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
+export type AppDispatch = typeof store.dispatch;
 
 const saveSubsetFilters = [
-  createFilter("state", ["history", "sessionId", "defaultModelTitle"]),
+  createFilter("state", ["messages", "sessionId", "defaultModelTitle"]),
 ];
+
+const loadSubsetFilter = createFilter("state", null, [
+  "session",
+  "misc",
+  "ui",
+  "editModeState",
+  "config",
+  "indexing"
+]);
 
 const persistConfig = {
   key: "root",
   storage,
-  transforms: [...saveSubsetFilters],
+  transforms: [...saveSubsetFilters, loadSubsetFilter],
   stateReconciler: autoMergeLevel2,
 };
 

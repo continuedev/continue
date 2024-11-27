@@ -1,28 +1,26 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { useCallback, useContext, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import {
   addContextItemsAtIndex,
-  setConfig,
-  setConfigError,
   setInactive,
   setSelectedProfileId,
-  setTTSActive,
-  updateDocsSuggestions,
-  updateIndexingStatus,
-} from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
+} from "../redux/slices/sessionSlice";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import { useAppSelector } from "../redux/hooks";
+import { setConfig, setConfigError } from "../redux/slices/configSlice";
+import { updateIndexingStatus } from "../redux/slices/indexingSlice";
+import { updateDocsSuggestions } from "../redux/slices/miscSlice";
+import { setTTSActive } from "../redux/slices/uiSlice";
 
 function useSetup(dispatch: Dispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const history = useSelector((store: RootState) => store.state.history);
+  const history = useAppSelector((store) => store.session.messages);
 
   const initialConfigLoad = useRef(false);
   const loadConfig = useCallback(async () => {
@@ -70,8 +68,9 @@ function useSetup(dispatch: Dispatch) {
   });
 
   // Load symbols for chat on any session change
-  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const sessionId = useAppSelector((store) => store.session.id);
   const sessionIdRef = useRef("");
+
   useEffect(() => {
     if (sessionIdRef.current !== sessionId) {
       updateFileSymbolsFromContextItems(
@@ -120,8 +119,8 @@ function useSetup(dispatch: Dispatch) {
 
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
 
-  const defaultModelTitle = useSelector(
-    (store: RootState) => store.state.defaultModelTitle,
+  const defaultModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
   );
 
   // IDE event listeners

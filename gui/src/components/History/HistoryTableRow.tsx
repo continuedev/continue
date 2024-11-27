@@ -1,12 +1,12 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
 import React, { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
 import useHistory from "../../hooks/useHistory";
-import { RootState } from "../../redux/store";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { useAppSelector } from "../../redux/hooks";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -32,9 +32,7 @@ export function HistoryTableRow({
   const [sessionTitleEditValue, setSessionTitleEditValue] = useState(
     sessionMetadata.title,
   );
-  const currentSessionId = useSelector(
-    (state: RootState) => state.state.sessionId,
-  );
+  const currentSessionId = useAppSelector((state) => state.session.id);
 
   const { saveSession, deleteSession, loadSession, getSession, updateSession } =
     useHistory(dispatch);

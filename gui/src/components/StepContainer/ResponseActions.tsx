@@ -2,11 +2,10 @@ import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { stripImages } from "core/llm/images";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
 import { ChatHistoryItem } from "core";
 import FeedbackButtons from "./FeedbackButtons";
 import EditActions from "./EditActions";
+import { useAppSelector } from "../../redux/hooks";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -23,8 +22,8 @@ export default function ResponseActions({
   isTruncated,
   onDelete,
 }: ResponseActionsProps) {
-  const isInEditMode = useSelector(
-    (store: RootState) => store.editModeState.isInEditMode,
+  const isInEditMode = useAppSelector(
+    (store) => store.editModeState.isInEditMode,
   );
 
   // Only render delete button if there is more than one message

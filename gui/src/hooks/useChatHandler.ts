@@ -15,12 +15,10 @@ import { stripImages } from "core/llm/images";
 import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
 } from "../components/mainInput/resolveInput";
 import { IIdeMessenger } from "../context/IdeMessenger";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   abortStream,
   addPromptCompletionPair,
@@ -32,29 +30,26 @@ import {
   setIsGatheringContext,
   setMessageAtIndex,
   streamUpdate,
-} from "../redux/slices/stateSlice";
-import { resetNextCodeBlockToApplyIndex } from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
+} from "../redux/slices/sessionSlice";
+import { resetNextCodeBlockToApplyIndex } from "../redux/slices/sessionSlice";
 import useHistory from "./useHistory";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import { useAppSelector } from "../redux/hooks";
+import { selectDefaultModel } from "../redux/slices/configSlice";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
 
-  const defaultModel = useSelector(defaultModelSelector);
-  const defaultContextProviders = useSelector(
-    (store: RootState) => store.state.config.experimental?.defaultContext ?? [],
+  const defaultModel = useAppSelector(selectDefaultModel);
+  const defaultContextProviders = useAppSelector(
+    (store) => store.config.config.experimental?.defaultContext ?? [],
   );
-
-  const slashCommands = useSelector(
-    (store: RootState) => store.state.config.slashCommands || [],
+  const slashCommands = useAppSelector(
+    (store) => store.config.config.slashCommands || [],
   );
-
-  const history = useSelector((store: RootState) => store.state.history);
-  const active = useSelector((store: RootState) => store.state.active);
-  const streamAborter = useSelector(
-    (store: RootState) => store.state.streamAborter,
-  );
+  const history = useAppSelector((store) => store.session.messages);
+  const active = useAppSelector((store) => store.session.isStreaming);
+  const streamAborter = useAppSelector((store) => store.session.streamAborter);
   const activeRef = useRef(active);
 
   const { saveSession } = useHistory(dispatch);
@@ -195,12 +190,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
 
       if (shouldGatherContext) {
-        dispatch(
-          setIsGatheringContext({
-            isGathering: true,
-            gatheringMessage: "Gathering Context",
-          }),
-        );
+        dispatch(setIsGatheringContext(true));
       }
 
       // Resolve context providers and construct new history
@@ -273,6 +263,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         message,
         contextItems: selectedContextItems,
         editorState,
+        mode: "chat",
+        isBeforeCheckpoint: false,
+        checkpoint: {},
+        isGatheringContext: false,
       };
 
       let newHistory: ChatHistoryItem[] = [

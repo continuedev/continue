@@ -11,7 +11,7 @@ import {
   vscForeground,
 } from "..";
 import { useDispatch } from "react-redux";
-import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { setShowDialog } from "../../redux/slices/uiSlice";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 interface TextDialogProps {

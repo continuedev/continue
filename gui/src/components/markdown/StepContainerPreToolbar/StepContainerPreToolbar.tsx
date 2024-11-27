@@ -1,20 +1,20 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
 import styled, { css, keyframes } from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
 import { childrenToText } from "../utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
-import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import { selectApplyStateBySessionId } from "../../../redux/slices/sessionSlice";
 
 const fadeInAnimation = keyframes`
   from {
@@ -68,22 +68,20 @@ export default function StepContainerPreToolbar(
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
-  const isInEditMode = useSelector(
-    (state: RootState) => state.editModeState.isInEditMode,
+  const isInEditMode = useAppSelector(
+    (state) => state.editModeState.isInEditMode,
   );
-  const active = useSelector((state: RootState) => state.state.active);
+  const active = useAppSelector((state) => state.session.isStreaming);
   const [isExpanded, setIsExpanded] = useState(isInEditMode ? false : true);
   const [codeBlockContent, setCodeBlockContent] = useState("");
-  const isChatActive = useSelector((state: RootState) => state.state.active);
+  const isChatActive = useAppSelector((state) => state.session.isStreaming);
 
-  const nextCodeBlockIndex = useSelector(
-    (state: RootState) => state.state.nextCodeBlockToApplyIndex,
+  const nextCodeBlockIndex = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.curIndex,
   );
 
-  const applyState = useSelector((store: RootState) =>
-    store.state.applyStates.find(
-      (state) => state.streamId === streamIdRef.current,
-    ),
+  const applyState = useAppSelector((state) =>
+    selectApplyStateBySessionId(state, streamIdRef.current),
   );
 
   // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
@@ -98,7 +96,8 @@ export default function StepContainerPreToolbar(
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
 
-  const defaultModel = useSelector(defaultModelSelector);
+  const defaultModel = useAppSelector(selectDefaultModel);
+
   function onClickApply() {
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,

@@ -5,10 +5,11 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommands } from "../../redux/selectors";
-import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
+import { newSession, setMessageAtIndex } from "../../redux/slices/sessionSlice";
 import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
+import { useAppSelector } from "../../redux/hooks";
 
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
@@ -63,10 +64,10 @@ const GradientBorder = styled.div<{
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
-  const active = useSelector((store: RootState) => store.state.active);
-  const availableSlashCommands = useSelector(selectSlashCommands);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
+  const active = useAppSelector((store) => store.session.isStreaming);
+  const availableSlashCommands = useAppSelector(selectSlashCommands);
+  const availableContextProviders = useAppSelector(
+    (store) => store.config.config.contextProviders,
   );
 
   useWebviewListener(

@@ -1,19 +1,16 @@
 import { useContext } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { removeCodeToEdit } from "../../redux/slices/editModeState";
-import { RootState } from "../../redux/store";
 import CodeToEditListItem from "./CodeToEditListItem";
 
 import { CodeToEdit, RangeInFileWithContents } from "core";
 import AddFileButton from "./AddFileButton";
+import { useAppSelector } from "../../redux/hooks";
 
 export default function WorkingSet() {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const codeToEdit = useSelector(
-    (state: RootState) => state.editModeState.codeToEdit,
-  );
+  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
 
   const title =
     codeToEdit.length === 0
@@ -63,4 +60,7 @@ export default function WorkingSet() {
       )}
     </div>
   );
+}
+function removeCodeToEdit(rif: RangeInFileWithContents): any {
+  throw new Error("Function not implemented.");
 }

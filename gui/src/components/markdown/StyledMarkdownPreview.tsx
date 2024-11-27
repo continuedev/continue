@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -20,10 +20,9 @@ import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { RootState } from "../../redux/store";
 import { ContextItemWithId, SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../../redux/hooks";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -155,11 +154,10 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
-  const contextItems = useSelector(
-    (state: RootState) =>
-      state.state.history[props.itemIndex - 1]?.contextItems,
+  const contextItems = useAppSelector(
+    (state) => state.session.messages[props.itemIndex - 1]?.contextItems,
   );
-  const symbols = useSelector((state: RootState) => state.state.symbols);
+  const symbols = useAppSelector((state) => state.session.symbols);
 
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
@@ -170,6 +168,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   useEffect(() => {
     contextItemsRef.current = contextItems || [];
   }, [contextItems]);
+
   useEffect(() => {
     // Note, before I was only looking for symbols that matched
     // Context item files on current history item

@@ -1,5 +1,4 @@
 import { ContextSubmenuItem } from "core";
-import { WebviewMessengerResult } from "core/protocol/util";
 import {
   deduplicateArray,
   getBasename,
@@ -8,12 +7,10 @@ import {
 } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { getLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
-import { RootState } from "../redux/store";
+import { useAppSelector } from "../redux/hooks";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -30,7 +27,7 @@ function useSubmenuContextProviders() {
     [id: string]: ContextSubmenuItem[];
   }>({});
 
-  const contextProviderDescriptions = useSelector(
+  const contextProviderDescriptions = useAppSelector(
     selectContextProviderDescriptions,
   );
 
@@ -39,7 +36,7 @@ function useSubmenuContextProviders() {
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
 
-  const config = useSelector((store: RootState) => store.state.config);
+  const config = useAppSelector((store) => store.config.config);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -239,7 +236,7 @@ function useSubmenuContextProviders() {
                 {
                   title: description.title,
                 },
-              )
+              );
 
               if (result.status === "error") {
                 console.error(

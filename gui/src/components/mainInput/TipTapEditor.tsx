@@ -24,7 +24,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { v4 } from "uuid";
 import {
@@ -44,10 +44,7 @@ import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { addCodeToEdit } from "../../redux/slices/editModeState";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
-import { RootState } from "../../redux/store";
+import { setShouldAddFileForEditing } from "../../redux/slices/uiSlice";
 import {
   getFontSize,
   isJetBrains,
@@ -68,6 +65,9 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
+import { useAppSelector } from "../../redux/hooks";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { addCodeToEdit } from "../../redux/slices/sessionSlice";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -170,11 +170,11 @@ function TipTapEditor(props: TipTapEditorProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
 
-  const historyLength = useSelector(
-    (store: RootState) => store.state.history.length,
+  const historyLength = useAppSelector(
+    (store) => store.session.messages.length,
   );
 
-  const useActiveFile = useSelector(selectUseActiveFile);
+  const useActiveFile = useAppSelector(selectUseActiveFile);
 
   const { saveSession, loadSession } = useHistory(dispatch);
 
@@ -187,12 +187,12 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const isOSREnabled = useIsOSREnabled();
 
-  const isInEditMode = useSelector(
-    (state: RootState) => state.editModeState.isInEditMode,
+  const isInEditMode = useAppSelector(
+    (state) => state.editModeState.isInEditMode,
   );
 
-  const shouldAddFileForEditing = useSelector(
-    (state: RootState) => state.uiState.shouldAddFileForEditing,
+  const shouldAddFileForEditing = useAppSelector(
+    (state) => state.ui.shouldAddFileForEditing,
   );
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
@@ -236,7 +236,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     inDropdownRef.current = true;
   };
 
-  const defaultModel = useSelector(defaultModelSelector);
+  const defaultModel = useAppSelector(selectDefaultModel);
   const defaultModelRef = useUpdatingRef(defaultModel);
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
@@ -249,7 +249,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     props.availableSlashCommands,
   );
 
-  const active = useSelector((state: RootState) => state.state.active);
+  const active = useAppSelector((state) => state.session.isStreaming);
   const activeRef = useUpdatingRef(active);
 
   // Only set `hasDefaultModel` after a timeout to prevent jank
@@ -307,8 +307,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     return undefined;
   }
 
-  const mainEditorContent = useSelector(
-    (store: RootState) => store.state.mainEditorContent,
+  const mainEditorContent = useAppSelector(
+    (store) => store.session.mainEditorContent,
   );
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);

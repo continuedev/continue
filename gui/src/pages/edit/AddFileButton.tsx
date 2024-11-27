@@ -1,10 +1,10 @@
-import { useContext, useState, useRef, useEffect } from "react";
+import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiStateSlice";
+import { setShouldAddFileForEditing } from "../../redux/slices/uiSlice";
 import { useDispatch } from "react-redux";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { addCodeToEdit } from "../../redux/slices/editModeState";
 import { Listbox } from "@headlessui/react";
+import { addCodeToEdit } from "../../redux/slices/sessionSlice";
 
 export default function AddFileButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);

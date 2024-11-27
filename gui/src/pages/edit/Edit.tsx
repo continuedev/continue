@@ -3,24 +3,24 @@ import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers, RangeInFileWithContents } from "core";
 import { stripImages } from "core/llm/images";
 import { useCallback, useContext, useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import TipTapEditor from "../../components/mainInput/TipTapEditor";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import {
-  clearCodeToEdit,
-  setEditDone,
-  submitEdit,
-} from "../../redux/slices/editModeState";
-import { RootState } from "../../redux/store";
-import CodeToEdit from "./CodeToEdit";
+import { setEditDone, submitEdit } from "../../redux/slices/editModeState";
 import useChatHandler from "../../hooks/useChatHandler";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import StepContainer from "../../components/StepContainer";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
+import { useAppSelector } from "../../redux/hooks";
+import {
+  clearCodeToEdit,
+  selectApplyStateBySessionId,
+} from "../../redux/slices/sessionSlice";
+import CodeToEdit from "./CodeToEdit";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "codebase",
@@ -39,27 +39,25 @@ export default function Edit() {
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
-  const editModeState = useSelector((state: RootState) => state.editModeState);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
+  const editModeState = useAppSelector((state) => state.editModeState);
+  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
+  const availableContextProviders = useAppSelector(
+    (store) => store.config.config.contextProviders,
   );
 
-  const history = useSelector((state: RootState) => state.state.history);
+  const history = useAppSelector((state) => state.session.messages);
 
-  const applyStates = useSelector(
-    (state: RootState) => state.state.applyStates,
+  const applyStates = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.states,
   );
 
-  const applyState = useSelector(
-    (store: RootState) =>
-      store.state.applyStates.find((state) => state.streamId === "edit")
-        ?.status ?? "closed",
+  const applyState = useAppSelector(
+    (state) => selectApplyStateBySessionId(state, "edit")?.status ?? "closed",
   );
 
   const isSingleRangeEdit =
-    editModeState.codeToEdit.length === 0 ||
-    (editModeState.codeToEdit.length === 1 &&
-      "range" in editModeState.codeToEdit[0]);
+    codeToEdit.length === 0 ||
+    (codeToEdit.length === 1 && "range" in codeToEdit[0]);
 
   useEffect(() => {
     if (editModeState.editStatus === "done") {
@@ -74,7 +72,7 @@ export default function Edit() {
     }
   }, [applyState, editModeState.editStatus]);
 
-  // const active = useSelector((state: RootState) => state.state.active);
+  // const active = useAppSelector((state) => state.session.isStreaming);
 
   const pendingApplyStates = applyStates.filter(
     (state) => state.status === "done",
@@ -121,7 +119,7 @@ export default function Edit() {
 
     ideMessenger.post("edit/sendPrompt", {
       prompt,
-      range: editModeState.codeToEdit[0] as RangeInFileWithContents,
+      range: codeToEdit[0] as RangeInFileWithContents,
     });
 
     dispatch(submitEdit(prompt));
@@ -136,7 +134,7 @@ export default function Edit() {
     if (isSingleRangeEdit) {
       handleSingleRangeEdit(editorState, modifiers, editor);
     } else {
-      const promptPreamble = getMultifileEditPrompt(editModeState.codeToEdit);
+      const promptPreamble = getMultifileEditPrompt(codeToEdit);
 
       streamResponse(
         editorState,

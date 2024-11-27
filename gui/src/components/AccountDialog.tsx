@@ -12,9 +12,9 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../context/Auth";
-import { setSelectedProfileId } from "../redux/slices/stateSlice";
+import { setSelectedProfileId } from "../redux/slices/sessionSlice";
 import { useDispatch } from "react-redux";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { NewSessionButton } from "./mainInput/NewSessionButton";
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`

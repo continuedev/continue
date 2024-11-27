@@ -6,11 +6,11 @@ import {
 import { useNavigate } from "react-router-dom";
 import { vscBackground } from "../../components";
 import { ROUTES } from "../../util/navigation";
-import { useConfigError } from "../../redux/hooks";
+import { useAppSelector } from "../../redux/hooks";
 
 export default function ConfigErrorPage() {
   const navigate = useNavigate();
-  const configError = useConfigError();
+  const configError = useAppSelector((state) => state.config.configError);
 
   const sortedErrors = configError
     ? [...configError].sort((a, b) => (b.fatal ? 1 : 0) - (a.fatal ? 1 : 0))

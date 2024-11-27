@@ -8,12 +8,12 @@ import { useContext, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import { hasPassedFTL } from "../../../util/freeTrial";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import OllamaModelDownload from "../components/OllamaModelDownload";
 import { OllamaStatus } from "../components/OllamaStatus";
 import { useSubmitOnboarding } from "../hooks";
+import { setDefaultModel } from "../../../redux/slices/configSlice";
 
 const OLLAMA_CHECK_INTERVAL_MS = 3000;
 

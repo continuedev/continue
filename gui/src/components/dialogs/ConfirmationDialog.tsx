@@ -1,10 +1,7 @@
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { Button, lightGray, SecondaryButton } from "..";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 
 const GridDiv = styled.div`
   display: grid;

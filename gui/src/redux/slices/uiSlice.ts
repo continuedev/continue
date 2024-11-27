@@ -4,23 +4,27 @@ import {
   OnboardingCardState,
 } from "../../components/OnboardingCard";
 
-type UiState = {
+type UIState = {
   showDialog: boolean;
   dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
   onboardingCard: OnboardingCardState;
   shouldAddFileForEditing: boolean;
+  ttsActive: boolean;
 };
 
-export const uiStateSlice = createSlice({
+const initialState: UIState = {
+  showDialog: false,
+  ttsActive: false,
+  dialogMessage: "",
+  dialogEntryOn: false,
+  onboardingCard: defaultOnboardingCardState,
+  shouldAddFileForEditing: false,
+};
+
+export const uiSlice = createSlice({
   name: "uiState",
-  initialState: {
-    showDialog: false,
-    dialogMessage: "",
-    dialogEntryOn: false,
-    onboardingCard: defaultOnboardingCardState,
-    shouldAddFileForEditing: false,
-  } as UiState,
+  initialState,
   reducers: {
     setOnboardingCard: (
       state,
@@ -30,24 +34,27 @@ export const uiStateSlice = createSlice({
     },
     setDialogMessage: (
       state,
-      action: PayloadAction<UiState["dialogMessage"]>,
+      action: PayloadAction<UIState["dialogMessage"]>,
     ) => {
       state.dialogMessage = action.payload;
     },
     setDialogEntryOn: (
       state,
-      action: PayloadAction<UiState["dialogEntryOn"]>,
+      action: PayloadAction<UIState["dialogEntryOn"]>,
     ) => {
       state.dialogEntryOn = action.payload;
     },
-    setShowDialog: (state, action: PayloadAction<UiState["showDialog"]>) => {
+    setShowDialog: (state, action: PayloadAction<UIState["showDialog"]>) => {
       state.showDialog = action.payload;
     },
     setShouldAddFileForEditing: (
       state,
-      action: PayloadAction<UiState["shouldAddFileForEditing"]>,
+      action: PayloadAction<UIState["shouldAddFileForEditing"]>,
     ) => {
       state.shouldAddFileForEditing = action.payload;
+    },
+    setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
+      state.ttsActive = payload;
     },
   },
 });
@@ -58,6 +65,7 @@ export const {
   setDialogEntryOn,
   setShowDialog,
   setShouldAddFileForEditing,
-} = uiStateSlice.actions;
+  setTTSActive,
+} = uiSlice.actions;
 
-export default uiStateSlice.reducer;
+export default uiSlice.reducer;

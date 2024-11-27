@@ -9,8 +9,8 @@ import SafeImg from "../SafeImg";
 import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getIconFromDropdownItem } from "./MentionList";
 import { getBasename } from "core/util";
-import { RootState } from "../../redux/store";
-import { useSelector } from "react-redux";
+import { useAppSelector } from "../../redux/hooks";
+import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -128,12 +128,7 @@ function ContextItemsPeek({
     (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
   );
 
-  const isGatheringContext = useSelector(
-    (store: RootState) => store.state.context.isGathering,
-  );
-  const gatheringMessage = useSelector(
-    (store: RootState) => store.state.context.gatheringMessage,
-  );
+  const isGatheringContext = useAppSelector(selectIsGatheringContext);
 
   const indicateIsGathering = isCurrentContextPeek && isGatheringContext;
 
@@ -162,7 +157,7 @@ function ContextItemsPeek({
         <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
           {isGatheringContext ? (
             <>
-              {gatheringMessage}
+              Gathering context...
               <AnimatedEllipsis />
             </>
           ) : (

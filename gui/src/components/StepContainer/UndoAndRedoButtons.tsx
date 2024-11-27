@@ -1,26 +1,26 @@
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { useDispatch } from "react-redux";
 import {
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
 } from "@heroicons/react/24/outline";
-import { setCurCheckpointIndex } from "../../redux/slices/stateSlice";
+import { setCurCheckpointIndex } from "../../redux/slices/sessionSlice";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppSelector } from "../../redux/hooks";
 
 export default function UndoAndRedoButtons() {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const checkpoints = useSelector(
-    (store: RootState) => store.state.checkpoints,
+  const checkpoints = useAppSelector(
+    (store) => store.session.messages.at(-1).checkpoint,
   );
 
-  const curCheckpointIndex = useSelector(
-    (store: RootState) => store.state.curCheckpointIndex,
+  const curCheckpointIndex = useAppSelector(
+    (store) => store.session.curCheckpointIndex,
   );
 
-  const shouldRenderRedo = curCheckpointIndex !== checkpoints.length - 1;
+  const shouldRenderRedo = false; // curCheckpointIndex !== checkpoints.length - 1;
 
   async function handleUndoOrRedo(type: "undo" | "redo") {
     const checkpointIndex = Math.max(

@@ -1,14 +1,12 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { Session, SessionMetadata } from "core";
-
 import { stripImages } from "core/llm/images";
 import { useCallback, useContext } from "react";
-import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
-import { newSession, updateSessionTitle } from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
+import { newSession, updateSessionTitle } from "../redux/slices/sessionSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { useAppSelector } from "../redux/hooks";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -20,13 +18,10 @@ function truncateText(text: string, maxLength: number) {
 }
 
 function useHistory(dispatch: Dispatch) {
-  const sessionId = useSelector((store: RootState) => store.state.sessionId);
-  const config = useSelector((store: RootState) => store.state.config);
-  const history = useSelector((store: RootState) => store.state.history);
-  const checkpoints = useSelector(
-    (store: RootState) => store.state.checkpoints,
-  );
-  const title = useSelector((store: RootState) => store.state.title);
+  const sessionId = useAppSelector((store) => store.session.id);
+  const config = useAppSelector((store) => store.config.config);
+  const history = useAppSelector((store) => store.session.messages);
+  const title = useAppSelector((store) => store.session.title);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
 
@@ -92,7 +87,6 @@ function useHistory(dispatch: Dispatch) {
       title: newTitle,
       workspaceDirectory: window.workspacePaths?.[0] || "",
       history,
-      checkpoints,
     };
 
     await ideMessenger.request("history/save", session);

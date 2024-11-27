@@ -5,9 +5,8 @@ import {
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { ChatHistoryItem } from "core";
 import { useState, useContext } from "react";
-import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { RootState } from "../../redux/store";
+import { useAppSelector } from "../../redux/hooks";
 
 export interface FeedbackButtonsProps {
   item: ChatHistoryItem;
@@ -16,7 +15,7 @@ export interface FeedbackButtonsProps {
 export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
   const ideMessenger = useContext(IdeMessengerContext);
-  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const sessionId = useAppSelector((store) => store.session.id);
 
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
