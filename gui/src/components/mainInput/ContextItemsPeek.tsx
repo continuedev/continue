@@ -1,7 +1,7 @@
 import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import FileIcon from "../FileIcon";
@@ -124,9 +124,13 @@ function ContextItemsPeek({
 }: ContextItemsPeekProps) {
   const [open, setOpen] = useState(false);
 
-  const ctxItems = contextItems?.filter(
-    (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
-  );
+  const ctxItems = useMemo(() => {
+    return (
+      contextItems?.filter(
+        (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
+      ) ?? []
+    );
+  }, [contextItems]);
 
   const isGatheringContext = useSelector(
     (store: RootState) => store.state.context.isGathering,

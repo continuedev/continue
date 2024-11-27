@@ -15,7 +15,7 @@ export async function updateFileSymbolsFromContextItems(
       new Set(
         contextItems
           .filter((item) => item.uri?.type === "file" && item?.uri?.value)
-          .map((item) => item.uri.value),
+          .map((item) => item.uri!.value),
       ),
     );
     // And then update symbols for those files

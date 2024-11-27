@@ -56,7 +56,7 @@ const hljsToTextMate: Record<string, string[]> = {
 function constructTheme(
   tmTheme: typeof window.fullColorTheme,
 ): Record<string, string> {
-  const rules = tmTheme["rules"] || [];
+  const rules = tmTheme?.["rules"] || [];
 
   const tokenToForeground = {};
   rules.forEach(({ token, foreground }) => {

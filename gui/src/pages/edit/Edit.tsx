@@ -2,7 +2,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers, RangeInFileWithContents } from "core";
 import { stripImages } from "core/llm/images";
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
@@ -44,6 +44,15 @@ export default function Edit() {
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
   );
+
+  const filteredContextProviders = useMemo(() => {
+    return (
+      availableContextProviders?.filter(
+        (provider) =>
+          !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
+      ) ?? []
+    );
+  }, [availableContextProviders]);
 
   const history = useSelector((state: RootState) => state.state.history);
 
@@ -88,10 +97,6 @@ export default function Edit() {
   };
 
   const hasPendingApplies = pendingApplyStates.length > 0;
-
-  const filteredContextProviders = availableContextProviders.filter(
-    (provider) => !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
-  );
 
   async function handleSingleRangeEdit(
     editorState: JSONContent,

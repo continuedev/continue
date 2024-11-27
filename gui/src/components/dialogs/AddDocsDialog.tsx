@@ -123,21 +123,23 @@ function AddDocsDialog() {
   }
 
   const handleSelectSuggestion = (docsResult: PackageDocsResult) => {
-    if (docsResult.error) {
+    if (docsResult.error || !docsResult.details) {
       setTitle(docsResult.packageInfo.name);
       setStartUrl("");
       urlRef.current?.focus();
       return;
     }
+    const suggestedTitle =
+      docsResult.details.title ?? docsResult.packageInfo.name;
     if (docsResult.details?.docsLinkWarning) {
-      setTitle(docsResult.packageInfo.name);
+      setTitle(suggestedTitle);
       setStartUrl(docsResult.details.docsLink);
       urlRef.current?.focus();
       return;
     }
     const siteIndexingConfig: SiteIndexingConfig = {
       startUrl: docsResult.details.docsLink,
-      title: docsResult.details.title,
+      title: suggestedTitle,
       faviconUrl: undefined,
     };
 
@@ -185,7 +187,7 @@ function AddDocsDialog() {
                 }}
               >
                 <div className="pr-1">
-                  {error || details.docsLinkWarning ? (
+                  {error || details?.docsLinkWarning ? (
                     <div>
                       <PencilIcon
                         data-tooltip-id={id + "-edit"}
@@ -210,7 +212,7 @@ function AddDocsDialog() {
                   <span className="lines lines-1">{name}</span>
                 </div>
                 <div>
-                  {error ? (
+                  {error || !details?.docsLink ? (
                     <span className="text-vsc-foreground-muted italic">
                       No docs link found
                     </span>

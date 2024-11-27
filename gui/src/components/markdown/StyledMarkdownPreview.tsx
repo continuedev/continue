@@ -112,7 +112,7 @@ function getLanuageFromClassName(className: any): string | null {
     .find((word) => word.startsWith(HLJS_LANGUAGE_CLASSNAME_PREFIX))
     ?.split("-")[1];
 
-  return language;
+  return language ?? null;
 }
 
 function getCodeChildrenContent(children: any) {
