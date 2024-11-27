@@ -20,7 +20,7 @@ export function getStopTokens(
 ): string[] {
   const stopTokens = [
     ...(completionOptions?.stop || []),
-    // ...multilineStops,
+    ...multilineStops,
     ...commonStops,
     ...(model.toLowerCase().includes("starcoder2")
       ? STARCODER2_T_ARTIFACTS
