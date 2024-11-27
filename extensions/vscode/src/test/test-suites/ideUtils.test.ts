@@ -77,7 +77,7 @@ describe("IDE Utils", () => {
 
   test("noDiff", async () => {
     const noDiff = await utils.getDiff(false);
-    assert(noDiff === "");
+    assert(noDiff.length === 0);
   });
 
   test.skip("getBranch", async () => {

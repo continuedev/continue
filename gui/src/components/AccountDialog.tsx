@@ -134,12 +134,12 @@ function AccountDialog() {
           ? "Signed in"
           : `Signed in as ${session.account.label}`}
       </p>
-      <NewSessionButton className="border border-solid" onClick={logout}>
-        Sign out
-      </NewSessionButton>
-      <div className="mt-3 flex flex-row">
+      <div className="mt-3 flex flex-row justify-between gap-2">
+        <SecondaryButton className="max-w-20 flex-1" onClick={logout}>
+          Sign out
+        </SecondaryButton>
         <Button
-          className="basis-1/4"
+          className="max-w-20 flex-1"
           onClick={() => {
             dispatch(setDialogMessage(undefined));
             dispatch(setShowDialog(false));

@@ -250,7 +250,7 @@ export class ChromiumInstaller {
 
   private async proposeInstall(site: string) {
     const msg =
-      `Unable to crawl documentation site: ${site}\n` +
+      `Unable to crawl documentation site: "${site}".` +
       "We recommend installing Chromium. " +
       "Download progress can be viewed in the developer console.";
 

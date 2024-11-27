@@ -4,6 +4,10 @@ import { getFontSize, isJetBrains } from "../util";
 export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
 export const VSC_FOREGROUND_VAR = "--vscode-editor-foreground";
+export const VSC_FOREGROUND_MUTED_VAR = "--vscode-foreground-muted";
+export const VSC_DESCRIPTION_FOREGROUND = "--vscode-descriptionForeground";
+export const VSC_INPUT_PLACEHOLDER_FOREGROUND =
+  "--vscode-input-placeholderForeground";
 export const VSC_BUTTON_BACKGROUND_VAR = "--vscode-button-background";
 export const VSC_BUTTON_FOREGROUND_VAR = "--vscode-button-foreground";
 export const VSC_EDITOR_BACKGROUND_VAR = "--vscode-editor-background";
@@ -27,6 +31,9 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
   VSC_BACKGROUND_VAR,
   VSC_FOREGROUND_VAR,
+  VSC_FOREGROUND_MUTED_VAR,
+  VSC_DESCRIPTION_FOREGROUND,
+  VSC_INPUT_PLACEHOLDER_FOREGROUND,
   VSC_BUTTON_BACKGROUND_VAR,
   VSC_BUTTON_FOREGROUND_VAR,
   VSC_EDITOR_BACKGROUND_VAR,
@@ -51,6 +58,9 @@ export const vscInputBackground = `var(${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45
 export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, ${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
 export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
+export const vscForegroundMuted = `var(${VSC_FOREGROUND_MUTED_VAR}, #999)`;
+export const vscDescriptionForeground = `var(${VSC_DESCRIPTION_FOREGROUND}, #999)`;
+export const vscInputPlaceholderForeground = `var(${VSC_INPUT_PLACEHOLDER_FOREGROUND}, #999)`;
 export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
 export const vscButtonForeground = `var(${VSC_BUTTON_FOREGROUND_VAR}, #ffffff)`;
 export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;

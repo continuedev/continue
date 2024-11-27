@@ -51,6 +51,11 @@ module.exports = {
           "var(--vscode-editor-findMatchBackground, rgba(255, 255, 0, 0.6))",
         "vsc-find-match-selected":
           "var(--vscode-editor-findMatchHighlightBackground, rgba(255, 223, 0, 0.8))",
+        "vsc-foreground-muted": "var(--vscode-foreground-muted, #999)",
+        "vsc-description-foreground":
+          "var(--vscode-descriptionForeground, #999)",
+        "vsc-input-placeholder-foreground":
+          "var(--vscode-input-placeholderForeground, #999)",
       },
     },
   },

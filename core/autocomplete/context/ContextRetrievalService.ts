@@ -1,9 +1,12 @@
 import { IDE } from "../..";
+import {
+  AutocompleteCodeSnippet,
+  AutocompleteSnippetType,
+} from "../snippets/types";
 import { HelperVars } from "../util/HelperVars";
-import { RecentlyEditedRange } from "../util/types";
 
 import { ImportDefinitionsService } from "./ImportDefinitionsService";
-import { AutocompleteSnippet, getSymbolsForSnippet } from "./ranking";
+import { getSymbolsForSnippet } from "./ranking";
 import { RootPathContextService } from "./root-path-context/RootPathContextService";
 
 export class ContextRetrievalService {
@@ -18,79 +21,14 @@ export class ContextRetrievalService {
     );
   }
 
-  public async retrieveCandidateSnippets(
+  public async getSnippetsFromImportDefinitions(
     helper: HelperVars,
-    extraSnippets: AutocompleteSnippet[],
-  ) {
-    if (helper.options.useOtherFiles === false) {
-      return [];
-    }
-
-    let snippets: AutocompleteSnippet[] = [];
-
-    // Snippets injected by the IDE for IDE-specific reasons
-    snippets.push(...extraSnippets);
-
-    // If a recently edited range has a line that is a perfect match with the start of the current line
-    snippets.push(...this.getSnippetsFromRecentlyEditedRanges(helper));
-
-    // Import definitions of any symbols in near range of the caret
-    snippets.push(...(await this.getSnippetsFromImportDefinitions(helper)));
-
-    // Root path context https://blog.continue.dev/root-path-context-the-secret-ingredient-in-continues-autocomplete-prompt/
-    if (helper.options.useRootPathContext && helper.treePath) {
-      snippets.push(
-        ...(await this.rootPathContextService.getContextForPath(
-          helper.filepath,
-          helper.treePath,
-        )),
-      );
-    }
-
-    return snippets;
-  }
-
-  private getSnippetsFromRecentlyEditedRanges(
-    helper: HelperVars,
-  ): AutocompleteSnippet[] {
-    if (helper.options.useRecentlyEdited === false) {
-      return [];
-    }
-
-    const currentLinePrefix = helper.prunedPrefix
-      .trim()
-      .split("\n")
-      .slice(-1)[0];
-    if (
-      currentLinePrefix?.length > helper.options.recentLinePrefixMatchMinLength
-    ) {
-      const matchingRange = this.findMatchingRange(
-        helper.input.recentlyEditedRanges,
-        currentLinePrefix,
-      );
-
-      if (matchingRange) {
-        return [
-          {
-            ...matchingRange,
-            contents: matchingRange.lines.join("\n"),
-            score: 0.8,
-          },
-        ];
-      }
-    }
-
-    return [];
-  }
-
-  private async getSnippetsFromImportDefinitions(
-    helper: HelperVars,
-  ): Promise<AutocompleteSnippet[]> {
+  ): Promise<AutocompleteCodeSnippet[]> {
     if (helper.options.useImports === false) {
       return [];
     }
 
-    const importSnippets = [];
+    const importSnippets: AutocompleteCodeSnippet[] = [];
     const fileInfo = this.importDefinitionsService.get(helper.filepath);
     if (fileInfo) {
       const { imports } = fileInfo;
@@ -104,21 +42,32 @@ export class ContextRetrievalService {
       for (const symbol of symbols) {
         const rifs = imports[symbol];
         if (Array.isArray(rifs)) {
-          importSnippets.push(...rifs);
+          const snippets: AutocompleteCodeSnippet[] = rifs.map((rif) => {
+            return {
+              filepath: rif.filepath,
+              content: rif.contents,
+              type: AutocompleteSnippetType.Code,
+            };
+          });
+
+          importSnippets.push(...snippets);
         }
       }
     }
+
     return importSnippets;
   }
 
-  findMatchingRange(
-    recentlyEditedRanges: RecentlyEditedRange[],
-    linePrefix: string,
-  ): RecentlyEditedRange | undefined {
-    return recentlyEditedRanges.find((recentlyEditedRange) => {
-      return recentlyEditedRange.lines.some((line) =>
-        line.startsWith(linePrefix),
-      );
-    });
+  public async getRootPathSnippets(
+    helper: HelperVars,
+  ): Promise<AutocompleteCodeSnippet[]> {
+    if (!helper.treePath) {
+      return [];
+    }
+
+    return this.rootPathContextService.getContextForPath(
+      helper.filepath,
+      helper.treePath,
+    );
   }
 }

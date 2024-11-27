@@ -42,7 +42,7 @@ export class ContinueCompletionProvider
         e.message,
         this.configHandler.reloadConfig.bind(this.configHandler),
         () => {
-          void this.webviewProtocol.request("openOnboardingCard", undefined)
+          void this.webviewProtocol.request("openOnboardingCard", undefined);
         },
       );
       return;
@@ -153,12 +153,6 @@ export class ContinueCompletionProvider
       const signal = abortController.signal;
       token.onCancellationRequested(() => abortController.abort());
 
-      const config = await this.configHandler.loadConfig();
-      let clipboardText = "";
-      if (config.tabAutocompleteOptions?.useCopyBuffer === true) {
-        clipboardText = await vscode.env.clipboard.readText();
-      }
-
       // Handle notebook cells
       const pos = {
         line: position.line,
@@ -194,12 +188,6 @@ export class ContinueCompletionProvider
       }
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
-      if (document.uri.scheme === "vscode-scm") {
-        return null;
-        // let diff = await this.ide.getDiff();
-        // diff = diff.split("\n").splice(-150).join("\n");
-        // manuallyPassPrefix = `${diff}\n\nCommit message: `;
-      }
 
       const input: AutocompleteInput = {
         completionId: uuidv4(),
@@ -208,7 +196,6 @@ export class ContinueCompletionProvider
         recentlyEditedFiles: [],
         recentlyEditedRanges:
           await this.recentlyEditedTracker.getRecentlyEditedRanges(),
-        clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
         selectedCompletionInfo,
