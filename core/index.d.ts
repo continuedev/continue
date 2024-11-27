@@ -699,7 +699,8 @@ type ModelProvider =
   | "vertexai"
   | "nebius"
   | "xAI"
-  | "moonshot";
+  | "moonshot"
+  | "siliconflow";
 
 export type ModelName =
   | "AUTODETECT"
@@ -911,7 +912,8 @@ export type EmbeddingsProviderName =
   | "mistral"
   | "nebius"
   | "vertexai"
-  | "watsonx";
+  | "watsonx"
+  | "siliconflow";
 
 export interface EmbedOptions {
   apiBase?: string;

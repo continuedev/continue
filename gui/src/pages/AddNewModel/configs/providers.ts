@@ -125,9 +125,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     tags: [ModelProviderTags.RequiresApiKey],
     refPage: "moonshot",
     apiKeyUrl: "https://docs.moonshot.cn/docs/getting-started",
-    packages: [
-      models.moonshotChat,
-    ],
+    packages: [models.moonshotChat],
     collectInputFor: [
       {
         inputType: "text",
@@ -784,5 +782,29 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       models.olmo7b,
     ],
     apiKeyUrl: "https://studio.nebius.ai/settings/api-keys",
+  },
+  siliconflow: {
+    title: "SiliconFlow",
+    provider: "siliconflow",
+    icon: "siliconflow.png",
+    description: "SiliconFlow provides cheap open-source models.",
+    longDescription:
+      "To get started with SiliconFlow, obtain an API key from their website [here](https://cloud.siliconflow.cn/account/ak).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your SiliconFlow API key",
+        required: true,
+      },
+    ],
+    packages: [
+      models.Qwen25Coder_7b,
+      models.Qwen25Coder_7b_pro,
+      models.Qwen25Coder_32b,
+    ],
+    apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
   },
 };
