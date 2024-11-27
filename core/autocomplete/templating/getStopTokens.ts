@@ -25,7 +25,6 @@ export function getStopTokens(
     ...(model.toLowerCase().includes("starcoder2")
       ? STARCODER2_T_ARTIFACTS
       : []),
-    ...(lang.stopWords ?? []),
     // ...lang.topLevelKeywords.map((word) => `\n${word}`),
   ];
 
