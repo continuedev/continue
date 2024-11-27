@@ -11,6 +11,7 @@ import { getIconFromDropdownItem } from "./MentionList";
 import { getBasename } from "core/util";
 import { RootState } from "../../redux/store";
 import { useSelector } from "react-redux";
+import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -23,11 +24,12 @@ interface ContextItemsPeekItemProps {
 
 function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   const ideMessenger = useContext(IdeMessengerContext);
+  const isUrl = contextItem.uri?.type === "url";
 
   function openContextItem() {
     const { uri, name, description, content } = contextItem;
 
-    if (uri?.type === "url") {
+    if (isUrl) {
       ideMessenger.post("openUrl", uri.value);
     } else if (uri) {
       const isRangeInFile = name.includes(" (") && name.endsWith(")");
@@ -97,22 +99,28 @@ function ContextItemsPeekItem({ contextItem }: ContextItemsPeekItemProps) {
   return (
     <div
       onClick={openContextItem}
-      className="mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
+      className="group mr-2 flex cursor-pointer items-center overflow-hidden text-ellipsis whitespace-nowrap rounded px-1.5 py-1 text-xs hover:bg-white/10"
     >
       <div className="flex w-full items-center">
         {getContextItemIcon()}
         <div className="flex min-w-0 flex-1 gap-2 text-xs">
-          <div className="max-w-[50%] flex-shrink-0 truncate">
+          <div
+            className={`max-w-[50%] flex-shrink-0 truncate ${isUrl ? "hover:underline" : ""}`}
+          >
             {contextItem.name}
           </div>
           <div
-            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400`}
+            className={`min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap text-xs text-gray-400 ${isUrl ? "hover:underline" : ""}`}
           >
             {contextItem.uri?.type === "file"
               ? getBasename(contextItem.description)
               : contextItem.description}
           </div>
         </div>
+
+        {isUrl && (
+          <ArrowTopRightOnSquareIcon className="mx-2 h-4 w-4 flex-shrink-0 text-gray-400 opacity-0 group-hover:opacity-100" />
+        )}
       </div>
     </div>
   );
