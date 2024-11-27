@@ -335,7 +335,7 @@ function hypothenuse(a, b) {
 };
 
 export function getTemplateForModel(model: string): AutocompleteTemplate {
-  const lowerCaseModel = "codestral";
+  const lowerCaseModel = model.toLowerCase();
 
   // if (lowerCaseModel.includes("starcoder2")) {
   //   return starcoder2FimTemplate;
