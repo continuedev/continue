@@ -1,7 +1,7 @@
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ContextSubmenuItemWithProvider,
-  SubmenuContextProvidersContext,
+  useSubmenuContextProviders,
 } from "../../context/SubmenuContextProviders";
 import { Combobox } from "@headlessui/react";
 import FileIcon from "../../components/FileIcon";
@@ -24,7 +24,7 @@ export default function AddFileCombobox({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
+  const { getSubmenuContextItems } = useSubmenuContextProviders();
   const allFiles = getSubmenuContextItems("file", "");
   const codeToEdit = useSelector(
     (state: RootState) => state.editModeState.codeToEdit,
