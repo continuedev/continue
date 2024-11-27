@@ -647,11 +647,12 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "focusContinueInput",
     async (data) => {
-      dispatch(clearCodeToEdit());
-
       if (!props.isMainInput) {
         return;
       }
+
+      dispatch(clearCodeToEdit());
+
       if (historyLength > 0) {
         await saveSession();
       }
