@@ -5,17 +5,16 @@ import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
 
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
-import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo.js";
-import { aggregateSnippets } from "./aggregateSnippets";
+import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
 // @prettier-ignore
 
-import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
-import { AutocompleteSnippet } from "./context/ranking/index.js";
 import { BracketMatchingService } from "./filtering/BracketMatchingService.js";
 import { CompletionStreamer } from "./generation/CompletionStreamer.js";
 import { postprocessCompletion } from "./postprocessing/index.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
+import { getAllSnippets } from "./snippets/index.js";
 import { renderPrompt } from "./templating/index.js";
+import { GetLspDefinitionsFunction } from "./types.js";
 import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
 import { AutocompleteLoggingService } from "./util/AutocompleteLoggingService.js";
 import AutocompleteLruCache from "./util/AutocompleteLruCache.js";
@@ -31,14 +30,6 @@ const ERRORS_TO_IGNORE = [
   "unexpected server status",
   "operation was aborted",
 ];
-
-export type GetLspDefinitionsFunction = (
-  filepath: string,
-  contents: string,
-  cursorIndex: number,
-  ide: IDE,
-  lang: AutocompleteLanguageInfo,
-) => Promise<AutocompleteSnippet[]>;
 
 export class CompletionProvider {
   private autocompleteCache = AutocompleteLruCache.get();
@@ -171,28 +162,18 @@ export class CompletionProvider {
         token = controller.signal;
       }
 
-      //////////
-
-      // Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
-      // or they might separately track recently edited ranges)
-      const extraSnippets = await this._getExtraSnippets(helper);
-
-      const [snippets, diff, clipboardContent, workspaceDirs] =
-        await Promise.all([
-          aggregateSnippets(
-            helper,
-            extraSnippets,
-            this.contextRetrievalService,
-          ),
-          this.ide.getDiff(true),
-          this.ide.getClipboardContent(),
-          this.ide.getWorkspaceDirs(),
-        ]);
+      const [snippetPayload, workspaceDirs] = await Promise.all([
+        getAllSnippets({
+          helper,
+          ide: this.ide,
+          getDefinitionsFromLsp: this.getDefinitionsFromLsp,
+          contextRetrievalService: this.contextRetrievalService,
+        }),
+        this.ide.getWorkspaceDirs(),
+      ]);
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
-        snippets,
-        diff,
-        clipboardContent,
+        snippetPayload,
         workspaceDirs,
         helper,
       });
@@ -271,7 +252,7 @@ export class CompletionProvider {
       //////////
 
       // Save to cache
-      if (!outcome.cacheHit) {
+      if (!outcome.cacheHit && helper.options.useCache) {
         (await this.autocompleteCache).put(outcome.prefix, outcome.completion);
       }
 
@@ -287,33 +268,5 @@ export class CompletionProvider {
     } finally {
       this.loggingService.deleteAbortController(input.completionId);
     }
-  }
-
-  private async _getExtraSnippets(
-    helper: HelperVars,
-  ): Promise<AutocompleteSnippet[]> {
-    let extraSnippets = helper.options.useOtherFiles
-      ? ((await Promise.race([
-          this.getDefinitionsFromLsp(
-            helper.input.filepath,
-            helper.fullPrefix + helper.fullSuffix,
-            helper.fullPrefix.length,
-            this.ide,
-            helper.lang,
-          ),
-          new Promise((resolve) => {
-            setTimeout(() => resolve([]), 100);
-          }),
-        ])) as AutocompleteSnippet[])
-      : [];
-
-    const workspaceDirs = await this.ide.getWorkspaceDirs();
-    if (helper.options.onlyMyCode) {
-      extraSnippets = extraSnippets.filter((snippet) => {
-        return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
-      });
-    }
-
-    return extraSnippets;
   }
 }

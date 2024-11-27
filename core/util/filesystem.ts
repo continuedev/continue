@@ -125,8 +125,8 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  getDiff(includeUnstaged: boolean): Promise<string> {
-    return Promise.resolve("");
+  getDiff(includeUnstaged: boolean): Promise<string[]> {
+    return Promise.resolve([]);
   }
 
   getClipboardContent(): Promise<{ text: string; copiedAt: string }> {

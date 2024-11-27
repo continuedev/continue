@@ -1,7 +1,6 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
-  ChatHistory,
   ChatHistoryItem,
   ChatMessage,
   ContextItemWithId,
@@ -258,11 +257,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         ideMessenger,
         dispatch,
       );
-
       if (promptPreamble) {
-        typeof content === "string"
-          ? (content += promptPreamble)
-          : (content.at(-1).text += promptPreamble);
+        if (typeof content === "string") {
+          content = promptPreamble + content;
+        } else {
+          content[0].text = promptPreamble + content[0].text;
+        }
       }
 
       const message: ChatMessage = {
@@ -276,7 +276,10 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         editorState,
       };
 
-      let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
+      let newHistory: ChatHistoryItem[] = [
+        ...history.slice(0, index),
+        historyItem,
+      ];
       const historyIndex = index || newHistory.length - 1;
       dispatch(
         setMessageAtIndex({
@@ -324,10 +327,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     } catch (e: any) {
       dispatch(clearLastEmptyResponse());
       console.debug("Error streaming response: ", e);
-      ideMessenger.post("showToast", [
-        "error",
-        `Error streaming response: ${e.message}`,
-      ]);
     } finally {
       dispatch(setInactive());
       triggerSave(!save);

@@ -5,7 +5,7 @@ import { VscThemeProvider } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
 import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
 import ConfigErrorPage from "./pages/config-error";
-import Edit from "./pages/Edit";
+import Edit from "./pages/edit";
 import ErrorPage from "./pages/error";
 import Chat from "./pages/gui";
 import History from "./pages/history";

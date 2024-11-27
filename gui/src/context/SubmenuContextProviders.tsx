@@ -21,6 +21,10 @@ const MINISEARCH_OPTIONS = {
 
 const MAX_LENGTH = 70;
 
+export interface ContextSubmenuItemWithProvider extends ContextSubmenuItem {
+  providerTitle: string;
+}
+
 interface SubtextContextProvidersContextType {
   getSubmenuContextItems: (
     providerTitle: string | undefined,

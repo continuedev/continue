@@ -5,14 +5,10 @@ class EditDecorationManager {
 
   constructor(context: vscode.ExtensionContext) {
     this.decorationType = vscode.window.createTextEditorDecorationType({
-      backgroundColor: "rgba(255, 255, 0, 0.1)",
-      borderWidth: "0 0 0 1px",
-      borderColor: "rgba(255, 255, 0)",
-      borderStyle: "solid",
+      backgroundColor: new vscode.ThemeColor(
+        "editor.inactiveSelectionBackground",
+      ),
       isWholeLine: true,
-      cursor: "pointer",
-      //   gutterIconPath: context.asAbsolutePath("media/gutterIcon.png"),
-      gutterIconSize: "contain",
     });
   }
 

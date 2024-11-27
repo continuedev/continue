@@ -313,6 +313,26 @@ export const Timer = () => {
     expectedCompletion: undefined,
     filename: "Timer.tsx",
   },
+  {
+    description: "Should autocomplete simple return statement in TypeScript",
+    filename: "file.ts",
+    input: `
+  multiply(number) {
+    this.result *= number;
+    return <|fim|>
+  }
+
+  divide(number) {
+    if (number === 0) {
+      throw new Error("Cannot divide by zero");
+    }
+    this.result /= number;
+    return this;
+  }
+`,
+    llmOutput: ` this;`,
+    expectedCompletion: `this;`,
+  },
 ];
 
 export const TEST_CASES_WITHOUT_DIFF: AutocompleteFileringTestInput[] = [
@@ -1616,7 +1636,19 @@ interface User {
   age: number;
 }`,
   },
+  {
+    description: "Should autocomplete TypeScript interface declarations",
+    filename: "autocomplete.ts",
+    input: `interface AutocompleteDiffSnippet extends BaseAutocompleteSnippet {}
 
+interface AutocompleteCodeSnippet`,
+    llmOutput: ` extends BaseAutocompleteSnippet {
+  filepath: string;
+}`,
+    expectedCompletion: ` extends BaseAutocompleteSnippet {
+  filepath: string;
+}`,
+  },
   {
     description:
       "Should autocomplete a TypeScript arrow function inside a variable assignment",
