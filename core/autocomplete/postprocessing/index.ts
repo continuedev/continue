@@ -43,9 +43,13 @@ function isExtremeRepetition(completion: string): boolean {
   }
   return false;
 }
-export function isOnlyWhitespace(completion: string): boolean {
+function isOnlyWhitespace(completion: string): boolean {
   const whitespaceRegex = /^[\s]+$/;
   return whitespaceRegex.test(completion);
+}
+
+function isBlank(completion: string): boolean {
+  return completion.trim().length === 0;
 }
 
 export function postprocessCompletion({
@@ -60,6 +64,11 @@ export function postprocessCompletion({
   suffix: string;
 }): string | undefined {
   // Don't return empty
+  if (isBlank(completion)) {
+    return undefined;
+  }
+
+  // Don't return whitespace
   if (isOnlyWhitespace(completion)) {
     return undefined;
   }
