@@ -2168,4 +2168,71 @@ export default {
     llmOutput: "}",
     expectedCompletion: "}",
   },
+  {
+    options: { only: true },
+    description:
+      "Should handle autocomplete in two similar TypeScript functions",
+    filename: "List.svelte",
+    input: `
+import { createClient, RedisClientType } from "redis";
+import { IKeyValueStore } from "./index.js";
+
+export class RedisKeyValueStore implements IKeyValueStore {
+  private client: RedisClientType;
+
+  constructor(redisUrl: string) {
+    this.client = createClient({
+      url: redisUrl
+        .replace("https://", "redis://")
+        .replace("http://", "redis://"),
+    });
+    this.client.on("connect", () => console.log("Redis Connected"));
+    this.client.on("error", (err) => console.log("Redis Client Error", err));
+    this.client.connect();
+  }
+  public async has(tableName: string, key: string): Promise<boolean> {
+    return (await this.client.exists(this._getKey(tableName, key))) > 0;
+  }
+
+  public async keys(tableName: string): Promise<string[]> {
+    const keys = await this.client.keys(this._getTableKey(tableName));
+    return keys.map((key) => key.split("::")[1]);
+  }
+
+  public async put(
+    tableName: string,
+    key: string,
+    value: string,
+  ): Promise<void> {
+    await this.client.set(this._getKey(tableName, key), value);
+  }
+
+  public async get(
+    tableName: string,
+    key: string,
+  ): Promise<string | undefined> {
+    const value = await this.client.get(this._getKey(tableName, key));
+    return value ?? undefined;
+  }
+
+  public async deleteAll(tableName: string): Promise<void> {
+    await this.client.del(this._getTableKey(tableName));
+  }
+
+<|fim|>
+  
+
+  public async remove(tableName: string, key: string): Promise<boolean> {
+    const result = await this.client.del(this._getKey(tableName, key));
+    return result > 0;
+  }
+}
+`,
+    llmOutput: `  public async delete(tableName: string, key: string): Promise<void> {
+    await this.client.del(this._getKey(tableName, key));
+  }`,
+    expectedCompletion: `  public async delete(tableName: string, key: string): Promise<void> {
+    await this.client.del(this._getKey(tableName, key));
+  }`,
+  },
 ];
