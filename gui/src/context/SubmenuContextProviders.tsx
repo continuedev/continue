@@ -41,7 +41,7 @@ const initialContextProviders: SubtextContextProvidersContextType = {
 const SubmenuContextProvidersContext =
   createContext<SubtextContextProvidersContextType>(initialContextProviders);
 
-function IsOpenFilesChanged(newFiles: { id: string; }[], oldFiles: { id: string; }[]) {
+function isOpenFilesChanged(newFiles: { id: string; }[], oldFiles: { id: string; }[]) {
   if (newFiles.length > oldFiles.length) {
     return true;
   }
@@ -138,7 +138,7 @@ export const SubmenuContextProvidersProvider = ({
     const refreshOpenFiles = async () => {
       if (!isMounted) return;
       const openFiles = await getOpenFilesItems();
-      if (IsOpenFilesChanged(openFiles, lastOpenFilesRef.current)) {
+      if (isOpenFilesChanged(openFiles, lastOpenFilesRef.current)) {
         setFallbackResults((prev) => ({
           ...prev,
           file: deduplicateArray(
