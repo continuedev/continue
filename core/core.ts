@@ -154,10 +154,10 @@ export class Core {
       // Index on initialization
       void this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
-        this.indexingPauseToken.paused = true;
         if (ideSettings.pauseCodebaseIndexOnStart) {
+          this.indexingPauseToken.paused = true;
           void this.messenger.request("indexProgress", {
-            progress: 1,
+            progress: 0,
             desc: "Initial Indexing Skipped",
             status: "paused",
           });
@@ -803,6 +803,8 @@ export class Core {
       this.indexingCancellationController.signal,
     )) {
       let updateToSend = { ...update };
+      // TODO reconsider this status overwrite?
+      // original goal was to not concern users with edge noncritical errors
       if (update.status === "failed") {
         updateToSend.status = "done";
         updateToSend.desc = "Indexing complete";

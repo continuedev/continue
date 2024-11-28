@@ -12,6 +12,7 @@ const STATUS_TO_TEXT: Record<IndexingProgressUpdate["status"], string> = {
   paused: "Indexing paused",
   failed: "Indexing failed",
   disabled: "Indexing disabled",
+  cancelled: "Indexing cancelled",
 };
 
 function IndexingProgressTitleText({ update }: IndexingProgressTitleTextProps) {
