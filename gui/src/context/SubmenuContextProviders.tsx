@@ -146,6 +146,7 @@ export const SubmenuContextProvidersProvider = ({
             (a, b) => a.id === b.id,
           ),
         }));
+        lastOpenFilesRef.current = newOpenFiles;
       }
     };
 
