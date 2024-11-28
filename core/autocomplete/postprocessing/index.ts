@@ -121,11 +121,8 @@ export function postprocessCompletion({
   // }
 
   // If prefix ends with space and so does completion, then remove the space from completion
-  if (
-    prefix.split("\n").pop()?.trim() !== "" &&
-    prefix.endsWith(" ") &&
-    completion.startsWith(" ")
-  ) {
+
+  if (prefix.endsWith(" ") && completion.startsWith(" ")) {
     completion = completion.slice(1);
   }
 
