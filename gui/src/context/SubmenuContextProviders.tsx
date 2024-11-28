@@ -41,6 +41,16 @@ const initialContextProviders: SubtextContextProvidersContextType = {
 const SubmenuContextProvidersContext =
   createContext<SubtextContextProvidersContextType>(initialContextProviders);
 
+function hasNewOpenFiles(a: { id: string; }[], b: { id: string; }[]) {
+  if (a.length > b.length) {
+    return true;
+  }
+  for (let i = 0; i < a.length; ++i) {
+    if (a[i].id !== b[i].id) return true;
+  }
+  return false;
+}
+
 export const SubmenuContextProvidersProvider = ({
   children,
 }: {
@@ -122,18 +132,21 @@ export const SubmenuContextProvidersProvider = ({
     [minisearches],
   );
 
+  const lastOpenFilesRef = useRef([]);
   useEffect(() => {
     let isMounted = true;
     const refreshOpenFiles = async () => {
       if (!isMounted) return;
       const openFiles = await getOpenFilesItems();
-      setFallbackResults((prev) => ({
-        ...prev,
-        file: deduplicateArray(
-          [...openFiles, ...(Array.isArray(prev.file) ? prev.file : [])],
-          (a, b) => a.id === b.id,
-        ),
-      }));
+      if (hasNewOpenFiles(openFiles, lastOpenFilesRef.current)) {
+        setFallbackResults((prev) => ({
+          ...prev,
+          file: deduplicateArray(
+            [...openFiles, ...(Array.isArray(prev.file) ? prev.file : [])],
+            (a, b) => a.id === b.id,
+          ),
+        }));
+      }
     };
 
     const interval = setInterval(refreshOpenFiles, 2000);
