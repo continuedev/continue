@@ -537,12 +537,17 @@ export async function* showWhateverWeHaveAtXMs(
   ms: number,
 ): LineStream {
   const startTime = Date.now();
+  let firstNonWhitespaceLineYielded = false;
+
   for await (const line of lines) {
-    // Always get at least one line
     yield line;
 
-    // But after that, soft break at X ms
-    if (Date.now() - startTime > ms) {
+    if (!firstNonWhitespaceLineYielded && line.trim() !== "") {
+      firstNonWhitespaceLineYielded = true;
+    }
+
+    const isTakingTooLong = Date.now() - startTime > ms;
+    if (isTakingTooLong && firstNonWhitespaceLineYielded) {
       break;
     }
   }

@@ -393,6 +393,21 @@ export const Timer = () => {
                 script:
                   - npm run deploy`,
   },
+  {
+    description:
+      "Should autocomplete SQL query with subquery and alias in SELECT clause",
+    filename: "complex_query.sql",
+    input: `SELECT u.id, 
+                  u.name, 
+                  (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count
+          FROM users u
+          WHERE u.active = 1
+          <|fim|>`,
+    llmOutput:
+      " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
+    expectedCompletion:
+      "AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
+  },
 ];
 
 export const TEST_CASES_WITHOUT_DIFF: AutocompleteFileringTestInput[] = [
@@ -891,21 +906,6 @@ func main() {
   `,
     llmOutput: " DEFAULT",
     expectedCompletion: " DEFAULT",
-  },
-  {
-    description:
-      "Should autocomplete SQL query with subquery and alias in SELECT clause",
-    filename: "complex_query.sql",
-    input: `SELECT u.id, 
-                  u.name, 
-                  (SELECT COUNT(*) FROM orders o WHERE o.user_id = u.id) AS order_count
-          FROM users u
-          WHERE u.active = 1
-          <|fim|>`,
-    llmOutput:
-      " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
-    expectedCompletion:
-      " AND EXISTS (SELECT 1 FROM transactions t WHERE t.user_id = u.id AND t.amount > 100)",
   },
   {
     description:

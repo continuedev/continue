@@ -110,7 +110,7 @@ function AccountDialog() {
                 {profiles.map((option, idx) => (
                   <StyledListboxOption
                     key={idx}
-                    selected={selectedProfile.id === option.id}
+                    selected={selectedProfile?.id === option.id}
                     value={option.id}
                     className="w-full"
                   >

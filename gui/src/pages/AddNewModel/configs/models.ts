@@ -1175,6 +1175,45 @@ export const models: { [key: string]: ModelPackage } = {
     },
     isOpenSource: true,
   },
+  Qwen25Coder_7b: {
+    title: "Qwen 2.5 Coder 7b",
+    description:
+      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Qwen 2.5 Coder 7b",
+      model: "Qwen/Qwen2.5-Coder-7B-Instruct",
+      contextLength: 32_000,
+    },
+    icon: "qwen.png",
+    providerOptions: ["siliconflow"],
+    isOpenSource: true,
+  },
+  Qwen25Coder_7b_pro: {
+    title: "Qwen 2.5 Coder 7b pro",
+    description:
+      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Qwen 2.5 Coder 7b pro",
+      model: "Pro/Qwen/Qwen2.5-Coder-7B-Instruct",
+      contextLength: 32_000,
+    },
+    icon: "qwen.png",
+    providerOptions: ["siliconflow"],
+    isOpenSource: true,
+  },
+  Qwen25Coder_32b: {
+    title: "Qwen 2.5 Coder 32b",
+    description:
+      "Qwen 2.5 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Qwen 2.5 Coder 32b",
+      model: "Qwen/Qwen2.5-Coder-32B-Instruct",
+      contextLength: 128_000,
+    },
+    icon: "qwen.png",
+    providerOptions: ["siliconflow"],
+    isOpenSource: true,
+  },
   AUTODETECT: {
     title: "Autodetect",
     description:
