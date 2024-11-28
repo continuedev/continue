@@ -7,7 +7,7 @@ import {
   groupByLastNPathParts,
 } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import { useCallback, useContext, useEffect, useMemo, userRef, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "./IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
