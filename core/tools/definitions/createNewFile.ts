@@ -5,6 +5,7 @@ export const createNewFileTool: Tool = {
   type: "function",
   displayTitle: "Create New File",
   wouldLikeTo: "create a new file",
+  readonly: false,
   function: {
     name: BuiltInToolNames.CreateNewFile,
     description: "Create a new file",
