@@ -547,7 +547,7 @@ class VsCodeIde implements IDE {
         if (code === 0) {
           resolve(output);
         } else if (code === 1) {
-          resolve("");
+          resolve(output);
         } else {
           reject(new Error(`Process exited with code ${code}`));
         }

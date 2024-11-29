@@ -68,7 +68,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     (store: RootState) => store.state.config.contextProviders,
   );
   const useTools = useSelector(
-    (store: RootState) => store.state.config.experimental?.useTools,
+    (store: RootState) => store.state.config.experimental?.useTools !== false,
   );
 
   useWebviewListener(

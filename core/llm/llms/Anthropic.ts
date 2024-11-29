@@ -178,6 +178,21 @@ class Anthropic extends BaseLLM {
       signal,
     });
 
+    if (!response.ok) {
+      const json = await response.json();
+      if (json.type === "error") {
+        if (json.error?.type === "overloaded_error") {
+          throw new Error(
+            "The Anthropic API is currently overloaded. Please check their status page: https://status.anthropic.com/#past-incidents",
+          );
+        }
+        throw new Error(json.message);
+      }
+      throw new Error(
+        `Anthropic API sent back ${response.status}: ${JSON.stringify(json)}`,
+      );
+    }
+
     if (options.stream === false) {
       const data = await response.json();
       yield { role: "assistant", content: data.content[0].text };
