@@ -435,8 +435,10 @@ class IdeProtocolClient(
                     "getRepoName" -> {
                         // Get the current repository name
                         val dir = (data as Map<String, Any>)["dir"] as String
+                        val directory = File(dir)
+                        val targetDir = if (directory.isFile) directory.parentFile else directory
                         val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
-                        builder.directory(File(dir))
+                        builder.directory(targetDir)
                         var output = "NONE"
                         try {
                             val process = builder.start()
