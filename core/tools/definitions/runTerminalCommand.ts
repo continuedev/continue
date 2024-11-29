@@ -1,5 +1,4 @@
 import { Tool } from "../..";
-
 import { BuiltInToolNames } from "../builtIn";
 
 export const runTerminalCommandTool: Tool = {
@@ -9,7 +8,8 @@ export const runTerminalCommandTool: Tool = {
   readonly: false,
   function: {
     name: BuiltInToolNames.RunTerminalCommand,
-    description: "Run a terminal command in the current directory",
+    description:
+      "Run a terminal command in the current directory. The shell is not stateful and will not remember any previous commands.",
     parameters: {
       type: "object",
       required: ["command"],

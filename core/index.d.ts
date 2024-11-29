@@ -402,6 +402,7 @@ interface ToolCallState {
   toolCall: ToolCall;
   status: ToolStatus;
   parsedArgs: any;
+  output?: ContextItem[];
 }
 
 export interface ChatHistoryItem {

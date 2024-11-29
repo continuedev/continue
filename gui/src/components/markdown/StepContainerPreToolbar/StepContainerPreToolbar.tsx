@@ -10,11 +10,12 @@ import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
 import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
-import { childrenToText } from "../utils";
+import { childrenToText, isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
+import RunInTerminalButton from "./RunInTerminalButton";
 
 const fadeInAnimation = keyframes`
   from {
@@ -202,14 +203,17 @@ export default function StepContainerPreToolbar(
           {!isGeneratingCodeBlock && (
             <>
               <CopyButton text={props.codeBlockContent} />
-              {props.hideApply || (
-                <ApplyActions
-                  applyState={applyState}
-                  onClickApply={onClickApply}
-                  onClickAccept={onClickAcceptApply}
-                  onClickReject={onClickRejectApply}
-                />
-              )}
+              {props.hideApply ||
+                (isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
+                  <RunInTerminalButton command={props.codeBlockContent} />
+                ) : (
+                  <ApplyActions
+                    applyState={applyState}
+                    onClickApply={onClickApply}
+                    onClickAccept={onClickAcceptApply}
+                    onClickReject={onClickRejectApply}
+                  />
+                ))}
             </>
           )}
         </div>

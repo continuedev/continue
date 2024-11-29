@@ -10,6 +10,7 @@ import {
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
+  ContextItem,
   ContextItemWithId,
   FileSymbolMap,
   IndexingStatus,
@@ -485,6 +486,12 @@ export const stateSlice = createSlice({
 
       toolCallState.status = "generated";
     },
+    setToolCallOutput: (state, action: PayloadAction<ContextItem[]>) => {
+      const toolCallState = findCurrentToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.output = action.payload
+    },
     cancelToolCall: (state) => {
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
@@ -598,6 +605,7 @@ export const {
   acceptToolCall,
   setToolGenerated,
   updateDocsSuggestions,
+  setToolCallOutput
 } = stateSlice.actions;
 
 export default stateSlice.reducer;
