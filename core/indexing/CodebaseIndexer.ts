@@ -15,7 +15,7 @@ import {
   RefreshIndexResults,
 } from "./types.js";
 import { walkDirAsync } from "./walkDir.js";
-import axios from 'axios';
+
 export class PauseToken {
   constructor(private _paused: boolean) {}
 
@@ -37,7 +37,7 @@ export class CodebaseIndexer {
   filesPerBatch = 500;
 
   // Note that we exclude certain Sqlite errors that we do not want to clear the indexes on,
-  // e.g. a `SQLITE_BUSY` error.r
+  // e.g. a `SQLITE_BUSY` error.
   errorsRegexesToClearIndexesOn = [
     /Invalid argument error: Values length (d+) is less than the length ((d+)) multiplied by the value size (d+)/,
     /SQLITE_CONSTRAINT/,
@@ -77,17 +77,15 @@ export class CodebaseIndexer {
 
     const indexes = [
       new ChunkCodebaseIndex(
-        (filepath,reponame) => this.readFile(filepath,reponame),
+        this.ide.readFile.bind(this.ide),
         pathSep,
         this.continueServerClient,
         config.embeddingsProvider.maxChunkSize,
-        this.configHandler.writeLog,
       ), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
-        (filepath,reponame) => this.readFile(filepath,reponame),
+        this.ide.readFile.bind(this.ide),
         pathSep,
-        this.configHandler.writeLog,
         this.continueServerClient,
       ),
       new FullTextSearchCodebaseIndex(),
@@ -98,10 +96,6 @@ export class CodebaseIndexer {
   }
 
   public async refreshFile(file: string): Promise<void> {
-    // this.configHandler.logMessage(
-    //   "core/indexing/CodebaseIndexer.ts\n" +
-    //   "refreshFile 函数\n"
-    // )
     if (this.pauseToken.paused) {
       // NOTE: by returning here, there is a chance that while paused a file is modified and
       // then after unpausing the file is not reindexed
@@ -111,7 +105,6 @@ export class CodebaseIndexer {
     if (!workspaceDir) {
       return;
     }
-    
     const branch = await this.ide.getBranch(workspaceDir);
     const repoName = await this.ide.getRepoName(workspaceDir);
     const indexesToBuild = await this.getIndexesToBuild();
@@ -126,8 +119,8 @@ export class CodebaseIndexer {
         await getComputeDeleteAddRemove(
           tag,
           { ...stats },
-          (filepath,reponame) => this.readFile(filepath,reponame),
-          repoName || "undefined",
+          (filepath) => this.ide.readFile(filepath),
+          repoName,
         );
       // since this is only a single file update / save we do not want to actualy remove anything, we just want to recompute for our single file
       results.removeTag = [];
@@ -148,38 +141,13 @@ export class CodebaseIndexer {
       }
     }
   }
-  
-  public async *read_repobench(): AsyncIterable<any> {
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/process');
-      const data = response.data;
-      for (const item of data) {
-        yield item;
-      }
-    } catch (error) {
-      console.error('Error calling Python service:', error);
-    }
-  }
-
-  public async readFile(filepath: string, repoName: string): Promise<string> {
-    try {
-      const response = await axios.post('http://127.0.0.1:5000/readFile',{
-        filepath, repoName
-      });
-      const data = response.data;
-      return data
-    } catch (error) {
-      console.error('Error calling Python service:', error);
-      return "";
-    }
-  }
-
 
   async *refresh(
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
     let progress = 0;
+
     if (workspaceDirs.length === 0) {
       yield {
         progress,
@@ -218,26 +186,36 @@ export class CodebaseIndexer {
     };
     const beginTime = Date.now();
 
-    for await(const data of this.read_repobench()){
-      const repoName = data.repo_name;
-
+    for (const directory of workspaceDirs) {
+      const dirBasename = await this.basename(directory);
       yield {
         progress,
-        desc: `Discovering files in ${repoName}...`,
+        desc: `Discovering files in ${dirBasename}...`,
         status: "indexing",
       };
       const workspaceFiles = [];
-
-      for (const snippet of data.context){
-        workspaceFiles.push(snippet.path);
+      for await (const p of walkDirAsync(directory, this.ide)) {
+        workspaceFiles.push(p);
+        if (abortSignal.aborted) {
+          yield {
+            progress: 1,
+            desc: "Indexing cancelled",
+            status: "disabled",
+          };
+          return;
+        }
+        if (this.pauseToken.paused) {
+          yield* this.yieldUpdateAndPause();
+        }
       }
 
-      const branch = "NONE";
+      const branch = await this.ide.getBranch(directory);
+      const repoName = await this.ide.getRepoName(directory);
       let nextLogThreshold = 0;
 
       try {
         for await (const updateDesc of this.indexFiles(
-          repoName, //directory
+          directory,
           workspaceFiles,
           branch,
           repoName,
@@ -365,22 +343,14 @@ export class CodebaseIndexer {
       curPos += this.filesPerBatch;
     }
   }
-  async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
-    const pathToLastModified: { [path: string]: number } = {};
-    await Promise.all(
-      files.map(async (file) => {
-        pathToLastModified[file] = 0;
-      }),
-    );
-    return pathToLastModified;
-  }
+
   private async *indexFiles(
     workspaceDir: string,
     workspaceFiles: string[],
     branch: string,
-    repoName: string,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const stats = await this.getLastModified(workspaceFiles);
+    const stats = await this.ide.getLastModified(workspaceFiles);
     const indexesToBuild = await this.getIndexesToBuild();
     let completedIndexCount = 0;
     let progress = 0;
@@ -399,21 +369,16 @@ export class CodebaseIndexer {
         await getComputeDeleteAddRemove(
           tag,
           { ...stats },
-          (filepath,reponame) => this.readFile(filepath,reponame),
+          (filepath) => this.ide.readFile(filepath),
           repoName,
         );
-      // this.configHandler.logMessage(
-      //   "core/indexing/CodebaseIndexer.ts" + "\n" +
-      //   "getComputeDeleteAddRemove - tag: " + JSON.stringify({...tag},null,2) + "\n" +
-      //   "getComputeDeleteAddRemove - results: " + JSON.stringify({...results},null,2) + "\n" 
-      // )
       const totalOps =
         results.compute.length +
         results.del.length +
         results.addTag.length +
         results.removeTag.length;
       let completedOps = 0;
-      
+
       // Don't update if nothing to update. Some of the indices might do unnecessary setup work
       if (totalOps > 0) {
         for (const subResult of this.batchRefreshIndexResults(results)) {
@@ -423,12 +388,6 @@ export class CodebaseIndexer {
             markComplete,
             repoName,
           )) {
-            // this.configHandler.logMessage(
-            //   "core/indexing/CodebaseIndexer.ts" + "\n" +
-            //   "indexFiles - tag: " + JSON.stringify({...tag},null,2) + "\n" +
-            //   "indexFiles - subResult: " + JSON.stringify({...subResult},null,2) + "\n" +
-            //   "indexFiles - desc: " + desc + "\n" 
-            // )
             yield {
               progress: progress,
               desc,

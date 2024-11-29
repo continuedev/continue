@@ -268,7 +268,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       //   +"defaultModel.model: "+defaultModel.model+"\n"
       // );
       let messages: ReturnType<typeof constructMessages>; // 声明 messages，类型根据构造函数来推导
-
+      /** DEBUG
+       */
       if (defaultModel.model !== undefined) {
         messages = constructMessages(newHistory, defaultModel.model);
       } else {

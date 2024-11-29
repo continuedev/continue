@@ -43,9 +43,8 @@ export class LanceDbIndex implements CodebaseIndex {
 
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
-    private readonly readFile: (filepath: string, reponame: string) => Promise<string>,
+    private readonly readFile: (filepath: string) => Promise<string>,
     private readonly pathSep: string,
-    private readonly writeLog: (log: string) => Promise<void>,
     private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
@@ -90,8 +89,8 @@ export class LanceDbIndex implements CodebaseIndex {
     );
   }
 
-  private async computeRows(items: PathAndCacheKey[], repoName: string): Promise<LanceDbRow[]> {
-    const chunkMap = await this.collectChunks(items,repoName);
+  private async computeRows(items: PathAndCacheKey[]): Promise<LanceDbRow[]> {
+    const chunkMap = await this.collectChunks(items);
     const allChunks = Array.from(chunkMap.values()).flatMap(
       ({ chunks }) => chunks,
     );
@@ -117,12 +116,12 @@ export class LanceDbIndex implements CodebaseIndex {
     return this.createLanceDbRows(chunkMap, embeddings);
   }
 
-  private async collectChunks(items: PathAndCacheKey[], reponame: string): Promise<ChunkMap> {
+  private async collectChunks(items: PathAndCacheKey[]): Promise<ChunkMap> {
     const chunkMap: ChunkMap = new Map();
 
     for (const item of items) {
       try {
-        const content = await this.readFile(item.path, reponame);
+        const content = await this.readFile(item.path);
 
         if (!shouldChunk(this.pathSep, item.path, content)) {
           continue;
@@ -202,12 +201,8 @@ export class LanceDbIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
-    repoName: string,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    this.writeLog(
-      "core/indexing/LanceDbIndex.ts\n" +
-      "update - tag: " + JSON.stringify({...tag},null,2) + "\n"
-    )
     const sqliteDb = await SqliteDb.get();
     await this.createSqliteCacheTable(sqliteDb);
 
@@ -275,7 +270,7 @@ export class LanceDbIndex implements CodebaseIndex {
               vector: chunk.vector,
             };
             rows.push(row);
-            
+
             await sqliteDb.run(
               "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
               row.uuid,
@@ -309,7 +304,7 @@ export class LanceDbIndex implements CodebaseIndex {
       status: "indexing",
     };
 
-    const dbRows = await this.computeRows(results.compute,repoName);
+    const dbRows = await this.computeRows(results.compute);
     await this.insertRows(sqliteDb, dbRows);
     await addComputedLanceDbRows(results.compute, dbRows);
     let accumulatedProgress = 0;
@@ -440,10 +435,6 @@ export class LanceDbIndex implements CodebaseIndex {
     tags: BranchAndDir[],
     filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
-    this.writeLog(
-      "core/indexing/LanceDbIndex.ts\n" +
-      "retrieve 函数\n"
-    )
     const [vector] = await this.embeddingsProvider.embed([query]);
     const db = await lance.connect(getLanceDbPath());
 

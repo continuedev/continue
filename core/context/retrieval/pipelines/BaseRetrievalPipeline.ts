@@ -34,8 +34,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     this.lanceDbIndex = new LanceDbIndex(
       options.config.embeddingsProvider,
       (path) => options.ide.readFile(path),
-      options.pathSep,
-      writeLog,
+      options.pathSep
     );
     this.writeLog = writeLog;
   }

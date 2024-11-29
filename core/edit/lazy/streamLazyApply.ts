@@ -16,9 +16,15 @@ export async function* streamLazyApply(
   llm: ILLM,
   fastLlm: ILLM,
 ): AsyncGenerator<DiffLine> {
-  const promptFactory = lazyApplyPromptForModel(llm.model, llm.providerName);
+  /** DEBUG 
+   */
+  let llm_model = llm.model;
+  if (llm.model === undefined){
+    llm_model = llm.completionOptions.model;
+  }
+  const promptFactory = lazyApplyPromptForModel(llm_model, llm.providerName);
   if (!promptFactory) {
-    throw new Error(`Lazy apply not supported for model ${llm.model}`);
+    throw new Error(`Lazy apply not supported for model ${llm_model}`);
   }
 
   const promptMessages = promptFactory(oldCode, filename, newCode);
