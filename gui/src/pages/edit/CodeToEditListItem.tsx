@@ -60,7 +60,7 @@ export default function CodeToEditListItem({
       onClick={() => setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet)}
     >
       <div
-        className={`hover:bg-lightgray hover:text-vsc-foreground flex justify-between rounded px-2 py-1 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
+        className={`hover:bg-lightgray hover:text-vsc-foreground flex justify-between rounded px-2 py-0.5 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
       >
         <div className="flex items-center gap-0.5">
           {showCodeSnippet ? (

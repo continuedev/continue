@@ -162,10 +162,7 @@ export class CompletionProvider {
         token = controller.signal;
       }
 
-      const [
-        { snippets, diff, clipboardContent, payload: snippetPayload },
-        workspaceDirs,
-      ] = await Promise.all([
+      const [snippetPayload, workspaceDirs] = await Promise.all([
         getAllSnippets({
           helper,
           ide: this.ide,
@@ -176,10 +173,7 @@ export class CompletionProvider {
       ]);
 
       const { prompt, prefix, suffix, completionOptions } = renderPrompt({
-        snippets,
         snippetPayload,
-        diff,
-        clipboardContent,
         workspaceDirs,
         helper,
       });
@@ -258,7 +252,7 @@ export class CompletionProvider {
       //////////
 
       // Save to cache
-      if (!outcome.cacheHit) {
+      if (!outcome.cacheHit && helper.options.useCache) {
         (await this.autocompleteCache).put(outcome.prefix, outcome.completion);
       }
 

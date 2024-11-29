@@ -382,7 +382,6 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       ) : (
         <>
           {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
-          {/* <CustomScrollbarDiv className="overflow-y-scroll max-h-96"> */}
           {allItems.length ? (
             allItems.map((item, index) => (
               <ItemDiv
@@ -402,7 +401,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         height="20px"
                         width="20px"
                         filename={item.description}
-                      ></FileIcon>
+                      />
                     )}
                     {!showFileIconForItem(item) && (
                       <>
@@ -414,7 +413,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   </div>
                   <span
                     style={{
-                      color: vscListActiveForeground,
+                      color: lightGray,
                       float: "right",
                       textAlign: "right",
                       opacity: index !== selectedIndex ? 0 : 1,

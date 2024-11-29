@@ -17,7 +17,7 @@ Each model has specific configuration options tailored to its provider and funct
 
 - `title` (**required**): The title to assign to your model, shown in dropdowns, etc.
 - `provider` (**required**): The provider of the model, which determines the type and interaction method. Options inclued `openai`, `ollama`, etc., see intelliJ suggestions.
-- `model` (**required**): The name of the model, used for prompt template auto-detection.
+- `model` (**required**): The name of the model, used for prompt template auto-detection. Use `AUTODETECT` special name to get all available models.
 - `apiKey`: API key required by providers like OpenAI, Anthropic, and Cohere.
 - `apiBase`: The base URL of the LLM API.
 - `contextLength`: Maximum context length of the model, typically in tokens (default: 2048).

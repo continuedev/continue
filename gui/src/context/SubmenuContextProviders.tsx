@@ -1,5 +1,5 @@
 import { ContextSubmenuItem } from "core";
-import { WebviewMessengerResult } from "core/protocol/util";
+import { createContext } from "react";
 import {
   deduplicateArray,
   getBasename,
@@ -9,11 +9,10 @@ import {
 import MiniSearch, { SearchResult } from "minisearch";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { IdeMessengerContext } from "../context/IdeMessenger";
+import { IdeMessengerContext } from "./IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { getLocalStorage } from "../util/localStorage";
-import { useWebviewListener } from "./useWebviewListener";
 import { RootState } from "../redux/store";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -22,7 +21,31 @@ const MINISEARCH_OPTIONS = {
 
 const MAX_LENGTH = 70;
 
-function useSubmenuContextProviders() {
+export interface ContextSubmenuItemWithProvider extends ContextSubmenuItem {
+  providerTitle: string;
+}
+
+interface SubtextContextProvidersContextType {
+  getSubmenuContextItems: (
+    providerTitle: string | undefined,
+    query: string,
+  ) => (ContextSubmenuItem & { providerTitle: string })[];
+  addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
+}
+
+const initialContextProviders: SubtextContextProvidersContextType = {
+  getSubmenuContextItems: () => [],
+  addItem: () => {},
+};
+
+const SubmenuContextProvidersContext =
+  createContext<SubtextContextProvidersContextType>(initialContextProviders);
+
+export const SubmenuContextProvidersProvider = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
   const [minisearches, setMinisearches] = useState<{
     [id: string]: MiniSearch;
   }>({});
@@ -33,33 +56,30 @@ function useSubmenuContextProviders() {
   const contextProviderDescriptions = useSelector(
     selectContextProviderDescriptions,
   );
+  const disableIndexing = useSelector(
+    (store: RootState) => store.state.config.disableIndexing,
+  );
 
-  const [loaded, setLoaded] = useState(false);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
 
-  const config = useSelector((store: RootState) => store.state.config);
-
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const memoizedGetOpenFileItems = useMemo(() => {
-    return async () => {
-      const openFiles = await ideMessenger.ide.getOpenFiles();
-      const openFileGroups = groupByLastNPathParts(openFiles, 2);
+  const getOpenFilesItems = useCallback(async () => {
+    const openFiles = await ideMessenger.ide.getOpenFiles();
+    const openFileGroups = groupByLastNPathParts(openFiles, 2);
 
-      return openFiles.map((file) => ({
-        id: file,
-        title: getBasename(file),
-        description: getUniqueFilePath(file, openFileGroups),
-        providerTitle: "file",
-      }));
-    };
+    return openFiles.map((file) => ({
+      id: file,
+      title: getBasename(file),
+      description: getUniqueFilePath(file, openFileGroups),
+      providerTitle: "file",
+    }));
   }, [ideMessenger]);
 
   useWebviewListener("refreshSubmenuItems", async (data) => {
     if (!isLoading) {
-      setLoaded(false);
       setInitialLoadComplete(false);
       setAutoLoadTriggered((prev) => !prev); // Toggle to trigger effect
     }
@@ -76,7 +96,7 @@ function useSubmenuContextProviders() {
     setMinisearches((prev) => ({ ...prev, [data.provider]: minisearch }));
 
     if (data.provider === "file") {
-      const openFiles = await memoizedGetOpenFileItems();
+      const openFiles = await getOpenFilesItems();
       setFallbackResults((prev) => ({
         ...prev,
         file: [
@@ -106,7 +126,7 @@ function useSubmenuContextProviders() {
     let isMounted = true;
     const refreshOpenFiles = async () => {
       if (!isMounted) return;
-      const openFiles = await memoizedGetOpenFileItems();
+      const openFiles = await getOpenFilesItems();
       setFallbackResults((prev) => ({
         ...prev,
         file: deduplicateArray(
@@ -124,7 +144,7 @@ function useSubmenuContextProviders() {
       isMounted = false;
       clearInterval(interval);
     };
-  }, [memoizedGetOpenFileItems]);
+  }, [getOpenFilesItems]);
 
   const getSubmenuSearchResults = useMemo(
     () =>
@@ -208,10 +228,9 @@ function useSubmenuContextProviders() {
   );
 
   useEffect(() => {
-    if (contextProviderDescriptions.length === 0 || loaded || isLoading) {
+    if (contextProviderDescriptions.length === 0 || isLoading) {
       return;
     }
-    setLoaded(true);
     setIsLoading(true);
 
     const loadSubmenuItems = async () => {
@@ -219,7 +238,7 @@ function useSubmenuContextProviders() {
         await Promise.all(
           contextProviderDescriptions.map(async (description) => {
             const shouldSkipProvider =
-              description.dependsOnIndexing && config.disableIndexing;
+              description.dependsOnIndexing && disableIndexing;
 
             if (shouldSkipProvider) {
               console.debug(
@@ -239,7 +258,7 @@ function useSubmenuContextProviders() {
                 {
                   title: description.title,
                 },
-              )
+              );
 
               if (result.status === "error") {
                 console.error(
@@ -258,7 +277,7 @@ function useSubmenuContextProviders() {
               }));
 
               if (description.title === "file") {
-                const openFiles = await memoizedGetOpenFileItems();
+                const openFiles = await getOpenFilesItems();
                 setFallbackResults((prev) => ({
                   ...prev,
                   file: [
@@ -289,23 +308,20 @@ function useSubmenuContextProviders() {
       }
     };
 
-    loadSubmenuItems().catch((error) => {
-      console.error("Error in loadSubmenuItems:", error);
-      setInitialLoadComplete(true);
-      setIsLoading(false);
-    });
-  }, [contextProviderDescriptions, loaded, autoLoadTriggered]);
+    loadSubmenuItems();
+  }, [contextProviderDescriptions, autoLoadTriggered]);
 
-  useWebviewListener("configUpdate", async () => {
-    // When config is updated (for example switching to a different workspace)
-    // we need to reload the context providers.
-    setLoaded(false);
-  });
+  return (
+    <SubmenuContextProvidersContext.Provider
+      value={{
+        getSubmenuContextItems,
+        addItem,
+      }}
+    >
+      {children}
+    </SubmenuContextProvidersContext.Provider>
+  );
+};
 
-  return {
-    getSubmenuContextItems,
-    addItem,
-  };
-}
-
-export default useSubmenuContextProviders;
+export const useSubmenuContextProviders = () =>
+  useContext(SubmenuContextProvidersContext);
