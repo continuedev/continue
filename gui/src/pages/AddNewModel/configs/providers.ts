@@ -801,9 +801,10 @@ To get started, [register](https://dataplatform.cloud.ibm.com/registration/stepo
       },
     ],
     packages: [
-      models.Qwen25Coder_7b,
-      models.Qwen25Coder_7b_pro,
+      models.QwenQwQ_32b_preview,
       models.Qwen25Coder_32b,
+      models.Hunyuan_a52b,
+      models.Llama31Nemotron_70b,
     ],
     apiKeyUrl: "https://cloud.siliconflow.cn/account/ak",
   },
