@@ -408,24 +408,6 @@ export class Core {
 
         const chunk = next.value;
 
-        // if (chunk.toolCalls?.length) {
-        //   for (const toolCall of chunk.toolCalls) {
-        //     const tool = model.completionOptions.tools?.find(
-        //       (tool) => tool.function.name === toolCall.function.name,
-        //     );
-        //     if (!tool) {
-        //       continue;
-        //     }
-        //     const response = await tool?.action(toolCall.function.arguments);
-
-        //     yield {
-        //       role: "assistant",
-        //       content: response,
-        //       toolCalls: [toolCall],
-        //     };
-        //   }
-        // }
-
         // @ts-ignore
         yield { content: chunk };
         next = await gen.next();

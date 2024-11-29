@@ -53,8 +53,15 @@ export const streamNormalInput = createAsyncThunk<
         dispatch(abortStream());
         break;
       }
-      dispatch(streamUpdate(next.value as ChatMessage));
+
+      const update = next.value as ChatMessage;
+      dispatch(streamUpdate(update));
       next = await gen.next();
+
+      // There has been lag when streaming tool calls. This is a temporary solution
+      if (update.role === "assistant" && update.toolCalls) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
     }
 
     // Attach prompt log
