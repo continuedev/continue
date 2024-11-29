@@ -453,9 +453,10 @@ class IdeProtocolClient(
 
                     "getDiff" -> {
                         val workspaceDirs = workspaceDirectories()
-                        val output = StringBuilder()
+                        val diffs = mutableListOf<String>()
 
                         for (workspaceDir in workspaceDirs) {
+                            val output = StringBuilder()
                             val builder = ProcessBuilder("git", "diff")
                             builder.directory(File(workspaceDir))
                             val process = builder.start()
@@ -469,9 +470,10 @@ class IdeProtocolClient(
                             }
 
                             process.waitFor()
+                            diffs.add(output.toString())
                         }
 
-                        respond(output.toString())
+                        respond(diffs)
                     }
 
                     "getProblems" -> {
