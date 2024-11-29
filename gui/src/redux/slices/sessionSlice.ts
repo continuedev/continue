@@ -345,14 +345,21 @@ export const sessionSlice = createSlice({
     resetNextCodeBlockToApplyIndex: (state) => {
       state.codeBlockApplyStates.curIndex = 0;
     },
+    addCodeToEdit: (
+      state,
+      { payload }: PayloadAction<CodeToEdit | CodeToEdit[]>,
+    ) => {
+      const entries = Array.isArray(payload) ? payload : [payload];
 
-    addCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
-      const entryExists = state.codeToEdit.some((entry) =>
-        isCodeToEditEqual(entry, payload),
+      const newEntries = entries.filter(
+        (entry) =>
+          !state.codeToEdit.some((existingEntry) =>
+            isCodeToEditEqual(existingEntry, entry),
+          ),
       );
 
-      if (!entryExists) {
-        state.codeToEdit.push(payload);
+      if (newEntries.length > 0) {
+        state.codeToEdit.push(...newEntries);
       }
     },
     removeCodeToEdit: (state, { payload }: PayloadAction<CodeToEdit>) => {
