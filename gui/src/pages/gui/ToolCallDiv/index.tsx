@@ -1,5 +1,10 @@
-import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { ToolCall, ToolCallState, ToolStatus } from "core";
+import { vscButtonBackground } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { ThreadDiv } from "./ThreadDiv";
@@ -14,8 +19,9 @@ export function ToolCallDiv(props: ToolCallDivProps) {
     switch (state) {
       case "generating":
       case "calling":
-      case "generated":
         return <Spinner />;
+      case "generated":
+        return <ArrowRightIcon color={vscButtonBackground} />;
       case "done":
         return <CheckIcon className="text-green-500" />;
       case "canceled":
