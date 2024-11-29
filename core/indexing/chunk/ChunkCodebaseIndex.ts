@@ -26,7 +26,9 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     private readonly pathSep: string,
     private readonly continueServerClient: IContinueServerClient,
     private readonly maxChunkSize: number,
-  ) {}
+  ) {
+    this.readFile = readFile;
+  }
 
   async *update(
     tag: IndexTag,

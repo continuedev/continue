@@ -1,0 +1,1903 @@
+ commit.patch                                       | 914 ---------------------
+ core/autocomplete/completionProvider.ts            | 104 ++-
+ core/autocomplete/postprocessing.ts                |  35 +-
+ core/config/ConfigHandler.ts                       |   2 +-
+ core/config/load.ts                                |   9 +
+ .../retrieval/pipelines/BaseRetrievalPipeline.ts   |   2 +-
+ .../pipelines/RerankerRetrievalPipeline.ts         |  42 +-
+ core/core.ts                                       |  17 +
+ core/edit/lazy/streamLazyApply.ts                  |  10 +-
+ core/edit/streamDiffLines.ts                       |   9 +-
+ core/indexing/CodebaseIndexer.ts                   |   2 +-
+ core/indexing/LanceDbIndex.ts                      |   4 +-
+ core/indexing/chunk/ChunkCodebaseIndex.ts          |   9 +-
+ core/indexing/chunk/code.ts                        |   2 +-
+ core/indexing/refreshIndex.ts                      |   2 +-
+ core/llm/index.ts                                  | 131 +--
+ core/llm/llms/OpenAI.ts                            |  43 +-
+ core/test/util/indexing.ts                         |   1 -
+ extensions/vscode/continue-0.8.56.vsix             | Bin 78916446 -> 0 bytes
+ extensions/vscode/package-lock.json                |   3 +-
+ extensions/vscode/src/VsCodeIde.ts                 |   1 +
+ .../vscode/src/autocomplete/completionProvider.ts  |  25 +-
+ extensions/vscode/src/diff/vertical/manager.ts     |   1 -
+ extensions/vscode/src/extension/VsCodeExtension.ts |   1 +
+ gui/src/hooks/useChatHandler.ts                    |   3 +-
+ 25 files changed, 197 insertions(+), 1175 deletions(-)
+diff --git a/commit.patch b/commit.patch
+deleted file mode 100644
+index cc0c42e38..000000000
+--- a/commit.patch
++++ /dev/null
+@@ -1,914 +0,0 @@
+-diff --git a/commit.patch b/commit.patch
+-new file mode 100644
+-index 000000000..e69de29bb
+-diff --git a/core/autocomplete/completionProvider.ts b/core/autocomplete/completionProvider.ts
+-index da11f1ed6..e2ccf0e7d 100644
+---- a/core/autocomplete/completionProvider.ts
+-+++ b/core/autocomplete/completionProvider.ts
+-@@ -152,7 +152,7 @@ export class CompletionProvider {
+-   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
+-   private static debouncing = false;
+-   private static lastUUID: string | undefined = undefined;
+--
+-+  private times: number[];
+-   constructor(
+-     private readonly configHandler: ConfigHandler,
+-     private readonly ide: IDE,
+-@@ -168,6 +168,7 @@ export class CompletionProvider {
+-       this.importDefinitionsService,
+-       this.ide,
+-     );
+-+    this.times = [];
+-   }
+- 
+-   private importDefinitionsService: ImportDefinitionsService;
+-@@ -251,7 +252,6 @@ export class CompletionProvider {
+-     token: AbortSignal | undefined,
+-     selectedModelTitle: string | undefined,
+-   ): Promise<AutocompleteOutcome | undefined> {
+--    const startTime = Date.now();
+-     try {
+-       // Debounce
+-       const uuid = uuidv4();
+-@@ -356,13 +356,6 @@ export class CompletionProvider {
+- 
+-       const outcome = await this.getTabCompletion(token, options, llm, input,selectedModelTitle);
+- 
+--      const time = Date.now() - startTime;
+--      // console.log()
+--      // await this.configHandler.logMessage(
+--      //   "Document Path: /continue/core/autocomplete/completionProvider.ts\n"+
+--      //   "provideInlineCompletionItems - time："+time/1000+"s\n"
+--      // );
+--      // "provideInlineCompletionItems 补全结果："+outcome?.completion+"\n"
+-       if (!outcome?.completion) {
+-         return undefined;
+-       }
+-@@ -623,7 +616,6 @@ export class CompletionProvider {
+-           2,
+-         )}\n${prefix}`;
+-       }
+--
+-       prompt = compiledTemplate({
+-         prefix,
+-         suffix,
+-@@ -667,14 +659,40 @@ export class CompletionProvider {
+-       if (!processedCompletion) {
+-         return undefined;
+-       }
+--
+-       completion = processedCompletion
+--      // await this.configHandler.logMessage(
+--      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+--      //   "使用缓存：getTabCompletion-cachedCompletion\n"+
+--      //   completion+"\n"
+--      // );
+-     } else {
+-+      if (typeof template === "string") {
+-+        let modified_prefix = prefix;
+-+        // // 调用 RAG 
+-+        // const RAGstartTime = Date.now();
+-+        // const CodebaseContext = await this.resolveCodebase(prompt,selectedModelTitle);
+-+        // modified_prefix = CodebaseContext + "```" + filepath + "```" + prefix;
+-+        // const RAGtime = Date.now() - RAGstartTime;
+-+        // await this.configHandler.logMessage(
+-+        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+-+        //   "获取codebasecontext耗时："+RAGtime/1000+"s\n"
+-+        // );
+-+        const compiledTemplate = Handlebars.compile(template);
+-+        prompt = compiledTemplate({
+-+          modified_prefix,
+-+          suffix,
+-+          filename,
+-+          reponame,
+-+          language: lang.name,
+-+        });
+-+      }else{
+-+        // Let the template function format snippets
+-+        prompt = template(
+-+          prefix,
+-+          suffix,
+-+          filepath,
+-+          reponame,
+-+          lang.name,
+-+          snippets,
+-+        );
+-+      }
+-+      
+-+
+-       const stop = [
+-         ...(completionOptions?.stop || []),
+-         ...multilineStops,
+-@@ -696,17 +714,6 @@ export class CompletionProvider {
+-           options.multilineCompletions !== "never" &&
+-           (options.multilineCompletions === "always" || completeMultiline);
+-       }
+--      
+--      // // 调用 RAG 
+--      // const RAGstartTime = Date.now();
+--      // const CodebaseContext = await this.resolveCodebase(prompt,selectedModelTitle);
+--      // prefix = CodebaseContext + "```" + filepath + "```" + prefix;
+--      // const RAGtime = Date.now() - RAGstartTime;
+--      // await this.configHandler.logMessage(
+--      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+--      //   "获取codebasecontext耗时："+RAGtime/1000+"s\n"
+--      // );
+--
+- 
+-       // Try to reuse pending requests if what the user typed matches start of completion
+-       const generator = this.generatorReuseManager.getGenerator(
+-@@ -791,24 +798,9 @@ export class CompletionProvider {
+- 
+- 
+-       try {
+--        // await this.configHandler.logMessage(
+--        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+--        //   "步骤1-不使用缓存：getTabCompletion生成\n"
+--        // );
+--        
+-         for await (const update of finalGenerator) {
+-           completion += update;
+--          // await this.configHandler.logMessage(
+--          //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+--          //   "步骤1-不使用缓存：getTabCompletion生成中。。。。\n"+
+--          //   completion +"\n"
+--          // );
+-         }
+--        // await this.configHandler.logMessage(
+--        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+--        //   "不使用缓存：finalGenerator\n"+
+--        //   completion+"\n"
+--        // );
+-       } catch (e: any) {
+-         if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
+-           return undefined;
+-@@ -828,13 +820,6 @@ export class CompletionProvider {
+-         llm,
+-         configHandler: this.configHandler
+-       });
+--      
+--      // await this.configHandler.logMessage(
+--      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+--      //   "步骤1-不使用缓存-后处理：getTabCompletion-processedCompletion\n"+
+--      //   processedCompletion+"\n"
+--      // );
+--
+-       if (!processedCompletion) {
+-         return undefined;
+-       }
+-@@ -842,6 +827,27 @@ export class CompletionProvider {
+-     }
+- 
+-     const time = Date.now() - startTime;
+-+
+-+    this.times.push(time);
+-+    const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+-+    const sortedTimes = [...this.times].sort((a, b) => a - b);
+-+    const mid = Math.floor(sortedTimes.length / 2);
+-+    const medianTime = sortedTimes.length % 2 !== 0
+-+        ? sortedTimes[mid]
+-+        : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+-+    const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+-+    const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+-+    await this.configHandler.logMessage(
+-+      "core/autocomplete/completionProvider.ts\n" + 
+-+      "getTabCompletion - Time: " + time/1000 + "s\n" + 
+-+      "getTabCompletion - Completion: " + completion + "\n" + 
+-+      "getTabCompletion - cacheHit: " + cacheHit + "\n" + 
+-+      "getTabCompletion - Data Count: " + this.times.length + "\n" + 
+-+      "getTabCompletion - Mean Time: " + (meanTime / 1000) + "s\n" +
+-+      "getTabCompletion - Median Time: " + (medianTime / 1000) + "s\n" +
+-+      "getTabCompletion - P95 Time: " + (p95Time / 1000) + "s\n" +
+-+      "getTabCompletion - P99 Time: " + (p99Time / 1000) + "s\n"
+-+    );
+-     const timestamp = Date.now();
+-     return {
+-       time,
+-diff --git a/core/autocomplete/postprocessing.ts b/core/autocomplete/postprocessing.ts
+-index 32f83ad48..289d03c28 100644
+---- a/core/autocomplete/postprocessing.ts
+-+++ b/core/autocomplete/postprocessing.ts
+-@@ -59,8 +59,9 @@ export function postprocessCompletion({
+-   // Don't return empty
+-   if (completion.trim().length <= 0) {
+-     configHandler.logMessage(
+--      // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+--      "后处理：补全结果为空，返回 undefined\n"
+-+      "autocomplete/postprocessing.ts\n" 
+-+      + "completion: "+completion+"\n"
+-+      + "后处理：补全结果为空，返回 undefined\n"
+-     )
+-     return undefined;
+-   }
+-@@ -72,21 +73,22 @@ export function postprocessCompletion({
+-       .filter((line) => line.trim().length > 0)
+-       .slice(1)  // 获取第二个及以后的非空行
+-       .join("\n");  // 将数组转换为字符串，以换行符连接
+--    // configHandler.logMessage(
+--    //   // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+--    //   + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
+--    //   + "completion: "+completion+"\n"
+--    // )
+-+      configHandler.logMessage(
+-+        "autocomplete/postprocessing.ts\n"
+-+        + "completion: "+completion+"\n"
+-+        + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
+-+      )
+-     if (secondLineAndAfterOfCompletion == undefined) return undefined;
+-     else completion = secondLineAndAfterOfCompletion;
+-   }
+- 
+-   // Filter out repetitions of many lines in a row
+-   if (isExtremeRepetition(completion)) {
+--    // configHandler.logMessage(
+--    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+--    //   + "后处理：连续多行的重复内容，返回 undefined\n"
+--    // )
+-+    configHandler.logMessage(
+-+      "autocomplete/postprocessing.ts\n"
+-+      + "completion: "+completion+"\n"
+-+      + "后处理：连续多行的重复内容，返回 undefined\n"
+-+    )
+-     return undefined;
+-   }
+- 
+-@@ -111,11 +113,12 @@ export function postprocessCompletion({
+-     !(prefix.endsWith("\n") ||prefix.endsWith("\t")||prefix.endsWith("  ")) &&
+-     (suffix.startsWith("\n") || suffix.trim().length === 0)
+-   ) {
+--    // configHandler.logMessage(
+--    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
+--    //   + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
+--    //   + "前缀以" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
+--    // )
+-+    configHandler.logMessage(
+-+      "core/autocomplete/postprocessing.ts\n"
+-+      + "completion: "+completion+"\n"
+-+      + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
+-+      + "前缀以ASCII码" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
+-+    )
+-     // completion = "\n" + completion;
+-     return undefined;
+-   }
+-diff --git a/core/config/ConfigHandler.ts b/core/config/ConfigHandler.ts
+-index 2df2435e6..30ffcfc9c 100644
+---- a/core/config/ConfigHandler.ts
+-+++ b/core/config/ConfigHandler.ts
+-@@ -40,7 +40,7 @@ export class ConfigHandler {
+-   constructor(
+-     private readonly ide: IDE,
+-     private ideSettingsPromise: Promise<IdeSettings>,
+--    private readonly writeLog: (text: string) => Promise<void>,
+-+    public readonly writeLog: (text: string) => Promise<void>,
+-     private controlPlaneClient: ControlPlaneClient,
+-   ) {
+-     this.ide = ide;
+-diff --git a/core/config/load.ts b/core/config/load.ts
+-index 795b62668..1cdb5a479 100644
+---- a/core/config/load.ts
+-+++ b/core/config/load.ts
+-@@ -242,15 +242,6 @@ async function intermediateToFinalConfig(
+- ): Promise<ContinueConfig> {
+-   // Auto-detect models
+-   let models: BaseLLM[] = [];
+--
+--  // writeLog(
+--  //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/config/load.ts\n"+
+--  //   "identify: intermediateToFinalConfig-config\n"+
+--  //   JSON.stringify({
+--  //     ...config
+--  //   },null,2,)
+--  // )
+--  
+-   for (const desc of config.models) {
+-     if (isModelDescription(desc)) {
+-       const llm = await llmFromDescription(
+-diff --git a/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts b/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts
+-index 04f34925b..2ea2c9450 100644
+---- a/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts
+-+++ b/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts
+-@@ -34,7 +34,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
+-     this.lanceDbIndex = new LanceDbIndex(
+-       options.config.embeddingsProvider,
+-       (path) => options.ide.readFile(path),
+--      options.pathSep,
+-+      options.pathSep
+-     );
+-     this.writeLog = writeLog;
+-   }
+-diff --git a/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts b/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts
+-index 50e4b0e46..de02f7f13 100644
+---- a/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts
+-+++ b/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts
+-@@ -10,31 +10,34 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
+- 
+-     let retrievalResults: Chunk[] = [];
+- 
+--    // const ftsstartTime = Date.now();
+-+    const ftsstartTime = Date.now();
+-     const ftsChunks = await this.retrieveFts(input, nRetrieve);
+--    // const ftstime = Date.now() - ftsstartTime;
+-+    const ftstime = Date.now() - ftsstartTime;
+-     // this.writeLog(
+--    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+--    //   "retrieve ftsChunks 耗时："+ftstime/1000+"s\n"
+-+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+-+    //   "retrieveFts - time: " + ftstime/1000 + "s\n" +
+-+    //   "retrieveFts - ftsChunks: " + JSON.stringify({...ftsChunks},null,2) + "\n"
+-     // );
+--
+--    // const embeddingsstartTime = Date.now();
+-+    
+-+    const embeddingsstartTime = Date.now();
+-     const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
+--    // const embeddingstime = Date.now() - embeddingsstartTime;
+-+    const embeddingstime = Date.now() - embeddingsstartTime;
+-     // this.writeLog(
+--    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+--    //   "retrieve embeddingsChunks 耗时："+embeddingstime/1000+"s\n"
+-+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+-+    //   "retrieveEmbeddings - time: " + embeddingstime/1000 + "s\n" +
+-+    //   "retrieveEmbeddings - embeddingsChunks: " + JSON.stringify({...embeddingsChunks},null,2) + "\n"
+-     // );
+- 
+-     // const recentlyEditedFilesstartTime = Date.now();
+--    const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+-+    // const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+-     // const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
+--    // this.writeLog(
+--    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+--    //   "retrieve recentlyEditedFilesChunks 耗时："+recentlyEditedFilestime/1000+"s\n"
+-+    // this.writeLog( 
+-+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n" +
+-+    //   "retrieveAndChunkRecentlyEditedFiles - time: " + recentlyEditedFilestime/1000 + "s\n" +
+-+    //   "retrieveAndChunkRecentlyEditedFiles - recentlyEditedFilesChunks: " + JSON.stringify({...recentlyEditedFilesChunks},null,2) + "\n"
+-     // );
+- 
+--    // const repoMapstartTime = Date.now();
+-+    const repoMapstartTime = Date.now();
+-     const repoMapChunks = await requestFilesFromRepoMap(
+-       this.options.llm,
+-       this.options.config,
+-@@ -42,14 +45,15 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
+-       input,
+-       filterDirectory,
+-     );
+--    // const repoMapTime = Date.now() - repoMapstartTime;
+-+    const repoMapTime = Date.now() - repoMapstartTime;
+-     // this.writeLog(
+--    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+--    //   "retrieve repoMapChunks 耗时："+repoMapTime/1000+"s\n"
+-+    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+-+    //   "requestFilesFromRepoMap - time: " + repoMapTime/1000 + "s\n" +
+-+    //   "requestFilesFromRepoMap - repoMapChunks: " + JSON.stringify({...repoMapChunks},null,2) + "\n"
+-     // );
+- 
+-     retrievalResults.push(
+--      ...recentlyEditedFilesChunks,
+-+      // ...recentlyEditedFilesChunks,
+-       ...ftsChunks,
+-       ...embeddingsChunks,
+-       ...repoMapChunks,
+-diff --git a/core/core.ts b/core/core.ts
+-index e09d69550..8695865ef 100644
+---- a/core/core.ts
+-+++ b/core/core.ts
+-@@ -316,11 +316,6 @@ export class Core {
+-       if (!provider) {
+-         return [];
+-       }
+--      // this.configHandler.logMessage(
+--      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+--      //   "context/getContextItems\n"+
+--      //   "msg: " + JSON.stringify({...msg},null,2)+"\n"
+--      // )
+-       try {
+-         const id: ContextItemId = {
+-           providerTitle: provider.description.title,
+-@@ -372,9 +367,6 @@ export class Core {
+-       abortedMessageIds: Set<string>,
+-       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
+-     ) {
+--      // configHandler.logMessage(
+--      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+--      //   "llm/llmStreamChat\n")
+- 
+-       const config = await configHandler.loadConfig();
+- 
+-@@ -422,9 +414,6 @@ export class Core {
+-       abortedMessageIds: Set<string>,
+-       msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
+-     ) {
+--      // configHandler.logMessage(
+--      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+--      //   "llm/streamComplete\n")
+-       const model = await configHandler.llmFromTitle(msg.data.title);
+-       const gen = model.streamComplete(
+-         msg.data.prompt,
+-@@ -581,9 +570,6 @@ export class Core {
+- 
+-     // Autocomplete
+-     on("autocomplete/complete", async (msg) => {
+--      // this.configHandler.logMessage(
+--      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+--      //   "autocomplete/complete\n")
+-       const outcome =
+-         await this.completionProvider.provideInlineCompletionItems(
+-           msg.data,
+-@@ -604,9 +590,6 @@ export class Core {
+-       abortedMessageIds: Set<string>,
+-       msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
+-     ) {
+--      // configHandler.logMessage(
+--      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
+--      //   "streamDiffLines\n")
+-       const data = msg.data;
+-       const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
+-       for await (const diffLine of streamDiffLines(
+-diff --git a/core/edit/streamDiffLines.ts b/core/edit/streamDiffLines.ts
+-index cad33b3a2..45ed6305a 100644
+---- a/core/edit/streamDiffLines.ts
+-+++ b/core/edit/streamDiffLines.ts
+-@@ -92,8 +92,13 @@ export async function* streamDiffLines(
+-     input,
+-     language,
+-   );
+--  const inept = modelIsInept(llm.model);
+--
+-+  /** DEBUG 
+-+   */
+-+  let llm_model = llm.model;
+-+  if (llm.model === undefined){
+-+    llm_model = llm.completionOptions.model;
+-+  }
+-+  const inept = modelIsInept(llm_model); // llm.model -> llm_model
+-   const options: LLMFullCompletionOptions = {};
+-   const completion =
+-     typeof prompt === "string"
+-diff --git a/core/indexing/CodebaseIndexer.ts b/core/indexing/CodebaseIndexer.ts
+-index 6eca76268..573a1c746 100644
+---- a/core/indexing/CodebaseIndexer.ts
+-+++ b/core/indexing/CodebaseIndexer.ts
+-@@ -425,4 +425,4 @@ export class CodebaseIndexer {
+-     const path = filepath.split(pathSep);
+-     return path[path.length - 1];
+-   }
+--}
+-+}
+-\ No newline at end of file
+-diff --git a/core/indexing/LanceDbIndex.ts b/core/indexing/LanceDbIndex.ts
+-index 57ee34e8a..3c6749326 100644
+---- a/core/indexing/LanceDbIndex.ts
+-+++ b/core/indexing/LanceDbIndex.ts
+-@@ -530,4 +530,4 @@ export class LanceDbIndex implements CodebaseIndex {
+-   private formatListPlurality(word: string, length: number): string {
+-     return length <= 1 ? word : `${word}s`;
+-   }
+--}
+-+}
+-\ No newline at end of file
+-diff --git a/core/indexing/chunk/ChunkCodebaseIndex.ts b/core/indexing/chunk/ChunkCodebaseIndex.ts
+-index cdf91f359..3b0ca854a 100644
+---- a/core/indexing/chunk/ChunkCodebaseIndex.ts
+-+++ b/core/indexing/chunk/ChunkCodebaseIndex.ts
+-@@ -1,5 +1,7 @@
+- import * as path from "path";
+-+
+- import { RunResult } from "sqlite3";
+-+
+- import { IContinueServerClient } from "../../continueServer/interface.js";
+- import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
+- import { getBasename } from "../../util/index.js";
+-@@ -11,6 +13,7 @@ import {
+-   RefreshIndexResults,
+-   type CodebaseIndex,
+- } from "../types.js";
+-+
+- import { chunkDocument, shouldChunk } from "./chunk.js";
+- 
+- export class ChunkCodebaseIndex implements CodebaseIndex {
+-@@ -23,9 +26,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
+-     private readonly pathSep: string,
+-     private readonly continueServerClient: IContinueServerClient,
+-     private readonly maxChunkSize: number,
+--  ) {
+--    this.readFile = readFile;
+--  }
+-+  ) {}
+- 
+-   async *update(
+-     tag: IndexTag,
+-@@ -245,4 +246,4 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
+-       });
+-     });
+-   }
+--}
+-+}
+-\ No newline at end of file
+-diff --git a/core/indexing/chunk/code.ts b/core/indexing/chunk/code.ts
+-index be02fbb2a..b80056a78 100644
+---- a/core/indexing/chunk/code.ts
+-+++ b/core/indexing/chunk/code.ts
+-@@ -130,7 +130,6 @@ async function constructFunctionDefinitionChunk(
+-   const funcText =
+-     code.slice(node.startIndex, bodyNode.startIndex) +
+-     collapsedReplacement(bodyNode);
+--
+-   if (
+-     node.parent &&
+-     ["block", "declaration_list"].includes(node.parent.type) &&
+-@@ -188,6 +187,7 @@ async function maybeYieldChunk(
+-   return undefined;
+- }
+- 
+-+
+- async function* getSmartCollapsedChunks(
+-   node: SyntaxNode,
+-   code: string,
+-diff --git a/core/indexing/refreshIndex.ts b/core/indexing/refreshIndex.ts
+-index 51cbdb646..c6776e727 100644
+---- a/core/indexing/refreshIndex.ts
+-+++ b/core/indexing/refreshIndex.ts
+-@@ -470,4 +470,4 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
+-       tag.artifactId,
+-     );
+-   }
+--}
+-+}
+-\ No newline at end of file
+-diff --git a/core/llm/index.ts b/core/llm/index.ts
+-index ea0580f95..546e539f6 100644
+---- a/core/llm/index.ts
+-+++ b/core/llm/index.ts
+-@@ -89,7 +89,8 @@ export abstract class BaseLLM implements ILLM {
+-   
+-   uniqueId: string;
+-   model: string;
+--
+-+  times: number[];
+-+  ttfts: number[];
+-   title?: string;
+-   systemMessage?: string;
+-   contextLength: number;
+-@@ -205,6 +206,9 @@ export abstract class BaseLLM implements ILLM {
+-     this.apiType = options.apiType;
+-     this.region = options.region;
+-     this.projectId = options.projectId;
+-+    // 新增 times 数组
+-+    this.times = [];
+-+    this.ttfts = [];
+-   }
+- 
+-   listModels(): Promise<string[]> {
+-@@ -465,14 +469,21 @@ export abstract class BaseLLM implements ILLM {
+-       suffix,
+-       completionOptions,
+-     )) {
+--      // 新增
+--      // 如果是连续空行不返回
+--      if (chunk.trim() === "" && completion[completion.length - 1] === "\n") {
+--        continue;
+-+        let newChunk = chunk;
+-+        // 新增后处理
+-+        // 如果第一行为空行，不返回
+-+        if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+-+          while (newChunk.startsWith("\n")) {
+-+            newChunk = newChunk.slice(1);
+-+          }
+-+          if (newChunk.length === 0) {
+-+              continue;
+-+          }
+-+        }
+-+        completion += newChunk;
+-+        yield newChunk;
+-       }
+--      completion += chunk;
+--      yield chunk;
+--    }
+-+      
+- 
+-     this._logTokensGenerated(
+-       completionOptions.model,
+-@@ -485,13 +496,10 @@ export abstract class BaseLLM implements ILLM {
+-     const lastNonEmptyLine = prefixLines[prefixLines.length - 1];
+- 
+-     if (log && this.writeLog) {
+--      // await this.writeLog(
+--      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"
+--      //   + "streamFim - time："+time/1000+"s\n"
+--      //   + "streamFim - completion: \n"+completion+"\n"
+--      // );
+-       await this.writeLog(
+--        "streamFim - completion: \n"+completion+"\n"
+-+        "core/llm/index.ts\n"
+-+        + "streamFim - time："+time/1000+"s\n"
+-+        + "streamFim - completion: \n"+completion+"\n"
+-       );
+-     }
+-     return {
+-@@ -536,21 +544,69 @@ export abstract class BaseLLM implements ILLM {
+- 
+- 
+-     let completion = "";
+-+    let flag = false;
+-+
+-+    const start_TTFT_Time = Date.now(); // 记录开始时间
+-     for await (const chunk of this._streamComplete(prompt, completionOptions)) {
+--      completion += chunk;
+--      yield chunk;
+--    }
+-+      let newChunk = chunk;
+-+      // 新增后处理
+-+      // 如果第一行为空行，不返回
+-+      if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+-+        while (newChunk.startsWith("\n")) {
+-+          newChunk = newChunk.slice(1);
+-+        }
+-+        if (newChunk.length === 0) {
+-+            continue;
+-+        }
+-+      }
+- 
+-+      // 计算ttft时间
+-+      if (!flag) {
+-+        flag = true;
+-+        const ttfts = Date.now() - start_TTFT_Time; // 计算ttft时间，单位为秒
+-+        this.ttfts.push(ttfts);
+-+      }
+-+    
+-+      completion += newChunk;
+-+      yield newChunk;
+-+    }
+-     this._logTokensGenerated(completionOptions.model, prompt, completion);
+-     const time = Date.now() - startTime;
+-     if (log && this.writeLog) {
+--      // await this.writeLog(
+--      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+--      //   "streamComplete - time: "+time/1000+"s\n"
+--      //   + "streamComplete - completion: \n"+completion+"\n"
+--      // );
+-+      this.times.push(time);
+-+      
+-+      // 计算时间的统计数据
+-+      const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+-+      const sortedTimes = [...this.times].sort((a, b) => a - b);
+-+      const mid = Math.floor(sortedTimes.length / 2);
+-+      const medianTime = sortedTimes.length % 2 !== 0 ? sortedTimes[mid] : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+-+      const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+-+      const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+-+      
+-+      // 计算TTFT的统计数据
+-+      const meanTTFT = this.ttfts.reduce((acc, t) => acc + t, 0) / this.ttfts.length;
+-+      const sortedTTFT = [...this.ttfts].sort((a, b) => a - b);
+-+      const midTTFT = Math.floor(sortedTTFT.length / 2);
+-+      const medianTTFT = sortedTTFT.length % 2 !== 0 ? sortedTTFT[midTTFT] : (sortedTTFT[midTTFT - 1] + sortedTTFT[midTTFT]) / 2;
+-+      const p95TTFT = sortedTTFT[Math.ceil(0.95 * sortedTTFT.length) - 1];
+-+      const p99TTFT = sortedTTFT[Math.ceil(0.99 * sortedTTFT.length) - 1];
+-       await this.writeLog(
+--        "streamComplete - completion: \n"+completion+"\n"
+-+        "core/llm/index.ts\n" +
+-+        "streamComplete - Completion: \n" + completion + "\n" +
+-+        "----------------------Time------------------------\n" +
+-+        "streamComplete - Time: " + (time / 1000) + "s\n" +
+-+        "streamComplete - Data Count: " + this.times.length + "\n" + 
+-+        "streamComplete - Mean Time: " + (meanTime / 1000) + "s\n" +
+-+        "streamComplete - Median Time: " + (medianTime / 1000) + "s\n" +
+-+        "streamComplete - P95 Time: " + (p95Time / 1000) + "s\n" + 
+-+        "streamComplete - P99 Time: " + (p99Time / 1000) + "s\n" +
+-+        "----------------------Time to First Token------------------------\n" +
+-+        "streamComplete - TTFT: " + (this.ttfts[this.ttfts.length - 1] / 1000) + "s\n" +
+-+        "streamComplete - TTFT Count: " + this.ttfts.length + "\n" +
+-+        "streamComplete - Mean TTFT: " + (meanTTFT / 1000) + "s\n" +
+-+        "streamComplete - Median TTFT: " + (medianTTFT / 1000) + "s\n" +
+-+        "streamComplete - P95 TTFT: " + (p95TTFT / 1000) + "s\n" +
+-+        "streamComplete - P99 TTFT: " + (p99TTFT / 1000) + "s\n"
+-       );
+-     }
+- 
+-@@ -595,13 +651,10 @@ export abstract class BaseLLM implements ILLM {
+- 
+-     const time = Date.now() - startTime;
+-     if (log && this.writeLog) {
+--      // await this.writeLog(
+--      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+--      //   "complete - time: "+time/1000+"s\n"
+--      //   +"complete - completion: \n"+completion+"\n"
+--      // );
+-       await this.writeLog(
+--        "complete - completion: \n"+completion+"\n"
+-+        "core/llm/index.ts\n"
+-+        + "complete - time: "+time/1000+"s\n"
+-+        + "complete - completion: \n"+completion+"\n"
+-       );
+-     }
+- 
+-@@ -670,13 +723,10 @@ export abstract class BaseLLM implements ILLM {
+- 
+-     const time = Date.now() - startTime;
+-     if (log && this.writeLog) {
+--      // await this.writeLog(
+--      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
+--      //   "streamChat - time: "+time/1000 + "s\n"+
+--      //   "streamChat - completion: \n"+completion+"\n"
+--      // );
+-       await this.writeLog(
+--        "streamChat - completion: \n"+completion+"\n"
+-+        "core/llm/index.ts\n" +
+-+        "streamChat - time: "+time/1000 + "s\n" +
+-+        "streamChat - completion: \n"+completion + "\n"
+-       );
+-     }
+- 
+-@@ -765,10 +815,17 @@ export abstract class BaseLLM implements ILLM {
+-       // Some providers don't allow you to put words in the model's mouth
+-       // So we have to manually compile the prompt template and use
+-       // raw /completions, not /chat/completions
+-+      /** DEBUG: llm 配置格式问题
+-+       * 读取到的 qwen模型 model 信息不在 this.model，而在 this.completionOptions.model
+-+       * */ 
+-+      let this_model = this.model;
+-+      if (this.model === undefined){
+-+        this_model = this.completionOptions.model;
+-+      }
+-       const templateMessages = autodetectTemplateFunction(
+--        this.model,
+-+        this_model,
+-         this.providerName,
+--        autodetectTemplateType(this.model),
+-+        autodetectTemplateType(this_model),
+-       );
+-       return templateMessages(rendered);
+-     }
+-diff --git a/core/llm/llms/OpenAI.ts b/core/llm/llms/OpenAI.ts
+-index 9362f58b9..760b9c53c 100644
+---- a/core/llm/llms/OpenAI.ts
+-+++ b/core/llm/llms/OpenAI.ts
+-@@ -301,31 +301,24 @@ class OpenAI extends BaseLLM {
+-       },
+-     });
+-     for await (const chunk of streamSse(resp)) {
+--      // chunk 格式
+--      // chunk: {
+--      //   "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
+--      //   "object": "text_completion",
+--      //   "created": 1730795368,
+--      //   "model": "/models/AI-ModelScope/starcoder2-3b",
+--      //   "choices": [
+--      //     {
+--      //       "index": 0,
+--      //       "text": ")\n# merge sort", text就是模型回复的补全结果
+--      //       "logprobs": null,
+--      //       "finish_reason": "stop",
+--      //       "stop_reason": "\ndef"
+--      //     }
+--      //   ],
+--      //   "usage": null
+--      // }
+--
+--
+--      // if (this.writeLog){
+--      //   await this.writeLog(
+--      //     "response: "+JSON.stringify({...resp},null,2)+"\n"
+--      //     +"chunk: "+JSON.stringify({...chunk},null,2)+"\n"
+--      //   );
+--      // }
+-+      /** DEBUG: api回复格式问题
+-+       * chunk: {
+-+       * "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
+-+       * "object": "text_completion",
+-+       * "created": 1730795368,
+-+       * "model": "/models/AI-ModelScope/starcoder2-3b",
+-+       * "choices": [
+-+       *   {
+-+       *     "index": 0,
+-+       *     "text": ")\n# merge sort", text就是模型回复的补全结果
+-+       *     "logprobs": null,
+-+       *     "finish_reason": "stop",
+-+       *     "stop_reason": "\ndef"
+-+       *   }
+-+       *  ],
+-+       *  "usage": null
+-+       * }
+-+       * */ 
+-       yield chunk.choices[0].text;
+-     }
+-   }
+-diff --git a/core/test/util/indexing.ts b/core/test/util/indexing.ts
+-index 650cc5b56..9eb44b573 100644
+---- a/core/test/util/indexing.ts
+-+++ b/core/test/util/indexing.ts
+-@@ -63,6 +63,7 @@ export async function insertMockChunks() {
+-     pathSep,
+-     mockContinueServerClient,
+-     1000,
+-+    async (_log: string): Promise<void> => {},
+-   );
+- 
+-   addToTestDir([[mockFilename, mockFileContents]]);
+-diff --git a/extensions/vscode/continue-0.8.56.vsix b/extensions/vscode/continue-0.8.56.vsix
+-new file mode 100644
+-index 000000000..4cb276ed0
+-Binary files /dev/null and b/extensions/vscode/continue-0.8.56.vsix differ
+-diff --git a/extensions/vscode/package-lock.json b/extensions/vscode/package-lock.json
+-index fc2eddacd..6845f58fc 100644
+---- a/extensions/vscode/package-lock.json
+-+++ b/extensions/vscode/package-lock.json
+-@@ -4452,11 +4452,10 @@
+-     },
+-     "node_modules/esbuild": {
+-       "version": "0.17.19",
+--      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.17.19.tgz",
+-+      "resolved": "https://registry.npmmirror.com/esbuild/-/esbuild-0.17.19.tgz",
+-       "integrity": "sha512-XQ0jAPFkK/u3LcVRcvVHQcTIqD6E2H1fvZMA5dQPSOWb3suUbWbfbRf94pjc0bNzRYLfIrDRQXr7X+LHIm5oHw==",
+-       "dev": true,
+-       "hasInstallScript": true,
+--      "license": "MIT",
+-       "bin": {
+-         "esbuild": "bin/esbuild"
+-       },
+-diff --git a/extensions/vscode/src/VsCodeIde.ts b/extensions/vscode/src/VsCodeIde.ts
+-index 43911c6f8..8ec65c3b5 100644
+---- a/extensions/vscode/src/VsCodeIde.ts
+-+++ b/extensions/vscode/src/VsCodeIde.ts
+-@@ -284,7 +284,6 @@ class VsCodeIde implements IDE {
+-         pathToLastModified[file] = stat.mtime;
+-       }),
+-     );
+--
+-     return pathToLastModified;
+-   }
+- 
+-diff --git a/extensions/vscode/src/autocomplete/completionProvider.ts b/extensions/vscode/src/autocomplete/completionProvider.ts
+-index ade2a16e8..76c5feff1 100644
+---- a/extensions/vscode/src/autocomplete/completionProvider.ts
+-+++ b/extensions/vscode/src/autocomplete/completionProvider.ts
+-@@ -57,7 +57,7 @@ export class ContinueCompletionProvider
+- 
+-   private completionProvider: CompletionProvider;
+-   private recentlyEditedTracker = new RecentlyEditedTracker();
+--
+-+  private times: number[];
+-   constructor(
+-     private readonly configHandler: ConfigHandler,
+-     private readonly ide: IDE,
+-@@ -71,7 +71,7 @@ export class ContinueCompletionProvider
+-       this.onError.bind(this),
+-       getDefinitionsFromLsp,
+-     );
+--
+-+    this.times = [];
+-     vscode.workspace.onDidChangeTextDocument((event) => {
+-       if (event.document.uri.fsPath === this._lastShownCompletion?.filepath) {
+-         // console.log("updating completion");
+-@@ -220,9 +220,24 @@ export class ContinueCompletionProvider
+-         );
+- 
+-       const time = Date.now() - startTime;
+--      await console.log(
+--        `ContinueCompletionProvider - time：`+time/1000 + `s\n`+
+--        `ContinueCompletionProvider - completion：`+outcome?.completion + `\n`
+-+      this.times.push(time);
+-+      const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+-+      const sortedTimes = [...this.times].sort((a, b) => a - b);
+-+      const mid = Math.floor(sortedTimes.length / 2);
+-+      const medianTime = sortedTimes.length % 2 !== 0
+-+          ? sortedTimes[mid]
+-+          : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+-+      const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+-+      const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+-+      await this.configHandler.logMessage(
+-+        "extensions/vscode/src/autocomplete/completionProvider.ts\n"+ 
+-+        "ContinueCompletionProvider - time: " + time/1000 + "s\n"+
+-+        "ContinueCompletionProvider - completion: " + outcome?.completion + "\n"+
+-+        "ContinueCompletionProvider - Data Count: " + this.times.length + "\n" + 
+-+        "ContinueCompletionProvider - Mean Time: " + (meanTime / 1000) + "s\n" +
+-+        "ContinueCompletionProvider - Median Time: " + (medianTime / 1000) + "s\n" +
+-+        "ContinueCompletionProvider - P95 Time: " + (p95Time / 1000) + "s\n" +
+-+        "ContinueCompletionProvider - P99 Time: " + (p99Time / 1000) + "s\n"
+-       );
+-       if (!outcome || !outcome.completion) {
+-         return null;
+-diff --git a/extensions/vscode/src/diff/vertical/manager.ts b/extensions/vscode/src/diff/vertical/manager.ts
+-index 985a6ba29..72696159f 100644
+---- a/extensions/vscode/src/diff/vertical/manager.ts
+-+++ b/extensions/vscode/src/diff/vertical/manager.ts
+-@@ -376,6 +376,7 @@ export class VerticalDiffManager {
+-     }
+- 
+-     const llm = await this.configHandler.llmFromTitle(modelTitle);
+-+    
+-     const rangeContent = editor.document.getText(selectedRange);
+-     const prefix = pruneLinesFromTop(
+-       editor.document.getText(
+-diff --git a/extensions/vscode/src/extension/VsCodeExtension.ts b/extensions/vscode/src/extension/VsCodeExtension.ts
+-index 78541f8ea..86d410958 100644
+---- a/extensions/vscode/src/extension/VsCodeExtension.ts
+-+++ b/extensions/vscode/src/extension/VsCodeExtension.ts
+-@@ -247,7 +247,6 @@ export class VsCodeExtension {
+-           "showConfigUpdateToast",
+-           true,
+-         );
+--
+-         if (showToast) {
+-           vscode.window
+-             .showInformationMessage("Config updated", "Don't show again")
+diff --git a/core/autocomplete/completionProvider.ts b/core/autocomplete/completionProvider.ts
+index e2ccf0e7d..da11f1ed6 100644
+--- a/core/autocomplete/completionProvider.ts
++++ b/core/autocomplete/completionProvider.ts
+@@ -152,7 +152,7 @@ export class CompletionProvider {
+   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
+   private static debouncing = false;
+   private static lastUUID: string | undefined = undefined;
+-  private times: number[];
++
+   constructor(
+     private readonly configHandler: ConfigHandler,
+     private readonly ide: IDE,
+@@ -168,7 +168,6 @@ export class CompletionProvider {
+       this.importDefinitionsService,
+       this.ide,
+     );
+-    this.times = [];
+   }
+ 
+   private importDefinitionsService: ImportDefinitionsService;
+@@ -252,6 +251,7 @@ export class CompletionProvider {
+     token: AbortSignal | undefined,
+     selectedModelTitle: string | undefined,
+   ): Promise<AutocompleteOutcome | undefined> {
++    const startTime = Date.now();
+     try {
+       // Debounce
+       const uuid = uuidv4();
+@@ -356,6 +356,13 @@ export class CompletionProvider {
+ 
+       const outcome = await this.getTabCompletion(token, options, llm, input,selectedModelTitle);
+ 
++      const time = Date.now() - startTime;
++      // console.log()
++      // await this.configHandler.logMessage(
++      //   "Document Path: /continue/core/autocomplete/completionProvider.ts\n"+
++      //   "provideInlineCompletionItems - time："+time/1000+"s\n"
++      // );
++      // "provideInlineCompletionItems 补全结果："+outcome?.completion+"\n"
+       if (!outcome?.completion) {
+         return undefined;
+       }
+@@ -616,6 +623,7 @@ export class CompletionProvider {
+           2,
+         )}\n${prefix}`;
+       }
++
+       prompt = compiledTemplate({
+         prefix,
+         suffix,
+@@ -659,40 +667,14 @@ export class CompletionProvider {
+       if (!processedCompletion) {
+         return undefined;
+       }
++
+       completion = processedCompletion
++      // await this.configHandler.logMessage(
++      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
++      //   "使用缓存：getTabCompletion-cachedCompletion\n"+
++      //   completion+"\n"
++      // );
+     } else {
+-      if (typeof template === "string") {
+-        let modified_prefix = prefix;
+-        // // 调用 RAG 
+-        // const RAGstartTime = Date.now();
+-        // const CodebaseContext = await this.resolveCodebase(prompt,selectedModelTitle);
+-        // modified_prefix = CodebaseContext + "```" + filepath + "```" + prefix;
+-        // const RAGtime = Date.now() - RAGstartTime;
+-        // await this.configHandler.logMessage(
+-        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
+-        //   "获取codebasecontext耗时："+RAGtime/1000+"s\n"
+-        // );
+-        const compiledTemplate = Handlebars.compile(template);
+-        prompt = compiledTemplate({
+-          modified_prefix,
+-          suffix,
+-          filename,
+-          reponame,
+-          language: lang.name,
+-        });
+-      }else{
+-        // Let the template function format snippets
+-        prompt = template(
+-          prefix,
+-          suffix,
+-          filepath,
+-          reponame,
+-          lang.name,
+-          snippets,
+-        );
+-      }
+-      
+-
+       const stop = [
+         ...(completionOptions?.stop || []),
+         ...multilineStops,
+@@ -714,6 +696,17 @@ export class CompletionProvider {
+           options.multilineCompletions !== "never" &&
+           (options.multilineCompletions === "always" || completeMultiline);
+       }
++      
++      // // 调用 RAG 
++      // const RAGstartTime = Date.now();
++      // const CodebaseContext = await this.resolveCodebase(prompt,selectedModelTitle);
++      // prefix = CodebaseContext + "```" + filepath + "```" + prefix;
++      // const RAGtime = Date.now() - RAGstartTime;
++      // await this.configHandler.logMessage(
++      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
++      //   "获取codebasecontext耗时："+RAGtime/1000+"s\n"
++      // );
++
+ 
+       // Try to reuse pending requests if what the user typed matches start of completion
+       const generator = this.generatorReuseManager.getGenerator(
+@@ -798,9 +791,24 @@ export class CompletionProvider {
+ 
+ 
+       try {
++        // await this.configHandler.logMessage(
++        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
++        //   "步骤1-不使用缓存：getTabCompletion生成\n"
++        // );
++        
+         for await (const update of finalGenerator) {
+           completion += update;
++          // await this.configHandler.logMessage(
++          //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
++          //   "步骤1-不使用缓存：getTabCompletion生成中。。。。\n"+
++          //   completion +"\n"
++          // );
+         }
++        // await this.configHandler.logMessage(
++        //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
++        //   "不使用缓存：finalGenerator\n"+
++        //   completion+"\n"
++        // );
+       } catch (e: any) {
+         if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
+           return undefined;
+@@ -820,6 +828,13 @@ export class CompletionProvider {
+         llm,
+         configHandler: this.configHandler
+       });
++      
++      // await this.configHandler.logMessage(
++      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/completionProvider.ts\n"+
++      //   "步骤1-不使用缓存-后处理：getTabCompletion-processedCompletion\n"+
++      //   processedCompletion+"\n"
++      // );
++
+       if (!processedCompletion) {
+         return undefined;
+       }
+@@ -827,27 +842,6 @@ export class CompletionProvider {
+     }
+ 
+     const time = Date.now() - startTime;
+-
+-    this.times.push(time);
+-    const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+-    const sortedTimes = [...this.times].sort((a, b) => a - b);
+-    const mid = Math.floor(sortedTimes.length / 2);
+-    const medianTime = sortedTimes.length % 2 !== 0
+-        ? sortedTimes[mid]
+-        : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+-    const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+-    const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+-    await this.configHandler.logMessage(
+-      "core/autocomplete/completionProvider.ts\n" + 
+-      "getTabCompletion - Time: " + time/1000 + "s\n" + 
+-      "getTabCompletion - Completion: " + completion + "\n" + 
+-      "getTabCompletion - cacheHit: " + cacheHit + "\n" + 
+-      "getTabCompletion - Data Count: " + this.times.length + "\n" + 
+-      "getTabCompletion - Mean Time: " + (meanTime / 1000) + "s\n" +
+-      "getTabCompletion - Median Time: " + (medianTime / 1000) + "s\n" +
+-      "getTabCompletion - P95 Time: " + (p95Time / 1000) + "s\n" +
+-      "getTabCompletion - P99 Time: " + (p99Time / 1000) + "s\n"
+-    );
+     const timestamp = Date.now();
+     return {
+       time,
+diff --git a/core/autocomplete/postprocessing.ts b/core/autocomplete/postprocessing.ts
+index 289d03c28..32f83ad48 100644
+--- a/core/autocomplete/postprocessing.ts
++++ b/core/autocomplete/postprocessing.ts
+@@ -59,9 +59,8 @@ export function postprocessCompletion({
+   // Don't return empty
+   if (completion.trim().length <= 0) {
+     configHandler.logMessage(
+-      "autocomplete/postprocessing.ts\n" 
+-      + "completion: "+completion+"\n"
+-      + "后处理：补全结果为空，返回 undefined\n"
++      // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
++      "后处理：补全结果为空，返回 undefined\n"
+     )
+     return undefined;
+   }
+@@ -73,22 +72,21 @@ export function postprocessCompletion({
+       .filter((line) => line.trim().length > 0)
+       .slice(1)  // 获取第二个及以后的非空行
+       .join("\n");  // 将数组转换为字符串，以换行符连接
+-      configHandler.logMessage(
+-        "autocomplete/postprocessing.ts\n"
+-        + "completion: "+completion+"\n"
+-        + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
+-      )
++    // configHandler.logMessage(
++    //   // "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
++    //   + "后处理：如果只是重复上面的一行，返回 secondLineAndAfterOfCompletion："+secondLineAndAfterOfCompletion+"\n"
++    //   + "completion: "+completion+"\n"
++    // )
+     if (secondLineAndAfterOfCompletion == undefined) return undefined;
+     else completion = secondLineAndAfterOfCompletion;
+   }
+ 
+   // Filter out repetitions of many lines in a row
+   if (isExtremeRepetition(completion)) {
+-    configHandler.logMessage(
+-      "autocomplete/postprocessing.ts\n"
+-      + "completion: "+completion+"\n"
+-      + "后处理：连续多行的重复内容，返回 undefined\n"
+-    )
++    // configHandler.logMessage(
++    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
++    //   + "后处理：连续多行的重复内容，返回 undefined\n"
++    // )
+     return undefined;
+   }
+ 
+@@ -113,12 +111,11 @@ export function postprocessCompletion({
+     !(prefix.endsWith("\n") ||prefix.endsWith("\t")||prefix.endsWith("  ")) &&
+     (suffix.startsWith("\n") || suffix.trim().length === 0)
+   ) {
+-    configHandler.logMessage(
+-      "core/autocomplete/postprocessing.ts\n"
+-      + "completion: "+completion+"\n"
+-      + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
+-      + "前缀以ASCII码" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
+-    )
++    // configHandler.logMessage(
++    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/autocomplete/postprocessing.ts\n"
++    //   + "后处理：如果补全以多个空格开始，但光标位于行尾, 那么可能应该换行，返回undefined\n"
++    //   + "前缀以" + prefix.charCodeAt(prefix.length - 1) + "结束\n"
++    // )
+     // completion = "\n" + completion;
+     return undefined;
+   }
+diff --git a/core/config/ConfigHandler.ts b/core/config/ConfigHandler.ts
+index 30ffcfc9c..2df2435e6 100644
+--- a/core/config/ConfigHandler.ts
++++ b/core/config/ConfigHandler.ts
+@@ -40,7 +40,7 @@ export class ConfigHandler {
+   constructor(
+     private readonly ide: IDE,
+     private ideSettingsPromise: Promise<IdeSettings>,
+-    public readonly writeLog: (text: string) => Promise<void>,
++    private readonly writeLog: (text: string) => Promise<void>,
+     private controlPlaneClient: ControlPlaneClient,
+   ) {
+     this.ide = ide;
+diff --git a/core/config/load.ts b/core/config/load.ts
+index 1cdb5a479..795b62668 100644
+--- a/core/config/load.ts
++++ b/core/config/load.ts
+@@ -242,6 +242,15 @@ async function intermediateToFinalConfig(
+ ): Promise<ContinueConfig> {
+   // Auto-detect models
+   let models: BaseLLM[] = [];
++
++  // writeLog(
++  //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/config/load.ts\n"+
++  //   "identify: intermediateToFinalConfig-config\n"+
++  //   JSON.stringify({
++  //     ...config
++  //   },null,2,)
++  // )
++  
+   for (const desc of config.models) {
+     if (isModelDescription(desc)) {
+       const llm = await llmFromDescription(
+diff --git a/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts b/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts
+index 2ea2c9450..04f34925b 100644
+--- a/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts
++++ b/core/context/retrieval/pipelines/BaseRetrievalPipeline.ts
+@@ -34,7 +34,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
+     this.lanceDbIndex = new LanceDbIndex(
+       options.config.embeddingsProvider,
+       (path) => options.ide.readFile(path),
+-      options.pathSep
++      options.pathSep,
+     );
+     this.writeLog = writeLog;
+   }
+diff --git a/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts b/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts
+index 222e0df16..50e4b0e46 100644
+--- a/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts
++++ b/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts
+@@ -10,34 +10,31 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
+ 
+     let retrievalResults: Chunk[] = [];
+ 
+-    const ftsstartTime = Date.now();
++    // const ftsstartTime = Date.now();
+     const ftsChunks = await this.retrieveFts(input, nRetrieve);
+-    const ftstime = Date.now() - ftsstartTime;
++    // const ftstime = Date.now() - ftsstartTime;
+     // this.writeLog(
+-    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+-    //   "retrieveFts - time: " + ftstime/1000 + "s\n" +
+-    //   "retrieveFts - ftsChunks: " + JSON.stringify({...ftsChunks},null,2) + "\n"
++    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
++    //   "retrieve ftsChunks 耗时："+ftstime/1000+"s\n"
+     // );
+-    
+-    const embeddingsstartTime = Date.now();
++
++    // const embeddingsstartTime = Date.now();
+     const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
+-    const embeddingstime = Date.now() - embeddingsstartTime;
++    // const embeddingstime = Date.now() - embeddingsstartTime;
+     // this.writeLog(
+-    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+-    //   "retrieveEmbeddings - time: " + embeddingstime/1000 + "s\n" +
+-    //   "retrieveEmbeddings - embeddingsChunks: " + JSON.stringify({...embeddingsChunks},null,2) + "\n"
++    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
++    //   "retrieve embeddingsChunks 耗时："+embeddingstime/1000+"s\n"
+     // );
+ 
+-    const recentlyEditedFilesstartTime = Date.now();
++    // const recentlyEditedFilesstartTime = Date.now();
+     const recentlyEditedFilesChunks = await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
+-    const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
+-    // this.writeLog( 
+-    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n" +
+-    //   "retrieveAndChunkRecentlyEditedFiles - time: " + recentlyEditedFilestime/1000 + "s\n" +
+-    //   "retrieveAndChunkRecentlyEditedFiles - recentlyEditedFilesChunks: " + JSON.stringify({...recentlyEditedFilesChunks},null,2) + "\n"
++    // const recentlyEditedFilestime = Date.now() - recentlyEditedFilesstartTime;
++    // this.writeLog(
++    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
++    //   "retrieve recentlyEditedFilesChunks 耗时："+recentlyEditedFilestime/1000+"s\n"
+     // );
+ 
+-    const repoMapstartTime = Date.now();
++    // const repoMapstartTime = Date.now();
+     const repoMapChunks = await requestFilesFromRepoMap(
+       this.options.llm,
+       this.options.config,
+@@ -45,15 +42,14 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
+       input,
+       filterDirectory,
+     );
+-    const repoMapTime = Date.now() - repoMapstartTime;
++    // const repoMapTime = Date.now() - repoMapstartTime;
+     // this.writeLog(
+-    //   "core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
+-    //   "requestFilesFromRepoMap - time: " + repoMapTime/1000 + "s\n" +
+-    //   "requestFilesFromRepoMap - repoMapChunks: " + JSON.stringify({...repoMapChunks},null,2) + "\n"
++    //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/context/retrieval/pipelines/RerankerRetrievalPipeline.ts\n"+
++    //   "retrieve repoMapChunks 耗时："+repoMapTime/1000+"s\n"
+     // );
+ 
+     retrievalResults.push(
+-      // ...recentlyEditedFilesChunks,
++      ...recentlyEditedFilesChunks,
+       ...ftsChunks,
+       ...embeddingsChunks,
+       ...repoMapChunks,
+diff --git a/core/core.ts b/core/core.ts
+index 8695865ef..e09d69550 100644
+--- a/core/core.ts
++++ b/core/core.ts
+@@ -316,6 +316,11 @@ export class Core {
+       if (!provider) {
+         return [];
+       }
++      // this.configHandler.logMessage(
++      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
++      //   "context/getContextItems\n"+
++      //   "msg: " + JSON.stringify({...msg},null,2)+"\n"
++      // )
+       try {
+         const id: ContextItemId = {
+           providerTitle: provider.description.title,
+@@ -367,6 +372,9 @@ export class Core {
+       abortedMessageIds: Set<string>,
+       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
+     ) {
++      // configHandler.logMessage(
++      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
++      //   "llm/llmStreamChat\n")
+ 
+       const config = await configHandler.loadConfig();
+ 
+@@ -414,6 +422,9 @@ export class Core {
+       abortedMessageIds: Set<string>,
+       msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
+     ) {
++      // configHandler.logMessage(
++      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
++      //   "llm/streamComplete\n")
+       const model = await configHandler.llmFromTitle(msg.data.title);
+       const gen = model.streamComplete(
+         msg.data.prompt,
+@@ -570,6 +581,9 @@ export class Core {
+ 
+     // Autocomplete
+     on("autocomplete/complete", async (msg) => {
++      // this.configHandler.logMessage(
++      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
++      //   "autocomplete/complete\n")
+       const outcome =
+         await this.completionProvider.provideInlineCompletionItems(
+           msg.data,
+@@ -590,6 +604,9 @@ export class Core {
+       abortedMessageIds: Set<string>,
+       msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
+     ) {
++      // configHandler.logMessage(
++      //   "文件路径: /ai4math/users/xmlu/continue_env/continue/core/core.ts\n"+
++      //   "streamDiffLines\n")
+       const data = msg.data;
+       const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
+       for await (const diffLine of streamDiffLines(
+diff --git a/core/edit/lazy/streamLazyApply.ts b/core/edit/lazy/streamLazyApply.ts
+index b66b20480..6dd9cef6d 100644
+--- a/core/edit/lazy/streamLazyApply.ts
++++ b/core/edit/lazy/streamLazyApply.ts
+@@ -16,15 +16,9 @@ export async function* streamLazyApply(
+   llm: ILLM,
+   fastLlm: ILLM,
+ ): AsyncGenerator<DiffLine> {
+-  /** DEBUG 
+-   */
+-  let llm_model = llm.model;
+-  if (llm.model === undefined){
+-    llm_model = llm.completionOptions.model;
+-  }
+-  const promptFactory = lazyApplyPromptForModel(llm_model, llm.providerName);
++  const promptFactory = lazyApplyPromptForModel(llm.model, llm.providerName);
+   if (!promptFactory) {
+-    throw new Error(`Lazy apply not supported for model ${llm_model}`);
++    throw new Error(`Lazy apply not supported for model ${llm.model}`);
+   }
+ 
+   const promptMessages = promptFactory(oldCode, filename, newCode);
+diff --git a/core/edit/streamDiffLines.ts b/core/edit/streamDiffLines.ts
+index 45ed6305a..cad33b3a2 100644
+--- a/core/edit/streamDiffLines.ts
++++ b/core/edit/streamDiffLines.ts
+@@ -92,13 +92,8 @@ export async function* streamDiffLines(
+     input,
+     language,
+   );
+-  /** DEBUG 
+-   */
+-  let llm_model = llm.model;
+-  if (llm.model === undefined){
+-    llm_model = llm.completionOptions.model;
+-  }
+-  const inept = modelIsInept(llm_model); // llm.model -> llm_model
++  const inept = modelIsInept(llm.model);
++
+   const options: LLMFullCompletionOptions = {};
+   const completion =
+     typeof prompt === "string"
+diff --git a/core/indexing/CodebaseIndexer.ts b/core/indexing/CodebaseIndexer.ts
+index 573a1c746..6eca76268 100644
+--- a/core/indexing/CodebaseIndexer.ts
++++ b/core/indexing/CodebaseIndexer.ts
+@@ -425,4 +425,4 @@ export class CodebaseIndexer {
+     const path = filepath.split(pathSep);
+     return path[path.length - 1];
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/core/indexing/LanceDbIndex.ts b/core/indexing/LanceDbIndex.ts
+index 4f2c1d540..57ee34e8a 100644
+--- a/core/indexing/LanceDbIndex.ts
++++ b/core/indexing/LanceDbIndex.ts
+@@ -21,7 +21,7 @@ import {
+   PathAndCacheKey,
+   RefreshIndexResults,
+ } from "./types.js";
+-// rag branch
++
+ // LanceDB  converts to lowercase, so names must all be lowercase
+ interface LanceDbRow {
+   uuid: string;
+@@ -530,4 +530,4 @@ export class LanceDbIndex implements CodebaseIndex {
+   private formatListPlurality(word: string, length: number): string {
+     return length <= 1 ? word : `${word}s`;
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/core/indexing/chunk/ChunkCodebaseIndex.ts b/core/indexing/chunk/ChunkCodebaseIndex.ts
+index 3b0ca854a..cdf91f359 100644
+--- a/core/indexing/chunk/ChunkCodebaseIndex.ts
++++ b/core/indexing/chunk/ChunkCodebaseIndex.ts
+@@ -1,7 +1,5 @@
+ import * as path from "path";
+-
+ import { RunResult } from "sqlite3";
+-
+ import { IContinueServerClient } from "../../continueServer/interface.js";
+ import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
+ import { getBasename } from "../../util/index.js";
+@@ -13,7 +11,6 @@ import {
+   RefreshIndexResults,
+   type CodebaseIndex,
+ } from "../types.js";
+-
+ import { chunkDocument, shouldChunk } from "./chunk.js";
+ 
+ export class ChunkCodebaseIndex implements CodebaseIndex {
+@@ -26,7 +23,9 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
+     private readonly pathSep: string,
+     private readonly continueServerClient: IContinueServerClient,
+     private readonly maxChunkSize: number,
+-  ) {}
++  ) {
++    this.readFile = readFile;
++  }
+ 
+   async *update(
+     tag: IndexTag,
+@@ -246,4 +245,4 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
+       });
+     });
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/core/indexing/chunk/code.ts b/core/indexing/chunk/code.ts
+index b80056a78..be02fbb2a 100644
+--- a/core/indexing/chunk/code.ts
++++ b/core/indexing/chunk/code.ts
+@@ -130,6 +130,7 @@ async function constructFunctionDefinitionChunk(
+   const funcText =
+     code.slice(node.startIndex, bodyNode.startIndex) +
+     collapsedReplacement(bodyNode);
++
+   if (
+     node.parent &&
+     ["block", "declaration_list"].includes(node.parent.type) &&
+@@ -187,7 +188,6 @@ async function maybeYieldChunk(
+   return undefined;
+ }
+ 
+-
+ async function* getSmartCollapsedChunks(
+   node: SyntaxNode,
+   code: string,
+diff --git a/core/indexing/refreshIndex.ts b/core/indexing/refreshIndex.ts
+index c6776e727..51cbdb646 100644
+--- a/core/indexing/refreshIndex.ts
++++ b/core/indexing/refreshIndex.ts
+@@ -470,4 +470,4 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
+       tag.artifactId,
+     );
+   }
+-}
+\ No newline at end of file
++}
+diff --git a/core/llm/index.ts b/core/llm/index.ts
+index 546e539f6..ea0580f95 100644
+--- a/core/llm/index.ts
++++ b/core/llm/index.ts
+@@ -89,8 +89,7 @@ export abstract class BaseLLM implements ILLM {
+   
+   uniqueId: string;
+   model: string;
+-  times: number[];
+-  ttfts: number[];
++
+   title?: string;
+   systemMessage?: string;
+   contextLength: number;
+@@ -206,9 +205,6 @@ export abstract class BaseLLM implements ILLM {
+     this.apiType = options.apiType;
+     this.region = options.region;
+     this.projectId = options.projectId;
+-    // 新增 times 数组
+-    this.times = [];
+-    this.ttfts = [];
+   }
+ 
+   listModels(): Promise<string[]> {
+@@ -469,21 +465,14 @@ export abstract class BaseLLM implements ILLM {
+       suffix,
+       completionOptions,
+     )) {
+-        let newChunk = chunk;
+-        // 新增后处理
+-        // 如果第一行为空行，不返回
+-        if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+-          while (newChunk.startsWith("\n")) {
+-            newChunk = newChunk.slice(1);
+-          }
+-          if (newChunk.length === 0) {
+-              continue;
+-          }
+-        }
+-        completion += newChunk;
+-        yield newChunk;
++      // 新增
++      // 如果是连续空行不返回
++      if (chunk.trim() === "" && completion[completion.length - 1] === "\n") {
++        continue;
+       }
+-      
++      completion += chunk;
++      yield chunk;
++    }
+ 
+     this._logTokensGenerated(
+       completionOptions.model,
+@@ -496,10 +485,13 @@ export abstract class BaseLLM implements ILLM {
+     const lastNonEmptyLine = prefixLines[prefixLines.length - 1];
+ 
+     if (log && this.writeLog) {
++      // await this.writeLog(
++      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"
++      //   + "streamFim - time："+time/1000+"s\n"
++      //   + "streamFim - completion: \n"+completion+"\n"
++      // );
+       await this.writeLog(
+-        "core/llm/index.ts\n"
+-        + "streamFim - time："+time/1000+"s\n"
+-        + "streamFim - completion: \n"+completion+"\n"
++        "streamFim - completion: \n"+completion+"\n"
+       );
+     }
+     return {
+@@ -544,69 +536,21 @@ export abstract class BaseLLM implements ILLM {
+ 
+ 
+     let completion = "";
+-    let flag = false;
+-
+-    const start_TTFT_Time = Date.now(); // 记录开始时间
+     for await (const chunk of this._streamComplete(prompt, completionOptions)) {
+-      let newChunk = chunk;
+-      // 新增后处理
+-      // 如果第一行为空行，不返回
+-      if (completion.length === 0 || completion[completion.length - 1] === "\n") {
+-        while (newChunk.startsWith("\n")) {
+-          newChunk = newChunk.slice(1);
+-        }
+-        if (newChunk.length === 0) {
+-            continue;
+-        }
+-      }
+-
+-      // 计算ttft时间
+-      if (!flag) {
+-        flag = true;
+-        const ttfts = Date.now() - start_TTFT_Time; // 计算ttft时间，单位为秒
+-        this.ttfts.push(ttfts);
+-      }
+-    
+-      completion += newChunk;
+-      yield newChunk;
++      completion += chunk;
++      yield chunk;
+     }
++
+     this._logTokensGenerated(completionOptions.model, prompt, completion);
+     const time = Date.now() - startTime;
+     if (log && this.writeLog) {
+-      this.times.push(time);
+-      
+-      // 计算时间的统计数据
+-      const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+-      const sortedTimes = [...this.times].sort((a, b) => a - b);
+-      const mid = Math.floor(sortedTimes.length / 2);
+-      const medianTime = sortedTimes.length % 2 !== 0 ? sortedTimes[mid] : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+-      const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+-      const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+-      
+-      // 计算TTFT的统计数据
+-      const meanTTFT = this.ttfts.reduce((acc, t) => acc + t, 0) / this.ttfts.length;
+-      const sortedTTFT = [...this.ttfts].sort((a, b) => a - b);
+-      const midTTFT = Math.floor(sortedTTFT.length / 2);
+-      const medianTTFT = sortedTTFT.length % 2 !== 0 ? sortedTTFT[midTTFT] : (sortedTTFT[midTTFT - 1] + sortedTTFT[midTTFT]) / 2;
+-      const p95TTFT = sortedTTFT[Math.ceil(0.95 * sortedTTFT.length) - 1];
+-      const p99TTFT = sortedTTFT[Math.ceil(0.99 * sortedTTFT.length) - 1];
++      // await this.writeLog(
++      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
++      //   "streamComplete - time: "+time/1000+"s\n"
++      //   + "streamComplete - completion: \n"+completion+"\n"
++      // );
+       await this.writeLog(
+-        "core/llm/index.ts\n" +
+-        "streamComplete - Completion: \n" + completion + "\n" +
+-        "----------------------Time------------------------\n" +
+-        "streamComplete - Time: " + (time / 1000) + "s\n" +
+-        "streamComplete - Data Count: " + this.times.length + "\n" + 
+-        "streamComplete - Mean Time: " + (meanTime / 1000) + "s\n" +
+-        "streamComplete - Median Time: " + (medianTime / 1000) + "s\n" +
+-        "streamComplete - P95 Time: " + (p95Time / 1000) + "s\n" + 
+-        "streamComplete - P99 Time: " + (p99Time / 1000) + "s\n" +
+-        "----------------------Time to First Token------------------------\n" +
+-        "streamComplete - TTFT: " + (this.ttfts[this.ttfts.length - 1] / 1000) + "s\n" +
+-        "streamComplete - TTFT Count: " + this.ttfts.length + "\n" +
+-        "streamComplete - Mean TTFT: " + (meanTTFT / 1000) + "s\n" +
+-        "streamComplete - Median TTFT: " + (medianTTFT / 1000) + "s\n" +
+-        "streamComplete - P95 TTFT: " + (p95TTFT / 1000) + "s\n" +
+-        "streamComplete - P99 TTFT: " + (p99TTFT / 1000) + "s\n"
++        "streamComplete - completion: \n"+completion+"\n"
+       );
+     }
+ 
+@@ -651,10 +595,13 @@ export abstract class BaseLLM implements ILLM {
+ 
+     const time = Date.now() - startTime;
+     if (log && this.writeLog) {
++      // await this.writeLog(
++      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
++      //   "complete - time: "+time/1000+"s\n"
++      //   +"complete - completion: \n"+completion+"\n"
++      // );
+       await this.writeLog(
+-        "core/llm/index.ts\n"
+-        + "complete - time: "+time/1000+"s\n"
+-        + "complete - completion: \n"+completion+"\n"
++        "complete - completion: \n"+completion+"\n"
+       );
+     }
+ 
+@@ -723,10 +670,13 @@ export abstract class BaseLLM implements ILLM {
+ 
+     const time = Date.now() - startTime;
+     if (log && this.writeLog) {
++      // await this.writeLog(
++      //   "Document Path: /ai4math/users/xmlu/continue_env/continue/core/llm/index.ts\n"+
++      //   "streamChat - time: "+time/1000 + "s\n"+
++      //   "streamChat - completion: \n"+completion+"\n"
++      // );
+       await this.writeLog(
+-        "core/llm/index.ts\n" +
+-        "streamChat - time: "+time/1000 + "s\n" +
+-        "streamChat - completion: \n"+completion + "\n"
++        "streamChat - completion: \n"+completion+"\n"
+       );
+     }
+ 
+@@ -815,17 +765,10 @@ export abstract class BaseLLM implements ILLM {
+       // Some providers don't allow you to put words in the model's mouth
+       // So we have to manually compile the prompt template and use
+       // raw /completions, not /chat/completions
+-      /** DEBUG: llm 配置格式问题
+-       * 读取到的 qwen模型 model 信息不在 this.model，而在 this.completionOptions.model
+-       * */ 
+-      let this_model = this.model;
+-      if (this.model === undefined){
+-        this_model = this.completionOptions.model;
+-      }
+       const templateMessages = autodetectTemplateFunction(
+-        this_model,
++        this.model,
+         this.providerName,
+-        autodetectTemplateType(this_model),
++        autodetectTemplateType(this.model),
+       );
+       return templateMessages(rendered);
+     }
+diff --git a/core/llm/llms/OpenAI.ts b/core/llm/llms/OpenAI.ts
+index 760b9c53c..9362f58b9 100644
+--- a/core/llm/llms/OpenAI.ts
++++ b/core/llm/llms/OpenAI.ts
+@@ -301,24 +301,31 @@ class OpenAI extends BaseLLM {
+       },
+     });
+     for await (const chunk of streamSse(resp)) {
+-      /** DEBUG: api回复格式问题
+-       * chunk: {
+-       * "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
+-       * "object": "text_completion",
+-       * "created": 1730795368,
+-       * "model": "/models/AI-ModelScope/starcoder2-3b",
+-       * "choices": [
+-       *   {
+-       *     "index": 0,
+-       *     "text": ")\n# merge sort", text就是模型回复的补全结果
+-       *     "logprobs": null,
+-       *     "finish_reason": "stop",
+-       *     "stop_reason": "\ndef"
+-       *   }
+-       *  ],
+-       *  "usage": null
+-       * }
+-       * */ 
++      // chunk 格式
++      // chunk: {
++      //   "id": "cmpl-39481d943f0b403f9d1891a6e7dda155",
++      //   "object": "text_completion",
++      //   "created": 1730795368,
++      //   "model": "/models/AI-ModelScope/starcoder2-3b",
++      //   "choices": [
++      //     {
++      //       "index": 0,
++      //       "text": ")\n# merge sort", text就是模型回复的补全结果
++      //       "logprobs": null,
++      //       "finish_reason": "stop",
++      //       "stop_reason": "\ndef"
++      //     }
++      //   ],
++      //   "usage": null
++      // }
++
++
++      // if (this.writeLog){
++      //   await this.writeLog(
++      //     "response: "+JSON.stringify({...resp},null,2)+"\n"
++      //     +"chunk: "+JSON.stringify({...chunk},null,2)+"\n"
++      //   );
++      // }
+       yield chunk.choices[0].text;
+     }
+   }
+diff --git a/core/test/util/indexing.ts b/core/test/util/indexing.ts
+index 9eb44b573..650cc5b56 100644
+--- a/core/test/util/indexing.ts
++++ b/core/test/util/indexing.ts
+@@ -63,7 +63,6 @@ export async function insertMockChunks() {
+     pathSep,
+     mockContinueServerClient,
+     1000,
+-    async (_log: string): Promise<void> => {},
+   );
+ 
+   addToTestDir([[mockFilename, mockFileContents]]);
+diff --git a/extensions/vscode/continue-0.8.56.vsix b/extensions/vscode/continue-0.8.56.vsix
+deleted file mode 100644
+index f9a878197..000000000
+Binary files a/extensions/vscode/continue-0.8.56.vsix and /dev/null differ
+diff --git a/extensions/vscode/package-lock.json b/extensions/vscode/package-lock.json
+index 6845f58fc..fc2eddacd 100644
+--- a/extensions/vscode/package-lock.json
++++ b/extensions/vscode/package-lock.json
+@@ -4452,10 +4452,11 @@
+     },
+     "node_modules/esbuild": {
+       "version": "0.17.19",
+-      "resolved": "https://registry.npmmirror.com/esbuild/-/esbuild-0.17.19.tgz",
++      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.17.19.tgz",
+       "integrity": "sha512-XQ0jAPFkK/u3LcVRcvVHQcTIqD6E2H1fvZMA5dQPSOWb3suUbWbfbRf94pjc0bNzRYLfIrDRQXr7X+LHIm5oHw==",
+       "dev": true,
+       "hasInstallScript": true,
++      "license": "MIT",
+       "bin": {
+         "esbuild": "bin/esbuild"
+       },
+diff --git a/extensions/vscode/src/VsCodeIde.ts b/extensions/vscode/src/VsCodeIde.ts
+index 8ec65c3b5..43911c6f8 100644
+--- a/extensions/vscode/src/VsCodeIde.ts
++++ b/extensions/vscode/src/VsCodeIde.ts
+@@ -284,6 +284,7 @@ class VsCodeIde implements IDE {
+         pathToLastModified[file] = stat.mtime;
+       }),
+     );
++
+     return pathToLastModified;
+   }
+ 
+diff --git a/extensions/vscode/src/autocomplete/completionProvider.ts b/extensions/vscode/src/autocomplete/completionProvider.ts
+index 76c5feff1..ade2a16e8 100644
+--- a/extensions/vscode/src/autocomplete/completionProvider.ts
++++ b/extensions/vscode/src/autocomplete/completionProvider.ts
+@@ -57,7 +57,7 @@ export class ContinueCompletionProvider
+ 
+   private completionProvider: CompletionProvider;
+   private recentlyEditedTracker = new RecentlyEditedTracker();
+-  private times: number[];
++
+   constructor(
+     private readonly configHandler: ConfigHandler,
+     private readonly ide: IDE,
+@@ -71,7 +71,7 @@ export class ContinueCompletionProvider
+       this.onError.bind(this),
+       getDefinitionsFromLsp,
+     );
+-    this.times = [];
++
+     vscode.workspace.onDidChangeTextDocument((event) => {
+       if (event.document.uri.fsPath === this._lastShownCompletion?.filepath) {
+         // console.log("updating completion");
+@@ -220,24 +220,9 @@ export class ContinueCompletionProvider
+         );
+ 
+       const time = Date.now() - startTime;
+-      this.times.push(time);
+-      const meanTime = this.times.reduce((acc, t) => acc + t, 0) / this.times.length;
+-      const sortedTimes = [...this.times].sort((a, b) => a - b);
+-      const mid = Math.floor(sortedTimes.length / 2);
+-      const medianTime = sortedTimes.length % 2 !== 0
+-          ? sortedTimes[mid]
+-          : (sortedTimes[mid - 1] + sortedTimes[mid]) / 2;
+-      const p95Time = sortedTimes[Math.ceil(0.95 * sortedTimes.length) - 1];
+-      const p99Time = sortedTimes[Math.ceil(0.99 * sortedTimes.length) - 1];
+-      await this.configHandler.logMessage(
+-        "extensions/vscode/src/autocomplete/completionProvider.ts\n"+ 
+-        "ContinueCompletionProvider - time: " + time/1000 + "s\n"+
+-        "ContinueCompletionProvider - completion: " + outcome?.completion + "\n"+
+-        "ContinueCompletionProvider - Data Count: " + this.times.length + "\n" + 
+-        "ContinueCompletionProvider - Mean Time: " + (meanTime / 1000) + "s\n" +
+-        "ContinueCompletionProvider - Median Time: " + (medianTime / 1000) + "s\n" +
+-        "ContinueCompletionProvider - P95 Time: " + (p95Time / 1000) + "s\n" +
+-        "ContinueCompletionProvider - P99 Time: " + (p99Time / 1000) + "s\n"
++      await console.log(
++        `ContinueCompletionProvider - time：`+time/1000 + `s\n`+
++        `ContinueCompletionProvider - completion：`+outcome?.completion + `\n`
+       );
+       if (!outcome || !outcome.completion) {
+         return null;
+diff --git a/extensions/vscode/src/diff/vertical/manager.ts b/extensions/vscode/src/diff/vertical/manager.ts
+index 72696159f..985a6ba29 100644
+--- a/extensions/vscode/src/diff/vertical/manager.ts
++++ b/extensions/vscode/src/diff/vertical/manager.ts
+@@ -376,7 +376,6 @@ export class VerticalDiffManager {
+     }
+ 
+     const llm = await this.configHandler.llmFromTitle(modelTitle);
+-    
+     const rangeContent = editor.document.getText(selectedRange);
+     const prefix = pruneLinesFromTop(
+       editor.document.getText(
+diff --git a/extensions/vscode/src/extension/VsCodeExtension.ts b/extensions/vscode/src/extension/VsCodeExtension.ts
+index 86d410958..78541f8ea 100644
+--- a/extensions/vscode/src/extension/VsCodeExtension.ts
++++ b/extensions/vscode/src/extension/VsCodeExtension.ts
+@@ -247,6 +247,7 @@ export class VsCodeExtension {
+           "showConfigUpdateToast",
+           true,
+         );
++
+         if (showToast) {
+           vscode.window
+             .showInformationMessage("Config updated", "Don't show again")
+diff --git a/gui/src/hooks/useChatHandler.ts b/gui/src/hooks/useChatHandler.ts
+index 3f630722b..c9bfcfc25 100644
+--- a/gui/src/hooks/useChatHandler.ts
++++ b/gui/src/hooks/useChatHandler.ts
+@@ -268,8 +268,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
+       //   +"defaultModel.model: "+defaultModel.model+"\n"
+       // );
+       let messages: ReturnType<typeof constructMessages>; // 声明 messages，类型根据构造函数来推导
+-      /** DEBUG
+-       */
++
+       if (defaultModel.model !== undefined) {
+         messages = constructMessages(newHistory, defaultModel.model);
+       } else {
