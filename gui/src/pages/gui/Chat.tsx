@@ -369,9 +369,10 @@ export function Chat() {
                 item.message.toolCalls &&
                 item.toolCallState ? (
                 <div>
-                  {item.message.toolCalls?.map((toolCall) => {
+                  {item.message.toolCalls?.map((toolCall, i) => {
                     return (
                       <ToolCallDiv
+                        key={i}
                         toolCallState={item.toolCallState}
                         toolCall={toolCall as any}
                       />

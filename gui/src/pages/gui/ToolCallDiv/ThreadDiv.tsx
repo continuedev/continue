@@ -1,4 +1,5 @@
-import { ToolCall } from "core";
+import { Tool, ToolCall, ToolCallState } from "core";
+import Mustache from "mustache";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { RootState } from "../../../redux/store";
@@ -7,6 +8,7 @@ interface ThreadDivProps {
   children: React.ReactNode;
   icon: React.ReactNode;
   toolCall: ToolCall;
+  toolCallState: ToolCallState;
 }
 
 const Container = styled.div`
@@ -34,6 +36,17 @@ export function ThreadDiv(props: ThreadDivProps) {
     (state: RootState) => state.state.config.tools,
   );
 
+  function renderWouldLikeToMessage(
+    tool: Tool,
+    toolCallState: ToolCallState,
+  ): string {
+    const rendered = Mustache.render(
+      tool.wouldLikeTo,
+      toolCallState.parsedArgs,
+    );
+    return rendered;
+  }
+
   return (
     <Container>
       <HeaderDiv>
@@ -48,11 +61,12 @@ export function ThreadDiv(props: ThreadDivProps) {
           {props.icon}
         </div>
         Continue wants to{" "}
-        {
+        {renderWouldLikeToMessage(
           availableTools.find(
             (tool) => props.toolCall.function.name === tool.function.name,
-          )?.wouldLikeTo
-        }
+          ),
+          props.toolCallState,
+        )}
       </HeaderDiv>
       <ChildrenDiv>{props.children}</ChildrenDiv>
     </Container>

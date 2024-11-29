@@ -33,7 +33,7 @@ const BackgroundDiv = styled.div<{ useTools: boolean }>`
   transition: background-color 200ms;
 `;
 
-export default function ToolDropdown({}: {}) {
+export default function ToolDropdown() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dispatch = useDispatch();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -61,7 +61,7 @@ export default function ToolDropdown({}: {}) {
     }
   }, [isDropdownOpen]);
 
-  if (!modelSupportsTools(defaultModel.model)) {
+  if (!defaultModel || !modelSupportsTools(defaultModel.model)) {
     return null;
   }
 

@@ -18,7 +18,12 @@ function FunctionSpecificToolCallDiv({
         <CreateFile filepath={args.filepath} fileContents={args.contents} />
       );
     case "run_terminal_command":
-      return <RunTerminalCommand command={args.command} toolCallState={toolCallState} />;
+      return (
+        <RunTerminalCommand
+          command={args.command}
+          toolCallState={toolCallState}
+        />
+      );
     case "exact_search":
       return <ExactSearch query={args.query} />;
     default:
