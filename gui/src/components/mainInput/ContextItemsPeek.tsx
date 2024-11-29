@@ -5,7 +5,6 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
-import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getBasename } from "core/util";
 import { useContext, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -136,11 +135,7 @@ function ContextItemsPeek({
   const [open, setOpen] = useState(false);
 
   const ctxItems = useMemo(() => {
-    return (
-      contextItems?.filter(
-        (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
-      ) ?? []
-    );
+    return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
   }, [contextItems]);
 
   const isGatheringContext = useSelector(

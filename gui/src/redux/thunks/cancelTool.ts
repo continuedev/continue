@@ -27,7 +27,15 @@ export const cancelTool = createAsyncThunk<void, undefined, ThunkApiType>(
     dispatch(
       streamResponseAfterToolCall({
         toolCallId: toolCallState.toolCallId,
-        toolOutput: [],
+        toolOutput: [
+          {
+            name: "Tool Cancelled",
+            description: "Tool Cancelled",
+            content:
+              "The tool call was cancelled by the user. Please try something else or request further instructions.",
+            hidden: true,
+          },
+        ],
       }),
     );
   },

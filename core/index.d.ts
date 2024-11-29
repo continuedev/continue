@@ -364,6 +364,7 @@ export interface ContextItem {
   editable?: boolean;
   icon?: string;
   uri?: ContextItemUri;
+  hidden?: boolean;
 }
 
 export interface ContextItemWithId extends ContextItem {
