@@ -371,16 +371,15 @@ export const sessionSlice = createSlice({
       state.codeToEdit = [];
     },
   },
+  selectors: {
+    selectIsGatheringContext: (state) => {
+      const curMessage = state.messages.at(-1);
+      return curMessage?.isGatheringContext || false;
+    },
+  },
 });
 
-export const selectIsGatheringContext = createSelector(
-  [(state: { session: SessionState }) => state.session.messages],
-  (messages) => {
-    const curMessage = messages.at(-1);
-    return curMessage?.isGatheringContext || false;
-  },
-);
-
+// TODO: this is supposed to be by streamID not sessoinId
 export const selectApplyStateBySessionId = createSelector(
   [
     (state: { session: SessionState }) =>
@@ -419,5 +418,7 @@ export const {
   addCodeToEdit,
   removeCodeToEdit,
 } = sessionSlice.actions;
+
+export const { selectIsGatheringContext } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

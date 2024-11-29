@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
-import { deleteMessage } from "../../redux/slices/stateSlice";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import ResponseActions from "./ResponseActions";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
+import { deleteMessage } from "../../redux/slices/sessionSlice";
 
 interface StepContainerProps {
   item: ChatHistoryItem;

@@ -5,10 +5,10 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 import { useAppSelector } from "../../redux/hooks";
+import { newSession, setMessageAtIndex } from "../../redux/slices/sessionSlice";
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;

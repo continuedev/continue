@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
-import { getMarkdownLanguageTagForFile } from "core/util";
+import { getLastNPathParts, getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
 import { CodeToEdit } from "core";
 
@@ -37,6 +37,7 @@ export default function CodeToEditListItem({
   const [showCodeSnippet, setShowCodeSnippet] = useState(false);
 
   const filepath = code.filepath.split("/").pop() || code.filepath;
+  const fileSubpath = getLastNPathParts(code.filepath, 2);
   let title = filepath;
 
   if ("range" in code) {
@@ -81,15 +82,20 @@ export default function CodeToEditListItem({
             />
           )}
           <FileIcon filename={code.filepath} height={"18px"} width={"18px"} />
-          <span
-            className="text-xs hover:underline"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClickFilename(code);
-            }}
-          >
-            {title}
-          </span>
+          <div className="flex gap-1.5">
+            <span
+              className="text-xs hover:underline"
+              onClick={(e) => {
+                e.stopPropagation();
+                onClickFilename(code);
+              }}
+            >
+              {title}
+            </span>
+            <span className="text-lightgray invisible max-w-[50%] truncate text-xs group-hover:visible">
+              {fileSubpath}
+            </span>
+          </div>
         </div>
         <div className="invisible flex gap-1.5 group-hover:visible">
           <XMarkIcon

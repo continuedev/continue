@@ -7,7 +7,10 @@ import AddFileButton from "./AddFileButton";
 import AddFileCombobox from "./AddFileCombobox";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../../redux/hooks";
-import { addCodeToEdit } from "../../redux/slices/sessionSlice";
+import {
+  addCodeToEdit,
+  removeCodeToEdit,
+} from "../../redux/slices/sessionSlice";
 
 export default function WorkingSet() {
   const dispatch = useDispatch();
@@ -89,7 +92,4 @@ export default function WorkingSet() {
       )}
     </div>
   );
-}
-function removeCodeToEdit(rif: RangeInFileWithContents): any {
-  throw new Error("Function not implemented.");
 }

@@ -6,10 +6,7 @@ import {
   addContextItemsAtIndex,
   setInactive,
   setSelectedProfileId,
-  setTTSActive,
-  updateDocsSuggestions,
-  updateIndexingStatus,
-} from "../redux/slices/stateSlice";
+} from "../redux/slices/sessionSlice";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
@@ -17,6 +14,9 @@ import { useWebviewListener } from "./useWebviewListener";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
 import { useAppSelector } from "../redux/hooks";
 import { setConfig, setConfigError } from "../redux/slices/configSlice";
+import { updateIndexingStatus } from "../redux/slices/indexingSlice";
+import { updateDocsSuggestions } from "../redux/slices/miscSlice";
+import { setTTSActive } from "../redux/slices/uiSlice";
 
 function useSetup(dispatch: Dispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
