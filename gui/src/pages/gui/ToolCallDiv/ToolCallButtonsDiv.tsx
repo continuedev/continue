@@ -8,10 +8,9 @@ import {
 } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
-import { cancelToolCall } from "../../../redux/slices/stateSlice";
 import { useAppDispatch } from "../../../redux/store";
 import { callTool } from "../../../redux/thunks/callTool";
-import { streamResponseAfterToolCall } from "../../../redux/thunks/streamResponseAfterToolCall";
+import { cancelTool } from "../../../redux/thunks/cancelTool";
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -54,16 +53,6 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
   const dispatch = useAppDispatch();
   const toolCallState = useSelector(selectCurrentToolCall);
 
-  async function cancelTool() {
-    dispatch(cancelToolCall());
-    dispatch(
-      streamResponseAfterToolCall({
-        toolCallId: toolCallState.toolCallId,
-        toolOutput: [],
-      }),
-    );
-  }
-
   if (!toolCallState) {
     return null;
   }
@@ -83,7 +72,9 @@ export function ToolCallButtons(props: ToolCallButtonsProps) {
           </div>
         ) : toolCallState.status === "generated" ? (
           <>
-            <RejectButton onClick={cancelTool}>Cancel</RejectButton>
+            <RejectButton onClick={() => dispatch(cancelTool())}>
+              Cancel
+            </RejectButton>
             <AcceptButton onClick={() => dispatch(callTool())}>
               Continue
             </AcceptButton>

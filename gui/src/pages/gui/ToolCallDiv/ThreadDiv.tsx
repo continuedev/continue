@@ -9,6 +9,7 @@ interface ThreadDivProps {
   icon: React.ReactNode;
   toolCall: ToolCall;
   toolCallState: ToolCallState;
+  key: number;
 }
 
 const Container = styled.div`
@@ -37,9 +38,11 @@ export function ThreadDiv(props: ThreadDivProps) {
   );
 
   function renderWouldLikeToMessage(
-    tool: Tool,
+    tool: Tool | undefined,
     toolCallState: ToolCallState,
   ): string {
+    if (!tool) return "";
+
     const rendered = Mustache.render(
       tool.wouldLikeTo,
       toolCallState.parsedArgs,
@@ -48,7 +51,7 @@ export function ThreadDiv(props: ThreadDivProps) {
   }
 
   return (
-    <Container>
+    <Container key={props.key}>
       <HeaderDiv>
         <div
           style={{

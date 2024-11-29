@@ -4,7 +4,6 @@ import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
 import { defaultModelSelector } from "../selectors/modelSelectors";
 import {
-  acceptToolCall,
   addContextItemsAtIndex,
   setActive,
   streamUpdate,
@@ -32,7 +31,6 @@ export const streamResponseAfterToolCall = createAsyncThunk<
 
         resetStateForNewMessage();
 
-        dispatch(acceptToolCall());
         await new Promise((resolve) => setTimeout(resolve, 0));
 
         const newMessage: ChatMessage = {

@@ -1,6 +1,5 @@
 import { ToolCall, ToolCallState } from "core";
 import { CreateFile } from "./CreateFile";
-import { ExactSearch } from "./ExactSearch";
 import { RunTerminalCommand } from "./RunTerminalCommand";
 
 function FunctionSpecificToolCallDiv({
@@ -24,8 +23,6 @@ function FunctionSpecificToolCallDiv({
           toolCallState={toolCallState}
         />
       );
-    case "exact_search":
-      return <ExactSearch query={args.query} />;
     default:
       return null;
   }
