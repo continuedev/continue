@@ -13,12 +13,14 @@ const getCommentMark = (helper: HelperVars) => {
 };
 
 const addCommentMarks = (text: string, helper: HelperVars) => {
+  const commentMark = getCommentMark(helper);
   const lines = [
     ...text
       .trim()
       .split("\n")
-      .map((line) => `${getCommentMark(helper)} ${line}`),
+      .map((line) => `${commentMark} ${line}`),
   ];
+
   return lines.join("\n");
 };
 
@@ -61,11 +63,6 @@ const commentifySnippet = (
   };
 };
 
-const SNIPPET_TYPES_TO_COMMENT = [
-  AutocompleteSnippetType.Code,
-  AutocompleteSnippetType.Clipboard,
-];
-
 export const formatSnippets = (
   helper: HelperVars,
   snippets: AutocompleteSnippet[],
@@ -88,19 +85,7 @@ export const formatSnippets = (
         }
       })
       .map((item) => {
-        if (SNIPPET_TYPES_TO_COMMENT.includes(item.type)) {
-          return commentifySnippet(helper, item);
-        }
-
-        return item;
-      })
-      .map((item) => {
-        if (SNIPPET_TYPES_TO_COMMENT.includes(item.type)) {
-          const commentMark = getCommentMark(helper);
-          return item.content + `\n${commentMark}\n${commentMark}`;
-        }
-
-        return item.content;
+        return commentifySnippet(helper, item).content;
       })
       .join("\n") + `\n${currentFilepathComment}`
   );
