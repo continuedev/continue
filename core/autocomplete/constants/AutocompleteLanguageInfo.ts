@@ -9,7 +9,6 @@ export interface AutocompleteLanguageInfo {
   topLevelKeywords: string[];
   singleLineComment?: string;
   endOfLine: string[];
-  stopWords?: string[];
   lineFilters?: LineFilter[];
   charFilters?: CharacterFilter[];
   useMultiline?: (args: { prefix: string; suffix: string }) => boolean;

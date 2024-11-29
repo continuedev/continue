@@ -1,9 +1,8 @@
-import { useContext, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
-import { IdeMessengerContext } from "../context/IdeMessenger";
 import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
@@ -67,28 +66,8 @@ const Layout = () => {
   }, [configError]);
 
   const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
+
   const showDialog = useAppSelector((state) => state.ui.showDialog);
-  const timeline = useAppSelector((state) => state.session.messages);
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
-        const selection = window.getSelection()?.toString();
-        if (selection) {
-          // Copy to clipboard
-          setTimeout(() => {
-            navigator.clipboard.writeText(selection);
-          }, 100);
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [timeline]);
 
   useWebviewListener(
     "openDialogMessage",
@@ -204,14 +183,42 @@ const Layout = () => {
     [navigate],
   );
 
-  useWebviewListener("setEditStatus", async ({ status, fileAfterEdit }) => {
-    dispatch(setEditStatus({ status, fileAfterEdit }));
-  });
+  useWebviewListener(
+    "setEditStatus",
+    async ({ status, fileAfterEdit }) => {
+      dispatch(setEditStatus({ status, fileAfterEdit }));
+    },
+    [],
+  );
 
-  useWebviewListener("exitEditMode", async () => {
-    dispatch(setEditDone());
-    navigate("/");
-  });
+  useWebviewListener(
+    "exitEditMode",
+    async () => {
+      dispatch(setEditDone());
+      navigate("/");
+    },
+    [navigate],
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (event: any) => {
+      if (isMetaEquivalentKeyPressed(event) && event.code === "KeyC") {
+        const selection = window.getSelection()?.toString();
+        if (selection) {
+          // Copy to clipboard
+          setTimeout(() => {
+            navigator.clipboard.writeText(selection);
+          }, 100);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (

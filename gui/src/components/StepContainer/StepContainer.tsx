@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
+import { deleteMessage } from "../../redux/slices/stateSlice";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import ResponseActions from "./ResponseActions";
-import { deleteMessage } from "../../redux/slices/sessionSlice";
 import { useAppSelector } from "../../redux/hooks";
 import { selectUIConfig } from "../../redux/slices/configSlice";
 
@@ -99,9 +99,7 @@ export default function StepContainer(props: StepContainerProps) {
         )}
       </ContentDiv>
       {/* We want to occupy space in the DOM regardless of whether the actions are visible to avoid jank on */}
-      <div
-        className={`${shouldHideActions && "hidden"} transition-opacity duration-300 ease-in-out`}
-      >
+      <div className={`mt-2 h-7 transition-opacity duration-300 ease-in-out`}>
         {!shouldHideActions && (
           <ResponseActions
             isTruncated={isTruncated}

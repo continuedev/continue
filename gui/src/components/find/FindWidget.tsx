@@ -76,7 +76,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
   const [open, setOpen] = useState<boolean>(false);
   const openWidget = useCallback(() => {
     setOpen(true);
-    inputRef?.current.select();
+    inputRef?.current?.select();
   }, [setOpen, inputRef]);
 
   // Search settings and results
@@ -93,7 +93,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
   const scrollToMatch = useCallback(
     (match: SearchMatch) => {
       setCurrentMatch(match);
-      searchRef.current.scrollTo({
+      searchRef?.current?.scrollTo({
         top: match.overlayRectangle.top - searchRef.current.clientHeight / 2,
         left: match.overlayRectangle.left - searchRef.current.clientWidth / 2,
         behavior: "smooth",
@@ -174,8 +174,10 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
     (scrollTo: ScrollToMatchOption = "none", clearFirst = false) => {
       if (clearFirst) setMatches([]);
 
+      const searchContainer = searchRef.current;
+
       const _query = debouncedInput.current; // trimStart - decided no because spaces should be fully searchable
-      if (!searchRef.current || !_query) {
+      if (!searchContainer || !_query) {
         setMatches([]);
         return;
       }
@@ -216,7 +218,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
       textNodes.forEach((textNode, idx) => {
         // Hacky way to detect code blocks that be wider than client and cause absolute positioning to fail
         const highlightFullLine =
-          textNode.parentElement.className.includes("hljs");
+          textNode.parentElement?.className.includes("hljs");
 
         let nodeTextValue = caseSensitive
           ? textNode.nodeValue
@@ -233,13 +235,9 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
           startIndex = endIndex;
 
           const top =
-            rect.top +
-            searchRef.current.clientTop +
-            searchRef.current.scrollTop;
+            rect.top + searchContainer.clientTop + searchContainer.scrollTop;
           const left =
-            rect.left +
-            searchRef.current.clientLeft +
-            searchRef.current.scrollLeft;
+            rect.left + searchContainer.clientLeft + searchContainer.scrollLeft;
 
           // Build a match result and push to matches
           const newMatch: SearchMatch = {
@@ -249,7 +247,7 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
               top,
               left: highlightFullLine ? 2 : left,
               width: highlightFullLine
-                ? searchRef.current.clientWidth - 4
+                ? searchContainer.clientWidth - 4
                 : rect.width, // equivalent of adding 2 px x padding
               height: rect.height,
             },
@@ -295,7 +293,9 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
           scrollToMatch(filteredMatches[0]);
         }
         if (scrollTo === "closest") {
-          scrollToMatch(closestMatchToMiddle);
+          if (closestMatchToMiddle) {
+            scrollToMatch(closestMatchToMiddle);
+          }
         }
         if (scrollTo === "none") {
           if (closestMatchToMiddle) {
@@ -334,13 +334,14 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
   // Could consider doing any window click but I only handled search div here
   // Since usually only clicks in search div will cause content changes in search div
   useEffect(() => {
-    if (!open || !searchRef.current) return;
+    const searchContainer = searchRef.current;
+    if (!open || !searchContainer) return;
     const handleSearchRefClick = () => {
       refreshSearch("none");
     };
-    searchRef.current.addEventListener("click", handleSearchRefClick);
+    searchContainer.addEventListener("click", handleSearchRefClick);
     return () => {
-      searchRef.current.removeEventListener("click", handleSearchRefClick);
+      searchContainer.removeEventListener("click", handleSearchRefClick);
     };
   }, [searchRef.current, refreshSearch, open]);
 

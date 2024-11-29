@@ -125,7 +125,10 @@ export function slashCommandFromPromptFile(
         systemMessage,
       );
 
-      for await (const chunk of context.llm.streamChat(messages, new AbortController().signal)) {
+      for await (const chunk of context.llm.streamChat(
+        messages,
+        new AbortController().signal,
+      )) {
         yield stripImages(chunk.content);
       }
 
@@ -173,7 +176,7 @@ async function renderPrompt(
   const diff = await context.ide.getDiff(false);
   const currentFile = await context.ide.getCurrentFile();
   const inputData: Record<string, string> = {
-    diff,
+    diff: diff.join("\n"),
     input: userInput,
   };
   if (currentFile) {

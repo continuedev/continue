@@ -56,10 +56,9 @@ export default function StepContainerPreToolbar(
   const isInEditMode = useAppSelector(
     (state) => state.editModeState.isInEditMode,
   );
-  const active = useAppSelector((state) => state.session.isStreaming);
   const [isExpanded, setIsExpanded] = useState(isInEditMode ? false : true);
   const [codeBlockContent, setCodeBlockContent] = useState("");
-  const isChatActive = useAppSelector((state) => state.session.isStreaming);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
@@ -74,7 +73,7 @@ export default function StepContainerPreToolbar(
   // we are done generating based on whether the next node in the tree is not a codeblock.
   // The tree parsing logic for Remark is defined on page load, so we can't access state
   // during the actual tree parsing.
-  const isGeneratingCodeBlock = !isChatActive
+  const isGeneratingCodeBlock = !isStreaming
     ? false
     : props.isGeneratingCodeBlock;
 
@@ -84,6 +83,9 @@ export default function StepContainerPreToolbar(
   const defaultModel = useAppSelector(selectDefaultModel);
 
   function onClickApply() {
+    if (!defaultModel) {
+      return;
+    }
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: props.filepath,

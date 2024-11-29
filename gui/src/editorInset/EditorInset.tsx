@@ -5,7 +5,7 @@ import { defaultBorderRadius } from "../components";
 import TipTapEditor from "../components/mainInput/TipTapEditor";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useSetup from "../hooks/useSetup";
-import { selectSlashCommands } from "../redux/selectors";
+import { selectSlashCommandComboBoxInputs } from "../redux/selectors";
 import { useAppSelector } from "../redux/hooks";
 
 const EditorInsetDiv = styled.div`
@@ -18,7 +18,9 @@ const EditorInsetDiv = styled.div`
 
 function EditorInset() {
   const dispatch = useDispatch();
-  const availableSlashCommands = useAppSelector(selectSlashCommands);
+  const availableSlashCommands = useAppSelector(
+    selectSlashCommandComboBoxInputs,
+  );
   const availableContextProviders = useAppSelector(
     (store) => store.config.config.contextProviders,
   );

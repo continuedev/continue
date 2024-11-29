@@ -47,15 +47,6 @@ export const uiSlice = createSlice({
     setShowDialog: (state, action: PayloadAction<UIState["showDialog"]>) => {
       state.showDialog = action.payload;
     },
-    setShouldAddFileForEditing: (
-      state,
-      action: PayloadAction<UIState["shouldAddFileForEditing"]>,
-    ) => {
-      state.shouldAddFileForEditing = action.payload;
-    },
-    setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
-      state.ttsActive = payload;
-    },
   },
 });
 
@@ -64,8 +55,6 @@ export const {
   setDialogMessage,
   setDialogEntryOn,
   setShowDialog,
-  setShouldAddFileForEditing,
-  setTTSActive,
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

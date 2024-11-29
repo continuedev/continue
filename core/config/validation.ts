@@ -63,7 +63,8 @@ export function validateConfig(config: SerializedContinueConfig) {
       if (
         nonAutocompleteModels.some((m) => modelName.includes(m)) &&
         !modelName.includes("deepseek") &&
-        !modelName.includes("codestral")
+        !modelName.includes("codestral") &&
+        !modelName.toLowerCase().includes("coder")
       ) {
         errors.push({
           fatal: false,

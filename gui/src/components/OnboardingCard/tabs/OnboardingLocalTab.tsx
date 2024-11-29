@@ -24,19 +24,19 @@ function OnboardingLocalTab() {
     hasPassedFTL() ? "LocalAfterFreeTrial" : "Local",
   );
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
-  const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<
-    string[]
-  >([]);
+  const [downloadedOllamaModels, setDownloadedOllamaModels] = useState<string[]>([]);
 
   const [isOllamaConnected, setIsOllamaConnected] = useState(false);
 
-  const hasDownloadedChatModel = downloadedOllamaModels.some((ollamaModel) =>
-    ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
-  );
+  const hasDownloadedChatModel = Array.isArray(downloadedOllamaModels) 
+    ? downloadedOllamaModels.some((ollamaModel) =>
+        ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL))
+    : false;
 
-  const hasDownloadedAutocompleteModel = downloadedOllamaModels.some(
-    (ollamaModel) => ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL),
-  );
+  const hasDownloadedAutocompleteModel = Array.isArray(downloadedOllamaModels)
+    ? downloadedOllamaModels.some((ollamaModel) => 
+        ollamaModel.startsWith(LOCAL_ONBOARDING_CHAT_MODEL))
+    : false;
 
   /**
    * The first time we detect that a chat model has been loaded,

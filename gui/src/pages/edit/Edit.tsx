@@ -2,7 +2,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers, RangeInFileWithContents } from "core";
 import { stripImages } from "core/llm/images";
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
@@ -15,12 +15,12 @@ import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectA
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import StepContainer from "../../components/StepContainer";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
-import { useAppSelector } from "../../redux/hooks";
+import CodeToEdit from "./CodeToEdit";
 import {
   clearCodeToEdit,
   selectApplyStateBySessionId,
 } from "../../redux/slices/sessionSlice";
-import CodeToEdit from "./CodeToEdit";
+import { useAppSelector } from "../../redux/hooks";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "codebase",
@@ -45,6 +45,15 @@ export default function Edit() {
     (store) => store.config.config.contextProviders,
   );
 
+  const filteredContextProviders = useMemo(() => {
+    return (
+      availableContextProviders?.filter(
+        (provider) =>
+          !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
+      ) ?? []
+    );
+  }, [availableContextProviders]);
+
   const history = useAppSelector((state) => state.session.messages);
 
   const applyStates = useAppSelector(
@@ -54,7 +63,6 @@ export default function Edit() {
   const applyState = useAppSelector(
     (state) => selectApplyStateBySessionId(state, "edit")?.status ?? "closed",
   );
-
   const isSingleRangeEdit =
     codeToEdit.length === 0 ||
     (codeToEdit.length === 1 && "range" in codeToEdit[0]);
@@ -71,8 +79,6 @@ export default function Edit() {
       dispatch(setEditDone());
     }
   }, [applyState, editModeState.editStatus]);
-
-  // const active = useAppSelector((state) => state.session.isStreaming);
 
   const pendingApplyStates = applyStates.filter(
     (state) => state.status === "done",
@@ -91,10 +97,6 @@ export default function Edit() {
   };
 
   const hasPendingApplies = pendingApplyStates.length > 0;
-
-  const filteredContextProviders = availableContextProviders.filter(
-    (provider) => !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
-  );
 
   async function handleSingleRangeEdit(
     editorState: JSONContent,

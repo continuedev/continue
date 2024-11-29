@@ -14,7 +14,8 @@ import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/images";
 import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
 } from "../components/mainInput/resolveInput";
@@ -34,6 +35,10 @@ import {
 import { resetNextCodeBlockToApplyIndex } from "../redux/slices/sessionSlice";
 import useHistory from "./useHistory";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import {
+  selectDefaultContextProviders,
+  selectSlashCommands,
+} from "../redux/selectors";
 import { useAppSelector } from "../redux/hooks";
 import { selectDefaultModel } from "../redux/slices/configSlice";
 
@@ -41,12 +46,8 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
 
   const defaultModel = useAppSelector(selectDefaultModel);
-  const defaultContextProviders = useAppSelector(
-    (store) => store.config.config.experimental?.defaultContext ?? [],
-  );
-  const slashCommands = useAppSelector(
-    (store) => store.config.config.slashCommands || [],
-  );
+  const defaultContextProviders = useSelector(selectDefaultContextProviders);
+  const slashCommands = useSelector(selectSlashCommands);
   const history = useAppSelector((store) => store.session.messages);
   const active = useAppSelector((store) => store.session.isStreaming);
   const streamAborter = useAppSelector((store) => store.session.streamAborter);
@@ -247,11 +248,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         ideMessenger,
         dispatch,
       );
-
       if (promptPreamble) {
-        typeof content === "string"
-          ? (content += promptPreamble)
-          : (content.at(-1).text += promptPreamble);
+        if (typeof content === "string") {
+          content = promptPreamble + content;
+        } else {
+          content[0].text = promptPreamble + content[0].text;
+        }
       }
 
       const message: ChatMessage = {

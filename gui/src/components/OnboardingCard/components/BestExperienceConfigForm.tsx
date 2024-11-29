@@ -9,7 +9,10 @@ import { providers } from "../../../pages/AddNewModel/configs/providers";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
 import { setDefaultModel } from "../../../redux/slices/configSlice";
 
-const { anthropic: chatProvider, mistral: autocompleteProvider } = providers;
+const { anthropic, mistral } = providers;
+const chatProvider = anthropic!;
+const autocompleteProvider = mistral!;
+
 const {
   claude35Sonnet: chatModel,
   claude3Haiku: repoMapModel,

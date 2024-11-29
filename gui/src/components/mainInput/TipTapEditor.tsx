@@ -37,14 +37,13 @@ import {
   vscInputBorderFocus,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
+import { useSubmenuContextProviders } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiSlice";
 import {
   getFontSize,
   isJetBrains,
@@ -67,7 +66,10 @@ import {
 import { ComboBoxItem } from "./types";
 import { useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
-import { addCodeToEdit } from "../../redux/slices/sessionSlice";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+} from "../../redux/slices/sessionSlice";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -129,9 +131,13 @@ const HoverTextDiv = styled.div`
   justify-content: center;
 `;
 
-function getDataUrlForFile(file: File, img): string {
-  const targetWidth = 512;
-  const targetHeight = 512;
+const IMAGE_RESOLUTION = 1024;
+function getDataUrlForFile(
+  file: File,
+  img: HTMLImageElement,
+): string | undefined {
+  const targetWidth = IMAGE_RESOLUTION;
+  const targetHeight = IMAGE_RESOLUTION;
   const scaleFactor = Math.min(
     targetWidth / img.width,
     targetHeight / img.height,
@@ -142,6 +148,10 @@ function getDataUrlForFile(file: File, img): string {
   canvas.height = img.height * scaleFactor;
 
   const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    console.error("Error getting image data url: 2d context not found");
+    return;
+  }
   ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
   const downsizedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
@@ -168,7 +178,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
-  const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
+  const { getSubmenuContextItems } = useSubmenuContextProviders();
 
   const historyLength = useAppSelector(
     (store) => store.session.messages.length,
@@ -289,6 +299,9 @@ function TipTapEditor(props: TipTapEditorProps) {
       return await new Promise((resolve) => {
         img.onload = function () {
           const dataUrl = getDataUrlForFile(file, img);
+          if (!dataUrl) {
+            return;
+          }
 
           let image = new window.Image();
           image.src = dataUrl;
@@ -323,26 +336,29 @@ function TipTapEditor(props: TipTapEditorProps) {
               handleDOMEvents: {
                 paste(view, event) {
                   const model = defaultModelRef.current;
-                  const items = event.clipboardData.items;
-                  for (const item of items) {
-                    const file = item.getAsFile();
-                    file &&
-                      modelSupportsImages(
-                        model.provider,
-                        model.model,
-                        model.title,
-                        model.capabilities,
-                      ) &&
-                      handleImageFile(file).then((resp) => {
-                        if (!resp) return;
-                        const [img, dataUrl] = resp;
-                        const { schema } = view.state;
-                        const node = schema.nodes.image.create({
-                          src: dataUrl,
+                  if (!model) return;
+                  const items = event.clipboardData?.items;
+                  if (items) {
+                    for (const item of items) {
+                      const file = item.getAsFile();
+                      file &&
+                        modelSupportsImages(
+                          model.provider,
+                          model.model,
+                          model.title,
+                          model.capabilities,
+                        ) &&
+                        handleImageFile(file).then((resp) => {
+                          if (!resp) return;
+                          const [img, dataUrl] = resp;
+                          const { schema } = view.state;
+                          const node = schema.nodes.image.create({
+                            src: dataUrl,
+                          });
+                          const tr = view.state.tr.insert(0, node);
+                          view.dispatch(tr);
                         });
-                        const tr = view.state.tr.insert(0, node);
-                        view.dispatch(tr);
-                      });
+                    }
                   }
                 },
               },
@@ -647,6 +663,9 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
+
+      dispatch(clearCodeToEdit());
+
       if (historyLength > 0) {
         await saveSession();
       }
@@ -808,13 +827,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   const [activeKey, setActiveKey] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (shouldAddFileForEditing && props.isMainInput) {
-      insertCharacterWithWhitespace("#");
-      dispatch(setShouldAddFileForEditing(false));
-    }
-  }, [shouldAddFileForEditing]);
 
   const insertCharacterWithWhitespace = useCallback(
     (char: string) => {

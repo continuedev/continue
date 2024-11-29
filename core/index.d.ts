@@ -508,7 +508,7 @@ export interface IdeSettings {
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;
-  getDiff(includeUnstaged: boolean): Promise<string>;
+  getDiff(includeUnstaged: boolean): Promise<string[]>;
   getClipboardContent(): Promise<{ text: string; copiedAt: string }>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
@@ -704,7 +704,8 @@ type ModelProvider =
   | "vertexai"
   | "nebius"
   | "xAI"
-  | "moonshot";
+  | "moonshot"
+  | "siliconflow";
 
 export type ModelName =
   | "AUTODETECT"
@@ -916,7 +917,8 @@ export type EmbeddingsProviderName =
   | "mistral"
   | "nebius"
   | "vertexai"
-  | "watsonx";
+  | "watsonx"
+  | "siliconflow";
 
 export interface EmbedOptions {
   apiBase?: string;

@@ -21,7 +21,7 @@ import ModelSelect from "../modelSelection/ModelSelect";
 import { useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 
-const StyledDiv = styled.div<{ isHidden: boolean }>`
+const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
   justify-content: space-between;
   gap: 1px;
@@ -117,8 +117,9 @@ function InputToolbar(props: InputToolbarProps) {
                     style={{ display: "none" }}
                     accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
                     onChange={(e) => {
-                      for (const file of e.target.files) {
-                        props.onImageFileSelected(file);
+                      const files = e.target?.files ?? [];
+                      for (const file of files) {
+                        props.onImageFileSelected?.(file);
                       }
                     }}
                   />
@@ -157,9 +158,9 @@ function InputToolbar(props: InputToolbarProps) {
                 </HoverItem>
               ) : (
                 <HoverItem
-                  className={props.activeKey === "Meta" && "underline"}
+                  className={props.activeKey === "Meta" ? "underline" : ""}
                   onClick={(e) =>
-                    props.onEnter({
+                    props.onEnter?.({
                       useCodebase: true,
                       noContext: !useActiveFile,
                     })

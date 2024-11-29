@@ -1,27 +1,29 @@
 import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { setShouldAddFileForEditing } from "../../redux/slices/uiSlice";
 import { useDispatch } from "react-redux";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Listbox } from "@headlessui/react";
 import { addCodeToEdit } from "../../redux/slices/sessionSlice";
 
-export default function AddFileButton() {
+export interface AddFileButtonProps {
+  onClick: () => void;
+}
+
+export default function AddFileButton({ onClick }: AddFileButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
-  function onClickAddFileToCodeToEdit() {
-    dispatch(setShouldAddFileForEditing(true));
-  }
-
   async function handleAddAllOpenFiles() {
     const openFiles = await ideMessenger.ide.getOpenFiles();
+    const filesData = await Promise.all(
+      openFiles.map(async (filepath) => {
+        const contents = await ideMessenger.ide.readFile(filepath);
+        return { filepath, contents };
+      }),
+    );
 
-    for (const filepath of openFiles) {
-      const contents = await ideMessenger.ide.readFile(filepath);
-      dispatch(addCodeToEdit({ filepath, contents }));
-    }
+    dispatch(addCodeToEdit(filesData));
   }
 
   return (
@@ -29,14 +31,14 @@ export default function AddFileButton() {
       <div className="relative">
         <Listbox.Button
           ref={buttonRef}
-          className="bg-vsc-editor-background border-lightgray/50 flex cursor-pointer items-center justify-between rounded-md border border-solid px-0 shadow-sm transition-colors"
+          className="bg-vsc-editor-background border-lightgray/50 flex h-5 cursor-pointer items-center justify-between rounded-md border border-solid px-0 shadow-sm transition-colors"
         >
           <div
-            className="flex items-center gap-1 px-1.5 hover:brightness-125"
+            className="flex h-5 w-14 items-center justify-center gap-1 hover:brightness-125"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              onClickAddFileToCodeToEdit();
+              onClick();
             }}
           >
             <PlusIcon className="text-vsc-foreground inline h-2.5 w-2.5 brightness-75" />

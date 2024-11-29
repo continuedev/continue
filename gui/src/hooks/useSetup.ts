@@ -6,7 +6,10 @@ import {
   addContextItemsAtIndex,
   setInactive,
   setSelectedProfileId,
-} from "../redux/slices/sessionSlice";
+  setTTSActive,
+  updateDocsSuggestions,
+  updateIndexingStatus,
+} from "../redux/slices/stateSlice";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
@@ -14,41 +17,45 @@ import { useWebviewListener } from "./useWebviewListener";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
 import { useAppSelector } from "../redux/hooks";
 import { setConfig, setConfigError } from "../redux/slices/configSlice";
-import { updateIndexingStatus } from "../redux/slices/indexingSlice";
-import { updateDocsSuggestions } from "../redux/slices/miscSlice";
-import { setTTSActive } from "../redux/slices/uiSlice";
 
 function useSetup(dispatch: Dispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.messages);
+  const defaultModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
+  const hasLoadedConfig = useRef(false);
+  const loadConfig = useCallback(
+    async (initial: boolean) => {
+      const result = await ideMessenger.request(
+        "config/getSerializedProfileInfo",
+        undefined,
+      );
+      if (result.status === "error") {
+        return;
+      }
+      const { config, profileId } = result.content;
+      if (initial && hasLoadedConfig.current) {
+        return;
+      }
+      hasLoadedConfig.current = true;
+      dispatch(setConfig(config));
+      dispatch(setSelectedProfileId(profileId));
 
-  const initialConfigLoad = useRef(false);
-  const loadConfig = useCallback(async () => {
-    const result = await ideMessenger.request(
-      "config/getSerializedProfileInfo",
-      undefined,
-    );
-    if (result.status === "error") {
-      return;
-    }
-    const { config, profileId } = result.content;
-    dispatch(setConfig(config));
-    dispatch(setSelectedProfileId(profileId));
-    initialConfigLoad.current = true;
-    setLocalStorage("disableIndexing", config.disableIndexing || false);
-
-    // Perform any actions needed with the config
-    if (config.ui?.fontSize) {
-      setLocalStorage("fontSize", config.ui.fontSize);
-      document.body.style.fontSize = `${config.ui.fontSize}px`;
-    }
-  }, [dispatch, ideMessenger, initialConfigLoad]);
+      // Perform any actions needed with the config
+      if (config.ui?.fontSize) {
+        setLocalStorage("fontSize", config.ui.fontSize);
+        document.body.style.fontSize = `${config.ui.fontSize}px`;
+      }
+    },
+    [dispatch, ideMessenger, hasLoadedConfig],
+  );
 
   // Load config from the IDE
   useEffect(() => {
-    loadConfig();
+    loadConfig(true);
     const interval = setInterval(() => {
-      if (initialConfigLoad.current) {
+      if (hasLoadedConfig.current) {
         // Docs init on config load
         ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
@@ -57,15 +64,19 @@ function useSetup(dispatch: Dispatch) {
         clearInterval(interval);
         return;
       }
-      loadConfig();
+      loadConfig(true);
     }, 2_000);
 
     return () => clearInterval(interval);
-  }, [initialConfigLoad, loadConfig, ideMessenger]);
+  }, [hasLoadedConfig, loadConfig, ideMessenger]);
 
-  useWebviewListener("configUpdate", async () => {
-    await loadConfig();
-  });
+  useWebviewListener(
+    "configUpdate",
+    async () => {
+      await loadConfig(false);
+    },
+    [loadConfig],
+  );
 
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((store) => store.session.id);
@@ -118,10 +129,6 @@ function useSetup(dispatch: Dispatch) {
   });
 
   const { streamResponse } = useChatHandler(dispatch, ideMessenger);
-
-  const defaultModelTitle = useAppSelector(
-    (store) => store.config.defaultModelTitle,
-  );
 
   // IDE event listeners
   useWebviewListener(

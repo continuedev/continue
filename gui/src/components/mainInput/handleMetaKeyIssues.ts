@@ -16,11 +16,11 @@ export const handleJetBrainsOSRMetaKeyIssues = (
 
   const handlers: Record<string, () => void> = {
     Backspace: () => handleJetBrainsMetaBackspace(editor),
-    ArrowLeft: () => selection.modify(alter, "backward", "lineboundary"),
-    ArrowRight: () => selection.modify(alter, "forward", "lineboundary"),
-    ArrowDown: () => selection.modify(alter, "forward", "documentboundary"),
+    ArrowLeft: () => selection?.modify(alter, "backward", "lineboundary"),
+    ArrowRight: () => selection?.modify(alter, "forward", "lineboundary"),
+    ArrowDown: () => selection?.modify(alter, "forward", "documentboundary"),
     ArrowUp: () => {
-      selection.modify(alter, "backward", "documentboundary");
+      selection?.modify(alter, "backward", "documentboundary");
     },
   };
 

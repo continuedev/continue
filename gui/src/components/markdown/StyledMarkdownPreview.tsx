@@ -20,8 +20,9 @@ import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { ContextItemWithId, SymbolWithRange } from "core";
+import { SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useAppSelector } from "../../redux/hooks";
 
 const StyledMarkdown = styled.div<{
@@ -110,7 +111,7 @@ function getLanuageFromClassName(className: any): string | null {
     .find((word) => word.startsWith(HLJS_LANGUAGE_CLASSNAME_PREFIX))
     ?.split("-")[1];
 
-  return language;
+  return language ?? null;
 }
 
 function getCodeChildrenContent(children: any) {
@@ -154,21 +155,17 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
-  const contextItems = useAppSelector(
-    (state) => state.session.messages[props.itemIndex - 1]?.contextItems,
-  );
-  const symbols = useAppSelector((state) => state.session.symbols);
-
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
+  const contextItems = useAppSelector(
+    (state) => state.session.messages[props.itemIndex - 1]?.contextItems,
+  );
+  const contextItemsRef = useUpdatingRef(contextItems);
+
+  const symbols = useAppSelector((state) => state.session.symbols);
+
   const symbolsRef = useRef<SymbolWithRange[]>([]);
-  const contextItemsRef = useRef<ContextItemWithId[]>([]);
-
-  useEffect(() => {
-    contextItemsRef.current = contextItems || [];
-  }, [contextItems]);
-
   useEffect(() => {
     // Note, before I was only looking for symbols that matched
     // Context item files on current history item
