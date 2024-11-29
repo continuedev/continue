@@ -5,10 +5,14 @@ import { RootState } from "../store";
 export const selectLastToolCall = createSelector(
   [(store: RootState) => store.state.history],
   (history): ToolCallState | null => {
-    const lastToolCallHistoryItem = history.findLast(
-      (item) =>
-        item.message.role === "assistant" && item.message.toolCalls?.length,
-    );
+    let lastToolCallHistoryItem = null;
+    for (let i = history.length - 1; i >= 0; i--) {
+      const item = history[i];
+      if (item.message.role === "assistant" && item.message.toolCalls?.length) {
+        lastToolCallHistoryItem = item;
+        break;
+      }
+    }
     if (!lastToolCallHistoryItem) return null;
     return lastToolCallHistoryItem.toolCallState;
   },
