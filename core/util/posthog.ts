@@ -102,11 +102,15 @@ export class Telemetry {
   }
 
   static async getValueForFeatureFlag(flag: PosthogFeatureFlag) {
-    const userGroup = await Telemetry.getFeatureFlag(flag);
-    if (typeof userGroup === "string") {
-      return EXPERIMENTS[flag][userGroup].value;
-    }
+    try {
+      const userGroup = await Telemetry.getFeatureFlag(flag);
+      if (typeof userGroup === "string") {
+        return EXPERIMENTS[flag][userGroup].value;
+      }
 
-    return undefined;
+      return undefined;
+    } catch {
+      return undefined;
+    }
   }
 }
