@@ -66,6 +66,7 @@ class ContinueBrowser(val project: Project, url: String) {
         "config/listProfiles",
         "profiles/switch",
         "didChangeSelectedProfile",
+        "context/getSymbolsForFiles",
     )
 
     private fun registerAppSchemeHandler() {
