@@ -1,8 +1,10 @@
 import { ContextItem, ToolExtras } from "..";
 import MCPConnectionSingleton from "../context/mcp";
 import { BuiltInToolNames } from "./builtIn";
+
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { exactSearchImpl } from "./implementations/exactSearch";
+import { readCurrentlyOpenFileImpl } from "./implementations/readCurrentlyOpenFile";
 import { readFileImpl } from "./implementations/readFile";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
@@ -99,6 +101,8 @@ export async function callTool(
       return await viewRepoMapImpl(args, extras);
     case BuiltInToolNames.ViewSubdirectory:
       return await viewSubdirectoryImpl(args, extras);
+    case BuiltInToolNames.ReadCurrentlyOpenFile:
+      return await readCurrentlyOpenFileImpl(args, extras);
     default:
       return await callToolFromUri(uri, args, extras);
   }
