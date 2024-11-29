@@ -993,6 +993,28 @@ export interface TabAutocompleteOptions {
   showWhateverWeHaveAtXMs?: number;
 }
 
+interface StdioOptions {
+  type: "stdio";
+  command: string;
+  args: string[];
+}
+
+interface WebSocketOptions {
+  type: "websocket";
+  url: string;
+}
+
+interface SSEOptions {
+  type: "sse";
+  url: string;
+}
+
+type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+
+export interface MCPOptions {
+  transport: TransportOptions;
+}
+
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
@@ -1098,6 +1120,7 @@ interface ExperimentalConfig {
    * This is needed to crawl a large number of documentation sites that are dynamically rendered.
    */
   useChromiumForDocsCrawling?: boolean;
+  modelContextProtocolServer?: MCPOptions;
 }
 
 interface AnalyticsConfig {

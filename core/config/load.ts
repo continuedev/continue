@@ -28,6 +28,7 @@ import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index.js";
+import MCPConnectionSingleton from "../context/mcp";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
@@ -57,7 +58,6 @@ import {
   getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
 } from "../util/paths";
-
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -484,7 +484,7 @@ async function intermediateToFinalConfig(
     }
   }
 
-  return {
+  let continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
     models,
@@ -492,6 +492,27 @@ async function intermediateToFinalConfig(
     tabAutocompleteModels,
     reranker: config.reranker as any,
   };
+
+  // Apply MCP if specified
+  if (config.experimental?.modelContextProtocolServer) {
+    const mcpConnection = await MCPConnectionSingleton.getInstance(
+      config.experimental.modelContextProtocolServer,
+    );
+    continueConfig = await Promise.race<ContinueConfig>([
+      mcpConnection.modifyConfig(continueConfig),
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("MCP connection timed out after 1000ms")),
+          1000,
+        ),
+      ),
+    ]).catch((error) => {
+      console.warn("MCP connection error:", error);
+      return continueConfig; // Return original config if timeout occurs
+    });
+  }
+
+  return continueConfig;
 }
 
 function finalToBrowserConfig(
