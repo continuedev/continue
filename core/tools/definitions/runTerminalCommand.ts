@@ -6,6 +6,7 @@ export const runTerminalCommandTool: Tool = {
   type: "function",
   displayTitle: "Run Terminal Command",
   wouldLikeTo: "run a terminal command",
+  readonly: false,
   function: {
     name: BuiltInToolNames.RunTerminalCommand,
     description: "Run a terminal command in the current directory",

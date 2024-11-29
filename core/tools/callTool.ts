@@ -2,6 +2,7 @@ import { ContextItem, ToolExtras } from "..";
 import { BuiltInToolNames } from "./builtIn";
 import { createNewFileImpl } from "./implementations/createNewFile";
 import { exactSearchImpl } from "./implementations/exactSearch";
+import { readFileImpl } from "./implementations/readFile";
 import { runTerminalCommandImpl } from "./implementations/runTerminalCommand";
 import { searchWebImpl } from "./implementations/searchWeb";
 import { viewDiffImpl } from "./implementations/viewDiff";
@@ -42,6 +43,8 @@ export async function callTool(
   extras: ToolExtras,
 ): Promise<ContextItem[]> {
   switch (uri) {
+    case BuiltInToolNames.ReadFile:
+      return await readFileImpl(args, extras);
     case BuiltInToolNames.CreateNewFile:
       return await createNewFileImpl(args, extras);
     case BuiltInToolNames.ExactSearch:

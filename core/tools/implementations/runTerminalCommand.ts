@@ -1,22 +1,31 @@
 import { ToolImpl } from ".";
-
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
 
 export const runTerminalCommandImpl: ToolImpl = async (args, extras) => {
   const ideInfo = await extras.ide.getIdeInfo();
+
   if (ideInfo.remoteName === "local" || ideInfo.remoteName === "") {
-    // If we're local, can just run the terminal command with child_process
-    const output = await asyncExec(args.command, {
-      cwd: (await extras.ide.getWorkspaceDirs())[0],
-    });
-    return [
-      {
-        name: "Terminal",
-        description: "Terminal command output",
-        content: output.stdout ?? "",
-      },
-    ];
+    try {
+      const output = await asyncExec(args.command, {
+        cwd: (await extras.ide.getWorkspaceDirs())[0],
+      });
+      return [
+        {
+          name: "Terminal",
+          description: "Terminal command output",
+          content: output.stdout ?? "",
+        },
+      ];
+    } catch (error: any) {
+      return [
+        {
+          name: "Terminal",
+          description: "Terminal command output",
+          content: error.stderr ?? error.toString(),
+        },
+      ];
+    }
   }
 
   await extras.ide.runCommand(args.command);

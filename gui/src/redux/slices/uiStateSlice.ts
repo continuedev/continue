@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { Tool } from "core";
 import { BuiltInToolNames } from "core/tools/builtIn";
 import {
   defaultOnboardingCardState,
@@ -33,6 +34,7 @@ export const uiStateSlice = createSlice({
 
     useTools: false,
     toolSettings: {
+      [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
       [BuiltInToolNames.CreateNewFile]: "allowedWithPermission",
       [BuiltInToolNames.RunTerminalCommand]: "allowedWithPermission",
       [BuiltInToolNames.ViewSubdirectory]: "allowedWithoutPermission",
@@ -68,6 +70,11 @@ export const uiStateSlice = createSlice({
     toggleUseTools: (state) => {
       state.useTools = !state.useTools;
     },
+    addTool: (state, action: PayloadAction<Tool>) => {
+      state.toolSettings[action.payload.function.name] = action.payload.readonly
+        ? "allowedWithoutPermission"
+        : "allowedWithPermission";
+    },
     toggleToolSetting: (state, action: PayloadAction<string>) => {
       const setting = state.toolSettings[action.payload];
 
@@ -96,6 +103,7 @@ export const {
   setShowDialog,
   toggleUseTools,
   toggleToolSetting,
+  addTool,
 } = uiStateSlice.actions;
 
 export default uiStateSlice.reducer;

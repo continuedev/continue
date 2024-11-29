@@ -930,6 +930,7 @@ export interface Tool {
 
   displayTitle: string;
   wouldLikeTo: string;
+  readonly: boolean;
 }
 
 interface BaseCompletionOptions {

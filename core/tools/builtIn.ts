@@ -1,4 +1,5 @@
 export enum BuiltInToolNames {
+  ReadFile = "read_file",
   CreateNewFile = "create_new_file",
   RunTerminalCommand = "run_terminal_command",
   ViewSubdirectory = "view_subdirectory",
