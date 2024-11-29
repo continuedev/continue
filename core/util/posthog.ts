@@ -46,6 +46,7 @@ export class Telemetry {
         distinctId: Telemetry.uniqueId,
         event,
         properties: augmentedProperties,
+        sendFeatureFlags: true,
       };
 
       // In cases where an extremely early fatal error occurs, we may not have initialized yet
