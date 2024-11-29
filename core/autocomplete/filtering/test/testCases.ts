@@ -110,6 +110,7 @@ Here is a list of features:
 - Feature 2`,
   },
   {
+    // options: { only: true },
     description: "Should autocomplete a Java method within a class",
     filename: "Calculator.java",
     input: `
@@ -150,8 +151,7 @@ public class Calculator {
             POSTGRES_DB: mydb
     `,
     expectedCompletion: `
-            POSTGRES_DB: mydb
-    `,
+            POSTGRES_DB: mydb`,
   },
   {
     description: "Should enforce bracket matching in JSON files",
@@ -213,8 +213,7 @@ public class Calculator {
     "required": ["JavaScript", "React", "Node.js", "Leadership", "Project Management"],
     "optional": ["Photoshop", "Illustrator"]`,
     expectedCompletion: `"latitude": 34.10834,
-      "longitude": -117.28977
-    `,
+      "longitude": -117.28977`,
   },
   {
     description:
@@ -255,8 +254,7 @@ async getContextForPath(
       ): Promise<AutocompleteCodeSnippet[]> {
     const snippets: AutocompleteCodeSnippet[] = [];
     `,
-    expectedCompletion: `console.log('TEST');
-      `,
+    expectedCompletion: `console.log('TEST');`,
   },
   {
     description: "Should autocomplete React effect hook",
@@ -304,6 +302,67 @@ export const Timer = () => {
 `,
     llmOutput: ` this;`,
     expectedCompletion: `this;`,
+  },
+  {
+    description: "Should complete YAML list item and preserve structure",
+    filename: "test.yaml",
+    input: `
+      services:
+        - name: web
+          image: nginx
+        - name: app<|fim|>
+      volumes:
+        - volume1
+        - volume2
+    `,
+    llmOutput: `
+          image: node
+    `,
+    expectedCompletion: `
+          image: node`,
+  },
+  {
+    description:
+      "Should complete YAML key-value pair inside a nested structure",
+    filename: "test.yaml",
+    input: `
+      version: '3'
+      services:
+        db:
+          image: postgres
+          environment:
+            POSTGRES_USER: user
+            POSTGRES_PASSWORD: pass
+            POSTGRES_DB: mydb<|fim|>
+    `,
+    llmOutput: `
+            PGDATA: /var/lib/postgresql/data/pgdata
+    `,
+    expectedCompletion: `
+            PGDATA: /var/lib/postgresql/data/pgdata`,
+  },
+  {
+    description: "Should complete YAML block within an existing block",
+    filename: "test.yaml",
+    input: `
+      pipelines:
+        branches:
+          master:
+            - step:
+                name: Build and Test
+                script:
+                  - npm install
+                  - npm run test
+            - step:
+                name: Deploy<|fim|>
+    `,
+    llmOutput: `
+                script:
+                  - npm run deploy
+    `,
+    expectedCompletion: `
+                script:
+                  - npm run deploy`,
   },
   {
     description:
@@ -1001,70 +1060,6 @@ Smart<|fim|>`,
 2, B<|fim|>`,
     llmOutput: "ob, 2023-02-10",
     expectedCompletion: "ob, 2023-02-10",
-  },
-  {
-    description: "Should complete YAML list item and preserve structure",
-    filename: "test.yaml",
-    input: `
-      services:
-        - name: web
-          image: nginx
-        - name: app<|fim|>
-      volumes:
-        - volume1
-        - volume2
-    `,
-    llmOutput: `
-          image: node
-    `,
-    expectedCompletion: `
-          image: node
-    `,
-  },
-  {
-    description:
-      "Should complete YAML key-value pair inside a nested structure",
-    filename: "test.yaml",
-    input: `
-      version: '3'
-      services:
-        db:
-          image: postgres
-          environment:
-            POSTGRES_USER: user
-            POSTGRES_PASSWORD: pass
-            POSTGRES_DB: mydb<|fim|>
-    `,
-    llmOutput: `
-            PGDATA: /var/lib/postgresql/data/pgdata
-    `,
-    expectedCompletion: `
-            PGDATA: /var/lib/postgresql/data/pgdata
-    `,
-  },
-  {
-    description: "Should complete YAML block within an existing block",
-    filename: "test.yaml",
-    input: `
-      pipelines:
-        branches:
-          master:
-            - step:
-                name: Build and Test
-                script:
-                  - npm install
-                  - npm run test
-            - step:
-                name: Deploy<|fim|>
-    `,
-    llmOutput: `
-                script:
-                  - npm run deploy
-    `,
-    expectedCompletion: `
-                script:
-                  - npm run deploy
-    `,
   },
   {
     description:
