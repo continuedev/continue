@@ -700,7 +700,8 @@ type ModelProvider =
   | "nebius"
   | "xAI"
   | "moonshot"
-  | "siliconflow";
+  | "siliconflow"
+  | "function-network";
 
 export type ModelName =
   | "AUTODETECT"
@@ -913,6 +914,7 @@ export type EmbeddingsProviderName =
   | "nebius"
   | "vertexai"
   | "watsonx"
+  | "function-network"
   | "siliconflow";
 
 export interface EmbedOptions {

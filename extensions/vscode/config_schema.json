@@ -207,6 +207,7 @@
             "xAI",
             "kindo",
             "moonshot",
+            "function-network",
             "siliconflow"
           ],
           "markdownEnumDescriptions": [
@@ -246,7 +247,8 @@
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
-            "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)"
+            "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
+            "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings."
           ],
           "type": "string"
         },
@@ -2524,7 +2526,8 @@
                 "mistral",
                 "watsonx",
                 "lmstudio",
-                "siliconflow"
+                "siliconflow",
+                "function-network"
               ]
             },
             "model": {
@@ -2572,7 +2575,13 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "nvidia", "gemini", "siliconflow"]
+                    "enum": [
+                      "cohere",
+                      "voyage",
+                      "nvidia",
+                      "gemini",
+                      "siliconflow"
+                    ]
                   }
                 },
                 "required": ["provider"]

@@ -124,6 +124,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "sambanova",
   "nebius",
   "vertexai",
+  "function-network",
 ];
 
 function llmCanGenerateInParallel(
@@ -150,13 +151,12 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini") ||
-    lower.includes("grok")||
+    lower.includes("grok") ||
     lower.includes("moonshot")
   ) {
-    return undefined; 
+    return undefined;
   }
-
-  if (lower.includes("llama3")) {
+  if (lower.includes("llama3") || lower.includes("llama-3")) {
     return "llama3";
   }
 
