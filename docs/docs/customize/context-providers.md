@@ -495,6 +495,26 @@ Reference the architecture and platform of your current operating system.
 }
 ```
 
+### Model Context Protocol
+
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) is a standard proposed by Anthropic to unify prompts, context, and tool use. Continue supports any MCP server with the MCP context provider. Read their [quickstart](https://modelcontextprotocol.io/quickstart) to learn how to set up a local server and then configure your `config.json` like this:
+
+```json
+{
+  "experimental": {
+    "modelContextProtocolServer": {
+      "transport": {
+        "type": "stdio",
+        "command": "uvx",
+        "args": ["mcp-server-sqlite", "--db-path", "/Users/NAME/test.db"]
+      }
+    }
+  }
+}
+```
+
+You'll then be able to type "@" and see "MCP" in the context providers dropdown.
+
 ### `@HTTP`
 
 The HttpContextProvider makes a POST request to the url passed in the configuration. The server must return 200 OK with a ContextItem object or an array of ContextItems.
