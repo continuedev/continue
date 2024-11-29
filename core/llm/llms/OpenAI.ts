@@ -83,7 +83,7 @@ class OpenAI extends BaseLLM {
         text: part.text,
       };
       if (part.type === "imageUrl") {
-        msg.image_url = { ...part.imageUrl, detail: "low" };
+        msg.image_url = { ...part.imageUrl, detail: "auto" };
         msg.type = "image_url";
       }
       return msg;
@@ -154,10 +154,7 @@ class OpenAI extends BaseLLM {
       finalOptions.max_completion_tokens = options.maxTokens;
       finalOptions.max_tokens = undefined;
 
-      // b) don't support streaming currently
-      finalOptions.stream = false;
-
-      // c) don't support system message
+      // b) don't support system message
       finalOptions.messages = finalOptions.messages?.filter(
         (message: any) => message?.role !== "system",
       );

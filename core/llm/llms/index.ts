@@ -48,6 +48,7 @@ import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
+import SiliconFlow from "./SiliconFlow";
 
 const LLMs = [
   Anthropic,
@@ -90,6 +91,7 @@ const LLMs = [
   Nebius,
   VertexAI,
   xAI,
+  SiliconFlow,
 ];
 
 export async function llmFromDescription(

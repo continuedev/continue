@@ -6,8 +6,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers, ToolCallState } from "core";
+import { streamResponse } from "core/llm/stream";
 import { usePostHog } from "posthog-js/react";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
@@ -128,7 +136,10 @@ export function Chat() {
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
-  const state = useSelector((state: RootState) => state.state);
+  const history = useSelector((store: RootState) => store.state.history);
+  const showChatScrollbar = useSelector(
+    (store: RootState) => store.state.config?.ui?.showChatScrollbar,
+  );
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
 
@@ -290,7 +301,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [state.history, defaultModel, state],
+    [history, defaultModel, streamResponse],
   );
 
   useWebviewListener(
@@ -304,30 +315,31 @@ export function Chat() {
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
-      return !state.history
+      return !history
         .slice(index + 1)
         .some((entry) => entry.message.role === "user");
     },
-    [state.history],
+    [history],
   );
 
-  const showScrollbar =
-    state.config.ui?.showChatScrollbar || window.innerHeight > 5000;
+  const showScrollbar = useMemo(() => {
+    return showChatScrollbar ?? window.innerHeight > 5000;
+  }, [showChatScrollbar]);
 
   return (
     <>
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`mt-[8px] overflow-y-scroll ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${state.history.length > 0 ? "h-full" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}
-        {state.history.map((item, index: number) => (
+        {history.map((item, index: number) => (
           <div
             key={item.message.id}
             style={{
-              minHeight: index === state.history.length - 1 ? "50vh" : 0,
+              minHeight: index === history.length - 1 ? "50vh" : 0,
             }}
           >
             <ErrorBoundary
@@ -394,7 +406,7 @@ export function Chat() {
                   >
                     <StepContainer
                       index={index}
-                      isLast={index === state.history.length - 1}
+                      isLast={index === history.length - 1}
                       item={item}
                     />
                   </TimelineItem>
@@ -449,7 +461,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {state.history.length === 0 && getLastSessionId() ? (
+              {history.length === 0 && getLastSessionId() ? (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
@@ -468,7 +480,7 @@ export function Chat() {
             <ConfigErrorIndicator />
           </div>
 
-          {state.history.length === 0 && (
+          {history.length === 0 && (
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
@@ -486,7 +498,7 @@ export function Chat() {
         </div>
       </div>
       <div
-        className={`${state.history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
+        className={`${history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
       >
         <ChatIndexingPeeks />
       </div>

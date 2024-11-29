@@ -64,7 +64,7 @@ export default function StepContainerPreActionButtons({
   const [hovering, setHovering] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
   const uiConfig = useUIConfig();
-  const streamIdRef = useRef<string | null>(null);
+  const streamIdRef = useRef<string>(uuidv4());
   const nextCodeBlockIndex = useSelector(
     (state: RootState) => state.state.nextCodeBlockToApplyIndex,
   );
@@ -75,12 +75,11 @@ export default function StepContainerPreActionButtons({
     !isJetBrains() && isTerminalCodeBlock(language, codeBlockContent);
   const isNextCodeBlock = nextCodeBlockIndex === codeBlockIndex;
 
-  if (streamIdRef.current === null) {
-    streamIdRef.current = uuidv4();
-  }
-
   const defaultModel = useSelector(defaultModelSelector);
   function onClickApply() {
+    if (!defaultModel) {
+      return;
+    }
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       text: codeBlockContent,

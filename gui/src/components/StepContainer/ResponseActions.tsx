@@ -29,9 +29,6 @@ export default function ResponseActions({
     (store: RootState) => store.editModeState.isInEditMode,
   );
 
-  // Only render delete button if there is more than one message
-  const shouldRenderDelete = index !== 1;
-
   if (isInEditMode) {
     return <EditActions index={index} item={item} />;
   }
@@ -50,15 +47,13 @@ export default function ResponseActions({
             </HeaderButtonWithToolTip>
           )}
 
-          {shouldRenderDelete && (
-            <HeaderButtonWithToolTip
-              text="Delete"
-              tabIndex={-1}
-              onClick={onDelete}
-            >
-              <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
-            </HeaderButtonWithToolTip>
-          )}
+          <HeaderButtonWithToolTip
+            text="Delete"
+            tabIndex={-1}
+            onClick={onDelete}
+          >
+            <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
+          </HeaderButtonWithToolTip>
 
           <CopyIconButton
             tabIndex={-1}

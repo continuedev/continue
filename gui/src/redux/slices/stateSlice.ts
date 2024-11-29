@@ -380,7 +380,7 @@ export const stateSlice = createSlice({
         state.history = payload.history as any;
         state.title = payload.title;
         state.sessionId = payload.sessionId;
-        state.checkpoints = payload.checkpoints;
+        state.checkpoints = payload.checkpoints ?? [];
         state.curCheckpointIndex = 0;
       } else {
         state.history = [];
@@ -438,10 +438,7 @@ export const stateSlice = createSlice({
       };
     },
     setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
-      return {
-        ...state,
-        selectedProfileId: payload,
-      };
+      state.selectedProfileId = payload;
     },
     setCurCheckpointIndex: (state, { payload }: PayloadAction<number>) => {
       state.curCheckpointIndex = payload;

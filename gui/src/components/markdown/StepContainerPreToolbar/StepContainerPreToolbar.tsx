@@ -1,6 +1,6 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { debounce } from "lodash";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import styled, { css, keyframes } from "styled-components";
 import { v4 as uuidv4 } from "uuid";
@@ -84,11 +84,12 @@ export default function StepContainerPreToolbar(
     (state: RootState) => state.state.nextCodeBlockToApplyIndex,
   );
 
-  const applyState = useSelector((store: RootState) =>
-    store.state.applyStates.find(
-      (state) => state.streamId === streamIdRef.current,
-    ),
+  const applyStates = useSelector(
+    (store: RootState) => store.state.applyStates,
   );
+  const applyState = useMemo(() => {
+    return applyStates.find((state) => state.streamId === streamIdRef.current);
+  }, [applyStates, streamIdRef]);
 
   // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
   // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
@@ -104,6 +105,9 @@ export default function StepContainerPreToolbar(
 
   const defaultModel = useSelector(defaultModelSelector);
   function onClickApply() {
+    if (!defaultModel) {
+      return;
+    }
     ideMessenger.post("applyToFile", {
       streamId: streamIdRef.current,
       filepath: props.filepath,

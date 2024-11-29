@@ -1,4 +1,4 @@
-import { ContextItemWithId, SymbolWithRange } from "core";
+import { SymbolWithRange } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -14,6 +14,7 @@ import {
   vscEditorBackground,
   vscForeground,
 } from "..";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { RootState } from "../../redux/store";
 import { getFontSize, isJetBrains } from "../../util";
 import FilenameLink from "./FilenameLink";
@@ -111,7 +112,7 @@ function getLanuageFromClassName(className: any): string | null {
     .find((word) => word.startsWith(HLJS_LANGUAGE_CLASSNAME_PREFIX))
     ?.split("-")[1];
 
-  return language;
+  return language ?? null;
 }
 
 function getCodeChildrenContent(children: any) {
@@ -155,21 +156,17 @@ function processCodeBlocks(tree: any) {
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
+  // The refs are a workaround because rehype options are stored on initiation
+  // So they won't use the most up-to-date state values
+  // So in this case we just put them in refs
   const contextItems = useSelector(
     (state: RootState) =>
       state.state.history[props.itemIndex - 1]?.contextItems,
   );
+  const contextItemsRef = useUpdatingRef(contextItems);
+
   const symbols = useSelector((state: RootState) => state.state.symbols);
-
-  // The refs are a workaround because rehype options are stored on initiation
-  // So they won't use the most up-to-date state values
-  // So in this case we just put them in refs
   const symbolsRef = useRef<SymbolWithRange[]>([]);
-  const contextItemsRef = useRef<ContextItemWithId[]>([]);
-
-  useEffect(() => {
-    contextItemsRef.current = contextItems || [];
-  }, [contextItems]);
   useEffect(() => {
     // Note, before I was only looking for symbols that matched
     // Context item files on current history item

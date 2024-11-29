@@ -570,8 +570,20 @@ export class VsCodeIdeUtils {
     return repo?.state?.HEAD?.name || "NONE";
   }
 
-  async getDiff(includeUnstaged: boolean): Promise<string> {
-    let diffs: string[] = [];
+  private splitDiff(diffString: string): string[] {
+    const fileDiffHeaderRegex = /(?=diff --git a\/.* b\/.*)/;
+
+    const diffs = diffString.split(fileDiffHeaderRegex);
+
+    if (diffs[0].trim() === "") {
+      diffs.shift();
+    }
+
+    return diffs;
+  }
+
+  async getDiff(includeUnstaged: boolean): Promise<string[]> {
+    const diffs: string[] = [];
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));
@@ -587,9 +599,7 @@ export class VsCodeIdeUtils {
       }
     }
 
-    const fullDiff = diffs.join("\n\n");
-
-    return fullDiff;
+    return diffs.flatMap((diff) => this.splitDiff(diff));
   }
 
   getHighlightedCode(): RangeInFile[] {

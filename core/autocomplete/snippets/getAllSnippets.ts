@@ -87,7 +87,7 @@ const getDiffSnippets = async (
 ): Promise<AutocompleteDiffSnippet[]> => {
   const diff = await ide.getDiff(true);
 
-  return [diff].map((item) => {
+  return diff.map((item) => {
     return {
       content: item,
       type: AutocompleteSnippetType.Diff,

@@ -176,7 +176,7 @@ async function renderPrompt(
   const diff = await context.ide.getDiff(false);
   const currentFile = await context.ide.getCurrentFile();
   const inputData: Record<string, string> = {
-    diff,
+    diff: diff.join("\n"),
     input: userInput,
   };
   if (currentFile) {

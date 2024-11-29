@@ -416,6 +416,16 @@ export class Core {
       if (config.experimental?.readResponseTTS && "completion" in next.value) {
         void TTS.read(next.value?.completion);
       }
+
+      void Telemetry.capture(
+        "chat",
+        {
+          model: model.model,
+          provider: model.providerName,
+        },
+        true,
+      );
+
       return { done: true, content: next.value };
     }
 

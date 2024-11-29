@@ -4,12 +4,11 @@ import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { selectSlashCommands } from "../../redux/selectors";
+import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
 import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
-
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
@@ -64,7 +63,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
   const active = useSelector((store: RootState) => store.state.active);
-  const availableSlashCommands = useSelector(selectSlashCommands);
+  const availableSlashCommands = useSelector(selectSlashCommandComboBoxInputs);
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
   );

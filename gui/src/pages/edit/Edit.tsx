@@ -2,7 +2,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers, RangeInFileWithContents } from "core";
 import { stripImages } from "core/util/messageContent";
-import { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
@@ -12,6 +12,7 @@ import TipTapEditor from "../../components/mainInput/TipTapEditor";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { selectApplyState } from "../../redux/selectors";
 import {
   clearCodeToEdit,
   setEditDone,
@@ -43,17 +44,22 @@ export default function Edit() {
     (store: RootState) => store.state.config.contextProviders,
   );
 
+  const filteredContextProviders = useMemo(() => {
+    return (
+      availableContextProviders?.filter(
+        (provider) =>
+          !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
+      ) ?? []
+    );
+  }, [availableContextProviders]);
+
   const history = useSelector((state: RootState) => state.state.history);
 
   const applyStates = useSelector(
     (state: RootState) => state.state.applyStates,
   );
 
-  const applyState = useSelector(
-    (store: RootState) =>
-      store.state.applyStates.find((state) => state.streamId === "edit")
-        ?.status ?? "closed",
-  );
+  const applyState = useSelector(selectApplyState);
 
   const isSingleRangeEdit =
     editModeState.codeToEdit.length === 0 ||
@@ -73,8 +79,6 @@ export default function Edit() {
     }
   }, [applyState, editModeState.editStatus]);
 
-  // const active = useSelector((state: RootState) => state.state.active);
-
   const pendingApplyStates = applyStates.filter(
     (state) => state.status === "done",
   );
@@ -92,10 +96,6 @@ export default function Edit() {
   };
 
   const hasPendingApplies = pendingApplyStates.length > 0;
-
-  const filteredContextProviders = availableContextProviders.filter(
-    (provider) => !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
-  );
 
   async function handleSingleRangeEdit(
     editorState: JSONContent,
