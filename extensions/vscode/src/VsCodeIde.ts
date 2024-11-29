@@ -36,7 +36,6 @@ import type {
   RangeInFile,
   Thread,
 } from "core";
-import { text } from "stream/consumers";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -312,7 +311,7 @@ class VsCodeIde implements IDE {
     return Promise.resolve(vscode.env.machineId);
   }
 
-  async getDiff(includeUnstaged: boolean): Promise<string> {
+  async getDiff(includeUnstaged: boolean): Promise<string[]> {
     return await this.ideUtils.getDiff(includeUnstaged);
   }
 

@@ -1,12 +1,20 @@
-import { stopAtStopTokens } from "./charStream";
+import { stopAtStartOf, stopAtStopTokens } from "./charStream";
+
+async function* createMockStream(chunks: string[]): AsyncGenerator<string> {
+  for (const chunk of chunks) {
+    yield chunk;
+  }
+}
+
+async function streamToString(stream: AsyncGenerator<string>): Promise<string> {
+  let result = "";
+  for await (const chunk of stream) {
+    result += chunk;
+  }
+  return result;
+}
 
 describe("stopAtStopTokens", () => {
-  async function* createMockStream(chunks: string[]): AsyncGenerator<string> {
-    for (const chunk of chunks) {
-      yield chunk;
-    }
-  }
-
   it("should yield characters until a stop token is encountered", async () => {
     const mockStream = createMockStream(["Hello", " world", "! Stop", "here"]);
     const stopTokens = ["Stop"];
@@ -30,12 +38,7 @@ describe("stopAtStopTokens", () => {
     const stopTokens = ["END", "STOP", "HALT"];
     const result = stopAtStopTokens(mockStream, stopTokens);
 
-    const output = [];
-    for await (const char of result) {
-      output.push(char);
-    }
-
-    expect(output.join("")).toBe("This is a test. ");
+    expect(await streamToString(result)).toBe("This is a test. ");
   });
 
   it("should handle stop tokens split across chunks", async () => {
@@ -67,12 +70,7 @@ describe("stopAtStopTokens", () => {
     const stopTokens = ["END"];
     const result = stopAtStopTokens(mockStream, stopTokens);
 
-    const output = [];
-    for await (const char of result) {
-      output.push(char);
-    }
-
-    expect(output.join("")).toBe("This is a complete stream");
+    expect(await streamToString(result)).toBe("This is a complete stream");
   });
 
   it("should handle empty chunks", async () => {
@@ -80,12 +78,7 @@ describe("stopAtStopTokens", () => {
     const stopTokens = ["STOP"];
     const result = stopAtStopTokens(mockStream, stopTokens);
 
-    const output = [];
-    for await (const char of result) {
-      output.push(char);
-    }
-
-    expect(output.join("")).toBe("Hello world! ");
+    expect(await streamToString(result)).toBe("Hello world! ");
   });
 
   it("should handle stop token at the beginning of the stream", async () => {
@@ -106,12 +99,7 @@ describe("stopAtStopTokens", () => {
     const stopTokens = ["STOP"];
     const result = stopAtStopTokens(mockStream, stopTokens);
 
-    const output = [];
-    for await (const char of result) {
-      output.push(char);
-    }
-
-    expect(output.join("")).toBe("Hello world");
+    expect(await streamToString(result)).toBe("Hello world");
   });
 
   it("should handle multiple stop tokens of different lengths", async () => {
@@ -124,12 +112,7 @@ describe("stopAtStopTokens", () => {
     const stopTokens = ["STOP", "END", "HALT"];
     const result = stopAtStopTokens(mockStream, stopTokens);
 
-    const output = [];
-    for await (const char of result) {
-      output.push(char);
-    }
-
-    expect(output.join("")).toBe("This is a test with multiple ");
+    expect(await streamToString(result)).toBe("This is a test with multiple ");
   });
 
   it("should handle an empty stream", async () => {
@@ -137,12 +120,7 @@ describe("stopAtStopTokens", () => {
     const stopTokens = ["STOP"];
     const result = stopAtStopTokens(mockStream, stopTokens);
 
-    const output = [];
-    for await (const char of result) {
-      output.push(char);
-    }
-
-    expect(output.join("")).toBe("");
+    expect(await streamToString(result)).toBe("");
   });
 
   it("should handle an empty stop tokens array", async () => {
@@ -166,11 +144,72 @@ describe("stopAtStopTokens", () => {
     ];
     const result = stopAtStopTokens(mockStream, stopTokens);
 
-    const output = [];
-    for await (const char of result) {
-      output.push(char);
-    }
+    expect(await streamToString(result)).toBe("Hello world!");
+  });
+});
 
-    expect(output.join("")).toBe("Hello world!");
+describe("stopAtStartOf", () => {
+  const sampleCode = `      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: \`Bearer \${this.workOsAccessToken}\`,
+        },
+      },
+    );
+    const data = await response.json();
+    return data.items;
+  }
+
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras,
+  ): Promise<ContextItem[]> {
+    const response = await extras.fetch(
+      new URL(
+        \`/proxy/context/\${this.options.id}/retrieve\`,
+        controlPlaneEnv.CONTROL_PLANE_URL,
+      ),
+`;
+
+  /* Some LLMs, such as Codestral, repeat the suffix of the query. To test our filtering, we cut the sample code at random positions, remove a part of the input
+and construct a response, containing the removed part and the suffix. The goal of the stopAtStartOf() method is to detect the start of the suffix in the response */
+  it("should stop if the start of the suffix is reached", async () => {
+    const suffix = `
+  const data = await response.json();
+  return data.items;
+}`;
+    const mockStream = createMockStream(sampleCode.split(/(?! )/g));
+    const result = stopAtStartOf(mockStream, suffix);
+
+    const resultStr = await streamToString(result);
+    expect(resultStr).toBe(`      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: \`Bearer \${this.workOsAccessToken}\`,
+        },
+      },
+    );
+    `);
+  });
+  it("should stop if the start of the suffix is reached, even if the suffix has a prefix", async () => {
+    const suffix = `
+  xxxconst data = await response.json();
+  return data.items;
+}`;
+    const mockStream = createMockStream(sampleCode.split(/(?! )/g));
+    const result = stopAtStartOf(mockStream, suffix);
+
+    const resultStr = await streamToString(result);
+    expect(resultStr).toBe(`      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: \`Bearer \${this.workOsAccessToken}\`,
+        },
+      },
+    );
+    `);
   });
 });

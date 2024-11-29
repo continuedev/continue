@@ -43,9 +43,13 @@ function isExtremeRepetition(completion: string): boolean {
   }
   return false;
 }
-export function isOnlyWhitespace(completion: string): boolean {
+function isOnlyWhitespace(completion: string): boolean {
   const whitespaceRegex = /^[\s]+$/;
   return whitespaceRegex.test(completion);
+}
+
+function isBlank(completion: string): boolean {
+  return completion.trim().length === 0;
 }
 
 export function postprocessCompletion({
@@ -60,6 +64,11 @@ export function postprocessCompletion({
   suffix: string;
 }): string | undefined {
   // Don't return empty
+  if (isBlank(completion)) {
+    return undefined;
+  }
+
+  // Don't return whitespace
   if (isOnlyWhitespace(completion)) {
     return undefined;
   }
@@ -112,16 +121,8 @@ export function postprocessCompletion({
   // }
 
   // If prefix ends with space and so does completion, then remove the space from completion
-  if (
-    prefix.split("\n").pop()?.trim() !== "" &&
-    prefix.endsWith(" ") &&
-    completion.startsWith(" ")
-  ) {
-    completion = completion.slice(1);
-  }
 
-  // Qwen often adds an extra space to the start
-  if (llm.model.toLowerCase().includes("qwen") && completion.startsWith(" ")) {
+  if (prefix.endsWith(" ") && completion.startsWith(" ")) {
     completion = completion.slice(1);
   }
 

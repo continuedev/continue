@@ -206,7 +206,8 @@
             "vertexai",
             "xAI",
             "kindo",
-            "moonshot"
+            "moonshot",
+            "siliconflow"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -244,7 +245,8 @@
             "### Ask Sage\nAsk Sage is an agnostic hosted service that provides language models. To get started with Ask Sage:\n1. Obtain an API key from your account. For more information, visit [Ask Sage](https://docs.asksage.ai/).\n2. Paste the API key below.\n3. Select a model preset.\n> [Reference](https://docs.asksage.ai/)",
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
-            "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)"
+            "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
+            "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)"
           ],
           "type": "string"
         },
@@ -1230,6 +1232,27 @@
                   "llama3.1-70b",
                   "llama3.1-405b",
                   "AUTODETECT"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["siliconflow"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "Qwen/Qwen2.5-Coder-32B-Instruct",
+                  "Qwen/Qwen2.5-Coder-7B-Instruct",
+                  "Pro/Qwen/Qwen2.5-Coder-7B-Instruct"
                 ]
               }
             }
@@ -2500,7 +2523,8 @@
                 "deepinfra",
                 "mistral",
                 "watsonx",
-                "lmstudio"
+                "lmstudio",
+                "siliconflow"
               ]
             },
             "model": {
@@ -2548,7 +2572,7 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "nvidia", "gemini"]
+                    "enum": ["cohere", "voyage", "nvidia", "gemini", "siliconflow"]
                   }
                 },
                 "required": ["provider"]
@@ -2791,10 +2815,6 @@
               "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
               "default": false
             },
-            "useCopyBuffer": {
-              "type": "boolean",
-              "description": "Determines whether the copy buffer will be considered when contructing the prompt."
-            },
             "useFileSuffix": {
               "type": "boolean",
               "description": "Determines whether to use the file suffix in the prompt."
@@ -2834,10 +2854,6 @@
             "onlyMyCode": {
               "type": "boolean",
               "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
-            },
-            "useOtherFiles": {
-              "type": "boolean",
-              "description": "Defaults to true. If set to false, Continue will not attempt to include snippets from other files."
             },
             "disableInFiles": {
               "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",

@@ -1,6 +1,6 @@
-import { IndexingStatus } from "core";
+import { IndexingStatus, SiteIndexingConfig } from "core";
 import { PropsWithChildren, useContext, useMemo } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { usePostHog } from "posthog-js/react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
@@ -12,9 +12,10 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { updateIndexingStatus } from "../../redux/slices/stateSlice";
+import { RootState } from "../../redux/store";
 
 interface IndexingStatusViewerProps {
-  status: IndexingStatus;
+  docConfig: SiteIndexingConfig;
 }
 
 const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
@@ -27,33 +28,43 @@ const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
   failed: XMarkIcon, // Since we show an erorr message below
 };
 
-function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
+function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const posthog = usePostHog();
   const dispatch = useDispatch();
 
+  // const status = undefined;
+  const status = useSelector(
+    (store: RootState) => store.state.indexing.statuses[docConfig.startUrl],
+  );
+
   const reIndex = () =>
     ideMessenger.post("indexing/reindex", {
-      type: status.type,
-      id: status.id,
+      type: "docs",
+      id: docConfig.startUrl,
     });
 
   const abort = () => {
     ideMessenger.post("indexing/abort", {
-      type: status.type,
-      id: status.id,
+      type: "docs",
+      id: docConfig.startUrl,
     });
     // Optimistic abort status
-    dispatch(
-      updateIndexingStatus({ ...status, status: "aborted", progress: 0 }),
-    );
+    if (status) {
+      dispatch(
+        updateIndexingStatus({ ...status, status: "aborted", progress: 0 }),
+      );
+    }
   };
 
   const progressPercentage = useMemo(() => {
+    if (!status) {
+      return 0;
+    }
     return Math.min(100, Math.max(0, status.progress * 100));
-  }, [status.progress]);
+  }, [status?.progress]);
 
-  const Icon = STATUS_TO_ICON[status.status];
+  const Icon = STATUS_TO_ICON[status?.status];
 
   return (
     <div className="mt-2 flex w-full flex-col">
@@ -62,24 +73,26 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
         className={`flex flex-row items-center justify-between gap-2 text-sm`}
       >
         <div
-          className={`flex flex-row items-center gap-2 ${status.url ? "cursor-pointer hover:underline" : ""}`}
+          className={`flex flex-row items-center gap-2 ${status?.url ? "cursor-pointer hover:underline" : ""}`}
           onClick={() => {
-            if (status.url) {
+            if (status?.url) {
               ideMessenger.post("openUrl", status.url);
             }
           }}
         >
-          {status.icon ? (
-            <img src={status.icon} alt="doc icon" className="h-4 w-4" />
+          {docConfig.faviconUrl ? (
+            <img
+              src={docConfig.faviconUrl}
+              alt="doc icon"
+              className="h-4 w-4"
+            />
           ) : null}
           <p className="lines lines-1 m-0 p-0 text-left">
-            {status.title ?? status.id}
+            {docConfig.title ?? docConfig.startUrl}
           </p>
-          {!!status.url && (
-            <ArrowTopRightOnSquareIcon className="mb-0.5 h-3 w-3 text-stone-500" />
-          )}
+          <ArrowTopRightOnSquareIcon className="mb-0.5 h-3 w-3 text-stone-500" />
         </div>
-        {status.status === "pending" ? (
+        {status?.status === "pending" ? (
           <div className="text-xs text-stone-500">Pending...</div>
         ) : (
           <div className="flex flex-row items-center gap-1 text-stone-500">
@@ -87,7 +100,7 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
             {Icon ? (
               <Icon
                 className={`inline-block h-4 w-4 text-stone-500 ${
-                  status.status === "indexing" ? "animate-spin-slow" : ""
+                  status?.status === "indexing" ? "animate-spin-slow" : ""
                 }`}
               ></Icon>
             ) : null}
@@ -98,7 +111,7 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
       <div className="my-2 h-1.5 w-full rounded-md border border-solid border-gray-400">
         <div
           className={`h-full rounded-lg transition-all duration-200 ease-in-out ${
-            status.status === "failed" ? "bg-red-600" : "bg-stone-500"
+            status?.status === "failed" ? "bg-red-600" : "bg-stone-500"
           }`}
           style={{
             width: `${progressPercentage}%`,
@@ -118,7 +131,7 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
               paused: () => {},
               deleted: () => {},
               pending: () => {},
-            }[status.status]
+            }[status?.status]
           }
         >
           {
@@ -130,18 +143,16 @@ function IndexingStatusViewer({ status }: IndexingStatusViewerProps) {
               paused: "",
               deleted: "",
               pending: "",
-            }[status.status]
+            }[status?.status]
           }
         </span>
 
-        {/* {status.status === "indexing" && ( */}
         <span className="lines lines-1 text-right text-xs text-stone-500">
-          {status.description}
+          {status?.description}
         </span>
-        {/* )} */}
       </div>
     </div>
   );
 }
 
-export default IndexingStatusViewer;
+export default DocsIndexingStatus;

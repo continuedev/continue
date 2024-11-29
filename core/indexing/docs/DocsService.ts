@@ -7,7 +7,6 @@ import {
   ContinueConfig,
   EmbeddingsProvider,
   IDE,
-  IndexingStatusMap,
   IndexingStatus,
   SiteIndexingConfig,
   IdeInfo,
@@ -70,6 +69,7 @@ export type AddParams = {
   favicon?: string;
 };
 
+
 /*
   General process:
   - On config update:
@@ -86,7 +86,6 @@ export type AddParams = {
 export default class DocsService {
   static lanceTableName = "docs";
   static sqlitebTableName = "docs";
-  static indexingType = "docs";
 
   static preIndexedDocsEmbeddingsProvider =
     new TransformersJsEmbeddingsProvider();
@@ -136,36 +135,58 @@ export default class DocsService {
     configHandler.onConfigUpdate(this.handleConfigUpdate.bind(this));
   }
 
-  readonly statuses: IndexingStatusMap = new Map();
-
-  // Function for GUI to retrieve initial pending statuses
-  // And kickoff indexing where needed
-  async initStatuses() {
-    this.config?.docs?.forEach(async (doc) => {
-      const currentStatus = this.statuses.get(doc.startUrl);
-      if (currentStatus) {
-        this.handleStatusUpdate(currentStatus);
-      } else {
-        this.handleStatusUpdate({
-          type: "docs",
-          id: doc.startUrl,
-          embeddingsProviderId: this.config.embeddingsProvider.id,
-          isReindexing: false,
-          progress: 0,
-          description: "Pending",
-          status: "pending",
-          title: doc.title,
-          debugInfo: `max depth: ${doc.maxDepth}`,
-          icon: doc.faviconUrl,
-          url: doc.startUrl,
-        });
-      }
-    });
-  }
+  readonly statuses: Map<string, IndexingStatus> = new Map();
 
   handleStatusUpdate(update: IndexingStatus) {
     this.statuses.set(update.id, update);
     this.messenger?.send("indexing/statusUpdate", update);
+  }
+
+  // A way for gui to retrieve initial statuses
+  async initStatuses(): Promise<void> {
+    if (!this.config?.docs) {
+      return;
+    }
+    const metadata = await this.listMetadata();
+
+    this.config.docs?.forEach((doc) => {
+      if (!doc.startUrl) {
+        console.error("Invalid config docs entry, no start");
+        return;
+      }
+
+      const currentStatus = this.statuses.get(doc.startUrl);
+      if (currentStatus) {
+        return currentStatus;
+      }
+
+      const sharedStatus = {
+        type: "docs" as IndexingStatus["type"],
+        id: doc.startUrl,
+        embeddingsProviderId: this.config.embeddingsProvider.id,
+        isReindexing: false,
+        title: doc.title,
+        debugInfo: `max depth: ${doc.maxDepth}`,
+        icon: doc.faviconUrl,
+        url: doc.startUrl,
+      };
+      const indexedStatus: IndexingStatus = metadata.find(
+        (meta) => meta.startUrl === doc.startUrl,
+      )
+        ? {
+            ...sharedStatus,
+            progress: 0,
+            description: "Pending",
+            status: "pending",
+          }
+        : {
+            ...sharedStatus,
+            progress: 1,
+            description: "Complete",
+            status: "complete",
+          };
+      this.handleStatusUpdate(indexedStatus);
+    });
   }
 
   abort(startUrl: string) {
@@ -362,6 +383,7 @@ export default class DocsService {
 
     const indexExists = await this.hasMetadata(startUrl);
 
+    // Build status update - most of it is fixed values
     const fixedStatus: Pick<
       IndexingStatus,
       | "type"
@@ -383,6 +405,8 @@ export default class DocsService {
       url: siteIndexingConfig.startUrl,
     };
 
+    // Clear current indexes if reIndexing
+    //
     if (indexExists) {
       if (reIndex) {
         await this.deleteIndexes(startUrl);
@@ -396,6 +420,12 @@ export default class DocsService {
         });
         return;
       }
+    }
+
+    // If not preindexed
+    const isPreIndexedDoc = !!preIndexedDocs[siteIndexingConfig.startUrl];
+    if (!isPreIndexedDoc) {
+      this.addToConfig(siteIndexingConfig);
     }
 
     try {
@@ -435,7 +465,7 @@ export default class DocsService {
         articles.push(article);
 
         processedPages++;
-        await new Promise((resolve) => setTimeout(resolve, 50)); // Locks down GUI if no sleeping
+        await new Promise((resolve) => setTimeout(resolve, 100)); // Locks down GUI if no sleeping
       }
 
       void Telemetry.capture("docs_pages_crawled", {
@@ -788,19 +818,13 @@ export default class DocsService {
         }
       }
 
-      // Sends "Pending" or current status for each
-      await this.initStatuses();
-
-      for (const doc of changedDocs) {
-        console.log(`Updating indexed doc: ${doc.startUrl}`);
-        await this.indexAndAdd(doc, true);
-      }
+      await Promise.allSettled([
+        ...changedDocs.map((doc) => this.indexAndAdd(doc, true)),
+        ...newDocs.map((doc) => this.indexAndAdd(doc)),
+      ]);
 
       for (const doc of newDocs) {
-        console.log(`Indexing new doc: ${doc.startUrl}`);
         void Telemetry.capture("add_docs_config", { url: doc.startUrl });
-
-        await this.indexAndAdd(doc);
       }
 
       for (const doc of deletedDocs) {
@@ -941,7 +965,7 @@ export default class DocsService {
     );
   }
 
-  private addToConfig({ siteIndexingConfig }: AddParams) {
+  private addToConfig(siteIndexingConfig: SiteIndexingConfig) {
     // Handles the case where a user has manually added the doc to config.json
     // so it already exists in the file
     const doesDocExist = this.config.docs?.some(
@@ -959,13 +983,6 @@ export default class DocsService {
   private async add(params: AddParams) {
     await this.addToLance(params);
     await this.addMetadataToSqlite(params);
-
-    const isPreIndexedDoc =
-      !!preIndexedDocs[params.siteIndexingConfig.startUrl];
-
-    if (!isPreIndexedDoc) {
-      this.addToConfig(params);
-    }
   }
 
   // Delete methods
@@ -1030,10 +1047,7 @@ export default class DocsService {
     console.log(
       `Reindexing non-preindexed docs with new embeddings provider: ${embeddingsProvider.id}`,
     );
-    await this.initStatuses();
-    for (const doc of docs) {
-      await this.indexAndAdd(doc, true);
-    }
+    await Promise.allSettled(docs.map((doc) => this.indexAndAdd(doc)));
 
     // Important that this only is invoked after we have successfully
     // cleared and reindex the docs so that the table cannot end up in an

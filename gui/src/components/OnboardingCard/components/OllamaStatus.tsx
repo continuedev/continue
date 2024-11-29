@@ -13,9 +13,7 @@ interface OllamaStatusProps {
   isOllamaConnected: boolean;
 }
 
-const {
-  ollama: { downloadUrl },
-} = providers;
+const downloadUrl = providers.ollama!.downloadUrl!;
 
 export function OllamaStatus({ isOllamaConnected }: OllamaStatusProps) {
   const ideMessenger = useContext(IdeMessengerContext);

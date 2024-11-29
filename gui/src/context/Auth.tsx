@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             setDialogMessage(
               <ConfirmationDialog
                 text={
-                  "Welcome to Continue for teams! Using the toggle in the bottom right, you can switch between your local profile (defined by config.json) and team profiles (defined in the Continue for teams web app). Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
+                  "Welcome to Continue for teams! Using account icon in the top right, you can switch between your local profile (defined by config.json) and team profiles (defined in the Continue for teams web app). Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
                 }
                 hideCancelButton={true}
                 confirmText="Ok"
