@@ -1,8 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
 import { ChatMessage, SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/images.js";
-
+import { renderChatMessage } from "../../util/messageContent.js";
 export function constructMcpSlashCommand(
   client: Client,
   name: string,
@@ -40,7 +39,7 @@ export function constructMcpSlashCommand(
         messages,
         new AbortController().signal,
       )) {
-        yield stripImages(chunk.content);
+        yield renderChatMessage(chunk);
       }
     },
   };
