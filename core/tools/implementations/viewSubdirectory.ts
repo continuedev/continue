@@ -1,11 +1,21 @@
 import generateRepoMap from "../../util/generateRepoMap";
+import { resolveRelativePathInWorkspace } from "../../util/ideUtils";
 
 import { ToolImpl } from ".";
 
 export const viewSubdirectoryImpl: ToolImpl = async (args: any, extras) => {
   const { directory_path } = args;
+  const absolutePath = await resolveRelativePathInWorkspace(
+    directory_path,
+    extras.ide,
+  );
+
+  if (!absolutePath) {
+    throw new Error(`Directory path "${directory_path}" does not exist.`);
+  }
+
   const repoMap = await generateRepoMap(extras.llm, extras.ide, {
-    dirs: [directory_path],
+    dirs: [absolutePath],
   });
   return [
     {
