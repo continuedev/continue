@@ -4,7 +4,7 @@ import { BuiltInToolNames } from "../builtIn";
 export const viewSubdirectoryTool: Tool = {
   type: "function",
   displayTitle: "View Subdirectory",
-  wouldLikeTo: 'view the contents of "{{ directory_path }}"',
+  wouldLikeTo: 'view the contents of "{{{ directory_path }}}"',
   readonly: true,
   function: {
     name: BuiltInToolNames.ViewSubdirectory,

@@ -4,7 +4,7 @@ import { BuiltInToolNames } from "../builtIn";
 export const readFileTool: Tool = {
   type: "function",
   displayTitle: "Read File",
-  wouldLikeTo: "read {{ filepath }}",
+  wouldLikeTo: "read {{{ filepath }}}",
   readonly: true,
   function: {
     name: BuiltInToolNames.ReadFile,

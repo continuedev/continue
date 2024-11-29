@@ -4,7 +4,7 @@ import { BuiltInToolNames } from "../builtIn";
 export const exactSearchTool: Tool = {
   type: "function",
   displayTitle: "Exact Search",
-  wouldLikeTo: 'search for "{{ query }}" in the repository',
+  wouldLikeTo: 'search for "{{{ query }}}" in the repository',
   readonly: true,
   function: {
     name: BuiltInToolNames.ExactSearch,
