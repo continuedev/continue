@@ -362,6 +362,10 @@ export const stateSlice = createSlice({
                 state.history[
                   state.history.length - 1
                 ].toolCallState.parsedArgs = parsedArgs;
+                state.history[
+                  state.history.length - 1
+                ].toolCallState.toolCall.function.arguments +=
+                  toolCall.function.arguments;
               }
             });
           }

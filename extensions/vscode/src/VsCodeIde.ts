@@ -531,7 +531,7 @@ class VsCodeIde implements IDE {
         "bin",
         "rg",
       ),
-      ["-i", "-C", "2", "--", `${query}`, "."], //no regex
+      ["-i", "-C", "2", "-F", "--", `"${query}"`, "."], //no regex
       //["-i", "-C", "2", "-e", `${query}`, "."], //use regex
       { cwd: dir },
     );
@@ -546,6 +546,8 @@ class VsCodeIde implements IDE {
       p.on("close", (code) => {
         if (code === 0) {
           resolve(output);
+        } else if (code === 1) {
+          resolve("");
         } else {
           reject(new Error(`Process exited with code ${code}`));
         }
