@@ -190,7 +190,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   const isInEditMode = useAppSelector(
     (state) => state.editModeState.isInEditMode,
   );
-
   const shouldAddFileForEditing = useAppSelector(
     (state) => state.ui.shouldAddFileForEditing,
   );

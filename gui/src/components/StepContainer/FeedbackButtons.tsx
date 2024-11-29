@@ -48,7 +48,7 @@ export default function FeedbackButtons({ item }: FeedbackButtonsProps) {
         <HandThumbDownIcon
           className={`h-3.5 w-3.5 ${feedback === false ? "text-red-400" : "text-gray-500"}`}
         />
-      </HeaderButtonWithToolTip>{" "}
+      </HeaderButtonWithToolTip>
     </>
   );
 }

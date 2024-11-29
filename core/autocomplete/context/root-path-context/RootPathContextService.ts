@@ -10,13 +10,13 @@ import {
   IGNORE_PATH_PATTERNS,
   LanguageName,
 } from "../../../util/treeSitter";
-import { AstPath } from "../../util/ast";
-import { ImportDefinitionsService } from "../ImportDefinitionsService";
-import { AutocompleteSnippetDeprecated } from "../../types";
 import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "../../snippets/types";
+import { AutocompleteSnippetDeprecated } from "../../types";
+import { AstPath } from "../../util/ast";
+import { ImportDefinitionsService } from "../ImportDefinitionsService";
 
 function getSyntaxTreeString(
   node: Parser.SyntaxNode,
@@ -112,7 +112,6 @@ export class RootPathContextService {
           );
           snippets.push(...newSnippets);
         } catch (e) {
-          debugger;
           throw e;
         }
       }

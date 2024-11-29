@@ -19,7 +19,7 @@ export const editModeStateSlice = createSlice({
   initialState,
   reducers: {
     focusEdit: (state) => {
-      state.isInEditMode = true;
+      // state.isInEditMode = true;
       state.editStatus = "not-started";
       state.previousInputs = [];
       state.fileAfterEdit = undefined;

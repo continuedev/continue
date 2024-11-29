@@ -131,7 +131,7 @@ export function Chat() {
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
-  const sessionState = useAppSelector((state) => state.session);
+  const messages = useAppSelector((state) => state.session.messages);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );
@@ -292,7 +292,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [sessionState.messages, defaultModel, sessionState, streamResponse],
+    [messages, defaultModel, streamResponse],
   );
 
   useWebviewListener(
@@ -306,11 +306,11 @@ export function Chat() {
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
-      return !sessionState.messages
+      return !messages
         .slice(index + 1)
         .some((entry) => entry.message.role === "user");
     },
-    [sessionState.messages],
+    [messages],
   );
 
   const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
@@ -320,11 +320,11 @@ export function Chat() {
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${sessionState.messages.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${messages.length > 0 ? "flex-1" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}
-        {sessionState.messages.map((item, index: number) => (
+        {messages.map((item, index: number) => (
           <Fragment key={item.message.id}>
             <ErrorBoundary
               FallbackComponent={fallbackRender}
@@ -370,7 +370,7 @@ export function Chat() {
                   >
                     <StepContainer
                       index={index}
-                      isLast={index === sessionState.messages.length - 1}
+                      isLast={index === messages.length - 1}
                       item={item}
                     />
                   </TimelineItem>
@@ -423,7 +423,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {sessionState.messages.length === 0 && getLastSessionId() ? (
+              {messages.length === 0 && getLastSessionId() ? (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
@@ -442,7 +442,7 @@ export function Chat() {
             <ConfigErrorIndicator />
           </div>
 
-          {sessionState.messages.length === 0 && (
+          {messages.length === 0 && (
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
@@ -460,7 +460,7 @@ export function Chat() {
         </div>
       </div>
       <div
-        className={`${sessionState.messages.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
+        className={`${messages.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
       >
         <ChatIndexingPeeks />
       </div>

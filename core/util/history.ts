@@ -96,7 +96,6 @@ class HistoryManager {
       title: session.title,
       workspaceDirectory: session.workspaceDirectory,
       history: session.history,
-      checkpoints: session.checkpoints,
     };
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),

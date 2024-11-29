@@ -1,7 +1,7 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { debounce } from "lodash";
 import { useContext, useEffect, useRef, useState } from "react";
-import styled, { css, keyframes } from "styled-components";
+import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
@@ -16,28 +16,13 @@ import { useAppSelector } from "../../../redux/hooks";
 import { selectDefaultModel } from "../../../redux/slices/configSlice";
 import { selectApplyStateBySessionId } from "../../../redux/slices/sessionSlice";
 
-const fadeInAnimation = keyframes`
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-`;
-
-const TopDiv = styled.div<{ active?: boolean }>`
+const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
   min-width: 0;
-  ${(props) =>
-    props.active
-      ? "animation: none;"
-      : css`
-          animation: ${fadeInAnimation} 300ms ease-out forwards;
-        `}
 `;
 
 const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
@@ -168,7 +153,7 @@ export default function StepContainerPreToolbar(
   }
 
   return (
-    <TopDiv active={active}>
+    <TopDiv>
       <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
         <div className="flex min-w-0 max-w-[45%] items-center">
           <ChevronDownIcon

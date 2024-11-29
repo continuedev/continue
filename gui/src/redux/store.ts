@@ -28,7 +28,7 @@ export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;
 
 const saveSubsetFilters = [
-  createFilter("state", ["messages", "sessionId", "defaultModelTitle"]),
+  createFilter("session", ["messages", "sessionId", "defaultModelTitle"]),
 ];
 
 const loadSubsetFilter = createFilter("state", null, [
@@ -37,7 +37,7 @@ const loadSubsetFilter = createFilter("state", null, [
   "ui",
   "editModeState",
   "config",
-  "indexing"
+  "indexing",
 ]);
 
 const persistConfig = {

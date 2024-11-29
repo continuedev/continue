@@ -40,7 +40,7 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
     >
       <div className="group flex flex-1 cursor-pointer flex-row items-center gap-2">
         <div className={`flex flex-row items-center gap-2`}>
-          <p className="m-0 p-0 text-stone-500 group-hover:underline">
+          <p className="m-0 p-0 text-xs text-stone-500 group-hover:underline">
             {state.displayName}
           </p>
         </div>

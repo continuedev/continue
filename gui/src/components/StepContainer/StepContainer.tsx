@@ -36,6 +36,7 @@ export default function StepContainer(props: StepContainerProps) {
   // );
   const uiConfig = useAppSelector(selectUIConfig);
   const shouldHideActions = isStreaming && props.isLast;
+
   // const isStepAheadOfCurCheckpoint =
   //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 

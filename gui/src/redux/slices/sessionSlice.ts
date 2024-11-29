@@ -40,18 +40,20 @@ function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
   return a.filepath === b.filepath && a.contents === b.contents;
 }
 
-const defaultMessage: ChatHistoryItemWithMessageId = {
-  message: {
-    id: uuidv4(),
-    role: "assistant",
-    content: "",
-  },
-  contextItems: [],
-  mode: "chat",
-  isGatheringContext: false,
-  checkpoint: {},
-  isBeforeCheckpoint: false,
-};
+function getDefaultMessage(): ChatHistoryItemWithMessageId {
+  return {
+    message: {
+      id: uuidv4(),
+      role: "assistant",
+      content: "",
+    },
+    contextItems: [],
+    mode: "chat",
+    isGatheringContext: false,
+    checkpoint: {},
+    isBeforeCheckpoint: false,
+  };
+}
 
 const initialState: SessionState = {
   messages: [],
@@ -147,7 +149,9 @@ export const sessionSlice = createSlice({
       // Cut off history after the resubmitted message
       state.messages = state.messages
         .slice(0, payload.index + 1)
-        .concat(defaultMessage);
+        .concat(getDefaultMessage());
+
+      state.isStreaming = true;
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
@@ -162,14 +166,14 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       state.messages.push({
-        ...defaultMessage,
-        message: { role: "user", ...defaultMessage.message },
+        ...getDefaultMessage(),
+        message: { role: "user", ...getDefaultMessage().message },
         editorState: payload.editorState,
       });
 
       state.messages.push({
-        ...defaultMessage,
-        message: { role: "assistant", ...defaultMessage.message },
+        ...getDefaultMessage(),
+        message: { role: "assistant", ...getDefaultMessage().message },
         editorState: payload.editorState,
       });
 
@@ -188,8 +192,8 @@ export const sessionSlice = createSlice({
     ) => {
       if (payload.index >= state.messages.length) {
         state.messages.push({
-          ...defaultMessage,
-          message: { ...defaultMessage.message, ...payload.message },
+          ...getDefaultMessage(),
+          message: { ...getDefaultMessage().message, ...payload.message },
           editorState: {
             type: "doc",
             content: stripImages(payload.message.content)
