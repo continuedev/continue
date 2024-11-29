@@ -2,7 +2,7 @@ import os from "node:os";
 
 import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
 import { IdeInfo } from "../index.js";
-import { PostHog } from "posthog-node";
+import type { PostHog as PostHogType } from "posthog-node";
 
 export enum PosthogFeatureFlag {
   AutocompleteTemperature = "autocomplete-temperature",
@@ -23,7 +23,7 @@ export const EXPERIMENTS: {
 
 export class Telemetry {
   // Set to undefined whenever telemetry is disabled
-  static client: PostHog | undefined = undefined;
+  static client: PostHogType | undefined = undefined;
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
   static ideInfo: IdeInfo | undefined = undefined;
@@ -73,9 +73,9 @@ export class Telemetry {
     Telemetry.client?.shutdown();
   }
 
-  static async getTelemetryClient(): Promise<PostHog | undefined> {
+  static async getTelemetryClient(): Promise<PostHogType | undefined> {
     try {
-      // const { PostHog } = await import("posthog-node");
+      const { PostHog } = await import("posthog-node");
       return new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
         host: "https://app.posthog.com",
       });
