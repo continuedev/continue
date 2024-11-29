@@ -44,6 +44,7 @@ import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
+import { allTools } from "../tools";
 import { copyOf } from "../util";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import { GlobalContext } from "../util/GlobalContext";
@@ -492,6 +493,7 @@ async function intermediateToFinalConfig(
     embeddingsProvider: config.embeddingsProvider as any,
     tabAutocompleteModels,
     reranker: config.reranker as any,
+    tools: allTools,
   };
 
   // Apply MCP if specified
@@ -550,6 +552,7 @@ function finalToBrowserConfig(
     ui: final.ui,
     experimental: final.experimental,
     docs: final.docs,
+    tools: final.tools,
   };
 }
 

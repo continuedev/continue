@@ -36,7 +36,6 @@ import { TTS } from "./util/tts";
 
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { allTools } from "./tools";
 import { callTool } from "./tools/callTool";
 import type { IMessenger, Message } from "./util/messenger";
 
@@ -782,7 +781,8 @@ export class Core {
     });
 
     on("tools/call", async ({ data: { toolCall } }) => {
-      const tool = allTools.find(
+      const config = await this.configHandler.loadConfig();
+      const tool = config.tools.find(
         (t) => t.function.name === toolCall.function.name,
       );
 
@@ -790,11 +790,10 @@ export class Core {
         throw new Error(`Tool ${toolCall.function.name} not found`);
       }
 
-      const config = await this.configHandler.loadConfig();
       const llm = await this.getSelectedModel();
 
       const contextItems = await callTool(
-        tool.function.name,
+        tool.uri ?? tool.function.name,
         JSON.parse(toolCall.function.arguments || "{}"),
         {
           ide: this.ide,

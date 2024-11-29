@@ -1,6 +1,7 @@
 import { ToolCall } from "core";
-import { allTools } from "core/tools";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
+import { RootState } from "../../../redux/store";
 
 interface ThreadDivProps {
   children: React.ReactNode;
@@ -29,6 +30,10 @@ const HeaderDiv = styled.div`
 `;
 
 export function ThreadDiv(props: ThreadDivProps) {
+  const availableTools = useSelector(
+    (state: RootState) => state.state.config.tools,
+  );
+
   return (
     <Container>
       <HeaderDiv>
@@ -44,7 +49,7 @@ export function ThreadDiv(props: ThreadDivProps) {
         </div>
         Continue wants to{" "}
         {
-          allTools.find(
+          availableTools.find(
             (tool) => props.toolCall.function.name === tool.function.name,
           )?.wouldLikeTo
         }

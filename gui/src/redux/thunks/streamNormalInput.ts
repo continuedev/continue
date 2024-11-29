@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatMessage, PromptLog } from "core";
-import { allTools } from "core/tools";
 import { defaultModelSelector } from "../selectors/modelSelectors";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import {
@@ -40,7 +39,9 @@ export const streamNormalInput = createAsyncThunk<
           ? Object.keys(toolSettings)
               .filter((tool) => toolSettings[tool] !== "disabled")
               .map((toolName) =>
-                allTools.find((tool) => tool.function.name === toolName),
+                state.state.config.tools.find(
+                  (tool) => tool.function.name === toolName,
+                ),
               )
           : undefined,
       },

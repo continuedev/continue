@@ -4,13 +4,13 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { WebSocketClientTransport } from "@modelcontextprotocol/sdk/client/websocket.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
-import { ContinueConfig, MCPOptions, SlashCommand } from "../..";
+import { ContinueConfig, MCPOptions, SlashCommand, Tool } from "../..";
 import { constructMcpSlashCommand } from "../../commands/slash/mcp";
 import MCPContextProvider from "../providers/MCPContextProvider";
 
 class MCPConnectionSingleton {
   private static instance: MCPConnectionSingleton;
-  private client: Client;
+  public client: Client;
   private transport: Transport;
 
   private constructor(private readonly options: MCPOptions) {
@@ -31,6 +31,10 @@ class MCPConnectionSingleton {
     if (!MCPConnectionSingleton.instance) {
       MCPConnectionSingleton.instance = new MCPConnectionSingleton(options);
     }
+    return MCPConnectionSingleton.instance;
+  }
+
+  public static getExistingInstance(): MCPConnectionSingleton | null {
     return MCPConnectionSingleton.instance;
   }
 
@@ -114,14 +118,21 @@ class MCPConnectionSingleton {
     );
 
     // Tools <—> Tools
-    // const { tools } = await this.client.listTools();
-    // const continueTools: Tool = tools.map((tool) => ({
+    const { tools } = await this.client.listTools();
+    const continueTools: Tool[] = tools.map((tool) => ({
+      displayTitle: tool.name,
+      function: {
+        description: tool.description,
+        name: tool.name,
+        parameters: tool.inputSchema,
+      },
+      readonly: false,
+      type: "function",
+      wouldLikeTo: `use the ${tool.name} tool`,
+      uri: `mcp://${tool.name}`,
+    }));
 
-    // }))
-    // if (!config.tools) {
-    //     config.tools = []
-    // }
-    // config.tools!.push(...continueTools);
+    config.tools = [...config.tools, ...continueTools];
 
     // Prompts <—> Slash commands
     const { prompts } = await this.client.listPrompts();

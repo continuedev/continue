@@ -5,7 +5,6 @@ import {
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { modelSupportsTools } from "core/llm/autodetect";
-import { allTools } from "core/tools/index";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -34,19 +33,17 @@ const BackgroundDiv = styled.div<{ useTools: boolean }>`
   transition: background-color 200ms;
 `;
 
-export default function ToolDropdown({
-
-}: {
-
-}) {
+export default function ToolDropdown({}: {}) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dispatch = useDispatch();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
-  
   const useTools = useSelector((store: RootState) => store.uiState.useTools);
+  const availableTools = useSelector(
+    (store: RootState) => store.state.config.tools,
+  );
   const defaultModel = useSelector(defaultModelSelector);
-  
+
   const [showAbove, setShowAbove] = useState(false);
 
   useEffect(() => {
@@ -99,51 +96,59 @@ export default function ToolDropdown({
                     <ChevronDownIcon className="h-3 w-3" />
                   )}
                 </Listbox.Button>
-                <Transition
-                  show={isDropdownOpen}
-                >
-                  <Listbox.Options className={`bg-vsc-editor-background border-lightgray/50 absolute right-0 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}>
-                    <div
-                      className="mb-1 flex items-center gap-2 px-2 py-1"
-                      style={{
-                        color: vscForeground,
-                        borderBottom: `1px solid ${lightGray}`,
-                      }}
-                    >
-                      Tool policies{" "}
-                      <InfoHover
-                        id={"tool-policies"}
-                        size={"3"}
-                        msg={
-                          <div
-                            className="gap-0 *:m-1 *:text-left"
-                            style={{ fontSize: "10px" }}
-                          >
-                            <p>
-                              <span className="text-green-500">Automatic:</span>{" "}
-                              Can be used without asking
-                            </p>
-                            <p>
-                              <span className="text-yellow-500">Allowed:</span>{" "}
-                              Will ask before using
-                            </p>
-                            <p>
-                              <span className="text-red-500">Disabled:</span>{" "}
-                              Cannot be used
-                            </p>
-                          </div>
-                        }
-                      />
-                    </div>
-                    {allTools.map((tool) => (
-                      <Listbox.Option
-                        key={tool.function.name}
-                        value="addAllFiles"
-                        className="text-vsc-foreground block w-full cursor-pointer text-left text-[10px] brightness-75 hover:brightness-125"
+                <Transition show={isDropdownOpen}>
+                  <Listbox.Options
+                    className={`bg-vsc-editor-background border-lightgray/50 absolute right-0 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}
+                  >
+                    <div className="sticky">
+                      <div
+                        className="mb-1 flex items-center gap-2 px-2 py-1"
+                        style={{
+                          color: vscForeground,
+                          borderBottom: `1px solid ${lightGray}`,
+                        }}
                       >
-                        <ToolDropdownItem tool={tool} />
-                      </Listbox.Option>
-                    ))}
+                        Tool policies{" "}
+                        <InfoHover
+                          id={"tool-policies"}
+                          size={"3"}
+                          msg={
+                            <div
+                              className="gap-0 *:m-1 *:text-left"
+                              style={{ fontSize: "10px" }}
+                            >
+                              <p>
+                                <span className="text-green-500">
+                                  Automatic:
+                                </span>{" "}
+                                Can be used without asking
+                              </p>
+                              <p>
+                                <span className="text-yellow-500">
+                                  Allowed:
+                                </span>{" "}
+                                Will ask before using
+                              </p>
+                              <p>
+                                <span className="text-red-500">Disabled:</span>{" "}
+                                Cannot be used
+                              </p>
+                            </div>
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto overflow-x-hidden">
+                      {availableTools.map((tool) => (
+                        <Listbox.Option
+                          key={tool.function.name}
+                          value="addAllFiles"
+                          className="text-vsc-foreground block w-full cursor-pointer text-left text-[10px] brightness-75 hover:brightness-125"
+                        >
+                          <ToolDropdownItem tool={tool} />
+                        </Listbox.Option>
+                      ))}
+                    </div>
                   </Listbox.Options>
                 </Transition>
               </Listbox>

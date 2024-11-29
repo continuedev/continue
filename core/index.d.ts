@@ -932,6 +932,7 @@ export interface Tool {
   displayTitle: string;
   wouldLikeTo: string;
   readonly: boolean;
+  uri?: string;
 }
 
 interface BaseCompletionOptions {
@@ -1297,6 +1298,7 @@ export interface ContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  tools: Tool[];
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1316,6 +1318,7 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  tools: Tool[];
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

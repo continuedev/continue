@@ -84,6 +84,7 @@ const initialState: State = {
     ],
     contextProviders: [],
     models: [],
+    tools: [],
   },
   title: "New Session",
   sessionId: v4(),
@@ -490,7 +491,7 @@ export const stateSlice = createSlice({
       const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
-      toolCallState.output = action.payload
+      toolCallState.output = action.payload;
     },
     cancelToolCall: (state) => {
       const toolCallState = findCurrentToolCall(state.history);
@@ -605,7 +606,7 @@ export const {
   acceptToolCall,
   setToolGenerated,
   updateDocsSuggestions,
-  setToolCallOutput
+  setToolCallOutput,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

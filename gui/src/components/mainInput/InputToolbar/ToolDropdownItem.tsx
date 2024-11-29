@@ -33,7 +33,14 @@ function ToolDropdownItem(props: ToolDropdownItemProps) {
         e.preventDefault();
       }}
     >
-      <span>{props.tool.displayTitle}</span>
+      <span className="flex items-center gap-1">
+        {props.tool.displayTitle}{" "}
+        {/* <InfoHover
+          id={`tool-policy-row-${props.tool.function.name}`}
+          size={"3"}
+          msg={props.tool.function.description}
+        /> */}
+      </span>
       <div className="flex gap-2 pr-4">
         {(settings === "allowedWithPermission" || settings === undefined) && (
           <span className="text-yellow-500">Allowed</span>
