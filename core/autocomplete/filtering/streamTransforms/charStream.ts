@@ -133,19 +133,19 @@ export async function* stopAtStartOf(
     }
     return;
   }
-
-  // Check only up to the `sequenceLength` size of the initial suffix
-  const targetPart = suffix.trimStart().slice(0, sequenceLength);
+  // We use sequenceLength * 1.5 as a heuristic to make sure we don't miss the sequence if the
+  // stream is not perfectly aligned with the sequence (small whitespace differences etc).
+  const targetPart = suffix
+    .trimStart()
+    .slice(0, Math.floor(sequenceLength * 1.5));
 
   let buffer = "";
 
   for await (const chunk of stream) {
     buffer += chunk;
 
-    // Check if the current buffer contains the target part at any point
-    if (buffer.includes(targetPart)) {
-      const stopIndex = buffer.indexOf(targetPart);
-      yield buffer.slice(0, stopIndex);
+    // Check if the targetPart contains contains the buffer at any point
+    if (buffer.length >= sequenceLength && targetPart.includes(buffer)) {
       return; // Stop processing when the sequence is found
     }
 
@@ -156,7 +156,7 @@ export async function* stopAtStartOf(
     }
   }
 
-  // Yield the remaining buffer if it does not contain the `targetPart`
+  // Yield the remaining buffer if it is not contained in the `targetPart`
   if (buffer.length > 0) {
     yield buffer;
   }
