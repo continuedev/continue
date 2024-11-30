@@ -531,8 +531,14 @@ class VsCodeIde implements IDE {
         "bin",
         "rg",
       ),
-      ["-i", "-C", "2", "--", `${query}`, "."], //no regex
-      //["-i", "-C", "2", "-e", `${query}`, "."], //use regex
+      [
+        "-i", // Case-insensitive search
+        "-C",
+        "2", // Show 2 lines of context
+        "-e",
+        query, // Pattern to search for
+        ".", // Directory to search in
+      ],
       { cwd: dir },
     );
     let output = "";
@@ -546,6 +552,9 @@ class VsCodeIde implements IDE {
       p.on("close", (code) => {
         if (code === 0) {
           resolve(output);
+        } else if (code === 1) {
+          // No matches
+          resolve("No matches found");
         } else {
           reject(new Error(`Process exited with code ${code}`));
         }

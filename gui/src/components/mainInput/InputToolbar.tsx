@@ -20,6 +20,8 @@ import {
 } from "../../util";
 import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
+import HoverItem from "./InputToolbar/HoverItem";
+import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -36,17 +38,6 @@ const StyledDiv = styled.div<{ isHidden?: boolean }>`
   & > * {
     flex: 0 0 auto;
   }
-`;
-
-const HoverItem = styled.span<{ isActive?: boolean }>`
-  padding: 0 4px;
-  padding-top: 2px;
-  padding-bottom: 2px;
-  cursor: pointer;
-  transition:
-    color 200ms,
-    background-color 200ms,
-    box-shadow 200ms;
 `;
 
 const EnterButton = styled.button`
@@ -69,6 +60,7 @@ export interface ToolbarOptions {
   hideAddContext?: boolean;
   enterText?: string;
   hideSelectModel?: boolean;
+  hideTools?: boolean;
 }
 
 interface InputToolbarProps {
@@ -145,6 +137,8 @@ function InputToolbar(props: InputToolbarProps) {
                 </ToolTip>
               </HoverItem>
             )}
+
+            {props.toolbarOptions?.hideTools || <ToggleToolsButton />}
           </div>
         </div>
 
@@ -153,7 +147,7 @@ function InputToolbar(props: InputToolbarProps) {
             <div className="hidden transition-colors duration-200 hover:underline sm:flex">
               {props.activeKey === "Alt" ? (
                 <HoverItem className="underline">
-                  {`${getAltKeyLabel()}⏎ 
+                  {`${getAltKeyLabel()}⏎
                   ${useActiveFile ? "No active file" : "Active file"}`}
                 </HoverItem>
               ) : (

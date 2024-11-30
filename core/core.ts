@@ -36,6 +36,7 @@ import { TTS } from "./util/tts";
 
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { callTool } from "./tools/callTool";
 import type { IMessenger, Message } from "./util/messenger";
 
 export class Core {
@@ -382,6 +383,7 @@ export class Core {
       }
 
       const model = await configHandler.llmFromTitle(msg.data.title);
+
       const gen = model.streamChat(
         msg.data.messages,
         new AbortController().signal,
@@ -402,8 +404,11 @@ export class Core {
           });
           break;
         }
+
+        const chunk = next.value;
+
         // @ts-ignore
-        yield { content: next.value.content };
+        yield { content: chunk };
         next = await gen.next();
       }
 
@@ -773,6 +778,32 @@ export class Core {
       if (!ignoreInstance.ignores(relativeFilePath)) {
         recentlyEditedFilesCache.set(filepath, filepath);
       }
+    });
+
+    on("tools/call", async ({ data: { toolCall } }) => {
+      const config = await this.configHandler.loadConfig();
+      const tool = config.tools.find(
+        (t) => t.function.name === toolCall.function.name,
+      );
+
+      if (!tool) {
+        throw new Error(`Tool ${toolCall.function.name} not found`);
+      }
+
+      const llm = await this.getSelectedModel();
+
+      const contextItems = await callTool(
+        tool.uri ?? tool.function.name,
+        JSON.parse(toolCall.function.arguments || "{}"),
+        {
+          ide: this.ide,
+          llm,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        },
+      );
+
+      return { contextItems };
     });
   }
 

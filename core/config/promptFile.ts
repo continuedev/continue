@@ -4,9 +4,9 @@ import Handlebars from "handlebars";
 import * as YAML from "yaml";
 
 import { walkDir } from "../indexing/walkDir";
-import { stripImages } from "../llm/images";
 import { renderTemplatedString } from "../promptFiles/v1/renderTemplatedString";
 import { getBasename } from "../util/index";
+import { renderChatMessage } from "../util/messageContent";
 
 import type {
   ChatMessage,
@@ -129,7 +129,7 @@ export function slashCommandFromPromptFile(
         messages,
         new AbortController().signal,
       )) {
-        yield stripImages(chunk.content);
+        yield renderChatMessage(chunk);
       }
 
       context.llm.systemMessage = originalSystemMessage;
@@ -236,7 +236,8 @@ function updateChatHistory(
   const messages = [...history];
 
   for (let i = messages.length - 1; i >= 0; i--) {
-    const { role, content } = messages[i];
+    const message = messages[i];
+    const { role, content } = message;
     if (role !== "user") {
       continue;
     }
@@ -254,7 +255,7 @@ function updateChatHistory(
       typeof content === "string" &&
       content.startsWith(`/${commandName}`)
     ) {
-      messages[i] = { ...messages[i], content: renderedPrompt };
+      messages[i] = { ...message, content: renderedPrompt };
       break;
     }
   }

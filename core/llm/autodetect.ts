@@ -84,6 +84,13 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "llama3.2",
 ];
 
+function modelSupportsTools(modelName: string) {
+  return (
+    modelName.includes("claude") &&
+    (modelName.includes("3-5") || modelName.includes("3.5"))
+  );
+}
+
 function modelSupportsImages(
   provider: ModelProvider,
   model: string,
@@ -354,4 +361,5 @@ export {
   autodetectTemplateType,
   llmCanGenerateInParallel,
   modelSupportsImages,
+  modelSupportsTools,
 };

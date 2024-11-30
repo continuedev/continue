@@ -172,6 +172,7 @@ function Settings() {
               <h3 className="flex gap-1">
                 System Message
                 <InfoHover
+                  id={"system-message"}
                   msg={`Set a system message with information that the LLM should always
               keep in mind (e.g. "Please give concise answers. Always respond in
               Spanish.")`}
@@ -186,6 +187,7 @@ function Settings() {
               <h3 className="flex gap-1">
                 Temperature
                 <InfoHover
+                  id={"temperature"}
                   msg={`Set temperature to any value between 0 and 1. Higher values will
             make the LLM more creative, while lower values will make it more
             predictable.`}

@@ -3048,6 +3048,68 @@
               "type": "boolean",
               "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`.",
               "default": false
+            },
+            "useTools": {
+              "type": "boolean",
+              "description": "Allow tool use. Currently only supported with Claude 3.5 Sonnet",
+              "default": true
+            },
+            "modelContextProtocolServer": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["stdio"]
+                        },
+                        "command": {
+                          "type": "string"
+                        },
+                        "args": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": ["type", "command", "args"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["websocket"]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": ["type", "url"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["sse"]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": ["type", "url"]
+                    }
+                  ]
+                }
+              },
+              "required": ["transport"]
             }
           }
         }

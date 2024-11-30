@@ -1,21 +1,31 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  ActionReducerMapBuilder,
+  AsyncThunk,
+  PayloadAction,
+  createSlice,
+} from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
   ApplyState,
   ChatHistoryItem,
   ChatMessage,
   Checkpoint,
+  ContextItem,
   ContextItemWithId,
-  PackageDocsResult,
   FileSymbolMap,
   IndexingStatus,
-  Session,
+  PackageDocsResult,
   PromptLog,
+  Session,
+  ToolCall,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { ConfigValidationError } from "core/config/validation";
-import { stripImages } from "core/llm/images";
+import { incrementalParseJson } from "core/util/incrementalParseJson";
+import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4, v4 } from "uuid";
+import { streamResponseThunk } from "../thunks/streamResponse";
+import { findCurrentToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -74,6 +84,7 @@ const initialState: State = {
     ],
     contextProviders: [],
     models: [],
+    tools: [],
   },
   title: "New Session",
   sessionId: v4(),
@@ -252,7 +263,7 @@ export const stateSlice = createSlice({
           message: { ...payload.message, id: uuidv4() },
           editorState: {
             type: "doc",
-            content: stripImages(payload.message.content)
+            content: renderChatMessage(payload.message)
               .split("\n")
               .map((line) => ({
                 type: "paragraph",
@@ -295,10 +306,72 @@ export const stateSlice = createSlice({
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
     },
-    streamUpdate: (state, action: PayloadAction<string>) => {
+    streamUpdate: (state, action: PayloadAction<ChatMessage>) => {
       if (state.history.length) {
-        state.history[state.history.length - 1].message.content +=
-          action.payload;
+        const lastMessage = state.history[state.history.length - 1];
+
+        if (
+          action.payload.role &&
+          (lastMessage.message.role !== action.payload.role ||
+            // This is when a tool call comes after assistant text
+            (lastMessage.message.content !== "" &&
+              action.payload.role === "assistant" &&
+              action.payload.toolCalls?.length))
+        ) {
+          // Create a new message
+          const historyItem: ChatHistoryItemWithMessageId = {
+            contextItems: [],
+            message: { id: uuidv4(), ...action.payload },
+          };
+
+          if (action.payload.role === "assistant" && action.payload.toolCalls) {
+            const [_, parsedArgs] = incrementalParseJson(
+              action.payload.toolCalls[0].function.arguments,
+            );
+            historyItem.toolCallState = {
+              status: "generating",
+              toolCall: action.payload.toolCalls[0] as ToolCall,
+              toolCallId: action.payload.toolCalls[0].id,
+              parsedArgs,
+            };
+          }
+
+          state.history.push(historyItem);
+        } else {
+          // Add to the existing message
+          const msg = state.history[state.history.length - 1].message;
+          if (action.payload.content) {
+            msg.content += renderChatMessage(action.payload);
+          } else if (
+            action.payload.role === "assistant" &&
+            action.payload.toolCalls &&
+            msg.role === "assistant"
+          ) {
+            if (!msg.toolCalls) {
+              msg.toolCalls = [];
+            }
+            action.payload.toolCalls.forEach((toolCall, i) => {
+              if (msg.toolCalls.length <= i) {
+                msg.toolCalls.push(toolCall);
+              } else {
+                msg.toolCalls[i].function.arguments +=
+                  toolCall.function.arguments;
+
+                const [_, parsedArgs] = incrementalParseJson(
+                  msg.toolCalls[i].function.arguments,
+                );
+
+                state.history[
+                  state.history.length - 1
+                ].toolCallState.parsedArgs = parsedArgs;
+                state.history[
+                  state.history.length - 1
+                ].toolCallState.toolCall.function.arguments +=
+                  toolCall.function.arguments;
+              }
+            });
+          }
+        }
       }
     },
     newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
@@ -308,6 +381,7 @@ export const stateSlice = createSlice({
       state.active = false;
       state.context.isGathering = false;
       state.symbols = {};
+
       if (payload) {
         state.history = payload.history as any;
         state.title = payload.title;
@@ -405,6 +479,38 @@ export const stateSlice = createSlice({
     resetNextCodeBlockToApplyIndex: (state) => {
       state.nextCodeBlockToApplyIndex = 0;
     },
+
+    // Related to currentToolCallState
+    setToolGenerated: (state) => {
+      const toolCallState = findCurrentToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "generated";
+    },
+    setToolCallOutput: (state, action: PayloadAction<ContextItem[]>) => {
+      const toolCallState = findCurrentToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.output = action.payload;
+    },
+    cancelToolCall: (state) => {
+      const toolCallState = findCurrentToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "canceled";
+    },
+    acceptToolCall: (state) => {
+      const toolCallState = findCurrentToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "done";
+    },
+    setCalling: (state) => {
+      const toolCallState = findCurrentToolCall(state.history);
+      if (!toolCallState) return;
+
+      toolCallState.status = "calling";
+    },
     updateIndexingStatus: (
       state,
       { payload }: PayloadAction<IndexingStatus>,
@@ -448,8 +554,23 @@ export const stateSlice = createSlice({
       state.docsSuggestions = payload;
     },
   },
+
+  extraReducers: (builder) => {
+    addPassthroughCases(builder, [streamResponseThunk]);
+  },
 });
 
+function addPassthroughCases(
+  builder: ActionReducerMapBuilder<State>,
+  thunks: AsyncThunk<any, any, any>[],
+) {
+  thunks.forEach((thunk) => {
+    builder
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
+  });
+}
 export const {
   updateFileSymbols,
   setContextItemsAtIndex,
@@ -477,10 +598,15 @@ export const {
   setCurCheckpointIndex,
   resetNextCodeBlockToApplyIndex,
   updateApplyState,
+  abortStream,
   updateIndexingStatus,
   setIndexingChatPeekHidden,
-  abortStream,
+  setCalling,
+  cancelToolCall,
+  acceptToolCall,
+  setToolGenerated,
   updateDocsSuggestions,
+  setToolCallOutput,
 } = stateSlice.actions;
 
 export default stateSlice.reducer;

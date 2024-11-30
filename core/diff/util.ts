@@ -1,7 +1,7 @@
 import { distance } from "fastest-levenshtein";
 
 import { ChatMessage } from "../index.js";
-import { stripImages } from "../llm/images.js";
+import { renderChatMessage } from "../util/messageContent.js";
 
 export type LineStream = AsyncGenerator<string>;
 
@@ -103,7 +103,7 @@ export async function* streamLines(
   try {
     for await (const update of streamCompletion) {
       const chunk =
-        typeof update === "string" ? update : stripImages(update.content);
+        typeof update === "string" ? update : renderChatMessage(update);
       buffer += chunk;
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";

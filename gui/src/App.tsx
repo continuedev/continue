@@ -32,16 +32,16 @@ const router = createMemoryRouter([
         element: <Chat />,
       },
       {
-        path: "/edit",
-        element: <Edit />,
-      },
-      {
         path: "/history",
         element: <History />,
       },
       {
         path: "/stats",
         element: <Stats />,
+      },
+      {
+        path: "/edit",
+        element: <Edit />,
       },
       {
         path: "/settings",

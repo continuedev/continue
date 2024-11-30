@@ -1,27 +1,27 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers, RangeInFileWithContents } from "core";
-import { stripImages } from "core/llm/images";
+import { stripImages } from "core/util/messageContent";
 import { useCallback, useContext, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import TipTapEditor from "../../components/mainInput/TipTapEditor";
+import StepContainer from "../../components/StepContainer";
+import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { selectApplyState } from "../../redux/selectors";
 import {
   clearCodeToEdit,
   setEditDone,
   submitEdit,
 } from "../../redux/slices/editModeState";
-import { RootState } from "../../redux/store";
+import { RootState, useAppDispatch } from "../../redux/store";
+import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import CodeToEdit from "./CodeToEdit";
-import useChatHandler from "../../hooks/useChatHandler";
-import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
-import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
-import StepContainer from "../../components/StepContainer";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
-import { selectApplyState } from "../../redux/selectors";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "codebase",
@@ -36,10 +36,9 @@ const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
 ];
 
 export default function Edit() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const editModeState = useSelector((state: RootState) => state.editModeState);
   const availableContextProviders = useSelector(
     (store: RootState) => store.state.config.contextProviders,
@@ -138,12 +137,12 @@ export default function Edit() {
     } else {
       const promptPreamble = getMultifileEditPrompt(editModeState.codeToEdit);
 
-      streamResponse(
-        editorState,
-        modifiers,
-        ideMessenger,
-        undefined,
-        promptPreamble,
+      dispatch(
+        streamResponseThunk({
+          editorState,
+          modifiers,
+          promptPreamble,
+        }),
       );
     }
   }
@@ -184,11 +183,12 @@ export default function Edit() {
                 {item.message.role === "user" ? (
                   <ContinueInputBox
                     onEnter={async (editorState, modifiers) => {
-                      streamResponse(
-                        editorState,
-                        modifiers,
-                        ideMessenger,
-                        index,
+                      dispatch(
+                        streamResponseThunk({
+                          editorState,
+                          modifiers,
+                          index,
+                        }),
                       );
                     }}
                     isLastUserInput={isLastUserInput(index)}

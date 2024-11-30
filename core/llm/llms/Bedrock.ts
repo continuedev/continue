@@ -11,7 +11,7 @@ import {
   MessageContent,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 /**
@@ -47,7 +47,7 @@ class Bedrock extends BaseLLM {
   ): AsyncGenerator<string> {
     const messages = [{ role: "user" as const, content: prompt }];
     for await (const update of this._streamChat(messages, signal, options)) {
-      yield stripImages(update.content);
+      yield renderChatMessage(update);
     }
   }
 
@@ -91,7 +91,7 @@ class Bedrock extends BaseLLM {
 
     const input = this._generateConverseInput(messages, options);
     const command = new ConverseStreamCommand(input);
-    const response = await client.send(command, { abortSignal: signal});
+    const response = await client.send(command, { abortSignal: signal });
 
     if (response.stream) {
       for await (const chunk of response.stream) {

@@ -58,6 +58,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "addAutocompleteModel",
     "profiles/switch",
     "didChangeSelectedProfile",
+    "tools/call",
   ];
 
 // Message types to pass through from core to webview

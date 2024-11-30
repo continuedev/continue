@@ -1,4 +1,3 @@
-import { Dispatch } from "@reduxjs/toolkit";
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
@@ -14,15 +13,15 @@ import {
   updateDocsSuggestions,
   updateIndexingStatus,
 } from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
+import { AppDispatch, RootState } from "../redux/store";
 
+import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
-import useChatHandler from "./useChatHandler";
-import { useWebviewListener } from "./useWebviewListener";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import { useWebviewListener } from "./useWebviewListener";
 
-function useSetup(dispatch: Dispatch) {
+function useSetup(dispatch: AppDispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useSelector((store: RootState) => store.state.history);
 
@@ -131,8 +130,6 @@ function useSetup(dispatch: Dispatch) {
     dispatch(updateDocsSuggestions(data));
   });
 
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
-
   // IDE event listeners
   useWebviewListener(
     "getWebviewHistoryLength",
@@ -163,10 +160,11 @@ function useSetup(dispatch: Dispatch) {
 
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
-    streamResponse(
-      data.message,
-      { useCodebase: false, noContext: true },
-      ideMessenger,
+    dispatch(
+      streamResponseThunk({
+        editorState: data.message,
+        modifiers: { useCodebase: false, noContext: true },
+      }),
     );
   });
 
