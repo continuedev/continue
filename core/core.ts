@@ -775,8 +775,16 @@ export class Core {
       const ignoreInstance = ignore().add(defaultIgnoreFile);
       let rootDirectory = await this.ide.getWorkspaceDirs();
       const relativeFilePath = path.relative(rootDirectory[0], filepath);
-      if (!ignoreInstance.ignores(relativeFilePath)) {
-        recentlyEditedFilesCache.set(filepath, filepath);
+      try {
+        if (!ignoreInstance.ignores(relativeFilePath)) {
+          recentlyEditedFilesCache.set(filepath, filepath);
+        }
+      } catch (e) {
+        if (e instanceof RangeError) {
+          // do nothing, this can happen when editing a file outside the workspace such as `../extensions/.continue-debug/config.json`
+        } else {
+          console.debug("unhandled ignores error", relativeFilePath, e);
+        }
       }
     });
 
