@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+  paths:
+    - "extensions/vscode/**"
+    - "core/**"
+    - "gui/**"
+
 jobs:
   tsc-check:
     runs-on: ubuntu-latest
