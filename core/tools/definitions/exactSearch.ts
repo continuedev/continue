@@ -8,14 +8,15 @@ export const exactSearchTool: Tool = {
   readonly: true,
   function: {
     name: BuiltInToolNames.ExactSearch,
-    description: "Perform an exact search over the repository using ripgrep",
+    description: "Perform an exact search over the repository using ripgrep.",
     parameters: {
       type: "object",
       required: ["query"],
       properties: {
         query: {
           type: "string",
-          description: "The search query to use",
+          description:
+            "The search query to use. Must be a valid ripgrep regex expression, escaped where needed",
         },
       },
     },

@@ -9,7 +9,7 @@ interface ThreadDivProps {
   icon: React.ReactNode;
   toolCall: ToolCall;
   toolCallState: ToolCallState;
-  key: number;
+  reactKey: string;
 }
 
 const Container = styled.div`
@@ -51,7 +51,7 @@ export function ThreadDiv(props: ThreadDivProps) {
   }
 
   return (
-    <Container key={props.key}>
+    <Container key={props.reactKey}>
       <HeaderDiv>
         <div
           style={{
@@ -59,6 +59,7 @@ export function ThreadDiv(props: ThreadDivProps) {
             height: `${W}px`,
             fontWeight: "bolder",
             marginTop: "1px",
+            flexShrink: 0,
           }}
         >
           {props.icon}

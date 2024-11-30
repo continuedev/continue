@@ -371,11 +371,13 @@ export function Chat() {
                 <div>
                   {item.message.toolCalls?.map((toolCall, i) => {
                     return (
-                      <ToolCallDiv
-                        key={i}
-                        toolCallState={item.toolCallState}
-                        toolCall={toolCall as any}
-                      />
+                      <div key={i}>
+                        <ToolCallDiv
+                          reactKey={toolCall.id}
+                          toolCallState={item.toolCallState}
+                          toolCall={toolCall as any}
+                        />
+                      </div>
                     );
                   })}
                 </div>

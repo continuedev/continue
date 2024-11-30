@@ -505,8 +505,8 @@ async function intermediateToFinalConfig(
       mcpConnection.modifyConfig(continueConfig),
       new Promise((_, reject) =>
         setTimeout(
-          () => reject(new Error("MCP connection timed out after 1000ms")),
-          1000,
+          () => reject(new Error("MCP connection timed out after 2000ms")),
+          2000,
         ),
       ),
     ]).catch((error) => {
