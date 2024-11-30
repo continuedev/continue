@@ -1,10 +1,10 @@
-import { CheckIcon, XMarkIcon, PlayIcon } from "@heroicons/react/24/outline";
-import Spinner from "./Spinner";
-import { lightGray, vscForeground } from "../..";
-import { useState } from "react";
-import { getMetaKeyLabel } from "../../../util";
-import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
+import { CheckIcon, PlayIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
+import { useState } from "react";
+import { lightGray, vscForeground } from "../..";
+import { getMetaKeyLabel } from "../../../util";
+import Spinner from "./Spinner";
+import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {
   applyState?: ApplyState;

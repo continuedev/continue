@@ -4,13 +4,11 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
-interface OllamaChatMessage extends ChatMessage {
-  images?: string[];
-}
+type OllamaChatMessage = ChatMessage & { images?: string[] };
 
 // See https://github.com/ollama/ollama/blob/main/docs/modelfile.md for details on each parameter
 interface ModelFileParams {
@@ -195,6 +193,10 @@ class Ollama extends BaseLLM {
   }
 
   private _convertMessage(message: ChatMessage) {
+    if (message.role === "tool") {
+      return null;
+    }
+
     if (typeof message.content === "string") {
       return message;
     }
@@ -210,7 +212,7 @@ class Ollama extends BaseLLM {
 
     return {
       role: message.role,
-      content: stripImages(message.content),
+      content: renderChatMessage(message),
       images,
     };
   }
@@ -221,7 +223,7 @@ class Ollama extends BaseLLM {
   ): ChatOptions {
     return {
       model: this._getModel(),
-      messages: messages.map(this._convertMessage),
+      messages: messages.map(this._convertMessage).filter(Boolean) as any,
       options: this._getModelFileParams(options),
       keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       stream: options.stream,

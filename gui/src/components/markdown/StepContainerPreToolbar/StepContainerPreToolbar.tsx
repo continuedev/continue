@@ -7,11 +7,12 @@ import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
 import { getFontSize } from "../../../util";
-import { childrenToText } from "../utils";
+import { childrenToText, isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
 import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
+import RunInTerminalButton from "./RunInTerminalButton";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectDefaultModel } from "../../../redux/slices/configSlice";
 import { selectApplyStateBySessionId } from "../../../redux/slices/sessionSlice";
@@ -45,6 +46,8 @@ export interface StepContainerPreToolbarProps {
   codeBlockIndex: number; // To track which codeblock we are applying
   range?: string;
   children: any;
+  expanded?: boolean;
+  hideApply?: boolean;
 }
 
 export default function StepContainerPreToolbar(
@@ -56,7 +59,9 @@ export default function StepContainerPreToolbar(
   const isInEditMode = useAppSelector(
     (state) => state.editModeState.isInEditMode,
   );
-  const [isExpanded, setIsExpanded] = useState(isInEditMode ? false : true);
+  const [isExpanded, setIsExpanded] = useState(
+    props.expanded ?? (isInEditMode ? false : true),
+  );
   const [codeBlockContent, setCodeBlockContent] = useState("");
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
@@ -180,12 +185,17 @@ export default function StepContainerPreToolbar(
           {!isGeneratingCodeBlock && (
             <>
               <CopyButton text={props.codeBlockContent} />
-              <ApplyActions
-                applyState={applyState}
-                onClickApply={onClickApply}
-                onClickAccept={onClickAcceptApply}
-                onClickReject={onClickRejectApply}
-              />
+              {props.hideApply ||
+                (isTerminalCodeBlock(props.language, props.codeBlockContent) ? (
+                  <RunInTerminalButton command={props.codeBlockContent} />
+                ) : (
+                  <ApplyActions
+                    applyState={applyState}
+                    onClickApply={onClickApply}
+                    onClickAccept={onClickAcceptApply}
+                    onClickReject={onClickRejectApply}
+                  />
+                ))}
             </>
           )}
         </div>

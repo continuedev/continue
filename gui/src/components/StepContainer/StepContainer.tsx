@@ -1,5 +1,5 @@
 import { ChatHistoryItem } from "core";
-import { stripImages } from "core/llm/images";
+import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
@@ -19,6 +19,7 @@ interface StepContainerProps {
 
 const ContentDiv = styled.div<{ fontSize?: number }>`
   padding-top: 4px;
+  padding-bottom: 4px;
   background-color: ${vscBackground};
   font-size: ${getFontSize()}px;
   overflow: hidden;
@@ -27,23 +28,23 @@ const ContentDiv = styled.div<{ fontSize?: number }>`
 export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
-  const isStreaming = useAppSelector((store) => store.session.isStreaming);
-  // const curCheckpointIndex = useAppSelector(
-  //   (store: RootState) => store.state.curCheckpointIndex,
-  // );
-  // const isInEditMode = useSelector(
-  //   (store: RootState) => store.editModeState.isInEditMode,
-  // );
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const historyItemAfterThis = useAppSelector(
+    (state) => state.session.messages[props.index + 1],
+  );
   const uiConfig = useAppSelector(selectUIConfig);
-  const shouldHideActions = isStreaming && props.isLast;
+
+  const shouldHideActions =
+    (isStreaming && props.isLast) ||
+    historyItemAfterThis?.message.role === "assistant";
 
   // const isStepAheadOfCurCheckpoint =
   //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
     if (!isStreaming) {
-      const content = stripImages(props.item.message.content).trim();
-      const endingPunctuation = [".", "?", "!", "```"];
+      const content = renderChatMessage(props.item.message).trim();
+      const endingPunctuation = [".", "?", "!", "```", ":"];
 
       // If not ending in punctuation or emoji, we assume the response got truncated
       if (
@@ -77,10 +78,7 @@ export default function StepContainer(props: StepContainerProps) {
 
   return (
     <div
-      // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
-      style={{
-        minHeight: props.isLast ? "50vh" : 0,
-      }}
+    // className={isStepAheadOfCurCheckpoint ? "opacity-25" : "relative"}
     >
       <ContentDiv>
         {uiConfig?.displayRawMarkdown ? (
@@ -88,7 +86,7 @@ export default function StepContainer(props: StepContainerProps) {
             className="max-w-full overflow-x-auto whitespace-pre-wrap break-words p-4"
             style={{ fontSize: getFontSize() - 2 }}
           >
-            {stripImages(props.item.message.content)}
+            {renderChatMessage(props.item.message)}
           </pre>
         ) : (
           <StyledMarkdownPreview
@@ -107,6 +105,7 @@ export default function StepContainer(props: StepContainerProps) {
             onContinueGeneration={onContinueGeneration}
             index={props.index}
             item={props.item}
+            shouldHideActions={shouldHideActions}
           />
         )}
       </div>

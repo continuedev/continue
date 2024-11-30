@@ -6,6 +6,7 @@ import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider.js";
 import ContinueProxyEmbeddingsProvider from "./ContinueProxyEmbeddingsProvider.js";
 import DeepInfraEmbeddingsProvider from "./DeepInfraEmbeddingsProvider.js";
 import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider.js";
+import FunctionNetworkEmbeddingsProvider from "./FunctionNetworkEmbeddingsProvider.js";
 import GeminiEmbeddingsProvider from "./GeminiEmbeddingsProvider.js";
 import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEIEmbeddingsProvider.js";
 import LMStudioEmbeddingsProvider from "./LMStudio.js";
@@ -36,6 +37,7 @@ export const allEmbeddingsProviders: Record<
   openai: OpenAIEmbeddingsProvider,
   cohere: CohereEmbeddingsProvider,
   "free-trial": FreeTrialEmbeddingsProvider,
+  "function-network": FunctionNetworkEmbeddingsProvider,
   "huggingface-tei": HuggingFaceTEIEmbeddingsProvider,
   gemini: GeminiEmbeddingsProvider,
   "continue-proxy": ContinueProxyEmbeddingsProvider,

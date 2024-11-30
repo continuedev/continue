@@ -5,19 +5,12 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
-import { InputModifiers } from "core";
+import { InputModifiers, ToolCallState } from "core";
+import { streamResponse } from "core/llm/stream";
 import { usePostHog } from "posthog-js/react";
-import {
-  Fragment,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   Button,
@@ -26,8 +19,9 @@ import {
   vscBackground,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
-import StepContainer from "../../components/StepContainer";
+import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
+import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
@@ -35,21 +29,18 @@ import {
   OnboardingCard,
   useOnboardingCard,
 } from "../../components/OnboardingCard";
+import StepContainer from "../../components/StepContainer";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import useChatHandler from "../../hooks/useChatHandler";
 import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import {
   clearLastEmptyResponse,
   newSession,
   setInactive,
 } from "../../redux/slices/sessionSlice";
-import {
-  setDialogEntryOn,
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiSlice";
+import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
   getMetaKeyLabel,
@@ -58,10 +49,17 @@ import {
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
-import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
-import { useFindWidget } from "../../components/find/FindWidget";
+import { ToolCallDiv } from "./ToolCallDiv";
+import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
+import ToolOutput from "./ToolCallDiv/ToolOutput";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
-import { useAppSelector } from "../../redux/hooks";
+import {
+  setDialogMessage,
+  setDialogEntryOn,
+  setShowDialog,
+} from "../../redux/slices/uiSlice";
+import { RootState } from "../../redux/store";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -95,7 +93,7 @@ const StepsDiv = styled.div`
   }
 
   .thread-message {
-    margin: 8px 4px 0 4px;
+    margin: 0px 4px 0 4px;
   }
 `;
 
@@ -110,6 +108,7 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
     >
       <p>Something went wrong:</p>
       <pre style={{ color: "red" }}>{error.message}</pre>
+      <pre style={{ color: lightGray }}>{error.stack}</pre>
 
       <div className="text-center">
         <Button onClick={resetErrorBoundary}>Restart</Button>
@@ -120,9 +119,8 @@ function fallbackRender({ error, resetErrorBoundary }: any) {
 
 export function Chat() {
   const posthog = usePostHog();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const defaultModel = useAppSelector(selectDefaultModel);
@@ -138,6 +136,10 @@ export function Chat() {
   );
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
+
+  const toolCallState = useSelector<RootState, ToolCallState | undefined>(
+    selectCurrentToolCall,
+  );
 
   const snapToBottom = useCallback(() => {
     if (!stepsDivRef.current) return;
@@ -176,7 +178,7 @@ export function Chat() {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        dispatch(setInactive());
+        // dispatch(cancelGeneration()); TODO!!!
       }
     };
     window.addEventListener("keydown", listener);
@@ -221,7 +223,7 @@ export function Chat() {
         }
       }
 
-      streamResponse(editorState, modifiers, ideMessenger);
+      dispatch(streamResponseThunk({ editorState, modifiers }));
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -326,7 +328,12 @@ export function Chat() {
       >
         {highlights}
         {messages.map((item, index: number) => (
-          <Fragment key={item.message.id}>
+          <div
+            key={item.message.id}
+            style={{
+              minHeight: index === messages.length - 1 ? "50vh" : 0,
+            }}
+          >
             <ErrorBoundary
               FallbackComponent={fallbackRender}
               onReset={() => {
@@ -336,13 +343,36 @@ export function Chat() {
               {item.message.role === "user" ? (
                 <ContinueInputBox
                   onEnter={async (editorState, modifiers) => {
-                    streamResponse(editorState, modifiers, ideMessenger, index);
+                    dispatch(
+                      streamResponseThunk({ editorState, modifiers, index }),
+                    );
                   }}
                   isLastUserInput={isLastUserInput(index)}
                   isMainInput={false}
                   editorState={item.editorState}
                   contextItems={item.contextItems}
                 />
+              ) : item.message.role === "tool" ? (
+                <ToolOutput
+                  contextItems={item.contextItems}
+                  toolCallId={item.message.toolCallId}
+                />
+              ) : item.message.role === "assistant" &&
+                item.message.toolCalls &&
+                item.toolCallState ? (
+                <div>
+                  {item.message.toolCalls?.map((toolCall, i) => {
+                    return (
+                      <div key={i}>
+                        <ToolCallDiv
+                          reactKey={toolCall.id}
+                          toolCallState={item.toolCallState}
+                          toolCall={toolCall as any}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="thread-message">
                   <TimelineItem
@@ -378,7 +408,7 @@ export function Chat() {
                 </div>
               )}
             </ErrorBoundary>
-          </Fragment>
+          </div>
         ))}
         <ChatScrollAnchor
           scrollAreaRef={stepsDivRef}
@@ -410,6 +440,8 @@ export function Chat() {
             </StopButton>
           )}
         </div>
+
+        {toolCallState?.status === "generated" && <ToolCallButtons />}
         <ContinueInputBox
           isMainInput
           isLastUserInput={false}

@@ -1,15 +1,17 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowTopRightOnSquareIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
+import { getBasename } from "core/util";
 import { useContext, useMemo, useState } from "react";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
-import { INSTRUCTIONS_BASE_ITEM } from "core/context/providers/utils";
 import { getIconFromDropdownItem } from "./MentionList";
-import { getBasename } from "core/util";
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../../redux/hooks";
 import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 
@@ -133,11 +135,7 @@ function ContextItemsPeek({
   const [open, setOpen] = useState(false);
 
   const ctxItems = useMemo(() => {
-    return (
-      contextItems?.filter(
-        (ctxItem) => !ctxItem.name.includes(INSTRUCTIONS_BASE_ITEM.name),
-      ) ?? []
-    );
+    return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
   }, [contextItems]);
 
   const isGatheringContext = useAppSelector(selectIsGatheringContext);
@@ -149,7 +147,12 @@ function ContextItemsPeek({
   }
 
   return (
-    <div className={`pl-2 pt-2 bg-[${vscBackground}]`}>
+    <div
+      className={`pl-2 pt-2`}
+      style={{
+        backgroundColor: vscBackground,
+      }}
+    >
       <div
         className="flex cursor-pointer items-center justify-start text-xs text-gray-300"
         onClick={() => setOpen((prev) => !prev)}

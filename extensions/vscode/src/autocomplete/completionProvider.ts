@@ -19,8 +19,8 @@ import {
   stopStatusBarLoading,
 } from "./statusBar";
 
-import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { IDE } from "core";
+import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;

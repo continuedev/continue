@@ -4,7 +4,7 @@ import path from "path";
 
 import { languageForFilepath } from "../../autocomplete/constants/AutocompleteLanguageInfo.js";
 import { SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
 function getOffsetDatetime(date: Date): Date {
@@ -48,7 +48,7 @@ const ShareSlashCommand: SlashCommand = {
     // message in the chat history, this will omit it
     for (const msg of history.slice(0, history.length - 1)) {
       let msgText = msg.content;
-      msgText = stripImages(msg.content);
+      msgText = renderChatMessage(msg);
 
       if (msg.role === "user" && msgText.search("```") > -1) {
         msgText = reformatCodeBlocks(msgText);

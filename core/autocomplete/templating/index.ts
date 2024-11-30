@@ -10,7 +10,6 @@ import {
   getTemplateForModel,
 } from "./AutocompleteTemplate";
 import { getStopTokens } from "./getStopTokens";
-import { AutocompleteCodeSnippet } from "../snippets/types";
 import { SnippetPayload } from "../snippets";
 import { formatSnippets } from "./formatting";
 import { getSnippets } from "./filtering";

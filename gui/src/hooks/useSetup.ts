@@ -1,24 +1,25 @@
-import { Dispatch } from "@reduxjs/toolkit";
 import { useCallback, useContext, useEffect, useRef } from "react";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import {
-  addContextItemsAtIndex,
-  setInactive,
-  setSelectedProfileId,
-} from "../redux/slices/sessionSlice";
+import { AppDispatch } from "../redux/store";
+
+import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
-import useChatHandler from "./useChatHandler";
-import { useWebviewListener } from "./useWebviewListener";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
+import { useWebviewListener } from "./useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
 import { setConfig, setConfigError } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
+import {
+  setSelectedProfileId,
+  setInactive,
+  addContextItemsAtIndex,
+} from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 
-function useSetup(dispatch: Dispatch) {
+function useSetup(dispatch: AppDispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.messages);
   const defaultModelTitle = useAppSelector(
@@ -79,7 +80,7 @@ function useSetup(dispatch: Dispatch) {
   );
 
   // Load symbols for chat on any session change
-  const sessionId = useAppSelector((store) => store.session.id);
+  const sessionId = useAppSelector((state) => state.session.id);
   const sessionIdRef = useRef("");
 
   useEffect(() => {
@@ -128,8 +129,6 @@ function useSetup(dispatch: Dispatch) {
     dispatch(updateDocsSuggestions(data));
   });
 
-  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
-
   // IDE event listeners
   useWebviewListener(
     "getWebviewHistoryLength",
@@ -160,10 +159,11 @@ function useSetup(dispatch: Dispatch) {
 
   // TODO - remove?
   useWebviewListener("submitMessage", async (data) => {
-    streamResponse(
-      data.message,
-      { useCodebase: false, noContext: true },
-      ideMessenger,
+    dispatch(
+      streamResponseThunk({
+        editorState: data.message,
+        modifiers: { useCodebase: false, noContext: true },
+      }),
     );
   });
 

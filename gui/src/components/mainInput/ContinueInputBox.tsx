@@ -69,6 +69,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useAppSelector(
     (state) => state.config.config.contextProviders,
   );
+  const useTools = useSelector(
+    (store: RootState) => store.state.config.experimental?.useTools !== false,
+  );
 
   useWebviewListener(
     "newSessionWithPrompt",
@@ -87,7 +90,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   );
 
   return (
-    <div className={`mb-1 ${props.hidden ? "hidden" : ""}`}>
+    <div className={`${props.hidden ? "hidden" : ""}`}>
       <div className={`relative flex px-2`}>
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}
@@ -108,6 +111,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}
             historyKey="chat"
+            toolbarOptions={{
+              hideTools: !useTools,
+            }}
           />
         </GradientBorder>
       </div>

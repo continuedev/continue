@@ -104,14 +104,14 @@ const StyledListboxOption = styled(Listbox.Option)<{ isDisabled?: boolean }>`
   `}
 `;
 
-const IconBase = styled.div<{ hovered: boolean }>`
+const IconBase = styled.div<{ $hovered: boolean }>`
   width: 1.2em;
   height: 1.2em;
   cursor: pointer;
   padding: 4px;
   border-radius: ${defaultBorderRadius};
-  opacity: ${(props) => (props.hovered ? 0.75 : 0)};
-  visibility: ${(props) => (props.hovered ? "visible" : "hidden")};
+  opacity: ${(props) => (props.$hovered ? 0.75 : 0)};
+  visibility: ${(props) => (props.$hovered ? "visible" : "hidden")};
 
   &:hover {
     opacity: 1;
@@ -203,9 +203,9 @@ function ModelOption({
             </span>
           </div>
           <div className="ml-5 flex items-center">
-            <StyledCog6ToothIcon hovered={hovered} onClick={onClickGear} />
+            <StyledCog6ToothIcon $hovered={hovered} onClick={onClickGear} />
             {showDelete && (
-              <StyledTrashIcon hovered={hovered} onClick={onClickDelete} />
+              <StyledTrashIcon $hovered={hovered} onClick={onClickDelete} />
             )}
           </div>
         </div>

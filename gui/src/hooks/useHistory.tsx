@@ -1,6 +1,6 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { Session, SessionMetadata } from "core";
-import { stripImages } from "core/llm/images";
+import { renderChatMessage } from "core/util/messageContent";
 import { useCallback, useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
@@ -72,7 +72,7 @@ function useHistory(dispatch: Dispatch) {
     let newTitle =
       currentTitle === "New Session"
         ? truncateText(
-            stripImages(history[0].message.content)
+            renderChatMessage(history[0].message)
               .split("\n")
               .filter((l) => l.trim() !== "")
               .slice(-1)[0] || "",

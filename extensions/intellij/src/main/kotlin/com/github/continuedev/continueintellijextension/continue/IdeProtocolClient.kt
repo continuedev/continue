@@ -435,8 +435,10 @@ class IdeProtocolClient(
                     "getRepoName" -> {
                         // Get the current repository name
                         val dir = (data as Map<String, Any>)["dir"] as String
+                        val directory = File(dir)
+                        val targetDir = if (directory.isFile) directory.parentFile else directory
                         val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
-                        builder.directory(File(dir))
+                        builder.directory(targetDir)
                         var output = "NONE"
                         try {
                             val process = builder.start()
@@ -453,9 +455,10 @@ class IdeProtocolClient(
 
                     "getDiff" -> {
                         val workspaceDirs = workspaceDirectories()
-                        val output = StringBuilder()
+                        val diffs = mutableListOf<String>()
 
                         for (workspaceDir in workspaceDirs) {
+                            val output = StringBuilder()
                             val builder = ProcessBuilder("git", "diff")
                             builder.directory(File(workspaceDir))
                             val process = builder.start()
@@ -469,9 +472,10 @@ class IdeProtocolClient(
                             }
 
                             process.waitFor()
+                            diffs.add(output.toString())
                         }
 
-                        respond(output.toString())
+                        respond(diffs)
                     }
 
                     "getProblems" -> {

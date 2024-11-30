@@ -1,4 +1,7 @@
+import { SymbolWithRange } from "core";
+import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -11,18 +14,16 @@ import {
   vscEditorBackground,
   vscForeground,
 } from "..";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { getFontSize, isJetBrains } from "../../util";
+import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
-import { ctxItemToRifWithContents } from "core/commands/util";
-import FilenameLink from "./FilenameLink";
-import StepContainerPreToolbar from "./StepContainerPreToolbar";
-import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
-import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { SymbolWithRange } from "core";
+import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
-import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 
 const StyledMarkdown = styled.div<{

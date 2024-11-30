@@ -7,7 +7,7 @@ import {
   MessagePart,
   RangeInFile,
 } from "core";
-import { stripImages } from "core/llm/images";
+import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { Dispatch } from "@reduxjs/toolkit";
 import { setIsGatheringContext } from "../../redux/slices/sessionSlice";
