@@ -1,4 +1,10 @@
-import { PayloadAction, createSelector, createSlice } from "@reduxjs/toolkit";
+import {
+  ActionReducerMapBuilder,
+  AsyncThunk,
+  PayloadAction,
+  createSelector,
+  createSlice,
+} from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
   ApplyState,
@@ -9,9 +15,14 @@ import {
   Session,
   PromptLog,
   CodeToEdit,
+  ToolCall,
+  ContextItem,
 } from "core";
-import { stripImages } from "core/llm/images";
+import { incrementalParseJson } from "core/util/incrementalParseJson";
+import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4 } from "uuid";
+import { streamResponseThunk } from "../thunks/streamResponse";
+import { findCurrentToolCall } from "../util";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -196,7 +207,7 @@ export const sessionSlice = createSlice({
           message: { ...getDefaultMessage().message, ...payload.message },
           editorState: {
             type: "doc",
-            content: stripImages(payload.message.content)
+            content: renderChatMessage(payload.message)
               .split("\n")
               .map((line) => ({
                 type: "paragraph",
@@ -246,10 +257,72 @@ export const sessionSlice = createSlice({
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
     },
-    streamUpdate: (state, action: PayloadAction<string>) => {
+    streamUpdate: (state, action: PayloadAction<ChatMessage>) => {
       if (state.messages.length) {
-        state.messages[state.messages.length - 1].message.content +=
-          action.payload;
+        const lastMessage = state.messages[state.messages.length - 1];
+
+        if (
+          action.payload.role &&
+          (lastMessage.message.role !== action.payload.role ||
+            // This is when a tool call comes after assistant text
+            (lastMessage.message.content !== "" &&
+              action.payload.role === "assistant" &&
+              action.payload.toolCalls?.length))
+        ) {
+          // Create a new message
+          const historyItem: ChatHistoryItemWithMessageId = {
+            contextItems: [],
+            message: { id: uuidv4(), ...action.payload },
+          };
+
+          if (action.payload.role === "assistant" && action.payload.toolCalls) {
+            const [_, parsedArgs] = incrementalParseJson(
+              action.payload.toolCalls[0].function.arguments,
+            );
+            historyItem.toolCallState = {
+              status: "generating",
+              toolCall: action.payload.toolCalls[0] as ToolCall,
+              toolCallId: action.payload.toolCalls[0].id,
+              parsedArgs,
+            };
+          }
+
+          state.messages.push(historyItem);
+        } else {
+          // Add to the existing message
+          const msg = state.messages[state.messages.length - 1].message;
+          if (action.payload.content) {
+            msg.content += renderChatMessage(action.payload);
+          } else if (
+            action.payload.role === "assistant" &&
+            action.payload.toolCalls &&
+            msg.role === "assistant"
+          ) {
+            if (!msg.toolCalls) {
+              msg.toolCalls = [];
+            }
+            action.payload.toolCalls.forEach((toolCall, i) => {
+              if (msg.toolCalls.length <= i) {
+                msg.toolCalls.push(toolCall);
+              } else {
+                msg.toolCalls[i].function.arguments +=
+                  toolCall.function.arguments;
+
+                const [_, parsedArgs] = incrementalParseJson(
+                  msg.toolCalls[i].function.arguments,
+                );
+
+                state.messages[
+                  state.messages.length - 1
+                ].toolCallState.parsedArgs = parsedArgs;
+                state.messages[
+                  state.messages.length - 1
+                ].toolCallState.toolCall.function.arguments +=
+                  toolCall.function.arguments;
+              }
+            });
+          }
+        }
       }
     },
     newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
@@ -370,6 +443,37 @@ export const sessionSlice = createSlice({
     clearCodeToEdit: (state) => {
       state.codeToEdit = [];
     },
+    // Related to currentToolCallState
+    setToolGenerated: (state) => {
+      const toolCallState = findCurrentToolCall(state.messages);
+      if (!toolCallState) return;
+
+      toolCallState.status = "generated";
+    },
+    setToolCallOutput: (state, action: PayloadAction<ContextItem[]>) => {
+      const toolCallState = findCurrentToolCall(state.messages);
+      if (!toolCallState) return;
+
+      toolCallState.output = action.payload;
+    },
+    cancelToolCall: (state) => {
+      const toolCallState = findCurrentToolCall(state.messages);
+      if (!toolCallState) return;
+
+      toolCallState.status = "canceled";
+    },
+    acceptToolCall: (state) => {
+      const toolCallState = findCurrentToolCall(state.messages);
+      if (!toolCallState) return;
+
+      toolCallState.status = "done";
+    },
+    setCalling: (state) => {
+      const toolCallState = findCurrentToolCall(state.messages);
+      if (!toolCallState) return;
+
+      toolCallState.status = "calling";
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
@@ -377,7 +481,22 @@ export const sessionSlice = createSlice({
       return curMessage?.isGatheringContext || false;
     },
   },
+  extraReducers: (builder) => {
+    addPassthroughCases(builder, [streamResponseThunk]);
+  },
 });
+
+function addPassthroughCases(
+  builder: ActionReducerMapBuilder<SessionState>,
+  thunks: AsyncThunk<any, any, any>[],
+) {
+  thunks.forEach((thunk) => {
+    builder
+      .addCase(thunk.fulfilled, (state, action) => {})
+      .addCase(thunk.rejected, (state, action) => {})
+      .addCase(thunk.pending, (state, action) => {});
+  });
+}
 
 // TODO: this is supposed to be by streamID not sessoinId
 export const selectApplyStateBySessionId = createSelector(
@@ -417,6 +536,11 @@ export const {
   clearCodeToEdit,
   addCodeToEdit,
   removeCodeToEdit,
+  setCalling,
+  cancelToolCall,
+  acceptToolCall,
+  setToolGenerated,
+  setToolCallOutput,
 } = sessionSlice.actions;
 
 export const { selectIsGatheringContext } = sessionSlice.selectors;
