@@ -189,8 +189,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { saveSession, loadSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
-  const [isEditorFocused, setIsEditorFocused] = useState(false);
-  const [hasDefaultModel, setHasDefaultModel] = useState(true);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -199,9 +197,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const isInEditMode = useAppSelector(
     (state) => state.editModeState.isInEditMode,
-  );
-  const shouldAddFileForEditing = useAppSelector(
-    (state) => state.ui.shouldAddFileForEditing,
   );
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
@@ -260,20 +255,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const active = useAppSelector((state) => state.session.isStreaming);
   const activeRef = useUpdatingRef(active);
-
-  // Only set `hasDefaultModel` after a timeout to prevent jank
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasDefaultModel(
-        !!defaultModel &&
-          defaultModel.apiKey !== undefined &&
-          defaultModel.apiKey !== "",
-      );
-    }, 3500);
-
-    // Cleanup function to clear the timeout if the component unmounts
-    return () => clearTimeout(timer);
-  }, [defaultModel]);
 
   async function handleImageFile(
     file: File,
@@ -549,9 +530,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
     },
     content: props.editorState || mainEditorContent || "",
-    onFocus: () => setIsEditorFocused(true),
-    onBlur: () => setIsEditorFocused(false),
-    // onUpdate
     editable: !active || props.isMainInput,
   });
 

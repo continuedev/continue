@@ -9,7 +9,6 @@ type UIState = {
   dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
   onboardingCard: OnboardingCardState;
-  shouldAddFileForEditing: boolean;
   ttsActive: boolean;
 };
 
@@ -19,7 +18,6 @@ const initialState: UIState = {
   dialogMessage: "",
   dialogEntryOn: false,
   onboardingCard: defaultOnboardingCardState,
-  shouldAddFileForEditing: false,
 };
 
 export const uiSlice = createSlice({
