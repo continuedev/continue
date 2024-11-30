@@ -6,6 +6,7 @@ import { useCallback, useContext, useEffect, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
+import { ToolbarOptions } from "../../components/mainInput/InputToolbar";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
 import TipTapEditor from "../../components/mainInput/TipTapEditor";
@@ -87,11 +88,12 @@ export default function Edit() {
     editModeState.editStatus === "streaming" ||
     editModeState.editStatus === "accepting";
 
-  const toolbarOptions = {
+  const toolbarOptions: ToolbarOptions = {
     hideAddContext: false,
     hideImageUpload: false,
     hideUseCodebase: true,
     hideSelectModel: false,
+    hideTools: true,
     enterText: isStreaming ? "Retry" : "Edit",
   };
 
