@@ -44,7 +44,7 @@ async function callToolFromUri(
   if (!canParse) {
     throw new Error(`Invalid URI: ${uri}`);
   }
-  const parsedUri = URL.parse(uri)!;
+  const parsedUri = new URL(uri);
 
   switch (parsedUri?.protocol) {
     case "http:":
