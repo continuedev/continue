@@ -147,7 +147,7 @@ function InputToolbar(props: InputToolbarProps) {
             <div className="hidden transition-colors duration-200 hover:underline sm:flex">
               {props.activeKey === "Alt" ? (
                 <HoverItem className="underline">
-                  {`${getAltKeyLabel()}⏎ 
+                  {`${getAltKeyLabel()}⏎
                   ${useActiveFile ? "No active file" : "Active file"}`}
                 </HoverItem>
               ) : (

@@ -28,7 +28,7 @@ const BackgroundDiv = styled.div<{ useTools: boolean }>`
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 
   transition: background-color 200ms;
 `;
@@ -78,7 +78,7 @@ export default function ToolDropdown() {
         />
         {useTools && (
           <>
-            <span>Tools</span>
+            <span className="hidden md:flex">Tools</span>
 
             <div className="relative">
               <Listbox onChange={() => {}}>
@@ -98,7 +98,7 @@ export default function ToolDropdown() {
                 </Listbox.Button>
                 <Transition show={isDropdownOpen}>
                   <Listbox.Options
-                    className={`bg-vsc-editor-background border-lightgray/50 absolute right-0 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}
+                    className={`bg-vsc-editor-background border-lightgray/50 absolute -left-32 z-50 mb-1 min-w-fit whitespace-nowrap rounded-md border border-solid px-1 py-0 shadow-lg ${showAbove ? "bottom-full" : ""}`}
                   >
                     <div className="sticky">
                       <div
