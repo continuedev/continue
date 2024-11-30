@@ -310,7 +310,10 @@ class OpenAI extends BaseLLM {
 
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.delta?.content) {
-        yield value.choices[0].delta;
+        yield {
+          role: "assistant",
+          content: value.choices[0].delta.content,
+        };
       } else if (value.choices?.[0]?.delta?.tool_calls) {
         yield {
           role: "assistant",
