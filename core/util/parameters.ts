@@ -4,11 +4,13 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
   useFileSuffix: true,
   maxPromptTokens: 1024,
-  prefixPercentage: 0.85,
-  maxSuffixPercentage: 0.25,
+  prefixPercentage: 0.3,
+  maxSuffixPercentage: 0.2,
   debounceDelay: 350,
   multilineCompletions: "auto",
+  // @deprecated TO BE REMOVED
   slidingWindowPrefixPercentage: 0.75,
+  // @deprecated TO BE REMOVED
   slidingWindowSize: 500,
   useCache: true,
   onlyMyCode: true,
