@@ -5,10 +5,10 @@ on:
     branches:
       - main
 
-  paths:
-    - "extensions/vscode/**"
-    - "core/**"
-    - "gui/**"
+    paths:
+      - "extensions/vscode/**"
+      - "core/**"
+      - "gui/**"
 
 jobs:
   tsc-check:
