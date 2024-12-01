@@ -71,7 +71,7 @@ export const configSlice = createSlice({
         (model) => model.title === state.defaultModelTitle,
       );
     },
-    selectDefaultModelContextLength: (state) => {
+    selectDefaultModelContextLength: (state): number => {
       return (
         configSlice.getSelectors().selectDefaultModel(state)?.contextLength ||
         DEFAULT_MAX_TOKENS
