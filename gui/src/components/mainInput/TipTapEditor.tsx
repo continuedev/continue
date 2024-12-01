@@ -180,9 +180,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { getSubmenuContextItems } = useSubmenuContextProviders();
 
-  const historyLength = useAppSelector(
-    (store) => store.session.messages.length,
-  );
+  const historyLength = useAppSelector((store) => store.session.history.length);
 
   const useActiveFile = useAppSelector(selectUseActiveFile);
 

@@ -53,7 +53,7 @@ export default function Edit() {
     );
   }, [availableContextProviders]);
 
-  const history = useAppSelector((state) => state.session.messages);
+  const history = useAppSelector((state) => state.session.history);
 
   const applyStates = useAppSelector(
     (state) => state.session.codeBlockApplyStates.states,

@@ -24,6 +24,7 @@ const rootReducer = combineReducers({
   config: configReducer,
   indexing: indexingReducer,
 });
+
 const saveSubsetFilters = [
   createFilter("session", ["history", "sessionId", "defaultModelTitle"]),
   // Don't persist any of the edit state for now

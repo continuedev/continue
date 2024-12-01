@@ -32,7 +32,7 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 };
 
 type SessionState = {
-  messages: ChatHistoryItemWithMessageId[];
+  history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
   title: string;
   id: string;
@@ -68,7 +68,7 @@ function getDefaultMessage(): ChatHistoryItemWithMessageId {
 }
 
 const initialState: SessionState = {
-  messages: [],
+  history: [],
   isStreaming: false,
   title: "New Session",
   id: uuidv4(),
@@ -91,11 +91,11 @@ export const sessionSlice = createSlice({
       state,
       { payload }: PayloadAction<PromptLog[]>,
     ) => {
-      if (!state.messages.length) {
+      if (!state.history.length) {
         return;
       }
 
-      const lastMessage = state.messages[state.messages.length - 1];
+      const lastMessage = state.history[state.history.length - 1];
 
       lastMessage.promptLogs = lastMessage.promptLogs
         ? lastMessage.promptLogs.concat(payload)
@@ -105,20 +105,20 @@ export const sessionSlice = createSlice({
       state.isStreaming = true;
     },
     setIsGatheringContext: (state, { payload }: PayloadAction<boolean>) => {
-      state.messages.at(-1).isGatheringContext = payload;
+      state.history.at(-1).isGatheringContext = payload;
     },
     clearLastEmptyResponse: (state) => {
-      if (state.messages.length < 2) {
+      if (state.history.length < 2) {
         return;
       }
 
-      const lastMessage = state.messages[state.messages.length - 1];
+      const lastMessage = state.history[state.history.length - 1];
 
       // Only clear in the case of an empty message
       if (!lastMessage.message.content.length) {
         state.mainEditorContent =
-          state.messages[state.messages.length - 2].editorState;
-        state.messages = state.messages.slice(0, -2);
+          state.history[state.history.length - 2].editorState;
+        state.history = state.history.slice(0, -2);
       }
     },
     updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
@@ -136,8 +136,8 @@ export const sessionSlice = createSlice({
         contextItems: ChatHistoryItem["contextItems"];
       }>,
     ) => {
-      if (state.messages[index]) {
-        state.messages[index].contextItems = contextItems;
+      if (state.history[index]) {
+        state.history[index].contextItems = contextItems;
       }
     },
     resubmitAtIndex: (
@@ -149,7 +149,7 @@ export const sessionSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
-      const historyItem = state.messages[payload.index];
+      const historyItem = state.history[payload.index];
 
       if (!historyItem) {
         return;
@@ -159,7 +159,7 @@ export const sessionSlice = createSlice({
       historyItem.editorState = payload.editorState;
 
       // Cut off history after the resubmitted message
-      state.messages = state.messages
+      state.history = state.history
         .slice(0, payload.index + 1)
         .concat(getDefaultMessage());
 
@@ -167,7 +167,7 @@ export const sessionSlice = createSlice({
     },
     deleteMessage: (state, action: PayloadAction<number>) => {
       // Deletes the current assistant message and the previous user message
-      state.messages.splice(action.payload - 1, 2);
+      state.history.splice(action.payload - 1, 2);
     },
     initNewActiveMessage: (
       state,
@@ -177,13 +177,13 @@ export const sessionSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
-      state.messages.push({
+      state.history.push({
         ...getDefaultMessage(),
         message: { role: "user", ...getDefaultMessage().message },
         editorState: payload.editorState,
       });
 
-      state.messages.push({
+      state.history.push({
         ...getDefaultMessage(),
         message: { role: "assistant", ...getDefaultMessage().message },
         editorState: payload.editorState,
@@ -202,8 +202,8 @@ export const sessionSlice = createSlice({
         contextItems?: ContextItemWithId[];
       }>,
     ) => {
-      if (payload.index >= state.messages.length) {
-        state.messages.push({
+      if (payload.index >= state.history.length) {
+        state.history.push({
           ...getDefaultMessage(),
           message: { ...getDefaultMessage().message, ...payload.message },
           editorState: {
@@ -218,12 +218,12 @@ export const sessionSlice = createSlice({
         });
       }
 
-      state.messages[payload.index].message = {
+      state.history[payload.index].message = {
         ...payload.message,
         id: uuidv4(),
       };
 
-      state.messages[payload.index].contextItems = payload.contextItems || [];
+      state.history[payload.index].contextItems = payload.contextItems || [];
     },
     addContextItemsAtIndex: (
       state,
@@ -234,7 +234,7 @@ export const sessionSlice = createSlice({
         contextItems: ContextItemWithId[];
       }>,
     ) => {
-      const historyItem = state.messages[payload.index];
+      const historyItem = state.history[payload.index];
 
       if (!historyItem) {
         return;
@@ -246,7 +246,7 @@ export const sessionSlice = createSlice({
       ];
     },
     setInactive: (state) => {
-      const curMessage = state.messages.at(-1);
+      const curMessage = state.history.at(-1);
 
       if (curMessage) {
         curMessage.isGatheringContext = false;
@@ -259,8 +259,8 @@ export const sessionSlice = createSlice({
       state.streamAborter = new AbortController();
     },
     streamUpdate: (state, action: PayloadAction<ChatMessage>) => {
-      if (state.messages.length) {
-        const lastMessage = state.messages[state.messages.length - 1];
+      if (state.history.length) {
+        const lastMessage = state.history[state.history.length - 1];
 
         if (
           action.payload.role &&
@@ -288,10 +288,10 @@ export const sessionSlice = createSlice({
             };
           }
 
-          state.messages.push(historyItem);
+          state.history.push(historyItem);
         } else {
           // Add to the existing message
-          const msg = state.messages[state.messages.length - 1].message;
+          const msg = state.history[state.history.length - 1].message;
           if (action.payload.content) {
             msg.content += renderChatMessage(action.payload);
           } else if (
@@ -313,11 +313,11 @@ export const sessionSlice = createSlice({
                   msg.toolCalls[i].function.arguments,
                 );
 
-                state.messages[
-                  state.messages.length - 1
+                state.history[
+                  state.history.length - 1
                 ].toolCallState.parsedArgs = parsedArgs;
-                state.messages[
-                  state.messages.length - 1
+                state.history[
+                  state.history.length - 1
                 ].toolCallState.toolCall.function.arguments +=
                   toolCall.function.arguments;
               }
@@ -334,12 +334,12 @@ export const sessionSlice = createSlice({
       state.symbols = {};
 
       if (payload) {
-        state.messages = payload.history as any;
+        state.history = payload.history as any;
         state.title = payload.title;
         state.id = payload.sessionId;
         state.curCheckpointIndex = 0;
       } else {
-        state.messages = [];
+        state.history = [];
         state.title = "New Session";
         state.id = uuidv4();
         state.curCheckpointIndex = 0;
@@ -355,7 +355,7 @@ export const sessionSlice = createSlice({
       }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>,
     ) => {
       let contextItems =
-        state.messages[state.messages.length - 1].contextItems ?? [];
+        state.history[state.history.length - 1].contextItems ?? [];
 
       contextItems = contextItems.map((item) => {
         return { ...item, editing: false };
@@ -381,7 +381,7 @@ export const sessionSlice = createSlice({
         editable: true,
       });
 
-      state.messages[state.messages.length - 1].contextItems = contextItems;
+      state.history[state.history.length - 1].contextItems = contextItems;
     },
     setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
       return {
@@ -396,7 +396,7 @@ export const sessionSlice = createSlice({
       state,
       { payload }: PayloadAction<{ filepath: string; content: string }>,
     ) => {
-      state.messages[state.curCheckpointIndex].checkpoint[payload.filepath] =
+      state.history[state.curCheckpointIndex].checkpoint[payload.filepath] =
         payload.content;
     },
     updateApplyState: (state, { payload }: PayloadAction<ApplyState>) => {
@@ -446,31 +446,31 @@ export const sessionSlice = createSlice({
     },
     // Related to currentToolCallState
     setToolGenerated: (state) => {
-      const toolCallState = findCurrentToolCall(state.messages);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.status = "generated";
     },
     setToolCallOutput: (state, action: PayloadAction<ContextItem[]>) => {
-      const toolCallState = findCurrentToolCall(state.messages);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.output = action.payload;
     },
     cancelToolCall: (state) => {
-      const toolCallState = findCurrentToolCall(state.messages);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.status = "canceled";
     },
     acceptToolCall: (state) => {
-      const toolCallState = findCurrentToolCall(state.messages);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.status = "done";
     },
     setCalling: (state) => {
-      const toolCallState = findCurrentToolCall(state.messages);
+      const toolCallState = findCurrentToolCall(state.history);
       if (!toolCallState) return;
 
       toolCallState.status = "calling";
@@ -478,7 +478,7 @@ export const sessionSlice = createSlice({
   },
   selectors: {
     selectIsGatheringContext: (state) => {
-      const curMessage = state.messages.at(-1);
+      const curMessage = state.history.at(-1);
       return curMessage?.isGatheringContext || false;
     },
   },
@@ -500,7 +500,7 @@ function addPassthroughCases(
 }
 
 export const selectCurrentToolCall = createSelector(
-  (store: RootState) => store.session.messages,
+  (store: RootState) => store.session.history,
   (history) => {
     return findCurrentToolCall(history);
   },

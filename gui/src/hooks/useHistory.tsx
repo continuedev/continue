@@ -20,7 +20,7 @@ function truncateText(text: string, maxLength: number) {
 function useHistory(dispatch: Dispatch) {
   const sessionId = useAppSelector((store) => store.session.id);
   const config = useAppSelector((store) => store.config.config);
-  const history = useAppSelector((store) => store.session.messages);
+  const history = useAppSelector((store) => store.session.history);
   const title = useAppSelector((store) => store.session.title);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();

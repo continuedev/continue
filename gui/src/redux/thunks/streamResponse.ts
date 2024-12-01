@@ -70,7 +70,7 @@ export const streamResponseThunk = createAsyncThunk<
         const state = getState();
         const defaultModel = selectDefaultModel(state);
         const slashCommands = state.config.config.slashCommands || [];
-        const inputIndex = index ?? state.session.messages.length;
+        const inputIndex = index ?? state.session.history.length;
 
         if (typeof index === "number") {
           dispatch(resubmitAtIndex({ index, editorState }));
@@ -114,7 +114,7 @@ export const streamResponseThunk = createAsyncThunk<
         );
 
         // Construct messages from updated history
-        const updatedHistory = getState().session.messages;
+        const updatedHistory = getState().session.history;
         const messages = constructMessages(updatedHistory, defaultModel.model);
 
         posthog.capture("step run", {

@@ -160,7 +160,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
   const contextItems = useAppSelector(
-    (state) => state.session.messages[props.itemIndex - 1]?.contextItems,
+    (state) => state.session.history[props.itemIndex - 1]?.contextItems,
   );
   const contextItemsRef = useUpdatingRef(contextItems);
 

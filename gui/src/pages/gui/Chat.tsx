@@ -130,7 +130,7 @@ export function Chat() {
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
-  const messages = useAppSelector((state) => state.session.messages);
+  const messages = useAppSelector((state) => state.session.history);
   const showChatScrollbar = useAppSelector(
     (state) => state.config.config.ui?.showChatScrollbar,
   );

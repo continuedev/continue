@@ -26,7 +26,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
     await dispatch(
       handleErrors(async () => {
         const state = getState();
-        const initialHistory = state.session.messages;
+        const initialHistory = state.session.history;
         const defaultModel = selectDefaultModel(state);
 
         resetStateForNewMessage();
@@ -55,7 +55,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
 
         dispatch(setActive());
 
-        const updatedHistory = getState().session.messages;
+        const updatedHistory = getState().session.history;
         const messages = constructMessages(
           [...updatedHistory],
           defaultModel.model,

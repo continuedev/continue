@@ -30,7 +30,7 @@ export default function StepContainer(props: StepContainerProps) {
   const [isTruncated, setIsTruncated] = useState(false);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const historyItemAfterThis = useAppSelector(
-    (state) => state.session.messages[props.index + 1],
+    (state) => state.session.history[props.index + 1],
   );
   const uiConfig = useAppSelector(selectUIConfig);
 

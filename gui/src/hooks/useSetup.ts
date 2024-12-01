@@ -21,7 +21,7 @@ import { setTTSActive } from "../redux/slices/uiSlice";
 
 function useSetup(dispatch: AppDispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const history = useAppSelector((store) => store.session.messages);
+  const history = useAppSelector((store) => store.session.history);
   const defaultModelTitle = useAppSelector(
     (store) => store.config.defaultModelTitle,
   );

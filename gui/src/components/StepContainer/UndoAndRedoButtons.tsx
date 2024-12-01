@@ -13,7 +13,7 @@ export default function UndoAndRedoButtons() {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const checkpoints = useAppSelector(
-    (store) => store.session.messages.at(-1).checkpoint,
+    (store) => store.session.history.at(-1).checkpoint,
   );
 
   const curCheckpointIndex = useAppSelector(
