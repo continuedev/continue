@@ -1,6 +1,11 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import miscReducer from "./slices/miscSlice";
-import { persistReducer, persistStore } from "redux-persist";
+import {
+  createMigrate,
+  MigrationManifest,
+  persistReducer,
+  persistStore,
+} from "redux-persist";
 import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
@@ -31,20 +36,30 @@ const saveSubsetFilters = [
   createFilter("editModeState", []),
 ];
 
-const loadSubsetFilter = createFilter("state", null, [
-  "session",
-  "misc",
-  "ui",
-  "editModeState",
-  "config",
-  "indexing",
-]);
+const migrations: MigrationManifest = {
+  "0": (state) => {
+    const oldState = state as any;
+
+    return {
+      config: {
+        defaultModelTitle: oldState?.state?.defaultModelTitle ?? "GPT-4",
+      },
+      session: {
+        history: oldState?.state?.history ?? [],
+        id: oldState?.state?.sessionId ?? "",
+      },
+      _persist: oldState?._persist,
+    };
+  },
+};
 
 const persistConfig = {
+  version: 1,
   key: "root",
   storage,
-  transforms: [...saveSubsetFilters, loadSubsetFilter],
+  transforms: [...saveSubsetFilters],
   stateReconciler: autoMergeLevel2,
+  migrate: createMigrate(migrations, { debug: false }),
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
