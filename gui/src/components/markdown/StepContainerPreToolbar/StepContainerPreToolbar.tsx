@@ -15,7 +15,7 @@ import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectDefaultModel } from "../../../redux/slices/configSlice";
-import { selectApplyStateBySessionId } from "../../../redux/slices/sessionSlice";
+import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
 
 const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
@@ -70,7 +70,7 @@ export default function StepContainerPreToolbar(
   );
 
   const applyState = useAppSelector((state) =>
-    selectApplyStateBySessionId(state, streamIdRef.current),
+    selectApplyStateByStreamId(state, streamIdRef.current),
   );
 
   // This handles an edge case when the last node in the markdown syntax tree is a codeblock.

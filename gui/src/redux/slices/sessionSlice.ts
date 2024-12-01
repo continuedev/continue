@@ -23,6 +23,7 @@ import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4 } from "uuid";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
+import { RootState } from "../store";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -498,15 +499,20 @@ function addPassthroughCases(
   });
 }
 
-// TODO: this is supposed to be by streamID not sessoinId
-export const selectApplyStateBySessionId = createSelector(
+export const selectCurrentToolCall = createSelector(
+  (store: RootState) => store.session.messages,
+  (history) => {
+    return findCurrentToolCall(history);
+  },
+);
+
+export const selectApplyStateByStreamId = createSelector(
   [
-    (state: { session: SessionState }) =>
-      state.session.codeBlockApplyStates.states,
-    (_state: { session: SessionState }, sessionId: string) => sessionId,
+    (state: RootState) => state.session.codeBlockApplyStates.states,
+    (state: RootState, streamId: string) => streamId,
   ],
-  (states, sessionId) => {
-    return states.find((state) => state.streamId === sessionId);
+  (states, streamId) => {
+    return states.find((state) => state.streamId === streamId);
   },
 );
 

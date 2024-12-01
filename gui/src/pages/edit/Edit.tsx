@@ -19,7 +19,7 @@ import getMultifileEditPrompt from "./getMultifileEditPrompt";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   clearCodeToEdit,
-  selectApplyStateBySessionId,
+  selectApplyStateByStreamId,
 } from "../../redux/slices/sessionSlice";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
@@ -60,7 +60,7 @@ export default function Edit() {
   );
 
   const applyState = useAppSelector(
-    (state) => selectApplyStateBySessionId(state, "edit")?.status ?? "closed",
+    (state) => selectApplyStateByStreamId(state, "edit")?.status ?? "closed",
   );
   const isSingleRangeEdit =
     codeToEdit.length === 0 ||
