@@ -25,6 +25,7 @@ const initialState: ConfigState = {
     ],
     contextProviders: [],
     models: [],
+    tools: [],
   },
 };
 

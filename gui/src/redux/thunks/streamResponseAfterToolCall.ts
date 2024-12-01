@@ -2,16 +2,16 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatMessage, ContextItem } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
-import { defaultModelSelector } from "../selectors/modelSelectors";
 import {
   addContextItemsAtIndex,
   setActive,
   streamUpdate,
-} from "../slices/stateSlice";
+} from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { handleErrors } from "./handleErrors";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
+import { selectDefaultModel } from "../slices/configSlice";
 
 export const streamResponseAfterToolCall = createAsyncThunk<
   void,
@@ -22,12 +22,12 @@ export const streamResponseAfterToolCall = createAsyncThunk<
   ThunkApiType
 >(
   "chat/streamAfterToolCall",
-  async ({ toolCallId, toolOutput }, { dispatch, getState, extra }) => {
+  async ({ toolCallId, toolOutput }, { dispatch, getState }) => {
     await dispatch(
       handleErrors(async () => {
         const state = getState();
-        const initialHistory = state.state.history;
-        const defaultModel = defaultModelSelector(state);
+        const initialHistory = state.session.messages;
+        const defaultModel = selectDefaultModel(state);
 
         resetStateForNewMessage();
 
@@ -55,7 +55,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
 
         dispatch(setActive());
 
-        const updatedHistory = getState().state.history;
+        const updatedHistory = getState().session.messages;
         const messages = constructMessages(
           [...updatedHistory],
           defaultModel.model,

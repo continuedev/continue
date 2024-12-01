@@ -1,8 +1,7 @@
 import { Tool, ToolCall, ToolCallState } from "core";
 import Mustache from "mustache";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { RootState } from "../../../redux/store";
+import { useAppSelector } from "../../../redux/hooks";
 
 interface ThreadDivProps {
   children: React.ReactNode;
@@ -33,9 +32,7 @@ const HeaderDiv = styled.div`
 `;
 
 export function ThreadDiv(props: ThreadDivProps) {
-  const availableTools = useSelector(
-    (state: RootState) => state.state.config.tools,
-  );
+  const availableTools = useAppSelector((state) => state.config.config.tools);
 
   function renderWouldLikeToMessage(
     tool: Tool | undefined,

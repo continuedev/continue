@@ -9,6 +9,7 @@ import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 import { useAppSelector } from "../../redux/hooks";
 import { newSession, setMessageAtIndex } from "../../redux/slices/sessionSlice";
+
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
@@ -69,8 +70,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const availableContextProviders = useAppSelector(
     (state) => state.config.config.contextProviders,
   );
-  const useTools = useSelector(
-    (store: RootState) => store.state.config.experimental?.useTools !== false,
+  const useTools = useAppSelector(
+    (state) => state.config.config.experimental?.useTools !== false,
   );
 
   useWebviewListener(

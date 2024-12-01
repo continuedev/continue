@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { resetNextCodeBlockToApplyIndex } from "../slices/stateSlice";
+import { resetNextCodeBlockToApplyIndex } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 
 export const resetStateForNewMessage = createAsyncThunk<

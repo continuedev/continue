@@ -10,19 +10,19 @@ import {
 import { constructMessages } from "core/llm/constructMessages";
 import { renderChatMessage } from "core/util/messageContent";
 import posthog from "posthog-js";
-import { defaultModelSelector } from "../selectors/modelSelectors";
 import {
   initNewActiveMessage,
   resubmitAtIndex,
   setCurCheckpointIndex,
   setMessageAtIndex,
-} from "../slices/stateSlice";
+} from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { gatherContext } from "./gatherContext";
 import { handleErrors } from "./handleErrors";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamSlashCommand } from "./streamSlashCommand";
+import { selectDefaultModel } from "../slices/configSlice";
 
 const getSlashCommandForInput = (
   input: MessageContent,
@@ -68,9 +68,9 @@ export const streamResponseThunk = createAsyncThunk<
     await dispatch(
       handleErrors(async () => {
         const state = getState();
-        const defaultModel = defaultModelSelector(state);
-        const slashCommands = state.state.config.slashCommands || [];
-        const inputIndex = index ?? state.state.history.length;
+        const defaultModel = selectDefaultModel(state);
+        const slashCommands = state.config.config.slashCommands || [];
+        const inputIndex = index ?? state.session.messages.length;
 
         if (typeof index === "number") {
           dispatch(resubmitAtIndex({ index, editorState }));
@@ -114,7 +114,7 @@ export const streamResponseThunk = createAsyncThunk<
         );
 
         // Construct messages from updated history
-        const updatedHistory = getState().state.history;
+        const updatedHistory = getState().session.messages;
         const messages = constructMessages(updatedHistory, defaultModel.model);
 
         posthog.capture("step run", {

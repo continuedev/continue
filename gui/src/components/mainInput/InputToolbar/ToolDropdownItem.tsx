@@ -1,8 +1,8 @@
 import { Tool } from "core";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { addTool, toggleToolSetting } from "../../../redux/slices/uiStateSlice";
 import { RootState } from "../../../redux/store";
+import { addTool, toggleToolSetting } from "../../../redux/slices/uiSlice";
 
 interface ToolDropdownItemProps {
   tool: Tool;
@@ -11,7 +11,7 @@ interface ToolDropdownItemProps {
 function ToolDropdownItem(props: ToolDropdownItemProps) {
   const dispatch = useDispatch();
   const settings = useSelector(
-    (state: RootState) => state.uiState.toolSettings[props.tool.function.name],
+    (state: RootState) => state.ui.toolSettings[props.tool.function.name],
   );
 
   useEffect(() => {
