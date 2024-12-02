@@ -4,7 +4,7 @@ import {
   acceptToolCall,
   setCalling,
   setToolCallOutput,
-} from "../slices/stateSlice";
+} from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { streamResponseAfterToolCall } from "./streamResponseAfterToolCall";
 

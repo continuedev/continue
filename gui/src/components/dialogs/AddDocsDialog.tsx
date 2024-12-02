@@ -7,19 +7,16 @@ import {
 import { IndexingStatus, PackageDocsResult, SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import { useContext, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { Input, SecondaryButton } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
-import { RootState } from "../../redux/store";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import { ToolTip } from "../gui/Tooltip";
 import FileIcon from "../FileIcon";
 import DocsIndexingPeeks from "../indexing/DocsIndexingPeeks";
-import { updateIndexingStatus } from "../../redux/slices/stateSlice";
 import preIndexedDocs from "core/indexing/docs/preIndexedDocs";
+import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
+import { useAppSelector } from "../../redux/hooks";
 
 function AddDocsDialog() {
   const posthog = usePostHog();
@@ -33,8 +30,8 @@ function AddDocsDialog() {
   const [faviconUrl, setFaviconUrl] = useState("");
 
   const ideMessenger = useContext(IdeMessengerContext);
-  const indexingStatuses = useSelector(
-    (store: RootState) => store.state.indexing.statuses,
+  const indexingStatuses = useAppSelector(
+    (store) => store.indexing.indexing.statuses,
   );
 
   const docsIndexingStatuses: IndexingStatus[] = useMemo(() => {
@@ -43,11 +40,8 @@ function AddDocsDialog() {
     );
   }, [indexingStatuses]);
 
-  const docsSuggestions = useSelector(
-    (store: RootState) => store.state.docsSuggestions,
-  );
-
-  const configDocs = useSelector((store: RootState) => store.state.config.docs);
+  const docsSuggestions = useAppSelector((store) => store.misc.docsSuggestions);
+  const configDocs = useAppSelector((store) => store.config.config.docs);
 
   const sortedDocsSuggestions = useMemo(() => {
     const docsFromConfig = configDocs ?? [];

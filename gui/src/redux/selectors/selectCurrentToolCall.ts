@@ -3,7 +3,7 @@ import { RootState } from "../store";
 import { findCurrentToolCall } from "../util";
 
 export const selectCurrentToolCall = createSelector(
-  (store: RootState) => store.state.history,
+  (store: RootState) => store.session.history,
   (history) => {
     return findCurrentToolCall(history);
   },

@@ -11,12 +11,13 @@ import { isJetBrains } from "../../util";
 import { isTerminalCodeBlock, getTerminalCommand } from "./utils";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import { CopyIconButton } from "../gui/CopyIconButton";
-import useUIConfig from "../../hooks/useUIConfig";
 import { v4 as uuidv4 } from "uuid";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { useAppSelector } from "../../redux/hooks";
+import {
+  selectDefaultModel,
+  selectUIConfig,
+} from "../../redux/slices/configSlice";
 
 const TopDiv = styled.div`
   outline: 0.5px solid rgba(153, 153, 152);
@@ -63,10 +64,10 @@ export default function StepContainerPreActionButtons({
 }: StepContainerPreActionButtonsProps) {
   const [hovering, setHovering] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
-  const uiConfig = useUIConfig();
-  const streamIdRef = useRef<string>(uuidv4());
-  const nextCodeBlockIndex = useSelector(
-    (state: RootState) => state.state.nextCodeBlockToApplyIndex,
+  const uiConfig = useAppSelector(selectUIConfig);
+  const streamIdRef = useRef<string | null>(null);
+  const nextCodeBlockIndex = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.curIndex,
   );
 
   const isBottomToolbarPosition =
@@ -75,7 +76,12 @@ export default function StepContainerPreActionButtons({
     !isJetBrains() && isTerminalCodeBlock(language, codeBlockContent);
   const isNextCodeBlock = nextCodeBlockIndex === codeBlockIndex;
 
-  const defaultModel = useSelector(defaultModelSelector);
+  if (streamIdRef.current === null) {
+    streamIdRef.current = uuidv4();
+  }
+
+  const defaultModel = useAppSelector(selectDefaultModel);
+
   function onClickApply() {
     if (!defaultModel) {
       return;

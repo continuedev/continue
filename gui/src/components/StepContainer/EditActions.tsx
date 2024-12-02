@@ -7,6 +7,7 @@ import UndoAndRedoButtons from "./UndoAndRedoButtons";
 
 import { renderChatMessage } from "core/util/messageContent";
 import { CopyIconButton } from "../gui/CopyIconButton";
+import { useAppSelector } from "../../redux/hooks";
 
 export interface EditActionsProps {
   index: number;
@@ -18,10 +19,10 @@ export default function EditActions({ index, item }: EditActionsProps) {
   //   (store: RootState) => store.state.curCheckpointIndex,
   // );
 
-  const active = useSelector((state: RootState) => state.state.active);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
-  const applyStates = useSelector(
-    (state: RootState) => state.state.applyStates,
+  const applyStates = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.states,
   );
 
   const pendingApplyStates = applyStates.filter(
@@ -35,7 +36,7 @@ export default function EditActions({ index, item }: EditActionsProps) {
   // const isCurCheckpoint = Math.floor(index / 2) === curCheckpointIndex;
   const hasPendingApplies = pendingApplyStates.length > 0;
 
-  if (active) return;
+  if (isStreaming) return;
 
   return (
     <div

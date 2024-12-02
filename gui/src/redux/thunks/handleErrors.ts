@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { setInactive } from "../slices/stateSlice";
+import { setInactive } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 
 export const handleErrors = createAsyncThunk<

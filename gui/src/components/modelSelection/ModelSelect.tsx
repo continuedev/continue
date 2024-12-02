@@ -17,19 +17,18 @@ import {
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import AddModelForm from "../../forms/AddModelForm";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { setDefaultModel } from "../../redux/slices/stateSlice";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
-import { RootState } from "../../redux/store";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import {
   getFontSize,
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
+import { useAppSelector } from "../../redux/hooks";
+import {
+  selectDefaultModel,
+  setDefaultModel,
+} from "../../redux/slices/configSlice";
 
 interface ModelOptionProps {
   option: Option;
@@ -217,17 +216,15 @@ function ModelOption({
 
 function ModelSelect() {
   const dispatch = useDispatch();
-  const defaultModel = useSelector(defaultModelSelector);
-  const allModels = useSelector(
-    (state: RootState) => state.state.config.models,
-  );
+  const defaultModel = useAppSelector(selectDefaultModel);
+  const allModels = useAppSelector((state) => state.config.config.models);
   const ideMessenger = useContext(IdeMessengerContext);
   const [showAbove, setShowAbove] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [options, setOptions] = useState<Option[]>([]);
   const [sortedOptions, setSortedOptions] = useState<Option[]>([]);
-  const selectedProfileId = useSelector(
-    (store: RootState) => store.state.selectedProfileId,
+  const selectedProfileId = useAppSelector(
+    (store) => store.session.selectedProfileId,
   );
 
   // Sort so that options without an API key are at the end

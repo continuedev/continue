@@ -1,14 +1,11 @@
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { debounce } from "lodash";
-import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
-import styled, { css, keyframes } from "styled-components";
+import { useContext, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import { v4 as uuidv4 } from "uuid";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { useWebviewListener } from "../../../hooks/useWebviewListener";
-import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
-import { RootState } from "../../../redux/store";
 import { getFontSize } from "../../../util";
 import { childrenToText, isTerminalCodeBlock } from "../utils";
 import ApplyActions from "./ApplyActions";
@@ -16,29 +13,17 @@ import CopyButton from "./CopyButton";
 import FileInfo from "./FileInfo";
 import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectDefaultModel } from "../../../redux/slices/configSlice";
+import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
 
-const fadeInAnimation = keyframes`
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-`;
-
-const TopDiv = styled.div<{ active?: boolean }>`
+const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
   outline-offset: -0.5px;
   border-radius: ${defaultBorderRadius};
   margin-bottom: 8px !important;
   background-color: ${vscEditorBackground};
   min-width: 0;
-  ${(props) =>
-    props.active
-      ? "animation: none;"
-      : css`
-          animation: ${fadeInAnimation} 300ms ease-out forwards;
-        `}
 `;
 
 const ToolbarDiv = styled.div<{ isExpanded: boolean }>`
@@ -71,40 +56,37 @@ export default function StepContainerPreToolbar(
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
-  const isInEditMode = useSelector(
-    (state: RootState) => state.editModeState.isInEditMode,
+  const isInEditMode = useAppSelector(
+    (state) => state.editModeState.isInEditMode,
   );
   const [isExpanded, setIsExpanded] = useState(
     props.expanded ?? (isInEditMode ? false : true),
   );
-  const active = useSelector((state: RootState) => state.state.active);
   const [codeBlockContent, setCodeBlockContent] = useState("");
-  const isChatActive = useSelector((state: RootState) => state.state.active);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
 
-  const nextCodeBlockIndex = useSelector(
-    (state: RootState) => state.state.nextCodeBlockToApplyIndex,
+  const nextCodeBlockIndex = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.curIndex,
   );
 
-  const applyStates = useSelector(
-    (store: RootState) => store.state.applyStates,
+  const applyState = useAppSelector((state) =>
+    selectApplyStateByStreamId(state, streamIdRef.current),
   );
-  const applyState = useMemo(() => {
-    return applyStates.find((state) => state.streamId === streamIdRef.current);
-  }, [applyStates, streamIdRef]);
 
   // This handles an edge case when the last node in the markdown syntax tree is a codeblock.
   // In this scenario, `isGeneratingCodeBlock` is never set to false since we determine if
   // we are done generating based on whether the next node in the tree is not a codeblock.
   // The tree parsing logic for Remark is defined on page load, so we can't access state
   // during the actual tree parsing.
-  const isGeneratingCodeBlock = !isChatActive
+  const isGeneratingCodeBlock = !isStreaming
     ? false
     : props.isGeneratingCodeBlock;
 
   const isNextCodeBlock = nextCodeBlockIndex === props.codeBlockIndex;
   const hasFileExtension = /\.[0-9a-z]+$/i.test(props.filepath);
 
-  const defaultModel = useSelector(defaultModelSelector);
+  const defaultModel = useAppSelector(selectDefaultModel);
+
   function onClickApply() {
     if (!defaultModel) {
       return;
@@ -178,7 +160,7 @@ export default function StepContainerPreToolbar(
   }
 
   return (
-    <TopDiv active={active}>
+    <TopDiv>
       <ToolbarDiv isExpanded={isExpanded} className="find-widget-skip">
         <div className="flex min-w-0 max-w-[45%] items-center">
           <ChevronDownIcon

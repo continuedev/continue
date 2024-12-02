@@ -12,7 +12,6 @@ import History from "./pages/history";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
 import MorePage from "./pages/More";
-import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 import { ROUTES } from "./util/navigation";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
@@ -42,10 +41,6 @@ const router = createMemoryRouter([
       {
         path: "/edit",
         element: <Edit />,
-      },
-      {
-        path: "/settings",
-        element: <SettingsPage />,
       },
       {
         path: "/addModel",

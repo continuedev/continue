@@ -7,12 +7,18 @@ import {
   groupByLastNPathParts,
 } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { IdeMessengerContext } from "./IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { RootState } from "../redux/store";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useAppSelector } from "../redux/hooks";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -41,7 +47,10 @@ const initialContextProviders: SubtextContextProvidersContextType = {
 const SubmenuContextProvidersContext =
   createContext<SubtextContextProvidersContextType>(initialContextProviders);
 
-function isOpenFilesChanged(newFiles: { id: string; }[], oldFiles: { id: string; }[]) {
+function isOpenFilesChanged(
+  newFiles: { id: string }[],
+  oldFiles: { id: string }[],
+) {
   if (newFiles.length > oldFiles.length) {
     return true;
   }
@@ -63,16 +72,18 @@ export const SubmenuContextProvidersProvider = ({
     [id: string]: ContextSubmenuItem[];
   }>({});
 
-  const contextProviderDescriptions = useSelector(
+  const contextProviderDescriptions = useAppSelector(
     selectContextProviderDescriptions,
   );
-  const disableIndexing = useSelector(
-    (store: RootState) => store.state.config.disableIndexing,
+  const disableIndexing = useAppSelector(
+    (store) => store.config.config.disableIndexing,
   );
 
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
+
+  const config = useAppSelector((store) => store.config.config);
 
   const ideMessenger = useContext(IdeMessengerContext);
 

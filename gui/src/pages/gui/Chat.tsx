@@ -8,14 +8,7 @@ import { JSONContent } from "@tiptap/react";
 import { InputModifiers, ToolCallState } from "core";
 import { streamResponse } from "core/llm/stream";
 import { usePostHog } from "posthog-js/react";
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
@@ -41,19 +34,12 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import {
   clearLastEmptyResponse,
   newSession,
   setInactive,
-} from "../../redux/slices/stateSlice";
-import {
-  setDialogEntryOn,
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
-import { RootState, useAppDispatch } from "../../redux/store";
+} from "../../redux/slices/sessionSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
@@ -66,6 +52,14 @@ import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import {
+  setDialogMessage,
+  setDialogEntryOn,
+  setShowDialog,
+} from "../../redux/slices/uiSlice";
+import { RootState } from "../../redux/store";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -129,16 +123,16 @@ export function Chat() {
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
-  const defaultModel = useSelector(defaultModelSelector);
-  const ttsActive = useSelector((state: RootState) => state.state.ttsActive);
-  const active = useSelector((state: RootState) => state.state.active);
+  const defaultModel = useAppSelector(selectDefaultModel);
+  const ttsActive = useAppSelector((state) => state.ui.ttsActive);
+  const active = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
-  const history = useSelector((store: RootState) => store.state.history);
-  const showChatScrollbar = useSelector(
-    (store: RootState) => store.state.config?.ui?.showChatScrollbar,
+  const messages = useAppSelector((state) => state.session.history);
+  const showChatScrollbar = useAppSelector(
+    (state) => state.config.config.ui?.showChatScrollbar,
   );
   const { saveSession, getLastSessionId, loadLastSession } =
     useHistory(dispatch);
@@ -301,7 +295,7 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [history, defaultModel, streamResponse],
+    [messages, defaultModel, streamResponse],
   );
 
   useWebviewListener(
@@ -315,31 +309,29 @@ export function Chat() {
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
-      return !history
+      return !messages
         .slice(index + 1)
         .some((entry) => entry.message.role === "user");
     },
-    [history],
+    [messages],
   );
 
-  const showScrollbar = useMemo(() => {
-    return showChatScrollbar ?? window.innerHeight > 5000;
-  }, [showChatScrollbar]);
+  const showScrollbar = showChatScrollbar || window.innerHeight > 5000;
 
   return (
     <>
       {widget}
       <StepsDiv
         ref={stepsDivRef}
-        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${history.length > 0 ? "flex-1" : ""}`}
+        className={`overflow-y-scroll pt-[8px] ${showScrollbar ? "thin-scrollbar" : "no-scrollbar"} ${messages.length > 0 ? "flex-1" : ""}`}
         onScroll={handleScroll}
       >
         {highlights}
-        {history.map((item, index: number) => (
+        {messages.map((item, index: number) => (
           <div
             key={item.message.id}
             style={{
-              minHeight: index === history.length - 1 ? "50vh" : 0,
+              minHeight: index === messages.length - 1 ? "50vh" : 0,
             }}
           >
             <ErrorBoundary
@@ -409,7 +401,7 @@ export function Chat() {
                   >
                     <StepContainer
                       index={index}
-                      isLast={index === history.length - 1}
+                      isLast={index === messages.length - 1}
                       item={item}
                     />
                   </TimelineItem>
@@ -464,7 +456,7 @@ export function Chat() {
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
             <div className="xs:inline hidden">
-              {history.length === 0 && getLastSessionId() ? (
+              {messages.length === 0 && getLastSessionId() ? (
                 <div className="xs:inline hidden">
                   <NewSessionButton
                     onClick={async () => {
@@ -483,7 +475,7 @@ export function Chat() {
             <ConfigErrorIndicator />
           </div>
 
-          {history.length === 0 && (
+          {messages.length === 0 && (
             <>
               {onboardingCard.show && (
                 <div className="mx-2 mt-10">
@@ -501,7 +493,7 @@ export function Chat() {
         </div>
       </div>
       <div
-        className={`${history.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
+        className={`${messages.length === 0 ? "h-full" : ""} flex flex-col justify-end`}
       >
         <ChatIndexingPeeks />
       </div>

@@ -1,15 +1,15 @@
 import { ChatHistoryItem } from "core";
 import { renderChatMessage, stripImages } from "core/util/messageContent";
 import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { vscBackground } from "..";
-import useUIConfig from "../../hooks/useUIConfig";
-import { deleteMessage } from "../../redux/slices/stateSlice";
-import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import ResponseActions from "./ResponseActions";
+import { useAppSelector } from "../../redux/hooks";
+import { selectUIConfig } from "../../redux/slices/configSlice";
+import { deleteMessage } from "../../redux/slices/sessionSlice";
 
 interface StepContainerProps {
   item: ChatHistoryItem;
@@ -28,28 +28,21 @@ const ContentDiv = styled.div<{ fontSize?: number }>`
 export default function StepContainer(props: StepContainerProps) {
   const dispatch = useDispatch();
   const [isTruncated, setIsTruncated] = useState(false);
-  const active = useSelector((store: RootState) => store.state.active);
-  const curCheckpointIndex = useSelector(
-    (store: RootState) => store.state.curCheckpointIndex,
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const historyItemAfterThis = useAppSelector(
+    (state) => state.session.history[props.index + 1],
   );
-  const isInEditMode = useSelector(
-    (store: RootState) => store.editModeState.isInEditMode,
-  );
+  const uiConfig = useAppSelector(selectUIConfig);
 
-  const historyItemAfterThis = useSelector(
-    (store: RootState) => store.state.history[props.index + 1],
-  );
-
-  const uiConfig = useUIConfig();
   const shouldHideActions =
-    (active && props.isLast) ||
+    (isStreaming && props.isLast) ||
     historyItemAfterThis?.message.role === "assistant";
 
   // const isStepAheadOfCurCheckpoint =
   //   isInEditMode && Math.floor(props.index / 2) > curCheckpointIndex;
 
   useEffect(() => {
-    if (!active) {
+    if (!isStreaming) {
       const content = renderChatMessage(props.item.message).trim();
       const endingPunctuation = [".", "?", "!", "```", ":"];
 
@@ -65,7 +58,7 @@ export default function StepContainer(props: StepContainerProps) {
         setIsTruncated(false);
       }
     }
-  }, [props.item.message.content, active]);
+  }, [props.item.message.content, isStreaming]);
 
   function onDelete() {
     dispatch(deleteMessage(props.index));

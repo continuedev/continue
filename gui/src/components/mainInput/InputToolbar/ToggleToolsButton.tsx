@@ -6,16 +6,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { modelSupportsTools } from "core/llm/autodetect";
 import { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscForeground } from "../..";
-import { defaultModelSelector } from "../../../redux/selectors/modelSelectors";
-import { toggleUseTools } from "../../../redux/slices/uiStateSlice";
-import { RootState } from "../../../redux/store";
+import { toggleUseTools } from "../../../redux/slices/uiSlice";
 import { getFontSize } from "../../../util";
 import InfoHover from "../../InfoHover";
 import HoverItem from "./HoverItem";
 import ToolDropdownItem from "./ToolDropdownItem";
+import { useAppSelector } from "../../../redux/hooks";
+import { selectDefaultModel } from "../../../redux/slices/configSlice";
 
 const BackgroundDiv = styled.div<{ useTools: boolean }>`
   background-color: ${(props) =>
@@ -38,11 +38,9 @@ export default function ToolDropdown() {
   const dispatch = useDispatch();
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
-  const useTools = useSelector((store: RootState) => store.uiState.useTools);
-  const availableTools = useSelector(
-    (store: RootState) => store.state.config.tools,
-  );
-  const defaultModel = useSelector(defaultModelSelector);
+  const useTools = useAppSelector((state) => state.ui.useTools);
+  const availableTools = useAppSelector((state) => state.config.config.tools);
+  const defaultModel = useAppSelector(selectDefaultModel);
 
   const [showAbove, setShowAbove] = useState(false);
 

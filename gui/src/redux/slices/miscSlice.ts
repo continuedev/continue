@@ -1,31 +1,36 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { PackageDocsResult } from "core";
+
+export type MiscState = {
+  docsSuggestions: PackageDocsResult[];
+  lastControlServerBetaEnabledStatus: boolean;
+};
+
+const initialState: MiscState = {
+  docsSuggestions: [],
+  lastControlServerBetaEnabledStatus: false,
+};
 
 export const miscSlice = createSlice({
   name: "misc",
-  initialState: {
-    takenAction: false,
-    serverStatusMessage: "Continue Server Starting",
-    lastControlServerBetaEnabledStatus: false,
-  },
+  initialState,
   reducers: {
-    setTakenActionTrue: (state) => {
-      state.takenAction = true;
-    },
-    setServerStatusMessage: (state, action: PayloadAction<string>) => {
-      state.serverStatusMessage = action.payload;
-    },
     setLastControlServerBetaEnabledStatus: (
       state,
       action: PayloadAction<boolean>,
     ) => {
       state.lastControlServerBetaEnabledStatus = action.payload;
     },
+    updateDocsSuggestions: (
+      state,
+      { payload }: PayloadAction<PackageDocsResult[]>,
+    ) => {
+      state.docsSuggestions = payload;
+    },
   },
 });
 
-export const {
-  setTakenActionTrue,
-  setServerStatusMessage,
-  setLastControlServerBetaEnabledStatus,
-} = miscSlice.actions;
+export const { setLastControlServerBetaEnabledStatus, updateDocsSuggestions } =
+  miscSlice.actions;
+
 export default miscSlice.reducer;

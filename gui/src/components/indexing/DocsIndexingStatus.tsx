@@ -1,18 +1,16 @@
 import { IndexingStatus, SiteIndexingConfig } from "core";
-import { PropsWithChildren, useContext, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { usePostHog } from "posthog-js/react";
+import { useContext, useMemo } from "react";
+import { useDispatch } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   ArrowPathIcon,
-  ArrowRightStartOnRectangleIcon,
   ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
   PauseCircleIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { updateIndexingStatus } from "../../redux/slices/stateSlice";
-import { RootState } from "../../redux/store";
+import { useAppSelector } from "../../redux/hooks";
+import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
 
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
@@ -30,12 +28,10 @@ const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
 
 function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const posthog = usePostHog();
   const dispatch = useDispatch();
 
-  // const status = undefined;
-  const status = useSelector(
-    (store: RootState) => store.state.indexing.statuses[docConfig.startUrl],
+  const status = useAppSelector(
+    (store) => store.indexing.indexing.statuses[docConfig.startUrl],
   );
 
   const reIndex = () =>

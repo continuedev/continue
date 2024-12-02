@@ -25,6 +25,7 @@ import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice
 import { RootState } from "../redux/store";
 import { getFontSize } from "../util";
 import HeaderButtonWithToolTip from "./gui/HeaderButtonWithToolTip";
+import { useAppSelector } from "../redux/hooks";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
@@ -129,12 +130,12 @@ function ProfileSwitcher() {
   const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
 
   const dispatch = useDispatch();
-  const lastControlServerBetaEnabledStatus = useSelector(
-    (state: RootState) => state.misc.lastControlServerBetaEnabledStatus,
+  const lastControlServerBetaEnabledStatus = useAppSelector(
+    (state) => state.misc.lastControlServerBetaEnabledStatus,
   );
 
-  const selectedProfileId = useSelector(
-    (store: RootState) => store.state.selectedProfileId,
+  const selectedProfileId = useAppSelector(
+    (store) => store.session.selectedProfileId,
   );
 
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =

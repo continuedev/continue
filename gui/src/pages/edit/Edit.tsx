@@ -3,7 +3,6 @@ import { Editor, JSONContent } from "@tiptap/core";
 import { InputModifiers, RangeInFileWithContents } from "core";
 import { stripImages } from "core/util/messageContent";
 import { useCallback, useContext, useEffect, useMemo } from "react";
-import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { ToolbarOptions } from "../../components/mainInput/InputToolbar";
@@ -13,16 +12,15 @@ import TipTapEditor from "../../components/mainInput/TipTapEditor";
 import StepContainer from "../../components/StepContainer";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { selectApplyState } from "../../redux/selectors";
-import {
-  clearCodeToEdit,
-  setEditDone,
-  submitEdit,
-} from "../../redux/slices/editModeState";
-import { RootState, useAppDispatch } from "../../redux/store";
+import { setEditDone, submitEdit } from "../../redux/slices/editModeState";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import CodeToEdit from "./CodeToEdit";
 import getMultifileEditPrompt from "./getMultifileEditPrompt";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import {
+  clearCodeToEdit,
+  selectApplyStateByStreamId,
+} from "../../redux/slices/sessionSlice";
 
 const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
   "codebase",
@@ -40,9 +38,10 @@ export default function Edit() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
-  const editModeState = useSelector((state: RootState) => state.editModeState);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
+  const editModeState = useAppSelector((state) => state.editModeState);
+  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
+  const availableContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
   );
 
   const filteredContextProviders = useMemo(() => {
@@ -54,18 +53,18 @@ export default function Edit() {
     );
   }, [availableContextProviders]);
 
-  const history = useSelector((state: RootState) => state.state.history);
+  const history = useAppSelector((state) => state.session.history);
 
-  const applyStates = useSelector(
-    (state: RootState) => state.state.applyStates,
+  const applyStates = useAppSelector(
+    (state) => state.session.codeBlockApplyStates.states,
   );
 
-  const applyState = useSelector(selectApplyState);
-
+  const applyState = useAppSelector(
+    (state) => selectApplyStateByStreamId(state, "edit")?.status ?? "closed",
+  );
   const isSingleRangeEdit =
-    editModeState.codeToEdit.length === 0 ||
-    (editModeState.codeToEdit.length === 1 &&
-      "range" in editModeState.codeToEdit[0]);
+    codeToEdit.length === 0 ||
+    (codeToEdit.length === 1 && "range" in codeToEdit[0]);
 
   useEffect(() => {
     if (editModeState.editStatus === "done") {
@@ -122,7 +121,7 @@ export default function Edit() {
 
     ideMessenger.post("edit/sendPrompt", {
       prompt,
-      range: editModeState.codeToEdit[0] as RangeInFileWithContents,
+      range: codeToEdit[0] as RangeInFileWithContents,
     });
 
     dispatch(submitEdit(prompt));
@@ -137,7 +136,7 @@ export default function Edit() {
     if (isSingleRangeEdit) {
       handleSingleRangeEdit(editorState, modifiers, editor);
     } else {
-      const promptPreamble = getMultifileEditPrompt(editModeState.codeToEdit);
+      const promptPreamble = getMultifileEditPrompt(codeToEdit);
 
       dispatch(
         streamResponseThunk({

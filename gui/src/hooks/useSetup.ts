@@ -1,30 +1,30 @@
 import { useCallback, useContext, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { setVscMachineId } from "../redux/slices/configSlice";
-import {
-  addContextItemsAtIndex,
-  setConfig,
-  setConfigError,
-  setInactive,
-  setSelectedProfileId,
-  setTTSActive,
-  updateDocsSuggestions,
-  updateIndexingStatus,
-} from "../redux/slices/stateSlice";
-import { AppDispatch, RootState } from "../redux/store";
+import { AppDispatch } from "../redux/store";
 
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
 import { useWebviewListener } from "./useWebviewListener";
+import { useAppSelector } from "../redux/hooks";
+import { setConfig, setConfigError } from "../redux/slices/configSlice";
+import { updateIndexingStatus } from "../redux/slices/indexingSlice";
+import { updateDocsSuggestions } from "../redux/slices/miscSlice";
+import {
+  setSelectedProfileId,
+  setInactive,
+  addContextItemsAtIndex,
+} from "../redux/slices/sessionSlice";
+import { setTTSActive } from "../redux/slices/uiSlice";
 
 function useSetup(dispatch: AppDispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const history = useSelector((store: RootState) => store.state.history);
-
+  const history = useAppSelector((store) => store.session.history);
+  const defaultModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
   const hasLoadedConfig = useRef(false);
   const loadConfig = useCallback(
     async (initial: boolean) => {
@@ -80,8 +80,9 @@ function useSetup(dispatch: AppDispatch) {
   );
 
   // Load symbols for chat on any session change
-  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+  const sessionId = useAppSelector((state) => state.session.id);
   const sessionIdRef = useRef("");
+
   useEffect(() => {
     if (sessionIdRef.current !== sessionId) {
       updateFileSymbolsFromContextItems(
@@ -109,8 +110,6 @@ function useSetup(dispatch: AppDispatch) {
       (window as any).workspacePaths = msg.workspacePaths;
       (window as any).vscMachineId = msg.vscMachineId;
       (window as any).vscMediaUrl = msg.vscMediaUrl;
-      dispatch(setVscMachineId(msg.vscMachineId));
-      // dispatch(setVscMediaUrl(msg.vscMediaUrl));
     });
 
     // Save theme colors to local storage for immediate loading in JetBrains
@@ -180,10 +179,6 @@ function useSetup(dispatch: AppDispatch) {
   useWebviewListener("indexing/statusUpdate", async (data) => {
     dispatch(updateIndexingStatus(data));
   });
-
-  const defaultModelTitle = useSelector(
-    (store: RootState) => store.state.defaultModelTitle,
-  );
 
   useWebviewListener(
     "getDefaultModelTitle",

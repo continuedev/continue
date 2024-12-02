@@ -2,7 +2,6 @@ import { AtSymbolIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { useRef } from "react";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -11,7 +10,6 @@ import {
   vscInputBackground,
 } from "..";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   getAltKeyLabel,
   getFontSize,
@@ -22,6 +20,8 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import HoverItem from "./InputToolbar/HoverItem";
 import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
+import { useAppSelector } from "../../redux/hooks";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -77,8 +77,8 @@ interface InputToolbarProps {
 
 function InputToolbar(props: InputToolbarProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const defaultModel = useSelector(defaultModelSelector);
-  const useActiveFile = useSelector(selectUseActiveFile);
+  const defaultModel = useAppSelector(selectDefaultModel);
+  const useActiveFile = useAppSelector(selectUseActiveFile);
 
   const supportsImages =
     defaultModel &&

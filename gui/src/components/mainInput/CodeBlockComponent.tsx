@@ -8,7 +8,7 @@ export const CodeBlockComponent = (props: any) => {
   const item: ContextItemWithId = node.attrs.item;
   // const contextItems = useSelector(
   //   (store: RootState) =>
-  //     store.state.history[store.state.history.length - 1].contextItems,
+  //     store.session.messages[store.session.messages.length - 1].contextItems,
   // );
   // const isFirstContextItem = item.id === contextItems[0]?.id;
   const isFirstContextItem = false; // TODO: fix this, decided not worth the insane renders for now

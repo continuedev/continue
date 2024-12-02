@@ -18,7 +18,7 @@
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@monaco-editor/react": "^4.6.0",
-    "@reduxjs/toolkit": "^1.9.3",
+    "@reduxjs/toolkit": "^2.3.0",
     "@tiptap/core": "^2.3.2",
     "@tiptap/extension-document": "^2.3.2",
     "@tiptap/extension-dropcursor": "^2.1.16",

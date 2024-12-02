@@ -1,10 +1,10 @@
-import { useSelector } from "react-redux";
-import { defaultModelSelector } from "../redux/selectors/modelSelectors";
+import { useAppSelector } from "../redux/hooks";
+import { selectDefaultModel } from "../redux/slices/configSlice";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import FreeTrialProgressBar from "./loaders/FreeTrialProgressBar";
 
 function Footer() {
-  const defaultModel = useSelector(defaultModelSelector);
+  const defaultModel = useAppSelector(selectDefaultModel);
 
   if (defaultModel?.provider === "free-trial") {
     return (

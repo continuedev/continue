@@ -1,12 +1,11 @@
 import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { renderChatMessage } from "core/util/messageContent";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import EditActions from "./EditActions";
 import FeedbackButtons from "./FeedbackButtons";
+import { useAppSelector } from "../../redux/hooks";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -25,8 +24,8 @@ export default function ResponseActions({
   onDelete,
   shouldHideActions,
 }: ResponseActionsProps) {
-  const isInEditMode = useSelector(
-    (store: RootState) => store.editModeState.isInEditMode,
+  const isInEditMode = useAppSelector(
+    (store) => store.editModeState.isInEditMode,
   );
 
   if (isInEditMode) {

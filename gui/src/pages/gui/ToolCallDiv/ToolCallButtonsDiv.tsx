@@ -8,9 +8,9 @@ import {
 } from "../../../components";
 import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
-import { useAppDispatch } from "../../../redux/store";
 import { callTool } from "../../../redux/thunks/callTool";
 import { cancelTool } from "../../../redux/thunks/cancelTool";
+import { useAppDispatch } from "../../../redux/hooks";
 
 const ButtonContainer = styled.div`
   display: flex;

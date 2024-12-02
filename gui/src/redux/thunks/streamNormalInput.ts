@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatMessage, PromptLog } from "core";
-import { defaultModelSelector } from "../selectors/modelSelectors";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
 import {
   abortStream,
@@ -8,9 +7,10 @@ import {
   clearLastEmptyResponse,
   setToolGenerated,
   streamUpdate,
-} from "../slices/stateSlice";
+} from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
+import { selectDefaultModel } from "../slices/configSlice";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -20,10 +20,10 @@ export const streamNormalInput = createAsyncThunk<
   try {
     // Gather state
     const state = getState();
-    const defaultModel = defaultModelSelector(state);
-    const toolSettings = state.uiState.toolSettings;
-    const streamAborter = state.state.streamAborter;
-    const useTools = state.uiState.useTools;
+    const defaultModel = selectDefaultModel(state);
+    const toolSettings = state.ui.toolSettings;
+    const streamAborter = state.session.streamAborter;
+    const useTools = state.ui.useTools;
 
     if (!defaultModel) {
       throw new Error("Default model not defined");
@@ -39,7 +39,7 @@ export const streamNormalInput = createAsyncThunk<
           ? Object.keys(toolSettings)
               .filter((tool) => toolSettings[tool] !== "disabled")
               .map((toolName) =>
-                state.state.config.tools.find(
+                state.config.config.tools.find(
                   (tool) => tool.function.name === toolName,
                 ),
               )
@@ -51,7 +51,7 @@ export const streamNormalInput = createAsyncThunk<
     // Stream response
     let next = await gen.next();
     while (!next.done) {
-      if (!getState().state.active) {
+      if (!getState().session.isStreaming) {
         dispatch(abortStream());
         break;
       }

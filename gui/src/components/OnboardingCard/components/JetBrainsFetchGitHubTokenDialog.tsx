@@ -2,7 +2,7 @@ import { ArrowTopRightOnSquareIcon } from "@heroicons/react/24/outline";
 import { useContext, useState } from "react";
 import { StyledActionButton, Input, Button, ButtonSubtext } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
-import { setShowDialog } from "../../../redux/slices/uiStateSlice";
+import { setShowDialog } from "../../../redux/slices/uiSlice";
 import { useDispatch } from "react-redux";
 
 interface JetBrainsFetchGitHubTokenDialogProps {

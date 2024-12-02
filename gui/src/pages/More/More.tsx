@@ -11,7 +11,7 @@ import KeyboardShortcuts from "./KeyboardShortcuts";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { useDispatch } from "react-redux";
-import { setOnboardingCard } from "../../redux/slices/uiStateSlice";
+import { setOnboardingCard } from "../../redux/slices/uiSlice";
 import useHistory from "../../hooks/useHistory";
 import MoreHelpRow from "./MoreHelpRow";
 import IndexingProgress from "./IndexingProgress";

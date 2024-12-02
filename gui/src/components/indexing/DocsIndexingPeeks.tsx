@@ -1,14 +1,8 @@
-import { useDispatch, useSelector } from "react-redux";
-
+import { useDispatch } from "react-redux";
 import { IndexingStatus } from "core";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowPathIcon } from "@heroicons/react/24/outline";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
-import { RootState } from "../../redux/store";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 
 export interface DocsIndexingPeekProps {
   status: IndexingStatus;
@@ -59,9 +53,6 @@ interface DocsIndexingPeeksProps {
 }
 
 function DocsIndexingPeekList({ statuses }: DocsIndexingPeeksProps) {
-  const config = useSelector((store: RootState) => store.state.config);
-  const configDocs = config.docs ?? [];
-  // const docs
   return (
     <div className="border-vsc-input-border mt-2 flex flex-col border-0 border-t border-solid pt-2">
       <p className="mx-0 my-1.5 p-0 px-1 font-semibold text-stone-500">

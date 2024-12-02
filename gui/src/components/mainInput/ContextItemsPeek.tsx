@@ -7,13 +7,13 @@ import { ContextItemWithId } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { getBasename } from "core/util";
 import { useContext, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { RootState } from "../../redux/store";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { getIconFromDropdownItem } from "./MentionList";
+import { useAppSelector } from "../../redux/hooks";
+import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -138,12 +138,7 @@ function ContextItemsPeek({
     return contextItems?.filter((ctxItem) => !ctxItem.hidden) ?? [];
   }, [contextItems]);
 
-  const isGatheringContext = useSelector(
-    (store: RootState) => store.state.context.isGathering,
-  );
-  const gatheringMessage = useSelector(
-    (store: RootState) => store.state.context.gatheringMessage,
-  );
+  const isGatheringContext = useAppSelector(selectIsGatheringContext);
 
   const indicateIsGathering = isCurrentContextPeek && isGatheringContext;
 
@@ -177,7 +172,7 @@ function ContextItemsPeek({
         <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
           {isGatheringContext ? (
             <>
-              {gatheringMessage}
+              Gathering context...
               <AnimatedEllipsis />
             </>
           ) : (

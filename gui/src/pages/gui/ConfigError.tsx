@@ -1,14 +1,11 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import HeaderButtonWithToolTip from "../../components/gui/HeaderButtonWithToolTip";
-import { useSelector } from "react-redux";
 import { ROUTES } from "../../util/navigation";
-import { RootState } from "../../redux/store";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
+import { useAppSelector } from "../../redux/hooks";
 
 const ConfigErrorIndicator = () => {
-  const configError = useSelector(
-    (store: RootState) => store.state.configError,
-  );
+  const configError = useAppSelector((store) => store.config.configError);
 
   const navigate = useNavigate();
   const { pathname } = useLocation();

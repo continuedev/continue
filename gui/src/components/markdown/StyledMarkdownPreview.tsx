@@ -15,7 +15,6 @@ import {
   vscForeground,
 } from "..";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
-import { RootState } from "../../redux/store";
 import { getFontSize, isJetBrains } from "../../util";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
@@ -25,6 +24,7 @@ import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
+import { useAppSelector } from "../../redux/hooks";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -159,13 +159,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
-  const contextItems = useSelector(
-    (state: RootState) =>
-      state.state.history[props.itemIndex - 1]?.contextItems,
+  const contextItems = useAppSelector(
+    (state) => state.session.history[props.itemIndex - 1]?.contextItems,
   );
   const contextItemsRef = useUpdatingRef(contextItems);
 
-  const symbols = useSelector((state: RootState) => state.state.symbols);
+  const symbols = useAppSelector((state) => state.session.symbols);
+
   const symbolsRef = useRef<SymbolWithRange[]>([]);
   useEffect(() => {
     // Note, before I was only looking for symbols that matched

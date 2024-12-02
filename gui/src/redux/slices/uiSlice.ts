@@ -11,7 +11,7 @@ type ToolSetting =
   | "allowedWithoutPermission"
   | "disabled";
 
-type UiState = {
+type UIState = {
   showDialog: boolean;
   dialogMessage: string | JSX.Element | undefined;
   dialogEntryOn: boolean;
@@ -19,19 +19,20 @@ type UiState = {
   shouldAddFileForEditing: boolean;
   useTools: boolean;
   toolSettings: { [toolName: string]: ToolSetting };
+  ttsActive: boolean;
 };
 
 export const DEFAULT_TOOL_SETTING: ToolSetting = "allowedWithPermission";
 
-export const uiStateSlice = createSlice({
-  name: "uiState",
+export const uiSlice = createSlice({
+  name: "ui",
   initialState: {
     showDialog: false,
     dialogMessage: "",
     dialogEntryOn: false,
     onboardingCard: defaultOnboardingCardState,
     shouldAddFileForEditing: false,
-
+    ttsActive: false,
     useTools: false,
     toolSettings: {
       [BuiltInToolNames.ReadFile]: "allowedWithoutPermission",
@@ -43,7 +44,7 @@ export const uiStateSlice = createSlice({
       [BuiltInToolNames.SearchWeb]: "allowedWithoutPermission",
       [BuiltInToolNames.ViewDiff]: "allowedWithoutPermission",
     },
-  } as UiState,
+  } as UIState,
   reducers: {
     setOnboardingCard: (
       state,
@@ -53,17 +54,17 @@ export const uiStateSlice = createSlice({
     },
     setDialogMessage: (
       state,
-      action: PayloadAction<UiState["dialogMessage"]>,
+      action: PayloadAction<UIState["dialogMessage"]>,
     ) => {
       state.dialogMessage = action.payload;
     },
     setDialogEntryOn: (
       state,
-      action: PayloadAction<UiState["dialogEntryOn"]>,
+      action: PayloadAction<UIState["dialogEntryOn"]>,
     ) => {
       state.dialogEntryOn = action.payload;
     },
-    setShowDialog: (state, action: PayloadAction<UiState["showDialog"]>) => {
+    setShowDialog: (state, action: PayloadAction<UIState["showDialog"]>) => {
       state.showDialog = action.payload;
     },
     // Tools
@@ -93,6 +94,9 @@ export const uiStateSlice = createSlice({
           break;
       }
     },
+    setTTSActive: (state, { payload }: PayloadAction<boolean>) => {
+      state.ttsActive = payload;
+    },
   },
 });
 
@@ -104,6 +108,7 @@ export const {
   toggleUseTools,
   toggleToolSetting,
   addTool,
-} = uiStateSlice.actions;
+  setTTSActive,
+} = uiSlice.actions;
 
-export default uiStateSlice.reducer;
+export default uiSlice.reducer;

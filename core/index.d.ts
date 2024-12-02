@@ -240,7 +240,6 @@ export interface Session {
   title: string;
   workspaceDirectory: string;
   history: ChatHistoryItem[];
-  checkpoints?: Checkpoint[];
 }
 
 export interface SessionMetadata {
@@ -390,6 +389,8 @@ export interface PromptLog {
   completion: string;
 }
 
+type MessageModes = "chat" | "edit";
+
 export type ToolStatus =
   | "generating"
   | "generated"
@@ -408,18 +409,19 @@ interface ToolCallState {
 
 export interface ChatHistoryItem {
   message: ChatMessage;
+  contextItems: ContextItemWithId[];
   editorState?: any;
   modifiers?: InputModifiers;
-  contextItems: ContextItemWithId[];
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;
+  mode?: MessageModes;
+  isGatheringContext?: boolean;
+  checkpoint?: Checkpoint;
+  isBeforeCheckpoint?: boolean;
 }
-
-// LLM
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
   log?: boolean;
-
   model?: string;
 }
 

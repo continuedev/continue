@@ -5,9 +5,9 @@ import {
   RangeInFile,
   SlashCommandDescription,
 } from "core";
-import { defaultModelSelector } from "../selectors/modelSelectors";
-import { abortStream, streamUpdate } from "../slices/stateSlice";
 import { ThunkApiType } from "../store";
+import { abortStream, streamUpdate } from "../slices/sessionSlice";
+import { selectDefaultModel } from "../slices/configSlice";
 
 export const streamSlashCommand = createAsyncThunk<
   void,
@@ -27,9 +27,9 @@ export const streamSlashCommand = createAsyncThunk<
     { dispatch, getState, extra },
   ) => {
     const state = getState();
-    const defaultModel = defaultModelSelector(state);
-    const active = state.state.active;
-    const streamAborter = state.state.streamAborter;
+    const defaultModel = selectDefaultModel(state);
+    const isStreaming = state.session.isStreaming;
+    const streamAborter = state.session.streamAborter;
 
     if (!defaultModel) {
       throw new Error("Default model not defined");
@@ -38,7 +38,7 @@ export const streamSlashCommand = createAsyncThunk<
     const modelTitle = defaultModel.title;
 
     const checkActiveInterval = setInterval(() => {
-      if (!active) {
+      if (!isStreaming) {
         dispatch(abortStream());
         clearInterval(checkActiveInterval);
       }
@@ -58,7 +58,7 @@ export const streamSlashCommand = createAsyncThunk<
       },
       streamAborter.signal,
     )) {
-      if (!getState().state.active) {
+      if (!getState().session.isStreaming) {
         dispatch(abortStream());
         break;
       }

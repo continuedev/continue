@@ -11,9 +11,9 @@ import resolveEditorContent, {
   hasSlashCommandOrContextProvider,
 } from "../../components/mainInput/resolveInput";
 import { updateFileSymbolsFromContextItems } from "../../util/symbols";
-import { defaultModelSelector } from "../selectors/modelSelectors";
-import { setIsGatheringContext } from "../slices/stateSlice";
 import { ThunkApiType } from "../store";
+import { selectDefaultModel } from "../slices/configSlice";
+import { setIsGatheringContext } from "../slices/sessionSlice";
 
 export const gatherContext = createAsyncThunk<
   {
@@ -34,21 +34,16 @@ export const gatherContext = createAsyncThunk<
     { dispatch, extra, getState },
   ) => {
     const state = getState();
-    const defaultModel = defaultModelSelector(state);
+    const defaultModel = selectDefaultModel(state);
     const defaultContextProviders =
-      state.state.config.experimental?.defaultContext ?? [];
+      state.config.config.experimental?.defaultContext ?? [];
 
     // Resolve context providers and construct new history
     const shouldGatherContext =
       modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
 
     if (shouldGatherContext) {
-      dispatch(
-        setIsGatheringContext({
-          isGathering: true,
-          gatheringMessage: "Gathering Context",
-        }),
-      );
+      dispatch(setIsGatheringContext(true));
     }
 
     let [selectedContextItems, selectedCode, content] =
