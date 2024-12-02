@@ -54,9 +54,7 @@ function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
   return a.filepath === b.filepath && a.contents === b.contents;
 }
 
-function getBaseHistoryItem(
-  lastHistoryItem?: ChatHistoryItemWithMessageId,
-): ChatHistoryItemWithMessageId {
+function getBaseHistoryItem(): ChatHistoryItemWithMessageId {
   return {
     message: {
       id: uuidv4(),
@@ -64,7 +62,6 @@ function getBaseHistoryItem(
       content: "",
     },
     contextItems: [],
-    mode: lastHistoryItem?.mode ?? "chat",
     isGatheringContext: false,
     checkpoint: {},
     isBeforeCheckpoint: false,
@@ -167,7 +164,7 @@ export const sessionSlice = createSlice({
       // Cut off history after the resubmitted message
       state.history = state.history
         .slice(0, payload.index + 1)
-        .concat(getBaseHistoryItem(lastHistoryItem));
+        .concat(getBaseHistoryItem());
 
       state.isStreaming = true;
     },
@@ -183,8 +180,7 @@ export const sessionSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
-      const lastHistoryItem = state.history.at(-1);
-      const baseHistoryItem = getBaseHistoryItem(lastHistoryItem);
+      const baseHistoryItem = getBaseHistoryItem();
 
       state.history.push({
         ...baseHistoryItem,
@@ -216,8 +212,7 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       if (payload.index >= state.history.length) {
-        const lastHistoryItem = state.history.at(-1);
-        const baseHistoryItem = getBaseHistoryItem(lastHistoryItem);
+        const baseHistoryItem = getBaseHistoryItem();
 
         state.history.push({
           ...baseHistoryItem,
@@ -286,8 +281,7 @@ export const sessionSlice = createSlice({
               action.payload.role === "assistant" &&
               action.payload.toolCalls?.length))
         ) {
-          const lastHistoryItem = state.history.at(-1);
-          const baseHistoryItem = getBaseHistoryItem(lastHistoryItem);
+          const baseHistoryItem = getBaseHistoryItem();
 
           // Create a new message
           const historyItem: ChatHistoryItemWithMessageId = {

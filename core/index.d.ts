@@ -414,7 +414,6 @@ export interface ChatHistoryItem {
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;
-  mode?: MessageModes;
   isGatheringContext?: boolean;
   checkpoint?: Checkpoint;
   isBeforeCheckpoint?: boolean;
