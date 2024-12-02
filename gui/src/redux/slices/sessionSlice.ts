@@ -506,6 +506,13 @@ export const sessionSlice = createSlice({
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
     },
+    selectIsSingleRangeEdit: (state) => {
+      return (
+        state.mode === "edit" &&
+        (state.codeToEdit.length === 0 ||
+          (state.codeToEdit.length === 1 && "range" in state.codeToEdit[0]))
+      );
+    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -575,7 +582,10 @@ export const {
   setMode,
 } = sessionSlice.actions;
 
-export const { selectIsGatheringContext, selectIsInEditMode } =
-  sessionSlice.selectors;
+export const {
+  selectIsGatheringContext,
+  selectIsInEditMode,
+  selectIsSingleRangeEdit,
+} = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

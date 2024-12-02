@@ -1,22 +1,16 @@
 import { useEffect, useMemo } from "react";
-import { useDispatch } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { useAppSelector } from "../redux/hooks";
-import {
-  setEditDone,
-  setEditStatus,
-  focusEdit,
-} from "../redux/slices/editModeState";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setEditStatus, focusEdit } from "../redux/slices/editModeState";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import {
   addCodeToEdit,
   updateApplyState,
   setMode,
-  clearCodeToEdit,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -28,6 +22,7 @@ import PostHogPageView from "./PosthogPageView";
 import AccountDialog from "./AccountDialog";
 import { AuthProvider } from "../context/Auth";
 import useHistory from "../hooks/useHistory";
+import { completeEdit } from "../redux/thunks";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -56,7 +51,7 @@ const GridDiv = styled.div`
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
   const { pathname } = useLocation();
   const { saveSession } = useHistory(dispatch);
@@ -194,15 +189,9 @@ const Layout = () => {
     [],
   );
 
-  useWebviewListener(
-    "exitEditMode",
-    async () => {
-      dispatch(setEditDone());
-      dispatch(setMode("chat"));
-      dispatch(clearCodeToEdit());
-    },
-    [navigate],
-  );
+  useWebviewListener("exitEditMode", async () => {
+    dispatch(completeEdit());
+  });
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {

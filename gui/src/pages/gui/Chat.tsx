@@ -40,6 +40,7 @@ import {
   clearLastEmptyResponse,
   newSession,
   selectIsInEditMode,
+  selectIsSingleRangeEdit,
   setInactive,
   setMode,
 } from "../../redux/slices/sessionSlice";
@@ -160,6 +161,7 @@ export function Chat() {
   );
   const hasPendingApplies = pendingApplyStates.length > 0;
   const isInEditMode = useAppSelector(selectIsInEditMode);
+  const isSingleRangeEdit = useAppSelector(selectIsSingleRangeEdit);
 
   const snapToBottom = useCallback(() => {
     if (!stepsDivRef.current) return;
@@ -183,10 +185,6 @@ export function Chat() {
   const returnToLastSessinButtonText = isInEditMode
     ? "Back to Chat"
     : "Last Session";
-
-  const isSingleRangeEdit =
-    codeToEdit.length === 0 ||
-    (codeToEdit.length === 1 && "range" in codeToEdit[0]);
 
   useEffect(() => {
     if (active) snapToBottom();
@@ -518,11 +516,11 @@ export function Chat() {
             <AcceptRejectAllButtons
               pendingApplyStates={pendingApplyStates}
               onAcceptOrReject={() => {
-                dispatch(clearCodeToEdit());
-                dispatch(setMode("chat"));
                 loadLastSession().catch((e) =>
                   console.error(`Failed to load last session: ${e}`),
                 );
+
+                dispatch(completeEdit());
               }}
             />
           )}

@@ -69,11 +69,11 @@ export default function CodeToEditListItem({
       <div
         className={`hover:bg-lightgray hover:text-vsc-foreground flex justify-between rounded px-2 py-0.5 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
       >
-        <div className="flex items-center gap-0.5">
+        <div className="flex w-4/5 min-w-0 items-center gap-0.5">
           <FileIcon filename={code.filepath} height={"18px"} width={"18px"} />
-          <div className="flex gap-1.5">
+          <div className="flex min-w-0 gap-1.5">
             <span
-              className="text-xs hover:underline"
+              className="flex-shrink-0 text-xs hover:underline"
               onClick={(e) => {
                 e.stopPropagation();
                 onClickFilename(code);
@@ -81,11 +81,14 @@ export default function CodeToEditListItem({
             >
               {title}
             </span>
-            <span className="text-lightgray invisible max-w-[50%] truncate text-xs group-hover:visible">
+            <span className="text-lightgray invisible flex-grow truncate text-xs group-hover:visible">
+              {" "}
+              {/* Added flex-grow */}
               {fileSubpath}
             </span>
           </div>
         </div>
+
         <div className="invisible mt-0.5 flex gap-1.5 group-hover:visible">
           <div className={isInsertion ? "hidden" : ""}>
             {showCodeSnippet ? (
