@@ -69,7 +69,10 @@ import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   clearCodeToEdit,
+  selectIsInEditMode,
+  setMode,
 } from "../../redux/slices/sessionSlice";
+import { setEditDone } from "../../redux/slices/editModeState";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -193,10 +196,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const isOSREnabled = useIsOSREnabled();
 
-  const isInEditMode = useAppSelector(
-    (state) => state.editModeState.isInEditMode,
-  );
-
   const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
     const indexOfAt = contents.lastIndexOf("@");
@@ -251,8 +250,11 @@ function TipTapEditor(props: TipTapEditorProps) {
     props.availableSlashCommands,
   );
 
-  const active = useAppSelector((state) => state.session.isStreaming);
-  const activeRef = useUpdatingRef(active);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const isStreamingRef = useUpdatingRef(isStreaming);
+
+  const isInEditMode = useAppSelector(selectIsInEditMode);
+  const isInEditModeRef = useUpdatingRef(isInEditMode);
 
   async function handleImageFile(
     file: File,
@@ -389,7 +391,7 @@ function TipTapEditor(props: TipTapEditorProps) {
               // If you press cmd+backspace wanting to cancel,
               // but are inside of a text box, it shouldn't
               // delete the text
-              if (activeRef.current) {
+              if (isStreamingRef.current) {
                 return true;
               }
             },
@@ -417,6 +419,18 @@ function TipTapEditor(props: TipTapEditorProps) {
                 }, 0);
                 return true;
               }
+            },
+            Escape: () => {
+              if (isInEditModeRef.current) {
+                dispatch(setMode("chat"));
+                dispatch(clearCodeToEdit());
+                dispatch(setEditDone());
+                ideMessenger.post("edit/escape", undefined);
+
+                return true;
+              }
+
+              return false;
             },
             ArrowDown: () => {
               if (
@@ -460,7 +474,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           return `@${props.node.attrs.label || props.node.attrs.id}`;
         },
       }),
-      isInEditMode
+      isInEditModeRef.current
         ? AddCodeToEdit.configure({
             HTMLAttributes: {
               class: "add-code-to-edit",
@@ -528,7 +542,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
     },
     content: props.editorState || mainEditorContent || "",
-    editable: !active || props.isMainInput,
+    editable: !isStreaming || props.isMainInput,
   });
 
   const [shouldHideToolbar, setShouldHideToolbar] = useState(false);
@@ -588,7 +602,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
-      if (active) {
+      if (isStreaming) {
         return;
       }
 
@@ -611,10 +625,10 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   // Re-focus main input after done generating
   useEffect(() => {
-    if (editor && !active && props.isMainInput && document.hasFocus()) {
+    if (editor && !isStreaming && props.isMainInput && document.hasFocus()) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
-  }, [props.isMainInput, active, editor]);
+  }, [props.isMainInput, isStreaming, editor]);
 
   // IDE event listeners
   useWebviewListener(
@@ -918,7 +932,7 @@ function TipTapEditor(props: TipTapEditorProps) {
               });
             });
           }}
-          disabled={active}
+          disabled={isStreaming}
         />
       </PaddingDiv>
 

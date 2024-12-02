@@ -1,11 +1,11 @@
-import FileIcon from "../../components/FileIcon";
+import FileIcon from "../FileIcon";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import { getLastNPathParts, getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
 import { CodeToEdit } from "core";
@@ -86,8 +86,8 @@ export default function CodeToEditListItem({
             </span>
           </div>
         </div>
-        <div className="invisible flex gap-1.5 group-hover:visible">
-          <div className={isInsertion && "hidden"}>
+        <div className="invisible mt-0.5 flex gap-1.5 group-hover:visible">
+          <div className={isInsertion ? "hidden" : ""}>
             {showCodeSnippet ? (
               <ChevronDownIcon
                 onClick={(e) => {

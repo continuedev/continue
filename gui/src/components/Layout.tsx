@@ -14,9 +14,9 @@ import {
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import {
   addCodeToEdit,
-  clearCodeToEdit,
   updateApplyState,
-  updateCurCheckpoint,
+  setMode,
+  clearCodeToEdit,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -27,6 +27,7 @@ import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import PostHogPageView from "./PosthogPageView";
 import AccountDialog from "./AccountDialog";
 import { AuthProvider } from "../context/Auth";
+import useHistory from "../hooks/useHistory";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -58,6 +59,7 @@ const Layout = () => {
   const dispatch = useDispatch();
   const onboardingCard = useOnboardingCard();
   const { pathname } = useLocation();
+  const { saveSession } = useHistory(dispatch);
 
   const configError = useAppSelector((state) => state.config.configError);
 
@@ -159,9 +161,9 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
+      saveSession();
       dispatch(focusEdit());
-      dispatch(clearCodeToEdit());
-      navigate("/edit");
+      dispatch(setMode("edit"));
     },
     [navigate],
   );
@@ -169,8 +171,9 @@ const Layout = () => {
   useWebviewListener(
     "focusEditWithoutClear",
     async () => {
+      saveSession();
       dispatch(focusEdit());
-      navigate("/edit");
+      dispatch(setMode("edit"));
     },
     [navigate],
   );
@@ -195,7 +198,8 @@ const Layout = () => {
     "exitEditMode",
     async () => {
       dispatch(setEditDone());
-      navigate("/");
+      dispatch(setMode("chat"));
+      dispatch(clearCodeToEdit());
     },
     [navigate],
   );
