@@ -157,21 +157,21 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
-      await saveSession(true);
+      await saveSession();
       dispatch(focusEdit());
       dispatch(setMode("edit"));
     },
-    [navigate],
+    [],
   );
 
   useWebviewListener(
     "focusEditWithoutClear",
     async () => {
-      await saveSession(true);
+      await saveSession();
       dispatch(focusEdit());
       dispatch(setMode("edit"));
     },
-    [navigate],
+    [],
   );
 
   useWebviewListener(

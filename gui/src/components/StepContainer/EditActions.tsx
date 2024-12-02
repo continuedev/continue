@@ -6,8 +6,6 @@ import { renderChatMessage } from "core/util/messageContent";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import useHistory from "../../hooks/useHistory";
-import { useContext } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { completeEdit } from "../../redux/thunks/completeEdit";
 
 export interface EditActionsProps {
