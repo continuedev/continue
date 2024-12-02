@@ -15,7 +15,7 @@
         <ProviderFactory
                 implementation="com.github.continuedev.continueintellijextension.continue.ConfigJsonSchemaProviderFactory"/>
     </extensions>
-        <extensions defaultExtensionNs="JavaScript.JsonSchema">
+    <extensions defaultExtensionNs="JavaScript.JsonSchema">
         <ProviderFactory
                 implementation="com.github.continuedev.continueintellijextension.continue.ConfigRcJsonSchemaProviderFactory"/>
     </extensions>
@@ -38,6 +38,8 @@
                 id="AutocompleteSpinnerWidget"/>
         <notificationGroup id="Continue"
                            displayType="BALLOON"/>
+        <actionPromoter order="last"
+                        implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
