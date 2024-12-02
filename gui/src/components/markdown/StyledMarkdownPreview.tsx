@@ -15,6 +15,7 @@ import {
 import { getFontSize, isJetBrains } from "../../util";
 import "./katex.css";
 import "./markdown.css";
+import "./markdown-tables.css";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
@@ -26,6 +27,7 @@ import { ContextItemWithId, SymbolWithRange } from "core";
 import SymbolLink from "./SymbolLink";
 import { useSelector } from "react-redux";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { remarkTables } from "./utils/remarkTables";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -177,11 +179,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
+      // remarkTables,
       // remarkGfm,
       remarkMath,
       () => processCodeBlocks,
-      // c
-      //c
     ],
     rehypePlugins: [
       rehypeKatex as any,
