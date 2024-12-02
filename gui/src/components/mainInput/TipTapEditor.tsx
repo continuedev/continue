@@ -24,7 +24,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { v4 } from "uuid";
 import {
@@ -64,15 +63,14 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
-import { useAppSelector } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   clearCodeToEdit,
   selectIsInEditMode,
-  setMode,
 } from "../../redux/slices/sessionSlice";
-import { setEditDone } from "../../redux/slices/editModeState";
+import { completeEdit } from "../../redux/thunks";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -178,7 +176,7 @@ interface TipTapEditorProps {
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
   const { getSubmenuContextItems } = useSubmenuContextProviders();
@@ -187,7 +185,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const useActiveFile = useAppSelector(selectUseActiveFile);
 
-  const { saveSession, loadSession } = useHistory(dispatch);
+  const { saveSession, loadSession, loadLastSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
 
@@ -422,14 +420,12 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
             Escape: () => {
               if (isInEditModeRef.current) {
-                dispatch(setMode("chat"));
-                dispatch(clearCodeToEdit());
-                dispatch(setEditDone());
-                ideMessenger.post("edit/escape", undefined);
-
+                loadLastSession().catch((e) =>
+                  console.error(`Failed to load last session: ${e}`),
+                );
+                dispatch(completeEdit());
                 return true;
               }
-
               return false;
             },
             ArrowDown: () => {

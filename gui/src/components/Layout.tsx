@@ -11,6 +11,7 @@ import {
   addCodeToEdit,
   updateApplyState,
   setMode,
+  newSession,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -54,7 +55,7 @@ const Layout = () => {
   const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
   const { pathname } = useLocation();
-  const { saveSession } = useHistory(dispatch);
+  const { saveSession, loadLastSession } = useHistory(dispatch);
 
   const configError = useAppSelector((state) => state.config.configError);
 
@@ -156,7 +157,7 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
-      saveSession();
+      await saveSession(true);
       dispatch(focusEdit());
       dispatch(setMode("edit"));
     },
@@ -166,7 +167,7 @@ const Layout = () => {
   useWebviewListener(
     "focusEditWithoutClear",
     async () => {
-      saveSession();
+      await saveSession(true);
       dispatch(focusEdit());
       dispatch(setMode("edit"));
     },
@@ -185,11 +186,22 @@ const Layout = () => {
     "setEditStatus",
     async ({ status, fileAfterEdit }) => {
       dispatch(setEditStatus({ status, fileAfterEdit }));
+
+      if (status === "done") {
+        loadLastSession().catch((e) =>
+          console.error(`Failed to load last session: ${e}`),
+        );
+        dispatch(completeEdit());
+      }
     },
     [],
   );
 
   useWebviewListener("exitEditMode", async () => {
+    loadLastSession().catch((e) =>
+      console.error(`Failed to load last session: ${e}`),
+    );
+
     dispatch(completeEdit());
   });
 
