@@ -3,6 +3,7 @@ import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
+import remarkGfm from "remark-gfm";
 import styled from "styled-components";
 import { visit } from "unist-util-visit";
 import {
@@ -175,7 +176,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
-    remarkPlugins: [remarkMath, () => processCodeBlocks],
+    remarkPlugins: [
+      // remarkGfm,
+      remarkMath,
+      () => processCodeBlocks,
+      // c
+      //c
+    ],
     rehypePlugins: [
       rehypeKatex as any,
       {},
@@ -187,17 +194,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       {
         // languages: {},
       } as Options,
-      () => {
-        let codeBlockIndex = 0;
-        return (tree) => {
-          visit(tree, { tagName: "pre" }, (node: any) => {
-            // Add an index (0, 1, 2, etc...) to each code block.
-            node.properties = { codeBlockIndex };
-            codeBlockIndex++;
-          });
-        };
-      },
-      {},
+      // () => {
+      //   let codeBlockIndex = 0;
+      //   return (tree) => {
+      //     visit(tree, { tagName: "pre" }, (node: any) => {
+      // Add an index (0, 1, 2, etc...) to each code block.
+      //       node.properties = { codeBlockIndex };
+      //       codeBlockIndex++;
+      //     });
+      //   };
+      // },
+      // {},
     ],
     rehypeReactOptions: {
       components: {
