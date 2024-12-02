@@ -10,7 +10,6 @@ import * as vscode from "vscode";
 import { showFreeTrialLoginMessage } from "../util/messages";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
-import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import {
   StatusBarStatus,
@@ -74,7 +73,6 @@ export class ContinueCompletionProvider
       this.ide,
       this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
       this.onError.bind(this),
-      getDefinitionsFromLsp,
     );
 
     vscode.workspace.onDidChangeTextDocument((event) => {

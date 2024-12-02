@@ -48,7 +48,6 @@ export async function testAutocompleteFiltering(
     ide,
     async () => llm,
     () => {},
-    async () => [],
   );
 
   const line = prefix.split("\n").length - 1;

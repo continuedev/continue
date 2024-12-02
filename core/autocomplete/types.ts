@@ -1,6 +1,4 @@
-import { IDE, RangeInFileWithContents } from "../index";
-import { AutocompleteLanguageInfo } from "./constants/AutocompleteLanguageInfo";
-import { AutocompleteCodeSnippet } from "./snippets/types";
+import { RangeInFileWithContents } from "../index";
 
 /**
  * @deprecated This type should be removed in the future or renamed.
@@ -10,11 +8,3 @@ import { AutocompleteCodeSnippet } from "./snippets/types";
 export type AutocompleteSnippetDeprecated = RangeInFileWithContents & {
   score?: number;
 };
-
-export type GetLspDefinitionsFunction = (
-  filepath: string,
-  contents: string,
-  cursorIndex: number,
-  ide: IDE,
-  lang: AutocompleteLanguageInfo,
-) => Promise<AutocompleteCodeSnippet[]>;

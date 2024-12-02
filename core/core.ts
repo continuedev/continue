@@ -183,7 +183,6 @@ export class Core {
       ide,
       getLlm,
       (e) => {},
-      (..._) => Promise.resolve([]),
     );
 
     const on = this.messenger.on.bind(this.messenger);

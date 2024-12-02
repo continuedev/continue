@@ -1,6 +1,5 @@
 import { IDE } from "../../index";
 import { ContextRetrievalService } from "../context/ContextRetrievalService";
-import { GetLspDefinitionsFunction } from "../types";
 import { HelperVars } from "../util/HelperVars";
 import {
   AutocompleteClipboardSnippet,
@@ -12,7 +11,6 @@ import {
 export interface SnippetPayload {
   rootPathSnippets: AutocompleteCodeSnippet[];
   importDefinitionSnippets: AutocompleteCodeSnippet[];
-  ideSnippets: AutocompleteCodeSnippet[];
   recentlyEditedRangeSnippets: AutocompleteCodeSnippet[];
   diffSnippets: AutocompleteDiffSnippet[];
   clipboardSnippets: AutocompleteClipboardSnippet[];
@@ -24,32 +22,6 @@ function racePromise<T>(promise: Promise<T[]>): Promise<T[]> {
   });
 
   return Promise.race([promise, timeoutPromise]);
-}
-
-// Some IDEs might have special ways of finding snippets (e.g. JetBrains and VS Code have different "LSP-equivalent" systems,
-// or they might separately track recently edited ranges)
-async function getIdeSnippets(
-  helper: HelperVars,
-  ide: IDE,
-  getDefinitionsFromLsp: GetLspDefinitionsFunction,
-): Promise<AutocompleteCodeSnippet[]> {
-  const ideSnippets = await getDefinitionsFromLsp(
-    helper.input.filepath,
-    helper.fullPrefix + helper.fullSuffix,
-    helper.fullPrefix.length,
-    ide,
-    helper.lang,
-  );
-
-  if (helper.options.onlyMyCode) {
-    const workspaceDirs = await ide.getWorkspaceDirs();
-
-    return ideSnippets.filter((snippet) =>
-      workspaceDirs.some((dir) => snippet.filepath.startsWith(dir)),
-    );
-  }
-
-  return ideSnippets;
 }
 
 function getSnippetsFromRecentlyEditedRanges(
@@ -98,12 +70,10 @@ const getDiffSnippets = async (
 export const getAllSnippets = async ({
   helper,
   ide,
-  getDefinitionsFromLsp,
   contextRetrievalService,
 }: {
   helper: HelperVars;
   ide: IDE;
-  getDefinitionsFromLsp: GetLspDefinitionsFunction;
   contextRetrievalService: ContextRetrievalService;
 }): Promise<SnippetPayload> => {
   const recentlyEditedRangeSnippets =
@@ -112,7 +82,6 @@ export const getAllSnippets = async ({
   const [
     rootPathSnippets,
     importDefinitionSnippets,
-    ideSnippets,
     diffSnippets,
     clipboardSnippets,
   ] = await Promise.all([
@@ -120,7 +89,6 @@ export const getAllSnippets = async ({
     racePromise(
       contextRetrievalService.getSnippetsFromImportDefinitions(helper),
     ),
-    racePromise(getIdeSnippets(helper, ide, getDefinitionsFromLsp)),
     racePromise(getDiffSnippets(ide)),
     racePromise(getClipboardSnippets(ide)),
   ]);
@@ -128,7 +96,6 @@ export const getAllSnippets = async ({
   return {
     rootPathSnippets,
     importDefinitionSnippets,
-    ideSnippets,
     recentlyEditedRangeSnippets,
     diffSnippets,
     clipboardSnippets,

@@ -1,5 +1,5 @@
 import { AutocompleteLanguageInfo } from "core/autocomplete/constants/AutocompleteLanguageInfo";
-import { getAst, getTreePathAtCursor } from "core/autocomplete/util/ast";
+import { getAst } from "core/autocomplete/util/ast";
 import {
   FUNCTION_BLOCK_NODE_TYPES,
   FUNCTION_DECLARATION_NODE_TYPEs,
@@ -9,14 +9,6 @@ import * as vscode from "vscode";
 
 import type { IDE, Range, RangeInFile, RangeInFileWithContents } from "core";
 import type Parser from "web-tree-sitter";
-import {
-  AutocompleteSnippetDeprecated,
-  GetLspDefinitionsFunction,
-} from "core/autocomplete/types";
-import {
-  AutocompleteCodeSnippet,
-  AutocompleteSnippetType,
-} from "core/autocomplete/snippets/types";
 
 type GotoProviderName =
   | "vscode.executeDefinitionProvider"
@@ -334,49 +326,3 @@ export async function getDefinitionsForNode(
     }),
   );
 }
-
-/**
- * and other stuff not directly on the path:
- * - variables defined on line above
- * ...etc...
- */
-
-export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
-  filepath: string,
-  contents: string,
-  cursorIndex: number,
-  ide: IDE,
-  lang: AutocompleteLanguageInfo,
-): Promise<AutocompleteCodeSnippet[]> => {
-  try {
-    const ast = await getAst(filepath, contents);
-    if (!ast) {
-      return [];
-    }
-
-    const treePath = await getTreePathAtCursor(ast, cursorIndex);
-    if (!treePath) {
-      return [];
-    }
-
-    const results: RangeInFileWithContents[] = [];
-    for (const node of treePath.reverse()) {
-      const definitions = await getDefinitionsForNode(
-        filepath,
-        node,
-        ide,
-        lang,
-      );
-      results.push(...definitions);
-    }
-
-    return results.map((result) => ({
-      filepath: result.filepath,
-      content: result.contents,
-      type: AutocompleteSnippetType.Code,
-    }));
-  } catch (e) {
-    console.warn("Error getting definitions from LSP: ", e);
-    return [];
-  }
-};
