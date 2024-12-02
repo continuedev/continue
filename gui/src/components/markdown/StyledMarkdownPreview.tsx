@@ -25,6 +25,7 @@ import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
+import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -286,7 +287,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   });
 
   useEffect(() => {
-    setMarkdownSource(patchNestedMarkdown(props.source ?? ""));
+    setMarkdownSource(
+      // some patches to source markdown are applied here:
+      fixDoubleDollarNewLineLatex(patchNestedMarkdown(props.source ?? "")),
+    );
   }, [props.source]);
 
   return (
