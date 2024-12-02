@@ -222,8 +222,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
           const language = getLanuageFromClassName(className);
 
-          console.log({ language });
-
           // If we don't have a filepath show the more basic toolbar
           // that is just action buttons on hover.
           // We also use this in JB since we haven't yet implemented
