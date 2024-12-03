@@ -582,7 +582,7 @@ const getCommandsMap: (
     "continue.exitEditMode": async () => {
       captureCommandTelemetry("exitEditMode");
       editDecorationManager.clear();
-      await sidebar.webviewProtocol?.request("exitEditMode", undefined);
+      void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
     // "continue.quickEdit": async (args: QuickEditShowParams) => {
     //   let linesOfCode = undefined;

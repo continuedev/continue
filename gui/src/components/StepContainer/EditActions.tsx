@@ -6,7 +6,7 @@ import { renderChatMessage } from "core/util/messageContent";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import useHistory from "../../hooks/useHistory";
-import { completeEdit } from "../../redux/thunks/completeEdit";
+import { exitEditMode } from "../../redux/thunks/exitEditMode";
 
 export interface EditActionsProps {
   index: number;
@@ -63,7 +63,7 @@ export default function EditActions({ index, item }: EditActionsProps) {
                 console.error(`Failed to load last session: ${e}`),
               );
 
-              dispatch(completeEdit());
+              dispatch(exitEditMode());
             }}
           />
         )}

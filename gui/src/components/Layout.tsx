@@ -23,7 +23,7 @@ import PostHogPageView from "./PosthogPageView";
 import AccountDialog from "./AccountDialog";
 import { AuthProvider } from "../context/Auth";
 import useHistory from "../hooks/useHistory";
-import { completeEdit } from "../redux/thunks";
+import { exitEditMode } from "../redux/thunks";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -157,7 +157,8 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
-      await saveSession();
+      await saveSession(false);
+      dispatch(newSession());
       dispatch(focusEdit());
       dispatch(setMode("edit"));
     },
@@ -167,7 +168,8 @@ const Layout = () => {
   useWebviewListener(
     "focusEditWithoutClear",
     async () => {
-      await saveSession();
+      await saveSession(false);
+      dispatch(newSession());
       dispatch(focusEdit());
       dispatch(setMode("edit"));
     },
@@ -186,13 +188,6 @@ const Layout = () => {
     "setEditStatus",
     async ({ status, fileAfterEdit }) => {
       dispatch(setEditStatus({ status, fileAfterEdit }));
-
-      if (status === "done") {
-        loadLastSession().catch((e) =>
-          console.error(`Failed to load last session: ${e}`),
-        );
-        dispatch(completeEdit());
-      }
     },
     [],
   );
@@ -202,7 +197,7 @@ const Layout = () => {
       console.error(`Failed to load last session: ${e}`),
     );
 
-    dispatch(completeEdit());
+    dispatch(exitEditMode());
   });
 
   useEffect(() => {

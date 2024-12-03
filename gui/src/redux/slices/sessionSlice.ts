@@ -51,7 +51,22 @@ type SessionState = {
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
-  return a.filepath === b.filepath && a.contents === b.contents;
+  if (a.filepath !== b.filepath || a.contents !== b.contents) {
+    return false;
+  }
+
+  if ("range" in a && "range" in b) {
+    const rangeA = a.range;
+    const rangeB = b.range;
+
+    return (
+      rangeA.start.line === rangeB.start.line &&
+      rangeA.end.line === rangeB.end.line
+    );
+  }
+
+  // If neither has a range, they are considered equal in this context
+  return !("range" in a) && !("range" in b);
 }
 
 function getBaseHistoryItem(): ChatHistoryItemWithMessageId {
@@ -500,12 +515,16 @@ export const sessionSlice = createSlice({
     selectIsInEditMode: (state) => {
       return state.mode === "edit";
     },
-    selectIsSingleRangeEdit: (state) => {
-      return (
-        state.mode === "edit" &&
-        (state.codeToEdit.length === 0 ||
-          (state.codeToEdit.length === 1 && "range" in state.codeToEdit[0]))
-      );
+    selectIsSingleRangeEditOrInsertion: (state) => {
+      if (state.mode !== "edit") {
+        return false;
+      }
+
+      const isInsertion = state.codeToEdit.length === 0;
+      const selectIsSingleRangeEdit =
+        state.codeToEdit.length === 1 && "range" in state.codeToEdit[0];
+
+      return selectIsSingleRangeEdit || isInsertion;
     },
   },
   extraReducers: (builder) => {
@@ -579,7 +598,7 @@ export const {
 export const {
   selectIsGatheringContext,
   selectIsInEditMode,
-  selectIsSingleRangeEdit,
+  selectIsSingleRangeEditOrInsertion,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

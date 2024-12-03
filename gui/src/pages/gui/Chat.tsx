@@ -36,13 +36,11 @@ import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
 import {
-  clearCodeToEdit,
   clearLastEmptyResponse,
   newSession,
   selectIsInEditMode,
-  selectIsSingleRangeEdit,
+  selectIsSingleRangeEditOrInsertion,
   setInactive,
-  setMode,
 } from "../../redux/slices/sessionSlice";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
@@ -66,13 +64,12 @@ import {
 import { RootState } from "../../redux/store";
 import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
-import { setEditDone, submitEdit } from "../../redux/slices/editModeState";
+import { submitEdit } from "../../redux/slices/editModeState";
 import { stripImages } from "core/util/messageContent";
 import resolveEditorContent from "../../components/mainInput/resolveInput";
-import CodeToEdit from "../../components/CodeToEditCard/CodeToEditCard";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import CodeToEditCard from "../../components/CodeToEditCard";
-import { completeEdit } from "../../redux/thunks/completeEdit";
+import { exitEditMode } from "../../redux/thunks/exitEditMode";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -161,7 +158,9 @@ export function Chat() {
   );
   const hasPendingApplies = pendingApplyStates.length > 0;
   const isInEditMode = useAppSelector(selectIsInEditMode);
-  const isSingleRangeEdit = useAppSelector(selectIsSingleRangeEdit);
+  const isSingleRangeEditOrInsertion = useAppSelector(
+    selectIsSingleRangeEditOrInsertion,
+  );
 
   const snapToBottom = useCallback(() => {
     if (!stepsDivRef.current) return;
@@ -182,7 +181,7 @@ export function Chat() {
     setIsAtBottom(true);
   }, [stepsDivRef, setIsAtBottom]);
 
-  const returnToLastSessinButtonText = isInEditMode
+  const returnToLastSessionButtonText = isInEditMode
     ? "Back to Chat"
     : "Last Session";
 
@@ -228,8 +227,8 @@ export function Chat() {
 
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
-  const sendChatInput = useCallback(
-    (editorState: JSONContent, modifiers: InputModifiers) => {
+  const sendInput = useCallback(
+    (editorState: JSONContent, modifiers: InputModifiers, editor: Editor) => {
       if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
         if (u) {
@@ -249,7 +248,18 @@ export function Chat() {
         }
       }
 
-      dispatch(streamResponseThunk({ editorState, modifiers }));
+      if (isSingleRangeEditOrInsertion) {
+        handleSingleRangeEditOrInsertion(editorState);
+        return;
+      }
+
+      editor.commands.clearContent(true);
+
+      const promptPreamble = isInEditMode
+        ? getMultifileEditPrompt(codeToEdit)
+        : undefined;
+
+      dispatch(streamResponseThunk({ editorState, modifiers, promptPreamble }));
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -264,14 +274,16 @@ export function Chat() {
         setLocalStorage("mainTextEntryCounter", 1);
       }
     },
-    [history, defaultModel, streamResponse],
+    [
+      history,
+      defaultModel,
+      streamResponse,
+      isSingleRangeEditOrInsertion,
+      codeToEdit,
+    ],
   );
 
-  async function handleSingleRangeEdit(
-    editorState: JSONContent,
-    modifiers: InputModifiers,
-    editor: Editor,
-  ) {
+  async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
     const [contextItems, __, userInstructions] = await resolveEditorContent(
       editorState,
       {
@@ -294,27 +306,6 @@ export function Chat() {
     });
 
     dispatch(submitEdit(prompt));
-    editor.commands.selectTextblockEnd();
-  }
-
-  async function sendEditInput(
-    editorState: JSONContent,
-    modifiers: InputModifiers,
-    editor: Editor,
-  ) {
-    if (isSingleRangeEdit) {
-      handleSingleRangeEdit(editorState, modifiers, editor);
-    } else {
-      const promptPreamble = getMultifileEditPrompt(codeToEdit);
-
-      dispatch(
-        streamResponseThunk({
-          editorState,
-          modifiers,
-          promptPreamble,
-        }),
-      );
-    }
   }
 
   useWebviewListener(
@@ -322,7 +313,7 @@ export function Chat() {
     async () => {
       saveSession();
       mainTextInputRef.current?.focus?.();
-      dispatch(completeEdit());
+      dispatch(exitEditMode());
     },
     [saveSession],
   );
@@ -362,13 +353,9 @@ export function Chat() {
             >
               {item.message.role === "user" ? (
                 <>
-                  {isInEditMode && <CodeToEditCard />}
+                  {isInEditMode && index === 0 && <CodeToEditCard />}
                   <ContinueInputBox
-                    onEnter={async (editorState, modifiers) => {
-                      dispatch(
-                        streamResponseThunk({ editorState, modifiers, index }),
-                      );
-                    }}
+                    onEnter={sendInput}
                     isLastUserInput={isLastUserInput(index)}
                     isMainInput={false}
                     editorState={item.editorState}
@@ -466,18 +453,14 @@ export function Chat() {
 
         {toolCallState?.status === "generated" && <ToolCallButtons />}
 
-        {history.length === 0 && isInEditMode && <CodeToEdit />}
+        {isInEditMode && history.length === 0 && <CodeToEditCard />}
 
         {isInEditMode && history.length > 0 ? null : (
           <ContinueInputBox
             isMainInput
-            isEditMode={isInEditMode && history.length === 0}
+            isEditMode={isInEditMode}
             isLastUserInput={false}
-            onEnter={(editorContent, modifiers, editor) => {
-              isInEditMode
-                ? sendEditInput(editorContent, modifiers, editor)
-                : sendChatInput(editorContent, modifiers);
-            }}
+            onEnter={sendInput}
           />
         )}
 
@@ -499,13 +482,13 @@ export function Chat() {
                       );
 
                       if (isInEditMode) {
-                        dispatch(completeEdit());
+                        dispatch(exitEditMode());
                       }
                     }}
                     className="flex items-center gap-2"
                   >
                     <ArrowLeftIcon className="h-3 w-3" />
-                    {returnToLastSessinButtonText}
+                    {returnToLastSessionButtonText}
                   </NewSessionButton>
                 </div>
               ) : null}
@@ -513,7 +496,7 @@ export function Chat() {
             <ConfigErrorIndicator />
           </div>
 
-          {hasPendingApplies && isSingleRangeEdit && (
+          {hasPendingApplies && isSingleRangeEditOrInsertion && (
             <AcceptRejectAllButtons
               pendingApplyStates={pendingApplyStates}
               onAcceptOrReject={() => {
@@ -521,7 +504,7 @@ export function Chat() {
                   console.error(`Failed to load last session: ${e}`),
                 );
 
-                dispatch(completeEdit());
+                dispatch(exitEditMode());
               }}
             />
           )}

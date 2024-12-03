@@ -4,7 +4,7 @@ import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
 import { getMetaKeyLabel } from "../../util";
 import { useAppSelector } from "../../redux/hooks";
-import { selectIsSingleRangeEdit } from "../../redux/slices/sessionSlice";
+import { selectIsSingleRangeEditOrInsertion } from "../../redux/slices/sessionSlice";
 
 export interface AcceptRejectAllButtonsProps {
   pendingApplyStates: ApplyState[];
@@ -16,7 +16,7 @@ export default function AcceptRejectAllButtons({
   onAcceptOrReject,
 }: AcceptRejectAllButtonsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const isSingleRangeEdit = useAppSelector(selectIsSingleRangeEdit);
+  const isSingleRangeEdit = useAppSelector(selectIsSingleRangeEditOrInsertion);
 
   async function handleAcceptOrReject(status: "acceptDiff" | "rejectDiff") {
     for (const { filepath, streamId } of pendingApplyStates) {

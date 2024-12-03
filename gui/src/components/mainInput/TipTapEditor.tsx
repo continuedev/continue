@@ -70,7 +70,7 @@ import {
   clearCodeToEdit,
   selectIsInEditMode,
 } from "../../redux/slices/sessionSlice";
-import { completeEdit } from "../../redux/thunks";
+import { exitEditMode } from "../../redux/thunks";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -347,11 +347,10 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
       }),
       Placeholder.configure({
-        placeholder:
-          props.placeholder ??
-          (historyLengthRef.current === 0
-            ? "Ask anything, '@' to add context"
-            : "Ask a follow-up"),
+        placeholder: getPlaceholderText(
+          props.placeholder,
+          historyLengthRef.current,
+        ),
       }),
       Paragraph.extend({
         addKeyboardShortcuts() {
@@ -419,14 +418,17 @@ function TipTapEditor(props: TipTapEditorProps) {
               }
             },
             Escape: () => {
-              if (isInEditModeRef.current) {
-                loadLastSession().catch((e) =>
-                  console.error(`Failed to load last session: ${e}`),
-                );
-                dispatch(completeEdit());
-                return true;
+              if (inDropdownRef.current || !isInEditModeRef.current) {
+                return false;
               }
-              return false;
+
+              loadLastSession().catch((e) =>
+                console.error(`Failed to load last session: ${e}`),
+              );
+
+              dispatch(exitEditMode());
+
+              return true;
             },
             ArrowDown: () => {
               if (
@@ -545,6 +547,38 @@ function TipTapEditor(props: TipTapEditorProps) {
   const debouncedShouldHideToolbar = debounce((value) => {
     setShouldHideToolbar(value);
   }, 200);
+
+  function getPlaceholderText(
+    placeholder: TipTapEditorProps["placeholder"],
+    historyLength: number,
+  ) {
+    if (placeholder) {
+      return placeholder;
+    }
+
+    return historyLength === 0
+      ? "Ask anything, '@' to add context"
+      : "Ask a follow-up";
+  }
+
+  useEffect(() => {
+    const placeholder = getPlaceholderText(
+      props.placeholder,
+      historyLengthRef.current,
+    );
+
+    editor.extensionManager.extensions.filter(
+      (extension) => extension.name === "placeholder",
+    )[0].options["placeholder"] = placeholder;
+
+    editor.view.dispatch(editor.state.tr);
+  }, [editor, props.placeholder, historyLengthRef.current]);
+
+  useEffect(() => {
+    if (props.isMainInput) {
+      editor.commands.clearContent(true);
+    }
+  }, [isInEditMode, props.isMainInput]);
 
   useEffect(() => {
     if (editor) {

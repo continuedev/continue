@@ -31,6 +31,7 @@ import { getFullyQualifiedPath } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { hideGUI } from "../commands";
 
 /**
  * A shared messenger class between Core and Webview
@@ -400,8 +401,16 @@ export class VsCodeMessenger {
         vscode.commands.executeCommand("continue.rejectDiff", filepath);
       }
     });
-    this.onWebview("edit/escape", async (msg) => {
-      this.editDecorationManager.clear();
+    this.onWebview("edit/exit", async (msg) => {
+      if (msg.data.shouldFocusEditor) {
+        const activeEditor = vscode.window.activeTextEditor;
+
+        if (activeEditor) {
+          vscode.window.showTextDocument(activeEditor.document);
+        }
+      }
+
+      editDecorationManager.clear();
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

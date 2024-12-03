@@ -1,4 +1,4 @@
-export { completeEdit } from "./completeEdit";
+export { exitEditMode } from "./exitEditMode";
 export { gatherContext } from "./gatherContext";
 export { handleErrors } from "./handleErrors";
 export { resetStateForNewMessage } from "./resetStateForNewMessage";

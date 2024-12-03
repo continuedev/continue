@@ -153,12 +153,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         >
           <TipTapEditor
             editorState={props.editorState}
-            onEnter={(...args) => {
-              props.onEnter(...args);
-              if (props.isMainInput) {
-                args[2].commands.clearContent(true);
-              }
-            }}
+            onEnter={props.onEnter}
             placeholder={placeholder}
             isMainInput={props.isMainInput ?? false}
             availableContextProviders={filteredContextProviders}

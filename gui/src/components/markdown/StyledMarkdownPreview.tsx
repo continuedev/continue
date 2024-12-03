@@ -256,9 +256,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           const content = getCodeChildrenContent(codeProps.children);
 
           if (content && contextItemsRef.current) {
-            const ctxItem = contextItemsRef.current.find((ctxItem) =>
-              ctxItem.uri?.value.includes(content),
+            const ctxItem = contextItemsRef.current.find(
+              (ctxItem) =>
+                ctxItem.uri?.value.includes(content) &&
+                ctxItem.uri.type === "file",
             );
+
             if (ctxItem) {
               const rif = ctxItemToRifWithContents(ctxItem);
               return <FilenameLink rif={rif} />;

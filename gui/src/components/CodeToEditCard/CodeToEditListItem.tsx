@@ -63,7 +63,11 @@ export default function CodeToEditListItem({
   return (
     <li
       className="group flex cursor-pointer flex-col"
-      onClick={() => setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet)}
+      onClick={() => {
+        if (!isInsertion) {
+          setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet);
+        }
+      }}
     >
       <div
         className={`hover:bg-lightgray hover:text-vsc-foreground flex items-center justify-between rounded px-2 py-0.5 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
