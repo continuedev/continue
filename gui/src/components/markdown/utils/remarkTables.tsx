@@ -1,150 +1,111 @@
-// import { visit } from "unist-util-visit";
-
-// // const markdownTableRegex = /(\|.+?\|)(\n\|(?:[-:]+?\|)+)(\n\|.+?\|)+/gm;
-// const tableRegex = /(\|(?:[^\|]*\|)+(\s*\n\s*\|(?:[^\|]*\|)+)*\s*(\n|\r|\r\n)?\|(?:[-:\s]*\|)+(\s*\n\s*\|(?:[^\|]*\|)+)*)/g;
-
-// const parseMarkdownTable = (markdown) => {
-//   const rows = markdown.trim().split("\n");
-//   const header = rows[0]
-//     .split("|")
-//     .slice(1, -1)
-//     .map((cell) => cell.trim());
-//   const alignments = rows[1]
-//     .split("|")
-//     .slice(1, -1)
-//     .map((cell) => {
-//       if (cell.startsWith(":") && cell.endsWith(":")) return "center";
-//       if (cell.startsWith(":")) return "left";
-//       if (cell.endsWith(":")) return "right";
-//       return null;
-//     });
-//   const bodyRows = rows.slice(2).map((row) =>
-//     row
-//       .split("|")
-//       .slice(1, -1)
-//       .map((cell) => cell.trim()),
-//   );
-
-//   return { header, alignments, bodyRows };
-// };
-
-// const renderTable = ({ header, alignments, bodyRows }) => (
-//   <table>
-//     <thead>
-//       <tr>
-//         {header.map((cell, index) => (
-//           <th key={index} style={{ textAlign: alignments[index] || "left" }}>
-//             {cell}
-//           </th>
-//         ))}
-//       </tr>
-//     </thead>
-//     <tbody>
-//       {bodyRows.map((row, rowIndex) => (
-//         <tr key={rowIndex}>
-//           {row.map((cell, cellIndex) => (
-//             <td
-//               key={cellIndex}
-//               style={{ textAlign: alignments[cellIndex] || "left" }}
-//             >
-//               {cell}
-//             </td>
-//           ))}
-//         </tr>
-//       ))}
-//     </tbody>
-//   </table>
-// );
-
-// export function remarkTables() {
-//   return (tree) => {
-//     visit(tree, "text", (node, index, parent) => {
-//       if (!node.value) return;
-
-//       const matches = [...node.value.matchAll(markdownTableRegex)];
-//       console.log("MATCHES", matches);
-//       if (matches.length === 0) return;
-
-//       const fragments = [];
-//       let lastIndex = 0;
-
-//       matches.forEach((match, idx) => {
-//         const [fullMatch] = match;
-//         const matchStart = match.index;
-//         const matchEnd = matchStart + fullMatch.length;
-
-//         // Add text before the table
-//         if (matchStart > lastIndex) {
-//           fragments.push(node.value.slice(lastIndex, matchStart));
-//         }
-
-//         // Parse and render the markdown table
-//         const table = parseMarkdownTable(fullMatch);
-//         fragments.push(renderTable(table));
-
-//         lastIndex = matchEnd;
-//       });
-
-//       // Add remaining text after the last table
-//       if (lastIndex < node.value.length) {
-//         fragments.push(node.value.slice(lastIndex));
-//       }
-
-//       // Replace the parent node with a fragment containing the new nodes
-//       if (parent && parent.children) {
-//         parent.children.splice(index, 1, ...fragments);
-//       }
-//     });
-//   };
-// }
-
 import { visit } from "unist-util-visit";
 
+/*
+  Remark plugin for github-flavor markdown tables
+  Given a table such as this exists in a text node:
+
+  | Fruit    | Color   | Taste       |
+  |----------|---------|-------------|
+  | Apple    | Red     | Sweet       |
+  | Banana   | Yellow  | Sweet       |
+  | Lemon    | Yellow  | Sour        |
+  | Orange   | Orange  | Citrus      |
+  | Grape    | Purple  | Sweet/Tart  |
+
+  1. Find it and split it into groups using regex
+      - header
+      - alignment row
+      - body
+  2. Parse the groups to get table cell values and text alignment
+  3. Build an MDAST table node
+  4. Do this for each table found, until no tables are found
+*/
 export function remarkTables() {
-  return (tree) => {
+  return (tree: any) => {
     visit(tree, "text", (node, index, parent) => {
       const { value } = node;
-      // console.log("NODE", value);
-      // Inspired by
-      // https://stackoverflow.com/questions/9837935/regex-for-markdown-table-syntax
+
       const tableRegex =
-        /((?:\| *[^|\n]+ *)+\|)(?:\r?\n)((?:\|[ :]?-+[ :]?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
-      // /((?:\| *[^|\r\n]+ *)+\|)(?:\r?\n)((?:\|:?-+:?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
-      // /((?:\| +[A-Za-z0-9 -_*#@$%:;?!.,\/\\]+ +)+\|)(?:\r?\n| )?((?:\|:?-+:?)+\|)((?:(?:\r?\n| )?(?:\| +[A-Za-z0-9 -_*#@$%:;?!.,\/\\^~]+ +)+\|)+)/g; // accepts space or nothing as separator between
-      // should probably change the (?:\r?\n| )? groups to (?:\r?\n)
-      // consider limiting table cells to chars e.g. A-Za-z0-9 -_*#@$%:;?!.,\/\\^~`{}
-      // /^(\|[^\n]+\|(?:\r?\n| ))((?:\|:?[-]+:?)+\|)((?:\r?\n| )(?:\|[^\n]+\|(?:\r?\n| ))*)?$/gm;
+        /((?:\| *[^|\r\n]+ *)+\|)(?:\r?\n)((?:\|[ :]?-+[ :]?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
+      //// header                // newline // |:---|----:|      // new line  // table rows
 
       let match: RegExpExecArray | null;
       let lastIndex = 0;
       const newNodes = [];
 
-      const matches = tableRegex.exec(value); //value.match(tableRegex);
-      // console.log("MATCHES FOR\n\n" + value, matches);
-
       while ((match = tableRegex.exec(value)) !== null) {
-        // if(match.groups === 3){
-        console.log(match);
+        const fullTableString = match[0];
+        const headerGroup = match[1];
+        const separatorGroup = match[2];
+        const bodyGroup = match[3];
 
-        // }
-        const tableText = match[0];
-
-        // Add any text before the table as a text node
-        if (match.index > lastIndex) {
-          newNodes.push({
-            type: "text",
-            value: value.slice(lastIndex, match.index),
-          });
+        if (!fullTableString || !headerGroup || !separatorGroup || !bodyGroup) {
+          console.error("Markdown table regex failed to yield table groups");
+          return;
         }
 
-        const tableNode = parseTable(tableText);
-        if (tableNode) {
+        const headerCells = splitRow(headerGroup);
+        const alignments = splitRow(separatorGroup).map((cell) => {
+          const trimmed = cell.trim();
+          if (trimmed.startsWith(":") && trimmed.endsWith(":")) return "center";
+          if (trimmed.endsWith(":")) return "right";
+          if (trimmed.startsWith(":")) return "left";
+          return null;
+        });
+
+        const bodyRows = bodyGroup
+          .trim()
+          .split("\n")
+          .map((bodyRow) => splitRow(bodyRow.trim()));
+
+        try {
+          const tableNode = {
+            type: "table",
+            align: alignments,
+            children: [
+              {
+                type: "tableRow",
+                children: headerCells.map((cell, i) => ({
+                  type: "element",
+                  tagName: "th",
+                  align: alignments[i],
+                  children: [{ type: "text", value: cell }],
+                })),
+              },
+              ...bodyRows.map((row, i) => {
+                return {
+                  type: "tableRow",
+                  data: {
+                    hProperties: {
+                      class: "markdown-table",
+                      key: i,
+                    },
+                  },
+                  children: row.map((cell, i) => ({
+                    type: "tableCell",
+                    align: alignments[i],
+                    children: [{ type: "text", value: cell.trim() }],
+                  })),
+                };
+              }),
+            ],
+          };
+
+          // Add any text before the table as a text node
+          if (match.index > lastIndex) {
+            newNodes.push({
+              type: "text",
+              value: value.slice(lastIndex, match.index),
+            });
+          }
+
+          // Add table node
           newNodes.push(tableNode);
-        } else {
-          // If parsing failed, keep the original text
+        } catch (e) {
+          console.error("Failed to parse markdown table after regex match", e);
           newNodes.push({
             type: "text",
-            value: tableText,
+            value: fullTableString,
           });
         }
 
@@ -167,81 +128,10 @@ export function remarkTables() {
   };
 }
 
-// The parseTable function remains the same as before
-function parseTable(tableText) {
-  // const header = tableText;
-  const lines = tableText.trim().split(/\r?\n/);
-
-  if (lines.length < 2) return null; // Not enough lines for a valid table
-
-  const header = splitRow(lines[0]);
-  const separator = splitRow(lines[1]);
-
-  // Validate the separator line
-  if (!separator.every((cell) => /^:?-+:?$/.test(cell.trim()))) {
-    return null;
-  }
-
-  const alignments = separator.map((cell) => {
-    const trimmed = cell.trim();
-    if (trimmed.startsWith(":") && trimmed.endsWith(":")) return "center";
-    if (trimmed.endsWith(":")) return "right";
-    if (trimmed.startsWith(":")) return "left";
-    return null;
-  });
-
-  const tableNode = {
-    type: "element",
-    tagName: "table",
-    children: [
-      {
-        type: "element",
-        tagName: "thead",
-        children: [
-          {
-            type: "element",
-            tagName: "tr",
-            children: header.map((cell, i) => ({
-              type: "element",
-              tagName: "th",
-              properties: {
-                align: alignments[i] || "left",
-                className: "text-" + alignments[i],
-              },
-              children: [{ type: "text", value: cell.trim() }],
-            })),
-          },
-        ],
-      },
-      {
-        type: "element",
-        tagName: "tbody",
-        children: lines.slice(2).map((line) => {
-          const cells = splitRow(line);
-          return {
-            type: "element",
-            tagName: "tr",
-            children: cells.map((cell, i) => ({
-              type: "element",
-              tagName: "td",
-              properties: {
-                align: alignments[i] || "left",
-                className: "text-" + alignments[i],
-              },
-              children: [{ type: "text", value: cell.trim() }],
-            })),
-          };
-        }),
-      },
-    ],
-  };
-
-  return tableNode;
-}
-
-function splitRow(row) {
+function splitRow(row: string) {
   return row
     .trim()
     .replace(/^\||\|$/g, "") // Remove leading and trailing pipes
-    .split("|");
+    .split("|")
+    .map((cell) => cell.trim());
 }

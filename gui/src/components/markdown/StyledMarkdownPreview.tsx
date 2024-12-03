@@ -15,7 +15,6 @@ import {
 import { getFontSize, isJetBrains } from "../../util";
 import "./katex.css";
 import "./markdown.css";
-import "./markdown-tables.css";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import FilenameLink from "./FilenameLink";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
@@ -179,9 +178,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
 
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
-      // remarkTables,
-      remarkGfm,
-      remarkMath,
+      remarkTables,
+      [
+        remarkMath,
+        {
+          singleDollarTextMath: false,
+        },
+      ],
       () => processCodeBlocks,
     ],
     rehypePlugins: [
@@ -195,17 +198,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       {
         // languages: {},
       } as Options,
-      // () => {
-      //   let codeBlockIndex = 0;
-      //   return (tree) => {
-      //     visit(tree, { tagName: "pre" }, (node: any) => {
-      // Add an index (0, 1, 2, etc...) to each code block.
-      //       node.properties = { codeBlockIndex };
-      //       codeBlockIndex++;
-      //     });
-      //   };
-      // },
-      // {},
+      () => {
+        let codeBlockIndex = 0;
+        return (tree) => {
+          visit(tree, { tagName: "pre" }, (node: any) => {
+            // Add an index (0, 1, 2, etc...) to each code block.
+            node.properties = { codeBlockIndex };
+            codeBlockIndex++;
+          });
+        };
+      },
+      {},
     ],
     rehypeReactOptions: {
       components: {
