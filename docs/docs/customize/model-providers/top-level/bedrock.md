@@ -46,7 +46,7 @@ We recommend configuring [`amazon.titan-embed-text-v2:0`](https://docs.aws.amazo
 
 ## Reranking model
 
-We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may also use `amazon.titan-embed-text-v2:0`.
+We recommend configuring `cohere.rerank-v3-5:0` as your reranking model, you may also use `amazon.rerank-v1:0`.
 
 ```json title="~/.continue/config.json"
 {
