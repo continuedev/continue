@@ -37,10 +37,7 @@ import {
   vscQuickInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";

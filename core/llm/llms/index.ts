@@ -21,6 +21,7 @@ import Deepseek from "./Deepseek";
 import Fireworks from "./Fireworks";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
+import FunctionNetwork from "./FunctionNetwork";
 import Gemini from "./Gemini";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
@@ -54,6 +55,7 @@ const LLMs = [
   Anthropic,
   Cohere,
   FreeTrial,
+  FunctionNetwork,
   Gemini,
   Llamafile,
   Moonshot,

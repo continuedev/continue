@@ -1,5 +1,5 @@
 import { SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 
 const CommitMessageCommand: SlashCommand = {
   name: "commit",
@@ -18,7 +18,7 @@ const CommitMessageCommand: SlashCommand = {
       [{ role: "user", content: prompt }],
       new AbortController().signal,
     )) {
-      yield stripImages(chunk.content);
+      yield renderChatMessage(chunk);
     }
   },
 };

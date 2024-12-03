@@ -1,5 +1,5 @@
 import { ChatMessage, SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 
 const prompt = `
      Review the following code, focusing on Readability, Maintainability, Code Smells, Speed, and Memory Performance. Provide feedback with these guidelines:
@@ -43,10 +43,11 @@ const ReviewMessageCommand: SlashCommand = {
 
     const content = `${prompt} \r\n ${reviewText}`;
 
-    for await (const chunk of llm.streamChat([
-      { role: "user", content: content },
-    ], new AbortController().signal)) {
-      yield stripImages(chunk.content);
+    for await (const chunk of llm.streamChat(
+      [{ role: "user", content: content }],
+      new AbortController().signal,
+    )) {
+      yield renderChatMessage(chunk);
     }
   },
 };

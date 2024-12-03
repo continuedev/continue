@@ -4,7 +4,6 @@ import * as path from "node:path";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { getModelByRole } from "core/config/util";
 import { applyCodeBlock } from "core/edit/lazy/applyCodeBlock";
-import { stripImages } from "core/llm/images";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -21,6 +20,7 @@ import { getBasename } from "core/util";
 import { InProcessMessenger, Message } from "core/util/messenger";
 import * as vscode from "vscode";
 
+import { stripImages } from "core/util/messageContent";
 import { VerticalDiffManager } from "../diff/vertical/manager";
 import EditDecorationManager from "../quickEdit/EditDecorationManager";
 import {
@@ -400,8 +400,16 @@ export class VsCodeMessenger {
         vscode.commands.executeCommand("continue.rejectDiff", filepath);
       }
     });
-    this.onWebview("edit/escape", async (msg) => {
-      this.editDecorationManager.clear();
+    this.onWebview("edit/exit", async (msg) => {
+      if (msg.data.shouldFocusEditor) {
+        const activeEditor = vscode.window.activeTextEditor;
+
+        if (activeEditor) {
+          vscode.window.showTextDocument(activeEditor.document);
+        }
+      }
+
+      editDecorationManager.clear();
     });
 
     /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/

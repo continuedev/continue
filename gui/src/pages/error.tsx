@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import { useNavigate, useRouteError } from "react-router-dom";
-import { newSession } from "../redux/slices/stateSlice";
+import { newSession } from "../redux/slices/sessionSlice";
 import { GithubIcon } from "../components/svg/GithubIcon";
 import { DiscordIcon } from "../components/svg/DiscordIcon";
 import { useContext, useEffect, useState } from "react";
@@ -31,12 +31,12 @@ const ErrorPage: React.FC = () => {
     }, 500);
   }, []);
   return (
-    <div className="bg- flex min-h-screen flex-col items-center justify-center px-8 py-4 text-center">
+    <div className="flex flex-col items-center justify-center px-2 py-4 text-center sm:px-8">
       <h1 className="mb-4 text-3xl font-bold">Error in Continue UI</h1>
 
-      <pre className="pb-6">
-        <code className="px-3 py-2">{error.statusText || error.message}</code>
-      </pre>
+      <code className="whitespace-wrap mx-2 mb-4 max-w-full break-words py-2">
+        {error.statusText || error.message}
+      </code>
 
       <Button
         className="flex flex-row items-center gap-2"

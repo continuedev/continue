@@ -4,21 +4,21 @@ import { ProfileDescription } from "../config/ConfigHandler";
 import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
+  ContextItem,
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
   FileSymbolMap,
   IdeSettings,
-  IndexingStatus,
   LLMFullCompletionOptions,
-  MessageContent,
   ModelDescription,
   ModelRoles,
-  Session,
   RangeInFile,
   SerializedContinueConfig,
+  Session,
   SessionMetadata,
   SiteIndexingConfig,
+  ToolCall,
 } from "../";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -123,7 +123,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    ProtocolGeneratorType<MessageContent>,
+    ProtocolGeneratorType<ChatMessage>,
   ];
   streamDiffLines: [
     {
@@ -174,4 +174,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "profiles/switch": [{ id: string }, undefined];
 
   "auth/getAuthUrl": [undefined, { url: string }];
+  "tools/call": [{ toolCall: ToolCall }, { contextItems: ContextItem[] }];
 };

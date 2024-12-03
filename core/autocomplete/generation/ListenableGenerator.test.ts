@@ -1,4 +1,5 @@
 import { jest } from "@jest/globals";
+
 import { ListenableGenerator } from "./ListenableGenerator";
 
 describe("ListenableGenerator", () => {

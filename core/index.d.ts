@@ -42,11 +42,18 @@ export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
   shouldClearIndexes?: boolean;
-  status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  status:
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
-// This is more or less a V2 of IndexingProgressUpdate
+// This is more or less a V2 of IndexingProgressUpdate for docs etc.
 export interface IndexingStatus {
   id: string;
   type: "docs";
@@ -240,7 +247,6 @@ export interface Session {
   title: string;
   workspaceDirectory: string;
   history: ChatHistoryItem[];
-  checkpoints?: Checkpoint[];
 }
 
 export interface SessionMetadata {
@@ -288,7 +294,7 @@ export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
 }
 
-export type ChatMessageRole = "user" | "assistant" | "system";
+export type ChatMessageRole = "user" | "assistant" | "system" | "tool";
 
 export interface MessagePart {
   type: "text" | "imageUrl";
@@ -298,10 +304,51 @@ export interface MessagePart {
 
 export type MessageContent = string | MessagePart[];
 
-export interface ChatMessage {
-  role: ChatMessageRole;
+export interface ToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+export interface ToolCallDelta {
+  id?: string;
+  type?: "function";
+  function?: {
+    name?: string;
+    arguments?: string;
+  };
+}
+
+export interface ToolResultChatMessage {
+  role: "tool";
+  content: string;
+  toolCallId: string;
+}
+
+export interface UserChatMessage {
+  role: "user";
   content: MessageContent;
 }
+
+export interface AssistantChatMessage {
+  role: "assistant";
+  content: MessageContent;
+  toolCalls?: ToolCallDelta[];
+}
+
+export interface SystemChatMessage {
+  role: "system";
+  content: string;
+}
+
+export type ChatMessage =
+  | UserChatMessage
+  | AssistantChatMessage
+  | SystemChatMessage
+  | ToolResultChatMessage;
 
 export interface ContextItemId {
   providerTitle: string;
@@ -323,6 +370,7 @@ export interface ContextItem {
   editable?: boolean;
   icon?: string;
   uri?: ContextItemUri;
+  hidden?: boolean;
 }
 
 export interface ContextItemWithId extends ContextItem {
@@ -347,19 +395,39 @@ export interface PromptLog {
   prompt: string;
   completion: string;
 }
-export interface ChatHistoryItem {
-  message: ChatMessage;
-  editorState?: any;
-  modifiers?: InputModifiers;
-  contextItems: ContextItemWithId[];
-  promptLogs?: PromptLog[];
+
+type MessageModes = "chat" | "edit";
+
+export type ToolStatus =
+  | "generating"
+  | "generated"
+  | "calling"
+  | "done"
+  | "canceled";
+
+// Will exist only on "assistant" messages with tool calls
+interface ToolCallState {
+  toolCallId: string;
+  toolCall: ToolCall;
+  status: ToolStatus;
+  parsedArgs: any;
+  output?: ContextItem[];
 }
 
-// LLM
+export interface ChatHistoryItem {
+  message: ChatMessage;
+  contextItems: ContextItemWithId[];
+  editorState?: any;
+  modifiers?: InputModifiers;
+  promptLogs?: PromptLog[];
+  toolCallState?: ToolCallState;
+  isGatheringContext?: boolean;
+  checkpoint?: Checkpoint;
+  isBeforeCheckpoint?: boolean;
+}
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
   log?: boolean;
-
   model?: string;
 }
 
@@ -700,7 +768,8 @@ type ModelProvider =
   | "nebius"
   | "xAI"
   | "moonshot"
-  | "siliconflow";
+  | "siliconflow"
+  | "function-network";
 
 export type ModelName =
   | "AUTODETECT"
@@ -855,6 +924,27 @@ interface Prediction {
       }[];
 }
 
+export interface ToolExtras {
+  ide: IDE;
+  llm: ILLM;
+  fetch: FetchFunction;
+}
+
+export interface Tool {
+  type: "function";
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, any>;
+    strict?: boolean | null;
+  };
+
+  displayTitle: string;
+  wouldLikeTo: string;
+  readonly: boolean;
+  uri?: string;
+}
+
 interface BaseCompletionOptions {
   temperature?: number;
   topP?: number;
@@ -871,6 +961,7 @@ interface BaseCompletionOptions {
   raw?: boolean;
   stream?: boolean;
   prediction?: Prediction;
+  tools?: Tool[];
 }
 
 export interface ModelCapability {
@@ -913,6 +1004,7 @@ export type EmbeddingsProviderName =
   | "nebius"
   | "vertexai"
   | "watsonx"
+  | "function-network"
   | "siliconflow";
 
 export interface EmbedOptions {
@@ -982,6 +1074,28 @@ export interface TabAutocompleteOptions {
   disableInFiles?: string[];
   useImports?: boolean;
   showWhateverWeHaveAtXMs?: number;
+}
+
+interface StdioOptions {
+  type: "stdio";
+  command: string;
+  args: string[];
+}
+
+interface WebSocketOptions {
+  type: "websocket";
+  url: string;
+}
+
+interface SSEOptions {
+  type: "sse";
+  url: string;
+}
+
+type TransportOptions = StdioOptions | WebSocketOptions | SSEOptions;
+
+export interface MCPOptions {
+  transport: TransportOptions;
 }
 
 export interface ContinueUIConfig {
@@ -1089,6 +1203,8 @@ interface ExperimentalConfig {
    * This is needed to crawl a large number of documentation sites that are dynamically rendered.
    */
   useChromiumForDocsCrawling?: boolean;
+  useTools?: boolean;
+  modelContextProtocolServer?: MCPOptions;
 }
 
 interface AnalyticsConfig {
@@ -1193,6 +1309,7 @@ export interface ContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  tools: Tool[];
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -1212,6 +1329,7 @@ export interface BrowserSerializedContinueConfig {
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
+  tools: Tool[];
 }
 
 // DOCS SUGGESTIONS AND PACKAGE INFO

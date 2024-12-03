@@ -119,8 +119,9 @@ export async function* stopAtStopTokens(
 }
 
 /**
- * Asynchronously yields characters from the input stream, stopping if a sequence contained in the beginning of the suffix is encountered.
- * */
+ * Asynchronously yields characters from the input stream.
+ * Stops if the beginning of the suffix is detected in the stream.
+ */
 export async function* stopAtStartOf(
   stream: AsyncGenerator<string>,
   suffix: string,
@@ -132,42 +133,31 @@ export async function* stopAtStartOf(
     }
     return;
   }
+  // We use sequenceLength * 1.5 as a heuristic to make sure we don't miss the sequence if the
+  // stream is not perfectly aligned with the sequence (small whitespace differences etc).
+  const targetPart = suffix
+    .trimStart()
+    .slice(0, Math.floor(sequenceLength * 1.5));
 
-  const n = Math.min(suffix.length, 3 * sequenceLength);
-  let prev = new Array(n + 1).fill(0);
-  let res = 0;
   let buffer = "";
 
   for await (const chunk of stream) {
-    const s1 = chunk;
-    const m = chunk.length;
-    for (let i = 1; i <= m; i++) {
-      // Create a temporary array to store the current row
-      let curr = new Array(n + 1).fill(0);
-      for (let j = 1; j <= n; j++) {
-        if (s1[i - 1] === suffix[j - 1]) {
-          curr[j] = prev[j - 1] + 1;
-          res = Math.max(res, curr[j]);
-        } else {
-          curr[j] = 0;
-        }
-      }
+    buffer += chunk;
 
-      // Move the current row's data to the previous row
-      prev = curr;
+    // Check if the targetPart contains contains the buffer at any point
+    if (buffer.length >= sequenceLength && targetPart.includes(buffer)) {
+      return; // Stop processing when the sequence is found
+    }
 
-      if (res > sequenceLength) {
-        return;
-      }
-
-      buffer += s1[i - 1];
-
-      while (buffer.length > sequenceLength) {
-        yield buffer[0];
-        buffer = buffer.slice(1);
-      }
+    // Yield chunk by chunk, ensuring not to exceed sequenceLength in the buffer
+    while (buffer.length > sequenceLength) {
+      yield buffer[0];
+      buffer = buffer.slice(1);
     }
   }
 
-  yield buffer;
+  // Yield the remaining buffer if it is not contained in the `targetPart`
+  if (buffer.length > 0) {
+    yield buffer;
+  }
 }

@@ -1,5 +1,4 @@
 import { JSONContent } from "@tiptap/react";
-import { IndexingProgressUpdate } from "core";
 import { OnboardingStatus } from "../components/OnboardingCard";
 
 type LocalStorageTypes = {
@@ -12,7 +11,6 @@ type LocalStorageTypes = {
   lastSessionId: string | undefined;
   [key: `inputHistory_${string}`]: JSONContent[];
   extensionVersion: string;
-  indexingState: IndexingProgressUpdate;
   showTutorialCard: boolean;
   shownProfilesIntroduction: boolean;
   disableIndexing: boolean;

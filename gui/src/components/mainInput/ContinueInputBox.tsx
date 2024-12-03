@@ -1,15 +1,19 @@
 import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
-import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
+import { useAppSelector } from "../../redux/hooks";
+import { newSession, setMessageAtIndex } from "../../redux/slices/sessionSlice";
+import { ToolbarOptions } from "./InputToolbar";
+import { useMemo } from "react";
+
 interface ContinueInputBoxProps {
+  isEditMode?: boolean;
   isLastUserInput: boolean;
   isMainInput?: boolean;
   onEnter: (
@@ -21,6 +25,18 @@ interface ContinueInputBoxProps {
   contextItems?: ContextItemWithId[];
   hidden?: boolean;
 }
+
+const EDIT_DISALLOWED_CONTEXT_PROVIDERS = [
+  "codebase",
+  "tree",
+  "open",
+  "web",
+  "diff",
+  "folder",
+  "search",
+  "debugger",
+  "repo-map",
+];
 
 const gradient = keyframes`
   0% {
@@ -62,11 +78,52 @@ const GradientBorder = styled.div<{
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
-  const active = useSelector((store: RootState) => store.state.active);
-  const availableSlashCommands = useSelector(selectSlashCommandComboBoxInputs);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+  const availableSlashCommands = useAppSelector(
+    selectSlashCommandComboBoxInputs,
   );
+  const availableContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
+  );
+  const useTools = useAppSelector(
+    (state) => state.config.config.experimental?.useTools !== false,
+  );
+  const editModeState = useAppSelector((state) => state.editModeState);
+
+  const filteredSlashCommands = props.isEditMode ? [] : availableSlashCommands;
+  const filteredContextProviders = useMemo(() => {
+    if (!props.isEditMode) {
+      availableContextProviders;
+    }
+
+    return (
+      availableContextProviders?.filter(
+        (provider) =>
+          !EDIT_DISALLOWED_CONTEXT_PROVIDERS.includes(provider.title),
+      ) ?? []
+    );
+  }, [availableContextProviders]);
+
+  const isStreamingEdit =
+    editModeState.editStatus === "streaming" ||
+    editModeState.editStatus === "accepting";
+
+  const historyKey = props.isEditMode ? "edit" : "chat";
+  const placeholder = props.isEditMode
+    ? "Describe how to modify the code - use '#' to add files"
+    : undefined;
+  const toolbarOptions: ToolbarOptions = props.isEditMode
+    ? {
+        hideAddContext: false,
+        hideImageUpload: false,
+        hideUseCodebase: true,
+        hideSelectModel: false,
+        hideTools: true,
+        enterText: isStreamingEdit ? "Retry" : "Edit",
+      }
+    : {
+        hideTools: !useTools,
+      };
 
   useWebviewListener(
     "newSessionWithPrompt",
@@ -85,27 +142,24 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   );
 
   return (
-    <div className={`mb-1 ${props.hidden ? "hidden" : ""}`}>
-      <div className={`relative flex px-2`}>
+    <div className={`${props.hidden ? "hidden" : ""}`}>
+      <div className={`relative flex flex-col px-2`}>
         <GradientBorder
-          loading={active && props.isLastUserInput ? 1 : 0}
+          loading={isStreaming && props.isLastUserInput ? 1 : 0}
           borderColor={
-            active && props.isLastUserInput ? undefined : vscBackground
+            isStreaming && props.isLastUserInput ? undefined : vscBackground
           }
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
             editorState={props.editorState}
-            onEnter={(...args) => {
-              props.onEnter(...args);
-              if (props.isMainInput) {
-                args[2].commands.clearContent(true);
-              }
-            }}
+            onEnter={props.onEnter}
+            placeholder={placeholder}
             isMainInput={props.isMainInput ?? false}
-            availableContextProviders={availableContextProviders ?? []}
-            availableSlashCommands={availableSlashCommands}
-            historyKey="chat"
+            availableContextProviders={filteredContextProviders}
+            availableSlashCommands={filteredSlashCommands}
+            historyKey={historyKey}
+            toolbarOptions={toolbarOptions}
           />
         </GradientBorder>
       </div>

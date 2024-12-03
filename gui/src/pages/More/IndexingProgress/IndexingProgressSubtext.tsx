@@ -15,6 +15,7 @@ const STATUS_TO_SUBTITLE_TEXT: Record<
   paused: "Click to resume",
   failed: "Click to retry",
   disabled: "Click to open config.json and enable indexing (requires reload)",
+  cancelled: "Click to restart",
 };
 
 function IndexingProgressSubtext({
