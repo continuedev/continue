@@ -322,7 +322,7 @@ export function Chat() {
     async () => {
       saveSession();
       mainTextInputRef.current?.focus?.();
-      dispatch(setMode("chat"));
+      dispatch(completeEdit());
     },
     [saveSession],
   );
