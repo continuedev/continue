@@ -1,9 +1,6 @@
 import { useDispatch } from "react-redux";
 import AddModelForm from "../../../forms/AddModelForm";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../../../redux/slices/uiSlice";
 import Alert from "../../gui/Alert";
 import { useSubmitOnboarding } from "../hooks";
 

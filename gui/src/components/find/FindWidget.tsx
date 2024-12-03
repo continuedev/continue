@@ -15,6 +15,7 @@ import { useSelector } from "react-redux";
 import { HeaderButton, Input } from "..";
 import { RootState } from "../../redux/store";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
+import { useAppSelector } from "../../redux/hooks";
 
 interface SearchMatch {
   index: number;
@@ -346,7 +347,8 @@ export const useFindWidget = (searchRef: RefObject<HTMLDivElement>) => {
 
   // Triggers that should cause results to temporarily disappear and then reload
   // Active = LLM is generating, etc.
-  const active = useSelector((state: RootState) => state.state.active);
+  const active = useAppSelector((state) => state.session.isStreaming);
+
   useEffect(() => {
     if (active || isResizing) setMatches([]);
     else refreshSearch("none");

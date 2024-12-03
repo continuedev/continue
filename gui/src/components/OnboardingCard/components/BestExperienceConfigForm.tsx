@@ -6,8 +6,8 @@ import { Button, Input, InputSubtext, lightGray } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { models } from "../../../pages/AddNewModel/configs/models";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
-import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import AddModelButtonSubtext from "../../AddModelButtonSubtext";
+import { setDefaultModel } from "../../../redux/slices/configSlice";
 
 const { anthropic, mistral } = providers;
 const chatProvider = anthropic!;

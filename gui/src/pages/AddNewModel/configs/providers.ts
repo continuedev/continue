@@ -137,6 +137,31 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       ...completionParamsInputsConfigs,
     ],
   },
+  "function-network": {
+    title: "Function Network",
+    provider: "function-network",
+    refPage: "function-network",
+    description:
+      "Run open-source models on Function Network. Private, Affordable User-Owned AI",
+    icon: "function-network.png",
+    longDescription: `Function Network is a private, affordable user-owned AI platform that allows you to run open-source models. Experience bleeding-edge Generative AI models with limitless scalability, all powered by our distributed inference network.`,
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Function Network API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.llama31Chat, models.deepseek],
+    apiKeyUrl: "https://function.network/join-waitlist",
+  },
   azure: {
     title: "Azure OpenAI",
     provider: "azure",

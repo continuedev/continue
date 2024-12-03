@@ -9,7 +9,7 @@ import {
   defaultIgnoreFile,
   gitIgArrayFromFile,
 } from "../../indexing/ignore";
-import { stripImages } from "../../llm/images";
+import { renderChatMessage } from "../../util/messageContent";
 
 const LANGUAGE_DEP_MGMT_FILENAMES = [
   "package.json", // JavaScript (Node.js)
@@ -45,10 +45,11 @@ const OnboardSlashCommand: SlashCommand = {
     const context = await gatherProjectContext(workspaceDir, ide);
     const prompt = createOnboardingPrompt(context);
 
-    for await (const chunk of llm.streamChat([
-      { role: "user", content: prompt },
-    ], new AbortController().signal)) {
-      yield stripImages(chunk.content);
+    for await (const chunk of llm.streamChat(
+      [{ role: "user", content: prompt }],
+      new AbortController().signal,
+    )) {
+      yield renderChatMessage(chunk);
     }
   },
 };

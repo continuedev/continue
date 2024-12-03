@@ -2,13 +2,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { Provider } from "react-redux";
 import { describe, expect, it, vi } from "vitest";
-import { uiStateSlice } from "../../redux/slices/uiStateSlice";
+import { uiSlice } from "../../redux/slices/uiSlice";
 import ConfirmationDialog from "./ConfirmationDialog";
 
 const createMockStore = () => {
   return configureStore({
     reducer: {
-      uiState: uiStateSlice.reducer,
+      uiState: uiSlice.reducer,
     },
   });
 };

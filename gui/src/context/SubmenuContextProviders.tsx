@@ -7,12 +7,18 @@ import {
   groupByLastNPathParts,
 } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import { useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { IdeMessengerContext } from "./IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { RootState } from "../redux/store";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { useAppSelector } from "../redux/hooks";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -41,6 +47,19 @@ const initialContextProviders: SubtextContextProvidersContextType = {
 const SubmenuContextProvidersContext =
   createContext<SubtextContextProvidersContextType>(initialContextProviders);
 
+function isOpenFilesChanged(
+  newFiles: { id: string }[],
+  oldFiles: { id: string }[],
+) {
+  if (newFiles.length > oldFiles.length) {
+    return true;
+  }
+  for (let i = 0; i < newFiles.length; ++i) {
+    if (newFiles[i].id !== oldFiles[i].id) return true;
+  }
+  return false;
+}
+
 export const SubmenuContextProvidersProvider = ({
   children,
 }: {
@@ -53,16 +72,18 @@ export const SubmenuContextProvidersProvider = ({
     [id: string]: ContextSubmenuItem[];
   }>({});
 
-  const contextProviderDescriptions = useSelector(
+  const contextProviderDescriptions = useAppSelector(
     selectContextProviderDescriptions,
   );
-  const disableIndexing = useSelector(
-    (store: RootState) => store.state.config.disableIndexing,
+  const disableIndexing = useAppSelector(
+    (store) => store.config.config.disableIndexing,
   );
 
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [autoLoadTriggered, setAutoLoadTriggered] = useState(false);
+
+  const config = useAppSelector((store) => store.config.config);
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -122,18 +143,22 @@ export const SubmenuContextProvidersProvider = ({
     [minisearches],
   );
 
+  const lastOpenFilesRef = useRef([]);
   useEffect(() => {
     let isMounted = true;
     const refreshOpenFiles = async () => {
       if (!isMounted) return;
       const openFiles = await getOpenFilesItems();
-      setFallbackResults((prev) => ({
-        ...prev,
-        file: deduplicateArray(
-          [...openFiles, ...(Array.isArray(prev.file) ? prev.file : [])],
-          (a, b) => a.id === b.id,
-        ),
-      }));
+      if (isOpenFilesChanged(openFiles, lastOpenFilesRef.current)) {
+        setFallbackResults((prev) => ({
+          ...prev,
+          file: deduplicateArray(
+            [...openFiles, ...(Array.isArray(prev.file) ? prev.file : [])],
+            (a, b) => a.id === b.id,
+          ),
+        }));
+        lastOpenFilesRef.current = openFiles;
+      }
     };
 
     const interval = setInterval(refreshOpenFiles, 2000);

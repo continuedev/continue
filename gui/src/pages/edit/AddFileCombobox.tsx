@@ -5,8 +5,7 @@ import {
 } from "../../context/SubmenuContextProviders";
 import { Combobox } from "@headlessui/react";
 import FileIcon from "../../components/FileIcon";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { useAppSelector } from "../../redux/hooks";
 
 export interface AddFileComboboxProps {
   onSelect: (filepaths: string[]) => void;
@@ -26,9 +25,7 @@ export default function AddFileCombobox({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { getSubmenuContextItems } = useSubmenuContextProviders();
   const allFiles = getSubmenuContextItems("file", "");
-  const codeToEdit = useSelector(
-    (state: RootState) => state.editModeState.codeToEdit,
-  );
+  const codeToEdit = useAppSelector((state) => state.session.codeToEdit);
   const remainingFiles = allFiles.filter(
     (file) => !codeToEdit.find((code) => code.filepath === file.id),
   );

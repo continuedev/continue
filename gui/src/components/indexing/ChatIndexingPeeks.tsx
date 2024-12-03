@@ -1,11 +1,10 @@
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-
+import { useDispatch } from "react-redux";
 import { IndexingStatus } from "core";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowPathIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { setIndexingChatPeekHidden } from "../../redux/slices/stateSlice";
+import { useAppSelector } from "../../redux/hooks";
+import { setIndexingChatPeekHidden } from "../../redux/slices/indexingSlice";
 
 interface MergedIndexingState {
   displayName: string;
@@ -27,8 +26,8 @@ export interface ChatIndexingPeekProps {
 function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const hiddenPeeks = useSelector(
-    (store: RootState) => store.state.indexing.hiddenChatPeekTypes,
+  const hiddenPeeks = useAppSelector(
+    (store) => store.indexing.indexing.hiddenChatPeekTypes,
   );
 
   if (hiddenPeeks[state.type]) return null;
@@ -41,7 +40,7 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
     >
       <div className="group flex flex-1 cursor-pointer flex-row items-center gap-2">
         <div className={`flex flex-row items-center gap-2`}>
-          <p className="m-0 p-0 text-stone-500 group-hover:underline">
+          <p className="m-0 p-0 text-xs text-stone-500 group-hover:underline">
             {state.displayName}
           </p>
         </div>
@@ -76,8 +75,8 @@ function ChatIndexingPeek({ state }: ChatIndexingPeekProps) {
 }
 
 function ChatIndexingPeeks() {
-  const indexingStatuses = useSelector(
-    (store: RootState) => store.state.indexing.statuses,
+  const indexingStatuses = useAppSelector(
+    (store) => store.indexing.indexing.statuses,
   );
   const mergedIndexingStates: MergedIndexingState[] = useMemo(() => {
     const mergedStates: MergedIndexingState[] = [];

@@ -1,6 +1,6 @@
 import { ContextItemWithId } from "core";
 import { IIdeMessenger } from "../context/IdeMessenger";
-import { updateFileSymbols } from "../redux/slices/stateSlice";
+import { updateFileSymbols } from "../redux/slices/sessionSlice";
 import { Dispatch } from "@reduxjs/toolkit";
 
 export async function updateFileSymbolsFromContextItems(

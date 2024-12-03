@@ -1,8 +1,8 @@
 import * as YAML from "yaml";
 
 import { ContinueSDK, SlashCommand } from "../..";
-import { stripImages } from "../../llm/images";
 import { getBasename } from "../../util/index";
+import { renderChatMessage } from "../../util/messageContent";
 
 import { getContextProviderHelpers } from "./getContextProviderHelpers";
 import { renderTemplatedString } from "./renderTemplatedString";
@@ -90,8 +90,11 @@ export function slashCommandFromPromptFile(
         systemMessage,
       );
 
-      for await (const chunk of context.llm.streamChat(messages, new AbortController().signal)) {
-        yield stripImages(chunk.content);
+      for await (const chunk of context.llm.streamChat(
+        messages,
+        new AbortController().signal,
+      )) {
+        yield renderChatMessage(chunk);
       }
     },
   };

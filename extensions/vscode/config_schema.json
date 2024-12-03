@@ -207,7 +207,8 @@
             "xAI",
             "kindo",
             "moonshot",
-            "siliconflow"
+            "siliconflow",
+            "function-network"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -246,7 +247,8 @@
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)",
-            "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)"
+            "### SiliconFlow\nTo get started with SiliconFlow, obtain your API key from [SiliconCloud](https://cloud.siliconflow.cn/account/ak). SiliconCloud provides cost-effective GenAI services based on excellent open source basic models.\n> [Models](https://siliconflow.cn/zh-cn/models)",
+            "### Function Network offers private, affordable user-owned AI\nTo get started with Function Network, obtain your API key from [Function Network](https://www.function.network/join-waitlist). Function Network provides a variety of models for chat, completion, and embeddings."
           ],
           "type": "string"
         },
@@ -2530,7 +2532,8 @@
                 "mistral",
                 "watsonx",
                 "lmstudio",
-                "siliconflow"
+                "siliconflow",
+                "function-network"
               ]
             },
             "model": {
@@ -2578,7 +2581,13 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere", "voyage", "nvidia", "gemini", "siliconflow"]
+                    "enum": [
+                      "cohere",
+                      "voyage",
+                      "nvidia",
+                      "gemini",
+                      "siliconflow"
+                    ]
                   }
                 },
                 "required": ["provider"]
@@ -3045,6 +3054,68 @@
               "type": "boolean",
               "description": "Use Chromium to crawl docs locally. Useful if the default Cheerio crawler fails on sites that require JavaScript rendering. Downloads and installs Chromium to `~/.continue/.utils`.",
               "default": false
+            },
+            "useTools": {
+              "type": "boolean",
+              "description": "Allow tool use. Currently only supported with Claude 3.5 Sonnet",
+              "default": true
+            },
+            "modelContextProtocolServer": {
+              "type": "object",
+              "properties": {
+                "transport": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["stdio"]
+                        },
+                        "command": {
+                          "type": "string"
+                        },
+                        "args": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": ["type", "command", "args"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["websocket"]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": ["type", "url"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": ["sse"]
+                        },
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "required": ["type", "url"]
+                    }
+                  ]
+                }
+              },
+              "required": ["transport"]
             }
           }
         }

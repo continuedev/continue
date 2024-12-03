@@ -1,22 +1,17 @@
-import { useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-import IndexingStatusViewer from "./DocsIndexingStatus";
+import { useDispatch } from "react-redux";
 import { SecondaryButton } from "..";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import DocsIndexingStatus from "./DocsIndexingStatus";
+import { useAppSelector } from "../../redux/hooks";
 
 function DocsIndexingStatuses() {
   const dispatch = useDispatch();
-  const config = useSelector((store: RootState) => store.state.config);
+  const config = useAppSelector((store) => store.config.config);
   const configDocs = config.docs ?? [];
 
   // const indexingStatuses = useSelector(
-  //   (store: RootState) => store.state.indexing.statuses,
+  //   (store: RootState) => store.indexing.indexing.statuses,
   // );
   // const docsStatuses = useMemo(() => {
   //   const docs = Object.values(indexingStatuses).filter(

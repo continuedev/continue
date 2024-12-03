@@ -1,10 +1,11 @@
 import { execSync } from "child_process";
-import * as JSONC from "comment-json";
 import * as fs from "fs";
 import os from "os";
 import path from "path";
 
+import * as JSONC from "comment-json";
 import * as tar from "tar";
+
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -28,6 +29,7 @@ import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index.js";
+import MCPConnectionSingleton from "../context/mcp";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
@@ -42,6 +44,7 @@ import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
+import { allTools } from "../tools";
 import { copyOf } from "../util";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import { GlobalContext } from "../util/GlobalContext";
@@ -57,7 +60,6 @@ import {
   getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
 } from "../util/paths";
-
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -484,14 +486,36 @@ async function intermediateToFinalConfig(
     }
   }
 
-  return {
+  let continueConfig: ContinueConfig = {
     ...config,
     contextProviders,
     models,
     embeddingsProvider: config.embeddingsProvider as any,
     tabAutocompleteModels,
     reranker: config.reranker as any,
+    tools: allTools,
   };
+
+  // Apply MCP if specified
+  if (config.experimental?.modelContextProtocolServer) {
+    const mcpConnection = await MCPConnectionSingleton.getInstance(
+      config.experimental.modelContextProtocolServer,
+    );
+    continueConfig = await Promise.race<ContinueConfig>([
+      mcpConnection.modifyConfig(continueConfig),
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error("MCP connection timed out after 2000ms")),
+          2000,
+        ),
+      ),
+    ]).catch((error) => {
+      console.warn("MCP connection error:", error);
+      return continueConfig; // Return original config if timeout occurs
+    });
+  }
+
+  return continueConfig;
 }
 
 function finalToBrowserConfig(
@@ -528,6 +552,7 @@ function finalToBrowserConfig(
     ui: final.ui,
     experimental: final.experimental,
     docs: final.docs,
+    tools: final.tools,
   };
 }
 

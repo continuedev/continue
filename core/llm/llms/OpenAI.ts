@@ -3,8 +3,9 @@ import {
   CompletionOptions,
   LLMOptions,
   ModelProvider,
+  Tool,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
@@ -56,6 +57,14 @@ class OpenAI extends BaseLLM {
   };
 
   protected _convertMessage(message: ChatMessage) {
+    if (message.role === "tool") {
+      return {
+        role: "tool",
+        content: message.content,
+        tool_call_id: message.toolCallId,
+      };
+    }
+
     if (typeof message.content === "string") {
       return message;
     } else if (!message.content.some((item) => item.type !== "text")) {
@@ -99,8 +108,22 @@ class OpenAI extends BaseLLM {
     return ["gpt-4o-mini", "gpt-4o"].includes(model);
   }
 
+  private convertTool(tool: Tool): any {
+    return {
+      type: tool.type,
+      function: {
+        name: tool.function.name,
+        description: tool.function.description,
+        parameters: tool.function.parameters,
+        strict: tool.function.strict,
+      },
+    };
+  }
+
   protected _convertArgs(options: CompletionOptions, messages: ChatMessage[]) {
     const url = new URL(this.apiBase!);
+    const tools = options.tools?.map(this.convertTool);
+
     const finalOptions: any = {
       messages: messages.map(this._convertMessage),
       model: this._convertModelName(options.model),
@@ -122,6 +145,7 @@ class OpenAI extends BaseLLM {
                 this.apiType === "azure"
               ? options.stop?.slice(0, 4)
               : options.stop,
+      tools,
     };
 
     // OpenAI o1-preview and o1-mini:
@@ -206,7 +230,7 @@ class OpenAI extends BaseLLM {
       signal,
       options,
     )) {
-      yield stripImages(chunk.content);
+      yield renderChatMessage(chunk);
     }
   }
 
@@ -249,7 +273,7 @@ class OpenAI extends BaseLLM {
         options.raw)
     ) {
       for await (const content of this._legacystreamComplete(
-        stripImages(messages[messages.length - 1]?.content || ""),
+        renderChatMessage(messages[messages.length - 1]),
         signal,
         options,
       )) {
@@ -266,6 +290,9 @@ class OpenAI extends BaseLLM {
     body.messages = body.messages.map((m: any) => ({
       ...m,
       content: m.content === "" ? " " : m.content,
+      // We call it toolCalls, they call it tool_calls
+      tool_calls: m.toolCalls,
+      tool_call_id: m.toolCallId,
     })) as any;
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
@@ -283,7 +310,25 @@ class OpenAI extends BaseLLM {
 
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.delta?.content) {
-        yield value.choices[0].delta;
+        yield {
+          role: "assistant",
+          content: value.choices[0].delta.content,
+        };
+      } else if (value.choices?.[0]?.delta?.tool_calls) {
+        yield {
+          role: "assistant",
+          content: "",
+          toolCalls: value.choices?.[0]?.delta?.tool_calls.map(
+            (tool_call: any) => ({
+              id: tool_call.id,
+              type: tool_call.type,
+              function: {
+                name: tool_call.function.name,
+                arguments: tool_call.function.arguments,
+              },
+            }),
+          ),
+        };
       }
     }
   }

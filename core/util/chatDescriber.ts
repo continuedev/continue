@@ -1,5 +1,4 @@
 import { ILLM, LLMFullCompletionOptions } from "..";
-import { stripImages } from "../llm/images";
 
 import { removeQuotesAndEscapes } from ".";
 
@@ -35,7 +34,6 @@ export class ChatDescriber {
     }
 
     // Clean up and distill the message we want to send to the LLM
-    message = stripImages(message);
     message = removeCodeBlocksAndTrim(message);
 
     if (!message) {

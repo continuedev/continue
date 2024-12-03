@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import styled from "styled-components";
-import { vscForeground, defaultBorderRadius } from "..";
+import { defaultBorderRadius, vscForeground } from "..";
 import { VscThemeContext } from "../../context/VscTheme";
 
 const generateThemeStyles = (theme: any) => {

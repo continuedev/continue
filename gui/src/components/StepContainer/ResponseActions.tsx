@@ -1,12 +1,11 @@
 import { BarsArrowDownIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { stripImages } from "core/llm/images";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
+import { renderChatMessage } from "core/util/messageContent";
 import { CopyIconButton } from "../gui/CopyIconButton";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import EditActions from "./EditActions";
 import FeedbackButtons from "./FeedbackButtons";
+import { useAppSelector } from "../../redux/hooks";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -14,6 +13,7 @@ export interface ResponseActionsProps {
   index: number;
   onDelete: () => void;
   item: ChatHistoryItem;
+  shouldHideActions: boolean;
 }
 
 export default function ResponseActions({
@@ -22,9 +22,10 @@ export default function ResponseActions({
   item,
   isTruncated,
   onDelete,
+  shouldHideActions,
 }: ResponseActionsProps) {
-  const isInEditMode = useSelector(
-    (store: RootState) => store.editModeState.isInEditMode,
+  const isInEditMode = useAppSelector(
+    (store) => store.editModeState.isInEditMode,
   );
 
   if (isInEditMode) {
@@ -32,28 +33,37 @@ export default function ResponseActions({
   }
 
   return (
-    <div className="mx-2 flex cursor-default items-center justify-end space-x-1 pb-0 text-xs text-gray-400">
-      {isTruncated && (
-        <HeaderButtonWithToolTip
-          tabIndex={-1}
-          text="Continue generation"
-          onClick={onContinueGeneration}
-        >
-          <BarsArrowDownIcon className="h-3.5 w-3.5 text-gray-500" />
-        </HeaderButtonWithToolTip>
+    <div className="mx-2 flex cursor-default items-center justify-end space-x-1 bg-transparent pb-0 text-xs text-gray-400">
+      {shouldHideActions || (
+        <>
+          {isTruncated && (
+            <HeaderButtonWithToolTip
+              tabIndex={-1}
+              text="Continue generation"
+              onClick={onContinueGeneration}
+            >
+              <BarsArrowDownIcon className="h-3.5 w-3.5 text-gray-500" />
+            </HeaderButtonWithToolTip>
+          )}
+
+          <HeaderButtonWithToolTip
+            text="Delete"
+            tabIndex={-1}
+            onClick={onDelete}
+          >
+            <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
+          </HeaderButtonWithToolTip>
+
+          <CopyIconButton
+            tabIndex={-1}
+            text={renderChatMessage(item.message)}
+            clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
+            checkIconClassName="h-3.5 w-3.5 text-green-400"
+          />
+
+          <FeedbackButtons item={item} />
+        </>
       )}
-
-      <HeaderButtonWithToolTip text="Delete" tabIndex={-1} onClick={onDelete}>
-        <TrashIcon className="h-3.5 w-3.5 text-gray-500" />
-      </HeaderButtonWithToolTip>
-
-      <CopyIconButton
-        tabIndex={-1}
-        text={stripImages(item.message.content)}
-        clipboardIconClassName="h-3.5 w-3.5 text-gray-500"
-        checkIconClassName="h-3.5 w-3.5 text-green-400"
-      />
-      <FeedbackButtons item={item} />
     </div>
   );
 }

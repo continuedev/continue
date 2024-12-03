@@ -2,8 +2,8 @@ import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useDispatch } from "react-redux";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { addCodeToEdit } from "../../redux/slices/editModeState";
 import { Listbox } from "@headlessui/react";
+import { addCodeToEdit } from "../../redux/slices/sessionSlice";
 
 export interface AddFileButtonProps {
   onClick: () => void;

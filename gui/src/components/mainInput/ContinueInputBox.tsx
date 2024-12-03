@@ -1,14 +1,15 @@
 import { Editor, JSONContent } from "@tiptap/react";
 import { ContextItemWithId, InputModifiers } from "core";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommandComboBoxInputs } from "../../redux/selectors";
-import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
-import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
+import { useAppSelector } from "../../redux/hooks";
+import { newSession, setMessageAtIndex } from "../../redux/slices/sessionSlice";
+
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
@@ -62,10 +63,15 @@ const GradientBorder = styled.div<{
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
-  const active = useSelector((store: RootState) => store.state.active);
-  const availableSlashCommands = useSelector(selectSlashCommandComboBoxInputs);
-  const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders,
+  const active = useAppSelector((state) => state.session.isStreaming);
+  const availableSlashCommands = useAppSelector(
+    selectSlashCommandComboBoxInputs,
+  );
+  const availableContextProviders = useAppSelector(
+    (state) => state.config.config.contextProviders,
+  );
+  const useTools = useAppSelector(
+    (state) => state.config.config.experimental?.useTools !== false,
   );
 
   useWebviewListener(
@@ -85,7 +91,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   );
 
   return (
-    <div className={`mb-1 ${props.hidden ? "hidden" : ""}`}>
+    <div className={`${props.hidden ? "hidden" : ""}`}>
       <div className={`relative flex px-2`}>
         <GradientBorder
           loading={active && props.isLastUserInput ? 1 : 0}
@@ -106,6 +112,9 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
             availableContextProviders={availableContextProviders ?? []}
             availableSlashCommands={availableSlashCommands}
             historyKey="chat"
+            toolbarOptions={{
+              hideTools: !useTools,
+            }}
           />
         </GradientBorder>
       </div>

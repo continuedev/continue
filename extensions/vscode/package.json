@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.237",
+  "version": "0.9.242",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -57,6 +57,12 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "authentication": [
+      {
+        "id": "continue",
+        "label": "Continue"
+      }
+    ],
     "languages": [
       {
         "filenames": [

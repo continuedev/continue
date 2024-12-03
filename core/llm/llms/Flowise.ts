@@ -6,7 +6,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../images.js";
+import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
 interface IFlowiseApiOptions {
@@ -126,7 +126,7 @@ class Flowise extends BaseLLM {
   ): AsyncGenerator<string> {
     const message: ChatMessage = { role: "user", content: prompt };
     for await (const chunk of this._streamChat([message], signal, options)) {
-      yield stripImages(chunk.content);
+      yield renderChatMessage(chunk);
     }
   }
 
@@ -141,7 +141,7 @@ class Flowise extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({ ...requestBody, socketIOClientId: socket.id }),
-      signal
+      signal,
     }).then((res) => res.json());
 
     while (await socketInfo.hasNextToken()) {

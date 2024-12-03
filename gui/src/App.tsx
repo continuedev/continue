@@ -12,7 +12,6 @@ import History from "./pages/history";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
 import MorePage from "./pages/More";
-import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 import { ROUTES } from "./util/navigation";
 import { SubmenuContextProvidersProvider } from "./context/SubmenuContextProviders";
@@ -32,10 +31,6 @@ const router = createMemoryRouter([
         element: <Chat />,
       },
       {
-        path: "/edit",
-        element: <Edit />,
-      },
-      {
         path: "/history",
         element: <History />,
       },
@@ -44,8 +39,8 @@ const router = createMemoryRouter([
         element: <Stats />,
       },
       {
-        path: "/settings",
-        element: <SettingsPage />,
+        path: "/edit",
+        element: <Edit />,
       },
       {
         path: "/addModel",

@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import { useNavigate, useRouteError } from "react-router-dom";
-import { newSession } from "../redux/slices/stateSlice";
+import { newSession } from "../redux/slices/sessionSlice";
 import { GithubIcon } from "../components/svg/GithubIcon";
 import { DiscordIcon } from "../components/svg/DiscordIcon";
 import { useContext, useEffect, useState } from "react";

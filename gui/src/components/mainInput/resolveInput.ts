@@ -7,10 +7,10 @@ import {
   MessagePart,
   RangeInFile,
 } from "core";
-import { stripImages } from "core/llm/images";
+import { stripImages } from "core/util/messageContent";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import { Dispatch } from "@reduxjs/toolkit";
-import { setIsGatheringContext } from "../../redux/slices/stateSlice";
+import { setIsGatheringContext } from "../../redux/slices/sessionSlice";
 
 interface MentionAttrs {
   label: string;
@@ -110,12 +110,7 @@ async function resolveEditorContent(
   const shouldGatherContext = modifiers.useCodebase || slashCommand;
 
   if (shouldGatherContext) {
-    dispatch(
-      setIsGatheringContext({
-        isGathering: true,
-        gatheringMessage: "Gathering context",
-      }),
-    );
+    dispatch(setIsGatheringContext(true));
   }
 
   let contextItemsText = "";
@@ -188,12 +183,7 @@ async function resolveEditorContent(
   }
 
   if (shouldGatherContext) {
-    dispatch(
-      setIsGatheringContext({
-        isGathering: false,
-        gatheringMessage: "Gathering context",
-      }),
-    );
+    dispatch(setIsGatheringContext(true));
   }
 
   return [contextItems, selectedCode, parts];

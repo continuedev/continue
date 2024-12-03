@@ -1,4 +1,7 @@
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { SymbolWithRange } from "core";
+import { ctxItemToRifWithContents } from "core/commands/util";
+import { memo, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -11,20 +14,17 @@ import {
   vscEditorBackground,
   vscForeground,
 } from "..";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { getFontSize, isJetBrains } from "../../util";
+import FilenameLink from "./FilenameLink";
 import "./katex.css";
 import "./markdown.css";
-import { ctxItemToRifWithContents } from "core/commands/util";
-import FilenameLink from "./FilenameLink";
-import StepContainerPreToolbar from "./StepContainerPreToolbar";
-import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
-import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
-import { RootState } from "../../redux/store";
-import { ContextItemWithId, SymbolWithRange } from "core";
+import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
-import { useSelector } from "react-redux";
-import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
+import { useAppSelector } from "../../redux/hooks";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -159,13 +159,13 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   // The refs are a workaround because rehype options are stored on initiation
   // So they won't use the most up-to-date state values
   // So in this case we just put them in refs
-  const contextItems = useSelector(
-    (state: RootState) =>
-      state.state.history[props.itemIndex - 1]?.contextItems,
+  const contextItems = useAppSelector(
+    (state) => state.session.history[props.itemIndex - 1]?.contextItems,
   );
   const contextItemsRef = useUpdatingRef(contextItems);
 
-  const symbols = useSelector((state: RootState) => state.state.symbols);
+  const symbols = useAppSelector((state) => state.session.symbols);
+
   const symbolsRef = useRef<SymbolWithRange[]>([]);
   useEffect(() => {
     // Note, before I was only looking for symbols that matched

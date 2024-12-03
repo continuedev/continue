@@ -1,4 +1,3 @@
-// AuthContext.tsx
 import React, {
   createContext,
   useContext,
@@ -7,16 +6,16 @@ import React, {
   useMemo,
 } from "react";
 import { ControlPlaneSessionInfo } from "core/control-plane/client";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { IdeMessengerContext } from "./IdeMessenger";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { RootState } from "../redux/store";
 import { ProfileDescription } from "core/config/ProfileLifecycleManager";
 import { setLastControlServerBetaEnabledStatus } from "../redux/slices/miscSlice";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import AccountDialog from "../components/AccountDialog";
+import { useAppSelector } from "../redux/hooks";
 
 interface AuthContextType {
   session: ControlPlaneSessionInfo | undefined;
@@ -36,8 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     undefined,
   );
   const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
-  const selectedProfileId = useSelector(
-    (store: RootState) => store.state.selectedProfileId,
+  const selectedProfileId = useAppSelector(
+    (store) => store.session.selectedProfileId,
   );
   const selectedProfile = useMemo(() => {
     return profiles.find((p) => p.id === selectedProfileId);
@@ -46,8 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
-  const lastControlServerBetaEnabledStatus = useSelector(
-    (state: RootState) => state.misc.lastControlServerBetaEnabledStatus,
+  const lastControlServerBetaEnabledStatus = useAppSelector(
+    (state) => state.misc.lastControlServerBetaEnabledStatus,
   );
 
   const login = () => {

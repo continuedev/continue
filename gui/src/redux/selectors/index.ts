@@ -3,7 +3,7 @@ import { ComboBoxItemType } from "../../components/mainInput/types";
 import { RootState } from "../store";
 
 export const selectSlashCommandComboBoxInputs = createSelector(
-  [(store: RootState) => store.state.config.slashCommands],
+  [(state: RootState) => state.config.config.slashCommands],
   (slashCommands) => {
     return (
       slashCommands?.map((cmd) => {
@@ -18,36 +18,27 @@ export const selectSlashCommandComboBoxInputs = createSelector(
 );
 
 export const selectSlashCommands = createSelector(
-  [(store: RootState) => store.state.config.slashCommands],
+  [(state: RootState) => state.config.config.slashCommands],
   (slashCommands) => {
     return slashCommands || [];
   },
 );
 
 export const selectContextProviderDescriptions = createSelector(
-  [(store: RootState) => store.state.config.contextProviders],
+  [(state: RootState) => state.config.config.contextProviders],
   (providers) => {
     return providers?.filter((desc) => desc.type === "submenu") || [];
   },
 );
 
 export const selectDefaultContextProviders = createSelector(
-  [(store: RootState) => store.state.config.experimental?.defaultContext],
+  [(state: RootState) => state.config.config.experimental?.defaultContext],
   (defaultProviders) => {
     return defaultProviders ?? [];
   },
 );
 
 export const selectUseActiveFile = createSelector(
-  [(store: RootState) => store.state.config.experimental?.defaultContext],
+  [(state: RootState) => state.config.config.experimental?.defaultContext],
   (defaultContext) => defaultContext?.includes("activeFile" as any),
-);
-
-export const selectApplyState = createSelector(
-  [(store: RootState) => store.state.applyStates],
-  (applyStates) => {
-    return (
-      applyStates.find((state) => state.streamId === "edit")?.status ?? "closed"
-    );
-  },
 );

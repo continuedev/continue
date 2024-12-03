@@ -16,10 +16,10 @@ import ModelCard from "../../components/modelSelection/ModelCard";
 import { ModelProviderTag } from "../../components/modelSelection/ModelProviderTag";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
-import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { updatedObj } from "../../util";
 import type { ProviderInfo } from "./configs/providers";
 import { providers } from "./configs/providers";
+import { setDefaultModel } from "../../redux/slices/configSlice";
 
 const GridDiv = styled.div`
   display: grid;

@@ -17,6 +17,7 @@ import GoogleContextProvider from "./GoogleContextProvider";
 import GreptileContextProvider from "./GreptileContextProvider";
 import HttpContextProvider from "./HttpContextProvider";
 import JiraIssuesContextProvider from "./JiraIssuesContextProvider/";
+import MCPContextProvider from "./MCPContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import OSContextProvider from "./OSContextProvider";
 import PostgresContextProvider from "./PostgresContextProvider";
@@ -60,6 +61,7 @@ export const Providers: (typeof BaseContextProvider)[] = [
   DiscordContextProvider,
   GreptileContextProvider,
   WebContextProvider,
+  MCPContextProvider,
 ];
 
 export function contextProviderClassFromName(

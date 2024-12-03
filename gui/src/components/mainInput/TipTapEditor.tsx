@@ -24,7 +24,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { v4 } from "uuid";
 import {
@@ -44,12 +44,6 @@ import useIsOSREnabled from "../../hooks/useIsOSREnabled";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
-import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import {
-  addCodeToEdit,
-  clearCodeToEdit,
-} from "../../redux/slices/editModeState";
-import { RootState } from "../../redux/store";
 import {
   getFontSize,
   isJetBrains,
@@ -70,6 +64,12 @@ import {
   handleVSCMetaKeyIssues,
 } from "./handleMetaKeyIssues";
 import { ComboBoxItem } from "./types";
+import { useAppSelector } from "../../redux/hooks";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import {
+  addCodeToEdit,
+  clearCodeToEdit,
+} from "../../redux/slices/sessionSlice";
 
 const InputBoxDiv = styled.div<{ border?: string }>`
   resize: none;
@@ -180,29 +180,21 @@ function TipTapEditor(props: TipTapEditorProps) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { getSubmenuContextItems } = useSubmenuContextProviders();
 
-  const historyLength = useSelector(
-    (store: RootState) => store.state.history.length,
-  );
+  const historyLength = useAppSelector((store) => store.session.history.length);
 
-  const useActiveFile = useSelector(selectUseActiveFile);
+  const useActiveFile = useAppSelector(selectUseActiveFile);
 
   const { saveSession, loadSession } = useHistory(dispatch);
 
   const posthog = usePostHog();
-  const [isEditorFocused, setIsEditorFocused] = useState(false);
-  const [hasDefaultModel, setHasDefaultModel] = useState(true);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
 
   const isOSREnabled = useIsOSREnabled();
 
-  const isInEditMode = useSelector(
-    (state: RootState) => state.editModeState.isInEditMode,
-  );
-
-  const shouldAddFileForEditing = useSelector(
-    (state: RootState) => state.uiState.shouldAddFileForEditing,
+  const isInEditMode = useAppSelector(
+    (state) => state.editModeState.isInEditMode,
   );
 
   const enterSubmenu = async (editor: Editor, providerId: string) => {
@@ -246,7 +238,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     inDropdownRef.current = true;
   };
 
-  const defaultModel = useSelector(defaultModelSelector);
+  const defaultModel = useAppSelector(selectDefaultModel);
   const defaultModelRef = useUpdatingRef(defaultModel);
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
@@ -259,22 +251,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     props.availableSlashCommands,
   );
 
-  const active = useSelector((state: RootState) => state.state.active);
+  const active = useAppSelector((state) => state.session.isStreaming);
   const activeRef = useUpdatingRef(active);
-
-  // Only set `hasDefaultModel` after a timeout to prevent jank
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setHasDefaultModel(
-        !!defaultModel &&
-          defaultModel.apiKey !== undefined &&
-          defaultModel.apiKey !== "",
-      );
-    }, 3500);
-
-    // Cleanup function to clear the timeout if the component unmounts
-    return () => clearTimeout(timer);
-  }, [defaultModel]);
 
   async function handleImageFile(
     file: File,
@@ -320,8 +298,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     return undefined;
   }
 
-  const mainEditorContent = useSelector(
-    (store: RootState) => store.state.mainEditorContent,
+  const mainEditorContent = useAppSelector(
+    (store) => store.session.mainEditorContent,
   );
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
@@ -550,9 +528,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       },
     },
     content: props.editorState || mainEditorContent || "",
-    onFocus: () => setIsEditorFocused(true),
-    onBlur: () => setIsEditorFocused(false),
-    // onUpdate
     editable: !active || props.isMainInput,
   });
 
@@ -781,6 +756,34 @@ function TipTapEditor(props: TipTapEditorProps) {
       props.isMainInput,
       onEnterRef.current,
     ],
+  );
+
+  useWebviewListener(
+    "focusEdit",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
+    },
+    [editor, props.isMainInput],
+  );
+
+  useWebviewListener(
+    "focusEditWithoutClear",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 2000);
+    },
+    [editor, props.isMainInput],
   );
 
   useWebviewListener(

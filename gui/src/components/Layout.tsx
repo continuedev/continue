@@ -1,25 +1,23 @@
-import { useContext, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useMemo } from "react";
+import { useDispatch } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { CustomScrollbarDiv, defaultBorderRadius, vscInputBackground } from ".";
-import { IdeMessengerContext } from "../context/IdeMessenger";
+import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { useConfigError } from "../redux/hooks";
+import { useAppSelector } from "../redux/hooks";
 import {
   setEditDone,
   setEditStatus,
-  addCodeToEdit,
   focusEdit,
-  clearCodeToEdit,
 } from "../redux/slices/editModeState";
-import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import {
+  addCodeToEdit,
+  clearCodeToEdit,
   updateApplyState,
   updateCurCheckpoint,
-} from "../redux/slices/stateSlice";
-import { RootState } from "../redux/store";
+} from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { ROUTES } from "../util/navigation";
@@ -58,22 +56,18 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const { pathname } = useLocation();
 
-  const configError = useConfigError();
+  const configError = useAppSelector((state) => state.config.configError);
 
   const hasFatalErrors = useMemo(() => {
     return configError?.some((error) => error.fatal);
   }, [configError]);
 
-  const dialogMessage = useSelector(
-    (state: RootState) => state.uiState.dialogMessage,
-  );
-  const showDialog = useSelector(
-    (state: RootState) => state.uiState.showDialog,
-  );
+  const dialogMessage = useAppSelector((state) => state.ui.dialogMessage);
+
+  const showDialog = useAppSelector((state) => state.ui.showDialog);
 
   useWebviewListener(
     "openDialogMessage",
@@ -135,12 +129,12 @@ const Layout = () => {
   useWebviewListener(
     "updateApplyState",
     async (state) => {
-      dispatch(
-        updateCurCheckpoint({
-          filepath: state.filepath,
-          content: state.fileContent,
-        }),
-      );
+      // dispatch(
+      //   updateCurCheckpoint({
+      //     filepath: state.filepath,
+      //     content: state.fileContent,
+      //   }),
+      // );
       dispatch(updateApplyState(state));
     },
     [],
