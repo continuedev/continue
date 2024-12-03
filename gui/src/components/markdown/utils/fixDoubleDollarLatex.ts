@@ -1,5 +1,6 @@
 /*
 Currently double dollar latext with new lines causes truncation error
+So this pseudo-remark plugin removes internal newlines with double dollar signs
 */
 export function fixDoubleDollarNewLineLatex(text: string): string {
   // Match LaTeX blocks delimited by $$ with newlines
@@ -8,6 +9,5 @@ export function fixDoubleDollarNewLineLatex(text: string): string {
   // Replace each matched block with $$ without newline
   const replacedText = text.replace(pattern, "$$$$$1$$$$");
 
-  console.log("RESULT", replacedText);
   return replacedText;
 }
