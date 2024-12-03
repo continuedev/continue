@@ -4,6 +4,7 @@ import {
   CommandLineIcon,
   PlayIcon,
   ArrowLeftEndOnRectangleIcon,
+  Bars3CenterLeftIcon,
 } from "@heroicons/react/24/outline";
 import { defaultBorderRadius, vscEditorBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -18,6 +19,8 @@ import {
   selectDefaultModel,
   selectUIConfig,
 } from "../../redux/slices/configSlice";
+import { useDispatch } from "react-redux";
+import { toggle } from "../../redux/slices/codeWrapSlice";
 
 const TopDiv = styled.div`
   outline: 0.5px solid rgba(153, 153, 152);
@@ -66,6 +69,7 @@ export default function StepContainerPreActionButtons({
   const ideMessenger = useContext(IdeMessengerContext);
   const uiConfig = useAppSelector(selectUIConfig);
   const streamIdRef = useRef<string | null>(null);
+  const dispatch = useDispatch();
   const nextCodeBlockIndex = useAppSelector(
     (state) => state.session.codeBlockApplyStates.curIndex,
   );
@@ -91,6 +95,10 @@ export default function StepContainerPreActionButtons({
       text: codeBlockContent,
       curSelectedModelTitle: defaultModel.title,
     });
+  }
+
+  function toggleWrap() {
+    dispatch(toggle());
   }
 
   async function onClickRunTerminal(): Promise<void> {
@@ -153,6 +161,13 @@ export default function StepContainerPreActionButtons({
             <ArrowLeftEndOnRectangleIcon className="h-4 w-4 text-gray-400" />
           </HeaderButtonWithToolTip>
           <CopyIconButton text={codeBlockContent} />
+          <HeaderButtonWithToolTip
+            text="Wrap code"
+            style={{ backgroundColor: vscEditorBackground }}
+            onClick={toggleWrap}
+          >
+            <Bars3CenterLeftIcon className="h-4 w-4 text-gray-400" />
+          </HeaderButtonWithToolTip>
         </InnerHoverDiv>
       </HoverDiv>
       {children}

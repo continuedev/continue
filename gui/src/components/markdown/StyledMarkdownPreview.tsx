@@ -25,11 +25,14 @@ import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
+import { RootState } from '../../redux/store';
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
+  whiteSpace: string;
 }>`
   pre {
+    white-space: ${(props) => props.whiteSpace};
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
@@ -289,8 +292,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     setMarkdownSource(patchNestedMarkdown(props.source ?? ""));
   }, [props.source]);
 
+  const codeWrapState = useSelector((state: RootState) => state.codeWrap);
+  console.log("here", codeWrapState);
   return (
-    <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>{reactContent}</StyledMarkdown>
   );
 });
 
