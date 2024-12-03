@@ -31,7 +31,6 @@ import { getFullyQualifiedPath } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeIde } from "../VsCodeIde";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { hideGUI } from "../commands";
 
 /**
  * A shared messenger class between Core and Webview
