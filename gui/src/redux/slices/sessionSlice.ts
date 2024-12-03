@@ -17,6 +17,7 @@ import {
   CodeToEdit,
   ToolCall,
   ContextItem,
+  MessageModes,
 } from "core";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
@@ -42,6 +43,7 @@ type SessionState = {
   curCheckpointIndex: number;
   mainEditorContent?: JSONContent;
   symbols: FileSymbolMap;
+  mode: MessageModes;
   codeBlockApplyStates: {
     states: ApplyState[];
     curIndex: number;
@@ -49,10 +51,25 @@ type SessionState = {
 };
 
 function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
-  return a.filepath === b.filepath && a.contents === b.contents;
+  if (a.filepath !== b.filepath || a.contents !== b.contents) {
+    return false;
+  }
+
+  if ("range" in a && "range" in b) {
+    const rangeA = a.range;
+    const rangeB = b.range;
+
+    return (
+      rangeA.start.line === rangeB.start.line &&
+      rangeA.end.line === rangeB.end.line
+    );
+  }
+
+  // If neither has a range, they are considered equal in this context
+  return !("range" in a) && !("range" in b);
 }
 
-function getDefaultMessage(): ChatHistoryItemWithMessageId {
+function getBaseHistoryItem(): ChatHistoryItemWithMessageId {
   return {
     message: {
       id: uuidv4(),
@@ -60,7 +77,6 @@ function getDefaultMessage(): ChatHistoryItemWithMessageId {
       content: "",
     },
     contextItems: [],
-    mode: "chat",
     isGatheringContext: false,
     checkpoint: {},
     isBeforeCheckpoint: false,
@@ -77,6 +93,7 @@ const initialState: SessionState = {
   streamAborter: new AbortController(),
   codeToEdit: [],
   symbols: {},
+  mode: "chat",
   codeBlockApplyStates: {
     states: [],
     curIndex: 0,
@@ -150,6 +167,7 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       const historyItem = state.history[payload.index];
+      const lastHistoryItem = state.history[payload.index - 1];
 
       if (!historyItem) {
         return;
@@ -161,7 +179,7 @@ export const sessionSlice = createSlice({
       // Cut off history after the resubmitted message
       state.history = state.history
         .slice(0, payload.index + 1)
-        .concat(getDefaultMessage());
+        .concat(getBaseHistoryItem());
 
       state.isStreaming = true;
     },
@@ -177,15 +195,21 @@ export const sessionSlice = createSlice({
         editorState: JSONContent;
       }>,
     ) => {
+      const baseHistoryItem = getBaseHistoryItem();
+
       state.history.push({
-        ...getDefaultMessage(),
-        message: { role: "user", ...getDefaultMessage().message },
+        ...baseHistoryItem,
+        message: { ...baseHistoryItem.message, id: uuidv4(), role: "user" },
         editorState: payload.editorState,
       });
 
       state.history.push({
-        ...getDefaultMessage(),
-        message: { role: "assistant", ...getDefaultMessage().message },
+        ...baseHistoryItem,
+        message: {
+          ...baseHistoryItem.message,
+          id: uuidv4(),
+          role: "assistant",
+        },
         editorState: payload.editorState,
       });
 
@@ -203,9 +227,11 @@ export const sessionSlice = createSlice({
       }>,
     ) => {
       if (payload.index >= state.history.length) {
+        const baseHistoryItem = getBaseHistoryItem();
+
         state.history.push({
-          ...getDefaultMessage(),
-          message: { ...getDefaultMessage().message, ...payload.message },
+          ...baseHistoryItem,
+          message: { ...baseHistoryItem.message, ...payload.message },
           editorState: {
             type: "doc",
             content: renderChatMessage(payload.message)
@@ -270,10 +296,12 @@ export const sessionSlice = createSlice({
               action.payload.role === "assistant" &&
               action.payload.toolCalls?.length))
         ) {
+          const baseHistoryItem = getBaseHistoryItem();
+
           // Create a new message
           const historyItem: ChatHistoryItemWithMessageId = {
-            contextItems: [],
-            message: { id: uuidv4(), ...action.payload },
+            ...baseHistoryItem,
+            message: { ...baseHistoryItem.message, ...action.payload },
           };
 
           if (action.payload.role === "assistant" && action.payload.toolCalls) {
@@ -475,11 +503,28 @@ export const sessionSlice = createSlice({
 
       toolCallState.status = "calling";
     },
+    setMode: (state, action: PayloadAction<MessageModes>) => {
+      state.mode = action.payload;
+    },
   },
   selectors: {
     selectIsGatheringContext: (state) => {
-      const curMessage = state.history.at(-1);
-      return curMessage?.isGatheringContext || false;
+      const curHistoryItem = state.history.at(-1);
+      return curHistoryItem?.isGatheringContext || false;
+    },
+    selectIsInEditMode: (state) => {
+      return state.mode === "edit";
+    },
+    selectIsSingleRangeEditOrInsertion: (state) => {
+      if (state.mode !== "edit") {
+        return false;
+      }
+
+      const isInsertion = state.codeToEdit.length === 0;
+      const selectIsSingleRangeEdit =
+        state.codeToEdit.length === 1 && "range" in state.codeToEdit[0];
+
+      return selectIsSingleRangeEdit || isInsertion;
     },
   },
   extraReducers: (builder) => {
@@ -547,8 +592,13 @@ export const {
   acceptToolCall,
   setToolGenerated,
   setToolCallOutput,
+  setMode,
 } = sessionSlice.actions;
 
-export const { selectIsGatheringContext } = sessionSlice.selectors;
+export const {
+  selectIsGatheringContext,
+  selectIsInEditMode,
+  selectIsSingleRangeEditOrInsertion,
+} = sessionSlice.selectors;
 
 export default sessionSlice.reducer;
