@@ -120,6 +120,8 @@ function OnboardingLocalTab() {
                 force: true, // Because it doesn't exist in the webview's config object yet
               }),
             );
+
+            ideMessenger.post("update/modelChange", LOCAL_ONBOARDING_CHAT_TITLE);
           }}
           className="w-full"
           disabled={!hasDownloadedChatModel}

@@ -196,6 +196,7 @@ function AddNewModel() {
                               force: true,
                             }),
                           );
+                          ideMessenger.post("update/modelChange", model.title);
                           navigate("/");
                         }}
                       />
