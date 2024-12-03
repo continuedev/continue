@@ -42,11 +42,18 @@ export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
   shouldClearIndexes?: boolean;
-  status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  status:
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
-// This is more or less a V2 of IndexingProgressUpdate
+// This is more or less a V2 of IndexingProgressUpdate for docs etc.
 export interface IndexingStatus {
   id: string;
   type: "docs";
