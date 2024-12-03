@@ -180,7 +180,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const [reactContent, setMarkdownSource] = useRemark({
     remarkPlugins: [
       // remarkTables,
-      // remarkGfm,
+      remarkGfm,
       remarkMath,
       () => processCodeBlocks,
     ],

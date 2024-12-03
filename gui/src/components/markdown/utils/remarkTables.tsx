@@ -98,22 +98,35 @@
 //   };
 // }
 
-const visit = require("unist-util-visit");
+import { visit } from "unist-util-visit";
 
 export function remarkTables() {
   return (tree) => {
     visit(tree, "text", (node, index, parent) => {
       const { value } = node;
+      // console.log("NODE", value);
       // Inspired by
       // https://stackoverflow.com/questions/9837935/regex-for-markdown-table-syntax
       const tableRegex =
-        /^(\|[^\n]+\|(?:\r?\n| ))((?:\|:?[-]+:?)+\|)((?:\r?\n| )(?:\|[^\n]+\|(?:\r?\n| ))*)?$/gm;
-      let match;
+        /((?:\| *[^|\n]+ *)+\|)(?:\r?\n)((?:\|[ :]?-+[ :]?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
+      // /((?:\| *[^|\r\n]+ *)+\|)(?:\r?\n)((?:\|:?-+:?)+\|)((?:(?:\r?\n)(?:\| *[^|\r\n]+ *)+\|)+)/g;
+      // /((?:\| +[A-Za-z0-9 -_*#@$%:;?!.,\/\\]+ +)+\|)(?:\r?\n| )?((?:\|:?-+:?)+\|)((?:(?:\r?\n| )?(?:\| +[A-Za-z0-9 -_*#@$%:;?!.,\/\\^~]+ +)+\|)+)/g; // accepts space or nothing as separator between
+      // should probably change the (?:\r?\n| )? groups to (?:\r?\n)
+      // consider limiting table cells to chars e.g. A-Za-z0-9 -_*#@$%:;?!.,\/\\^~`{}
+      // /^(\|[^\n]+\|(?:\r?\n| ))((?:\|:?[-]+:?)+\|)((?:\r?\n| )(?:\|[^\n]+\|(?:\r?\n| ))*)?$/gm;
+
+      let match: RegExpExecArray | null;
       let lastIndex = 0;
       const newNodes = [];
 
+      const matches = tableRegex.exec(value); //value.match(tableRegex);
+      // console.log("MATCHES FOR\n\n" + value, matches);
+
       while ((match = tableRegex.exec(value)) !== null) {
+        // if(match.groups === 3){
         console.log(match);
+
+        // }
         const tableText = match[0];
 
         // Add any text before the table as a text node
@@ -156,6 +169,7 @@ export function remarkTables() {
 
 // The parseTable function remains the same as before
 function parseTable(tableText) {
+  // const header = tableText;
   const lines = tableText.trim().split(/\r?\n/);
 
   if (lines.length < 2) return null; // Not enough lines for a valid table
