@@ -85,6 +85,11 @@ tasks {
         from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
     }
 
+    prepareTestingSandbox {
+        from("../../binary/bin") { into("${intellij.pluginName.get()}/core/") }
+        from("../vscode/node_modules/@vscode/ripgrep") { into("${intellij.pluginName.get()}/ripgrep/") }
+    }
+
     wrapper { gradleVersion = properties("gradleVersion").get() }
 
     patchPluginXml {

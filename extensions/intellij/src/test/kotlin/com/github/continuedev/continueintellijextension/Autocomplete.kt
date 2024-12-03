@@ -8,8 +8,9 @@ import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.PsiErrorElementUtil
 
-@TestDataPath("\$CONTENT_ROOT/src/test/testData")
-class MyPluginTest : BasePlatformTestCase() {
+//@TestDataPath("\$CONTENT_ROOT/src/test/testData")
+class Autocomplete : BasePlatformTestCase() {
+//    override fun getTestDataPath() = "src/test/testData/rename"
 
     fun testXMLFile() {
         val psiFile =
@@ -35,5 +36,4 @@ class MyPluginTest : BasePlatformTestCase() {
 //        )
     }
 
-    override fun getTestDataPath() = "src/test/testData/rename"
 }
