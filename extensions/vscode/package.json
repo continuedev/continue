@@ -618,11 +618,13 @@
     "build:rust": "cargo-cp-artifact -ac sync sync.node -- cargo build --manifest-path ../../sync/Cargo.toml --message-format=json-render-diagnostics",
     "build-debug:rust": "npm run build:rust --",
     "build-release:rust": "npm run build:rust -- --release",
-    "compile-ui-tests": "tsc -p ./tsconfig.ui-test.json",
-    "get-chromedriver": "extest get-chromedriver --storage ./some-folder",
-    "get-vscode": "extest get-vscode --storage ./some-folder",
-    "install-vsix": "extest install-vsix -f ./build/continue-0.9.243.vsix --extensions_dir .test-extensions --storage ./some-folder",
-    "ui-test": "npm run install-vsix && extest run-tests './e2e/compiled/*.test.js' --code_settings settings.json --extensions_dir .test-extensions --storage ./some-folder"
+    "e2e:compile": "tsc -p ./tsconfig.e2e.json",
+    "e2e:create-storage": "mkdir -p ./e2e/storage",
+    "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage",
+    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage && codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
+    "e2e:install-vsix": "extest install-vsix -f ./build/continue-0.9.243.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
+    "e2e:test": "extest run-tests './e2e/_output/*.test.js' --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
+    "e2e:all": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:install-vsix && npm run e2e:test"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.4",

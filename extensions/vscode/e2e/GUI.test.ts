@@ -5,6 +5,7 @@ import {
   By,
   WebElement,
   WebDriver,
+  Key,
 } from "vscode-extension-tester";
 import { expect } from "chai";
 
@@ -44,7 +45,7 @@ describe("GUI Test", () => {
   let driver: WebDriver;
 
   before(async function () {
-    this.timeout(10000000);
+    this.timeout(10000);
 
     await new Workbench().executeCommand("continue.focusContinueInput");
 
@@ -59,12 +60,27 @@ describe("GUI Test", () => {
     await new EditorView().closeAllEditors();
   });
 
-  it("Find description", async () => {
+  it("should display correct panel description", async () => {
     const description = await view.findWebElement(
       By.xpath("//*[contains(text(), 'Quickly')]"),
     );
+
     expect(await description.getText()).has.string(
       "Quickly get up and running using our API keys.",
     );
   });
+
+  it("should allow typing text in the editor", async () => {
+    const tiptap = await view.findWebElement(By.className("tiptap"));
+
+    await tiptap.sendKeys("Hello world!");
+
+    expect(await tiptap.getText()).has.string("Hello world!");
+
+    // Just to show that we can
+    await tiptap.sendKeys(Key.ENTER);
+    await new Promise((res) => {
+      setTimeout(res, 5000);
+    });
+  }).timeout(6000);
 });

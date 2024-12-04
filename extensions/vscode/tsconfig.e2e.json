@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "module": "Node16",
+    "module": "CommonJS",
     "target": "ES2022",
-    "outDir": "e2e/compiled",
+    "outDir": "e2e/_output",
     "sourceMap": true,
     "strict": true,
     "rootDir": "e2e",
@@ -12,7 +12,6 @@
   "exclude": [
     "node_modules",
     ".vscode-test",
-    "test-resources",
     "e2e/resources/**",
     ".test-extensions"
   ],

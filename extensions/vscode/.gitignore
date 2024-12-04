@@ -19,7 +19,6 @@ gui/**
 continue_rc_schema.json
 
 
-e2e/compiled
-test-resources/
-.test-extensions
-some-folder
+e2e/_output
+e2e/.test-extensions
+e2e/storage
