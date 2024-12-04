@@ -446,6 +446,7 @@ export interface LLMOptions {
   aiGatewaySlug?: string;
   apiBase?: string;
   cacheBehavior?: CacheBehavior;
+  
 
   useLegacyCompletionsEndpoint?: boolean;
 
@@ -472,6 +473,9 @@ export interface LLMOptions {
 
   // IBM watsonx Options
   deploymentId?: string;
+
+  // Portkey Options
+  portkeyConfig?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,

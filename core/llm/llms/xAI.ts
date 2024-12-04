@@ -1,18 +1,20 @@
 import { LLMOptions, ModelProvider } from "../../index.js";
+
 import OpenAI from "./OpenAI.js";
 
-class Portkey extends OpenAI {
-  static providerName: ModelProvider = "portkey";
+class xAI extends OpenAI {
+  static providerName: ModelProvider = "xAI";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.portkey.ai/v1/",
+    apiBase: "https://api.x.ai/v1/",
   };
 
-  protected _getHeaders() {
-    return {
-      ...super._getHeaders(), // This includes "Authorization: Bearer ${apiKey}"
-      "x-portkey-config": this.portkeyConfigId,
-    };
+  private static MODEL_IDS: { [name: string]: string } = {
+    "grok-beta": "grok-beta", // Future names might not line up
+  };
+
+  protected _convertModelName(model: string) {
+    return xAI.MODEL_IDS[model] || this.model;
   }
 }
 
-export default Portkey;
+export default xAI;
