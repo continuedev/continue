@@ -279,7 +279,7 @@ export class CodebaseIndexer {
     for (const regexStr of this.errorsRegexesToClearIndexesOn) {
       const regex = new RegExp(regexStr);
       const match = err.message.match(regex);
-
+      
       if (match !== null) {
         shouldClearIndexes = true;
         break;

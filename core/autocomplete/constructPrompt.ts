@@ -75,10 +75,8 @@ export async function constructAutocompletePrompt(
 
   // Find external snippets
   let snippets: AutocompleteSnippet[] = [];
- 
   if (options.useOtherFiles) {
     snippets.push(...extraSnippets);
-                                 
     const windowAroundCursor =
       fullPrefix.slice(
         -options.slidingWindowSize * options.slidingWindowPrefixPercentage,
