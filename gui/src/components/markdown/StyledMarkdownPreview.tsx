@@ -25,7 +25,7 @@ import SymbolLink from "./SymbolLink";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
-import { RootState } from '../../redux/store';
+import { selectUIConfig } from "../../redux/slices/configSlice";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
@@ -292,8 +292,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     setMarkdownSource(patchNestedMarkdown(props.source ?? ""));
   }, [props.source]);
 
-  const codeWrapState = useSelector((state: RootState) => state.codeWrap);
-  console.log("here", codeWrapState);
+  const uiConfig = useAppSelector(selectUIConfig);
+  const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
     <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>{reactContent}</StyledMarkdown>
   );

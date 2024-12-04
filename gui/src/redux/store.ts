@@ -15,7 +15,6 @@ import configReducer from "./slices/configSlice";
 import indexingReducer from "./slices/indexingSlice";
 import sessionReducer from "./slices/sessionSlice";
 import uiReducer from "./slices/uiSlice";
-import codeWrapReducer from "./slices/codeWrapSlice"
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -29,7 +28,6 @@ const rootReducer = combineReducers({
   editModeState: editModeStateReducer,
   config: configReducer,
   indexing: indexingReducer,
-  codeWrap: codeWrapReducer,
 });
 
 const saveSubsetFilters = [
