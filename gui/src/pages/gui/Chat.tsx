@@ -228,7 +228,12 @@ export function Chat() {
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
   const sendInput = useCallback(
-    (editorState: JSONContent, modifiers: InputModifiers, editor: Editor) => {
+    (
+      editorState: JSONContent,
+      modifiers: InputModifiers,
+      editor: Editor,
+      index?: number,
+    ) => {
       if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
         if (u) {
@@ -259,7 +264,9 @@ export function Chat() {
         ? getMultifileEditPrompt(codeToEdit)
         : undefined;
 
-      dispatch(streamResponseThunk({ editorState, modifiers, promptPreamble }));
+      dispatch(
+        streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
+      );
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -355,7 +362,9 @@ export function Chat() {
                 <>
                   {isInEditMode && index === 0 && <CodeToEditCard />}
                   <ContinueInputBox
-                    onEnter={sendInput}
+                    onEnter={(editorState, modifiers, editor) =>
+                      sendInput(editorState, modifiers, editor, index)
+                    }
                     isLastUserInput={isLastUserInput(index)}
                     isMainInput={false}
                     editorState={item.editorState}
