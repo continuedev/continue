@@ -742,6 +742,7 @@ type ModelProvider =
   | "deepinfra"
   | "flowise"
   | "groq"
+  | "portkey"
   | "continue-proxy"
   | "fireworks"
   | "custom"
