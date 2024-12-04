@@ -20,8 +20,13 @@ import { ToolTip } from "../gui/Tooltip";
 import ModelSelect from "../modelSelection/ModelSelect";
 import HoverItem from "./InputToolbar/HoverItem";
 import ToggleToolsButton from "./InputToolbar/ToggleToolsButton";
-import { useAppSelector } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectDefaultModel } from "../../redux/slices/configSlice";
+import {
+  selectHasCodeToEdit,
+  selectIsInEditMode,
+} from "../../redux/slices/sessionSlice";
+import { exitEditMode } from "../../redux/thunks";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -76,9 +81,15 @@ interface InputToolbarProps {
 }
 
 function InputToolbar(props: InputToolbarProps) {
+  const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useAppSelector(selectDefaultModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
+  const isInEditMode = useAppSelector(selectIsInEditMode);
+  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+
+  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
+  const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
 
   const supportsImages =
     defaultModel &&
@@ -172,13 +183,15 @@ function InputToolbar(props: InputToolbarProps) {
           )}
 
           <EnterButton
-            onClick={(e) => {
-              props.onEnter({
-                useCodebase: isMetaEquivalentKeyPressed(e as any),
-                noContext: useActiveFile ? e.altKey : !e.altKey,
-              });
+            onClick={async (e) => {
+              if (props.onEnter) {
+                props.onEnter({
+                  useCodebase: isMetaEquivalentKeyPressed(e as any),
+                  noContext: useActiveFile ? e.altKey : !e.altKey,
+                });
+              }
             }}
-            disabled={props.disabled}
+            disabled={isEnterDisabled}
           >
             <span className="hidden md:inline">
               ⏎ {props.toolbarOptions?.enterText ?? "Enter"}
