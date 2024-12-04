@@ -472,49 +472,47 @@ function TipTapEditor(props: TipTapEditorProps) {
           return `@${props.node.attrs.label || props.node.attrs.id}`;
         },
       }),
-      isInEditModeRef.current
-        ? AddCodeToEdit.configure({
-            HTMLAttributes: {
-              class: "add-code-to-edit",
-            },
-            suggestion: {
-              ...getContextProviderDropdownOptions(
-                availableContextProvidersRef,
-                getSubmenuContextItemsRef,
-                enterSubmenu,
-                onClose,
-                onOpen,
-                inSubmenuRef,
-                ideMessenger,
-              ),
-              command: async ({ editor, range, props }) => {
-                editor.chain().focus().insertContentAt(range, "").run();
-                const filepath = props.id;
-                const contents = await ideMessenger.ide.readFile(filepath);
-                dispatch(
-                  addCodeToEdit({
-                    filepath,
-                    contents,
-                  }),
-                );
-              },
-              items: async ({ query }) => {
-                // Only display files in the dropdown
-                const results = getSubmenuContextItemsRef.current(
-                  "file",
-                  query,
-                );
-                return results.map((result) => ({
-                  ...result,
-                  label: result.title,
-                  type: "file",
-                  query: result.id,
-                  icon: result.icon,
-                }));
-              },
-            },
-          })
-        : undefined,
+
+      AddCodeToEdit.configure({
+        HTMLAttributes: {
+          class: "add-code-to-edit",
+        },
+        suggestion: {
+          ...getContextProviderDropdownOptions(
+            availableContextProvidersRef,
+            getSubmenuContextItemsRef,
+            enterSubmenu,
+            onClose,
+            onOpen,
+            inSubmenuRef,
+            ideMessenger,
+          ),
+          allow: () => isInEditModeRef.current,
+          command: async ({ editor, range, props }) => {
+            console.log({ range });
+            editor.chain().focus().insertContentAt(range, "").run();
+            const filepath = props.id;
+            const contents = await ideMessenger.ide.readFile(filepath);
+            dispatch(
+              addCodeToEdit({
+                filepath,
+                contents,
+              }),
+            );
+          },
+          items: async ({ query }) => {
+            // Only display files in the dropdown
+            const results = getSubmenuContextItemsRef.current("file", query);
+            return results.map((result) => ({
+              ...result,
+              label: result.title,
+              type: "file",
+              query: result.id,
+              icon: result.icon,
+            }));
+          },
+        },
+      }),
       props.availableSlashCommands.length
         ? SlashCommand.configure({
             HTMLAttributes: {
