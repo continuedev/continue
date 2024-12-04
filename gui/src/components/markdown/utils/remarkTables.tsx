@@ -32,7 +32,7 @@ export function remarkTables() {
       let match: RegExpExecArray | null;
       let lastIndex = 0;
       const newNodes = [];
-
+      let failed = false;
       while ((match = tableRegex.exec(value)) !== null) {
         const fullTableString = match[0];
         const headerGroup = match[1];
@@ -41,22 +41,22 @@ export function remarkTables() {
 
         if (!fullTableString || !headerGroup || !separatorGroup || !bodyGroup) {
           console.error("Markdown table regex failed to yield table groups");
-          return;
+          failed = true;
+          break;
         }
 
         const headerCells = splitRow(headerGroup);
         const alignments = splitRow(separatorGroup).map((cell) => {
-          const trimmed = cell.trim();
-          if (trimmed.startsWith(":") && trimmed.endsWith(":")) return "center";
-          if (trimmed.endsWith(":")) return "right";
-          if (trimmed.startsWith(":")) return "left";
+          if (cell.startsWith(":") && cell.endsWith(":")) return "center";
+          if (cell.endsWith(":")) return "right";
+          if (cell.startsWith(":")) return "left";
           return null;
         });
 
-        const bodyRows = bodyGroup
+        const bodyCells = bodyGroup
           .trim()
           .split("\n")
-          .map((bodyRow) => splitRow(bodyRow.trim()));
+          .map((bodyRow) => splitRow(bodyRow));
 
         try {
           const tableNode = {
@@ -72,7 +72,7 @@ export function remarkTables() {
                   children: [{ type: "text", value: cell }],
                 })),
               },
-              ...bodyRows.map((row, i) => {
+              ...bodyCells.map((row, i) => {
                 return {
                   type: "tableRow",
                   data: {
@@ -110,6 +110,10 @@ export function remarkTables() {
         }
 
         lastIndex = tableRegex.lastIndex;
+      }
+
+      if (failed) {
+        return;
       }
 
       // Add any remaining text after the last table
