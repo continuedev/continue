@@ -3,6 +3,8 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { ApplyState } from "core";
 import { getMetaKeyLabel } from "../../util";
+import { useAppSelector } from "../../redux/hooks";
+import { selectIsSingleRangeEditOrInsertion } from "../../redux/slices/sessionSlice";
 
 export interface AcceptRejectAllButtonsProps {
   pendingApplyStates: ApplyState[];
@@ -14,9 +16,7 @@ export default function AcceptRejectAllButtons({
   onAcceptOrReject,
 }: AcceptRejectAllButtonsProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-
-  // To handle the case of a single-range edit
-  const hasSinglePendingApplyStates = pendingApplyStates.length === 1;
+  const isSingleRangeEdit = useAppSelector(selectIsSingleRangeEditOrInsertion);
 
   async function handleAcceptOrReject(status: "acceptDiff" | "rejectDiff") {
     for (const { filepath, streamId } of pendingApplyStates) {
@@ -37,7 +37,7 @@ export default function AcceptRejectAllButtons({
         onClick={() => handleAcceptOrReject("rejectDiff")}
       >
         <XMarkIcon className="mr-1 h-4 w-4 text-red-600" />
-        {hasSinglePendingApplyStates ? (
+        {isSingleRangeEdit ? (
           <span>Reject ({getMetaKeyLabel()}⇧⌫)</span>
         ) : (
           <>
@@ -52,7 +52,7 @@ export default function AcceptRejectAllButtons({
         onClick={() => handleAcceptOrReject("acceptDiff")}
       >
         <CheckIcon className="mr-1 h-4 w-4 text-green-600" />
-        {hasSinglePendingApplyStates ? (
+        {isSingleRangeEdit ? (
           <span>Accept ({getMetaKeyLabel()}⇧⏎)</span>
         ) : (
           <>
