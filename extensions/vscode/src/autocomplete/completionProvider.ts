@@ -21,6 +21,7 @@ import {
 
 import type { IDE } from "core";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { getContinueWorkspaceConfig } from "../util/workspaceConfig";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -62,12 +63,14 @@ export class ContinueCompletionProvider
 
   private completionProvider: CompletionProvider;
   private recentlyEditedTracker = new RecentlyEditedTracker();
+  private loadingSpinnerDecorationType: vscode.TextEditorDecorationType;
 
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly tabAutocompleteModel: TabAutocompleteModel,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
+    context: vscode.ExtensionContext,
   ) {
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -82,6 +85,15 @@ export class ContinueCompletionProvider
         // console.log("updating completion");
       }
     });
+
+    this.loadingSpinnerDecorationType =
+      vscode.window.createTextEditorDecorationType({
+        backgroundColor: "yellow",
+        textDecoration: "underline",
+
+        gutterIconPath: context.asAbsolutePath("media/loading.webp"),
+        gutterIconSize: "cover",
+      });
   }
 
   _lastShownCompletion: AutocompleteOutcome | undefined;
@@ -147,6 +159,7 @@ export class ContinueCompletionProvider
     };
     const selectedCompletionInfo = context.selectedCompletionInfo;
     this._lastVsCodeCompletionInput = newVsCodeInput;
+    const editor = vscode.window.activeTextEditor;
 
     try {
       const abortController = new AbortController();
@@ -203,6 +216,18 @@ export class ContinueCompletionProvider
       };
 
       setupStatusBar(undefined, true);
+
+      if (
+        editor &&
+        getContinueWorkspaceConfig().get<boolean>(
+          "enableTabAutocompleteLineSpinner",
+        )
+      ) {
+        editor.setDecorations(this.loadingSpinnerDecorationType, [
+          new vscode.Range(editor.selection.end, editor.selection.end),
+        ]);
+      }
+
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           input,
@@ -263,6 +288,7 @@ export class ContinueCompletionProvider
       return [completionItem];
     } finally {
       stopStatusBarLoading();
+      editor?.setDecorations(this.loadingSpinnerDecorationType, []);
     }
   }
 

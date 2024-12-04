@@ -117,6 +117,11 @@
           "default": true,
           "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/features/tab-autocomplete)"
         },
+        "continue.enableTabAutocompleteLineSpinner": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "If enabled, a loading spinner is displayed to the left of the line while the autocomplete request is running"
+        },
         "continue.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
