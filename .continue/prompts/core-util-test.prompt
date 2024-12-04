@@ -1,4 +1,4 @@
-name: Create Core Test
+name: Write Core Utility Test
 description: Generate unit tests for core utilities
 ---
 Write jest tests for the provided code. Use best practices. Be clear and consise.
