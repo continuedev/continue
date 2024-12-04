@@ -22,9 +22,7 @@ export class ContinueGUIWebviewViewProvider
   private updateDebugLogsStatus() {
     const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
     this.enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
-    if (this.enableDebugLogs) {
-      this.outputChannel.show(true);
-    } else {
+    if (!this.enableDebugLogs) {
       this.outputChannel.hide();
     }
   }
@@ -35,9 +33,7 @@ export class ContinueGUIWebviewViewProvider
       if (event.affectsConfiguration("continue.enableDebugLogs")) {
         const settings = vscode.workspace.getConfiguration(EXTENSION_NAME);
         const enableDebugLogs = settings.get<boolean>("enableDebugLogs", false);
-        if (enableDebugLogs) {
-          this.outputChannel.show(true);
-        } else {
+        if (!enableDebugLogs) {
           this.outputChannel.hide();
         }
       }
