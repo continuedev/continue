@@ -324,6 +324,39 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },
+  portkey: {
+    title: "Portkey",
+  provider: "portkey",
+  description: "Route your OpenAI requests through Portkey for monitoring and management",
+  icon: "portkey.png",
+  tags: [ModelProviderTags.RequiresApiKey],
+  collectInputFor: [
+    {
+      inputType: "text",
+      key: "apiKey",
+      label: "API Key",
+      placeholder: "Enter your Portkey API key",
+      required: true,
+    },
+    {
+      inputType: "text", 
+      key: "portkeyConfigId",
+      label: "Config ID",
+      placeholder: "Enter your Portkey config ID",
+      required: true,
+    }
+  ],
+  packages: [
+    {
+      ...models.AUTODETECT,
+      params: {
+        ...models.AUTODETECT.params,
+        title: "Portkey",
+      },
+    }
+  ],
+  apiKeyUrl: "https://app.portkey.ai/",
+  },
   deepseek: {
     title: "DeepSeek",
     provider: "deepseek",
