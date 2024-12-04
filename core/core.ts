@@ -23,6 +23,7 @@ import { getAllSuggestedDocs } from "./indexing/docs/suggestions";
 import { defaultIgnoreFile } from "./indexing/ignore.js";
 import Ollama from "./llm/llms/Ollama";
 import { createNewPromptFileV2 } from "./promptFiles/v2/createNewPromptFile";
+import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
@@ -36,7 +37,6 @@ import { TTS } from "./util/tts";
 
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { callTool } from "./tools/callTool";
 import type { IMessenger, Message } from "./util/messenger";
 
 export class Core {
@@ -56,14 +56,8 @@ export class Core {
 
   private abortedMessageIds: Set<string> = new Set();
 
-  private selectedModelTitle: string | undefined;
-
   private async config() {
     return this.configHandler.loadConfig();
-  }
-
-  private async getSelectedModel() {
-    return await this.configHandler.llmFromTitle(this.selectedModelTitle);
   }
 
   invoke<T extends keyof ToCoreProtocol>(
@@ -197,11 +191,6 @@ export class Core {
       void this.ide.showToast("error", err.message);
     });
 
-    // New
-    on("update/modelChange", (msg) => {
-      this.selectedModelTitle = msg.data;
-    });
-
     on("update/selectTabAutocompleteModel", async (msg) => {
       this.globalContext.update("selectedTabAutocompleteModel", msg.data);
       void this.configHandler.reloadConfig();
@@ -309,9 +298,10 @@ export class Core {
     });
 
     on("context/getContextItems", async (msg) => {
-      const { name, query, fullInput, selectedCode } = msg.data;
+      const { name, query, fullInput, selectedCode, selectedModelTitle } =
+        msg.data;
       const config = await this.config();
-      const llm = await this.getSelectedModel();
+      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
       const provider = config.contextProviders?.find(
         (provider) => provider.description.title === name,
       );
@@ -510,8 +500,10 @@ export class Core {
     });
 
     on("chatDescriber/describe", async (msg) => {
-      const currentModel = await this.getSelectedModel();
-      return await ChatDescriber.describe(currentModel, {}, msg.data);
+      const currentModel = await this.configHandler.llmFromTitle(
+        msg.data.selectedModelTitle,
+      );
+      return await ChatDescriber.describe(currentModel, {}, msg.data.text);
     });
 
     async function* runNodeJsSlashCommand(
@@ -788,7 +780,7 @@ export class Core {
       }
     });
 
-    on("tools/call", async ({ data: { toolCall } }) => {
+    on("tools/call", async ({ data: { toolCall, selectedModelTitle } }) => {
       const config = await this.configHandler.loadConfig();
       const tool = config.tools.find(
         (t) => t.function.name === toolCall.function.name,
@@ -798,7 +790,7 @@ export class Core {
         throw new Error(`Tool ${toolCall.function.name} not found`);
       }
 
-      const llm = await this.getSelectedModel();
+      const llm = await this.configHandler.llmFromTitle(selectedModelTitle);
 
       const contextItems = await callTool(
         tool.uri ?? tool.function.name,

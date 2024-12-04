@@ -2,8 +2,8 @@ import { ILLM, LLMFullCompletionOptions } from "..";
 
 import { removeQuotesAndEscapes } from ".";
 
-import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "./messenger";
+import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 
 /**
  * Removes code blocks from a message.

@@ -28,7 +28,6 @@ class ContinueBrowser(val project: Project, url: String) {
     private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
 
     private val PASS_THROUGH_TO_CORE = listOf(
-        "update/modelChange",
         "ping",
         "abort",
         "history/list",

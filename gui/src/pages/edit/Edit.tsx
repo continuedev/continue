@@ -43,6 +43,9 @@ export default function Edit() {
   const availableContextProviders = useAppSelector(
     (state) => state.config.config.contextProviders,
   );
+  const selectedModelTitle = useAppSelector(
+    (state) => state.config.defaultModelTitle,
+  );
 
   const filteredContextProviders = useMemo(() => {
     return (
@@ -103,16 +106,21 @@ export default function Edit() {
     modifiers: InputModifiers,
     editor: Editor,
   ) {
-    const [contextItems, __, userInstructions] = await resolveEditorContent(
+    if (!selectedModelTitle) {
+      console.error("Failed to handle single range edit: no model selected");
+      return;
+    }
+    const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
-      {
+      selectedModelTitle,
+      modifiers: {
         noContext: true,
         useCodebase: false,
       },
       ideMessenger,
-      [],
+      defaultContextProviders: [],
       dispatch,
-    );
+    });
 
     const prompt = [
       ...contextItems.map((item) => item.content),

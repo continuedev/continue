@@ -66,7 +66,6 @@ function BestExperienceConfigForm({
       role: "repoMapFileSelection",
     });
     dispatch(setDefaultModel({ title: chatModelConfig.title, force: true }));
-    ideMessenger.post("update/modelChange", chatModelConfig.title);
 
     if (!!autocompleteApiKey) {
       await ideMessenger.request("addAutocompleteModel", {

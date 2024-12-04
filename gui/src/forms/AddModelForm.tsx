@@ -92,7 +92,6 @@ function AddModelForm({
     });
 
     dispatch(setDefaultModel({ title: model.title, force: true }));
-    ideMessenger.post("update/modelChange", model.title);
 
     onDone();
   }
