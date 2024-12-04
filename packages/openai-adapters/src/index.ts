@@ -81,6 +81,11 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
         ...config,
         apiBase: "https://api.studio.nebius.ai/v1/",
       });
+      case "portkey":
+      return new OpenAIApi({
+      ...config,
+      apiBase: "https://api.portkey.ai/v1/",
+      });
     default:
       throw new Error(`Unsupported LLM API format: ${config.provider}`);
   }
