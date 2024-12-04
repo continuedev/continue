@@ -71,7 +71,7 @@ This should open a new instance on IntelliJ with the extension installed.
 
 ### Accessing files in the `.continue` directory
 
-When running the `Start Core Dev Server` task, we set the location of your Continue directory to `./binary/.continue`. This is to
+When running the `Start Core Dev Server` task, we set the location of your Continue directory to `./extensions/.continue-debug`. This is to
 allow for changes to your `config.json` and other files during development, without affecting your actual configuration.
 
 ### Reloading changes
