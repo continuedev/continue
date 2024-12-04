@@ -72,13 +72,10 @@ export class BedrockReranker implements Reranker {
 
       const responseBody = JSON.parse(new TextDecoder().decode(response.body));
 
-      // Sort results by relevance_score in descending order
-      const sortedResults = responseBody.results.sort(
-        (a: any, b: any) => b.relevance_score - a.relevance_score,
-      );
-
-      // Return the sorted relevance scores
-      return sortedResults.map((result: any) => result.relevance_score);
+      // Sort results by index to maintain original order
+      return responseBody.results
+        .sort((a: any, b: any) => a.index - b.index)
+        .map((result: any) => result.relevance_score);
     } catch (error) {
       console.error("Error in BedrockReranker.rerank:", error);
       throw error;
