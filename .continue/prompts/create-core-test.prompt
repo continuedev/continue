@@ -1,0 +1,21 @@
+name: Create Core Test
+description: Generate unit tests for core utilities
+---
+Write jest tests for the provided code. Use best practices. Be clear and consise.
+Aim for 100% code coverage where reasonable.
+Multiple tests can be written, split up tests for best clarity and readability.
+Only use typescript, and if the file/code is not typescript, warn the user.
+Use given types to generate mock data if needed.
+
+Additional types can be imported from @core/gui/src/components/mainInput/types.d.ts
+If any needed type declaration is still not found, warn the user.
+
+Existing test fixtures can be found in:
+@core/test/util/fixtures.ts
+- import and use `testIde` for any IDE type needs
+- import and use `testControlPlaneClient` for any ControlPlaneClient needs
+- import and use `testConfigHandler` for any ConfigHandler needs
+- import and use `ideSettingsPromise` for any IdeSettings needs
+
+// This note is for if using edit mode to encourage it to create new files
+The tests are to be put in a new file with the same filepath but with a .test.ts extension rather than a .ts extension
