@@ -8,8 +8,8 @@ export default {
   moduleNameMapper: {
     "^(\\.{1,2}/.*)\\.js$": "$1",
     "^uuid$": "uuid", // https://stackoverflow.com/a/73626360
-    '^@azure/(.*)$': '<rootDir>/node_modules/@azure/$1',
-    '^mssql$': '<rootDir>/node_modules/mssql'
+    "^@azure/(.*)$": "<rootDir>/node_modules/@azure/$1",
+    "^mssql$": "<rootDir>/node_modules/mssql",
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
@@ -21,4 +21,5 @@ export default {
   },
   globalSetup: "<rootDir>/jest.global-setup.ts",
   setupFilesAfterEnv: ["<rootDir>/jest.setup-after-env.ts"],
+  maxWorkers: 1 // equivalent to CLI --runInBand
 };
