@@ -1,4 +1,5 @@
 // https://github.com/mswjs/msw/issues/1576#issuecomment-1482643055
+
 import { TextDecoder, TextEncoder } from "util";
 
 import { jest } from "@jest/globals";
@@ -10,6 +11,7 @@ if (process.env.DEBUG === "jest") {
 
 const globalThis = global as any;
 
+globalThis.jest = jest;
 globalThis.fetch = fetch;
 globalThis.Request = Request;
 globalThis.Response = Response;
