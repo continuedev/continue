@@ -1,7 +1,6 @@
 import { SymbolWithRange } from "core";
 import { ctxItemToRifWithContents } from "core/commands/util";
 import { memo, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
 import { useRemark } from "react-remark";
 import rehypeHighlight, { Options } from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -14,7 +13,6 @@ import {
   vscEditorBackground,
   vscForeground,
 } from "..";
-import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { getFontSize, isJetBrains } from "../../util";
 import FilenameLink from "./FilenameLink";
 import "./katex.css";
@@ -22,6 +20,8 @@ import "./markdown.css";
 import StepContainerPreActionButtons from "./StepContainerPreActionButtons";
 import StepContainerPreToolbar from "./StepContainerPreToolbar";
 import SymbolLink from "./SymbolLink";
+import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { remarkTables } from "./utils/remarkTables";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
@@ -175,7 +175,16 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [symbols]);
 
   const [reactContent, setMarkdownSource] = useRemark({
-    remarkPlugins: [remarkMath, () => processCodeBlocks],
+    remarkPlugins: [
+      remarkTables,
+      [
+        remarkMath,
+        {
+          singleDollarTextMath: false,
+        },
+      ],
+      () => processCodeBlocks,
+    ],
     rehypePlugins: [
       rehypeKatex as any,
       {},
