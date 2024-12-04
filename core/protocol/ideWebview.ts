@@ -56,7 +56,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     { accept: boolean; onlyFirst: boolean; filepath: string },
     void,
   ];
-  "edit/escape": [undefined, void];
+  "edit/exit": [{ shouldFocusEditor: boolean }, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

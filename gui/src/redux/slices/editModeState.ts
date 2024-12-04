@@ -5,13 +5,11 @@ export interface EditModeState {
   editStatus: EditStatus;
   previousInputs: MessageContent[];
   fileAfterEdit?: string;
-  isInEditMode: boolean;
 }
 
 const initialState: EditModeState = {
   editStatus: "not-started",
   previousInputs: [],
-  isInEditMode: false,
 };
 
 export const editModeStateSlice = createSlice({
@@ -19,7 +17,6 @@ export const editModeStateSlice = createSlice({
   initialState,
   reducers: {
     focusEdit: (state) => {
-      // state.isInEditMode = true;
       state.editStatus = "not-started";
       state.previousInputs = [];
       state.fileAfterEdit = undefined;

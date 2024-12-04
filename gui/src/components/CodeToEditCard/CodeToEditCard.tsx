@@ -2,7 +2,7 @@ import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import CodeToEditListItem from "./CodeToEditListItem";
-import { CodeToEdit, RangeInFileWithContents } from "core";
+import type { CodeToEdit, RangeInFileWithContents } from "core";
 import AddFileButton from "./AddFileButton";
 import AddFileCombobox from "./AddFileCombobox";
 import { XMarkIcon } from "@heroicons/react/24/outline";
@@ -12,7 +12,7 @@ import {
   removeCodeToEdit,
 } from "../../redux/slices/sessionSlice";
 
-export default function WorkingSet() {
+export default function CodeToEditCard() {
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const [showAddFileCombobox, setShowAddFileCombobox] = useState(false);
@@ -55,7 +55,7 @@ export default function WorkingSet() {
   }
 
   return (
-    <div className="bg-vsc-editor-background mx-1 flex flex-col rounded-t-lg p-1">
+    <div className="bg-vsc-editor-background mx-3 flex flex-col rounded-t-lg p-1">
       <div className="text-lightgray flex items-center justify-between gap-1.5 py-1.5 pl-3 pr-2 text-xs">
         <span>{title}</span>
         <AddFileButton onClick={() => setShowAddFileCombobox(true)} />
