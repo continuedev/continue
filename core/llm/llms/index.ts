@@ -35,6 +35,7 @@ import Mock from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
 import Nebius from "./Nebius";
+import Portkey from "./Portkey";
 import Nvidia from "./Nvidia";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
@@ -76,6 +77,7 @@ const LLMs = [
   DeepInfra,
   Flowise,
   Groq,
+  Portkey,
   Fireworks,
   ContinueProxy,
   Cloudflare,
