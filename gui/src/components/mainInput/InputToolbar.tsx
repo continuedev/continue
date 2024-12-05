@@ -27,6 +27,7 @@ import {
   selectIsInEditMode,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
+import useHistory from "../../hooks/useHistory";
 
 const StyledDiv = styled.div<{ isHidden?: boolean }>`
   padding-top: 4px;
@@ -82,11 +83,13 @@ interface InputToolbarProps {
 }
 
 function InputToolbar(props: InputToolbarProps) {
+  const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useAppSelector(selectDefaultModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const { loadLastSession } = useHistory(dispatch);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
   const isEnterDisabled = props.disabled || isEditModeAndNoCodeToEdit;
   const shouldRenderToolsButton =
@@ -185,6 +188,23 @@ function InputToolbar(props: InputToolbarProps) {
                 </HoverItem>
               )}
             </div>
+          )}
+
+          {isInEditMode && (
+            <HoverItem
+              className="hidden hover:underline sm:flex"
+              onClick={(e) => {
+                loadLastSession().catch((e) =>
+                  console.error(`Failed to load last session: ${e}`),
+                );
+
+                dispatch(exitEditMode());
+              }}
+            >
+              <span>
+                <i>Esc</i> to exit
+              </span>
+            </HoverItem>
           )}
 
           <EnterButton
