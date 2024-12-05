@@ -206,10 +206,11 @@ Configuration for the reranker model used in response ranking.
 
 **Properties:**
 
-- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`
+- `name` (**required**): Reranker name, e.g., `cohere`, `voyage`, `llm`, `free-trial`, `huggingface-tei`, `bedrock`
 - `params`:
   - `model`: Model name
   - `apiKey`: Api key
+  - `region`: Region (for Bedrock only)
 
 Example
 
