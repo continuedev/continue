@@ -24,6 +24,9 @@ function useHistory(dispatch: Dispatch) {
   const title = useAppSelector((store) => store.session.title);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
+  const selectedModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
 
   const updateLastSessionId = useCallback((sessionId: string) => {
     setLastSessionId(sessionId);
@@ -42,10 +45,14 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function getChatTitle(message?: string): Promise<string | undefined> {
-    const result = await ideMessenger.request(
-      "chatDescriber/describe",
-      message,
-    );
+    if (!selectedModelTitle) {
+      console.error("Failed to get chat title");
+      return;
+    }
+    const result = await ideMessenger.request("chatDescriber/describe", {
+      text: message,
+      selectedModelTitle,
+    });
     return result.status === "success" ? result.content : undefined;
   }
 

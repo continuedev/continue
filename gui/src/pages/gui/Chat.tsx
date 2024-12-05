@@ -135,6 +135,9 @@ export function Chat() {
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
+  const selectedModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
   const defaultModel = useAppSelector(selectDefaultModel);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
@@ -289,16 +292,17 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    const [contextItems, __, userInstructions] = await resolveEditorContent(
+    const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
-      {
+      modifiers: {
         noContext: true,
         useCodebase: false,
       },
       ideMessenger,
-      [],
+      defaultContextProviders: [],
       dispatch,
-    );
+      selectedModelTitle,
+    });
 
     const prompt = [
       ...contextItems.map((item) => item.content),
