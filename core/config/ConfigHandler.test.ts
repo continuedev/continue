@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { testConfigHandler } from "../test/fixtures";
-import { TEST_DIR } from "../indexing/test/testWorkspaceDir";
+import { TEST_DIR } from "../test/util/testDir";
 import { getConfigTsPath } from "../util/paths";
 
 import { defaultConfig } from "./default";

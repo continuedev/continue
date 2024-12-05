@@ -2,7 +2,7 @@ import { ConfigHandler } from "../config/ConfigHandler";
 import { ControlPlaneClient } from "../control-plane/client";
 import FileSystemIde from "../util/filesystem";
 
-import { TEST_DIR } from "../indexing/test/testWorkspaceDir";
+import { TEST_DIR } from "./util/testDir";
 
 export const testIde = new FileSystemIde(TEST_DIR);
 

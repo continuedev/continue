@@ -1,7 +1,4 @@
-import {
-  setUpTestDir,
-  tearDownTestDir,
-} from "../../../indexing/test/testWorkspaceDir";
+import { setUpTestDir, tearDownTestDir } from "../../../test/util/testDir";
 
 import { TEST_CASES_WITH_DIFF, TEST_CASES_WITHOUT_DIFF } from "./testCases";
 import {

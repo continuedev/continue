@@ -7,7 +7,7 @@ import { tagToString } from "../refreshIndex";
 import { CodebaseIndex, PathAndCacheKey, RefreshIndexResults } from "../types";
 
 import { testIde } from "../../test/fixtures";
-import { addToTestDir, TEST_DIR } from "./testWorkspaceDir";
+import { addToTestDir, TEST_DIR } from "../../test/util/testDir";
 
 export const mockFilename = "test.py";
 export const mockPathAndCacheKey = {

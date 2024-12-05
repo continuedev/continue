@@ -11,7 +11,7 @@ import {
   setUpTestDir,
   tearDownTestDir,
   TEST_DIR,
-} from "./test/testWorkspaceDir.js";
+} from "../test/util/testDir.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 
 import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";

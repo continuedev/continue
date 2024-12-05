@@ -8,7 +8,7 @@ import {
   testContinueServerClient,
   updateIndexAndAwaitGenerator,
 } from "../test/indexing";
-import { addToTestDir } from "../test/testWorkspaceDir";
+import { addToTestDir } from "../../test/util/testDir";
 import { DatabaseConnection, SqliteDb } from "../refreshIndex";
 import { IndexResultType } from "../types";
 

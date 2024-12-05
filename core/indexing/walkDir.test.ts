@@ -6,7 +6,7 @@ import {
   setUpTestDir,
   tearDownTestDir,
   addToTestDir,
-} from "./test/testWorkspaceDir";
+} from "../test/util/testDir";
 import FileSystemIde from "../util/filesystem";
 
 const ide = new FileSystemIde(TEST_DIR);
