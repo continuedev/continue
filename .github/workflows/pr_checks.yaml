@@ -91,7 +91,6 @@ jobs:
           cd extensions/vscode
           npm run package
           npm run e2e:ci
-        if: matrix.os == 'ubuntu-latest'
 
       - name: core checks
         run: |
