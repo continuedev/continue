@@ -13,7 +13,7 @@ Use given types to generate mock data if needed.
 Additional types can be imported from @core/index.d.ts
 If any needed type declaration is still not found, warn the user.
 
-Existing test fixtures can be found in @core/test/util/fixtures.ts
+Existing test fixtures can be found in @core/test/fixtures.ts
 - import and use `testIde` for any IDE type needs
 - import and use `testControlPlaneClient` for any ControlPlaneClient needs
 - import and use `testConfigHandler` for any ConfigHandler needs

@@ -5,13 +5,13 @@ import path from "node:path";
 import { jest } from "@jest/globals";
 
 import { ContinueServerClient } from "../continueServer/stubs/client.js";
-import { testConfigHandler, testIde } from "../test/util/fixtures.js";
+import { testConfigHandler, testIde } from "../test/fixtures.js";
 import {
   addToTestDir,
   setUpTestDir,
   tearDownTestDir,
   TEST_DIR,
-} from "../test/util/testDir.js";
+} from "../test/testDir.js";
 import { getIndexSqlitePath } from "../util/paths.js";
 
 import { CodebaseIndexer, PauseToken } from "./CodebaseIndexer.js";

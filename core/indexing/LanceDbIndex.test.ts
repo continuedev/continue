@@ -1,7 +1,7 @@
 import { jest } from "@jest/globals";
 import lance from "vectordb";
 
-import { testConfigHandler, testIde } from "../test/util/fixtures";
+import { testConfigHandler, testIde } from "../test/fixtures";
 import {
   mockPathAndCacheKey,
   mockTag,

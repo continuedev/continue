@@ -9,7 +9,7 @@ import { ConfigHandler } from "../../config/ConfigHandler";
 import { contextProviderClassFromName } from ".";
 import { ControlPlaneClient } from "../../control-plane/client";
 import FileSystemIde from "../../util/filesystem";
-import { TEST_DIR } from "../../test/util/testDir";
+import { TEST_DIR } from "../../test/testDir";
 
 const CONTEXT_PROVIDERS_TO_TEST: ContextProviderWithParams[] = [
   { name: "diff", params: {} },

@@ -1,6 +1,6 @@
 import { jest } from "@jest/globals";
 
-import { testIde } from "../test/util/fixtures";
+import { testIde } from "../test/fixtures";
 import {
   insertMockChunks,
   mockPathAndCacheKey,
