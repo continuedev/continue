@@ -73,13 +73,15 @@ export default function CodeToEditCard() {
           ))}
         </ul>
       ) : (
-        <div
-          className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground -mt-0.5 flex cursor-pointer items-center justify-center gap-1 rounded py-1 text-center text-xs transition-colors hover:bg-opacity-20"
-          onClick={() => setShowAddFileCombobox(true)}
-        >
-          <PlusIcon className="h-3.5 w-3.5" />
-          <span>Add a file to get started</span>
-        </div>
+        !showAddFileCombobox && (
+          <div
+            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground -mt-0.5 flex cursor-pointer items-center justify-center gap-1 rounded py-1 text-center text-xs transition-colors hover:bg-opacity-20"
+            onClick={() => setShowAddFileCombobox(true)}
+          >
+            <PlusIcon className="h-3.5 w-3.5" />
+            <span>Add a file to get started</span>
+          </div>
+        )
       )}
 
       {showAddFileCombobox && (
