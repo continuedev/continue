@@ -264,7 +264,8 @@ function ModelSelect() {
         );
         let nextIndex = (currentIndex + 1 * direction) % options.length;
         if (nextIndex < 0) nextIndex = options.length - 1;
-        dispatch(setDefaultModel({ title: options[nextIndex].value }));
+        const newModelTitle = options[nextIndex].value;
+        dispatch(setDefaultModel({ title: newModelTitle }));
       }
     };
 
@@ -311,7 +312,6 @@ function ModelSelect() {
       onChange={async (val: string) => {
         if (val === defaultModel?.title) return;
         dispatch(setDefaultModel({ title: val }));
-        await ideMessenger.request("update/modelChange", val);
       }}
     >
       <div className="relative">

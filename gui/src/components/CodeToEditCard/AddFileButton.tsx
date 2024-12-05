@@ -1,9 +1,9 @@
 import { useContext, useRef } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { useDispatch } from "react-redux";
 import { ChevronDownIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Listbox } from "@headlessui/react";
 import { addCodeToEdit } from "../../redux/slices/sessionSlice";
+import { useAppDispatch } from "../../redux/hooks";
 
 export interface AddFileButtonProps {
   onClick: () => void;
@@ -12,7 +12,7 @@ export interface AddFileButtonProps {
 export default function AddFileButton({ onClick }: AddFileButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const ideMessenger = useContext(IdeMessengerContext);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   async function handleAddAllOpenFiles() {
     const openFiles = await ideMessenger.ide.getOpenFiles();
