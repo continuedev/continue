@@ -22,3 +22,4 @@ continue_rc_schema.json
 e2e/_output
 e2e/.test-extensions
 e2e/storage
+e2e/vsix
