@@ -83,6 +83,11 @@ jobs:
           npx tsc --noEmit
           npm run lint
 
+      - name: Run VSCode e2e tests
+        run: |
+          cd extensions/vscode
+          npm run e2e:all
+
       - name: core checks
         run: |
           cd core
