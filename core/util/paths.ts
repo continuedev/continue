@@ -101,10 +101,6 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
   return p;
 }
 
-export function getConfigJsonUri(): string {
-  return getContinueGlobalUri() + "/config.json";
-}
-
 export function getConfigTsPath(): string {
   const p = path.join(getContinueGlobalPath(), "config.ts");
   if (!fs.existsSync(p)) {

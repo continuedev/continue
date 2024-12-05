@@ -19,15 +19,13 @@ export default {
     __dirname: path.dirname(fileURLToPath(import.meta.url)),
     __filename: path.resolve(fileURLToPath(import.meta.url)),
   },
-
-  globalSetup: "<rootDir>/jest.global-setup.ts",
-  setupFilesAfterEnv: ["<rootDir>/jest.setup-after-env.ts"],
-  maxWorkers: 1, // equivalent to CLI --runInBand
   // collectCoverage: true,
   collectCoverageFrom: [
     "util/**/*.{js,ts}", // Adjust this pattern to match files you want coverage for
     "!**/node_modules/**", // Exclude node_modules
     "!**/vendor/**", // Exclude any vendor directories if necessary
   ],
-  // other Jest configuration...
+  globalSetup: "<rootDir>/test/jest.global-setup.ts",
+  setupFilesAfterEnv: ["<rootDir>/test/jest.setup-after-env.ts"],
+  maxWorkers: 1, // equivalent to CLI --runInBand
 };
