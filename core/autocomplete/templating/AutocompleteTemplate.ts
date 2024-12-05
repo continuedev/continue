@@ -237,10 +237,8 @@ Fill in the blank to complete the code block. Your response should include only 
   completionOptions: { stop: ["\n"] },
 };
 
-const holeFillerTemplate: AutocompleteTemplate = {
-  template: (prefix: string, suffix: string) => {
-    // From https://github.com/VictorTaelin/AI-scripts
-    const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
+// From https://github.com/VictorTaelin/AI-scripts
+const HOLE_FILLER_SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
 
 ## EXAMPLE QUERY:
 
@@ -324,13 +322,26 @@ function hypothenuse(a, b) {
 
 <COMPLETION>a ** 2 + </COMPLETION>`;
 
+const holeFillerTemplate: AutocompleteTemplate = {
+  template: (prefix: string, suffix: string) => {
     const fullPrompt =
-      SYSTEM_MSG +
+      HOLE_FILLER_SYSTEM_MSG +
       `\n\n<QUERY>\n${prefix}{{FILL_HERE}}${suffix}\n</QUERY>\nTASK: Fill the {{FILL_HERE}} hole. Answer only with the CORRECT completion, and NOTHING ELSE. Do it now.\n<COMPLETION>`;
     return fullPrompt;
   },
   completionOptions: {
     stop: ["</COMPLETION>"],
+  },
+};
+
+const graniteHoleFillerTemplate: AutocompleteTemplate = {
+  template: (prefix: string, suffix: string) => {
+    const request = `<QUERY>\n${prefix}{{FILL_HERE}}${suffix}\n</QUERY>\nTASK: Fill the {{FILL_HERE}} hole. Answer only with the CORRECT completion, and NOTHING ELSE.`;
+
+    return `<|start_of_role|>system<|end_of_role|>${HOLE_FILLER_SYSTEM_MSG}<|end_of_text|>\n<|start_of_role|>user<|end_of_role|>${request}<|end_of_text|>\n<|start_of_role|>assistant<|end_of_role|>`;
+  },
+  completionOptions: {
+    stop: ["<|end_of_text|>", "<|start_of_role|>", "</COMPLETION>"],
   },
 };
 
@@ -380,10 +391,13 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
   if (
     lowerCaseModel.includes("gpt") ||
     lowerCaseModel.includes("davinci-002") ||
-    lowerCaseModel.includes("claude") ||
-    lowerCaseModel.includes("granite3")
+    lowerCaseModel.includes("claude")
   ) {
     return holeFillerTemplate;
+  }
+
+  if (lowerCaseModel.includes("granite3")) {
+    return graniteHoleFillerTemplate;
   }
 
   return stableCodeFimTemplate;
