@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { testConfigHandler } from "../test/fixtures";
+import { testConfigHandler } from "../test/util/fixtures";
 import { TEST_DIR } from "../test/util/testDir";
 import { getConfigTsPath } from "../util/paths";
 

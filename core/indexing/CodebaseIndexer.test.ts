@@ -5,7 +5,7 @@ import path from "node:path";
 import { jest } from "@jest/globals";
 
 import { ContinueServerClient } from "../continueServer/stubs/client.js";
-import { testConfigHandler, testIde } from "../test/fixtures.js";
+import { testConfigHandler, testIde } from "../test/util/fixtures.js";
 import {
   addToTestDir,
   setUpTestDir,

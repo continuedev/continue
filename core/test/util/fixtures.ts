@@ -1,8 +1,8 @@
-import { ConfigHandler } from "../config/ConfigHandler";
-import { ControlPlaneClient } from "../control-plane/client";
-import FileSystemIde from "../util/filesystem";
+import { ConfigHandler } from "../../config/ConfigHandler";
+import { ControlPlaneClient } from "../../control-plane/client";
+import FileSystemIde from "../../util/filesystem";
 
-import { TEST_DIR } from "./util/testDir";
+import { TEST_DIR } from "./testDir";
 
 export const testIde = new FileSystemIde(TEST_DIR);
 
