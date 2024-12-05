@@ -86,6 +86,7 @@ jobs:
       - name: Run VSCode e2e tests
         run: |
           cd extensions/vscode
+          npm run package
           npm run e2e:ci
 
       - name: core checks
