@@ -15,7 +15,7 @@ Additional types can be imported from @core/index.d.ts
 If any needed type declaration is still not found, warn the user.
 
 Existing test fixtures and setup can be found in the following files:
-@core/test/jest.global-setup.ts creates a temporary global extension directory, which contains files that the extension uses
+@core/test/jest.global-setup.ts creates a temporary global extension directory, which is where files that store persisted extension data 
 @core/test/jest.setup
 @core/test/jest.setup-after-env.ts gives tests access to node and jest globals such as Requests, fetch, and jest
 

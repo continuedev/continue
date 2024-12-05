@@ -1,5 +1,3 @@
-// core/util/LruCache.test.ts
-
 import { PrecalculatedLruCache } from "./LruCache";
 
 describe("PrecalculatedLruCache", () => {
