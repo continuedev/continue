@@ -8,29 +8,31 @@ Use best practices. Be clear and consise.
 Aim for 100% code coverage where reasonable.
 Multiple tests can be written, split up tests for best clarity and readability.
 Only use typescript, and if the file/code is not typescript, warn the user.
-Use ESM to import modules, do not use `require`
-Use given types to generate mock data if needed.
+Use ESM to import modules, do NOT use `require`
+Tests are to be described in an adjacent file with a path identical except for a `.test.ts` rather than a `.ts` file extension
+Use double quotes (or backticks if needed) for strings
+
+The code being tested is used in IDE extensions, and it:
+- accesses code workspaces through the IDE ("workspace directories")
+- persists extension-related data to the the local machine of the user ("global directory"), and
+- uses configuration via a `ConfigHandler`, which is stored in either the global directory (default) or accesed via a remote "control plane" using the `ControlPlaneClient`
+
+Jest testing setup includes
+- @core/test/jest.global-setup.ts initializes a temporary global directory, which is where files that store persisted extension data live.
+- @core/test/testDir.ts provides utils for creating and working with the temporary workspace directory. Use `setUpTestDir` and `tearDownTestDir` explicitly in tests that work with workspace files
+- @core/test/jest.setup-after-env.ts gives tests access to node and jest globals
+
+@core/test/fixtures.ts provides fixtures that should be used in tests to emulate extension behavior
+- import `testIde` for IDE/workspace operations
+- import `testConfigHandler` for any ConfigHandler needs
+- import `testControlPlaneClient` for control plane operations
+- import `ideSettingsPromise` for any IdeSettings needs
+
+Do NOT write tests for any files in `core/test`, only use them as helpers for testing other files. If no other files are provided, warn the user and write no tests.
+
+IMPORTANT: Avoid using pure mocks when possible; perform actual operations and use `jest.spyOn` so that functions are actually invoked. 
+Instead, generate actual mock files and data for operations
+Pure mocks should only be used to emulate specific network responses/error or hard-to-duplicate errors, or to prevent long-duration tests
 
 Additional types can be imported from @core/index.d.ts
-If any needed type declaration is still not found, warn the user.
-
-Existing test fixtures and setup can be found in the following files:
-@core/test/jest.global-setup.ts creates a temporary global extension directory, which is where files that store persisted extension data 
-@core/test/jest.setup
-@core/test/jest.setup-after-env.ts gives tests access to node and jest globals such as Requests, fetch, and jest
-
-@core/test/fixtures.ts
-- import and use `testIde` to use for IDE methodsis only being used for filesystem operations. This code is used in an extension that accesses code workspaces in IDEs. The test IDE is a filesystem IDE that operates in a temporary workspace directory.
-- import and use `testControlPlaneClient` for any ControlPlaneClient needs
-- import and use `testConfigHandler` for any ConfigHandler needs. The config handler 
-- import and use `ideSettingsPromise` for any IdeSettings needs
-- do not mock any of these fixtures.
-
-Do NOT write tests for anything in `core/test/fixtures.ts`, ` `core/index.d.ts`, only use them as helpers for testing other files. If no other files are attached, just warn the user.
-
-// This note is for if using edit mode to encourage it to create new files
-The tests are to be added/created in an adjacent file with the same filepath but with a .test.ts extension rather than a .ts extension
-
-Avoid using mocks when possible; use the fixture test directory and perform actual file actions where possible. Generate files and mock data to perform actions on if needed. Only use mocks to avoid long waits.
-Use double quotes (or backticks if needed) for strings, and observe eslint import order standards
-
+If any needed types, functions, constants, or classes are still not found, warn the user and do not generate tests.
