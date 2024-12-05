@@ -621,11 +621,13 @@
     "e2e:compile": "tsc -p ./tsconfig.e2e.json",
     "e2e:create-storage": "mkdir -p ./e2e/storage",
     "e2e:get-chromedriver": "extest get-chromedriver --storage ./e2e/storage",
-    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage && codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
+    "e2e:get-vscode": "extest get-vscode --storage ./e2e/storage",
+    "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
     "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
     "e2e:test": "extest run-tests './e2e/_output/*.test.js' --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
-    "e2e:all": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:test"
+    "e2e:all": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:test",
+    "e2e:ci": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:test"
   },
   "devDependencies": {
     "@biomejs/biome": "1.6.4",
