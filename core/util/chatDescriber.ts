@@ -1,10 +1,9 @@
 import { ILLM, LLMFullCompletionOptions } from "..";
 
-import { removeQuotesAndEscapes } from ".";
+import { removeQuotesAndEscapes, removeCodeBlocksAndTrim } from ".";
 
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "./messenger";
-import { removeCodeBlocksAndTrim } from "./markdown";
 
 export class ChatDescriber {
   static prompt: string | undefined =
