@@ -4,12 +4,12 @@ import {
   ContextProviderExtras,
   ContextProviderWithParams,
   IContextProvider,
-} from "../../..";
-import { ConfigHandler } from "../../../config/ConfigHandler";
-import { contextProviderClassFromName } from "../../../context/providers";
-import { ControlPlaneClient } from "../../../control-plane/client";
-import FileSystemIde from "../../../util/filesystem";
-import { TEST_DIR } from "../../util/testDir";
+} from "../..";
+import { ConfigHandler } from "../../config/ConfigHandler";
+import { contextProviderClassFromName } from ".";
+import { ControlPlaneClient } from "../../control-plane/client";
+import FileSystemIde from "../../util/filesystem";
+import { TEST_DIR } from "../../indexing/test/testWorkspaceDir";
 
 const CONTEXT_PROVIDERS_TO_TEST: ContextProviderWithParams[] = [
   { name: "diff", params: {} },

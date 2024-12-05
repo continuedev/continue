@@ -4,7 +4,7 @@ import path from "path";
 
 import Parser from "web-tree-sitter";
 import { Position } from "../../../..";
-import { testIde } from "../../../../test/util/fixtures";
+import { testIde } from "../../../../test/fixtures";
 import { getAst, getTreePathAtCursor } from "../../../util/ast";
 import { ImportDefinitionsService } from "../../ImportDefinitionsService";
 import { RootPathContextService } from "../RootPathContextService";

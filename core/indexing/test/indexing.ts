@@ -2,19 +2,12 @@ import { jest } from "@jest/globals";
 
 import { IndexTag } from "../..";
 import { IContinueServerClient } from "../../continueServer/interface";
-import { ChunkCodebaseIndex } from "../../indexing/chunk/ChunkCodebaseIndex";
-import { tagToString } from "../../indexing/refreshIndex";
-import {
-  CodebaseIndex,
-  PathAndCacheKey,
-  RefreshIndexResults,
-} from "../../indexing/types";
+import { ChunkCodebaseIndex } from "../chunk/ChunkCodebaseIndex";
+import { tagToString } from "../refreshIndex";
+import { CodebaseIndex, PathAndCacheKey, RefreshIndexResults } from "../types";
 
-import { testIde } from "./fixtures";
-import { addToTestDir, TEST_DIR } from "./testDir";
-
-
-
+import { testIde } from "../../test/fixtures";
+import { addToTestDir, TEST_DIR } from "./testWorkspaceDir";
 
 export const mockFilename = "test.py";
 export const mockPathAndCacheKey = {
