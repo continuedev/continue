@@ -25,7 +25,7 @@ export default {
   maxWorkers: 1, // equivalent to CLI --runInBand
   // collectCoverage: true,
   collectCoverageFrom: [
-    "src/**/*.{js,ts}", // Adjust this pattern to match files you want coverage for
+    "util/**/*.{js,ts}", // Adjust this pattern to match files you want coverage for
     "!**/node_modules/**", // Exclude node_modules
     "!**/vendor/**", // Exclude any vendor directories if necessary
   ],
