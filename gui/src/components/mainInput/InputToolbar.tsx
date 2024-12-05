@@ -83,6 +83,7 @@ interface InputToolbarProps {
 }
 
 function InputToolbar(props: InputToolbarProps) {
+  const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const defaultModel = useAppSelector(selectDefaultModel);
   const useActiveFile = useAppSelector(selectUseActiveFile);
