@@ -1,23 +1,9 @@
 import { ILLM, LLMFullCompletionOptions } from "..";
 
-import { removeQuotesAndEscapes } from ".";
+import { removeQuotesAndEscapes, removeCodeBlocksAndTrim } from ".";
 
 import type { FromCoreProtocol, ToCoreProtocol } from "../protocol";
 import type { IMessenger } from "./messenger";
-
-/**
- * Removes code blocks from a message.
- *
- * Return modified message text.
- */
-function removeCodeBlocksAndTrim(msgText: string): string {
-  const codeBlockRegex = /```[\s\S]*?```/g;
-
-  // Remove code blocks from the message text
-  const textWithoutCodeBlocks = msgText.replace(codeBlockRegex, "");
-
-  return textWithoutCodeBlocks.trim();
-}
 
 export class ChatDescriber {
   static prompt: string | undefined =

@@ -1,14 +1,14 @@
 import { jest } from "@jest/globals";
 
-import { testIde } from "../../test/util/fixtures";
+import { testIde } from "../../test/fixtures";
 import {
   mockFileContents,
   mockFilename,
   mockPathAndCacheKey,
   testContinueServerClient,
   updateIndexAndAwaitGenerator,
-} from "../../test/util/indexing";
-import { addToTestDir } from "../../test/util/testDir";
+} from "../test/indexing";
+import { addToTestDir } from "../../test/testDir";
 import { DatabaseConnection, SqliteDb } from "../refreshIndex";
 import { IndexResultType } from "../types";
 

@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { Session } from "../..";
-import historyManager from "../../util/history";
-import { getSessionFilePath } from "../../util/paths";
+import { Session } from "..";
+import historyManager from "./history";
+import { getSessionFilePath } from "./paths";
 
 const sessionId = uuidv4();
 const testSession: Session = {
