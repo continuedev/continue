@@ -25,20 +25,21 @@ function breakdownArticleComponent(
   max_chunk_size: number,
 ): Chunk[] {
   const chunks: Chunk[] = [];
-  const words = article.body.split(/\s+/);
-  let currentChunk = "";
+  const lines = article.body.split("\n");
   let startLine = 0;
+  let endLine = 0;
+  let content = "";
   let index = 0;
 
   const createChunk = (
-    content: string,
-    currentStartLine: number,
-    endLine: number,
+    chunkContent: string,
+    chunkStartLine: number,
+    chunkEndLine: number,
   ) => {
     chunks.push({
-      content: content.trim(),
-      startLine: currentStartLine,
-      endLine: endLine,
+      content: chunkContent.trim(),
+      startLine: chunkStartLine,
+      endLine: chunkEndLine,
       otherMetadata: {
         title: cleanHeader(article.title),
       },
@@ -51,51 +52,48 @@ function breakdownArticleComponent(
     });
   };
 
-  for (let i = 0; i < words.length; i++) {
-    const word = words[i];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
 
-    // If a single word is longer than max_chunk_size, split it
-    if (word.length > max_chunk_size) {
-      // First, push the current chunk if it has content
-      if (currentChunk.trim().length > 0) {
-        createChunk(currentChunk.trim(), startLine, i - 1);
-        currentChunk = "";
+    // Handle oversized lines by splitting them
+    if (line.length > max_chunk_size) {
+      // First push any accumulated content
+      if (content.trim().length > 0) {
+        createChunk(content, startLine, endLine);
+        content = "";
       }
 
-      // Split the long word into smaller pieces
-      let remainingWord = word;
-      while (remainingWord.length > 0) {
-        const chunk = remainingWord.slice(0, max_chunk_size);
-        createChunk(chunk, i, i);
-        remainingWord = remainingWord.slice(max_chunk_size);
+      // Split the long line into chunks
+      let remainingLine = line;
+      let subLineStart = i;
+      while (remainingLine.length > 0) {
+        const chunk = remainingLine.slice(0, max_chunk_size);
+        createChunk(chunk, subLineStart, i);
+        remainingLine = remainingLine.slice(max_chunk_size);
       }
-
       startLine = i + 1;
       continue;
     }
 
-    // Check if adding this word would exceed max_chunk_size
-    if (currentChunk.length + word.length + 1 > max_chunk_size) {
-      // Push current chunk if it has content
-      if (currentChunk.trim().length > 0) {
-        createChunk(currentChunk.trim(), startLine, i - 1);
-      }
-
-      // Start new chunk with current word
-      currentChunk = word;
-      startLine = i;
+    // Normal line handling
+    if (content.length + line.length + 1 <= max_chunk_size) {
+      content += `${line}\n`;
+      endLine = i;
     } else {
-      // Add word to current chunk
-      currentChunk = currentChunk.length > 0 ? `${currentChunk} ${word}` : word;
+      if (content.trim().length > 0) {
+        createChunk(content, startLine, endLine);
+      }
+      content = `${line}\n`;
+      startLine = i;
+      endLine = i;
     }
   }
 
-  // Push the last chunk if it has content
-  if (currentChunk.trim().length > 0) {
-    createChunk(currentChunk.trim(), startLine, words.length - 1);
+  // Push the last chunk
+  if (content.trim().length > 0) {
+    createChunk(content, startLine, endLine);
   }
 
-  // Don't use small chunks. Probably they're a mistake. Definitely they'll confuse the embeddings model.
   return chunks.filter((c) => c.content.trim().length > 20);
 }
 
