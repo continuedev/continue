@@ -4,9 +4,9 @@ import { renderChatMessage } from "core/util/messageContent";
 import { useCallback, useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
+import { useAppSelector } from "../redux/hooks";
 import { newSession, updateSessionTitle } from "../redux/slices/sessionSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { useAppSelector } from "../redux/hooks";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -52,6 +52,11 @@ function useHistory(dispatch: Dispatch) {
   async function saveSession(openNewSession: boolean = true) {
     if (history.length === 0) return;
 
+    if (openNewSession) {
+      dispatch(newSession());
+      updateLastSessionId(sessionId);
+    }
+
     let currentTitle = title;
     if (config?.ui?.getChatTitles && currentTitle === "New Session") {
       try {
@@ -91,10 +96,7 @@ function useHistory(dispatch: Dispatch) {
 
     await ideMessenger.request("history/save", session);
 
-    if (openNewSession) {
-      dispatch(newSession());
-      updateLastSessionId(sessionId);
-    } else {
+    if (!openNewSession) {
       dispatch(updateSessionTitle(newTitle));
     }
   }

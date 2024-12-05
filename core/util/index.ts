@@ -328,3 +328,17 @@ export function dedent(strings: TemplateStringsArray, ...values: any[]) {
 
   return lines.join("\n");
 }
+
+/**
+ * Removes code blocks from a message.
+ *
+ * Return modified message text.
+ */
+export function removeCodeBlocksAndTrim(text: string): string {
+  const codeBlockRegex = /```[\s\S]*?```/g;
+
+  // Remove code blocks from the message text
+  const textWithoutCodeBlocks = text.replace(codeBlockRegex, "");
+
+  return textWithoutCodeBlocks.trim();
+}

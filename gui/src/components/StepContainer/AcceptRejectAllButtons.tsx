@@ -8,8 +8,10 @@ import { selectIsSingleRangeEditOrInsertion } from "../../redux/slices/sessionSl
 
 export interface AcceptRejectAllButtonsProps {
   pendingApplyStates: ApplyState[];
-  onAcceptOrReject?: () => void;
+  onAcceptOrReject?: (outcome: AcceptOrRejectOutcome) => void;
 }
+
+export type AcceptOrRejectOutcome = "acceptDiff" | "rejectDiff";
 
 export default function AcceptRejectAllButtons({
   pendingApplyStates,
@@ -18,7 +20,7 @@ export default function AcceptRejectAllButtons({
   const ideMessenger = useContext(IdeMessengerContext);
   const isSingleRangeEdit = useAppSelector(selectIsSingleRangeEditOrInsertion);
 
-  async function handleAcceptOrReject(status: "acceptDiff" | "rejectDiff") {
+  async function handleAcceptOrReject(status: AcceptOrRejectOutcome) {
     for (const { filepath, streamId } of pendingApplyStates) {
       ideMessenger.post(status, {
         filepath,
@@ -27,9 +29,10 @@ export default function AcceptRejectAllButtons({
     }
 
     if (onAcceptOrReject) {
-      onAcceptOrReject();
+      onAcceptOrReject(status);
     }
   }
+
   return (
     <div className="flex justify-center gap-2 border-b border-gray-200/25 p-1 px-3">
       <button

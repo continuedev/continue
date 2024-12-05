@@ -70,6 +70,8 @@ import resolveEditorContent from "../../components/mainInput/resolveInput";
 import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import CodeToEditCard from "../../components/CodeToEditCard";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
+import PageHeader from "../../components/PageHeader";
+import Spinner from "../../components/gui/Spinner";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -135,7 +137,7 @@ export function Chat() {
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
   const defaultModel = useAppSelector(selectDefaultModel);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
-  const active = useAppSelector((state) => state.session.isStreaming);
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const stepsDivRef = useRef<HTMLDivElement>(null);
@@ -181,13 +183,9 @@ export function Chat() {
     setIsAtBottom(true);
   }, [stepsDivRef, setIsAtBottom]);
 
-  const returnToLastSessionButtonText = isInEditMode
-    ? "Back to Chat"
-    : "Last Session";
-
   useEffect(() => {
-    if (active) snapToBottom();
-  }, [active, snapToBottom]);
+    if (isStreaming) snapToBottom();
+  }, [isStreaming, snapToBottom]);
 
   // useEffect(() => {
   //   setTimeout(() => {
@@ -211,7 +209,7 @@ export function Chat() {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [active]);
+  }, [isStreaming]);
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -228,7 +226,12 @@ export function Chat() {
   const { widget, highlights } = useFindWidget(stepsDivRef);
 
   const sendInput = useCallback(
-    (editorState: JSONContent, modifiers: InputModifiers, editor: Editor) => {
+    (
+      editorState: JSONContent,
+      modifiers: InputModifiers,
+      editor: Editor,
+      index?: number,
+    ) => {
       if (defaultModel?.provider === "free-trial") {
         const u = getLocalStorage("ftc");
         if (u) {
@@ -259,7 +262,9 @@ export function Chat() {
         ? getMultifileEditPrompt(codeToEdit)
         : undefined;
 
-      dispatch(streamResponseThunk({ editorState, modifiers, promptPreamble }));
+      dispatch(
+        streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
+      );
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -331,6 +336,21 @@ export function Chat() {
 
   return (
     <>
+      {isInEditMode && (
+        <PageHeader
+          title="Chat"
+          onClick={() => {
+            loadLastSession().catch((e) =>
+              console.error(`Failed to load last session: ${e}`),
+            );
+
+            if (isInEditMode) {
+              dispatch(exitEditMode());
+            }
+          }}
+        />
+      )}
+
       {widget}
       <StepsDiv
         ref={stepsDivRef}
@@ -355,7 +375,9 @@ export function Chat() {
                 <>
                   {isInEditMode && index === 0 && <CodeToEditCard />}
                   <ContinueInputBox
-                    onEnter={sendInput}
+                    onEnter={(editorState, modifiers, editor) =>
+                      sendInput(editorState, modifiers, editor, index)
+                    }
                     isLastUserInput={isLastUserInput(index)}
                     isMainInput={false}
                     editorState={item.editorState}
@@ -423,7 +445,7 @@ export function Chat() {
         <ChatScrollAnchor
           scrollAreaRef={stepsDivRef}
           isAtBottom={isAtBottom}
-          trackVisibility={active}
+          trackVisibility={isStreaming}
         />
       </StepsDiv>
 
@@ -439,7 +461,7 @@ export function Chat() {
               ■ Stop TTS
             </StopButton>
           )}
-          {active && (
+          {isStreaming && (
             <StopButton
               onClick={() => {
                 dispatch(setInactive());
@@ -466,49 +488,40 @@ export function Chat() {
 
         <div
           style={{
-            pointerEvents: active ? "none" : "auto",
+            pointerEvents: isStreaming ? "none" : "auto",
           }}
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
-            <div className="xs:inline hidden">
-              {history.length === 0 &&
-              getLastSessionId() &&
-              !hasPendingApplies ? (
-                <div className="xs:inline hidden">
-                  <NewSessionButton
-                    onClick={async () => {
-                      loadLastSession().catch((e) =>
-                        console.error(`Failed to load last session: ${e}`),
-                      );
-
-                      if (isInEditMode) {
-                        dispatch(exitEditMode());
-                      }
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <ArrowLeftIcon className="h-3 w-3" />
-                    {returnToLastSessionButtonText}
-                  </NewSessionButton>
-                </div>
-              ) : null}
-            </div>
+            {history.length === 0 && getLastSessionId() && !isInEditMode && (
+              <NewSessionButton
+                onClick={() =>
+                  loadLastSession().catch((e) =>
+                    console.error(`Failed to load last session: ${e}`),
+                  )
+                }
+                className="xs:inline flex hidden items-center gap-2"
+              >
+                <ArrowLeftIcon className="h-3 w-3" />
+                Last Session
+              </NewSessionButton>
+            )}
             <ConfigErrorIndicator />
           </div>
 
           {hasPendingApplies && isSingleRangeEditOrInsertion && (
             <AcceptRejectAllButtons
               pendingApplyStates={pendingApplyStates}
-              onAcceptOrReject={() => {
-                loadLastSession().catch((e) =>
-                  console.error(`Failed to load last session: ${e}`),
-                );
+              onAcceptOrReject={(outcome) => {
+                if (outcome === "acceptDiff") {
+                  loadLastSession().catch((e) =>
+                    console.error(`Failed to load last session: ${e}`),
+                  );
 
-                dispatch(exitEditMode());
+                  dispatch(exitEditMode());
+                }
               }}
             />
           )}
-
           {history.length === 0 && (
             <>
               {onboardingCard.show && (

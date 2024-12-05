@@ -58,12 +58,14 @@ export default function EditActions({ index, item }: EditActionsProps) {
         {hasPendingApplies && (
           <AcceptRejectAllButtons
             pendingApplyStates={pendingApplyStates}
-            onAcceptOrReject={() => {
-              loadLastSession().catch((e) =>
-                console.error(`Failed to load last session: ${e}`),
-              );
+            onAcceptOrReject={(outcome) => {
+              if (outcome === "acceptDiff") {
+                loadLastSession().catch((e) =>
+                  console.error(`Failed to load last session: ${e}`),
+                );
 
-              dispatch(exitEditMode());
+                dispatch(exitEditMode());
+              }
             }}
           />
         )}
