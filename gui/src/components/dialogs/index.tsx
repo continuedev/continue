@@ -78,8 +78,9 @@ const TextDialog = (props: TextDialogProps) => {
       >
         <Dialog>
           <CloseButton onClick={props.onClose}>
-            <XMarkIcon className="h-5 w-5" />
+            <XMarkIcon className="h-5 w-5 hover:brightness-125" />
           </CloseButton>
+
           {typeof props.message === "string" ? (
             <ReactMarkdown>{props.message || ""}</ReactMarkdown>
           ) : !React.isValidElement(props.message) ? null : (
