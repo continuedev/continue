@@ -39,7 +39,6 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  "update/modelChange": [string, void];
   "update/selectTabAutocompleteModel": [string, void];
 
   // Special
@@ -76,6 +75,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       query: string;
       fullInput: string;
       selectedCode: RangeInFile[];
+      selectedModelTitle: string;
     },
     ContextItemWithId[],
   ];
@@ -136,7 +136,13 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "chatDescriber/describe": [string, string | undefined];
+  "chatDescriber/describe": [
+    {
+      selectedModelTitle: string;
+      text: string;
+    },
+    string | undefined,
+  ];
   "stats/getTokensPerDay": [
     undefined,
     { day: string; promptTokens: number; generatedTokens: number }[],
@@ -174,5 +180,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "profiles/switch": [{ id: string }, undefined];
 
   "auth/getAuthUrl": [undefined, { url: string }];
-  "tools/call": [{ toolCall: ToolCall }, { contextItems: ContextItem[] }];
+  "tools/call": [
+    { toolCall: ToolCall; selectedModelTitle: string },
+    { contextItems: ContextItem[] },
+  ];
 };

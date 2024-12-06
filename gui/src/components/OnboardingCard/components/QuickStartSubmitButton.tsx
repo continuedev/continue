@@ -19,9 +19,8 @@ function QuickstartSubmitButton() {
     submitOnboarding();
 
     // Set Sonnet as the default model
-    dispatch(
-      setDefaultModel({ title: FREE_TRIAL_MODELS[0].title, force: true }),
-    );
+    const title = FREE_TRIAL_MODELS[0].title;
+    dispatch(setDefaultModel({ title, force: true }));
   }
 
   function openJetBrainsDialog() {
