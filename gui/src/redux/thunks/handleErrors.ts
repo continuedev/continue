@@ -10,6 +10,7 @@ export const handleStreamErrors = createAsyncThunk<
   try {
     await runStream();
   } catch (e: any) {
+    // NOTE - streaming errors are shown as ide toasts in core, don't show duplicate here
     console.error("Error streaming response: ", e);
   } finally {
     dispatch(clearLastEmptyResponse());

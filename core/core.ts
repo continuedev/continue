@@ -366,7 +366,6 @@ export class Core {
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
       const config = await configHandler.loadConfig();
-
       // Stop TTS on new StreamChat
       if (config.experimental?.readResponseTTS) {
         void TTS.kill();
@@ -381,6 +380,10 @@ export class Core {
       );
       let next = await gen.next();
       while (!next.done) {
+        if (Math.random() > 0) {
+          //
+          // throw new Error("Intentional");
+        }
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
           next = await gen.return({

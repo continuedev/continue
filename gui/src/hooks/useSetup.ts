@@ -9,11 +9,7 @@ import { setLocalStorage } from "../util/localStorage";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
 import { useWebviewListener } from "./useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
-import {
-  selectDefaultModel,
-  setConfig,
-  setConfigError,
-} from "../redux/slices/configSlice";
+import { setConfig, setConfigError } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {

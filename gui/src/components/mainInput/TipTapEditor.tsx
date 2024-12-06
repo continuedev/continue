@@ -301,10 +301,19 @@ function TipTapEditor(props: TipTapEditorProps) {
     return undefined;
   }
 
-  const mainEditorContent = useAppSelector(
-    (store) => store.session.mainEditorContent,
+  const lastMainEditorState = useAppSelector(
+    (store) => store.session.lastMainEditorState,
   );
-  console.log("MAIN EDITOR", mainEditorContent?.content);
+  const [fakeContent, setFakeContent] = useState("hello");
+  useEffect(() => {
+    setTimeout(() => {
+      setFakeContent("Hello world");
+    }, 2000);
+  }, []);
+
+  if (props.isMainInput) {
+    console.log("Main input editor state prop:", props.editorState);
+  }
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
@@ -540,7 +549,18 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: `font-size: ${getFontSize()}px;`,
       },
     },
-    content: props.editorState || mainEditorContent || "",
+    content: props.editorState ?? {
+      type: "doc",
+      content: [
+        (() => {
+          console.log("set here");
+          return {
+            type: "paragraph",
+            content: [{ type: "text", text: fakeContent }],
+          };
+        })(),
+      ],
+    },
     editable: !isStreaming || props.isMainInput,
   });
 
