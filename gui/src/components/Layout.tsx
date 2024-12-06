@@ -231,7 +231,6 @@ const Layout = () => {
     }
   }, [location]);
 
-  
   useEffect(() => {
     if (isStreaming === false) {
       saveSession(false);
