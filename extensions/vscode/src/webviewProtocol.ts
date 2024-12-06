@@ -9,7 +9,7 @@ import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
-import { IMessenger } from "../../../core/util/messenger";
+import { IMessenger } from "../../../core/protocol/messenger";
 
 import { showFreeTrialLoginMessage } from "./util/messages";
 import { getExtensionUri } from "./util/vscode";
