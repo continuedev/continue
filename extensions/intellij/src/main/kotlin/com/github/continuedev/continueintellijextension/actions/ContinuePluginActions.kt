@@ -124,3 +124,27 @@ class ViewHistoryAction : AnAction() {
         continuePluginService.sendToWebview("viewHistory", null)
     }
 }
+
+class OpenConfigAction : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val continuePluginService = getContinuePluginService(e.project) ?: return
+        val params = mapOf("profileId" to null)
+        continuePluginService.coreMessenger?.request("config/openProfile", params, null) { _ -> }
+    }
+}
+
+class OpenMorePageAction : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val continuePluginService = getContinuePluginService(e.project) ?: return
+        continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
+        val params = mapOf("path" to "/more", "toggle" to true)
+        continuePluginService.sendToWebview("navigateTo", params)
+    }
+}
+
+class OpenAccountDialogAction : AnAction() {
+    override fun actionPerformed(e: AnActionEvent) {
+        val continuePluginService = getContinuePluginService(e.project) ?: return
+        continuePluginService.sendToWebview("openDialogMessage", "account")
+    }
+}

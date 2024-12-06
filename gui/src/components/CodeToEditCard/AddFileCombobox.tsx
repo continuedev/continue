@@ -4,7 +4,7 @@ import {
   useSubmenuContextProviders,
 } from "../../context/SubmenuContextProviders";
 import { Combobox } from "@headlessui/react";
-import FileIcon from "../../components/FileIcon";
+import FileIcon from "../FileIcon";
 import { useAppSelector } from "../../redux/hooks";
 
 export interface AddFileComboboxProps {

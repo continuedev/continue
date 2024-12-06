@@ -4,7 +4,7 @@ import {
   insertMockChunks,
   mockPathAndCacheKey,
   updateIndexAndAwaitGenerator,
-} from "../test/util/indexing";
+} from "./test/indexing";
 
 import { FullTextSearchCodebaseIndex } from "./FullTextSearchCodebaseIndex";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";

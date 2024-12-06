@@ -135,9 +135,7 @@ cached_embeddings.pkl
 .ruff_cache
 codeql
 
-**/.continue
 .DS_Store
-.continue
 .test
 .tiktoken_cache
 
@@ -153,7 +151,6 @@ continue_server.dist
 Icon
 Icon?
 
-.continue
 .continuerc.json
 .prompts/
 .aider*
@@ -171,3 +168,5 @@ extensions/intellij/bin
 extensions/.continue-debug/
 
 *.vsix
+
+binary/.continue

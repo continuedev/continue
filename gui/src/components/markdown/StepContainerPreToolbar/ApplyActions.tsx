@@ -3,7 +3,7 @@ import { ApplyState } from "core";
 import { useState } from "react";
 import { lightGray, vscForeground } from "../..";
 import { getMetaKeyLabel } from "../../../util";
-import Spinner from "./Spinner";
+import Spinner from "../../gui/Spinner";
 import { ToolbarButtonWithTooltip } from "./ToolbarButtonWithTooltip";
 
 interface ApplyActionsProps {

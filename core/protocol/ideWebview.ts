@@ -43,7 +43,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
-  "jetbrains/isOSREnabled": [undefined, void];
+  "jetbrains/isOSREnabled": [undefined, boolean];
   "vscode/openMoveRightMarkdown": [undefined, void];
   setGitHubAuthToken: [{ token: string }, void];
   acceptDiff: [{ filepath: string; streamId?: string }, void];
@@ -56,7 +56,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
     { accept: boolean; onlyFirst: boolean; filepath: string },
     void,
   ];
-  "edit/escape": [undefined, void];
+  "edit/exit": [{ shouldFocusEditor: boolean }, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {

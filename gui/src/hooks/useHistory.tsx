@@ -4,9 +4,9 @@ import { renderChatMessage } from "core/util/messageContent";
 import { useCallback, useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useLastSessionContext } from "../context/LastSessionContext";
+import { useAppSelector } from "../redux/hooks";
 import { newSession, updateSessionTitle } from "../redux/slices/sessionSlice";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import { useAppSelector } from "../redux/hooks";
 
 const MAX_TITLE_LENGTH = 100;
 
@@ -24,6 +24,9 @@ function useHistory(dispatch: Dispatch) {
   const title = useAppSelector((store) => store.session.title);
   const ideMessenger = useContext(IdeMessengerContext);
   const { lastSessionId, setLastSessionId } = useLastSessionContext();
+  const selectedModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
 
   const updateLastSessionId = useCallback((sessionId: string) => {
     setLastSessionId(sessionId);
@@ -42,15 +45,24 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function getChatTitle(message?: string): Promise<string | undefined> {
-    const result = await ideMessenger.request(
-      "chatDescriber/describe",
-      message,
-    );
+    if (!selectedModelTitle) {
+      console.error("Failed to get chat title");
+      return;
+    }
+    const result = await ideMessenger.request("chatDescriber/describe", {
+      text: message,
+      selectedModelTitle,
+    });
     return result.status === "success" ? result.content : undefined;
   }
 
   async function saveSession(openNewSession: boolean = true) {
     if (history.length === 0) return;
+
+    if (openNewSession) {
+      dispatch(newSession());
+      updateLastSessionId(sessionId);
+    }
 
     let currentTitle = title;
     if (config?.ui?.getChatTitles && currentTitle === "New Session") {
@@ -91,10 +103,7 @@ function useHistory(dispatch: Dispatch) {
 
     await ideMessenger.request("history/save", session);
 
-    if (openNewSession) {
-      dispatch(newSession());
-      updateLastSessionId(sessionId);
-    } else {
+    if (!openNewSession) {
       dispatch(updateSessionTitle(newTitle));
     }
   }

@@ -1,10 +1,8 @@
 import * as dotenv from "dotenv";
 
-import { CompletionOptions } from "../";
-import { BaseLLM } from "../llm/";
-import OpenAI from "../llm/llms/OpenAI";
-
-// jest.setTimeout(100_000);
+import { CompletionOptions } from "..";
+import { BaseLLM } from ".";
+import OpenAI from "./llms/OpenAI";
 
 dotenv.config();
 
