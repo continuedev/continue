@@ -718,11 +718,15 @@ export abstract class BaseLLM implements ILLM {
       const compiledTemplate = Handlebars.compile(template);
       return compiledTemplate(data);
     }
-    const rendered = template(history, {
+
+    const renderedData = {
       ...otherData,
       supportsCompletions: this.supportsCompletions() ? "true" : "false",
       supportsPrefill: this.supportsPrefill() ? "true" : "false",
-    });
+      ...(this.systemMessage ? { systemMessage: this.systemMessage } : {}),
+    };
+
+    const rendered = template(history, renderedData);
     if (
       typeof rendered !== "string" &&
       rendered[rendered.length - 1]?.role === "assistant" &&

@@ -2,7 +2,7 @@ import { PromptTemplateFunction } from "../../..";
 import { dedent } from "../../../util";
 
 const gptInsertionEditPrompt: PromptTemplateFunction = (_, otherData) => {
-  return dedent`
+  let content = dedent`
     \`\`\`${otherData.language}
     ${otherData.prefix}[BLANK]${otherData.codeToEdit}${otherData.suffix}
     \`\`\`
@@ -12,10 +12,17 @@ const gptInsertionEditPrompt: PromptTemplateFunction = (_, otherData) => {
     "${otherData.userInput}"
 
     Please generate this code. Your output will be only the code that should replace the "[BLANK]", without repeating any of the prefix or suffix, without any natural language explanation, and without messing up indentation. Here is the code that will replace the "[BLANK]":`;
+
+  if (otherData?.systemMessage) {
+    content = `${otherData.systemMessage}\n\n${content}`;
+  }
+
+  return content;
 };
 
 const gptFullFileEditPrompt: PromptTemplateFunction = (_, otherData) => {
   return dedent`
+  ${otherData?.systemMessage ? `${otherData.systemMessage}\n\n` : ""}
     \`\`\`${otherData.language}
     ${otherData.codeToEdit}
     \`\`\`
@@ -37,9 +44,15 @@ export const gptEditPrompt: PromptTemplateFunction = (history, otherData) => {
     return gptFullFileEditPrompt(history, otherData);
   }
 
-  const paragraphs = [
+  const paragraphs = [];
+
+  if (otherData?.systemMessage) {
+    paragraphs.push(otherData.systemMessage);
+  }
+
+  paragraphs.push(
     "The user has requested a section of code in a file to be rewritten.",
-  ];
+  );
 
   if (otherData.prefix?.trim().length > 0) {
     paragraphs.push(dedent`
