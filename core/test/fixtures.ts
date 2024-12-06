@@ -1,6 +1,5 @@
 import { ConfigHandler } from "../config/ConfigHandler";
 import { ControlPlaneClient } from "../control-plane/client";
-import { llmFromDescription } from "../llm/llms";
 import Mock from "../llm/llms/Mock";
 import FileSystemIde from "../util/filesystem";
 
