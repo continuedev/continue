@@ -65,6 +65,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "openrouter",
   "vertexai",
   "azure",
+  "portkey"
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [

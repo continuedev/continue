@@ -286,6 +286,12 @@ class OpenAI extends BaseLLM {
     }
 
     const body = this._convertArgs(options, messages);
+
+    // portkey doesn't require model from body, can be configured through portkey portal's config
+    const isPortkeyProvider = this.providerName === "portkey";
+    if (isPortkeyProvider) {
+      delete body["model"];
+    }
     // Empty messages cause an error in LM Studio
     body.messages = body.messages.map((m: any) => ({
       ...m,

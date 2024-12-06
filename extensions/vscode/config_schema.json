@@ -1251,7 +1251,10 @@
             "required": ["provider"]
           },
           "then": {
-            "required": ["apiKey", "portkeyConfigId"]
+            "required": ["apiKey", "portkeyConfigId"],
+            "model": {
+              "enum": ["AUTODETECT"]
+            }
           }
         },
         {

@@ -475,7 +475,7 @@ export interface LLMOptions {
   deploymentId?: string;
 
   // Portkey Options
-  portkeyConfig?: string;
+  portkeyConfigId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,

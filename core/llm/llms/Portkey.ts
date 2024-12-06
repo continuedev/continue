@@ -11,14 +11,21 @@ class Portkey extends OpenAI {
 
   constructor(options: LLMOptions) {
     super(options);
-    this.portkeyConfig = options.portkeyConfig || "";
+    this.portkeyConfig = options.portkeyConfigId || "";
   }
 
   protected _getHeaders() {
     return {
       ...super._getHeaders(),
       "x-portkey-config": this.portkeyConfig,
+      "x-portkey-api-key": this.apiKey,
+      "Content-Type": "application/json",
     };
+  }
+
+  // Show configId
+  async listModels(): Promise<string[]> {
+    return [this.portkeyConfig];
   }
 }
 
