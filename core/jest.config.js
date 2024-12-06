@@ -21,7 +21,7 @@ export default {
   },
   // collectCoverage: true,
   collectCoverageFrom: [
-    "util/**/*.{js,ts}", // Adjust this pattern to match files you want coverage for
+    "**/*.{js,ts}", // Adjust this pattern to match files you want coverage for
     "!**/node_modules/**", // Exclude node_modules
     "!**/vendor/**", // Exclude any vendor directories if necessary
   ],
