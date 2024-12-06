@@ -23,7 +23,8 @@ export default {
   collectCoverageFrom: [
     "**/*.{js,ts}", // Adjust this pattern to match files you want coverage for
     "!**/node_modules/**", // Exclude node_modules
-    "!**/vendor/**", // Exclude any vendor directories if necessary
+    "!**/vendor/**",
+    // "!**/autocomplete/context/root-path-context/test/files/**",
   ],
   globalSetup: "<rootDir>/test/jest.global-setup.ts",
   setupFilesAfterEnv: ["<rootDir>/test/jest.setup-after-env.ts"],
