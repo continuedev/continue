@@ -7,15 +7,19 @@ export default function useIsOSREnabled() {
   const [isOSREnabled, setIsOSREnabled] = useState(false);
   const ideMessenger = useContext(IdeMessengerContext);
 
-  useWebviewListener("jetbrains/isOSREnabled", async (isOSREnabled) => {
-    setIsOSREnabled(isOSREnabled);
-  });
-
   useEffect(() => {
     if (isJetBrains()) {
-      ideMessenger.post("jetbrains/isOSREnabled", undefined);
+      (async () => {
+        await ideMessenger
+          .request("jetbrains/isOSREnabled", undefined)
+          .then((result) => {
+            if (result.status === "success") {
+              setIsOSREnabled(result.content);
+            }
+          });
+      })();
     }
-  }, []);
+  }, [ideMessenger]);
 
   return isOSREnabled;
 }

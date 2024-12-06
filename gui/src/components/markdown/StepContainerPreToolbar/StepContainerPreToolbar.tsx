@@ -15,7 +15,10 @@ import GeneratingCodeLoader from "./GeneratingCodeLoader";
 import RunInTerminalButton from "./RunInTerminalButton";
 import { useAppSelector } from "../../../redux/hooks";
 import { selectDefaultModel } from "../../../redux/slices/configSlice";
-import { selectApplyStateByStreamId } from "../../../redux/slices/sessionSlice";
+import {
+  selectApplyStateByStreamId,
+  selectIsInEditMode,
+} from "../../../redux/slices/sessionSlice";
 
 const TopDiv = styled.div`
   outline: 1px solid rgba(153, 153, 152);
@@ -56,9 +59,7 @@ export default function StepContainerPreToolbar(
   const ideMessenger = useContext(IdeMessengerContext);
   const streamIdRef = useRef<string>(uuidv4());
   const wasGeneratingRef = useRef(props.isGeneratingCodeBlock);
-  const isInEditMode = useAppSelector(
-    (state) => state.editModeState.isInEditMode,
-  );
+  const isInEditMode = useAppSelector(selectIsInEditMode);
   const [isExpanded, setIsExpanded] = useState(
     props.expanded ?? (isInEditMode ? false : true),
   );
@@ -126,6 +127,7 @@ export default function StepContainerPreToolbar(
   useEffect(() => {
     const hasCompletedGenerating =
       wasGeneratingRef.current && !isGeneratingCodeBlock;
+
     const shouldAutoApply = hasCompletedGenerating && isInEditMode;
 
     if (shouldAutoApply) {

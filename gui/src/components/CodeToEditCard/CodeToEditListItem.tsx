@@ -1,11 +1,11 @@
-import FileIcon from "../../components/FileIcon";
+import FileIcon from "../FileIcon";
 import {
   ChevronDownIcon,
   ChevronRightIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
+import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 import { getLastNPathParts, getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
 import { CodeToEdit } from "core";
@@ -16,7 +16,6 @@ export interface CodeToEditListItemProps {
   onClickFilename: (codeToEdit: CodeToEdit) => void;
 }
 
-// Easiest method to overwrite the top level styling of the markdown preview
 const NoPaddingWrapper = styled.div`
   > * {
     margin: 0 !important;
@@ -64,16 +63,20 @@ export default function CodeToEditListItem({
   return (
     <li
       className="group flex cursor-pointer flex-col"
-      onClick={() => setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet)}
+      onClick={() => {
+        if (!isInsertion) {
+          setShowCodeSnippet((showCodeSnippet) => !showCodeSnippet);
+        }
+      }}
     >
       <div
-        className={`hover:bg-lightgray hover:text-vsc-foreground flex justify-between rounded px-2 py-0.5 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
+        className={`hover:bg-lightgray hover:text-vsc-foreground flex items-center justify-between rounded px-2 py-0.5 transition-colors hover:bg-opacity-20 ${showCodeSnippet && "text-vsc-foreground bg-lightgray bg-opacity-20"}`}
       >
-        <div className="flex items-center gap-0.5">
+        <div className="flex w-4/5 min-w-0 items-center gap-0.5">
           <FileIcon filename={code.filepath} height={"18px"} width={"18px"} />
-          <div className="flex gap-1.5">
+          <div className="flex min-w-0 gap-1.5">
             <span
-              className="text-xs hover:underline"
+              className="flex-shrink-0 text-xs hover:underline"
               onClick={(e) => {
                 e.stopPropagation();
                 onClickFilename(code);
@@ -81,20 +84,21 @@ export default function CodeToEditListItem({
             >
               {title}
             </span>
-            <span className="text-lightgray invisible max-w-[50%] truncate text-xs group-hover:visible">
+            <span className="text-lightgray invisible flex-grow truncate text-xs group-hover:visible">
               {fileSubpath}
             </span>
           </div>
         </div>
-        <div className="invisible flex gap-1.5 group-hover:visible">
-          <div className={isInsertion && "hidden"}>
+
+        <div className="invisible flex items-center gap-1.5 group-hover:visible">
+          <div className={`flex items-center ${isInsertion ? "hidden" : ""}`}>
             {showCodeSnippet ? (
               <ChevronDownIcon
                 onClick={(e) => {
                   e.stopPropagation();
                   setShowCodeSnippet(false);
                 }}
-                className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
+                className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
               />
             ) : (
               <ChevronRightIcon
@@ -102,17 +106,19 @@ export default function CodeToEditListItem({
                   e.stopPropagation();
                   setShowCodeSnippet(true);
                 }}
-                className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
+                className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
               />
             )}
           </div>
-          <XMarkIcon
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(code);
-            }}
-            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-md rounded-sm p-0.5 hover:bg-opacity-20"
-          />
+          <div className="flex items-center">
+            <XMarkIcon
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(code);
+              }}
+              className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground h-3.5 w-3.5 cursor-pointer rounded-sm p-0.5 hover:bg-opacity-20"
+            />
+          </div>
         </div>
       </div>
 

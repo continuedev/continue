@@ -5,7 +5,7 @@ keywords: [rules, .continuerules, system, prompt, message]
 
 # `.continuerules`
 
-You can create a project-specific system message by adding a `.continuerules` file to the root of your project. This file is raw text and its contents will be inserted into the system message for all LLM requests.
+You can create a project-specific system message by adding a `.continuerules` file to the root of your project. This file is raw text and its contents will be inserted into the system message for all chat requests. Rules are not used for autocomplete.
 
 ## Simple Examples
 

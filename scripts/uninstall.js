@@ -18,6 +18,8 @@ const directories = [
   "./binary/bin",
   "./binary/dist",
   "./binary/out",
+  // root
+  "./node_modules",
 ];
 
 directories.forEach((dir) => {

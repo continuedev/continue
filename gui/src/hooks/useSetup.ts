@@ -9,7 +9,11 @@ import { setLocalStorage } from "../util/localStorage";
 import { updateFileSymbolsFromContextItems } from "../util/symbols";
 import { useWebviewListener } from "./useWebviewListener";
 import { useAppSelector } from "../redux/hooks";
-import { setConfig, setConfigError } from "../redux/slices/configSlice";
+import {
+  selectDefaultModel,
+  setConfig,
+  setConfigError,
+} from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
@@ -18,6 +22,7 @@ import {
   addContextItemsAtIndex,
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
+import useUpdatingRef from "./useUpdatingRef";
 
 function useSetup(dispatch: AppDispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -25,6 +30,7 @@ function useSetup(dispatch: AppDispatch) {
   const defaultModelTitle = useAppSelector(
     (store) => store.config.defaultModelTitle,
   );
+  const defaultModelTitleRef = useUpdatingRef(defaultModelTitle);
   const hasLoadedConfig = useRef(false);
   const loadConfig = useCallback(
     async (initial: boolean) => {
@@ -57,7 +63,7 @@ function useSetup(dispatch: AppDispatch) {
     loadConfig(true);
     const interval = setInterval(() => {
       if (hasLoadedConfig.current) {
-        // Docs init on config load
+        // Init to run on initial config load
         ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
 

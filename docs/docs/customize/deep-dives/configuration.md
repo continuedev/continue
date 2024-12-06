@@ -31,7 +31,7 @@ The format of `.continuerc.json` is the same as `config.json`, plus one _additio
 
 Example
 
-```json title="config.json"
+```json title=".continuerc.json"
 {
   "tabAutocompleteOptions": {
     "disable": true

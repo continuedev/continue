@@ -17,6 +17,7 @@ const STATUS_TO_ICON: Record<IndexingProgressUpdate["status"], any> = {
   paused: PauseCircleIcon,
   done: CheckCircleIcon,
   failed: null, // Since we show an erorr message below
+  cancelled: null,
 };
 
 function IndexingProgressIndicator({ update }: IndexingProgressIndicatorProps) {

@@ -1,6 +1,6 @@
-import { ConfigHandler } from "../../config/ConfigHandler";
-import { ControlPlaneClient } from "../../control-plane/client";
-import FileSystemIde from "../../util/filesystem";
+import { ConfigHandler } from "../config/ConfigHandler";
+import { ControlPlaneClient } from "../control-plane/client";
+import FileSystemIde from "../util/filesystem";
 
 import { TEST_DIR } from "./testDir";
 

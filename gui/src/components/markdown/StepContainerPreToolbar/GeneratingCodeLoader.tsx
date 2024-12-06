@@ -1,4 +1,4 @@
-import Spinner from "./Spinner";
+import Spinner from "../../gui/Spinner";
 
 export interface GeneratingCodeLoaderProps {
   showLineCount: boolean;
