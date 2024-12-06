@@ -1086,6 +1086,7 @@ export interface EmbeddingsProvider {
 
 export type RerankerName =
   | "cohere"
+  | "bedrock"
   | "voyage"
   | "llm"
   | "free-trial"
