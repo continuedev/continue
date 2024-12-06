@@ -27,7 +27,7 @@ Jest testing setup includes
 - import `testConfigHandler` for any ConfigHandler needs
 - import `testControlPlaneClient` for control plane operations
 - import `ideSettingsPromise` for any IdeSettings needs
-- import `getTestLLM` for any ILLM/BaseLLM needs. Set the `completion` property to the desired completion, e.g. `const llm = await getTestLLM(); llm.completion = "Desired completion";`
+- import `testLLM` for any ILLM/BaseLLM needs. Set the `completion` property to the desired completion, e.g. `testLLM.completion = "Desired completion";`
 
 Do NOT write tests for any files in `core/test`, only use them as helpers for testing other files. If no other files are provided, warn the user and write no tests.
 
