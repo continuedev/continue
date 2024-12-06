@@ -18,7 +18,7 @@ import {
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { gatherContext } from "./gatherContext";
-import { handleErrors } from "./handleErrors";
+import { handleStreamErrors } from "./handleErrors";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamSlashCommand } from "./streamSlashCommand";
@@ -66,7 +66,8 @@ export const streamResponseThunk = createAsyncThunk<
     { dispatch, extra, getState },
   ) => {
     await dispatch(
-      handleErrors(async () => {
+      handleStreamErrors(async () => {
+        throw new Error("intentional");
         const state = getState();
         const defaultModel = selectDefaultModel(state);
         const slashCommands = state.config.config.slashCommands || [];

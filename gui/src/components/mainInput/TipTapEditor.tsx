@@ -304,6 +304,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const mainEditorContent = useAppSelector(
     (store) => store.session.mainEditorContent,
   );
+  console.log("MAIN EDITOR", mainEditorContent?.content);
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 

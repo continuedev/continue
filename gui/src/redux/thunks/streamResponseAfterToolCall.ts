@@ -9,7 +9,7 @@ import {
   streamUpdate,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
-import { handleErrors } from "./handleErrors";
+import { handleStreamErrors } from "./handleErrors";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 
@@ -24,7 +24,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
   "chat/streamAfterToolCall",
   async ({ toolCallId, toolOutput }, { dispatch, getState }) => {
     await dispatch(
-      handleErrors(async () => {
+      handleStreamErrors(async () => {
         const state = getState();
         const initialHistory = state.session.history;
         const defaultModel = selectDefaultModel(state);
