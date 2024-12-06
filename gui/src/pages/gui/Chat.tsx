@@ -341,7 +341,7 @@ export function Chat() {
     <>
       {isInEditMode && (
         <PageHeader
-          title="Chat"
+          title="Back to Chat"
           onClick={() => {
             loadLastSession().catch((e) =>
               console.error(`Failed to load last session: ${e}`),
