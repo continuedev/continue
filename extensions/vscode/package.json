@@ -2,7 +2,7 @@
   "name": "continue",
   "icon": "media/icon.png",
   "author": "Continue Dev, Inc",
-  "version": "0.9.244",
+  "version": "0.9.251",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -613,6 +613,7 @@
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
+    "e2e:package": "CONTINUE_GLOBAL_DIR=e2e/test-files node scripts/package.js",
     "package-all": "node scripts/package-all.js",
     "package:pre-release": "node scripts/package.js --pre-release",
     "build:rust": "cargo-cp-artifact -ac sync sync.node -- cargo build --manifest-path ../../sync/Cargo.toml --message-format=json-render-diagnostics",
@@ -625,8 +626,10 @@
     "e2e:sign-vscode": "codesign --entitlements entitlements.plist --deep --force -s - './e2e/storage/Visual Studio Code.app'",
     "e2e:copy-vsix": "chmod +x ./e2e/get-latest-vsix.sh && bash ./e2e/get-latest-vsix.sh",
     "e2e:install-vsix": "extest install-vsix -f ./e2e/vsix/continue.vsix --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
-    "e2e:test": "extest run-tests './e2e/_output/*.test.js' --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
-    "e2e:all": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:test",
+    "e2e:test": "extest run-tests './e2e/_output/tests/*.test.js' --code_settings settings.json --extensions_dir ./e2e/.test-extensions --storage ./e2e/storage",
+    "e2e:clean": "rm -rf ./e2e/_output",
+    "e2e:all": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:sign-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:test && npm run e2e:clean",
+    "e2e:quick": "CONTINUE_GLOBAL_DIR=e2e/test-files npm run e2e:compile && npm run e2e:test && npm run e2e:clean",
     "e2e:ci": "npm run e2e:compile && npm run e2e:create-storage && npm run e2e:get-chromedriver && npm run e2e:get-vscode && npm run e2e:copy-vsix && npm run e2e:install-vsix && npm run e2e:test"
   },
   "devDependencies": {
