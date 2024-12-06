@@ -19,7 +19,7 @@
     "@google/generative-ai": "^0.11.4",
     "@types/diff": "^5.2.2",
     "@types/follow-redirects": "^1.14.4",
-    "@types/jest": "^29.5.12",
+    "@types/jest": "^29.5.14",
     "@types/jquery": "^3.5.29",
     "@types/jsdom": "^21.1.6",
     "@types/mozilla-readability": "^0.2.1",
@@ -38,7 +38,7 @@
     "myers-diff": "^2.1.0",
     "onnxruntime-common": "1.14.0",
     "onnxruntime-web": "1.14.0",
-    "ts-jest": "^29.1.1"
+    "ts-jest": "^29.2.5"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.620.1",

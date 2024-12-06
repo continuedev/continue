@@ -8,7 +8,7 @@ Use best practices. Be clear and consise.
 Aim for 100% code coverage where reasonable.
 Multiple tests can be written, split up tests for best clarity and readability.
 Only use typescript, and if the file/code is not typescript, warn the user.
-Use ESM to import modules, do NOT use `require`
+IMPORTANT Use ESM to import modules, do NOT use `require` anywhere
 Tests are to be described in an adjacent file with a path identical except for a `.test.ts` rather than a `.ts` file extension
 Use double quotes (or backticks if needed) for strings
 
@@ -31,7 +31,8 @@ Jest testing setup includes
 
 Do NOT write tests for any files in `core/test`, only use them as helpers for testing other files. If no other files are provided, warn the user and write no tests.
 
-IMPORTANT: Avoid using pure mocks when possible; perform actual operations and use `jest.spyOn` so that functions are actually invoked. 
+IMPORTANT: Do NOT mock the fixtures above other than using `jest.spyOn`. DO mock 3rd party modules, etc. when sensible. 
+When using jest.fn, always declare the type, e.g. jest.fn<Promise<string>>().mockResolvedValue("hi")
 Instead, generate actual mock files and data for operations
 Pure mocks should only be used to emulate specific network responses/error or hard-to-duplicate errors, or to prevent long-duration tests
 
