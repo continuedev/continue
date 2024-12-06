@@ -65,3 +65,28 @@ export function renderConfigYaml(configYaml: string): ConfigYaml {
     throw new Error(`Failed to parse config yaml: ${e.message}`);
   }
 }
+
+const TEMPLATE_VAR_REGEX = /\${{[\s]*([^}\s]+)[\s]*}}/g;
+
+export function getTemplateVariables(templatedYaml: string): string[] {
+  const variables = new Set<string>();
+  const matches = templatedYaml.matchAll(TEMPLATE_VAR_REGEX);
+  for (const match of matches) {
+    variables.add(match[1]);
+  }
+  return Array.from(variables);
+}
+
+export function fillTemplateVariables(
+  templatedYaml: string,
+  data: { [key: string]: string },
+): string {
+  return templatedYaml.replace(TEMPLATE_VAR_REGEX, (match, variableName) => {
+    // Inject data
+    if (variableName in data) {
+      return data[variableName];
+    }
+    // If variable doesn't exist, return the original expression
+    return match;
+  });
+}

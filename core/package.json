@@ -46,6 +46,7 @@
     "@aws-sdk/credential-providers": "^3.620.1",
     "@continuedev/config-types": "^1.0.13",
     "@continuedev/llm-info": "^1.0.2",
+    "@continuedev/config-yaml": "../packages/config-yaml",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@mozilla/readability": "^0.5.0",
     "@octokit/rest": "^20.0.2",
