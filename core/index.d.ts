@@ -1,6 +1,5 @@
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-
 declare global {
   interface Window {
     ide?: "vscode";

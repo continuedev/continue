@@ -366,7 +366,6 @@ export class Core {
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
       const config = await configHandler.loadConfig();
-
       // Stop TTS on new StreamChat
       if (config.experimental?.readResponseTTS) {
         void TTS.kill();
