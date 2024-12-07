@@ -5,6 +5,7 @@ import {
   Workbench,
 } from "vscode-extension-tester";
 import { GUISelectors } from "../selectors/GUI.selectors";
+import { TestUtils } from "../TestUtils";
 
 export class GUIActions {
   public static switchToReactIframe = async (driver: WebDriver) => {
@@ -49,14 +50,10 @@ export class GUIActions {
     const dropdownButton = await GUISelectors.getModelDropdownButton(view);
     await dropdownButton.click();
 
-    await new Promise((res) => {
-      setTimeout(res, 2000);
+    const dropdownOption = await TestUtils.waitForElement(() => {
+      return GUISelectors.getModelDropdownOption(view, option);
     });
 
-    const dropdownOption = await GUISelectors.getModelDropdownOption(
-      view,
-      option,
-    );
     await dropdownOption.click();
   };
 }

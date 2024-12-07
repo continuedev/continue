@@ -5,7 +5,7 @@ export class TestUtils {
     locatorFn: () => Promise<WebElement>,
     timeout: number = 5000,
     interval: number = 500,
-  ): Promise<any> {
+  ): Promise<WebElement> {
     const startTime = Date.now();
 
     while (Date.now() - startTime < timeout) {
