@@ -7,6 +7,7 @@ import useHistory from "../../hooks/useHistory";
 import { getFontSize, getMetaKeyLabel } from "../../util";
 import { HistoryTableRow } from "./HistoryTableRow";
 import { XMarkIcon } from "@heroicons/react/24/solid";
+import { useAppSelector } from "../../redux/hooks";
 
 const parseDate = (date: string): Date => {
   let dateObj = new Date(date);
@@ -28,6 +29,8 @@ export function History() {
   const { getHistory, lastSessionId } = useHistory(dispatch);
 
   const [searchTerm, setSearchTerm] = useState("");
+
+  const sessionTitle = useAppSelector((state) => state.session.title);
 
   const minisearch = useRef<MiniSearch>(
     new MiniSearch({
@@ -56,7 +59,7 @@ export function History() {
       }
     };
     fetchSessions();
-  }, [lastSessionId]);
+  }, [lastSessionId, sessionTitle]);
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>
