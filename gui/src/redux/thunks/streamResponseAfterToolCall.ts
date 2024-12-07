@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatMessage, ContextItem } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderContextItems } from "core/util/messageContent";
+import { selectDefaultModel } from "../slices/configSlice";
 import {
   addContextItemsAtIndex,
   setActive,
@@ -11,7 +12,6 @@ import { ThunkApiType } from "../store";
 import { handleErrors } from "./handleErrors";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
-import { selectDefaultModel } from "../slices/configSlice";
 
 export const streamResponseAfterToolCall = createAsyncThunk<
   void,
@@ -39,7 +39,7 @@ export const streamResponseAfterToolCall = createAsyncThunk<
           toolCallId,
         };
 
-        dispatch(streamUpdate(newMessage));
+        dispatch(streamUpdate([newMessage]));
         dispatch(
           addContextItemsAtIndex({
             index: initialHistory.length,

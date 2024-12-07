@@ -1,5 +1,6 @@
 import { RerankerName } from "../../index.js";
 
+import { BedrockReranker } from "./bedrock.js";
 import { CohereReranker } from "./cohere.js";
 import { ContinueProxyReranker } from "./ContinueProxyReranker.js";
 import { FreeTrialReranker } from "./freeTrial.js";
@@ -9,6 +10,7 @@ import { VoyageReranker } from "./voyage.js";
 
 export const AllRerankers: { [key in RerankerName]: any } = {
   cohere: CohereReranker,
+  bedrock: BedrockReranker,
   llm: LLMReranker,
   voyage: VoyageReranker,
   "free-trial": FreeTrialReranker,
