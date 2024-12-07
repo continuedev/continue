@@ -57,6 +57,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiSlice";
 import { RootState } from "../../redux/store";
+import { cancelStream } from "../../redux/thunks/cancelStream";
 import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
@@ -203,7 +204,7 @@ export function Chat() {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        // dispatch(cancelGeneration()); TODO!!!
+        dispatch(cancelStream());
       }
     };
     window.addEventListener("keydown", listener);
