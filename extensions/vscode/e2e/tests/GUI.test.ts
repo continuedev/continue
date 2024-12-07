@@ -17,7 +17,7 @@ describe("GUI Test", () => {
   before(async function () {
     this.timeout(10000000);
 
-    await VSBrowser.instance.openResources(path.join("e2e/test-files"));
+    await VSBrowser.instance.openResources(path.join("e2e/test-continue"));
 
     await GUIActions.openGui();
 
@@ -43,7 +43,7 @@ describe("GUI Test", () => {
     );
   });
 
-  it.only("should allow typing text in the editor", async () => {
+  it("should allow typing text in the editor", async () => {
     await GUIActions.selectModelFromDropdown(view, "Mock");
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
 
@@ -53,7 +53,7 @@ describe("GUI Test", () => {
     (await GUISelectors.getSubmitInputButton(view)).click();
 
     await new Promise((res) => {
-      setTimeout(res, 600000000);
+      setTimeout(res, 1000);
     });
 
     await GUISelectors.getThreadMessageByText(view, "I'm fine");
