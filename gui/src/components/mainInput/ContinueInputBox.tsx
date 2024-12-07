@@ -74,8 +74,6 @@ const GradientBorder = styled.div<{
 `;
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
-  const dispatch = useDispatch();
-
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
   const availableSlashCommands = useAppSelector(
     selectSlashCommandComboBoxInputs,

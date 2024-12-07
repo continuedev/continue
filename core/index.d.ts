@@ -1,6 +1,5 @@
 import Parser from "web-tree-sitter";
 import { GetGhTokenArgs } from "./protocol/ide";
-
 declare global {
   interface Window {
     ide?: "vscode";
@@ -418,10 +417,23 @@ interface ToolCallState {
   output?: ContextItem[];
 }
 
+export type TipTapJsonContent = {
+  type?: string;
+  attrs?: Record<string, any>;
+  content?: TipTapJsonContent[];
+  marks?: {
+    type: string;
+    attrs?: Record<string, any>;
+    [key: string]: any;
+  }[];
+  text?: string;
+  [key: string]: any;
+};
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   contextItems: ContextItemWithId[];
-  editorState?: any;
+  editorState?: TipTapJsonContent;
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;

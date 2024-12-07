@@ -41,7 +41,9 @@ type SessionState = {
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
-  lastMainEditorState?: JSONContent;
+  currentMainEditorContent?: JSONContent;
+  lastMainEditorContent?: JSONContent | undefined;
+  mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
   codeBlockApplyStates: {
@@ -114,19 +116,31 @@ export const sessionSlice = createSlice({
       if (state.history.length < 2) {
         return;
       }
-
       const lastMessage = state.history[state.history.length - 1];
+      console.log("CLEARING LAST EMPTY RESPONSE", { ...lastMessage });
 
       // Only clear in the case of an empty message
       if (!lastMessage.message.content.length) {
-        console.log(
-          "setting editor state to",
-          state.history[state.history.length - 2].editorState,
-        );
-        state.lastMainEditorState =
+        console.log("CLEARING", {
+          ...state.history[state.history.length - 2].editorState,
+        });
+        state.mainEditorContentTrigger =
           state.history[state.history.length - 2].editorState;
         state.history = state.history.slice(0, -2);
       }
+    },
+    // Trigger value picked up by editor with isMainInput to set its content
+    setMainEditorContentTrigger: (
+      state,
+      action: PayloadAction<JSONContent | undefined>,
+    ) => {
+      state.mainEditorContentTrigger = action.payload;
+    },
+    setLastMainEditorContent: (
+      state,
+      action: PayloadAction<JSONContent | undefined>,
+    ) => {
+      state.lastMainEditorContent = action.payload;
     },
     updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
       state.symbols = {
@@ -167,7 +181,7 @@ export const sessionSlice = createSlice({
         }
         const historyItem = state.history[index];
 
-        historyItem.message.content = "";
+        historyItem.message.content = ""; // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
         historyItem.editorState = payload.editorState;
 
         state.history = state.history.slice(0, index + 1).concat({
@@ -187,7 +201,7 @@ export const sessionSlice = createSlice({
             message: {
               id: uuidv4(),
               role: "user",
-              content: "", // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state
+              content: "", // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
             },
             contextItems: [],
             editorState,
@@ -563,6 +577,8 @@ export const {
   submitEditorAndInitAtIndex,
   updateHistoryItemAtIndex,
   clearLastEmptyResponse,
+  setMainEditorContentTrigger,
+  setLastMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,

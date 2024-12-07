@@ -70,6 +70,8 @@ import {
   clearCodeToEdit,
   selectHasCodeToEdit,
   selectIsInEditMode,
+  setLastMainEditorContent,
+  setMainEditorContentTrigger,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
 
@@ -256,7 +258,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   const isInEditModeRef = useUpdatingRef(isInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
@@ -301,21 +302,11 @@ function TipTapEditor(props: TipTapEditorProps) {
     return undefined;
   }
 
-  const lastMainEditorState = useAppSelector(
-    (store) => store.session.lastMainEditorState,
-  );
-  const [fakeContent, setFakeContent] = useState("hello");
-  useEffect(() => {
-    setTimeout(() => {
-      setFakeContent("Hello world");
-    }, 2000);
-  }, []);
-
-  if (props.isMainInput) {
-    console.log("Main input editor state prop:", props.editorState);
-  }
-
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
+
+  const handleContentUpdate = useUpdatingRef((content: JSONContent) => {
+    dispatch(setLastMainEditorContent(content));
+  }, []);
 
   const editor: Editor = useEditor({
     extensions: [
@@ -392,7 +383,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
               onEnterRef.current({
                 useCodebase: false,
-                noContext: useActiveFile,
+                noContext: !!useActiveFile,
               });
 
               return true;
@@ -549,18 +540,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: `font-size: ${getFontSize()}px;`,
       },
     },
-    content: props.editorState ?? {
-      type: "doc",
-      content: [
-        (() => {
-          console.log("set here");
-          return {
-            type: "paragraph",
-            content: [{ type: "text", text: fakeContent }],
-          };
-        })(),
-      ],
+    onUpdate: (event) => {
+      const editorContent = event.editor.getJSON();
+      handleContentUpdate.current(editorContent);
     },
+    content: props.editorState,
     editable: !isStreaming || props.isMainInput,
   });
 
@@ -680,6 +664,18 @@ function TipTapEditor(props: TipTapEditorProps) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, isStreaming, editor]);
+
+  // This allows anywhere in the app to set the content of the main input
+  const mainInputContentTrigger = useAppSelector(
+    (store) => store.session.mainEditorContentTrigger,
+  );
+  useEffect(() => {
+    if (!props.isMainInput || !mainInputContentTrigger) {
+      return;
+    }
+    editor.commands.setContent(mainInputContentTrigger);
+    dispatch(setMainEditorContentTrigger(undefined));
+  }, [editor, props.isMainInput, mainInputContentTrigger]);
 
   // IDE event listeners
   useWebviewListener(

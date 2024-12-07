@@ -1,23 +1,16 @@
 import { createAsyncThunk, unwrapResult } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/core";
-import {
-  ChatHistoryItem,
-  ChatMessage,
-  InputModifiers,
-  MessageContent,
-  SlashCommandDescription,
-} from "core";
+import { InputModifiers, MessageContent, SlashCommandDescription } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { renderChatMessage } from "core/util/messageContent";
 import posthog from "posthog-js";
 import {
   submitEditorAndInitAtIndex,
-  setCurCheckpointIndex,
   updateHistoryItemAtIndex,
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { gatherContext } from "./gatherContext";
-import { handleStreamErrors } from "./handleErrors";
+import { streamThunkWrapper } from "./streamThunkWrapper";
 import { resetStateForNewMessage } from "./resetStateForNewMessage";
 import { streamNormalInput } from "./streamNormalInput";
 import { streamSlashCommand } from "./streamSlashCommand";
@@ -66,7 +59,7 @@ export const streamResponseThunk = createAsyncThunk<
     { dispatch, extra, getState },
   ) => {
     await dispatch(
-      handleStreamErrors(async () => {
+      streamThunkWrapper(async () => {
         const state = getState();
         const defaultModel = selectDefaultModel(state);
         const slashCommands = state.config.config.slashCommands || [];
@@ -113,7 +106,7 @@ export const streamResponseThunk = createAsyncThunk<
         let commandAndInput = getSlashCommandForInput(content, slashCommands);
 
         if (!commandAndInput) {
-          await dispatch(streamNormalInput(messages));
+          unwrapResult(await dispatch(streamNormalInput(messages)));
         } else {
           const [slashCommand, commandInput] = commandAndInput;
           let updatedContextItems = [];
