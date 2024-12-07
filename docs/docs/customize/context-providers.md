@@ -444,7 +444,7 @@ Available connection types:
 
 ### `@Debugger`
 
-Reference the contents of the local variables in the debugger.
+Reference the contents of the local variables in the debugger. Currently only available in VS Code.
 
 ```json title="config.json"
 {

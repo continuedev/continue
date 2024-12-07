@@ -28,7 +28,6 @@ class ContinueBrowser(val project: Project, url: String) {
     private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
 
     private val PASS_THROUGH_TO_CORE = listOf(
-        "update/modelChange",
         "ping",
         "abort",
         "history/list",
@@ -138,7 +137,7 @@ class ContinueBrowser(val project: Project, url: String) {
                 }
 
                 "jetbrains/isOSREnabled" -> {
-                    sendToWebview( "jetbrains/isOSREnabled", isOSREnabled)
+                    respond(isOSREnabled)
                 }
 
                 "onLoad" -> {
@@ -268,7 +267,9 @@ class ContinueBrowser(val project: Project, url: String) {
         val jsCode = buildJavaScript(jsonData)
 
         try {
-            this.browser.executeJavaScriptAsync(jsCode)
+            this.browser.executeJavaScriptAsync(jsCode).onError {
+                println("Failed to execute jsCode error: ${it.message}")
+            }
         } catch (error: IllegalStateException) {
             println("Webview not initialized yet $error")
         }

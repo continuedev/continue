@@ -10,21 +10,22 @@ import {
   ApplyState,
   ChatHistoryItem,
   ChatMessage,
+  CodeToEdit,
+  ContextItem,
   ContextItemWithId,
   FileSymbolMap,
-  Session,
-  PromptLog,
-  CodeToEdit,
-  ToolCall,
-  ContextItem,
   MessageModes,
+  PromptLog,
+  Session,
+  ToolCall,
 } from "core";
+import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4 } from "uuid";
+import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
-import { RootState } from "../store";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -86,7 +87,7 @@ function getBaseHistoryItem(): ChatHistoryItemWithMessageId {
 const initialState: SessionState = {
   history: [],
   isStreaming: false,
-  title: "New Session",
+  title: NEW_SESSION_TITLE,
   id: uuidv4(),
   selectedProfileId: "local",
   curCheckpointIndex: 0,
@@ -284,72 +285,74 @@ export const sessionSlice = createSlice({
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
     },
-    streamUpdate: (state, action: PayloadAction<ChatMessage>) => {
+    streamUpdate: (state, action: PayloadAction<ChatMessage[]>) => {
       if (state.history.length) {
-        const lastMessage = state.history[state.history.length - 1];
+        for (const message of action.payload) {
+          const lastMessage = state.history[state.history.length - 1];
 
-        if (
-          action.payload.role &&
-          (lastMessage.message.role !== action.payload.role ||
-            // This is when a tool call comes after assistant text
-            (lastMessage.message.content !== "" &&
-              action.payload.role === "assistant" &&
-              action.payload.toolCalls?.length))
-        ) {
-          const baseHistoryItem = getBaseHistoryItem();
-
-          // Create a new message
-          const historyItem: ChatHistoryItemWithMessageId = {
-            ...baseHistoryItem,
-            message: { ...baseHistoryItem.message, ...action.payload },
-          };
-
-          if (action.payload.role === "assistant" && action.payload.toolCalls) {
-            const [_, parsedArgs] = incrementalParseJson(
-              action.payload.toolCalls[0].function.arguments,
-            );
-            historyItem.toolCallState = {
-              status: "generating",
-              toolCall: action.payload.toolCalls[0] as ToolCall,
-              toolCallId: action.payload.toolCalls[0].id,
-              parsedArgs,
-            };
-          }
-
-          state.history.push(historyItem);
-        } else {
-          // Add to the existing message
-          const msg = state.history[state.history.length - 1].message;
-          if (action.payload.content) {
-            msg.content += renderChatMessage(action.payload);
-          } else if (
-            action.payload.role === "assistant" &&
-            action.payload.toolCalls &&
-            msg.role === "assistant"
+          if (
+            message.role &&
+            (lastMessage.message.role !== message.role ||
+              // This is when a tool call comes after assistant text
+              (lastMessage.message.content !== "" &&
+                message.role === "assistant" &&
+                message.toolCalls?.length))
           ) {
-            if (!msg.toolCalls) {
-              msg.toolCalls = [];
+            const baseHistoryItem = getBaseHistoryItem();
+
+            // Create a new message
+            const historyItem: ChatHistoryItemWithMessageId = {
+              ...baseHistoryItem,
+              message: { ...baseHistoryItem.message, ...message },
+            };
+
+            if (message.role === "assistant" && message.toolCalls) {
+              const [_, parsedArgs] = incrementalParseJson(
+                message.toolCalls[0].function.arguments,
+              );
+              historyItem.toolCallState = {
+                status: "generating",
+                toolCall: message.toolCalls[0] as ToolCall,
+                toolCallId: message.toolCalls[0].id,
+                parsedArgs,
+              };
             }
-            action.payload.toolCalls.forEach((toolCall, i) => {
-              if (msg.toolCalls.length <= i) {
-                msg.toolCalls.push(toolCall);
-              } else {
-                msg.toolCalls[i].function.arguments +=
-                  toolCall.function.arguments;
 
-                const [_, parsedArgs] = incrementalParseJson(
-                  msg.toolCalls[i].function.arguments,
-                );
-
-                state.history[
-                  state.history.length - 1
-                ].toolCallState.parsedArgs = parsedArgs;
-                state.history[
-                  state.history.length - 1
-                ].toolCallState.toolCall.function.arguments +=
-                  toolCall.function.arguments;
+            state.history.push(historyItem);
+          } else {
+            // Add to the existing message
+            const msg = state.history[state.history.length - 1].message;
+            if (message.content) {
+              msg.content += renderChatMessage(message);
+            } else if (
+              message.role === "assistant" &&
+              message.toolCalls &&
+              msg.role === "assistant"
+            ) {
+              if (!msg.toolCalls) {
+                msg.toolCalls = [];
               }
-            });
+              message.toolCalls.forEach((toolCall, i) => {
+                if (msg.toolCalls.length <= i) {
+                  msg.toolCalls.push(toolCall);
+                } else {
+                  msg.toolCalls[i].function.arguments +=
+                    toolCall.function.arguments;
+
+                  const [_, parsedArgs] = incrementalParseJson(
+                    msg.toolCalls[i].function.arguments,
+                  );
+
+                  state.history[
+                    state.history.length - 1
+                  ].toolCallState.parsedArgs = parsedArgs;
+                  state.history[
+                    state.history.length - 1
+                  ].toolCallState.toolCall.function.arguments +=
+                    toolCall.function.arguments;
+                }
+              });
+            }
           }
         }
       }
@@ -526,6 +529,9 @@ export const sessionSlice = createSlice({
 
       return selectIsSingleRangeEdit || isInsertion;
     },
+    selectHasCodeToEdit: (state) => {
+      return state.codeToEdit.length > 0;
+    },
   },
   extraReducers: (builder) => {
     addPassthroughCases(builder, [streamResponseThunk]);
@@ -599,6 +605,7 @@ export const {
   selectIsGatheringContext,
   selectIsInEditMode,
   selectIsSingleRangeEditOrInsertion,
+  selectHasCodeToEdit,
 } = sessionSlice.selectors;
 
 export default sessionSlice.reducer;

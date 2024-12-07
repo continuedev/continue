@@ -3,7 +3,7 @@ import os from "os";
 import path from "path";
 
 // Want this outside of the git repository so we can change branches in tests
-export const TEST_DIR = path.join(os.tmpdir(), "testDir");
+export const TEST_DIR = path.join(os.tmpdir(), "testWorkspaceDir");
 
 export function setUpTestDir() {
   if (fs.existsSync(TEST_DIR)) {

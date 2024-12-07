@@ -3,7 +3,7 @@ import os from "os";
 import { jest } from "@jest/globals";
 
 import { ContinueConfig } from "../..";
-import { testConfigHandler } from "../../test/util/fixtures";
+import { testConfigHandler } from "../../test/fixtures";
 import FileSystemIde from "../../util/filesystem";
 
 import DocsCrawler, { ChromiumInstaller, type PageData } from "./DocsCrawler";

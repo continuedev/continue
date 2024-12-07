@@ -13,6 +13,7 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
   async (_, { dispatch, extra, getState }) => {
     const state = getState();
     const isInEditMode = selectIsInEditMode(state);
+    const codeToEdit = state.session.codeToEdit;
     const isSingleRangeEditOrInsertion =
       selectIsSingleRangeEditOrInsertion(state);
 
@@ -21,6 +22,13 @@ export const exitEditMode = createAsyncThunk<void, undefined, ThunkApiType>(
     }
 
     dispatch(setMode("chat"));
+
+    for (const code of codeToEdit) {
+      extra.ideMessenger.post("rejectDiff", {
+        filepath: code.filepath,
+      });
+    }
+
     dispatch(clearCodeToEdit());
     dispatch(setEditDone());
 

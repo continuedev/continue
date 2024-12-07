@@ -1,8 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { Session } from "../..";
-import historyManager from "../../util/history";
-import { getSessionFilePath } from "../../util/paths";
+import { Session } from "..";
+import { NEW_SESSION_TITLE } from "./constants";
+import historyManager from "./history";
+import { getSessionFilePath } from "./paths";
 
 const sessionId = uuidv4();
 const testSession: Session = {
@@ -31,7 +32,7 @@ describe("No sessions have been created", () => {
     const session = historyManager.load(testSessionId);
     expect(session).toEqual({
       history: [],
-      title: "Failed to load session",
+      title: NEW_SESSION_TITLE,
       workspaceDirectory: "",
       sessionId: testSessionId,
     });
