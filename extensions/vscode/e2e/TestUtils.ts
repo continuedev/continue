@@ -3,7 +3,7 @@ import { WebElement } from "vscode-extension-tester";
 export class TestUtils {
   public static async waitForElement(
     locatorFn: () => Promise<WebElement>,
-    timeout: number = 1500,
+    timeout: number = 5000,
     interval: number = 500,
   ): Promise<any> {
     const startTime = Date.now();

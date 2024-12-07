@@ -5,6 +5,7 @@ import {
   Workbench,
 } from "vscode-extension-tester";
 import { GUISelectors } from "../selectors/GUI.selectors";
+import { TestUtils } from "../TestUtils";
 
 export class GUIActions {
   public static switchToReactIframe = async (driver: WebDriver) => {

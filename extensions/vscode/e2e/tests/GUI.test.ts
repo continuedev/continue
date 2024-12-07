@@ -54,7 +54,6 @@ describe("GUI Test", () => {
 
     await TestUtils.waitForElement(
       () => GUISelectors.getThreadMessageByText(view, "I'm fine"),
-      5000,
     );
   }).timeout(600000000);
 });
