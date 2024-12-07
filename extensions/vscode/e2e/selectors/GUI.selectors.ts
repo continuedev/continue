@@ -26,7 +26,10 @@ export class GUISelectors {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
   }
 
-  public static getModelDropdownOption(view: WebView, option: string) {
+  public static async getModelDropdownOption(view: WebView, option: string) {
+    const listbox = await view.findWebElement(By.xpath('//*[@role="listbox"]'));
+
+    console.log("LISTBOX", await listbox.getText());
     return view.findWebElement(
       By.xpath(`//*[@role="listbox"]//*[contains(text(), "${option}")]`),
     );
