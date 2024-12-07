@@ -417,23 +417,10 @@ interface ToolCallState {
   output?: ContextItem[];
 }
 
-export type TipTapJsonContent = {
-  type?: string;
-  attrs?: Record<string, any>;
-  content?: TipTapJsonContent[];
-  marks?: {
-    type: string;
-    attrs?: Record<string, any>;
-    [key: string]: any;
-  }[];
-  text?: string;
-  [key: string]: any;
-};
-
 export interface ChatHistoryItem {
   message: ChatMessage;
   contextItems: ContextItemWithId[];
-  editorState?: TipTapJsonContent;
+  editorState?: any;
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;
