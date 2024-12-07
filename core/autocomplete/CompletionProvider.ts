@@ -3,7 +3,7 @@ import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { IDE, ILLM } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters.js";
-import { EXPERIMENTS, PosthogFeatureFlag, Telemetry } from "../util/posthog.js";
+import { PosthogFeatureFlag, Telemetry } from "../util/posthog.js";
 
 import { shouldCompleteMultiline } from "./classification/shouldCompleteMultiline.js";
 import { ContextRetrievalService } from "./context/ContextRetrievalService.js";
@@ -15,7 +15,6 @@ import { postprocessCompletion } from "./postprocessing/index.js";
 import { shouldPrefilter } from "./prefiltering/index.js";
 import { getAllSnippets } from "./snippets/index.js";
 import { renderPrompt } from "./templating/index.js";
-import { GetLspDefinitionsFunction } from "./types.js";
 import { AutocompleteDebouncer } from "./util/AutocompleteDebouncer.js";
 import { AutocompleteLoggingService } from "./util/AutocompleteLoggingService.js";
 import AutocompleteLruCache from "./util/AutocompleteLruCache.js";
@@ -46,7 +45,6 @@ export class CompletionProvider {
     private readonly ide: IDE,
     private readonly _injectedGetLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
-    private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
   ) {
     this.completionStreamer = new CompletionStreamer(this.onError.bind(this));
     this.contextRetrievalService = new ContextRetrievalService(this.ide);
@@ -171,7 +169,6 @@ export class CompletionProvider {
         getAllSnippets({
           helper,
           ide: this.ide,
-          getDefinitionsFromLsp: this.getDefinitionsFromLsp,
           contextRetrievalService: this.contextRetrievalService,
         }),
         this.ide.getWorkspaceDirs(),
