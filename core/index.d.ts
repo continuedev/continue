@@ -807,6 +807,7 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
+  | "test"
   | "cerebras"
   | "askSage"
   | "vertexai"

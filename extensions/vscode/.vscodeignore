@@ -21,6 +21,7 @@ esbuild.js
 esbuild.test.mjs
 importMetaUrl.js
 scripts
+e2e
 
 server/exe/**
 !out/node_modules/**
