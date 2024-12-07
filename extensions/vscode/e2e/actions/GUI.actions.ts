@@ -50,6 +50,10 @@ export class GUIActions {
     const dropdownButton = await GUISelectors.getModelDropdownButton(view);
     await dropdownButton.click();
 
+    await new Promise((res) => {
+      setTimeout(res, 1000);
+    });
+
     const dropdownOption = await GUISelectors.getModelDropdownOption(
       view,
       option,

@@ -52,8 +52,8 @@ describe("GUI Test", () => {
     await tiptap.sendKeys("How are you?");
     (await GUISelectors.getSubmitInputButton(view)).click();
 
-    await TestUtils.waitForElement(
-      () => GUISelectors.getThreadMessageByText(view, "I'm fine"),
+    await TestUtils.waitForElement(() =>
+      GUISelectors.getThreadMessageByText(view, "I'm fine"),
     );
   }).timeout(600000000);
 });
