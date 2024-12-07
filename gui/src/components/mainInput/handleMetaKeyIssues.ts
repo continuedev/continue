@@ -1,8 +1,9 @@
 import { Editor } from "@tiptap/react";
 import { KeyboardEvent } from "react";
-import { isWebEnvironment } from "../../util";
+import { getPlatform, isWebEnvironment } from "../../util";
 
 const isWebEnv = isWebEnvironment();
+const platform = getPlatform();
 
 /**
  * This handles various keypress issues when OSR is enabled
@@ -56,15 +57,48 @@ export const handleVSCMetaKeyIssues = async (
   }
 };
 
+const deleteSingleWord = (editor: Editor) => {
+  const textContent =
+    editor.state.doc.resolve(editor.state.selection.from).parent.textContent ??
+    "";
+
+  const cursorPosition = editor.state.selection.from;
+  const nodeStartPosition = editor.state.doc.resolve(cursorPosition).start();
+
+  const textBeforeCursor = textContent.slice(
+    0,
+    cursorPosition - nodeStartPosition,
+  );
+
+  // Match the last word including any trailing whitespace
+  const lastWordMatch = textBeforeCursor.match(/\S+\s*$/);
+
+  if (lastWordMatch) {
+    const lastWordWithSpace = lastWordMatch[0];
+    editor.commands.deleteRange({
+      from: editor.state.selection.from - lastWordWithSpace.length,
+      to: editor.state.selection.from,
+    });
+  }
+};
+
 export const handleJetBrainsMetaBackspace = (editor: Editor) => {
   const { doc } = editor.state;
 
   for (let i = doc.content.childCount - 1; i >= 0; i--) {
     const node = doc.content.child(i);
 
-    if (node.type.name !== "codeBlock") {
-      editor.commands.deleteNode(node.type.name);
+    if (node.type.name === "codeBlock") {
+      continue;
     }
+
+    // For Linux/Windows, only delete the word to the left of the cursor
+    if (platform !== "mac") {
+      deleteSingleWord(editor);
+      break;
+    }
+
+    editor.commands.deleteNode(node.type.name);
   }
 
   // Add an empty string so the user can keep typing

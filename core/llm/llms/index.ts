@@ -31,7 +31,7 @@ import LlamaCpp from "./LlamaCpp";
 import Llamafile from "./Llamafile";
 import LMStudio from "./LMStudio";
 import Mistral from "./Mistral";
-import Mock from "./Mock";
+import MockLLM from "./Mock";
 import Moonshot from "./Moonshot";
 import Msty from "./Msty";
 import Nebius from "./Nebius";
@@ -50,6 +50,7 @@ import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 import SiliconFlow from "./SiliconFlow";
+import TestLLM from "./Test";
 
 const LLMs = [
   Anthropic,
@@ -87,7 +88,8 @@ const LLMs = [
   Nvidia,
   Vllm,
   SambaNova,
-  Mock,
+  MockLLM,
+  TestLLM,
   Cerebras,
   Asksage,
   Nebius,

@@ -1,6 +1,9 @@
 import { ChatHistoryItem, ChatMessage, MessagePart } from "../index.js";
 import { normalizeToMessageParts } from "../util/messageContent.js";
+
 import { modelSupportsTools } from "./autodetect.js";
+
+const CUSTOM_SYS_MSG_MODEL_FAMILIES = ["sonnet", "gpt-4o", "mistral-large"];
 
 const SYSTEM_MESSAGE = `When generating new code:
 
@@ -64,7 +67,7 @@ const TOOL_USE_RULES = `When using tools, follow the following guidelines:
 - Avoid calling tools unless they are absolutely necessary. For example, if you are asked a simple programming question you do not need web search. As another example, if the user asks you to explain something about code, do not create a new file.`;
 
 function constructSystemPrompt(model: string): string | null {
-  if (model.includes("sonnet")) {
+  if (CUSTOM_SYS_MSG_MODEL_FAMILIES.some((family) => model.includes(family))) {
     return SYSTEM_MESSAGE + "\n\n" + TOOL_USE_RULES;
   }
   if (modelSupportsTools(model)) {

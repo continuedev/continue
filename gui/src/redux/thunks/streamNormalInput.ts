@@ -1,6 +1,7 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ChatMessage, PromptLog } from "core";
 import { selectCurrentToolCall } from "../selectors/selectCurrentToolCall";
+import { selectDefaultModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
@@ -10,7 +11,6 @@ import {
 } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { callTool } from "./callTool";
-import { selectDefaultModel } from "../slices/configSlice";
 
 export const streamNormalInput = createAsyncThunk<
   void,
@@ -56,14 +56,9 @@ export const streamNormalInput = createAsyncThunk<
         break;
       }
 
-      const update = next.value as ChatMessage;
-      dispatch(streamUpdate(update));
+      const updates = next.value as ChatMessage[];
+      dispatch(streamUpdate(updates));
       next = await gen.next();
-
-      // There has been lag when streaming tool calls. This is a temporary solution
-      if (update.role === "assistant" && update.toolCalls) {
-        await new Promise((resolve) => setTimeout(resolve, 10));
-      }
     }
 
     // Attach prompt log

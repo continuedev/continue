@@ -12,3 +12,4 @@ There are a number of different ways to customize Chat
 - You can create your own [custom code RAG](../customize/tutorials/custom-code-rag.md)
 - You can configure [`@Docs`](../customize/deep-dives/docs.md)
 - You can [build your own context provider](../customize/tutorials/build-your-own-context-provider.md)
+- You can configure and create custom [tools](../customize/tools.md)

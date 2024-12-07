@@ -31,9 +31,15 @@ export default function FileIcon({ filename, height, width }: FileIconProps) {
   const sanitizedSVG = DOMPurify.sanitize(svg);
 
   return (
-    <div
+    <span
       dangerouslySetInnerHTML={{ __html: sanitizedSVG }}
-      style={{ width: width, height: height, fill: color, flexShrink: 0 }}
+      style={{
+        width: width,
+        height: height,
+        fill: color,
+        flexShrink: 0,
+        display: "block",
+      }}
     />
   );
 }

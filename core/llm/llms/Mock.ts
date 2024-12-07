@@ -1,7 +1,7 @@
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
-class Mock extends BaseLLM {
+class MockLLM extends BaseLLM {
   public completion: string = "Test Completion";
   static providerName: ModelProvider = "mock";
 
@@ -27,4 +27,4 @@ class Mock extends BaseLLM {
   }
 }
 
-export default Mock;
+export default MockLLM;
