@@ -2,13 +2,13 @@ import {
   EditorView,
   WebView,
   WebDriver,
-  Key,
   VSBrowser,
 } from "vscode-extension-tester";
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
 import { GUISelectors } from "../selectors/GUI.selectors";
 import * as path from "path";
+import { TestUtils } from "../TestUtils";
 
 describe("GUI Test", () => {
   let view: WebView;
@@ -52,10 +52,9 @@ describe("GUI Test", () => {
     await tiptap.sendKeys("How are you?");
     (await GUISelectors.getSubmitInputButton(view)).click();
 
-    await new Promise((res) => {
-      setTimeout(res, 1000);
-    });
-
-    await GUISelectors.getThreadMessageByText(view, "I'm fine");
+    await TestUtils.waitForElement(
+      () => GUISelectors.getThreadMessageByText(view, "I'm fine"),
+      5000,
+    );
   }).timeout(600000000);
 });
