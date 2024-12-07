@@ -38,6 +38,8 @@
                 id="AutocompleteSpinnerWidget"/>
         <notificationGroup id="Continue"
                            displayType="BALLOON"/>
+        <actionPromoter order="last"
+                        implementation="com.github.continuedev.continueintellijextension.actions.ContinueActionPromote"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
