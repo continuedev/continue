@@ -6,7 +6,6 @@ import {
 // Message types to pass through from webview to core
 export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
   [
-    "update/modelChange",
     "ping",
     "abort",
     "history/list",

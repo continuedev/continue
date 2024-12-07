@@ -1,7 +1,7 @@
 export class PrecalculatedLruCache<V> {
   private items: [string, V][] = [];
   constructor(
-    private readonly calculateValue: (key: string) => Promise<V>,
+    private readonly calculateValue: (key: string) => Promise<V | null>,
     private readonly N: number,
   ) {}
 
@@ -11,7 +11,11 @@ export class PrecalculatedLruCache<V> {
 
     if (index < 0) {
       // Calculate info for new file
-      const value: V = await this.calculateValue(key);
+      const value: V | null = await this.calculateValue(key);
+
+      if (value === null) {
+        return;
+      }
 
       this.items.push([key, value]);
       if (this.items.length > this.N) {

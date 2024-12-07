@@ -2643,6 +2643,7 @@
           "properties": {
             "name": {
               "enum": [
+                "bedrock",
                 "cohere",
                 "voyage",
                 "llm",
@@ -2740,6 +2741,32 @@
                       }
                     },
                     "required": ["apiKey"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["bedrock"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "cohere.rerank-v3-5:0",
+                          "amazon.rerank-v1:0"
+                        ]
+                      }
+                    },
+                    "required": ["model"]
                   }
                 }
               }

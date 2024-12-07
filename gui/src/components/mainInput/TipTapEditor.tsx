@@ -68,6 +68,7 @@ import { selectDefaultModel } from "../../redux/slices/configSlice";
 import {
   addCodeToEdit,
   clearCodeToEdit,
+  selectHasCodeToEdit,
   selectIsInEditMode,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
@@ -253,6 +254,8 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const isInEditMode = useAppSelector(selectIsInEditMode);
   const isInEditModeRef = useUpdatingRef(isInEditMode);
+  const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
+  const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
 
   async function handleImageFile(
     file: File,
@@ -489,7 +492,6 @@ function TipTapEditor(props: TipTapEditorProps) {
           ),
           allow: () => isInEditModeRef.current,
           command: async ({ editor, range, props }) => {
-            console.log({ range });
             editor.chain().focus().insertContentAt(range, "").run();
             const filepath = props.id;
             const contents = await ideMessenger.ide.readFile(filepath);
@@ -630,7 +632,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
-      if (isStreaming) {
+      if (isStreaming || isEditModeAndNoCodeToEdit) {
         return;
       }
 

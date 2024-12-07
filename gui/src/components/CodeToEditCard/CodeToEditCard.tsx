@@ -5,7 +5,7 @@ import CodeToEditListItem from "./CodeToEditListItem";
 import type { CodeToEdit, RangeInFileWithContents } from "core";
 import AddFileButton from "./AddFileButton";
 import AddFileCombobox from "./AddFileCombobox";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { useAppSelector } from "../../redux/hooks";
 import {
   addCodeToEdit,
@@ -61,7 +61,7 @@ export default function CodeToEditCard() {
         <AddFileButton onClick={() => setShowAddFileCombobox(true)} />
       </div>
 
-      {codeToEdit.length > 0 && (
+      {codeToEdit.length > 0 ? (
         <ul className="no-scrollbar my-0 mb-1.5 max-h-[50vh] list-outside list-none overflow-y-auto pl-0">
           {codeToEdit.map((code, i) => (
             <CodeToEditListItem
@@ -72,6 +72,16 @@ export default function CodeToEditCard() {
             />
           ))}
         </ul>
+      ) : (
+        !showAddFileCombobox && (
+          <div
+            className="text-lightgray hover:bg-lightgray hover:text-vsc-foreground -mt-0.5 flex cursor-pointer items-center justify-center gap-1 rounded py-1 text-center text-xs transition-colors hover:bg-opacity-20"
+            onClick={() => setShowAddFileCombobox(true)}
+          >
+            <PlusIcon className="h-3.5 w-3.5" />
+            <span>Add a file to get started</span>
+          </div>
+        )
       )}
 
       {showAddFileCombobox && (

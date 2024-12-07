@@ -231,7 +231,13 @@ export async function getSymbolsForFile(
     return;
   }
 
-  const tree = parser.parse(contents);
+  let tree: Parser.Tree;
+  try {
+    tree = parser.parse(contents);
+  } catch (e) {
+    console.log(`Error parsing file: ${filepath}`);
+    return;
+  }
   // console.log(`file: ${filepath}`);
 
   // Function to recursively find all named nodes (classes and functions)
