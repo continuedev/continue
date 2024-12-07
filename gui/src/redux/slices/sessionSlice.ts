@@ -42,7 +42,6 @@ type SessionState = {
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
   currentMainEditorContent?: JSONContent;
-  lastMainEditorContent?: JSONContent | undefined;
   mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
@@ -131,12 +130,6 @@ export const sessionSlice = createSlice({
       action: PayloadAction<JSONContent | undefined>,
     ) => {
       state.mainEditorContentTrigger = action.payload;
-    },
-    setLastMainEditorContent: (
-      state,
-      action: PayloadAction<JSONContent | undefined>,
-    ) => {
-      state.lastMainEditorContent = action.payload;
     },
     updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
       state.symbols = {
@@ -574,7 +567,6 @@ export const {
   updateHistoryItemAtIndex,
   clearLastEmptyResponse,
   setMainEditorContentTrigger,
-  setLastMainEditorContent,
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,

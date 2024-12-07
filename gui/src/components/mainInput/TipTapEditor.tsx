@@ -70,7 +70,6 @@ import {
   clearCodeToEdit,
   selectHasCodeToEdit,
   selectIsInEditMode,
-  setLastMainEditorContent,
   setMainEditorContentTrigger,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
@@ -304,10 +303,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
-  const handleContentUpdate = useUpdatingRef((content: JSONContent) => {
-    dispatch(setLastMainEditorContent(content));
-  }, []);
-
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -539,10 +534,6 @@ function TipTapEditor(props: TipTapEditorProps) {
         class: "outline-none -mt-1 overflow-hidden",
         style: `font-size: ${getFontSize()}px;`,
       },
-    },
-    onUpdate: (event) => {
-      const editorContent = event.editor.getJSON();
-      handleContentUpdate.current(editorContent);
     },
     content: props.editorState,
     editable: !isStreaming || props.isMainInput,
