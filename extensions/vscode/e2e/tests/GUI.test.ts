@@ -44,7 +44,7 @@ describe("GUI Test", () => {
   }).timeout(20_000);
 
   it("should allow typing text in the editor", async () => {
-    // await GUIActions.selectModelFromDropdown(view, "Mock");
+    await GUIActions.selectModelFromDropdown(view, "Mock");
     await GUIActions.selectModelFromDropdown(view, "TEST LLM");
 
     const tiptap = await GUISelectors.getTipTapEditor(view);
