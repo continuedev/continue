@@ -41,7 +41,7 @@ describe("GUI Test", () => {
     expect(await description.getText()).has.string(
       "Quickly get up and running using our API keys.",
     );
-  });
+  }).timeout(20_000);
 
   it("should allow typing text in the editor", async () => {
     await GUIActions.selectModelFromDropdown(view, "Mock");
@@ -55,5 +55,5 @@ describe("GUI Test", () => {
     await TestUtils.waitForElement(() =>
       GUISelectors.getThreadMessageByText(view, "I'm fine"),
     );
-  }).timeout(600000000);
+  }).timeout(20_000);
 });
