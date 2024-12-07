@@ -5,6 +5,7 @@ import {
   getParserForFile,
   getQueryForFile,
 } from "../../util/treeSitter";
+import { createOutline } from "./outline/createOutline";
 
 interface FileInfo {
   imports: { [key: string]: RangeInFileWithContents[] };
@@ -72,10 +73,19 @@ export class ImportDefinitionsService {
         },
       });
       fileInfo.imports[match.captures[0].node.text] = await Promise.all(
-        defs.map(async (def) => ({
-          ...def,
-          contents: await this.ide.readRangeInFile(def.filepath, def.range),
-        })),
+        defs.map(async (def) => {
+          const outline = await createOutline(
+            def.filepath,
+            await this.ide.readFile(def.filepath),
+            def.range,
+          );
+          return {
+            ...def,
+            contents:
+              outline ??
+              (await this.ide.readRangeInFile(def.filepath, def.range)),
+          };
+        }),
       );
     }
 

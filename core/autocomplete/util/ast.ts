@@ -1,6 +1,6 @@
-import Parser from "web-tree-sitter";
+import Parser, { Point } from "web-tree-sitter";
 
-import { RangeInFileWithContents } from "../../";
+import { Position, Range, RangeInFileWithContents } from "../../";
 import { getParserForFile } from "../../util/treeSitter";
 
 export type AstPath = Parser.SyntaxNode[];
@@ -44,6 +44,30 @@ export async function getTreePathAtCursor(
   }
 
   return path;
+}
+
+function compare(a: Point, b: Position) {
+  if (a.row < b.line) return -1;
+  else if (a.row > b.line) return 1;
+  else if (a.column < b.character) return -1;
+  else if (a.column > b.character) return 1;
+  else return 0;
+}
+
+export function getNodeAroundRange(ast: Parser.Tree, range: Range) {
+  let node = ast.rootNode;
+  outer: do {
+    for (const child of node.children) {
+      if (
+        compare(child.startPosition, range.start) <= 0 &&
+        compare(child.endPosition, range.end) >= 0
+      ) {
+        node = child;
+        continue outer;
+      }
+    }
+  } while (false);
+  return node;
 }
 
 export async function getScopeAroundRange(

@@ -17,6 +17,7 @@ import {
 import { AutocompleteSnippetDeprecated } from "../../types";
 import { AstPath } from "../../util/ast";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
+import { createOutline } from "../outline/createOutline";
 
 function getSyntaxTreeString(
   node: Parser.SyntaxNode,
@@ -143,10 +144,24 @@ export class RootPathContextService {
 
           return !isIgnoredPath;
         })
-        .map(async (def) => ({
-          ...def,
-          contents: await this.ide.readRangeInFile(def.filepath, def.range),
-        })),
+        .map(async (def) => {
+          const fileContents = await this.ide.readFile(def.filepath);
+          const outline = await createOutline(
+            def.filepath,
+            fileContents,
+            def.range,
+          );
+          if (outline !== undefined) {
+            return {
+              ...def,
+              contents: outline,
+            };
+          }
+          return {
+            ...def,
+            contents: await this.ide.readRangeInFile(def.filepath, def.range),
+          };
+        }),
     );
 
     return newSnippets;

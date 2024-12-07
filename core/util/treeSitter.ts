@@ -301,3 +301,16 @@ export async function getSymbolsForManyFiles(
   );
   return Object.fromEntries(filesAndSymbols);
 }
+
+export function debugFormatNode(
+  node: Parser.SyntaxNode,
+  indent: string = "",
+): string {
+  let result = "";
+  result += `${indent}${node.type} ${node.startPosition.row}:${node.startPosition.column} - ${node.endPosition.row}:${node.endPosition.column} {\n`;
+  node.namedChildren.forEach((child) => {
+    result += debugFormatNode(child, indent + "  ") + "\n";
+  });
+  result += indent + `}`;
+  return result;
+}
