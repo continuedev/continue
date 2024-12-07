@@ -11,7 +11,7 @@ export const streamThunkWrapper = createAsyncThunk<
     await runStream();
   } catch (e: any) {
     // NOTE - streaming errors are shown as ide toasts in core, don't show duplicate here
-    // console.debug("Error streaming response: ", e);
+    console.debug("Error streaming response: ", e);
     dispatch(clearLastEmptyResponse());
   } finally {
     dispatch(setInactive());

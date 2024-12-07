@@ -5,7 +5,6 @@ import { selectDefaultModel } from "../slices/configSlice";
 import {
   abortStream,
   addPromptCompletionPair,
-  clearLastEmptyResponse,
   setToolGenerated,
   streamUpdate,
 } from "../slices/sessionSlice";

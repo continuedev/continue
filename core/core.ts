@@ -380,10 +380,6 @@ export class Core {
       );
       let next = await gen.next();
       while (!next.done) {
-        if (Math.random() > 0) {
-          //
-          // throw new Error("Intentional");
-        }
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
           next = await gen.return({

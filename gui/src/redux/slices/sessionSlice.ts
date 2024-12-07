@@ -117,13 +117,9 @@ export const sessionSlice = createSlice({
         return;
       }
       const lastMessage = state.history[state.history.length - 1];
-      console.log("CLEARING LAST EMPTY RESPONSE", { ...lastMessage });
 
       // Only clear in the case of an empty message
       if (!lastMessage.message.content.length) {
-        console.log("CLEARING", {
-          ...state.history[state.history.length - 2].editorState,
-        });
         state.mainEditorContentTrigger =
           state.history[state.history.length - 2].editorState;
         state.history = state.history.slice(0, -2);
