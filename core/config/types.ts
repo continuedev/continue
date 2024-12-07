@@ -846,6 +846,7 @@ declare global {
     codeBlockToolbarPosition?: "top" | "bottom";
     fontSize?: number;
     displayRawMarkdown?: boolean;
+    codeWrap?: boolean;
   }
 
   interface ContextMenuConfig {

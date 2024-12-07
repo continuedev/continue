@@ -26,11 +26,15 @@ import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import { patchNestedMarkdown } from "./utils/patchNestedMarkdown";
 import { useAppSelector } from "../../redux/hooks";
 import { fixDoubleDollarNewLineLatex } from "./utils/fixDoubleDollarLatex";
+import { selectUIConfig } from "../../redux/slices/configSlice";
+
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
+  whiteSpace: string;
 }>`
   pre {
+    white-space: ${(props) => props.whiteSpace};
     background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
@@ -305,8 +309,10 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     );
   }, [props.source]);
 
+  const uiConfig = useAppSelector(selectUIConfig);
+  const codeWrapState = uiConfig?.codeWrap ? "pre-wrap" : "pre";
   return (
-    <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
+    <StyledMarkdown fontSize={getFontSize()} whiteSpace={codeWrapState}>{reactContent}</StyledMarkdown>
   );
 });
 
