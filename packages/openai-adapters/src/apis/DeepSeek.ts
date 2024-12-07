@@ -1,15 +1,20 @@
 import { streamSse } from "@continuedev/fetch";
 import fetch from "node-fetch";
-import { ChatCompletionChunk } from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+import { ChatCompletionChunk, Model } from "openai/resources/index.mjs";
+import { DeepseekConfig } from "../types.js";
+import { chatChunk } from "../util.js";
 import { OpenAIApi } from "./OpenAI.js";
 import { FimCreateParamsStreaming } from "./base.js";
 
 export class DeepSeekApi extends OpenAIApi {
-  constructor(config: LlmApiConfig) {
-    super(config);
-    this.apiBase = "https://api.deepseek.com/";
+  apiBase: string = "https://api.deepseek.com/";
+  constructor(config: DeepseekConfig) {
+    super({
+      ...config,
+      provider: "openai",
+    });
   }
+
   async *fimStream(
     body: FimCreateParamsStreaming,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
@@ -35,23 +40,15 @@ export class DeepSeekApi extends OpenAIApi {
       },
     });
     for await (const chunk of streamSse(resp as any)) {
-      yield {
-        choices: [
-          {
-            delta: {
-              content: chunk.choices[0].text,
-              role: "assistant",
-            },
-            finish_reason: chunk.finish_reason,
-            index: 0,
-            logprobs: null,
-          },
-        ],
-        created: Date.now(),
-        id: "",
+      yield chatChunk({
+        content: chunk.choices[0].text,
+        finish_reason: chunk.finish_reason,
         model: body.model,
-        object: "chat.completion.chunk",
-      };
+      });
     }
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

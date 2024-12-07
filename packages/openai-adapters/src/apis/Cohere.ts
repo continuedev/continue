@@ -12,8 +12,10 @@ import {
   CompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
+  Model,
 } from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+import { CohereConfig } from "../types.js";
+import { chatCompletion, embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -26,11 +28,8 @@ export class CohereApi implements BaseLlmApi {
 
   static maxStopSequences = 5;
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: CohereConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    if (!this.apiBase.endsWith("/")) {
-      this.apiBase += "/";
-    }
   }
 
   private _convertMessages(
@@ -76,29 +75,16 @@ export class CohereApi implements BaseLlmApi {
 
     const data = (await resp.json()) as any;
     const { input_tokens, output_tokens } = data.meta.tokens;
-    return {
-      id: data.id,
-      object: "chat.completion",
+    return chatCompletion({
       model: body.model,
-      created: Date.now(),
+      id: data.id,
+      content: data.text,
       usage: {
         total_tokens: input_tokens + output_tokens,
         completion_tokens: output_tokens,
         prompt_tokens: input_tokens,
       },
-      choices: [
-        {
-          logprobs: null,
-          finish_reason: "stop",
-          message: {
-            role: "assistant",
-            content: data.text,
-            refusal: null,
-          },
-          index: 0,
-        },
-      ],
-    };
+    });
   }
 
   async *chatCompletionStream(
@@ -196,18 +182,17 @@ export class CohereApi implements BaseLlmApi {
     });
     const data = (await response.json()) as any;
 
-    return {
-      object: "list",
+    return embedding({
       model: body.model,
       usage: {
         total_tokens: 0,
         prompt_tokens: 0,
       },
-      data: data.embeddings.map((embedding: any, index: number) => ({
-        object: "embedding",
-        index,
-        embedding,
-      })),
-    };
+      data: data.embeddings.map((embedding: any) => embedding),
+    });
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

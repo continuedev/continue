@@ -8,6 +8,7 @@ import {
   CompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
+  Model,
 } from "openai/resources/index.mjs";
 
 export interface FimCreateParamsStreaming
@@ -67,4 +68,7 @@ export interface BaseLlmApi {
 
   // Reranking
   rerank(body: RerankCreateParams): Promise<CreateRerankResponse>;
+
+  // List Models
+  list(): Promise<Model[]>;
 }

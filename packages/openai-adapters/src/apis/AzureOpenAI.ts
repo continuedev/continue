@@ -13,8 +13,10 @@ import {
   ChatCompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
+  Model,
 } from "openai/resources/index.js";
-import { LlmApiConfig } from "../index.js";
+import { AzureConfig } from "../types.js";
+import { embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -32,7 +34,7 @@ const MS_TOKEN = 30;
 export class AzureOpenAIApi implements BaseLlmApi {
   private client: OpenAIClient;
 
-  constructor(private config: LlmApiConfig) {
+  constructor(private config: AzureConfig) {
     let proxyOptions;
     const PROXY = HTTPS_PROXY ?? HTTP_PROXY;
     if (PROXY) {
@@ -231,23 +233,23 @@ export class AzureOpenAIApi implements BaseLlmApi {
       model: body.model,
     });
 
-    const output = {
-      data: response.data.map((item) => ({
-        ...item,
-        object: "embedding" as const,
-      })),
+    const output = embedding({
+      data: response.data.map((item) => item.embedding),
       model: body.model,
-      object: "list" as const,
       usage: {
         prompt_tokens: response.usage.promptTokens,
         total_tokens: response.usage.totalTokens,
       },
-    };
+    });
 
     return output;
   }
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     throw new Error("Azure OpenAI does not support reranking.");
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

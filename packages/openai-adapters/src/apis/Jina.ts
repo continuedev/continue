@@ -8,8 +8,10 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
+  Model,
 } from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+import { JinaConfig } from "../types.js";
+import { rerank } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -20,11 +22,8 @@ import {
 export class JinaApi implements BaseLlmApi {
   apiBase: string = "https://api.jina.ai/v1/";
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: JinaConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    if (!this.apiBase.endsWith("/")) {
-      this.apiBase += "/";
-    }
   }
 
   async chatCompletionNonStream(
@@ -72,16 +71,17 @@ export class JinaApi implements BaseLlmApi {
       },
     });
     const data = (await response.json()) as any;
-    return {
-      object: "list",
-      data: data.results.map((result: any) => ({
-        index: result.index,
-        relevance_score: result.relevance_score,
-      })),
+
+    return rerank({
       model: body.model,
       usage: {
         total_tokens: 0,
       },
-    };
+      data: data.results.map((result: any) => result.relevance_score),
+    });
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

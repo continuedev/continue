@@ -11,7 +11,7 @@ import {
   CompletionCreateParamsStreaming,
 } from "openai/resources/index.mjs";
 import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
-import { LlmApiConfig } from "../index.js";
+import { AnthropicConfig } from "../types.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -22,7 +22,7 @@ import {
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: AnthropicConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
@@ -186,6 +186,10 @@ export class AnthropicApi implements BaseLlmApi {
   }
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
+    throw new Error("Method not implemented.");
+  }
+
+  list(): Promise<OpenAI.Models.Model[]> {
     throw new Error("Method not implemented.");
   }
 }

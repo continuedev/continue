@@ -9,8 +9,10 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
+  Model,
 } from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+import { z } from "zod";
+import { OpenAIConfigSchema } from "../types.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -22,11 +24,8 @@ export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
   apiBase: string = "https://api.openai.com/v1/";
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: z.infer<typeof OpenAIConfigSchema>) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    if (!this.apiBase.endsWith("/")) {
-      this.apiBase += "/";
-    }
     this.openai = new OpenAI({
       apiKey: config.apiKey,
       baseURL: this.apiBase,
@@ -115,5 +114,9 @@ export class OpenAIApi implements BaseLlmApi {
     });
     const data = await response.json();
     return data as any;
+  }
+
+  async list(): Promise<Model[]> {
+    return (await this.openai.models.list()).data;
   }
 }

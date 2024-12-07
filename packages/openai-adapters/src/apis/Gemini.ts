@@ -12,8 +12,11 @@ import {
   CompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
+  Model,
 } from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+
+import { GeminiConfig } from "../types.js";
+import { embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -26,11 +29,8 @@ export class GeminiApi implements BaseLlmApi {
 
   static maxStopSequences = 5;
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: GeminiConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    if (!this.apiBase.endsWith("/")) {
-      this.apiBase += "/";
-    }
   }
 
   private _convertMessages(
@@ -255,18 +255,17 @@ export class GeminiApi implements BaseLlmApi {
     );
 
     const data = (await response.json()) as any;
-    return {
-      object: "list",
+    return embedding({
       model: body.model,
       usage: {
-        total_tokens: 0,
-        prompt_tokens: 0,
+        total_tokens: data.total_tokens,
+        prompt_tokens: data.prompt_tokens,
       },
-      data: data.embeddings.map((embedding: any, index: number) => ({
-        object: "embedding",
-        index,
-        embedding: embedding.values,
-      })),
-    };
+      data: data.batchEmbedContents.map((embedding: any) => embedding.values),
+    });
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }
