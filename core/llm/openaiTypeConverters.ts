@@ -3,8 +3,10 @@ import {
   ChatCompletionChunk,
   ChatCompletionCreateParams,
   ChatCompletionMessageParam,
+  CompletionCreateParams,
 } from "openai/resources/index";
 
+import { FimCreateParamsStreaming } from "@continuedev/openai-adapters/dist/apis/base";
 import { ChatMessage, CompletionOptions } from "..";
 
 export function toChatMessage(
@@ -80,6 +82,42 @@ export function toChatBody(
   };
 }
 
+export function toCompleteBody(
+  prompt: string,
+  options: CompletionOptions,
+): CompletionCreateParams {
+  return {
+    prompt,
+    model: options.model,
+    max_tokens: options.maxTokens,
+    temperature: options.temperature,
+    top_p: options.topP,
+    frequency_penalty: options.frequencyPenalty,
+    presence_penalty: options.presencePenalty,
+    stream: options.stream ?? true,
+    stop: options.stop,
+  };
+}
+
+export function toFimBody(
+  prefix: string,
+  suffix: string,
+  options: CompletionOptions,
+): FimCreateParamsStreaming {
+  return {
+    model: options.model,
+    prompt: prefix,
+    suffix,
+    max_tokens: options.maxTokens,
+    temperature: options.temperature,
+    top_p: options.topP,
+    frequency_penalty: options.frequencyPenalty,
+    presence_penalty: options.presencePenalty,
+    stop: options.stop,
+    stream: true,
+  };
+}
+
 export function fromChatResponse(response: ChatCompletion): ChatMessage {
   const message = response.choices[0].message;
   const toolCall = message.tool_calls?.[0];
@@ -124,3 +162,13 @@ export function fromChatCompletionChunk(
 
   return undefined;
 }
+
+export type LlmApiRequestType =
+  | "chat"
+  | "streamChat"
+  | "complete"
+  | "streamComplete"
+  | "streamFim"
+  | "embed"
+  | "rerank"
+  | "list";

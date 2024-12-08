@@ -1,4 +1,5 @@
 import { findLlmInfo } from "@continuedev/llm-info";
+import { BaseLlmApi, constructLlmApi } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
 
 import {
@@ -41,6 +42,13 @@ import {
   countTokens,
   pruneRawPromptFromTop,
 } from "./countTokens.js";
+import {
+  fromChatCompletionChunk,
+  LlmApiRequestType,
+  toChatBody,
+  toCompleteBody,
+  toFimBody,
+} from "./openaiTypeConverters.js";
 import CompletionOptionsForModels from "./templates/options.js";
 
 export abstract class BaseLLM implements ILLM {
@@ -120,6 +128,8 @@ export abstract class BaseLLM implements ILLM {
 
   private _llmOptions: LLMOptions;
 
+  private openaiAdapter: BaseLlmApi;
+
   constructor(_options: LLMOptions) {
     this._llmOptions = _options;
 
@@ -196,6 +206,13 @@ export abstract class BaseLLM implements ILLM {
     this.apiType = options.apiType;
     this.region = options.region;
     this.projectId = options.projectId;
+
+    this.openaiAdapter = constructLlmApi({
+      provider: this.providerName as any,
+      apiKey: this.apiKey,
+      apiBase: this.apiBase,
+      requestOptions: this.requestOptions,
+    });
   }
 
   listModels(): Promise<string[]> {
@@ -431,6 +448,15 @@ export abstract class BaseLLM implements ILLM {
     throw new Error("Not implemented");
   }
 
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [];
+
+  private shouldUseOpenAIAdapter(requestType: LlmApiRequestType) {
+    return (
+      this.useOpenAIAdapterFor.includes(requestType) ||
+      this.useOpenAIAdapterFor.includes("*")
+    );
+  }
+
   async *streamFim(
     prefix: string,
     suffix: string,
@@ -452,14 +478,29 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion = "";
-    for await (const chunk of this._streamFim(
-      prefix,
-      suffix,
-      signal,
-      completionOptions,
-    )) {
-      completion += chunk;
-      yield chunk;
+
+    if (this.shouldUseOpenAIAdapter("streamFim")) {
+      const stream = this.openaiAdapter.fimStream(
+        toFimBody(prefix, suffix, completionOptions),
+      );
+      for await (const chunk of stream) {
+        const result = fromChatCompletionChunk(chunk);
+        if (result) {
+          const content = renderChatMessage(result);
+          completion += content;
+          yield content;
+        }
+      }
+    } else {
+      for await (const chunk of this._streamFim(
+        prefix,
+        suffix,
+        signal,
+        completionOptions,
+      )) {
+        completion += chunk;
+        yield chunk;
+      }
     }
 
     this._logTokensGenerated(
@@ -509,13 +550,24 @@ export abstract class BaseLLM implements ILLM {
 
     let completion = "";
     try {
-      for await (const chunk of this._streamComplete(
-        prompt,
-        signal,
-        completionOptions,
-      )) {
-        completion += chunk;
-        yield chunk;
+      if (this.shouldUseOpenAIAdapter("streamComplete")) {
+        for await (const chunk of this.openaiAdapter.completionStream({
+          ...toCompleteBody(prompt, completionOptions),
+          stream: true,
+        })) {
+          const content = chunk.choices[0]?.text ?? "";
+          completion += content;
+          yield content;
+        }
+      } else {
+        for await (const chunk of this._streamComplete(
+          prompt,
+          signal,
+          completionOptions,
+        )) {
+          completion += chunk;
+          yield chunk;
+        }
       }
     } finally {
       this._logTokensGenerated(completionOptions.model, prompt, completion);
@@ -561,7 +613,16 @@ export abstract class BaseLLM implements ILLM {
       }
     }
 
-    const completion = await this._complete(prompt, signal, completionOptions);
+    let completion: string;
+    if (this.shouldUseOpenAIAdapter("complete")) {
+      const result = await this.openaiAdapter.completionNonStream({
+        ...toCompleteBody(prompt, completionOptions),
+        stream: false,
+      });
+      completion = result.choices[0].text;
+    } else {
+      completion = await this._complete(prompt, signal, completionOptions);
+    }
 
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
@@ -619,13 +680,26 @@ export abstract class BaseLLM implements ILLM {
           yield { role: "assistant", content: chunk };
         }
       } else {
-        for await (const chunk of this._streamChat(
-          messages,
-          signal,
-          completionOptions,
-        )) {
-          completion += chunk.content;
-          yield chunk;
+        if (this.shouldUseOpenAIAdapter("streamChat")) {
+          const stream = this.openaiAdapter.chatCompletionStream({
+            ...toChatBody(messages, completionOptions),
+            stream: true,
+          });
+          for await (const chunk of stream) {
+            const result = fromChatCompletionChunk(chunk);
+            if (result) {
+              yield result;
+            }
+          }
+        } else {
+          for await (const chunk of this._streamChat(
+            messages,
+            signal,
+            completionOptions,
+          )) {
+            completion += chunk.content;
+            yield chunk;
+          }
         }
       }
     } catch (error) {
