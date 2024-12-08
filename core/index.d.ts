@@ -132,6 +132,10 @@ export interface ILLM extends LLMOptions {
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
 
+  embed(chunks: string[]): Promise<number[][]>;
+
+  rerank(query: string, chunks: Chunk[]): Promise<number[]>;
+
   countTokens(text: string): number;
 
   supportsImages(): boolean;

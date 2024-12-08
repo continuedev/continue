@@ -5,6 +5,7 @@ import Handlebars from "handlebars";
 import {
   CacheBehavior,
   ChatMessage,
+  Chunk,
   CompletionOptions,
   ILLM,
   LLMFullCompletionOptions,
@@ -721,7 +722,38 @@ export abstract class BaseLLM implements ILLM {
     };
   }
 
-  // biome-ignore lint/correctness/useYield: Purposefully not implemented
+  async embed(chunks: string[]): Promise<number[][]> {
+    if (this.shouldUseOpenAIAdapter("embed")) {
+      const result = await this.openaiAdapter.embed({
+        model: this.model,
+        input: chunks,
+      });
+      return result.data.map((chunk) => chunk.embedding);
+    }
+
+    throw new Error(
+      `Embedding is not supported for provider type ${this.providerName}`,
+    );
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    if (this.shouldUseOpenAIAdapter("rerank")) {
+      const results = await this.openaiAdapter.rerank({
+        model: this.model,
+        query,
+        documents: chunks.map((chunk) => chunk.content),
+      });
+
+      // Put them in the order they were given
+      const sortedResults = results.data.sort((a, b) => a.index - b.index);
+      return sortedResults.map((result) => result.relevance_score);
+    }
+
+    throw new Error(
+      `Reranking is not supported for provider type ${this.providerName}`,
+    );
+  }
+
   protected async *_streamComplete(
     prompt: string,
     signal: AbortSignal,
