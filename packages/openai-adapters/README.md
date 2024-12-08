@@ -17,6 +17,7 @@ They are concerned with:
 - Cache behavior
 - max stop words
 - use legacy completions endpoint?
+- anything else that couldn't possibly be guess by the client since it won't know the endpoint behind the proxy
 
 ## Supported APIs
 

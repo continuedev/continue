@@ -20,7 +20,6 @@ export const RequestOptionsSchema = z.object({
 // Base config objects
 export const BaseConfig = z.object({
   provider: z.string(),
-  model: z.string(),
   requestOptions: RequestOptionsSchema.optional(),
 });
 
