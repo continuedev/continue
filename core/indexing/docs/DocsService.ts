@@ -7,9 +7,9 @@ import {
   ContinueConfig,
   EmbeddingsProvider,
   IDE,
+  IdeInfo,
   IndexingStatus,
   SiteIndexingConfig,
-  IdeInfo,
 } from "../..";
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { addContextProvider } from "../../config/util";
@@ -475,8 +475,6 @@ export default class DocsService {
       const embeddings: number[][] = [];
 
       // Create embeddings of retrieved articles
-      console.debug(`Creating embeddings for ${articles.length} articles`);
-
       for (let i = 0; i < articles.length; i++) {
         const article = articles[i];
 

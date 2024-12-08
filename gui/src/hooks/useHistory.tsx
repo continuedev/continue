@@ -1,5 +1,6 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { Session, SessionMetadata } from "core";
+import { NEW_SESSION_TITLE } from "core/util/constants";
 import { renderChatMessage } from "core/util/messageContent";
 import { useCallback, useContext } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
@@ -65,7 +66,7 @@ function useHistory(dispatch: Dispatch) {
     }
 
     let currentTitle = title;
-    if (config?.ui?.getChatTitles && currentTitle === "New Session") {
+    if (config?.ui?.getChatTitles && currentTitle === NEW_SESSION_TITLE) {
       try {
         // Check if we have first assistant response
         let assistantResponse = history
@@ -82,7 +83,7 @@ function useHistory(dispatch: Dispatch) {
 
     // Fallback if we get an error above or if the user has not set getChatTitles
     let newTitle =
-      currentTitle === "New Session"
+      currentTitle === NEW_SESSION_TITLE
         ? truncateText(
             renderChatMessage(history[0].message)
               .split("\n")

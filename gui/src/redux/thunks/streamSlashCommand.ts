@@ -5,9 +5,9 @@ import {
   RangeInFile,
   SlashCommandDescription,
 } from "core";
-import { ThunkApiType } from "../store";
-import { abortStream, streamUpdate } from "../slices/sessionSlice";
 import { selectDefaultModel } from "../slices/configSlice";
+import { abortStream, streamUpdate } from "../slices/sessionSlice";
+import { ThunkApiType } from "../store";
 
 export const streamSlashCommand = createAsyncThunk<
   void,
@@ -62,8 +62,17 @@ export const streamSlashCommand = createAsyncThunk<
         dispatch(abortStream());
         break;
       }
-      if (typeof update === "string") {
-        dispatch(streamUpdate(update));
+      for (const item of update) {
+        if (typeof item === "string") {
+          dispatch(
+            streamUpdate([
+              {
+                role: "assistant",
+                content: item,
+              },
+            ]),
+          );
+        }
       }
     }
     clearInterval(checkActiveInterval);
