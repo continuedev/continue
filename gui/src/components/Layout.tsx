@@ -1,22 +1,17 @@
 import { useEffect, useMemo } from "react";
-import { useDispatch } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
 import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { useAppSelector } from "../redux/hooks";
-import {
-  setEditDone,
-  setEditStatus,
-  focusEdit,
-} from "../redux/slices/editModeState";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setEditStatus, focusEdit } from "../redux/slices/editModeState";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiSlice";
 import {
   addCodeToEdit,
-  clearCodeToEdit,
   updateApplyState,
-  updateCurCheckpoint,
+  setMode,
+  newSession,
 } from "../redux/slices/sessionSlice";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
@@ -27,6 +22,8 @@ import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import PostHogPageView from "./PosthogPageView";
 import AccountDialog from "./AccountDialog";
 import { AuthProvider } from "../context/Auth";
+import useHistory from "../hooks/useHistory";
+import { exitEditMode } from "../redux/thunks";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -55,9 +52,10 @@ const GridDiv = styled.div`
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
   const { pathname } = useLocation();
+  const { saveSession, loadLastSession } = useHistory(dispatch);
 
   const configError = useAppSelector((state) => state.config.configError);
 
@@ -159,20 +157,23 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
+      await saveSession(false);
+      dispatch(newSession());
       dispatch(focusEdit());
-      dispatch(clearCodeToEdit());
-      navigate("/edit");
+      dispatch(setMode("edit"));
     },
-    [navigate],
+    [],
   );
 
   useWebviewListener(
     "focusEditWithoutClear",
     async () => {
+      await saveSession(false);
+      dispatch(newSession());
       dispatch(focusEdit());
-      navigate("/edit");
+      dispatch(setMode("edit"));
     },
-    [navigate],
+    [],
   );
 
   useWebviewListener(
@@ -191,14 +192,13 @@ const Layout = () => {
     [],
   );
 
-  useWebviewListener(
-    "exitEditMode",
-    async () => {
-      dispatch(setEditDone());
-      navigate("/");
-    },
-    [navigate],
-  );
+  useWebviewListener("exitEditMode", async () => {
+    loadLastSession().catch((e) =>
+      console.error(`Failed to load last session: ${e}`),
+    );
+
+    dispatch(exitEditMode());
+  });
 
   useEffect(() => {
     const handleKeyDown = (event: any) => {

@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import Mock from "../../../llm/llms/Mock";
-import { testConfigHandler, testIde } from "../../../test/util/fixtures";
+import MockLLM from "../../../llm/llms/Mock";
+import { testConfigHandler, testIde } from "../../../test/fixtures";
 import { CompletionProvider } from "../../CompletionProvider";
 import { AutocompleteInput } from "../../util/types";
 
@@ -30,7 +30,7 @@ export async function testAutocompleteFiltering(
   const { prefix, suffix } = parseFimExample(test.input);
 
   // Setup necessary objects
-  const llm = new Mock({
+  const llm = new MockLLM({
     model: "mock",
   });
   llm.completion = test.llmOutput;

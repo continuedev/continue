@@ -6,7 +6,7 @@ import {
   vscButtonBackground,
   vscButtonForeground,
 } from "../../../components";
-import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
+import Spinner from "../../../components/gui/Spinner";
 import { selectCurrentToolCall } from "../../../redux/selectors/selectCurrentToolCall";
 import { callTool } from "../../../redux/thunks/callTool";
 import { cancelTool } from "../../../redux/thunks/cancelTool";

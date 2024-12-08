@@ -1,11 +1,11 @@
 import { jest } from "@jest/globals";
 
-import { testIde } from "../test/util/fixtures";
+import { testIde } from "../test/fixtures";
 import {
   insertMockChunks,
   mockPathAndCacheKey,
   updateIndexAndAwaitGenerator,
-} from "../test/util/indexing";
+} from "./test/indexing";
 
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";

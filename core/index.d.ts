@@ -42,11 +42,18 @@ export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
   shouldClearIndexes?: boolean;
-  status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  status:
+    | "loading"
+    | "indexing"
+    | "done"
+    | "failed"
+    | "paused"
+    | "disabled"
+    | "cancelled";
   debugInfo?: string;
 }
 
-// This is more or less a V2 of IndexingProgressUpdate
+// This is more or less a V2 of IndexingProgressUpdate for docs etc.
 export interface IndexingStatus {
   id: string;
   type: "docs";
@@ -192,10 +199,12 @@ export interface CustomContextProvider {
   description?: string;
   renderInlineAs?: string;
   type?: ContextProviderType;
+
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
+
   loadSubmenuItems?: (
     args: LoadSubmenuItemsArgs,
   ) => Promise<ContextSubmenuItem[]>;
@@ -272,10 +281,12 @@ export interface Range {
   start: Position;
   end: Position;
 }
+
 export interface Position {
   line: number;
   character: number;
 }
+
 export interface FileEdit {
   filepath: string;
   range: Range;
@@ -418,7 +429,6 @@ export interface ChatHistoryItem {
   modifiers?: InputModifiers;
   promptLogs?: PromptLog[];
   toolCallState?: ToolCallState;
-  mode?: MessageModes;
   isGatheringContext?: boolean;
   checkpoint?: Checkpoint;
   isBeforeCheckpoint?: boolean;
@@ -477,6 +487,7 @@ export interface LLMOptions {
   // IBM watsonx Options
   deploymentId?: string;
 }
+
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
   Exclude<keyof T, Keys>
@@ -533,6 +544,7 @@ export class Thread {
 }
 
 export type IdeType = "vscode" | "jetbrains";
+
 export interface IdeInfo {
   ideType: IdeType;
   name: string;
@@ -568,42 +580,68 @@ export interface IdeSettings {
 
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
+
   getIdeSettings(): Promise<IdeSettings>;
+
   getDiff(includeUnstaged: boolean): Promise<string[]>;
+
   getClipboardContent(): Promise<{ text: string; copiedAt: string }>;
+
   isTelemetryEnabled(): Promise<boolean>;
+
   getUniqueId(): Promise<string>;
+
   getTerminalContents(): Promise<string>;
+
   getDebugLocals(threadIndex: number): Promise<string>;
+
   getTopLevelCallStackSources(
     threadIndex: number,
     stackDepth: number,
   ): Promise<string[]>;
+
   getAvailableThreads(): Promise<Thread[]>;
+
   listFolders(): Promise<string[]>;
+
   getWorkspaceDirs(): Promise<string[]>;
+
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
+
   fileExists(filepath: string): Promise<boolean>;
+
   writeFile(path: string, contents: string): Promise<void>;
+
   showVirtualFile(title: string, contents: string): Promise<void>;
+
   getContinueDir(): Promise<string>;
+
   openFile(path: string): Promise<void>;
+
   openUrl(url: string): Promise<void>;
+
   runCommand(command: string): Promise<void>;
+
   saveFile(filepath: string): Promise<void>;
+
   readFile(filepath: string): Promise<string>;
+
   readRangeInFile(filepath: string, range: Range): Promise<string>;
+
   showLines(
     filepath: string,
     startLine: number,
     endLine: number,
   ): Promise<void>;
+
   showDiff(
     filepath: string,
     newContents: string,
     stepIndex: number,
   ): Promise<void>;
+
   getOpenFiles(): Promise<string[]>;
+
   getCurrentFile(): Promise<
     | undefined
     | {
@@ -612,21 +650,33 @@ export interface IDE {
         contents: string;
       }
   >;
+
   getPinnedFiles(): Promise<string[]>;
+
   getSearchResults(query: string): Promise<string>;
+
   subprocess(command: string, cwd?: string): Promise<[string, string]>;
+
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
+
   getBranch(dir: string): Promise<string>;
+
   getTags(artifactId: string): Promise<IndexTag[]>;
+
   getRepoName(dir: string): Promise<string | undefined>;
+
   showToast(
     type: ToastType,
     message: string,
     ...otherParams: any[]
   ): Promise<any>;
+
   getGitRootPath(dir: string): Promise<string | undefined>;
+
   listDir(dir: string): Promise<[string, FileType][]>;
+
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
+
   getGitHubAuthToken(args: GetGhTokenArgs): Promise<string | undefined>;
 
   // LSP
@@ -634,6 +684,7 @@ export interface IDE {
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
+
   pathSep(): Promise<string>;
 }
 
@@ -760,6 +811,7 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
+  | "test"
   | "cerebras"
   | "askSage"
   | "vertexai"
@@ -1033,11 +1085,13 @@ export interface EmbeddingsProvider {
   id: string;
   providerName: EmbeddingsProviderName;
   maxChunkSize: number;
+
   embed(chunks: string[]): Promise<number[][]>;
 }
 
 export type RerankerName =
   | "cohere"
+  | "bedrock"
   | "voyage"
   | "llm"
   | "free-trial"
@@ -1051,6 +1105,7 @@ export interface RerankerDescription {
 
 export interface Reranker {
   name: string;
+
   rerank(query: string, chunks: Chunk[]): Promise<number[]>;
 }
 

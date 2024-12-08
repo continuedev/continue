@@ -40,8 +40,6 @@ export default function ToolDropdown() {
 
   const useTools = useAppSelector((state) => state.ui.useTools);
   const availableTools = useAppSelector((state) => state.config.config.tools);
-  const defaultModel = useAppSelector(selectDefaultModel);
-
   const [showAbove, setShowAbove] = useState(false);
 
   useEffect(() => {
@@ -58,10 +56,6 @@ export default function ToolDropdown() {
       checkPosition();
     }
   }, [isDropdownOpen]);
-
-  if (!defaultModel || !modelSupportsTools(defaultModel.model)) {
-    return null;
-  }
 
   return (
     <HoverItem onClick={() => dispatch(toggleUseTools())}>

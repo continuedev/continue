@@ -38,6 +38,11 @@ export const gatherContext = createAsyncThunk<
     const defaultContextProviders =
       state.config.config.experimental?.defaultContext ?? [];
 
+    if (!state.config.defaultModelTitle) {
+      console.error("Failed to gather context, no model selected");
+      return;
+    }
+
     // Resolve context providers and construct new history
     const shouldGatherContext =
       modifiers.useCodebase || hasSlashCommandOrContextProvider(editorState);
@@ -47,13 +52,14 @@ export const gatherContext = createAsyncThunk<
     }
 
     let [selectedContextItems, selectedCode, content] =
-      await resolveEditorContent(
+      await resolveEditorContent({
         editorState,
         modifiers,
-        extra.ideMessenger,
+        ideMessenger: extra.ideMessenger,
         defaultContextProviders,
         dispatch,
-      );
+        selectedModelTitle: state.config.defaultModelTitle,
+      });
 
     // Automatically use currently open file
     if (!modifiers.noContext) {

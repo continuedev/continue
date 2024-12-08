@@ -5,7 +5,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ToolCall, ToolCallState, ToolStatus } from "core";
 import { vscButtonBackground } from "../../../components";
-import Spinner from "../../../components/markdown/StepContainerPreToolbar/Spinner";
+import Spinner from "../../../components/gui/Spinner";
 import FunctionSpecificToolCallDiv from "./FunctionSpecificToolCallDiv";
 import { ThreadDiv } from "./ThreadDiv";
 

@@ -37,14 +37,14 @@ export interface IIdeMessenger {
     messageType: T,
     data: FromWebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): FromWebviewProtocol[T][1];
+  ): AsyncGenerator<unknown[]>;
 
   llmStreamChat(
     modelTitle: string,
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<ChatMessage, PromptLog, unknown>;
+  ): AsyncGenerator<ChatMessage[], PromptLog, unknown>;
 
   ide: IDE;
 }
@@ -147,11 +147,20 @@ export class IdeMessenger implements IIdeMessenger {
     });
   }
 
+  /**
+   * Because of weird type stuff, we're actually yielding an array of the things
+   * that are streamed. For example, if the return type here says
+   * AsyncGenerator<ChatMessage>, then it's actually AsyncGenerator<ChatMessage[]>.
+   * This needs to be handled by the caller.
+   *
+   * Using unknown for now to make this more explicit
+   */
   async *streamRequest<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): FromWebviewProtocol[T][1] {
+  ): AsyncGenerator<unknown[]> {
+    // ): FromWebviewProtocol[T][1] {
     const messageId = uuidv4();
 
     this.post(messageType, data, messageId);
@@ -181,17 +190,16 @@ export class IdeMessenger implements IIdeMessenger {
 
     while (!done) {
       if (buffer.length > index) {
-        const chunk = buffer[index];
-        index++;
-        yield chunk;
+        const chunks = buffer.slice(index);
+        index = buffer.length;
+        yield chunks;
       }
       await new Promise((resolve) => setTimeout(resolve, 50));
     }
 
-    while (buffer.length > index) {
-      const chunk = buffer[index];
-      index++;
-      yield chunk;
+    if (buffer.length > index) {
+      const chunks = buffer.slice(index);
+      yield chunks;
     }
 
     return returnVal;
@@ -202,7 +210,7 @@ export class IdeMessenger implements IIdeMessenger {
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
-  ): AsyncGenerator<ChatMessage, PromptLog> {
+  ): AsyncGenerator<ChatMessage[], PromptLog> {
     const gen = this.streamRequest(
       "llm/streamChat",
       {

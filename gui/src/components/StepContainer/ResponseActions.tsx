@@ -6,6 +6,7 @@ import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
 import EditActions from "./EditActions";
 import FeedbackButtons from "./FeedbackButtons";
 import { useAppSelector } from "../../redux/hooks";
+import { selectIsInEditMode } from "../../redux/slices/sessionSlice";
 
 export interface ResponseActionsProps {
   isTruncated: boolean;
@@ -24,9 +25,7 @@ export default function ResponseActions({
   onDelete,
   shouldHideActions,
 }: ResponseActionsProps) {
-  const isInEditMode = useAppSelector(
-    (store) => store.editModeState.isInEditMode,
-  );
+  const isInEditMode = useAppSelector(selectIsInEditMode);
 
   if (isInEditMode) {
     return <EditActions index={index} item={item} />;

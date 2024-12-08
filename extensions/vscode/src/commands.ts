@@ -581,7 +581,8 @@ const getCommandsMap: (
     },
     "continue.exitEditMode": async () => {
       captureCommandTelemetry("exitEditMode");
-      await sidebar.webviewProtocol?.request("exitEditMode", undefined);
+      editDecorationManager.clear();
+      void sidebar.webviewProtocol?.request("exitEditMode", undefined);
     },
     // "continue.quickEdit": async (args: QuickEditShowParams) => {
     //   let linesOfCode = undefined;
@@ -728,6 +729,7 @@ const getCommandsMap: (
       if (fullScreenTab && fullScreenPanel) {
         // Full screen open, but not focused - focus it
         fullScreenPanel.reveal();
+        vscode.commands.executeCommand("continue.focusContinueInput");
         return;
       }
 

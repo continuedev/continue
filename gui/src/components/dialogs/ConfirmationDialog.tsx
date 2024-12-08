@@ -1,22 +1,7 @@
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
-import { Button, lightGray, SecondaryButton } from "..";
+import { Button, SecondaryButton } from "..";
 import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
-
-const GridDiv = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-gap: 8px;
-  align-items: center;
-
-  > * {
-    grid-column: 2;
-  }
-
-  > :nth-last-child(2):first-child {
-    grid-column: 1;
-  }
-`;
 
 interface ConfirmationDialogProps {
   onConfirm: () => void;
@@ -31,14 +16,18 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
   const dispatch = useDispatch();
 
   return (
-    <div className="p-4">
-      <h3>{props.title ?? "Confirmation"}</h3>
-      <p style={{ whiteSpace: "pre-wrap" }}>{props.text}</p>
+    <div className="p-4 pt-0">
+      <h1 className="text-2x mb-1 text-center">
+        {props.title ?? "Confirmation"}
+      </h1>
+      <p className="text-center text-base" style={{ whiteSpace: "pre-wrap" }}>
+        {props.text}
+      </p>
 
-      <GridDiv>
+      <div className="w/1/2 flex justify-end gap-2">
         {!!props.hideCancelButton || (
           <SecondaryButton
-            style={{ color: lightGray }}
+            className="text-lightgray"
             onClick={() => {
               dispatch(setShowDialog(false));
               dispatch(setDialogMessage(undefined));
@@ -57,7 +46,7 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
         >
           {props.confirmText ?? "Confirm"}
         </Button>
-      </GridDiv>
+      </div>
     </div>
   );
 }

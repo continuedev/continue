@@ -3,8 +3,8 @@ import * as fs from "fs";
 import { Session, SessionMetadata } from "../index.js";
 import { ListHistoryOptions } from "../protocol/core.js";
 
+import { NEW_SESSION_TITLE } from "./constants.js";
 import { getSessionFilePath, getSessionsListPath } from "./paths.js";
-
 function safeParseArray<T>(
   value: string,
   errorMessage: string = "Error parsing array",
@@ -80,7 +80,7 @@ class HistoryManager {
       console.log(`Error loading session: ${e}`);
       return {
         history: [],
-        title: "Failed to load session",
+        title: NEW_SESSION_TITLE,
         workspaceDirectory: "",
         sessionId: sessionId,
       };

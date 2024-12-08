@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "target": "ES2022",
+    "outDir": "e2e/_output",
+    "sourceMap": true,
+    "strict": true,
+    "rootDir": "e2e",
+    "resolveJsonModule": true,
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "node_modules",
+    ".vscode-test",
+    "e2e/resources/**",
+    ".test-extensions"
+  ],
+  "include": ["e2e"]
+}
