@@ -58,17 +58,27 @@ export function intersection(a: Range, b: Range): Range | null {
 }
 
 export function union(a: Range, b: Range): Range {
-  const startLine = Math.min(a.start.line, b.start.line);
-  const endLine = Math.max(a.end.line, b.end.line);
+  let start: Position;
+  if (a.start.line === b.start.line) {
+    start = {
+      line: a.start.line,
+      character: Math.min(a.start.character, b.start.character),
+    };
+  } else if (a.start.line < b.start.line) start = a.start;
+  else start = b.start;
 
-  const startCharacter =
-    startLine === a.start.line ? a.start.character : b.start.character;
-  const endCharacter =
-    endLine === a.end.line ? a.end.character : b.end.character;
+  let end: Position;
+  if (a.end.line === b.end.line) {
+    end = {
+      line: a.end.line,
+      character: Math.max(a.end.character, b.end.character),
+    };
+  } else if (a.end.line > b.end.line) end = a.end;
+  else end = b.end;
 
   return {
-    start: { line: startLine, character: startCharacter },
-    end: { line: endLine, character: endCharacter },
+    start,
+    end,
   };
 }
 
