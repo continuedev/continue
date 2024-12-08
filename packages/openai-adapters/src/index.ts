@@ -99,6 +99,6 @@ export {
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
   type CompletionCreateParamsStreaming,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 
 export type { BaseLlmApi } from "./apis/base.js";

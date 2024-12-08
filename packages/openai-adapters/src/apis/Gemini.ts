@@ -1,6 +1,6 @@
 import { streamResponse } from "@continuedev/fetch";
 import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -13,7 +13,7 @@ import {
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
   Model,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 
 import { GeminiConfig } from "../types.js";
 import { embedding } from "../util.js";
@@ -45,16 +45,22 @@ export class GeminiApi implements BaseLlmApi {
   private _oaiPartToGeminiPart(
     part: OpenAI.Chat.Completions.ChatCompletionContentPart,
   ) {
-    return part.type === "text"
-      ? {
+    switch (part.type) {
+      case "text":
+        return {
           text: part.text,
-        }
-      : {
+        };
+      case "input_audio":
+        throw new Error("Unsupported part type: input_audio");
+      case "image_url":
+      default:
+        return {
           inlineData: {
             mimeType: "image/jpeg",
             data: part.image_url?.url.split(",")[1],
           },
         };
+    }
   }
 
   private _convertBody(oaiBody: ChatCompletionCreateParams, url: string) {

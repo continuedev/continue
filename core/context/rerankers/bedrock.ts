@@ -4,12 +4,13 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-import { Chunk, Reranker } from "../../index.js";
+import { Chunk, LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 
-export class BedrockReranker implements Reranker {
-  name = "bedrock";
+export class BedrockReranker extends BaseLLM {
+  static providerName = "bedrock";
 
-  static defaultOptions = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     region: "us-east-1",
     model: "amazon.rerank-v1:0",
     profile: "bedrock",
@@ -17,16 +18,11 @@ export class BedrockReranker implements Reranker {
 
   private supportedModels = ["amazon.rerank-v1:0", "cohere.rerank-v3-5:0"];
 
-  constructor(
-    private readonly params: {
-      region?: string;
-      model?: string;
-      profile?: string;
-    } = {},
-  ) {
-    if (params.model && !this.supportedModels.includes(params.model)) {
+  constructor(options: LLMOptions) {
+    super(options);
+    if (options.model && !this.supportedModels.includes(options.model)) {
       throw new Error(
-        `Unsupported model: ${params.model}. Supported models are: ${this.supportedModels.join(", ")}`,
+        `Unsupported model: ${options.model}. Supported models are: ${this.supportedModels.join(", ")}`,
       );
     }
   }
@@ -39,11 +35,9 @@ export class BedrockReranker implements Reranker {
     try {
       const credentials = await this._getCredentials();
       const client = new BedrockRuntimeClient({
-        region: this.params.region ?? BedrockReranker.defaultOptions.region,
+        region: this.region,
         credentials,
       });
-
-      const model = this.params.model ?? BedrockReranker.defaultOptions.model;
 
       // Base payload for both models
       const payload: any = {
@@ -53,13 +47,13 @@ export class BedrockReranker implements Reranker {
       };
 
       // Add api_version for Cohere model
-      if (model.startsWith("cohere.rerank")) {
+      if (this.model.startsWith("cohere.rerank")) {
         payload.api_version = 2;
       }
 
       const input = {
         body: JSON.stringify(payload),
-        modelId: model,
+        modelId: this.model,
         accept: "*/*",
         contentType: "application/json",
       };
@@ -86,13 +80,13 @@ export class BedrockReranker implements Reranker {
   private async _getCredentials() {
     try {
       const credentials = await fromIni({
-        profile: this.params.profile ?? BedrockReranker.defaultOptions.profile,
+        profile: this.profile,
         ignoreCache: true,
       })();
       return credentials;
     } catch (e) {
       console.warn(
-        `AWS profile with name ${this.params.profile ?? BedrockReranker.defaultOptions.profile} not found in ~/.aws/credentials, using default profile`,
+        `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
       );
       return await fromIni()();
     }

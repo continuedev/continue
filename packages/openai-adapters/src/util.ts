@@ -3,7 +3,7 @@ import {
   CompletionUsage,
   CreateEmbeddingResponse,
   Model,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 import { ChatCompletion } from "openai/src/resources/index.js";
 import { CreateRerankResponse } from "./apis/base.js";
 

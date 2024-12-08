@@ -209,6 +209,11 @@ export class AzureOpenAIApi implements BaseLlmApi {
       yield {
         ...event,
         object: "text_completion",
+        usage: {
+          completion_tokens: event.usage?.completion_tokens ?? 0,
+          prompt_tokens: event.usage?.prompt_tokens ?? 0,
+          total_tokens: event.usage?.total_tokens ?? 0,
+        },
         choices: event.choices.map((choice) => ({
           ...choice,
           text: choice.delta.content ?? "",

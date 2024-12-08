@@ -1,6 +1,6 @@
 import { streamSse } from "@continuedev/fetch";
 import fetch from "node-fetch";
-import { ChatCompletionChunk, Model } from "openai/resources/index.mjs";
+import { ChatCompletionChunk, Model } from "openai/resources/index";
 import { MoonshotConfig } from "../types.js";
 import { chatChunk } from "../util.js";
 import { OpenAIApi } from "./OpenAI.js";

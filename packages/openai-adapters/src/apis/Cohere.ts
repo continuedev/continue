@@ -1,6 +1,6 @@
 import { streamJSON } from "@continuedev/fetch";
 import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -13,7 +13,7 @@ import {
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
   Model,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 import { CohereConfig } from "../types.js";
 import { chatCompletion, embedding } from "../util.js";
 import {

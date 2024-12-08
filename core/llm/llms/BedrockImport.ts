@@ -14,7 +14,6 @@ class BedrockImport extends BaseLLM {
   };
   // the BedRock imported custom model ARN
   modelArn?: string | undefined;
-  profile?: string | undefined;
 
   constructor(options: LLMOptions) {
     super(options);

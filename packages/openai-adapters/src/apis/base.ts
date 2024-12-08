@@ -9,7 +9,7 @@ import {
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
   Model,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 
 export interface FimCreateParamsStreaming
   extends CompletionCreateParamsStreaming {

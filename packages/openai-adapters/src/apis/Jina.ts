@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -9,7 +9,7 @@ import {
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
   Model,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 import { JinaConfig } from "../types.js";
 import { rerank } from "../util.js";
 import {

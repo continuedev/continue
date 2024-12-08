@@ -5,7 +5,6 @@ import {
 import { fromIni } from "@aws-sdk/credential-providers";
 
 import { LLMOptions } from "../../index.js";
-
 import { BaseLLM } from "../../llm/index.js";
 
 interface ModelConfig {
@@ -20,7 +19,6 @@ class BedrockEmbeddingsProvider extends BaseLLM {
     region: "us-east-1",
     profile: "bedrock",
   };
-  profile?: string | undefined;
 
   constructor(options: LLMOptions) {
     super(options);

@@ -25,7 +25,6 @@ class Bedrock extends BaseLLM {
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
     contextLength: 200_000,
   };
-  profile?: string | undefined;
 
   constructor(options: LLMOptions) {
     super(options);

@@ -884,7 +884,7 @@ export interface ModelCapability {
 
 export interface ModelDescription {
   title: string;
-  provider: ModelProvider;
+  provider: string;
   model: string;
   apiKey?: string;
   apiBase?: string;
@@ -924,14 +924,8 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 }
 
 export interface RerankerDescription {
-  name: RerankerName;
-  params?: { [key: string]: any };
-}
-
-export interface Reranker {
   name: string;
-
-  rerank(query: string, chunks: Chunk[]): Promise<number[]>;
+  params?: { [key: string]: any };
 }
 
 export interface TabAutocompleteOptions {
@@ -1160,7 +1154,7 @@ export interface Config {
   /** UI styles customization */
   ui?: ContinueUIConfig;
   /** Options for the reranker */
-  reranker?: RerankerDescription | Reranker;
+  reranker?: RerankerDescription | ILLM;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
   /** Analytics configuration */

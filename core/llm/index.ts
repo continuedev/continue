@@ -123,6 +123,7 @@ export abstract class BaseLLM implements ILLM {
   projectId?: string;
   accountId?: string;
   aiGatewaySlug?: string;
+  profile?: string | undefined;
 
   // For IBM watsonx
   deploymentId?: string;
@@ -212,6 +213,7 @@ export abstract class BaseLLM implements ILLM {
     this.apiType = options.apiType;
     this.region = options.region;
     this.projectId = options.projectId;
+    this.profile = options.profile;
 
     this.openaiAdapter = constructLlmApi({
       provider: this.providerName as any,

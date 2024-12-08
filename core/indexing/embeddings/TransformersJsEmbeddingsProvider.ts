@@ -1,8 +1,8 @@
 import path from "path";
 
+import { BaseLLM } from "../../llm/index.js";
 // @ts-ignore
 // prettier-ignore
-import { BaseLLM } from "../../llm/index.js";
 import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 
 class EmbeddingsPipeline {

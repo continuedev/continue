@@ -1,4 +1,5 @@
-import { Chunk, ILLM, Reranker } from "../../index.js";
+import { Chunk } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { getBasename } from "../../util/index.js";
 
 const RERANK_PROMPT = (
@@ -41,22 +42,20 @@ const RERANK_PROMPT = (
   Relevant:
   `;
 
-export class LLMReranker implements Reranker {
-  name = "llmReranker";
-
-  constructor(private readonly llm: ILLM) {}
+export class LLMReranker extends BaseLLM {
+  static providerName = "llmReranker";
 
   async scoreChunk(chunk: Chunk, query: string): Promise<number> {
-    const completion = await this.llm.complete(
+    const completion = await this.complete(
       RERANK_PROMPT(query, getBasename(chunk.filepath), chunk.content),
       new AbortController().signal,
       {
         maxTokens: 1,
         model:
-          this.llm.providerName.startsWith("openai") &&
-          this.llm.model.startsWith("gpt-4")
+          this.providerName.startsWith("openai") &&
+          this.model.startsWith("gpt-4")
             ? "gpt-3.5-turbo"
-            : this.llm.model,
+            : this.model,
       },
     );
 

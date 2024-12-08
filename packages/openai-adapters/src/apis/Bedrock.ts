@@ -2,18 +2,18 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
-} from "openai/resources/completions.mjs";
+} from "openai/resources/completions";
 import {
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
-} from "openai/resources/embeddings.mjs";
+} from "openai/resources/embeddings";
 import {
   ChatCompletion,
   ChatCompletionChunk,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
-} from "openai/resources/index.mjs";
-import { Model } from "openai/resources/models.mjs";
+} from "openai/resources/index";
+import { Model } from "openai/resources/models";
 import {
   BaseLlmApi,
   CreateRerankResponse,

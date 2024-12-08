@@ -115,7 +115,7 @@ export function toFimBody(
     presence_penalty: options.presencePenalty,
     stop: options.stop,
     stream: true,
-  };
+  } as any;
 }
 
 export function fromChatResponse(response: ChatCompletion): ChatMessage {

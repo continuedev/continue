@@ -1,6 +1,6 @@
 import { streamSse } from "@continuedev/fetch";
 import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -9,7 +9,7 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
 import { AnthropicConfig } from "../types.js";
 import {

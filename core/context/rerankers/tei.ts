@@ -1,40 +1,37 @@
 import fetch from "node-fetch";
 
-import { Chunk, Reranker } from "../../index.js";
+import { Chunk, LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 
-export class HuggingFaceTEIReranker implements Reranker {
-  name = "huggingface-tei";
+export class HuggingFaceTEIReranker extends BaseLLM {
+  static providerName = "huggingface-tei";
 
-  static defaultOptions = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "http://localhost:8080",
-    truncate: true,
-    truncation_direction: "Right"
+    // truncate: true,
+    // truncation_direction: "Right",
   };
 
-  constructor(
-    private readonly params: {
-      apiBase?: string;
-      truncate?: boolean;
-      truncation_direction?: string;
-      apiKey?: string;
-    },
-  ) {}
+  // constructor(
+  //   private readonly params: {
+  //     apiBase?: string;
+  // TODO support truncate and truncate_direction
+  //     truncate?: boolean;
+  //     truncation_direction?: string;
+  //     apiKey?: string;
+  //   },
+  // ) {}
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    let apiBase = this.params.apiBase ?? HuggingFaceTEIReranker.defaultOptions.apiBase;
-    if (!apiBase.endsWith("/")) {
-      apiBase += "/";
-    }
-
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
     };
 
-    if (this.params.apiKey) {
-      headers["Authorization"] = `Bearer ${this.params.apiKey}`;
+    if (this.apiKey) {
+      headers["Authorization"] = `Bearer ${this.apiKey}`;
     }
 
-    const resp = await fetch(new URL("rerank", apiBase), {
+    const resp = await fetch(new URL("rerank", this.apiBase), {
       method: "POST",
       headers,
       body: JSON.stringify({
@@ -42,8 +39,8 @@ export class HuggingFaceTEIReranker implements Reranker {
         return_text: false,
         raw_scores: false,
         texts: chunks.map((chunk) => chunk.content),
-        truncation_direction: this.params.truncation_direction ?? HuggingFaceTEIReranker.defaultOptions.truncation_direction,
-        truncate: this.params.truncate ?? HuggingFaceTEIReranker.defaultOptions.truncate
+        truncation_direction: "Right",
+        truncate: true,
       }),
     });
 

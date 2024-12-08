@@ -2,10 +2,11 @@ import fetch from "node-fetch";
 
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
-import { Chunk, Reranker } from "../../index.js";
+import { Chunk } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 
-export class FreeTrialReranker implements Reranker {
-  name = "free-trial";
+export class FreeTrialReranker extends BaseLLM {
+  static providerName = "free-trial";
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
     if (chunks.length === 0) {

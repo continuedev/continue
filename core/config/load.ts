@@ -19,8 +19,8 @@ import {
   IDE,
   IdeSettings,
   IdeType,
+  ILLM,
   ModelDescription,
-  Reranker,
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
@@ -51,10 +51,10 @@ import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
 import {
   DEFAULT_CONFIG_TS_CONTENTS,
-  getConfigJsPath,
-  getConfigJsPathForRemote,
   getConfigJsonPath,
   getConfigJsonPathForRemote,
+  getConfigJsPath,
+  getConfigJsPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
   getEsbuildBinaryPath,
@@ -471,7 +471,7 @@ async function intermediateToFinalConfig(
   }
 
   // Reranker
-  if (config.reranker && !(config.reranker as Reranker | undefined)?.rerank) {
+  if (config.reranker && !(config.reranker as ILLM | undefined)?.rerank) {
     const { name, params } = config.reranker as RerankerDescription;
     const rerankerClass = AllRerankers[name];
 

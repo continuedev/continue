@@ -1,25 +1,18 @@
 import fetch from "node-fetch";
 
-import { Chunk, Reranker } from "../../index.js";
+import { Chunk } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 
-export class CohereReranker implements Reranker {
-  name = "cohere";
+export class CohereReranker extends BaseLLM {
+  static providerName = "cohere";
 
   static defaultOptions = {
     apiBase: "https://api.cohere.ai/v1/",
     model: "rerank-english-v3.0",
   };
 
-  constructor(
-    private readonly params: {
-      apiBase?: string;
-      apiKey: string;
-      model?: string;
-    },
-  ) {}
-
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    let apiBase = this.params.apiBase ?? CohereReranker.defaultOptions.apiBase;
+    let apiBase = this.apiBase ?? CohereReranker.defaultOptions.apiBase;
     if (!apiBase.endsWith("/")) {
       apiBase += "/";
     }
@@ -27,11 +20,11 @@ export class CohereReranker implements Reranker {
     const resp = await fetch(new URL("rerank", apiBase), {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${this.params.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: this.params.model ?? CohereReranker.defaultOptions.model,
+        model: this.model ?? CohereReranker.defaultOptions.model,
         query,
         documents: chunks.map((chunk) => chunk.content),
       }),

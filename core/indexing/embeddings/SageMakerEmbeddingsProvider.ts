@@ -15,7 +15,6 @@ class SageMakerEmbeddingsProvider extends BaseLLM {
     maxEmbeddingBatchSize: 1,
     profile: "sagemaker",
   };
-  profile?: string | undefined;
 
   constructor(options: LLMOptions) {
     super(options);

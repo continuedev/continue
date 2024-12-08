@@ -1,24 +1,18 @@
 import fetch from "node-fetch";
 
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
-import { Chunk, Reranker } from "../../index.js";
+import { Chunk } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 
-export class ContinueProxyReranker implements Reranker {
-  name = "continue-proxy";
+export class ContinueProxyReranker extends BaseLLM {
+  static providerName = "continue-proxy";
 
   private _controlPlaneProxyInfo?: ControlPlaneProxyInfo;
 
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
-    this.params.apiKey = value.workOsAccessToken!;
+    this.apiKey = value.workOsAccessToken!;
     this._controlPlaneProxyInfo = value;
   }
-
-  constructor(
-    private readonly params: {
-      apiKey: string;
-      model?: string;
-    },
-  ) {}
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
     const url = new URL(
@@ -29,12 +23,12 @@ export class ContinueProxyReranker implements Reranker {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.params.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
         query,
         documents: chunks.map((chunk) => chunk.content),
-        model: this.params.model,
+        model: this.model,
       }),
     });
     const data: any = await resp.json();
