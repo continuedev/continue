@@ -15,11 +15,7 @@ import {
   showSuggestion as showSuggestionInEditor,
 } from "../suggestions";
 
-import {
-  getUniqueId,
-  openEditorAndRevealRange,
-  uriFromFilePath,
-} from "./vscode";
+import { getUniqueId, openEditorAndRevealRange } from "./vscode";
 
 import type { FileEdit, RangeInFile, Thread } from "core";
 
@@ -30,7 +26,7 @@ export class VsCodeIdeUtils {
   visibleMessages: Set<string> = new Set();
 
   async gotoDefinition(
-    filepath: string,
+    uri: string,
     position: vscode.Position,
   ): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = await vscode.commands.executeCommand(

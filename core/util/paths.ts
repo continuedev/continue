@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as os from "os";
-import { pathToFileURL } from "url";
 import * as path from "path";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
@@ -41,9 +40,6 @@ export function getGlobalContinueIgnorePath(): string {
   return continueIgnorePath;
 }
 
-/*
-  Deprecated, replace with getContinueGlobalUri where possible
-*/
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
   const continuePath = CONTINUE_GLOBAL_DIR;
@@ -51,10 +47,6 @@ export function getContinueGlobalPath(): string {
     fs.mkdirSync(continuePath);
   }
   return continuePath;
-}
-
-export function getContinueGlobalUri(): string {
-  return pathToFileURL(CONTINUE_GLOBAL_DIR).href;
 }
 
 export function getSessionsFolderPath(): string {
@@ -99,10 +91,6 @@ export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
     }
   }
   return p;
-}
-
-export function getConfigJsonUri(): string {
-  return getContinueGlobalUri() + "/config.json";
 }
 
 export function getConfigTsPath(): string {

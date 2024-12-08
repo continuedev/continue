@@ -7,7 +7,6 @@ import {
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
 import { GUISelectors } from "../selectors/GUI.selectors";
-import * as path from "path";
 import { TestUtils } from "../TestUtils";
 
 describe("GUI Test", () => {
@@ -17,7 +16,7 @@ describe("GUI Test", () => {
   before(async function () {
     this.timeout(10000000);
 
-    await VSBrowser.instance.openResources(path.join("e2e/test-continue"));
+    await VSBrowser.instance.openResources("e2e/test-continue");
 
     await GUIActions.openGui();
 

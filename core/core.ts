@@ -30,7 +30,11 @@ import { DevDataSqliteDb } from "./util/devdataSqlite";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
-import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
+import {
+  editConfigJson,
+  getConfigJsonPath,
+  setupInitialDotContinueDirectory,
+} from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { getSymbolsForManyFiles } from "./util/treeSitter";
 import { TTS } from "./util/tts";
@@ -38,6 +42,8 @@ import { TTS } from "./util/tts";
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import type { IMessenger, Message } from "./util/messenger";
+import { fileURLToPath } from "url";
+import { SYSTEM_PROMPT_DOT_FILE } from "./config/getSystemPromptDotFile";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -702,11 +708,6 @@ export class Core {
       const dirs = data?.dirs ?? (await this.ide.getWorkspaceDirs());
       await this.refreshCodebaseIndex(dirs);
     });
-    on("index/forceReIndexFiles", async ({ data }) => {
-      if (data?.files?.length) {
-        await this.refreshCodebaseIndexFiles(data.files);
-      }
-    });
     on("index/setPaused", (msg) => {
       this.globalContext.update("indexingPaused", msg.data);
       this.indexingPauseToken.paused = msg.data;
@@ -719,6 +720,69 @@ export class Core {
           "indexProgress",
           this.codebaseIndexingState,
         );
+      }
+    });
+
+    // File changes
+    // TODO - remove remaining logic for these from IDEs where possible
+    on("files/changed", async ({ data }) => {
+      if (data?.uris?.length) {
+        for (const uri of data.uris) {
+          // Listen for file changes in the workspace
+          const filePath = fileURLToPath(uri);
+          if (filePath === getConfigJsonPath()) {
+            // Trigger a toast notification to provide UI feedback that config
+            // has been updated
+            const showToast =
+              this.globalContext.get("showConfigUpdateToast") ?? true;
+            if (showToast) {
+              void this.ide.showToast("info", "Config updated");
+
+              // URI TODO - this is a small regression - add core -> toast functionality that handles responses to update global context here
+              // vscode.window
+              // .showInformationMessage("Config updated", "Don't show again")
+              // .then((selection) => {
+              //   if (selection === "Don't show again") {
+              //     this.globalContext.update("showConfigUpdateToast", false);
+              //   }
+              // });
+            }
+          }
+
+          if (
+            uri.endsWith(".continuerc.json") ||
+            uri.endsWith(".prompt") ||
+            uri.endsWith(SYSTEM_PROMPT_DOT_FILE)
+          ) {
+            await this.configHandler.reloadConfig();
+          } else if (
+            uri.endsWith(".continueignore") ||
+            uri.endsWith(".gitignore")
+          ) {
+            // Reindex the workspaces
+            this.invoke("index/forceReIndex", undefined);
+          } else {
+            // Reindex the file
+            await this.refreshCodebaseIndexFiles([uri]);
+          }
+        }
+      }
+    });
+
+    on("files/created", async ({ data }) => {
+      if (data?.uris?.length) {
+        await this.refreshCodebaseIndexFiles(data.uris);
+      }
+    });
+
+    on("files/deleted", async ({ data }) => {
+      if (data?.uris?.length) {
+        await this.refreshCodebaseIndexFiles(data.uris);
+      }
+    });
+    on("files/opened", async ({ data }) => {
+      if (data?.uris?.length) {
+        // Do something on files opened
       }
     });
 
