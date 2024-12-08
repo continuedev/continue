@@ -18,7 +18,7 @@ function parseUses(uses: string): {
   };
 }
 
-function extendConfig(config: ConfigYaml, pkg: ConfigYaml): ConfigYaml {
+export function extendConfig(config: ConfigYaml, pkg: ConfigYaml): ConfigYaml {
   return {
     ...config,
     models: [...(config.models ?? []), ...(pkg.models ?? [])],
@@ -90,3 +90,6 @@ export function fillTemplateVariables(
     return match;
   });
 }
+
+export type { ModelConfig } from "./schemas/models.js";
+export { validateConfigYaml } from "./validation.js";

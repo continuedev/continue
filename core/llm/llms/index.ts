@@ -42,6 +42,7 @@ import OpenRouter from "./OpenRouter";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
+import SiliconFlow from "./SiliconFlow";
 import ContinueProxy from "./stubs/ContinueProxy";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
@@ -49,9 +50,8 @@ import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
-import SiliconFlow from "./SiliconFlow";
 
-const LLMs = [
+export const LLMClasses = [
   Anthropic,
   Cohere,
   FreeTrial,
@@ -105,7 +105,7 @@ export async function llmFromDescription(
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
-  const cls = LLMs.find((llm) => llm.providerName === desc.provider);
+  const cls = LLMClasses.find((llm) => llm.providerName === desc.provider);
 
   if (!cls) {
     return undefined;
@@ -152,7 +152,7 @@ export function llmFromProviderAndOptions(
   providerName: string,
   llmOptions: LLMOptions,
 ): ILLM {
-  const cls = LLMs.find((llm) => llm.providerName === providerName);
+  const cls = LLMClasses.find((llm) => llm.providerName === providerName);
 
   if (!cls) {
     throw new Error(`Unknown LLM provider type "${providerName}"`);
