@@ -18,6 +18,12 @@ export function tearDownTestDir() {
   }
 }
 
+/*
+  accepts array of items in 3 formats, e.g.
+  "index/" creates index directory
+  "index/index.ts" creates an empty index/index.ts
+  ["index/index.ts", "hello"] creates index/index.ts with contents "hello"
+*/
 export function addToTestDir(paths: (string | string[])[]) {
   for (const p of paths) {
     const filepath = path.join(TEST_DIR, Array.isArray(p) ? p[0] : p);

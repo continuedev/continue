@@ -3,7 +3,7 @@ import {
   ContextItem,
   MessageContent,
   MessagePart,
-} from "../index.js";
+} from "../index";
 
 export function stripImages(messageContent: MessageContent): string {
   if (typeof messageContent === "string") {

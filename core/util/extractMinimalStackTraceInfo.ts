@@ -5,12 +5,29 @@
  * @returns A string containing the minimal stack trace information.
  */
 export function extractMinimalStackTraceInfo(stack: unknown): string {
-  if (typeof stack !== "string") {return "";}
-  const lines = stack.split("\n");
+  if (typeof stack !== "string") {
+    return "";
+  }
+  const lines = stack
+    .trim()
+    .split("\n")
+    .map((line) => line.trim());
   const minimalLines = lines.filter((line) => {
-    return line.trimStart().startsWith("at ") && !line.includes("node_modules");
+    return (
+      line.startsWith("at ") &&
+      !line.includes("node_modules") &&
+      !line.includes("node:internal")
+    );
   });
   return minimalLines
-    .map((line) => line.trimStart().replace("at ", "").split(" (").slice(0, 1))
+    .map((line) => line.replace("at ", "").split(" (").slice(0, 1))
+    .flatMap((parts) =>
+      parts.map(
+        // to be safe, remove any lingering paths - anonymous function case
+        (part) =>
+          part.replace(/(?:[A-Za-z]:[\\/]|[\\/])[^\n]*?:\d+:\d+/g, "").trim(),
+      ),
+    )
+    .filter((part) => !!part) // remove empty string parts (anonymous functions case)
     .join(", ");
 }

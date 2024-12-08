@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 
-import type { IProtocol } from "../protocol/index.js";
+import type { IProtocol } from "../index";
 
 export interface Message<T = any> {
   messageType: string;
@@ -76,7 +76,9 @@ export class InProcessMessenger<
     messageId?: string,
   ): ToProtocol[T][1] {
     const listener = this.myTypeListeners.get(messageType);
-    if (!listener) {return;}
+    if (!listener) {
+      return;
+    }
 
     const msg: Message = {
       messageType: messageType as string,

@@ -17,7 +17,7 @@ import {
   WEBVIEW_TO_CORE_PASS_THROUGH,
 } from "core/protocol/passThrough";
 import { getBasename } from "core/util";
-import { InProcessMessenger, Message } from "core/util/messenger";
+import { InProcessMessenger, Message } from "core/protocol/messenger";
 import * as vscode from "vscode";
 
 import { stripImages } from "core/util/messageContent";

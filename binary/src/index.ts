@@ -2,7 +2,7 @@ process.env.IS_BINARY = "true";
 import { Command } from "commander";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { IMessenger } from "core/util/messenger";
+import { IMessenger } from "core/protocol/messenger";
 import { getCoreLogsPath, getPromptLogsPath } from "core/util/paths";
 import fs from "node:fs";
 import { IpcIde } from "./IpcIde";

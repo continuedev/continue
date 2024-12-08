@@ -1,7 +1,7 @@
-import { IDE } from "../index.js";
-import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
+import { IDE } from "../../index";
+import { ToIdeFromWebviewOrCoreProtocol } from "../ide";
 
-import { Message } from "./messenger.js";
+import { Message } from ".";
 
 export class ReverseMessageIde {
   private on<T extends keyof ToIdeFromWebviewOrCoreProtocol>(

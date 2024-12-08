@@ -17,7 +17,7 @@ import DocsContextProvider from "../../context/providers/DocsContextProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
 import { GlobalContext } from "../../util/GlobalContext";
-import { IMessenger } from "../../util/messenger";
+import { IMessenger } from "../../protocol/messenger";
 import {
   editConfigJson,
   getDocsSqlitePath,

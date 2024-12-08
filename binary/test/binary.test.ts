@@ -2,8 +2,7 @@ import { SerializedContinueConfig } from "core";
 // import Mock from "core/llm/llms/Mock.js";
 import { FromIdeProtocol, ToIdeProtocol } from "core/protocol/index.js";
 import FileSystemIde from "core/util/filesystem";
-import { IMessenger } from "core/util/messenger";
-import { ReverseMessageIde } from "core/util/reverseMessageIde";
+import { IMessenger } from "core/protocol/messenger";
 import fs from "fs";
 import {
   ChildProcessWithoutNullStreams,
@@ -133,7 +132,7 @@ describe("Test Suite", () => {
       fs.mkdirSync(testDir);
     }
     const ide = new FileSystemIde(testDir);
-    const reverseIde = new ReverseMessageIde(messenger.on.bind(messenger), ide);
+    // const reverseIde = new ReverseMessageIde(messenger.on.bind(messenger), ide);
 
     // Wait for core to set itself up
     await new Promise((resolve) => setTimeout(resolve, 1000));

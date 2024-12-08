@@ -30,7 +30,7 @@ function constructPrompt(
   });
 }
 
-async function* addIndentation(
+export async function* addIndentation(
   diffLineGenerator: AsyncGenerator<DiffLine>,
   indentation: string,
 ): AsyncGenerator<DiffLine> {
@@ -96,8 +96,11 @@ export async function* streamDiffLines(
 
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt,  new AbortController().signal, { raw: true, prediction })
-      : llm.streamChat(prompt,  new AbortController().signal, {
+      ? llm.streamComplete(prompt, new AbortController().signal, {
+          raw: true,
+          prediction,
+        })
+      : llm.streamChat(prompt, new AbortController().signal, {
           prediction,
         });
 

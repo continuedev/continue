@@ -1,5 +1,5 @@
 import { IProtocol } from "core/protocol";
-import { IMessenger, Message } from "core/util/messenger";
+import { IMessenger, Message } from "core/protocol/messenger";
 import net from "net";
 import { v4 as uuidv4 } from "uuid";
 

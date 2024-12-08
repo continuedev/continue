@@ -37,7 +37,7 @@ import { TTS } from "./util/tts";
 
 import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import type { IMessenger, Message } from "./util/messenger";
+import type { IMessenger, Message } from "./protocol/messenger";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
