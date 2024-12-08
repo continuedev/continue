@@ -1,6 +1,6 @@
 import { IDE } from "../..";
 import { GlobalContext } from "../../util/GlobalContext";
-import { getPathModuleForIde } from "../../util/pathModule";
+// import { getPathModuleForIde } from "../../util/pathModule";
 
 const FIRST_TIME_DEFAULT_PROMPT_FILE = `# This is an example ".prompt" file
 # It is used to define and reuse prompts within Continue
@@ -54,15 +54,12 @@ export async function createNewPromptFileV2(
 
   // Find the first available filename
   let counter = 0;
-  let promptFilePath: string;
+  let promptFileUri: string;
   do {
     const suffix = counter === 0 ? "" : `-${counter}`;
-    promptFilePath = pathModule.join(
-      baseDir,
-      `new-prompt-file${suffix}.prompt`,
-    );
+    promptFileUri = pathModule.join(baseDir, `new-prompt-file${suffix}.prompt`);
     counter++;
-  } while (await ide.fileExists(promptFilePath));
+  } while (await ide.fileExists(promptFileUri));
 
   const globalContext = new GlobalContext();
   const PROMPT_FILE =
@@ -72,6 +69,6 @@ export async function createNewPromptFileV2(
 
   globalContext.update("hasAlreadyCreatedAPromptFile", true);
 
-  await ide.writeFile(promptFilePath, PROMPT_FILE);
-  await ide.openFile(promptFilePath);
+  await ide.writeFile(promptFileUri, PROMPT_FILE);
+  await ide.openFile(promptFileUri);
 }
