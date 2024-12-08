@@ -3,14 +3,13 @@ import {
   CompletionOptions,
   LLMOptions,
   MessagePart,
-  ModelProvider,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 class Gemini extends BaseLLM {
-  static providerName: ModelProvider = "gemini";
+  static providerName = "gemini";
 
   static defaultOptions: Partial<LLMOptions> = {
     model: "gemini-pro",

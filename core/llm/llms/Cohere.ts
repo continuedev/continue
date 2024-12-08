@@ -1,15 +1,10 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamJSON } from "../stream.js";
 
 class Cohere extends BaseLLM {
-  static providerName: ModelProvider = "cohere";
+  static providerName = "cohere";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.cohere.ai/v1",
   };

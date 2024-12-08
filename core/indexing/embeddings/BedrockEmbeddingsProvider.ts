@@ -4,41 +4,36 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-import { EmbeddingsProviderName, EmbedOptions, FetchFunction } from "../../index.js";
+import { LLMOptions } from "../../index.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+import { BaseLLM } from "../../llm/index.js";
 
 interface ModelConfig {
   formatPayload: (text: string) => any;
   extractEmbeddings: (responseBody: any) => number[][];
 }
 
-class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "bedrock";
-  static defaultOptions: Partial<EmbedOptions> = {
+class BedrockEmbeddingsProvider extends BaseLLM {
+  static providerName = "bedrock";
+  static defaultOptions: Partial<LLMOptions> = {
     model: "amazon.titan-embed-text-v2:0",
-    region: "us-east-1"
+    region: "us-east-1",
+    profile: "bedrock",
   };
   profile?: string | undefined;
 
-  constructor(options: EmbedOptions, fetch: FetchFunction) {
-    super(options, fetch);
-    this.options.model = this.options.model || BedrockEmbeddingsProvider.defaultOptions.model!;
-    if (!options.apiBase) {
-      options.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
-    }
+  constructor(options: LLMOptions) {
+    super(options);
 
-    if (options.profile) {
-      this.profile = options.profile;
-    } else {
-      this.profile = "bedrock";
+    if (!this.apiBase) {
+      this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
     }
   }
 
   async embed(chunks: string[]): Promise<number[][]> {
     const credentials = await this._getCredentials();
     const client = new BedrockRuntimeClient({
-      region: this.options.region,
+      region: this.region,
       credentials: {
         accessKeyId: credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
@@ -53,7 +48,9 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
           const command = new InvokeModelCommand(input);
           const response = await client.send(command);
           if (response.body) {
-            const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+            const responseBody = JSON.parse(
+              new TextDecoder().decode(response.body),
+            );
             return this._extractEmbeddings(responseBody);
           }
           return [];
@@ -68,7 +65,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
 
     return {
       body: JSON.stringify(payload),
-      modelId: this.options.model,
+      modelId: this.model,
       accept: "*/*",
       contentType: "application/json",
     };
@@ -81,7 +78,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
 
   private _getModelConfig() {
     const modelConfigs: { [key: string]: ModelConfig } = {
-      "cohere": {
+      cohere: {
         formatPayload: (text: string) => ({
           texts: [text],
           input_type: "search_document",
@@ -93,13 +90,16 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
         formatPayload: (text: string) => ({
           inputText: text,
         }),
-        extractEmbeddings: (responseBody: any) => responseBody.embedding ? [responseBody.embedding] : [],
+        extractEmbeddings: (responseBody: any) =>
+          responseBody.embedding ? [responseBody.embedding] : [],
       },
     };
 
-    const modelPrefix = Object.keys(modelConfigs).find(prefix => this.options.model!.startsWith(prefix));
+    const modelPrefix = Object.keys(modelConfigs).find((prefix) =>
+      this.model!.startsWith(prefix),
+    );
     if (!modelPrefix) {
-      throw new Error(`Unsupported model: ${this.options.model}`);
+      throw new Error(`Unsupported model: ${this.model}`);
     }
     return modelConfigs[modelPrefix];
   }
@@ -108,7 +108,7 @@ class BedrockEmbeddingsProvider extends BaseEmbeddingsProvider {
     try {
       return await fromIni({
         profile: this.profile,
-        ignoreCache: true
+        ignoreCache: true,
       })();
     } catch (e) {
       console.warn(

@@ -1,23 +1,18 @@
 import {
   InvokeEndpointWithResponseStreamCommand,
-  SageMakerRuntimeClient
+  SageMakerRuntimeClient,
 } from "@aws-sdk/client-sagemaker-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
 // @ts-ignore
 import jinja from "jinja-js";
 
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 class SageMaker extends BaseLLM {
   private static PROFILE_NAME: string = "sagemaker";
-  static providerName: ModelProvider = "sagemaker";
+  static providerName = "sagemaker";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-west-2",
     contextLength: 200_000,
@@ -62,19 +57,16 @@ class SageMaker extends BaseLLM {
             if ("choices" in data) {
               if ("delta" in data.choices[0]) {
                 text = data.choices[0].delta.content;
-              }
-              else {
+              } else {
                 text = data.choices[0].text;
               }
-            }
-            else if ("token" in data) {
+            } else if ("token" in data) {
               text = data.token.text;
             }
             if (text !== undefined) {
               yield text;
             }
-          } catch (e) {
-          }
+          } catch (e) {}
           buffer = buffer.slice(position + 1);
         }
       }
@@ -114,19 +106,16 @@ class SageMaker extends BaseLLM {
             if ("choices" in data) {
               if ("delta" in data.choices[0]) {
                 text = data.choices[0].delta.content;
-              }
-              else {
+              } else {
                 text = data.choices[0].text;
               }
-            }
-            else if ("token" in data) {
+            } else if ("token" in data) {
               text = data.token.text;
             }
             if (text !== undefined) {
               yield { role: "assistant", content: text };
             }
-          } catch (e) {
-          }
+          } catch (e) {}
           buffer = buffer.slice(position + 1);
         }
       }
@@ -145,7 +134,6 @@ class SageMaker extends BaseLLM {
       return await fromIni()();
     }
   }
-
 }
 
 interface SageMakerModelToolkit {
@@ -157,19 +145,20 @@ interface SageMakerModelToolkit {
 }
 
 class MessageAPIToolkit implements SageMakerModelToolkit {
-  constructor(private sagemaker: SageMaker) { }
+  constructor(private sagemaker: SageMaker) {}
   generateCommand(
     messages: ChatMessage[],
     prompt: string,
     options: CompletionOptions,
   ): InvokeEndpointWithResponseStreamCommand {
-
     if ("chat_template" in this.sagemaker.completionOptions) {
       // for some model you can apply chat_template to the model
-      let prompt = jinja.compile(this.sagemaker.completionOptions.chat_template).render(
-        { messages: messages, add_generation_prompt: true },
-        { autoEscape: false }
-      );
+      let prompt = jinja
+        .compile(this.sagemaker.completionOptions.chat_template)
+        .render(
+          { messages: messages, add_generation_prompt: true },
+          { autoEscape: false },
+        );
       const payload = {
         inputs: prompt,
         parameters: this.sagemaker.completionOptions,
@@ -182,8 +171,7 @@ class MessageAPIToolkit implements SageMakerModelToolkit {
         ContentType: "application/json",
         CustomAttributes: "accept_eula=false",
       });
-    }
-    else {
+    } else {
       const payload = {
         messages: messages,
         max_tokens: options.maxTokens,
@@ -203,11 +191,10 @@ class MessageAPIToolkit implements SageMakerModelToolkit {
         CustomAttributes: "accept_eula=false",
       });
     }
-
   }
 }
 class CompletionAPIToolkit implements SageMakerModelToolkit {
-  constructor(private sagemaker: SageMaker) { }
+  constructor(private sagemaker: SageMaker) {}
   generateCommand(
     messages: ChatMessage[],
     prompt: string,

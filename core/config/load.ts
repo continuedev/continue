@@ -60,6 +60,7 @@ import {
   getEsbuildBinaryPath,
   readAllGlobalPromptFiles,
 } from "../util/paths";
+
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
@@ -548,7 +549,7 @@ function finalToBrowserConfig(
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,
     userToken: final.userToken,
-    embeddingsProvider: final.embeddingsProvider?.id,
+    embeddingsProvider: final.embeddingsProvider?.embeddingId,
     ui: final.ui,
     experimental: final.experimental,
     docs: final.docs,

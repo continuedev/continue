@@ -1,11 +1,11 @@
-import { EmbeddingsProviderName, EmbedOptions } from "../..";
+import { LLMOptions } from "../..";
 
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
 
 class SiliconFlowEmbeddingsProvider extends OpenAIEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "siliconflow";
+  static providerName = "siliconflow";
 
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "https://api.siliconflow.cn/v1/",
     model: "BAAI/bge-m3",
   };

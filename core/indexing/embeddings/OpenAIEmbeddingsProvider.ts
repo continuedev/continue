@@ -1,40 +1,33 @@
-import { Response } from "node-fetch";
-
-import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+class OpenAIEmbeddingsProvider extends BaseLLM {
+  static providerName = "openai";
 
-class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "openai";
-  // https://platform.openai.com/docs/api-reference/embeddings/create is 2048
-  // but Voyage is 128
-  static maxBatchSize = 128;
-
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "https://api.openai.com/v1/",
     model: "text-embedding-3-small",
     apiVersion: "2024-02-15-preview",
+    // https://platform.openai.com/docs/api-reference/embeddings/create is 2048
+    // but Voyage is 128
+    maxEmbeddingBatchSize: 128,
   };
 
   private _getEndpoint() {
-    if (!this.options.apiBase) {
+    if (!this.apiBase) {
       throw new Error(
         "No API base URL provided. Please set the 'apiBase' option in config.json",
       );
     }
 
-    this.options.apiBase = this.options.apiBase.endsWith("/")
-      ? this.options.apiBase
-      : `${this.options.apiBase}/`;
-
-    if (this.options.apiType === "azure") {
+    if (this.apiType === "azure") {
       return new URL(
-        `openai/deployments/${this.options.deployment}/embeddings?api-version=${this.options.apiVersion}`,
-        this.options.apiBase,
+        `openai/deployments/${this.deployment}/embeddings?api-version=${this.apiVersion}`,
+        this.apiBase,
       );
     }
-    return new URL("embeddings", this.options.apiBase);
+    return new URL("embeddings", this.apiBase);
   }
 
   async embed(chunks: string[]) {
@@ -52,12 +45,12 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,
-                  model: this.options.model,
+                  model: this.model,
                 }),
                 headers: {
-                  Authorization: `Bearer ${this.options.apiKey}`,
+                  Authorization: `Bearer ${this.apiKey}`,
                   "Content-Type": "application/json",
-                  "api-key": this.options.apiKey ?? "", // For Azure
+                  "api-key": this.apiKey ?? "", // For Azure
                 },
               }),
             );

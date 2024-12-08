@@ -1,12 +1,12 @@
 import { TRIAL_FIM_MODEL } from "../../config/onboarding.js";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { ChatMessage, CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 class FreeTrial extends BaseLLM {
-  static providerName: ModelProvider = "free-trial";
+  static providerName = "free-trial";
 
   private ghAuthToken: string | undefined = undefined;
 

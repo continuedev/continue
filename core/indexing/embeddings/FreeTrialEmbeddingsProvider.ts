@@ -1,28 +1,20 @@
-import { Response } from "node-fetch";
-
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
-import {
-  EmbeddingsProviderName,
-  EmbedOptions,
-  FetchFunction,
-} from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
-
-class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "free-trial";
+class FreeTrialEmbeddingsProvider extends BaseLLM {
+  static providerName = "free-trial";
   static maxBatchSize = 128;
 
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     model: "voyage-code-2",
   };
 
-  constructor(options: EmbedOptions, fetch: FetchFunction) {
-    super(options, fetch);
-    this.options.model = FreeTrialEmbeddingsProvider.defaultOptions?.model;
-    this.id = `${this.constructor.name}::${this.options.model}`;
+  constructor(options: LLMOptions) {
+    super(options);
+    this.embeddingId = `${this.constructor.name}::${this.model}`;
   }
 
   async embed(chunks: string[]) {
@@ -39,7 +31,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,
-                  model: this.options.model,
+                  model: this.model,
                 }),
                 headers: {
                   "Content-Type": "application/json",

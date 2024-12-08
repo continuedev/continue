@@ -1,42 +1,35 @@
-import { Response } from "node-fetch";
-
-import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
-
-class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
+class CohereEmbeddingsProvider extends BaseLLM {
   static maxBatchSize = 96;
 
-  static providerName: EmbeddingsProviderName = "cohere";
+  static providerName = "cohere";
 
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "https://api.cohere.ai/v1/",
     model: "embed-english-v3.0",
   };
 
   async embed(chunks: string[]) {
-    if (!this.options.apiBase?.endsWith("/")) {
-      this.options.apiBase += "/";
-    }
-
     const batchedChunks = this.getBatchedChunks(chunks);
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
-              this.fetch(new URL("embed", this.options.apiBase), {
+              this.fetch(new URL("embed", this.apiBase), {
                 method: "POST",
                 body: JSON.stringify({
                   texts: batch,
-                  model: this.options.model,
+                  model: this.model,
                   input_type: "search_document",
                   embedding_types: ["float"],
                   truncate: "END",
                 }),
                 headers: {
-                  Authorization: `Bearer ${this.options.apiKey}`,
+                  Authorization: `Bearer ${this.apiKey}`,
                   "Content-Type": "application/json",
                 },
               }),

@@ -1,4 +1,4 @@
-import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { ChatMessage, CompletionOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 const RESPONSES: Record<string, string> = {
@@ -8,7 +8,7 @@ const RESPONSES: Record<string, string> = {
 const HARDCODED_CHAT_RESPONSE = "THIS IS A HARDCODED RESPONSE";
 
 class TestLLM extends BaseLLM {
-  static providerName: ModelProvider = "test";
+  static providerName = "test";
 
   private findResponse(prompt: string) {
     return Object.entries(RESPONSES).find(([key]) => prompt.includes(key))?.[1];

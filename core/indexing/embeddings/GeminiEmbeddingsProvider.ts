@@ -1,15 +1,11 @@
-import { Response } from "node-fetch";
-
-import { EmbeddingsProviderName } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
-
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 /**
  * [View the Gemini Text Embedding docs.](https://ai.google.dev/gemini-api/docs/models/gemini#text-embedding-and-embedding)
  */
-class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "gemini";
+class GeminiEmbeddingsProvider extends BaseLLM {
+  static providerName = "gemini";
   static maxBatchSize = 100;
 
   static defaultOptions = {
@@ -18,13 +14,13 @@ class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   get urlPath(): string {
-    return `${this.options.model}:batchEmbedContents`;
+    return `${this.model}:batchEmbedContents`;
   }
 
   async getSingleBatchEmbedding(batch: string[]) {
     // Batch embed endpoint: https://ai.google.dev/api/embeddings?authuser=1#EmbedContentRequest
     const requests = batch.map((text) => ({
-      model: this.options.model,
+      model: this.model,
       content: {
         role: "user",
         parts: [{ text }],
@@ -33,15 +29,15 @@ class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
 
     const fetchWithBackoff = () =>
       withExponentialBackoff<Response>(() =>
-        this.fetch(new URL(this.urlPath, this.options.apiBase), {
+        this.fetch(new URL(this.urlPath, this.apiBase), {
           method: "POST",
           body: JSON.stringify({
             requests,
           }),
           headers: {
-            "x-goog-api-key": this.options.apiKey,
+            "x-goog-api-key": this.apiKey,
             "Content-Type": "application/json",
-          },
+          } as any,
         }),
       );
 

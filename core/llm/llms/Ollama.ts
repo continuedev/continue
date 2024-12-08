@@ -1,9 +1,4 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -59,7 +54,7 @@ interface ChatOptions extends BaseOptions {
 }
 
 class Ollama extends BaseLLM {
-  static providerName: ModelProvider = "ollama";
+  static providerName = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:11434/",
     model: "codellama-7b",

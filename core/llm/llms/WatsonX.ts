@@ -1,9 +1,4 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -84,7 +79,7 @@ class WatsonX extends BaseLLM {
       : `${this.apiBase}/ml/v1/text/generation_stream?version=${this.apiVersion}`;
   }
 
-  static providerName: ModelProvider = "watsonx";
+  static providerName = "watsonx";
 
   protected _convertMessage(message: ChatMessage) {
     if (typeof message.content === "string") {

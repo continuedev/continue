@@ -3,10 +3,11 @@ import {
   InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
-import { Chunk, Reranker, RerankerName } from "../../index.js";
+
+import { Chunk, Reranker } from "../../index.js";
 
 export class BedrockReranker implements Reranker {
-  name: RerankerName = "bedrock";
+  name = "bedrock";
 
   static defaultOptions = {
     region: "us-east-1",

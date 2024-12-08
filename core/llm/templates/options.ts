@@ -1,7 +1,7 @@
-import { CompletionOptions, ModelName } from "../../index.js";
+import { CompletionOptions } from "../../index.js";
 
 const CompletionOptionsForModels: {
-  [key in ModelName]?: Partial<CompletionOptions>;
+  [key: string]: Partial<CompletionOptions>;
 } = {
   "codellama-70b": {
     stop: ["Source: assistant"],

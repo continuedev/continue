@@ -1,11 +1,11 @@
-import { EmbeddingsProviderName, EmbedOptions } from "../..";
+import { LLMOptions } from "../..";
 
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
 
 class NebiusEmbeddingsProvider extends OpenAIEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "nebius";
+  static providerName = "nebius";
 
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "https://api.studio.nebius.ai/v1/",
     model: "BAAI/bge-en-icl",
   };

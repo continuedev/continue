@@ -1,6 +1,4 @@
-import { EmbeddingsProviderName } from "../../index.js";
-
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+import { ILLM } from "../../index.js";
 import BedrockEmbeddingsProvider from "./BedrockEmbeddingsProvider.js";
 import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider.js";
 import ContinueProxyEmbeddingsProvider from "./ContinueProxyEmbeddingsProvider.js";
@@ -22,12 +20,10 @@ import VertexEmbeddingsProvider from "./VertexEmbeddingsProvider.js";
 import VoyageEmbeddingsProvider from "./VoyageEmbeddingsProvider.js";
 import WatsonxEmbeddingsProvider from "./WatsonxEmbeddingsProvider.js";
 
-type EmbeddingsProviderConstructor = new (
-  ...args: any[]
-) => BaseEmbeddingsProvider;
+type EmbeddingsProviderConstructor = new (...args: any[]) => ILLM;
 
 export const allEmbeddingsProviders: Record<
-  EmbeddingsProviderName,
+  string,
   EmbeddingsProviderConstructor
 > = {
   sagemaker: SageMakerEmbeddingsProvider,

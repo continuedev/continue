@@ -3,7 +3,6 @@ import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
-  ModelProvider,
   Tool,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
@@ -56,7 +55,7 @@ class OpenAI extends BaseLLM {
     this.apiVersion = options.apiVersion ?? "2023-07-01-preview";
   }
 
-  static providerName: ModelProvider = "openai";
+  static providerName = "openai";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.openai.com/v1/",
   };

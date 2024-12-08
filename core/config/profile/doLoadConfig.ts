@@ -116,7 +116,7 @@ async function injectControlPlaneProxyInfo(
     ).controlPlaneProxyInfo = info;
   }
 
-  if (config.reranker?.name === "continue-proxy") {
+  if (config.reranker?.providerName === "continue-proxy") {
     (config.reranker as ContinueProxyReranker).controlPlaneProxyInfo = info;
   }
 

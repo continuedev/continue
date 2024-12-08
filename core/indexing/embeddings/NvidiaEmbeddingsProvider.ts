@@ -1,35 +1,20 @@
-import { Response } from "node-fetch";
-
-import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+class NvidiaEmbeddingsProvider extends BaseLLM {
+  static providerName = "nvidia";
 
-class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static maxBatchSize = 96;
-
-  static providerName: EmbeddingsProviderName = "nvidia";
-
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "https://integrate.api.nvidia.com/v1/",
     model: "nvidia/nv-embedqa-mistral-7b-v2",
+    maxEmbeddingBatchSize: 96,
   };
 
   async embed(chunks: string[]) {
-
-    if (!this.options.apiBase?.endsWith("/")) {
-      this.options.apiBase += "/";
-    }
-
     const batchedChunks = [];
-    for (
-      let i = 0;
-      i < chunks.length;
-      i += NvidiaEmbeddingsProvider.maxBatchSize
-    ) {
-      batchedChunks.push(
-        chunks.slice(i, i + NvidiaEmbeddingsProvider.maxBatchSize),
-      );
+    for (let i = 0; i < chunks.length; i += this.maxEmbeddingBatchSize) {
+      batchedChunks.push(chunks.slice(i, i + this.maxEmbeddingBatchSize));
     }
     return (
       await Promise.all(
@@ -37,7 +22,7 @@ class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
           if (batch.length === 0) {
             return [];
           }
-      
+
           // Input list must be non empty and all elements must be non empty, therefore, for all empty elements replace it with a token
           const emptyToken = "[EMPTY]";
           for (let i = 0; i < batch.length; i++) {
@@ -48,16 +33,16 @@ class NvidiaEmbeddingsProvider extends BaseEmbeddingsProvider {
 
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
-              this.fetch(new URL("embeddings", this.options.apiBase), {
+              this.fetch(new URL("embeddings", this.apiBase), {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,
-                  model: this.options.model,
+                  model: this.model,
                   input_type: "passage",
                   truncate: "END",
                 }),
                 headers: {
-                  Authorization: `Bearer ${this.options.apiKey}`,
+                  Authorization: `Bearer ${this.apiKey}`,
                   "Content-Type": "application/json",
                 },
               }),

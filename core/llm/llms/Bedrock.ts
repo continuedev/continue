@@ -9,7 +9,6 @@ import {
   CompletionOptions,
   LLMOptions,
   MessageContent,
-  ModelProvider,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
@@ -20,7 +19,7 @@ import { BaseLLM } from "../index.js";
  * Supports both text and image inputs through Claude 3 models.
  */
 class Bedrock extends BaseLLM {
-  static providerName: ModelProvider = "bedrock";
+  static providerName = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
     model: "anthropic.claude-3-sonnet-20240229-v1:0",

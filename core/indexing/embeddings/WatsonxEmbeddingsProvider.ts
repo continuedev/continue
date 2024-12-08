@@ -1,35 +1,25 @@
-import {
-  EmbeddingsProviderName,
-  EmbedOptions,
-  FetchFunction,
-} from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 
-import BaseEmbeddingsProvider, {
-  IBaseEmbeddingsProvider,
-} from "./BaseEmbeddingsProvider.js";
-
 let accessToken = {
-    expiration: 0,
-    token: "",
+  expiration: 0,
+  token: "",
 };
 
-
-class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "watsonx";
+class WatsonxEmbeddingsProvider extends BaseLLM {
+  static providerName = "watsonx";
   static maxBatchSize = 1000;
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     model: "ibm/slate-125m-english-rtrvr-v2",
   };
 
   async getBearerToken(): Promise<{ token: string; expiration: number }> {
-    if (
-      this.options.apiBase?.includes("cloud.ibm.com")
-    ) {
+    if (this.apiBase?.includes("cloud.ibm.com")) {
       // watsonx SaaS
       const wxToken = await (
         await fetch(
-          `https://iam.cloud.ibm.com/identity/token?apikey=${this.options.apiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
+          `https://iam.cloud.ibm.com/identity/token?apikey=${this.apiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`,
           {
             method: "POST",
             headers: {
@@ -45,17 +35,17 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
       };
     } else {
       // watsonx Software
-      if (!this.options.apiKey?.includes(":")) {
+      if (!this.apiKey?.includes(":")) {
         // Using ZenApiKey auth
         return {
-          token: this.options.apiKey ?? "",
+          token: this.apiKey ?? "",
           expiration: -1,
         };
       } else {
         // Using username/password auth
-        const userPass = this.options.apiKey?.split(":");
+        const userPass = this.apiKey?.split(":");
         const wxToken = await (
-          await fetch(`${this.options.apiBase}/icp4d-api/v1/authorize`, {
+          await fetch(`${this.apiBase}/icp4d-api/v1/authorize`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -68,16 +58,13 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
           })
         ).json();
         const wxTokenExpiry = await (
-          await fetch(
-            `${this.options.apiBase}/usermgmt/v1/user/tokenExpiry`,
-            {
-              method: "GET",
-              headers: {
-                Accept: "application/json",
-                Authorization: `Bearer ${wxToken["token"]}`,
-              },
+          await fetch(`${this.apiBase}/usermgmt/v1/user/tokenExpiry`, {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              Authorization: `Bearer ${wxToken["token"]}`,
             },
-          )
+          })
         ).json();
         return {
           token: wxToken["token"],
@@ -96,7 +83,8 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
       accessToken = await this.getBearerToken();
     } else {
       console.log(
-        `Reusing token (expires in ${(accessToken.expiration - now) / 60
+        `Reusing token (expires in ${
+          (accessToken.expiration - now) / 60
         } mins)`,
       );
     }
@@ -107,17 +95,18 @@ class WatsonxEmbeddingsProvider extends BaseEmbeddingsProvider {
           truncate_input_tokens: 500,
           return_options: { input_text: false },
         },
-        model_id: this.options.model,
-        project_id: this.options.projectId,
+        model_id: this.model,
+        project_id: this.projectId,
       };
       const headers = {
         "Content-Type": "application/json",
-        Authorization: `${accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
-          } ${accessToken.token}`,
+        Authorization: `${
+          accessToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+        } ${accessToken.token}`,
       };
       const resp = await this.fetch(
         new URL(
-          `${this.options.apiBase}/ml/v1/text/embeddings?version=${this.options.apiVersion}`,
+          `${this.apiBase}/ml/v1/text/embeddings?version=${this.apiVersion}`,
         ),
         {
           method: "POST",

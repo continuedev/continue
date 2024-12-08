@@ -4,41 +4,28 @@ import {
 } from "@aws-sdk/client-sagemaker-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
-import {
-  EmbeddingsProviderName,
-  EmbedOptions,
-  FetchFunction,
-} from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+class SageMakerEmbeddingsProvider extends BaseLLM {
+  static providerName = "sagemaker";
 
-
-class SageMakerEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "sagemaker";
-
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     region: "us-west-2",
-    maxBatchSize: 1,
+    maxEmbeddingBatchSize: 1,
+    profile: "sagemaker",
   };
   profile?: string | undefined;
 
-  constructor(options: EmbedOptions, fetch: FetchFunction) {
-    super(options, fetch);
-    if (!options.apiBase) {
-      options.apiBase = `https://runtime.sagemaker.${options.region}.amazonaws.com`;
-    }
-
-    if (options.profile) {
-      this.profile = options.profile;
-    } else {
-      this.profile = "sagemaker";
-    }
+  constructor(options: LLMOptions) {
+    super(options);
+    this.apiBase ??= `https://runtime.sagemaker.${options.region}.amazonaws.com`;
   }
 
   async embed(chunks: string[]) {
     const credentials = await this._getCredentials();
     const client = new SageMakerRuntimeClient({
-      region: this.options.region,
+      region: this.region,
       credentials: {
         accessKeyId: credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
@@ -50,10 +37,7 @@ class SageMakerEmbeddingsProvider extends BaseEmbeddingsProvider {
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {
-          const input = this._generateInvokeModelCommandInput(
-            batch,
-            this.options,
-          );
+          const input = this._generateInvokeModelCommandInput(batch);
           const command = new InvokeEndpointCommand(input);
           const response = await client.send(command);
 
@@ -74,22 +58,19 @@ class SageMakerEmbeddingsProvider extends BaseEmbeddingsProvider {
       )
     ).flat();
   }
-  private _generateInvokeModelCommandInput(
-    prompts: string | string[],
-    options: EmbedOptions,
-  ): any {
+  private _generateInvokeModelCommandInput(prompts: string | string[]): any {
     const payload = {
       inputs: prompts,
       normalize: true,
       // ...(options.requestOptions?.extraBodyProperties || {}),
     };
 
-    if (options.requestOptions?.extraBodyProperties) {
-      Object.assign(payload, options.requestOptions.extraBodyProperties);
+    if (this.requestOptions?.extraBodyProperties) {
+      Object.assign(payload, this.requestOptions.extraBodyProperties);
     }
 
     return {
-      EndpointName: this.options.model,
+      EndpointName: this.model,
       Body: JSON.stringify(payload),
       ContentType: "application/json",
       CustomAttributes: "accept_eula=false",

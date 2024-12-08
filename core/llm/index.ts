@@ -11,8 +11,6 @@ import {
   LLMFullCompletionOptions,
   LLMOptions,
   ModelCapability,
-  ModelName,
-  ModelProvider,
   PromptLog,
   PromptTemplate,
   RequestOptions,
@@ -36,6 +34,8 @@ import {
   CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
   DEFAULT_CONTEXT_LENGTH,
+  DEFAULT_MAX_BATCH_SIZE,
+  DEFAULT_MAX_CHUNK_SIZE,
   DEFAULT_MAX_TOKENS,
 } from "./constants.js";
 import {
@@ -53,10 +53,10 @@ import {
 import CompletionOptionsForModels from "./templates/options.js";
 
 export abstract class BaseLLM implements ILLM {
-  static providerName: ModelProvider;
+  static providerName: string;
   static defaultOptions: Partial<LLMOptions> | undefined = undefined;
 
-  get providerName(): ModelProvider {
+  get providerName(): string {
     return (this.constructor as typeof BaseLLM).providerName;
   }
 
@@ -127,6 +127,11 @@ export abstract class BaseLLM implements ILLM {
   // For IBM watsonx
   deploymentId?: string;
 
+  // Embedding options
+  embeddingId: string;
+  maxEmbeddingChunkSize: number;
+  maxEmbeddingBatchSize: number;
+
   private _llmOptions: LLMOptions;
 
   private openaiAdapter: BaseLlmApi;
@@ -168,10 +173,10 @@ export abstract class BaseLLM implements ILLM {
             )
           : DEFAULT_MAX_TOKENS),
     };
-    if (CompletionOptionsForModels[options.model as ModelName]) {
+    if (CompletionOptionsForModels[options.model]) {
       this.completionOptions = mergeJson(
         this.completionOptions,
-        CompletionOptionsForModels[options.model as ModelName] ?? {},
+        CompletionOptionsForModels[options.model] ?? {},
       );
     }
     this.requestOptions = options.requestOptions;
@@ -214,6 +219,11 @@ export abstract class BaseLLM implements ILLM {
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
     });
+    this.maxEmbeddingBatchSize =
+      options.maxEmbeddingBatchSize ?? DEFAULT_MAX_BATCH_SIZE;
+    this.maxEmbeddingChunkSize =
+      options.maxEmbeddingChunkSize ?? DEFAULT_MAX_CHUNK_SIZE;
+    this.embeddingId = `${this.constructor.name}::${this.model}::${this.maxEmbeddingChunkSize}`;
   }
 
   listModels(): Promise<string[]> {
@@ -720,6 +730,16 @@ export abstract class BaseLLM implements ILLM {
       completion,
       completionOptions,
     };
+  }
+
+  getBatchedChunks(chunks: string[]): string[][] {
+    const batchedChunks = [];
+
+    for (let i = 0; i < chunks.length; i += this.maxEmbeddingBatchSize) {
+      batchedChunks.push(chunks.slice(i, i + this.maxEmbeddingBatchSize));
+    }
+
+    return batchedChunks;
   }
 
   async embed(chunks: string[]): Promise<number[][]> {

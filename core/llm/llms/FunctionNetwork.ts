@@ -1,9 +1,9 @@
-import { LLMOptions, ModelProvider } from "../../index.js";
+import { LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
 class FunctionNetwork extends OpenAI {
-  static providerName: ModelProvider = "function-network";
+  static providerName = "function-network";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.function.network/v1/",
     model: "meta/llama-3.1-70b-instruct",

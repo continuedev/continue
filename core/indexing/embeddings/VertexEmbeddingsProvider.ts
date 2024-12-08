@@ -1,30 +1,27 @@
 import { GoogleAuth } from "google-auth-library";
-import { Response } from "node-fetch";
 
-import { EmbeddingsProviderName, EmbedOptions, FetchFunction } from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
-
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 /**
  * [View the Vertex Text Embedding docs.](https://cloud.google.com/vertex-ai/generative-ai/docs/embeddings/get-text-embeddings)
  */
-class VertexEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "vertexai";
+class VertexEmbeddingsProvider extends BaseLLM {
+  static providerName = "vertexai";
   declare apiBase: string;
 
-
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     model: "text-embedding-004",
-    maxBatchSize: 5,
-    region: "us-central1"
+    maxEmbeddingBatchSize: 5,
+    region: "us-central1",
   };
 
   private clientPromise = new GoogleAuth({
     scopes: "https://www.googleapis.com/auth/cloud-platform",
   }).getClient();
 
-  private static getDefaultApiBaseFrom(options: EmbedOptions) {
+  private static getDefaultApiBaseFrom(options: LLMOptions) {
     const { region, projectId } = options;
     if (!region || !projectId) {
       throw new Error(
@@ -35,18 +32,13 @@ class VertexEmbeddingsProvider extends BaseEmbeddingsProvider {
     return `https://${region}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${region}`;
   }
 
-
-
-  constructor(options: EmbedOptions, fetch: FetchFunction) {
-    super(options, fetch);
+  constructor(options: LLMOptions) {
+    super(options);
     this.apiBase ??= VertexEmbeddingsProvider.getDefaultApiBaseFrom(options);
-
   }
 
-
-
   get urlPath(): string {
-    return `/publishers/google/models/${this.options.model}:predict`;
+    return `/publishers/google/models/${this.model}:predict`;
   }
 
   async embed(chunks: string[]) {
@@ -82,7 +74,9 @@ class VertexEmbeddingsProvider extends BaseEmbeddingsProvider {
           }
 
           const data = (await resp.json()) as any;
-          return data.predictions.map((prediction: any) => prediction.embeddings.values);
+          return data.predictions.map(
+            (prediction: any) => prediction.embeddings.values,
+          );
         }),
       )
     ).flat();

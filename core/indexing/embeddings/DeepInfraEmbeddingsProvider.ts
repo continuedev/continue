@@ -1,27 +1,23 @@
-import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
+import { LLMOptions } from "../../index.js";
+import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
-
-class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "deepinfra";
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+class DeepInfraEmbeddingsProvider extends BaseLLM {
+  static providerName = "deepinfra";
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     model: "sentence-transformers/all-MiniLM-L6-v2",
   };
 
   async embed(chunks: string[]) {
     const fetchWithBackoff = () =>
       withExponentialBackoff<Response>(() =>
-        this.fetch(
-          `https://api.deepinfra.com/v1/inference/${this.options.model}`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `bearer ${this.options.apiKey}`,
-            },
-            body: JSON.stringify({ inputs: chunks }),
+        this.fetch(`https://api.deepinfra.com/v1/inference/${this.model}`, {
+          method: "POST",
+          headers: {
+            Authorization: `bearer ${this.apiKey}`,
           },
-        ),
+          body: JSON.stringify({ inputs: chunks }),
+        }),
       );
     const resp = await fetchWithBackoff();
     const data = await resp.json();

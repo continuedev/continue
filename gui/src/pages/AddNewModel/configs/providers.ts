@@ -1,4 +1,3 @@
-import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
 import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
@@ -24,7 +23,7 @@ export interface InputDescriptor {
 export interface ProviderInfo {
   title: string;
   icon?: string;
-  provider: ModelProvider;
+  provider: string;
   description: string;
   longDescription?: string;
   tags?: ModelProviderTags[];
@@ -50,7 +49,7 @@ export const apiBaseInput: InputDescriptor = {
   required: false,
 };
 
-export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
+export const providers: Partial<Record<string, ProviderInfo>> = {
   openai: {
     title: "OpenAI",
     provider: "openai",

@@ -1,11 +1,6 @@
 import socketIOClient, { Socket } from "socket.io-client";
 
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
@@ -58,7 +53,7 @@ interface IFlowiseProviderLLMOptions extends LLMOptions {
 }
 
 class Flowise extends BaseLLM {
-  static providerName: ModelProvider = "flowise";
+  static providerName = "flowise";
   static defaultOptions: Partial<IFlowiseProviderLLMOptions> = {
     apiBase: "http://localhost:3000",
   };

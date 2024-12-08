@@ -1,5 +1,3 @@
-import { RerankerName } from "../../index.js";
-
 import { BedrockReranker } from "./bedrock.js";
 import { CohereReranker } from "./cohere.js";
 import { ContinueProxyReranker } from "./ContinueProxyReranker.js";
@@ -8,7 +6,7 @@ import { LLMReranker } from "./llm.js";
 import { HuggingFaceTEIReranker } from "./tei.js";
 import { VoyageReranker } from "./voyage.js";
 
-export const AllRerankers: { [key in RerankerName]: any } = {
+export const AllRerankers: { [key: string]: any } = {
   cohere: CohereReranker,
   bedrock: BedrockReranker,
   llm: LLMReranker,

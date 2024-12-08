@@ -5,9 +5,9 @@ import lancedb, { Connection } from "vectordb";
 import {
   Chunk,
   ContinueConfig,
-  EmbeddingsProvider,
   IDE,
   IdeInfo,
+  ILLM,
   IndexingStatus,
   SiteIndexingConfig,
 } from "../..";
@@ -162,7 +162,7 @@ export default class DocsService {
       const sharedStatus = {
         type: "docs" as IndexingStatus["type"],
         id: doc.startUrl,
-        embeddingsProviderId: this.config.embeddingsProvider.id,
+        embeddingsProviderId: this.config.embeddingsProvider.embeddingId,
         isReindexing: false,
         title: doc.title,
         debugInfo: `max depth: ${doc.maxDepth}`,
@@ -235,15 +235,13 @@ export default class DocsService {
 
   async isUsingUnsupportedPreIndexedEmbeddingsProvider() {
     const isPreIndexedDocsProvider =
-      this.config.embeddingsProvider.id ===
-      DocsService.preIndexedDocsEmbeddingsProvider.id;
+      this.config.embeddingsProvider.embeddingId ===
+      DocsService.preIndexedDocsEmbeddingsProvider.embeddingId;
     const canUsePreindexedDocs = await this.canUsePreindexedDocs();
     return isPreIndexedDocsProvider && !canUsePreindexedDocs;
   }
 
-  async getEmbeddingsProvider(
-    isPreIndexedDoc: boolean = false,
-  ): Promise<EmbeddingsProvider> {
+  async getEmbeddingsProvider(isPreIndexedDoc: boolean = false): Promise<ILLM> {
     const canUsePreindexedDocs = await this.canUsePreindexedDocs();
 
     if (canUsePreindexedDocs && isPreIndexedDoc) {
@@ -286,7 +284,7 @@ export default class DocsService {
     );
     if (
       !curEmbeddingsProviderId ||
-      curEmbeddingsProviderId !== newConfig.embeddingsProvider.id
+      curEmbeddingsProviderId !== newConfig.embeddingsProvider.embeddingId
     ) {
       // If not set, we're initializing
       const currentDocs = await this.listMetadata();
@@ -396,7 +394,7 @@ export default class DocsService {
     > = {
       type: "docs",
       id: siteIndexingConfig.startUrl,
-      embeddingsProviderId: embeddingsProvider.id,
+      embeddingsProviderId: embeddingsProvider.embeddingId,
       isReindexing: reIndex && indexExists,
       title: siteIndexingConfig.title,
       debugInfo: `max depth: ${siteIndexingConfig.maxDepth}`,
@@ -491,7 +489,7 @@ export default class DocsService {
         try {
           const chunkedArticle = chunkArticle(
             article,
-            embeddingsProvider.maxChunkSize,
+            embeddingsProvider.maxEmbeddingChunkSize,
           );
 
           const chunkedArticleContents = chunkedArticle.map(
@@ -606,7 +604,7 @@ export default class DocsService {
 
     const data = await downloadFromS3(
       S3Buckets.continueIndexedDocs,
-      getS3Filename(embeddingsProvider.id, title),
+      getS3Filename(embeddingsProvider.embeddingId, title),
     );
 
     const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
@@ -638,7 +636,7 @@ export default class DocsService {
     if (await this.isUsingUnsupportedPreIndexedEmbeddingsProvider()) {
       await this.ide.showToast(
         "error",
-        `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
+        `${DocsService.preIndexedDocsEmbeddingsProvider.embeddingId} is configured as ` +
           "the embeddings provider, but it cannot be used with JetBrains. " + // TODO "with this IDE"
           "Please select a different embeddings provider to use the '@docs' " +
           "context provider.",
@@ -799,7 +797,7 @@ export default class DocsService {
             this.handleStatusUpdate({
               type: "docs",
               id: doc.startUrl,
-              embeddingsProviderId: this.config.embeddingsProvider.id,
+              embeddingsProviderId: this.config.embeddingsProvider.embeddingId,
               isReindexing: false,
               title: doc.title,
               debugInfo: "Config sync: not changed",
@@ -882,7 +880,7 @@ export default class DocsService {
       await this.getEmbeddingsProvider(isPreIndexedDoc);
 
     const tableName = this.sanitizeLanceTableName(
-      `${DocsService.lanceTableName}${embeddingsProvider.id}`,
+      `${DocsService.lanceTableName}${embeddingsProvider.embeddingId}`,
     );
 
     return tableName;
@@ -1042,14 +1040,17 @@ export default class DocsService {
     }
 
     console.log(
-      `Reindexing non-preindexed docs with new embeddings provider: ${embeddingsProvider.id}`,
+      `Reindexing non-preindexed docs with new embeddings provider: ${embeddingsProvider.embeddingId}`,
     );
     await Promise.allSettled(docs.map((doc) => this.indexAndAdd(doc)));
 
     // Important that this only is invoked after we have successfully
     // cleared and reindex the docs so that the table cannot end up in an
     // invalid state.
-    this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
+    this.globalContext.update(
+      "curEmbeddingsProviderId",
+      embeddingsProvider.embeddingId,
+    );
 
     console.log("Completed reindexing of all non-preindexed docs");
   }

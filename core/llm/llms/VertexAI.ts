@@ -1,11 +1,6 @@
 import { GoogleAuth } from "google-auth-library";
 
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse, streamSse } from "../stream.js";
@@ -14,7 +9,7 @@ import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
 
 class VertexAI extends BaseLLM {
-  static providerName: ModelProvider = "vertexai";
+  static providerName = "vertexai";
   declare apiBase: string;
   declare vertexProvider: string;
   declare anthropicInstance: Anthropic;

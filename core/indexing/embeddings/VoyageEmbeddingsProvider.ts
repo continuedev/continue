@@ -1,11 +1,11 @@
-import { EmbeddingsProviderName, EmbedOptions } from "../..";
+import { LLMOptions } from "../..";
 
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
 
 class VoyageEmbeddingsProvider extends OpenAIEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "voyage";
+  static providerName = "voyage";
 
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "https://api.voyageai.com/v1/",
     model: "voyage-code-2",
   };

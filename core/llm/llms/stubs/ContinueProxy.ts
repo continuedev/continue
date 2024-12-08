@@ -2,7 +2,7 @@ import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyti
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 
-import type { LLMOptions, ModelProvider } from "../../../index.js";
+import type { LLMOptions } from "../../../index.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
@@ -10,7 +10,7 @@ class ContinueProxy extends OpenAI {
     this.apiBase = new URL("openai/v1/", value.controlPlaneProxyUrl).toString();
   }
 
-  static providerName: ModelProvider = "continue-proxy";
+  static providerName = "continue-proxy";
   static defaultOptions: Partial<LLMOptions> = {
     useLegacyCompletionsEndpoint: false,
   };
