@@ -6,13 +6,13 @@ import {
   AutocompleteSnippet,
   AutocompleteSnippetType,
 } from "../snippets/types";
-import { HelperVars } from "../util/HelperVars";
+import { AutocompleteContext } from "../util/AutocompleteContext";
 
-const getCommentMark = (helper: HelperVars) => {
+const getCommentMark = (helper: AutocompleteContext) => {
   return helper.lang.singleLineComment;
 };
 
-const addCommentMarks = (text: string, helper: HelperVars) => {
+const addCommentMarks = (text: string, helper: AutocompleteContext) => {
   const commentMark = getCommentMark(helper);
   const lines = [
     ...text
@@ -49,12 +49,12 @@ const formatDiffSnippet = (
   return snippet;
 };
 
-const getCurrentFilepath = (helper: HelperVars) => {
+const getCurrentFilepath = (helper: AutocompleteContext) => {
   return getLastNPathParts(helper.filepath, 2);
 };
 
 const commentifySnippet = (
-  helper: HelperVars,
+  helper: AutocompleteContext,
   snippet: AutocompleteSnippet,
 ): AutocompleteSnippet => {
   return {
@@ -64,7 +64,7 @@ const commentifySnippet = (
 };
 
 export const formatSnippets = (
-  helper: HelperVars,
+  helper: AutocompleteContext,
   snippets: AutocompleteSnippet[],
 ): string => {
   const currentFilepathComment = addCommentMarks(

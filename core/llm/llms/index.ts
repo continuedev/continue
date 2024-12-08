@@ -42,15 +42,15 @@ import OpenRouter from "./OpenRouter";
 import Replicate from "./Replicate";
 import SageMaker from "./SageMaker";
 import SambaNova from "./SambaNova";
+import SiliconFlow from "./SiliconFlow";
 import ContinueProxy from "./stubs/ContinueProxy";
+import TestLLM from "./Test";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
 import VertexAI from "./VertexAI";
 import Vllm from "./Vllm";
 import WatsonX from "./WatsonX";
 import xAI from "./xAI";
-import SiliconFlow from "./SiliconFlow";
-import TestLLM from "./Test";
 
 const LLMs = [
   Anthropic,
@@ -103,7 +103,7 @@ export async function llmFromDescription(
   readFile: (filepath: string) => Promise<string>,
   uniqueId: string,
   ideSettings: IdeSettings,
-  writeLog: (log: string) => Promise<void>,
+  writeLog: (log: string) => void,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {

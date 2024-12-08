@@ -1,5 +1,5 @@
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
-import { HelperVars } from "../util/HelperVars";
+import { AutocompleteContext } from "../util/AutocompleteContext";
 
 function isMidlineCompletion(prefix: string, suffix: string): boolean {
   return !suffix.startsWith("\n");
@@ -13,7 +13,7 @@ function shouldCompleteMultilineBasedOnLanguage(
   return language.useMultiline?.({ prefix, suffix }) ?? true;
 }
 
-export function shouldCompleteMultiline(helper: HelperVars) {
+export function shouldCompleteMultiline(helper: AutocompleteContext) {
   switch (helper.options.multilineCompletions) {
     case "always":
       return true;

@@ -1,3 +1,5 @@
+import { RangeInFile } from "..";
+
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -341,4 +343,8 @@ export function removeCodeBlocksAndTrim(text: string): string {
   const textWithoutCodeBlocks = text.replace(codeBlockRegex, "");
 
   return textWithoutCodeBlocks.trim();
+}
+
+export function rangeInFileToString(range: RangeInFile): string {
+  return `${range.filepath}(${range.range.start.line}:${range.range.start.character})`;
 }

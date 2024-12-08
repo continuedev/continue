@@ -100,7 +100,7 @@ export abstract class BaseLLM implements ILLM {
   template?: TemplateType;
   promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
-  writeLog?: (str: string) => Promise<void>;
+  writeLog?: (str: string) => void;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
@@ -442,7 +442,7 @@ export abstract class BaseLLM implements ILLM {
     const madeUpFimPrompt = `${prefix}<FIM>${suffix}`;
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(
+        this.writeLog(
           this._compileLogMessage(madeUpFimPrompt, completionOptions),
         );
       }
@@ -469,7 +469,7 @@ export abstract class BaseLLM implements ILLM {
     );
 
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n${completion}\n\n`);
+      this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return {
@@ -500,7 +500,7 @@ export abstract class BaseLLM implements ILLM {
 
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        this.writeLog(this._compileLogMessage(prompt, completionOptions));
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -521,7 +521,7 @@ export abstract class BaseLLM implements ILLM {
       this._logTokensGenerated(completionOptions.model, prompt, completion);
 
       if (log && this.writeLog) {
-        await this.writeLog(`Completion:\n${completion}\n\n`);
+        this.writeLog(`Completion:\n${completion}\n\n`);
       }
     }
 
@@ -554,7 +554,7 @@ export abstract class BaseLLM implements ILLM {
 
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        this.writeLog(this._compileLogMessage(prompt, completionOptions));
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -566,7 +566,7 @@ export abstract class BaseLLM implements ILLM {
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n${completion}\n\n`);
+      this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return completion;
@@ -599,7 +599,7 @@ export abstract class BaseLLM implements ILLM {
       : this._formatChatMessages(messages);
     if (log) {
       if (this.writeLog) {
-        await this.writeLog(this._compileLogMessage(prompt, completionOptions));
+        this.writeLog(this._compileLogMessage(prompt, completionOptions));
       }
       if (this.llmRequestHook) {
         this.llmRequestHook(completionOptions.model, prompt);
@@ -636,7 +636,7 @@ export abstract class BaseLLM implements ILLM {
     this._logTokensGenerated(completionOptions.model, prompt, completion);
 
     if (log && this.writeLog) {
-      await this.writeLog(`Completion:\n${completion}\n\n`);
+      this.writeLog(`Completion:\n${completion}\n\n`);
     }
 
     return {

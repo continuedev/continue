@@ -20,7 +20,7 @@ export default async function doLoadConfig(
   ide: IDE,
   ideSettingsPromise: Promise<IdeSettings>,
   controlPlaneClient: ControlPlaneClient,
-  writeLog: (message: string) => Promise<void>,
+  writeLog: (message: string) => void,
   overrideConfigJson: SerializedContinueConfig | undefined,
   workspaceId?: string,
 ): Promise<ConfigResult<ContinueConfig>> {

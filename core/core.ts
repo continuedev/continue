@@ -80,7 +80,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => {},
+    private readonly writeLog: (text: string) =>void =  () => {},
   ) {
     // Ensure .continue directory is created
     setupInitialDotContinueDirectory();
@@ -101,7 +101,7 @@ export class Core {
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
-      this.onWrite,
+      this.writeLog,
       this.controlPlaneClient,
     );
 
@@ -177,6 +177,7 @@ export class Core {
       ide,
       getLlm,
       (e) => {},
+      writeLog,
     );
 
     const on = this.messenger.on.bind(this.messenger);

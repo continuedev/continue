@@ -67,12 +67,14 @@ export class ContinueCompletionProvider
     private readonly ide: IDE,
     private readonly tabAutocompleteModel: TabAutocompleteModel,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
+    writeLog: (message: string) => void,
   ) {
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
       this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
       this.onError.bind(this),
+      writeLog,
     );
 
     vscode.workspace.onDidChangeTextDocument((event) => {

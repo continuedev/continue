@@ -1,11 +1,11 @@
 import { Chunk, IDE } from "core";
-import { languageForFilepath } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 import { DEFAULT_IGNORE_DIRS } from "core/indexing/ignore";
 import { deduplicateArray } from "core/util";
 import { getParserForFile } from "core/util/treeSitter";
 
 import { getDefinitionsForNode } from "../autocomplete/lsp";
 
+import { getAutocompleteLanguageInfoForFile } from "core/autocomplete/constants/AutocompleteLanguageInfo";
 import type { SyntaxNode } from "web-tree-sitter";
 
 export async function expandSnippet(
@@ -56,7 +56,7 @@ export async function expandSnippet(
           filepath,
           node,
           ide,
-          languageForFilepath(filepath),
+          getAutocompleteLanguageInfoForFile(filepath),
         );
       }),
     )

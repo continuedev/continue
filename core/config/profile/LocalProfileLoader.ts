@@ -14,7 +14,7 @@ export default class LocalProfileLoader implements IProfileLoader {
     private ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private controlPlaneClient: ControlPlaneClient,
-    private writeLog: (message: string) => Promise<void>,
+    private writeLog: (message: string) =>void,
   ) {}
 
   async doLoadConfig(): Promise<ConfigResult<ContinueConfig>> {

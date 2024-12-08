@@ -1,7 +1,7 @@
 import { RangeInFileWithContents } from "../../../";
 import { countTokens } from "../../../llm/countTokens";
 import { AutocompleteSnippetDeprecated } from "../../types";
-import { HelperVars } from "../../util/HelperVars";
+import { AutocompleteContext } from "../../util/AutocompleteContext";
 
 const rx = /[\s.,\/#!$%\^&\*;:{}=\-_`~()\[\]]/g;
 export function getSymbolsForSnippet(snippet: string): Set<string> {
@@ -40,7 +40,7 @@ function jaccardSimilarity(a: string, b: string): number {
  */
 export function rankAndOrderSnippets(
   ranges: AutocompleteSnippetDeprecated[],
-  helper: HelperVars,
+  helper: AutocompleteContext,
 ): Required<AutocompleteSnippetDeprecated>[] {
   const windowAroundCursor =
     helper.fullPrefix.slice(

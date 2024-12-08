@@ -25,6 +25,7 @@ describe("lineStream", () => {
 
   beforeEach(() => {
     mockFullStop = jest.fn();
+    mockFullStop.mockReturnValue(Promise.resolve());
   });
 
   describe("noTopLevelKeywordsMidline", () => {
@@ -167,7 +168,10 @@ describe("lineStream", () => {
         "const z = 15;",
       ]);
 
-      const result = lineStream.stopAtLines(linesGenerator, mockFullStop);
+      const result = lineStream.stopAtLines(
+        linesGenerator,
+        mockFullStop as any,
+      );
       const filteredLines = await getFilteredLines(result);
 
       expect(filteredLines).toEqual(["const x = 5;", "let y = 10;"]);
@@ -402,7 +406,7 @@ describe("lineStream", () => {
 
       const result = lineStream.stopAtRepeatingLines(
         linesGenerator,
-        mockFullStop,
+        mockFullStop as any,
       );
       const filteredLines = await getFilteredLines(result);
 
@@ -424,7 +428,7 @@ describe("lineStream", () => {
 
       const result = lineStream.stopAtRepeatingLines(
         linesGenerator,
-        mockFullStop,
+        mockFullStop as any,
       );
       const filteredLines = await getFilteredLines(result);
 

@@ -1,0 +1,4 @@
+- refactored language detection based on file extension
+- individual enabling/disabling of context providers
+- individual logging enabling/disabling for each context provider
+-

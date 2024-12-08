@@ -1,15 +1,12 @@
-import path from "path";
-
 import { DiffLine, ILLM } from "../..";
 import { generateLines } from "../../diff/util";
-import { supportedLanguages } from "../../util/treeSitter";
+import { getLanguageForFile } from "../../util/treeSitter";
 
 import { deterministicApplyLazyEdit } from "./deterministic";
 import { streamLazyApply } from "./streamLazyApply";
 
 function canUseInstantApply(filename: string) {
-  const fileExtension = path.extname(filename).toLowerCase().slice(1);
-  return supportedLanguages[fileExtension] !== undefined;
+  return getLanguageForFile(filename) !== undefined;
 }
 
 export async function applyCodeBlock(

@@ -2,7 +2,11 @@ import { distance } from "fastest-levenshtein";
 
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
-import { BRACKETS, BRACKETS_REVERSE } from "../BracketMatchingService";
+import {
+  TabAutocompleteLanguageOptions,
+  TabAutocompleteOptions,
+} from "../../TabAutocompleteOptions";
+import { LogWriter } from "../../util/AutocompleteContext";
 
 export type LineFilter = (args: {
   lines: LineStream;
@@ -15,6 +19,9 @@ export type CharacterFilter = (args: {
   suffix: string;
   filepath: string;
   multiline: boolean;
+  options: TabAutocompleteOptions;
+  langOptions: TabAutocompleteLanguageOptions;
+  writeLog: LogWriter;
 }) => AsyncGenerator<string>;
 
 function isBracketEnding(line: string): boolean {
@@ -155,12 +162,13 @@ export async function* avoidPathLine(
 export async function* avoidEmptyComments(
   stream: LineStream,
   comment?: string,
+  onLineRemoved?: (line: string) => void,
 ): LineStream {
   // Filter lines that are empty comments
   for await (const line of stream) {
     if (!comment || line.trim() !== comment) {
       yield line;
-    }
+    } else onLineRemoved?.(line);
   }
 }
 
@@ -258,12 +266,17 @@ export async function* stopAtSimilarLine(
  */
 export async function* stopAtLines(
   stream: LineStream,
-  fullStop: () => void,
+  fullStop:
+    | undefined
+    | ((line: string, stopPattern: string) => void) = undefined,
   linesToStopAt: string[] = LINES_TO_STOP_AT,
 ): LineStream {
   for await (const line of stream) {
-    if (linesToStopAt.some((stopAt) => line.trim().includes(stopAt))) {
-      fullStop();
+    const stopPattern = linesToStopAt.find((stopAt) =>
+      line.trim().includes(stopAt),
+    );
+    if (stopPattern !== undefined) {
+      await fullStop?.(line, stopPattern);
       break;
     }
     yield line;
@@ -496,15 +509,15 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
 export async function* stopAtRepeatingLines(
   lines: LineStream,
   fullStop: () => void,
+  maxRepeats: number = 3,
 ): LineStream {
   let previousLine: string | undefined;
   let repeatCount = 0;
-  const MAX_REPEATS = 3;
 
   for await (const line of lines) {
     if (line === previousLine) {
       repeatCount++;
-      if (repeatCount === MAX_REPEATS) {
+      if (repeatCount === maxRepeats) {
         fullStop();
         return;
       }

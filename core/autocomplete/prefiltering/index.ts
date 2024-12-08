@@ -5,17 +5,13 @@ import ignore from "ignore";
 import { IDE } from "../..";
 import { getBasename } from "../../util";
 import { getConfigJsonPath } from "../../util/paths";
-import { HelperVars } from "../util/HelperVars";
+import { AutocompleteContext } from "../util/AutocompleteContext";
 
-async function isDisabledForFile(
-  currentFilepath: string,
-  disableInFiles: string[] | undefined,
-  ide: IDE,
-) {
-  if (disableInFiles) {
+async function isDisabledForFile(ctx: AutocompleteContext, ide: IDE) {
+  if (ctx.options.disableInFiles) {
     // Relative path needed for `ignore`
     const workspaceDirs = await ide.getWorkspaceDirs();
-    let filepath = currentFilepath;
+    let filepath = ctx.filepath;
     for (const workspaceDir of workspaceDirs) {
       const relativePath = path.relative(workspaceDir, filepath);
       const relativePathBase = relativePath.split(path.sep).at(0);
@@ -28,54 +24,44 @@ async function isDisabledForFile(
     }
 
     // Worst case we can check filetype glob patterns
-    if (filepath === currentFilepath) {
+    if (filepath === ctx.filepath) {
       filepath = getBasename(filepath);
     }
 
     // @ts-ignore
-    const pattern = ignore.default().add(disableInFiles);
-    if (pattern.ignores(filepath)) {
-      return true;
-    }
-  }
-}
+    const pattern = ignore.default().add(ctx.options.disableInFiles);
+    const result = pattern.ignores(filepath);
 
-async function shouldLanguageSpecificPrefilter(helper: HelperVars) {
-  const line = helper.fileLines[helper.pos.line] ?? "";
-  for (const endOfLine of helper.lang.endOfLine) {
-    if (line.endsWith(endOfLine) && helper.pos.character >= line.length) {
-      return true;
-    }
+    if (ctx.options.logDisableInFiles)
+      ctx.writeLog(
+        `Options.disableInFiles=${ctx.options.disableInFiles}; file: ${filepath} file ignored: ${result}`,
+      );
+    return result;
+  } else {
+    if (ctx.options.logDisableInFiles)
+      ctx.writeLog("Options.disableInFiles is not set, not ignoring file");
+    return false;
   }
 }
 
 export async function shouldPrefilter(
-  helper: HelperVars,
+  ctx: AutocompleteContext,
   ide: IDE,
 ): Promise<boolean> {
   // Allow disabling autocomplete from config.json
-  if (helper.options.disable) {
+  if (ctx.options.disable) {
     return true;
   }
 
   // Check whether we're in the continue config.json file
-  if (helper.filepath === getConfigJsonPath()) {
+  if (ctx.filepath === getConfigJsonPath()) {
     return true;
   }
 
   // Check whether autocomplete is disabled for this file
-  if (
-    await isDisabledForFile(helper.filepath, helper.options.disableInFiles, ide)
-  ) {
+  if (await isDisabledForFile(ctx, ide)) {
     return true;
   }
-
-  // if (
-  //   helper.options.transform &&
-  //   (await shouldLanguageSpecificPrefilter(helper))
-  // ) {
-  //   return true;
-  // }
 
   return false;
 }

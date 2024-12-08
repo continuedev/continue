@@ -3,18 +3,17 @@ import Handlebars from "handlebars";
 import { CompletionOptions } from "../..";
 import { getBasename } from "../../util";
 import { AutocompleteLanguageInfo } from "../constants/AutocompleteLanguageInfo";
-import { HelperVars } from "../util/HelperVars";
+import { AutocompleteContext } from "../util/AutocompleteContext";
 
+import { AutocompleteSnippet } from "../snippets/types";
 import {
   AutocompleteTemplate,
   getTemplateForModel,
 } from "./AutocompleteTemplate";
-import { getStopTokens } from "./getStopTokens";
-import { SnippetPayload } from "../snippets";
 import { formatSnippets } from "./formatting";
-import { getSnippets } from "./filtering";
+import { getStopTokens } from "./getStopTokens";
 
-function getTemplate(helper: HelperVars): AutocompleteTemplate {
+function getTemplate(helper: AutocompleteContext): AutocompleteTemplate {
   if (helper.options.template) {
     return {
       template: helper.options.template,
@@ -46,13 +45,13 @@ function renderStringTemplate(
 }
 
 export function renderPrompt({
-  snippetPayload,
+  snippets,
   workspaceDirs,
   helper,
 }: {
-  snippetPayload: SnippetPayload;
+  snippets: AutocompleteSnippet[];
   workspaceDirs: string[];
-  helper: HelperVars;
+  helper: AutocompleteContext;
 }): {
   prompt: string;
   prefix: string;
@@ -67,8 +66,6 @@ export function renderPrompt({
 
   const { template, compilePrefixSuffix, completionOptions } =
     getTemplate(helper);
-
-  const snippets = getSnippets(helper, snippetPayload);
 
   // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
   // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint

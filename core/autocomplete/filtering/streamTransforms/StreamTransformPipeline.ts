@@ -1,6 +1,5 @@
 import { streamLines } from "../../../diff/util";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "../../../util/parameters";
-import { HelperVars } from "../../util/HelperVars";
+import { AutocompleteContext } from "../../util/AutocompleteContext";
 
 import { stopAtStartOf, stopAtStopTokens } from "./charStream";
 import {
@@ -23,48 +22,72 @@ export class StreamTransformPipeline {
     multiline: boolean,
     stopTokens: string[],
     fullStop: () => void,
-    helper: HelperVars,
+    ctx: AutocompleteContext,
   ): AsyncGenerator<string> {
     let charGenerator = generator;
 
     charGenerator = stopAtStopTokens(generator, stopTokens);
     charGenerator = stopAtStartOf(charGenerator, suffix);
-    for (const charFilter of helper.lang.charFilters ?? []) {
+    for (const charFilter of ctx.lang.charFilters ?? []) {
       charGenerator = charFilter({
         chars: charGenerator,
         prefix,
         suffix,
-        filepath: helper.filepath,
+        filepath: ctx.filepath,
         multiline,
+        options: ctx.options,
+        langOptions: ctx.langOptions,
+        writeLog: ctx.writeLog,
       });
     }
 
     let lineGenerator = streamLines(charGenerator);
 
-    lineGenerator = stopAtLines(lineGenerator, fullStop);
-    lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
+    lineGenerator = stopAtLines(lineGenerator, (line, pattern) => {
+      if (ctx.options.logCompletionStop)
+        ctx.writeLog(
+          `CompletionStop: Completion stopped at line: due to pattern ${pattern} at line\n${line}`,
+        );
+      fullStop();
+    });
+    lineGenerator = stopAtRepeatingLines(
+      lineGenerator,
+      () => {
+        if (ctx.options.logCompletionStop)
+          ctx.writeLog(
+            `CompletionStop: Completion stopped after encountering ${ctx.langOptions.filterMaxRepeatingLines} repeated lines`,
+          );
+        fullStop();
+      },
+      ctx.langOptions.filterMaxRepeatingLines,
+    );
+
     lineGenerator = avoidEmptyComments(
       lineGenerator,
-      helper.lang.singleLineComment,
+      ctx.lang.singleLineComment,
+      (line) => {
+        if (ctx.options.logEmptySingleLineCommentFilter)
+          ctx.writeLog(`EmptySingleLineCommentFilter:removed line ${line}`);
+      },
     );
-    lineGenerator = avoidPathLine(lineGenerator, helper.lang.singleLineComment);
+
+    lineGenerator = avoidPathLine(lineGenerator, ctx.lang.singleLineComment);
     lineGenerator = skipPrefixes(lineGenerator);
     lineGenerator = noDoubleNewLine(lineGenerator);
 
-    for (const lineFilter of helper.lang.lineFilters ?? []) {
+    for (const lineFilter of ctx.lang.lineFilters ?? []) {
       lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
     }
 
     lineGenerator = stopAtSimilarLine(
       lineGenerator,
-      this.getLineBelowCursor(helper),
+      this.getLineBelowCursor(ctx),
       fullStop,
     );
 
     lineGenerator = showWhateverWeHaveAtXMs(
       lineGenerator,
-      helper.options.showWhateverWeHaveAtXMs ??
-        (DEFAULT_AUTOCOMPLETE_OPTS.showWhateverWeHaveAtXMs as number),
+      ctx.options.showWhateverWeHaveAtXMs,
     );
 
     const finalGenerator = streamWithNewLines(lineGenerator);
@@ -73,7 +96,7 @@ export class StreamTransformPipeline {
     }
   }
 
-  private getLineBelowCursor(helper: HelperVars): string {
+  private getLineBelowCursor(helper: AutocompleteContext): string {
     let lineBelowCursor = "";
     let i = 1;
     while (

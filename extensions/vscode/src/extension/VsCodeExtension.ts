@@ -129,15 +129,10 @@ export class VsCodeExtension {
       this.editDecorationManager,
     );
 
-    this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.append(log);
-    });
+    const writeToOutputChannel = (log: string) =>
+      outputChannel.append(log + "\n");
+
+    this.core = new Core(inProcessMessenger, this.ide, writeToOutputChannel);
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
 
@@ -209,6 +204,7 @@ export class VsCodeExtension {
           this.ide,
           this.tabAutocompleteModel,
           this.sidebar.webviewProtocol,
+          writeToOutputChannel,
         ),
       ),
     );

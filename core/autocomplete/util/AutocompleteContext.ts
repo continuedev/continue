@@ -1,24 +1,38 @@
-import { IDE, TabAutocompleteOptions } from "../..";
+import { IDE } from "../..";
 import {
   countTokens,
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../../llm/countTokens";
+import { languageForFilepath } from "../../util/languageId";
+import { getRangeInString } from "../../util/ranges";
 import {
   AutocompleteLanguageInfo,
-  languageForFilepath,
+  getAutocompleteLanguageInfo,
 } from "../constants/AutocompleteLanguageInfo";
-import { constructInitialPrefixSuffix } from "../templating/constructPrefixSuffix";
+import {
+  TabAutocompleteLanguageOptions,
+  TabAutocompleteOptions,
+} from "../TabAutocompleteOptions";
 
 import { AstPath, getAst, getTreePathAtCursor } from "./ast";
 import { AutocompleteInput } from "./types";
+
+export type LogWriter = (message: string) => void;
+/** A subset of the context sufficient for logging. Allows easier testing */
+export interface AutocompleteLoggingContext {
+  options: TabAutocompleteOptions;
+  langOptions: TabAutocompleteLanguageOptions;
+  writeLog: LogWriter;
+}
 
 /**
  * A collection of variables that are often accessed throughout the autocomplete pipeline
  * It's noisy to re-calculate all the time or inject them into each function
  */
-export class HelperVars {
+export class AutocompleteContext implements AutocompleteLoggingContext {
   lang: AutocompleteLanguageInfo;
+  langOptions: TabAutocompleteLanguageOptions;
   treePath: AstPath | undefined;
 
   private _fileContents: string | undefined;
@@ -33,8 +47,15 @@ export class HelperVars {
     public readonly options: TabAutocompleteOptions,
     public readonly modelName: string,
     private readonly ide: IDE,
+    public readonly writeLog: LogWriter,
   ) {
-    this.lang = languageForFilepath(input.filepath);
+    this.lang = getAutocompleteLanguageInfo(
+      languageForFilepath(input.filepath),
+    );
+    this.langOptions = {
+      ...options.defaultLanguageOptions,
+      ...options.languageOptions[this.lang.id],
+    };
   }
 
   private async init() {
@@ -51,7 +72,7 @@ export class HelperVars {
 
     // Construct full prefix/suffix (a few edge cases handled in here)
     const { prefix: fullPrefix, suffix: fullSuffix } =
-      await constructInitialPrefixSuffix(this.input, this.ide);
+      await this.constructInitialPrefixSuffix(this.input, this.ide);
     this._fullPrefix = fullPrefix;
     this._fullSuffix = fullSuffix;
 
@@ -74,13 +95,59 @@ export class HelperVars {
     options: TabAutocompleteOptions,
     modelName: string,
     ide: IDE,
-  ): Promise<HelperVars> {
-    const instance = new HelperVars(input, options, modelName, ide);
+    writeLog: (message: string) => void,
+  ): Promise<AutocompleteContext> {
+    const instance = new AutocompleteContext(
+      input,
+      options,
+      modelName,
+      ide,
+      writeLog,
+    );
     await instance.init();
     return instance;
   }
 
-  prunePrefixSuffix() {
+  /**
+   * We have to handle a few edge cases in getting the entire prefix/suffix for the current file.
+   * This is entirely prior to finding snippets from other files
+   */
+  private async constructInitialPrefixSuffix(
+    input: AutocompleteInput,
+    ide: IDE,
+  ): Promise<{
+    prefix: string;
+    suffix: string;
+  }> {
+    const fileContents =
+      input.manuallyPassFileContents ?? (await ide.readFile(input.filepath));
+    const fileLines = fileContents.split("\n");
+    let prefix =
+      getRangeInString(fileContents, {
+        start: { line: 0, character: 0 },
+        end: input.selectedCompletionInfo?.range.start ?? input.pos,
+      }) + (input.selectedCompletionInfo?.text ?? "");
+
+    if (input.injectDetails) {
+      const lines = prefix.split("\n");
+      prefix = `${lines.slice(0, -1).join("\n")}\n${
+        this.lang.singleLineComment
+      } ${input.injectDetails
+        .split("\n")
+        .join(
+          `\n${this.lang.singleLineComment} `,
+        )}\n${lines[lines.length - 1]}`;
+    }
+
+    const suffix = getRangeInString(fileContents, {
+      start: input.pos,
+      end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
+    });
+
+    return { prefix, suffix };
+  }
+
+  private prunePrefixSuffix() {
     // Construct basic prefix
     const maxPrefixTokens =
       this.options.maxPromptTokens * this.options.prefixPercentage;
@@ -156,6 +223,7 @@ export class HelperVars {
     return this._fullSuffix;
   }
 
+  /** the prefix before the caret which fits into the maxPromptTokens  */
   get prunedPrefix(): string {
     if (this._prunedPrefix === undefined) {
       throw new Error(
@@ -165,6 +233,7 @@ export class HelperVars {
     return this._prunedPrefix;
   }
 
+  /** the suffix after the caret which fits into the maxPromptTokens  */
   get prunedSuffix(): string {
     if (this._prunedSuffix === undefined) {
       throw new Error(

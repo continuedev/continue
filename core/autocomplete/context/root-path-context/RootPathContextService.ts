@@ -1,42 +1,32 @@
 import { createHash } from "crypto";
 
-import { LRUCache } from "lru-cache";
 import Parser from "web-tree-sitter";
 
 import { IDE } from "../../..";
+import { rangeInFileToString } from "../../../util";
+import { languageForFilepath, LanguageId } from "../../../util/languageId";
 import {
-  getFullLanguageName,
-  getQueryForFile,
+  getQuery,
   IGNORE_PATH_PATTERNS,
-  LanguageName,
+  rangeToString,
 } from "../../../util/treeSitter";
 import {
   AutocompleteCodeSnippet,
   AutocompleteSnippetType,
 } from "../../snippets/types";
-import { AutocompleteSnippetDeprecated } from "../../types";
 import { AstPath } from "../../util/ast";
+import {
+  AutocompleteLoggingContext,
+  LogWriter,
+} from "../../util/AutocompleteContext";
 import { ImportDefinitionsService } from "../ImportDefinitionsService";
 import { createOutline } from "../outline/createOutline";
-
-function getSyntaxTreeString(
-  node: Parser.SyntaxNode,
-  indent: string = "",
-): string {
-  let result = "";
-  const nodeInfo = `${node.type} [${node.startPosition.row}:${node.startPosition.column} - ${node.endPosition.row}:${node.endPosition.column}]`;
-  result += `${indent}${nodeInfo}\n`;
-
-  for (const child of node.children) {
-    result += getSyntaxTreeString(child, indent + "  ");
-  }
-
-  return result;
-}
+import { LRUAsyncCache } from "./LRUAsyncCache";
 
 export class RootPathContextService {
-  private cache = new LRUCache<string, AutocompleteSnippetDeprecated[]>({
+  private snippetCache = new LRUAsyncCache({
     max: 100,
+    ttl: 1000 * 30,
   });
 
   constructor(
@@ -47,18 +37,6 @@ export class RootPathContextService {
   private static getNodeId(node: Parser.SyntaxNode): string {
     return `${node.startIndex}`;
   }
-
-  private static TYPES_TO_USE = new Set([
-    "arrow_function",
-    "generator_function_declaration",
-    "program",
-    "function_declaration",
-    "function_definition",
-    "method_definition",
-    "method_declaration",
-    "class_declaration",
-    "class_definition",
-  ]);
 
   /**
    * Key comes from hash of parent key and node type and node id.
@@ -77,39 +55,41 @@ export class RootPathContextService {
   private async getSnippetsForNode(
     filepath: string,
     node: Parser.SyntaxNode,
-  ): Promise<AutocompleteSnippetDeprecated[]> {
-    const snippets: AutocompleteSnippetDeprecated[] = [];
-    const language = getFullLanguageName(filepath);
+    ctx: AutocompleteLoggingContext,
+    writeLog?: LogWriter,
+  ): Promise<AutocompleteCodeSnippet[]> {
+    const language = languageForFilepath(filepath);
 
-    let query: Parser.Query | undefined;
-    switch (node.type) {
-      case "program":
-        this.importDefinitionsService.get(filepath);
-        break;
-      default:
-        // const type = node.type;
-        // console.log(getSyntaxTreeString(node));
-        // debugger;
-
-        query = await getQueryForFile(
-          filepath,
-          `root-path-context-queries/${language}/${node.type}.scm`,
-        );
-        break;
-    }
+    const query = await getQuery(
+      language,
+      `root-path-context-queries`,
+      node.type,
+    );
 
     if (!query) {
-      return snippets;
+      writeLog?.(`No query for node type ${node.type} in language ${language}`);
+
+      return [];
     }
 
+    const snippets: AutocompleteCodeSnippet[] = [];
     const queries = query.matches(node).map(async (match) => {
+      writeLog?.(
+        `Match found: node type: ${node.type} language: ${language} patternIndex: ${match.pattern}, nodePosition: ${rangeToString(node)}`,
+      );
       for (const item of match.captures) {
+        writeLog?.(
+          `Capture found: node type: ${item.node.type} nodePosition: ${rangeToString(item.node)} text: ${item.node.text}`,
+        );
+
         try {
           const endPosition = item.node.endPosition;
           const newSnippets = await this.getSnippets(
             filepath,
             endPosition,
             language,
+            ctx,
+            writeLog,
           );
           snippets.push(...newSnippets);
         } catch (e) {
@@ -126,8 +106,10 @@ export class RootPathContextService {
   private async getSnippets(
     filepath: string,
     endPosition: Parser.Point,
-    language: LanguageName,
-  ): Promise<AutocompleteSnippetDeprecated[]> {
+    language: LanguageId,
+    ctx: AutocompleteLoggingContext,
+    writeLog?: LogWriter,
+  ): Promise<AutocompleteCodeSnippet[]> {
     const definitions = await this.ide.gotoDefinition({
       filepath,
       position: {
@@ -135,13 +117,18 @@ export class RootPathContextService {
         character: endPosition.column,
       },
     });
-    const newSnippets = await Promise.all(
+    writeLog?.(
+      "Found definitions: " +
+        definitions.map((d) => rangeInFileToString(d)).join(", "),
+    );
+    const newSnippets: AutocompleteCodeSnippet[] = await Promise.all(
       definitions
         .filter((definition) => {
           const isIgnoredPath = IGNORE_PATH_PATTERNS[language]?.some(
             (pattern) => pattern.test(definition.filepath),
           );
-
+          if (isIgnoredPath)
+            writeLog?.(`Ignoring path: ${definition.filepath}`);
           return !isIgnoredPath;
         })
         .map(async (def) => {
@@ -150,16 +137,22 @@ export class RootPathContextService {
             def.filepath,
             fileContents,
             def.range,
+            ctx,
           );
           if (outline !== undefined) {
+            writeLog?.("Created Outline for " + rangeInFileToString(def));
             return {
-              ...def,
-              contents: outline,
+              type: AutocompleteSnippetType.Code,
+              filepath: def.filepath,
+              content: outline,
             };
           }
+
+          writeLog?.("Created Snippet for " + rangeInFileToString(def));
           return {
-            ...def,
-            contents: await this.ide.readRangeInFile(def.filepath, def.range),
+            type: AutocompleteSnippetType.Code,
+            filepath: def.filepath,
+            content: await this.ide.readRangeInFile(def.filepath, def.range),
           };
         }),
     );
@@ -170,35 +163,32 @@ export class RootPathContextService {
   async getContextForPath(
     filepath: string,
     astPath: AstPath,
-    // cursorIndex: number,
+    ctx: AutocompleteLoggingContext,
   ): Promise<AutocompleteCodeSnippet[]> {
     const snippets: AutocompleteCodeSnippet[] = [];
+    const writeLog = ctx.options.logRootPathSnippets
+      ? async (message: string) => ctx.writeLog(`RootPathSnippets: ${message}`)
+      : undefined;
 
     let parentKey = filepath;
-    for (const astNode of astPath.filter((node) =>
-      RootPathContextService.TYPES_TO_USE.has(node.type),
-    )) {
+    const filteredAstPath = astPath.filter((node) => node.isNamed());
+
+    writeLog?.(`processing path ${filteredAstPath.map((t) => t.type)}`);
+    for (const astNode of filteredAstPath) {
       const key = RootPathContextService.keyFromNode(parentKey, astNode);
-      // const type = astNode.type;
-      // debugger;
 
-      const foundInCache = this.cache.get(key);
-      const newSnippets =
-        foundInCache ?? (await this.getSnippetsForNode(filepath, astNode));
-
-      const formattedSnippets: AutocompleteCodeSnippet[] = newSnippets.map(
-        (item) => ({
-          filepath: item.filepath,
-          content: item.contents,
-          type: AutocompleteSnippetType.Code,
-        }),
+      const newSnippets = await this.snippetCache.get(
+        key,
+        () => {
+          writeLog?.(`getting snippets for ${astNode.type}`);
+          return this.getSnippetsForNode(filepath, astNode, ctx, writeLog);
+        },
+        () => {
+          writeLog?.(`cache hit for ${astNode.type}`);
+        },
       );
 
-      snippets.push(...formattedSnippets);
-
-      if (!foundInCache) {
-        this.cache.set(key, newSnippets);
-      }
+      snippets.push(...newSnippets);
 
       parentKey = key;
     }

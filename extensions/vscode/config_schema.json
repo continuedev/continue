@@ -2760,10 +2760,7 @@
                     "type": "object",
                     "properties": {
                       "model": {
-                        "enum": [
-                          "cohere.rerank-v3-5:0",
-                          "amazon.rerank-v1:0"
-                        ]
+                        "enum": ["cohere.rerank-v3-5:0", "amazon.rerank-v1:0"]
                       }
                     },
                     "required": ["model"]
@@ -2884,6 +2881,14 @@
               "enum": ["always", "never", "auto"],
               "description": "If set to true, Continue will only complete a single line at a time."
             },
+            "slidingWindowPrefixPercentage": {
+              "type": "number",
+              "description": "deprected, unused"
+            },
+            "slidingWindowSize": {
+              "type": "number",
+              "description": "deprected, unused"
+            },
             "useCache": {
               "type": "boolean",
               "description": "Whether to cache completions"
@@ -2892,12 +2897,22 @@
               "type": "boolean",
               "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
             },
+            "useRecentlyEdited": {},
             "disableInFiles": {
-              "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",
+              "description": "A list of files / glob patterns in which to disable tab autocomplete. (.gitignore syntax) For example, *.csv if you'd like to disable autocomplete in .csv files.",
               "type": "array",
               "items": {
                 "type": "string"
               }
+            },
+            "useImports": {
+              "type": "boolean",
+              "description": "If set to true, Continue will use imports from the current file when generating completions."
+            },
+            "showWhateverWeHaveAtXMs": {
+              "type": "number",
+              "description": "Truncate the response of the LLM after X milliseconds, even if it's not finished. This can be useful to speed up completions, but may result in incomplete results.",
+              "default": 500
             }
           },
           "required": []

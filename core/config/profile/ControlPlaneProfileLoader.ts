@@ -26,7 +26,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     private readonly controlPlaneClient: ControlPlaneClient,
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
-    private writeLog: (message: string) => Promise<void>,
+    private writeLog: (message: string) => void,
     private readonly onReload: () => void,
   ) {
     this.profileId = workspaceId;

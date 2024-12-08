@@ -44,7 +44,7 @@ export class AutocompleteLruCache {
       truncateSqliteLikePattern(prefix),
     );
 
-    // Validate that the cached compeltion is a valid completion for the prefix
+    // Validate that the cached completion is a valid completion for the prefix
     if (result && result.value.startsWith(prefix.slice(result.key.length))) {
       await this.db.run(
         "UPDATE cache SET timestamp = ? WHERE key = ?",

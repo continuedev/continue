@@ -1,9 +1,9 @@
-import * as fs from "fs";
-import * as os from "os";
-import { pathToFileURL } from "url";
-import * as path from "path";
 import * as JSONC from "comment-json";
 import dotenv from "dotenv";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { pathToFileURL } from "url";
 
 import { IdeType, SerializedContinueConfig } from "../";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
@@ -63,6 +63,13 @@ export function getSessionsFolderPath(): string {
     fs.mkdirSync(sessionsPath);
   }
   return sessionsPath;
+}
+export function getUserTreeSitterFolderPath(): string {
+  const treeSitterPath = path.join(getContinueGlobalPath(), "tree-sitter");
+  if (!fs.existsSync(treeSitterPath)) {
+    fs.mkdirSync(treeSitterPath);
+  }
+  return treeSitterPath;
 }
 
 export function getIndexFolderPath(): string {
