@@ -7,7 +7,7 @@ class VoyageEmbeddingsProvider extends OpenAIEmbeddingsProvider {
 
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "https://api.voyageai.com/v1/",
-    model: "voyage-code-2",
+    model: "voyage-code-3",
   };
 }
 

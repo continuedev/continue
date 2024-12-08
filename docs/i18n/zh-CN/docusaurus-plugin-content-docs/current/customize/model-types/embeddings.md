@@ -11,7 +11,7 @@ sidebar_position: 3
 
 ## 推荐的嵌入模型
 
-如果你有使用任何模型的能力，我们推荐 `voyage-code-2` ，它独立列在下面，和其他的嵌入模型选项一起。
+如果你有使用任何模型的能力，我们推荐 `voyage-code-3` ，它独立列在下面，和其他的嵌入模型选项一起。
 
 如果你想本地生成嵌入，我们推荐通过 [Ollama](../model-providers/top-level/ollama.md#嵌入模型) 使用 `nomic-embed-text` 。
 
@@ -23,7 +23,7 @@ sidebar_position: 3
 {
   "embeddingsProvider": {
     "provider": "voyage",
-    "model": "voyage-code-2",
+    "model": "voyage-code-3",
     "apiKey": "<VOYAGE_API_KEY>"
   }
 }

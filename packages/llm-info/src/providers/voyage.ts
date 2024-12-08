@@ -6,6 +6,11 @@ export const Voyage: ModelProvider = {
       model: "voyage-code-2",
       displayName: "Voyage Code 2",
       contextLength: 8096,
+    },
+    {
+      model: "voyage-code-3",
+      displayName: "Voyage Code 3",
+      contextLength: 8096,
       recommendedFor: ["embed"],
     },
     {

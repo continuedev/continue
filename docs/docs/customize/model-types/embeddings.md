@@ -19,7 +19,7 @@ The free trial supports embeddings (provider: `free-trial`)
 
 ## Recommended embedding models
 
-If you have the ability to use any model, we recommend `voyage-code-2`, which is listed below along with the rest of the options for embeddings models.
+If you have the ability to use any model, we recommend `voyage-code-3`, which is listed below along with the rest of the options for embeddings models.
 
 If you want to generate embeddings locally, we recommend using `nomic-embed-text` with [Ollama](../model-providers/top-level/ollama.md#embeddings-model).
 
@@ -31,7 +31,7 @@ After obtaining an API key from [here](https://www.voyageai.com/), you can confi
 {
   "embeddingsProvider": {
     "provider": "voyage",
-    "model": "voyage-code-2",
+    "model": "voyage-code-3",
     "apiKey": "<VOYAGE_API_KEY>"
   }
 }
