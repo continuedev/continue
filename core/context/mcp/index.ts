@@ -105,34 +105,34 @@ class MCPConnectionSingleton {
         return config;
       }
     }
-  
+
+    const capabilities = this.client.getServerCapabilities();
+
     // Resources <—> Context Provider
-    const rawResources = await this.checkClientAttribute(() => this.client.listResources());
-    if (rawResources && rawResources.resources) {
-      const submenuItems = rawResources.resources.map((resource: any) => ({
+    if (capabilities?.resources) {
+      const { resources } = await this.client.listResources();
+      const submenuItems = resources.map((resource: any) => ({
         title: resource.name,
         description: resource.description,
         id: resource.uri,
       }));
-  
+
       if (!config.contextProviders) {
         config.contextProviders = [];
       }
-  
+
       config.contextProviders.push(
         new MCPContextProvider({
           submenuItems,
           client: this.client,
         }),
       );
-    } else {
-      console.warn("Failed to retrieve resources or resources are empty");
     }
-  
+
     // Tools <—> Tools
-    const rawTools = await this.checkClientAttribute(() => this.client.listTools());
-    if (rawTools && rawTools.tools) {
-      const continueTools: Tool[] = rawTools.tools.map((tool: any) => ({
+    if (capabilities?.tools) {
+      const { tools } = await this.client.listTools();
+      const continueTools: Tool[] = tools.map((tool: any) => ({
         displayTitle: tool.name,
         function: {
           description: tool.description,
@@ -144,33 +144,29 @@ class MCPConnectionSingleton {
         wouldLikeTo: `use the ${tool.name} tool`,
         uri: `mcp://${tool.name}`,
       }));
-  
+
       config.tools = [...config.tools, ...continueTools];
-    } else {
-      console.warn("Failed to retrieve tools or tools are empty");
     }
-  
+
     // Prompts <—> Slash commands
-    const rawPrompts = await this.checkClientAttribute(() => this.client.listPrompts());
-    if (rawPrompts && rawPrompts.prompts) {
+    if (capabilities?.prompts) {
+      const { prompts } = await this.client.listPrompts();
       if (!config.slashCommands) {
         config.slashCommands = [];
       }
-  
-      const slashCommands: SlashCommand[] = rawPrompts.prompts.map((prompt: any) => 
+
+      const slashCommands: SlashCommand[] = prompts.map((prompt: any) =>
         constructMcpSlashCommand(
           this.client,
           prompt.name,
           prompt.description,
           prompt.arguments?.map((a: any) => a.name),
-        )
+        ),
       );
-  
+
       config.slashCommands.push(...slashCommands);
-    } else {
-      console.warn("Failed to retrieve prompts or prompts are empty");
     }
-  
+
     return config;
   }
 }
