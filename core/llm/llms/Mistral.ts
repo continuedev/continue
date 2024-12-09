@@ -11,6 +11,7 @@ class Mistral extends OpenAI {
     promptTemplates: {
       edit: gptEditPrompt,
     },
+    maxEmbeddingBatchSize: 128,
   };
 
   constructor(options: LLMOptions) {

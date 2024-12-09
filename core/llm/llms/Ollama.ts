@@ -58,6 +58,7 @@ class Ollama extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:11434/",
     model: "codellama-7b",
+    maxEmbeddingBatchSize: 64,
   };
 
   private fimSupported: boolean = false;
@@ -399,6 +400,32 @@ class Ollama extends BaseLLM {
         "Failed to list Ollama models. Make sure Ollama is running.",
       );
     }
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const resp = await this.fetch(new URL("api/embed", this.apiBase), {
+      method: "POST",
+      body: JSON.stringify({
+        model: this.model,
+        input: chunks,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(`Failed to embed chunk: ${await resp.text()}`);
+    }
+
+    const data = await resp.json();
+    const embedding: number[][] = data.embeddings;
+
+    if (!embedding || embedding.length === 0) {
+      throw new Error("Ollama generated empty embedding");
+    }
+    return embedding;
   }
 }
 

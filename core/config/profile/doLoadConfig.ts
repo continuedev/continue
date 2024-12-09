@@ -10,7 +10,6 @@ import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsP
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { controlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
-import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
@@ -111,9 +110,7 @@ async function injectControlPlaneProxyInfo(
   );
 
   if (config.embeddingsProvider?.providerName === "continue-proxy") {
-    (
-      config.embeddingsProvider as ContinueProxyEmbeddingsProvider
-    ).controlPlaneProxyInfo = info;
+    (config.embeddingsProvider as ContinueProxy).controlPlaneProxyInfo = info;
   }
 
   if (config.reranker?.providerName === "continue-proxy") {

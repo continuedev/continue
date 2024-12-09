@@ -10,6 +10,7 @@ They are purely a translation layer, and are not concerned with:
 - Keeping track of system message (it will always be the first message with a systemMesage)
 - Keeping a private variable with anything that is already passed through the OpenAI request body
 - Appending "/" to the apiBase (but this is TODO)
+- Batching embeddings (yes, it requires some knowledge of max batch size, but it's more important to maintain 1 req = 1 req)
 
 They are concerned with:
 

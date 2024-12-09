@@ -10,7 +10,31 @@ class Nvidia extends OpenAI {
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://integrate.api.nvidia.com/v1/",
     useLegacyCompletionsEndpoint: false,
+    maxEmbeddingBatchSize: 96,
   };
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const resp = await this.fetch(new URL("embeddings", this.apiBase), {
+      method: "POST",
+      body: JSON.stringify({
+        input: chunks,
+        model: this.model,
+        input_type: "passage",
+        truncate: "END",
+      }),
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    return data.data.map((result: { embedding: number[] }) => result.embedding);
+  }
 }
 
 export default Nvidia;

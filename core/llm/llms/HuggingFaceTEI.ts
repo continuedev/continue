@@ -1,6 +1,6 @@
 import { LLMOptions } from "../../index.js";
-import { BaseLLM } from "../../llm/index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+import { BaseLLM } from "../index.js";
 
 class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
   static providerName = "huggingface-tei";

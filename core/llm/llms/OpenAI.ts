@@ -1,4 +1,5 @@
 import { ChatCompletionCreateParams } from "openai/resources/index";
+
 import {
   ChatMessage,
   CompletionOptions,
@@ -56,8 +57,9 @@ class OpenAI extends BaseLLM {
   }
 
   static providerName = "openai";
-  static defaultOptions: Partial<LLMOptions> = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "https://api.openai.com/v1/",
+    maxEmbeddingBatchSize: 128,
   };
 
   protected _convertModelName(model: string): string {
@@ -324,6 +326,44 @@ class OpenAI extends BaseLLM {
 
     const data = await response.json();
     return data.data.map((m: any) => m.id);
+  }
+
+  private _getEmbedEndpoint() {
+    if (!this.apiBase) {
+      throw new Error(
+        "No API base URL provided. Please set the 'apiBase' option in config.json",
+      );
+    }
+
+    if (this.apiType === "azure") {
+      return new URL(
+        `openai/deployments/${this.deployment}/embeddings?api-version=${this.apiVersion}`,
+        this.apiBase,
+      );
+    }
+    return new URL("embeddings", this.apiBase);
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const resp = await this.fetch(this._getEmbedEndpoint(), {
+      method: "POST",
+      body: JSON.stringify({
+        input: chunks,
+        model: this.model,
+      }),
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+        "api-key": this.apiKey ?? "", // For Azure
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    return data.data.map((result: { embedding: number[] }) => result.embedding);
   }
 }
 

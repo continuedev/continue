@@ -1,8 +1,8 @@
-import { IndexingProgressUpdate } from "core";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { isJetBrains } from "../../../util";
 import { XCircleIcon } from "@heroicons/react/24/outline";
+import { IndexingProgressUpdate } from "core";
+import TransformersJsEmbeddingsProvider from "core/llm/llms/TransformersJsEmbeddingsProvider";
 import { useAppSelector } from "../../../redux/hooks";
+import { isJetBrains } from "../../../util";
 
 export interface IndexingProgressErrorTextProps {
   update: IndexingProgressUpdate;

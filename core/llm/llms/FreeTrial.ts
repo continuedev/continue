@@ -1,14 +1,22 @@
 import { TRIAL_FIM_MODEL } from "../../config/onboarding.js";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { TRIAL_PROXY_URL } from "../../control-plane/client.js";
-import { ChatMessage, CompletionOptions } from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 class FreeTrial extends BaseLLM {
   static providerName = "free-trial";
+  static defaultOptions: Partial<LLMOptions> | undefined = {
+    maxEmbeddingBatchSize: 128,
+  };
 
   private ghAuthToken: string | undefined = undefined;
+
+  constructor(options: LLMOptions) {
+    super(options);
+    this.embeddingId = `${this.constructor.name}::${this.model}`;
+  }
 
   setupGhAuthToken(ghAuthToken: string | undefined) {
     this.ghAuthToken = ghAuthToken;
@@ -196,6 +204,27 @@ class FreeTrial extends BaseLLM {
       "claude-3-haiku-20240307",
       "gemini-1.5-pro-latest",
     ];
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const resp = await this.fetch(new URL("embeddings", TRIAL_PROXY_URL), {
+      method: "POST",
+      body: JSON.stringify({
+        input: chunks,
+        model: this.model,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        ...(await getHeaders()),
+      },
+    });
+
+    if (resp.status !== 200) {
+      throw new Error(`Failed to embed: ${resp.status} ${await resp.text()}`);
+    }
+
+    const data = (await resp.json()) as any;
+    return data.embeddings;
   }
 }
 

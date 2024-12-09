@@ -745,17 +745,33 @@ export abstract class BaseLLM implements ILLM {
   }
 
   async embed(chunks: string[]): Promise<number[][]> {
-    if (this.shouldUseOpenAIAdapter("embed")) {
-      const result = await this.openaiAdapter.embed({
-        model: this.model,
-        input: chunks,
-      });
-      return result.data.map((chunk) => chunk.embedding);
-    }
+    const batches = this.getBatchedChunks(chunks);
 
-    throw new Error(
-      `Embedding is not supported for provider type ${this.providerName}`,
-    );
+    return (
+      await Promise.all(
+        batches.map(async (batch) => {
+          if (batch.length === 0) {
+            return [];
+          }
+
+          const embeddings = await withExponentialBackoff<number[][]>(
+            async () => {
+              if (this.shouldUseOpenAIAdapter("embed")) {
+                const result = await this.openaiAdapter.embed({
+                  model: this.model,
+                  input: chunks,
+                });
+                return result.data.map((chunk) => chunk.embedding);
+              }
+
+              return await this._embed(chunks);
+            },
+          );
+
+          return embeddings;
+        }),
+      )
+    ).flat();
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
@@ -814,6 +830,12 @@ export abstract class BaseLLM implements ILLM {
       completion += chunk;
     }
     return completion;
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    throw new Error(
+      `Embedding is not supported for provider type ${this.providerName}`,
+    );
   }
 
   countTokens(text: string): number {

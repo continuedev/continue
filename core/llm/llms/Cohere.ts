@@ -7,6 +7,7 @@ class Cohere extends BaseLLM {
   static providerName = "cohere";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.cohere.ai/v1",
+    maxEmbeddingBatchSize: 96,
   };
   static maxStopSequences = 5;
 
@@ -84,6 +85,30 @@ class Cohere extends BaseLLM {
         yield { role: "assistant", content: value.text };
       }
     }
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const resp = await this.fetch(new URL("embed", this.apiBase), {
+      method: "POST",
+      body: JSON.stringify({
+        texts: chunks,
+        model: this.model,
+        input_type: "search_document",
+        embedding_types: ["float"],
+        truncate: "END",
+      }),
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    return data.embeddings.float;
   }
 }
 

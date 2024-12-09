@@ -9,6 +9,10 @@ let watsonxToken = {
 };
 
 class WatsonX extends BaseLLM {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
+    maxEmbeddingBatchSize: 1000,
+  };
+
   constructor(options: LLMOptions) {
     super(options);
   }
@@ -259,6 +263,59 @@ class WatsonX extends BaseLLM {
         };
       }
     }
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    var now = new Date().getTime() / 1000;
+    if (
+      watsonxToken === undefined ||
+      now > watsonxToken.expiration ||
+      watsonxToken.token === undefined
+    ) {
+      watsonxToken = await this.getBearerToken();
+    } else {
+      console.log(
+        `Reusing token (expires in ${
+          (watsonxToken.expiration - now) / 60
+        } mins)`,
+      );
+    }
+    const payload: any = {
+      inputs: chunks,
+      parameters: {
+        truncate_input_tokens: 500,
+        return_options: { input_text: false },
+      },
+      model_id: this.model,
+      project_id: this.projectId,
+    };
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `${
+        watsonxToken.expiration === -1 ? "ZenApiKey" : "Bearer"
+      } ${watsonxToken.token}`,
+    };
+    const resp = await this.fetch(
+      new URL(
+        `${this.apiBase}/ml/v1/text/embeddings?version=${this.apiVersion}`,
+      ),
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: headers,
+      },
+    );
+
+    if (!resp.ok) {
+      throw new Error(`Failed to embed chunk: ${await resp.text()}`);
+    }
+    const data = await resp.json();
+    const embeddings = data.results;
+
+    if (!embeddings || embeddings.length === 0) {
+      throw new Error("Watsonx generated empty embedding");
+    }
+    return embeddings.map((e: any) => e.embedding);
   }
 }
 

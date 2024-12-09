@@ -14,6 +14,7 @@ import {
 import { ConfigHandler } from "../../config/ConfigHandler";
 import { addContextProvider } from "../../config/util";
 import DocsContextProvider from "../../context/providers/DocsContextProvider";
+import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import { FromCoreProtocol, ToCoreProtocol } from "../../protocol";
 import { fetchFavicon, getFaviconBase64 } from "../../util/fetchFavicon";
 import { GlobalContext } from "../../util/GlobalContext";
@@ -24,7 +25,6 @@ import {
   getLanceDbPath,
 } from "../../util/paths";
 import { Telemetry } from "../../util/posthog";
-import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider";
 
 import { Article, chunkArticle, pageToArticle } from "./article";
 import DocsCrawler from "./DocsCrawler";

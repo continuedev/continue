@@ -1,4 +1,5 @@
 import {
+  InvokeEndpointCommand,
   InvokeEndpointWithResponseStreamCommand,
   SageMakerRuntimeClient,
 } from "@aws-sdk/client-sagemaker-runtime";
@@ -11,11 +12,14 @@ import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 
 class SageMaker extends BaseLLM {
-  private static PROFILE_NAME: string = "sagemaker";
+  private static DEFAULT_PROFILE_NAME: string = "sagemaker";
+
   static providerName = "sagemaker";
+
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-west-2",
     contextLength: 200_000,
+    maxEmbeddingBatchSize: 1,
   };
 
   constructor(options: LLMOptions) {
@@ -23,6 +27,8 @@ class SageMaker extends BaseLLM {
     if (!options.apiBase) {
       this.apiBase = `https://runtime.sagemaker.${options.region}.amazonaws.com`;
     }
+
+    this.profile ??= SageMaker.DEFAULT_PROFILE_NAME;
   }
 
   protected async *_streamComplete(
@@ -125,14 +131,60 @@ class SageMaker extends BaseLLM {
   private async _getCredentials() {
     try {
       return await fromIni({
-        profile: SageMaker.PROFILE_NAME,
+        profile: this.profile,
       })();
     } catch (e) {
       console.warn(
-        `AWS profile with name ${SageMaker.PROFILE_NAME} not found in ~/.aws/credentials, using default profile`,
+        `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
       );
       return await fromIni()();
     }
+  }
+
+  async embed(chunks: string[]) {
+    const credentials = await this._getCredentials();
+    const client = new SageMakerRuntimeClient({
+      region: this.region,
+      credentials: {
+        accessKeyId: credentials.accessKeyId,
+        secretAccessKey: credentials.secretAccessKey,
+        sessionToken: credentials.sessionToken || "",
+      },
+    });
+
+    const input = this._generateInvokeModelCommandInput(chunks);
+    const command = new InvokeEndpointCommand(input);
+    const response = await client.send(command);
+
+    if (response.Body) {
+      const responseBody = JSON.parse(new TextDecoder().decode(response.Body));
+      // If the body contains a key called "embedding" or "embeddings", return the value, otherwise return the whole body
+      if (responseBody.embedding) {
+        return responseBody.embedding;
+      } else if (responseBody.embeddings) {
+        return responseBody.embeddings;
+      } else {
+        return responseBody;
+      }
+    }
+  }
+  private _generateInvokeModelCommandInput(prompts: string | string[]): any {
+    const payload = {
+      inputs: prompts,
+      normalize: true,
+      // ...(options.requestOptions?.extraBodyProperties || {}),
+    };
+
+    if (this.requestOptions?.extraBodyProperties) {
+      Object.assign(payload, this.requestOptions.extraBodyProperties);
+    }
+
+    return {
+      EndpointName: this.model,
+      Body: JSON.stringify(payload),
+      ContentType: "application/json",
+      CustomAttributes: "accept_eula=false",
+    };
   }
 }
 
