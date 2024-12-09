@@ -1,10 +1,10 @@
-import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { ChatMessage, CompletionOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 export default class Cloudflare extends BaseLLM {
-  static providerName: ModelProvider = "cloudflare";
+  static providerName = "cloudflare";
 
   private _convertArgs(options: CompletionOptions) {
     const finalOptions = {

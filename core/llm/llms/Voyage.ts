@@ -1,21 +1,13 @@
-import fetch from "node-fetch";
+import { Chunk, LLMOptions } from "../../index.js";
 
-import { Chunk, Reranker } from "../../index.js";
+import OpenAI from "./OpenAI.js";
 
-export class VoyageReranker implements Reranker {
-  name = "voyage";
-
-  constructor(
-    private readonly params: {
-      apiKey: string;
-      model?: string;
-      apiBase?: string;
-    },
-  ) {}
-
-  private get apiBase() {
-    return this.params.apiBase ?? "https://api.voyageai.com/v1/";
-  }
+class Voyage extends OpenAI {
+  static providerName = "voyage";
+  static defaultOptions: Partial<LLMOptions> | undefined = {
+    apiBase: "https://api.voyageai.com/v1/",
+    maxEmbeddingBatchSize: 128,
+  };
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
     if (!query || chunks.length === 0) {
@@ -26,12 +18,12 @@ export class VoyageReranker implements Reranker {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.params.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify({
         query,
         documents: chunks.map((chunk) => chunk.content),
-        model: this.params.model ?? "rerank-2",
+        model: this.model ?? "rerank-2",
       }),
     });
 
@@ -48,3 +40,5 @@ export class VoyageReranker implements Reranker {
     return results.map((result) => result.relevance_score);
   }
 }
+
+export default Voyage;

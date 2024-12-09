@@ -1,4 +1,4 @@
-import { ILLM, ModelProvider } from "core";
+import { ILLM } from "core";
 import { ModelProviderTags } from "../../../components/modelSelection/utils";
 import { InputDescriptor } from "./providers";
 
@@ -26,7 +26,7 @@ export interface ModelPackage {
     [key: string]: any;
   };
   dimensions?: PackageDimension[];
-  providerOptions?: ModelProvider[];
+  providerOptions?: string[];
   isOpenSource: boolean;
 }
 
