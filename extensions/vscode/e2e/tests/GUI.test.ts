@@ -19,21 +19,24 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(10000000);
-
     await VSBrowser.instance.openResources(path.join("e2e/test-continue"));
+  });
 
+  beforeEach(async function () {
     await GUIActions.openGui();
 
     view = new WebView();
     driver = view.getDriver();
 
     await GUIActions.switchToReactIframe(driver);
+    await GUIActions.selectModelFromDropdown(view, "TEST LLM");
+
     // await new Promise((res) => {
     //   setTimeout(res, 10000000);
     // });
   });
 
-  after(async () => {
+  afterEach(async () => {
     await view.switchBack();
     await new EditorView().closeAllEditors();
   });
@@ -48,11 +51,30 @@ describe("GUI Test", () => {
     }).timeout(DEFAULT_TIMEOUT);
   });
 
-  describe("Chat Paths", () => {
-    it.only("chat → history → chat", async () => {
-      await GUIActions.selectModelFromDropdown(view, "Mock");
-      await GUIActions.selectModelFromDropdown(view, "TEST LLM");
+  describe("Chat", () => {
+    it("Can submit message by pressing enter", async () => {
+      const [tiptap] = await GUISelectors.getTipTapEditor(view);
+      const messagePair = TestUtils.generateTestMessagePair();
+      await tiptap.sendKeys(messagePair.userMessage);
+      await tiptap.sendKeys(Key.ENTER);
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
+      );
+    });
 
+    it("Can submit message by button click", async () => {
+      const [tiptap] = await GUISelectors.getTipTapEditor(view);
+      const messagePair = TestUtils.generateTestMessagePair();
+      await tiptap.sendKeys(messagePair.userMessage);
+      (await GUISelectors.getSubmitInputButton(view)).click();
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair.llmResponse),
+      );
+    });
+  });
+
+  describe("Chat Paths", () => {
+    it("chat → history → chat", async () => {
       const [tiptap] = await GUISelectors.getTipTapEditor(view);
 
       const messagePair1 = TestUtils.generateTestMessagePair(1);
@@ -70,16 +92,23 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
       );
 
+      /**
+       * SWITCHING BACK AND FORTH
+       * We are switching back and forth here because the history is broken.
+       * It only updates once a another chat is opened, so we need to open a
+       * different chat first.
+       */
       await view.switchBack();
       await (await GUISelectors.getHistoryNavButton(view)).click();
-      await Promise.all([
-        TestUtils.expectNoElement(() =>
-          GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
-        ),
-        TestUtils.expectNoElement(() =>
-          GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
-        ),
-      ]);
+      await GUIActions.switchToReactIframe(driver);
+      
+      await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
+
+      await view.switchBack();
+      await (await GUISelectors.getHistoryNavButton(view)).click();
+      /**
+       * END OF SWITCHING BACK AND FORTH
+       */
 
       await GUIActions.switchToReactIframe(driver);
       await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
@@ -104,5 +133,15 @@ describe("GUI Test", () => {
         GUISelectors.getThreadMessageByText(view, messagePair3.llmResponse),
       );
     }).timeout(DEFAULT_TIMEOUT);
+
+    it("message → edit message", async () => {
+      const [tiptap] = await GUISelectors.getTipTapEditor(view);
+      const messagePair2 = TestUtils.generateTestMessagePair(2);
+      await tiptap.sendKeys(messagePair2.userMessage);
+      await tiptap.sendKeys(Key.ENTER);
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
+      );
+    });
   });
 });

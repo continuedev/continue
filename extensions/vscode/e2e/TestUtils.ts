@@ -50,7 +50,7 @@ export class TestUtils {
     expect(elementFound).to.be.false;
   }
 
-  public static generateTestMessagePair(id: number): {
+  public static generateTestMessagePair(id: number = 0): {
     userMessage: string;
     llmResponse: string;
   } {
