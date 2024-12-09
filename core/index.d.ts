@@ -59,14 +59,7 @@ export interface IndexingStatus {
   type: "docs";
   progress: number;
   description: string;
-  status:
-    | "indexing"
-    | "complete"
-    | "paused"
-    | "failed"
-    | "aborted"
-    | "deleted"
-    | "pending";
+  status: "indexing" | "complete" | "paused" | "failed" | "aborted" | "pending";
   embeddingsProviderId: string;
   isReindexing?: boolean;
   debugInfo?: string;

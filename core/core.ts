@@ -735,7 +735,7 @@ export class Core {
     });
     on("indexing/setPaused", async (msg) => {
       if (msg.data.type === "docs") {
-        this.docsService.setPaused(msg.data.id, msg.data.paused);
+        // this.docsService.setPaused(msg.data.id, msg.data.paused);
       }
     });
     on("docs/getSuggestedDocs", async (msg) => {
