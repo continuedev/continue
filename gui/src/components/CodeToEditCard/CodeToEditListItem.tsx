@@ -6,9 +6,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { getLastNPathParts, getMarkdownLanguageTagForFile } from "core/util";
+import { getMarkdownLanguageTagForFile } from "core/util";
 import styled from "styled-components";
 import { CodeToEdit } from "core";
+import { getLastNPathParts } from "core/util/uri";
 
 export interface CodeToEditListItemProps {
   code: CodeToEdit;

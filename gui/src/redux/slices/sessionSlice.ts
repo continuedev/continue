@@ -26,6 +26,7 @@ import { v4 as uuidv4 } from "uuid";
 import { RootState } from "../store";
 import { streamResponseThunk } from "../thunks/streamResponse";
 import { findCurrentToolCall } from "../util";
+import { getFileName, getRelativePath } from "core/util/uri";
 
 // We need this to handle reorderings (e.g. a mid-array deletion) of the messages array.
 // The proper fix is adding a UUID to all chat messages, but this is the temp workaround.
@@ -392,17 +393,19 @@ export const sessionSlice = createSlice({
         return { ...item, editing: false };
       });
 
-      const base = payload.rangeInFileWithContents.filepath
-        .split(/[\\/]/)
-        .pop();
+      const relativeFilepath = getRelativePath(
+        payload.rangeInFileWithContents.filepath,
+        window.workspacePaths ?? [],
+      );
+      const fileName = getFileName(payload.rangeInFileWithContents.filepath);
 
       const lineNums = `(${
         payload.rangeInFileWithContents.range.start.line + 1
       }-${payload.rangeInFileWithContents.range.end.line + 1})`;
 
       contextItems.push({
-        name: `${base} ${lineNums}`,
-        description: payload.rangeInFileWithContents.filepath,
+        name: `${fileName} ${lineNums}`,
+        description: relativeFilepath,
         id: {
           providerTitle: "code",
           itemId: uuidv4(),
@@ -410,6 +413,10 @@ export const sessionSlice = createSlice({
         content: payload.rangeInFileWithContents.contents,
         editing: true,
         editable: true,
+        uri: {
+          type: "file",
+          value: payload.rangeInFileWithContents.filepath,
+        },
       });
 
       state.history[state.history.length - 1].contextItems = contextItems;

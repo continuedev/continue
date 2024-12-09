@@ -1,8 +1,7 @@
-import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import { getBasename } from "core/util";
 import FileIcon from "../../FileIcon";
 import { useContext } from "react";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { getFileName } from "core/util/uri";
 
 export interface FileInfoProps {
   filepath: string;
@@ -26,7 +25,7 @@ const FileInfo = ({ filepath, range }: FileInfoProps) => {
       >
         <FileIcon height="20px" width="20px" filename={filepath} />
         <span className="w-full truncate hover:underline">
-          {getBasename(filepath)}
+          {getFileName(filepath)}
           {range && ` ${range}`}
         </span>
       </div>
