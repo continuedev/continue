@@ -1,5 +1,6 @@
 import path from "path";
 
+import { LLMOptions } from "../../index.js";
 import { BaseLLM } from "../../llm/index.js";
 // @ts-ignore
 // prettier-ignore
@@ -42,6 +43,10 @@ export class TransformersJsEmbeddingsProvider extends BaseLLM {
   static maxGroupSize: number = 1;
   static model: string = "all-MiniLM-L6-v2";
   static mockVector: number[] = Array.from({ length: 384 }).fill(2) as number[];
+
+  static defaultOptions: Partial<LLMOptions> | undefined = {
+    model: TransformersJsEmbeddingsProvider.model,
+  };
 
   constructor() {
     super({ model: TransformersJsEmbeddingsProvider.model });

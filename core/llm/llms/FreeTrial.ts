@@ -14,6 +14,7 @@ class FreeTrial extends BaseLLM {
   static providerName = "free-trial";
   static defaultOptions: Partial<LLMOptions> | undefined = {
     maxEmbeddingBatchSize: 128,
+    model: "voyage-code-2",
   };
 
   private ghAuthToken: string | undefined = undefined;
@@ -155,7 +156,7 @@ class FreeTrial extends BaseLLM {
       };
       completion += chunk;
     }
-    this._countTokens(completion, args.model, false);
+    await this._countTokens(completion, args.model, false);
   }
 
   supportsFim(): boolean {
@@ -187,7 +188,7 @@ class FreeTrial extends BaseLLM {
         yield value;
         completion += value;
       }
-      this._countTokens(completion, args.model, false);
+      await this._countTokens(completion, args.model, false);
     } catch (e: any) {
       if (e.message.startsWith("HTTP 429")) {
         throw new Error(
