@@ -10,6 +10,7 @@ import {
   showWhateverWeHaveAtXMs,
   skipPrefixes,
   stopAtLines,
+  stopAtLinesExact,
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
@@ -42,6 +43,12 @@ export class StreamTransformPipeline {
     let lineGenerator = streamLines(charGenerator);
 
     lineGenerator = stopAtLines(lineGenerator, fullStop);
+    const lineBelowCursor = this.getLineBelowCursor(helper);
+    if (lineBelowCursor.trim() !== "") {
+      lineGenerator = stopAtLinesExact(lineGenerator, fullStop, [
+        lineBelowCursor,
+      ]);
+    }
     lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
     lineGenerator = avoidEmptyComments(
       lineGenerator,

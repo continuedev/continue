@@ -25,59 +25,75 @@ function breakdownArticleComponent(
   max_chunk_size: number,
 ): Chunk[] {
   const chunks: Chunk[] = [];
-
   const lines = article.body.split("\n");
   let startLine = 0;
   let endLine = 0;
   let content = "";
   let index = 0;
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    if (content.length + line.length <= max_chunk_size) {
-      content += `${line}\n`;
-      endLine = i;
-    } else {
-      chunks.push({
-        content: content.trim(),
-        startLine: startLine,
-        endLine: endLine,
-        otherMetadata: {
-          title: cleanHeader(article.title),
-        },
-        index: index,
-        filepath: new URL(
-          `${subpath}#${cleanFragment(article.title)}`,
-          url,
-        ).toString(),
-        digest: subpath,
-      });
-      content = `${line}\n`;
-      startLine = i;
-      endLine = i;
-      index += 1;
-    }
-  }
-
-  // Push the last chunk
-  if (content) {
+  const createChunk = (
+    chunkContent: string,
+    chunkStartLine: number,
+    chunkEndLine: number,
+  ) => {
     chunks.push({
-      content: content.trim(),
-      startLine: startLine,
-      endLine: endLine,
+      content: chunkContent.trim(),
+      startLine: chunkStartLine,
+      endLine: chunkEndLine,
       otherMetadata: {
         title: cleanHeader(article.title),
       },
-      index: index,
+      index: index++,
       filepath: new URL(
         `${subpath}#${cleanFragment(article.title)}`,
         url,
       ).toString(),
       digest: subpath,
     });
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Handle oversized lines by splitting them
+    if (line.length > max_chunk_size) {
+      // First push any accumulated content
+      if (content.trim().length > 0) {
+        createChunk(content, startLine, endLine);
+        content = "";
+      }
+
+      // Split the long line into chunks
+      let remainingLine = line;
+      let subLineStart = i;
+      while (remainingLine.length > 0) {
+        const chunk = remainingLine.slice(0, max_chunk_size);
+        createChunk(chunk, subLineStart, i);
+        remainingLine = remainingLine.slice(max_chunk_size);
+      }
+      startLine = i + 1;
+      continue;
+    }
+
+    // Normal line handling
+    if (content.length + line.length + 1 <= max_chunk_size) {
+      content += `${line}\n`;
+      endLine = i;
+    } else {
+      if (content.trim().length > 0) {
+        createChunk(content, startLine, endLine);
+      }
+      content = `${line}\n`;
+      startLine = i;
+      endLine = i;
+    }
   }
 
-  // Don't use small chunks. Probably they're a mistake. Definitely they'll confuse the embeddings model.
+  // Push the last chunk
+  if (content.trim().length > 0) {
+    createChunk(content, startLine, endLine);
+  }
+
   return chunks.filter((c) => c.content.trim().length > 20);
 }
 

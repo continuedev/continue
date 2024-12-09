@@ -101,6 +101,10 @@ export class ContinueCompletionProvider
       return null;
     }
 
+    if (document.uri.scheme === "vscode-scm") {
+      return null;
+    }
+
     // If the text at the range isn't a prefix of the intellisense text,
     // no completion will be displayed, regardless of what we return
     if (

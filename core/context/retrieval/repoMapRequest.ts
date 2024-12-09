@@ -66,7 +66,6 @@ This is the question that you should select relevant files for: "${input}"`;
       new AbortController().signal,
     );
     const content = renderChatMessage(response);
-    console.debug("Repo map retrieval response: ", content);
 
     if (!content.includes("\n")) {
       return [];

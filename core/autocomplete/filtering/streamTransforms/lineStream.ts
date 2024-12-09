@@ -2,7 +2,6 @@ import { distance } from "fastest-levenshtein";
 
 import { DiffLine } from "../../..";
 import { LineStream } from "../../../diff/util";
-import { BRACKETS, BRACKETS_REVERSE } from "../BracketMatchingService";
 
 export type LineFilter = (args: {
   lines: LineStream;
@@ -263,6 +262,20 @@ export async function* stopAtLines(
 ): LineStream {
   for await (const line of stream) {
     if (linesToStopAt.some((stopAt) => line.trim().includes(stopAt))) {
+      fullStop();
+      break;
+    }
+    yield line;
+  }
+}
+
+export async function* stopAtLinesExact(
+  stream: LineStream,
+  fullStop: () => void,
+  linesToStopAt: string[],
+): LineStream {
+  for await (const line of stream) {
+    if (linesToStopAt.some((stopAt) => line === stopAt)) {
       fullStop();
       break;
     }

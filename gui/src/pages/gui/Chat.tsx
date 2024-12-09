@@ -7,6 +7,7 @@ import {
 import { Editor, JSONContent } from "@tiptap/react";
 import { InputModifiers, RangeInFileWithContents, ToolCallState } from "core";
 import { streamResponse } from "core/llm/stream";
+import { stripImages } from "core/util/messageContent";
 import { usePostHog } from "posthog-js/react";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -19,22 +20,30 @@ import {
   vscBackground,
 } from "../../components";
 import { ChatScrollAnchor } from "../../components/ChatScrollAnchor";
+import CodeToEditCard from "../../components/CodeToEditCard";
+import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
 import { useFindWidget } from "../../components/find/FindWidget";
 import TimelineItem from "../../components/gui/TimelineItem";
 import ChatIndexingPeeks from "../../components/indexing/ChatIndexingPeeks";
 import ContinueInputBox from "../../components/mainInput/ContinueInputBox";
 import { NewSessionButton } from "../../components/mainInput/NewSessionButton";
+import resolveEditorContent from "../../components/mainInput/resolveInput";
 import { TutorialCard } from "../../components/mainInput/TutorialCard";
 import {
   OnboardingCard,
   useOnboardingCard,
 } from "../../components/OnboardingCard";
+import PageHeader from "../../components/PageHeader";
 import StepContainer from "../../components/StepContainer";
+import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import useHistory from "../../hooks/useHistory";
 import { useTutorialCard } from "../../hooks/useTutorialCard";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { selectCurrentToolCall } from "../../redux/selectors/selectCurrentToolCall";
+import { selectDefaultModel } from "../../redux/slices/configSlice";
+import { submitEdit } from "../../redux/slices/editModeState";
 import {
   clearLastEmptyResponse,
   newSession,
@@ -42,6 +51,14 @@ import {
   selectIsSingleRangeEditOrInsertion,
   setInactive,
 } from "../../redux/slices/sessionSlice";
+import {
+  setDialogEntryOn,
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiSlice";
+import { RootState } from "../../redux/store";
+import { cancelStream } from "../../redux/thunks/cancelStream";
+import { exitEditMode } from "../../redux/thunks/exitEditMode";
 import { streamResponseThunk } from "../../redux/thunks/streamResponse";
 import {
   getFontSize,
@@ -49,29 +66,12 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
+import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import ConfigErrorIndicator from "./ConfigError";
 import { ToolCallDiv } from "./ToolCallDiv";
 import { ToolCallButtons } from "./ToolCallDiv/ToolCallButtonsDiv";
 import ToolOutput from "./ToolCallDiv/ToolOutput";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { selectDefaultModel } from "../../redux/slices/configSlice";
-import {
-  setDialogMessage,
-  setDialogEntryOn,
-  setShowDialog,
-} from "../../redux/slices/uiSlice";
-import { RootState } from "../../redux/store";
-import FeedbackDialog from "../../components/dialogs/FeedbackDialog";
-import getMultifileEditPrompt from "../../util/getMultifileEditPrompt";
-import { submitEdit } from "../../redux/slices/editModeState";
-import { stripImages } from "core/util/messageContent";
-import resolveEditorContent from "../../components/mainInput/resolveInput";
-import AcceptRejectAllButtons from "../../components/StepContainer/AcceptRejectAllButtons";
-import CodeToEditCard from "../../components/CodeToEditCard";
-import { exitEditMode } from "../../redux/thunks/exitEditMode";
-import PageHeader from "../../components/PageHeader";
-import Spinner from "../../components/gui/Spinner";
 
 const StopButton = styled.div`
   background-color: ${vscBackground};
@@ -135,6 +135,9 @@ export function Chat() {
   const ideMessenger = useContext(IdeMessengerContext);
   const onboardingCard = useOnboardingCard();
   const { showTutorialCard, closeTutorialCard } = useTutorialCard();
+  const selectedModelTitle = useAppSelector(
+    (store) => store.config.defaultModelTitle,
+  );
   const defaultModel = useAppSelector(selectDefaultModel);
   const ttsActive = useAppSelector((state) => state.ui.ttsActive);
   const isStreaming = useAppSelector((state) => state.session.isStreaming);
@@ -201,7 +204,7 @@ export function Chat() {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        // dispatch(cancelGeneration()); TODO!!!
+        dispatch(cancelStream());
       }
     };
     window.addEventListener("keydown", listener);
@@ -289,16 +292,17 @@ export function Chat() {
   );
 
   async function handleSingleRangeEditOrInsertion(editorState: JSONContent) {
-    const [contextItems, __, userInstructions] = await resolveEditorContent(
+    const [contextItems, __, userInstructions] = await resolveEditorContent({
       editorState,
-      {
+      modifiers: {
         noContext: true,
         useCodebase: false,
       },
       ideMessenger,
-      [],
+      defaultContextProviders: [],
       dispatch,
-    );
+      selectedModelTitle,
+    });
 
     const prompt = [
       ...contextItems.map((item) => item.content),
@@ -338,7 +342,7 @@ export function Chat() {
     <>
       {isInEditMode && (
         <PageHeader
-          title="Chat"
+          title="Back to Chat"
           onClick={() => {
             loadLastSession().catch((e) =>
               console.error(`Failed to load last session: ${e}`),
@@ -492,19 +496,23 @@ export function Chat() {
           }}
         >
           <div className="flex flex-row items-center justify-between pb-1 pl-0.5 pr-2">
-            {history.length === 0 && getLastSessionId() && !isInEditMode && (
-              <NewSessionButton
-                onClick={() =>
-                  loadLastSession().catch((e) =>
-                    console.error(`Failed to load last session: ${e}`),
-                  )
-                }
-                className="xs:inline flex hidden items-center gap-2"
-              >
-                <ArrowLeftIcon className="h-3 w-3" />
-                Last Session
-              </NewSessionButton>
-            )}
+            <div className="xs:inline hidden">
+              {history.length === 0 && getLastSessionId() && !isInEditMode && (
+                <div className="xs:inline hidden">
+                  <NewSessionButton
+                    onClick={() =>
+                      loadLastSession().catch((e) =>
+                        console.error(`Failed to load last session: ${e}`),
+                      )
+                    }
+                    className="flex items-center gap-2"
+                  >
+                    <ArrowLeftIcon className="h-3 w-3" />
+                    Last Session
+                  </NewSessionButton>
+                </div>
+              )}
+            </div>
             <ConfigErrorIndicator />
           </div>
 

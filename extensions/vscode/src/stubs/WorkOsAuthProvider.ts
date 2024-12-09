@@ -408,7 +408,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
           return await Promise.race([
             codeExchangePromise.promise,
             new Promise<string>((_, reject) =>
-              setTimeout(() => reject("Cancelled"), 60000),
+              setTimeout(() => reject("Cancelled"), 15 * 60 * 1_000),
             ),
             promiseFromEvent<any, any>(
               token.onCancellationRequested,
