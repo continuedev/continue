@@ -1,6 +1,5 @@
 import { XCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
-import TransformersJsEmbeddingsProvider from "core/llm/llms/TransformersJsEmbeddingsProvider";
 import { useAppSelector } from "../../../redux/hooks";
 import { isJetBrains } from "../../../util";
 
@@ -14,9 +13,7 @@ function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
   );
 
   const showJbError =
-    (isJetBrains() &&
-      embeddingsProvider === TransformersJsEmbeddingsProvider.model) ||
-    true;
+    (isJetBrains() && embeddingsProvider === "all-MiniLM-L6-v2") || true;
 
   if (showJbError) {
     return (
