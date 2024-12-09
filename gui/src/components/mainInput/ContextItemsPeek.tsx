@@ -9,11 +9,11 @@ import { getBasename } from "core/util";
 import { useContext, useMemo, useState } from "react";
 import { AnimatedEllipsis, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useAppSelector } from "../../redux/hooks";
+import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import { getIconFromDropdownItem } from "./MentionList";
-import { useAppSelector } from "../../redux/hooks";
-import { selectIsGatheringContext } from "../../redux/slices/sessionSlice";
 
 interface ContextItemsPeekProps {
   contextItems?: ContextItemWithId[];
@@ -172,7 +172,7 @@ function ContextItemsPeek({
         <span className="ml-1 text-xs text-gray-400 transition-colors duration-200">
           {isGatheringContext ? (
             <>
-              Gathering context...
+              Gathering context
               <AnimatedEllipsis />
             </>
           ) : (

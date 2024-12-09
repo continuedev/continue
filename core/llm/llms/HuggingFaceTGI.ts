@@ -1,10 +1,10 @@
-import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
+import { CompletionOptions, LLMOptions } from "../../index.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 class HuggingFaceTGI extends BaseLLM {
   private static MAX_STOP_TOKENS = 4;
-  static providerName: ModelProvider = "huggingface-tgi";
+  static providerName = "huggingface-tgi";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:8080/",
   };
@@ -61,7 +61,7 @@ class HuggingFaceTGI extends BaseLLM {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ inputs: prompt, parameters: args }),
-        signal
+        signal,
       },
     );
 

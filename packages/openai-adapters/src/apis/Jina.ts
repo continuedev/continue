@@ -1,5 +1,4 @@
-import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -8,8 +7,10 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
-} from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+  Model,
+} from "openai/resources/index";
+import { JinaConfig } from "../types.js";
+import { customFetch, rerank } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -20,11 +21,8 @@ import {
 export class JinaApi implements BaseLlmApi {
   apiBase: string = "https://api.jina.ai/v1/";
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: JinaConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    if (!this.apiBase.endsWith("/")) {
-      this.apiBase += "/";
-    }
   }
 
   async chatCompletionNonStream(
@@ -61,7 +59,7 @@ export class JinaApi implements BaseLlmApi {
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     const endpoint = new URL("rerank", this.apiBase);
-    const response = await fetch(endpoint, {
+    const response = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
@@ -72,16 +70,17 @@ export class JinaApi implements BaseLlmApi {
       },
     });
     const data = (await response.json()) as any;
-    return {
-      object: "list",
-      data: data.results.map((result: any) => ({
-        index: result.index,
-        relevance_score: result.relevance_score,
-      })),
+
+    return rerank({
       model: body.model,
       usage: {
         total_tokens: 0,
       },
-    };
+      data: data.results.map((result: any) => result.relevance_score),
+    });
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

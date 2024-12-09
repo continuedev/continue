@@ -1,5 +1,6 @@
 import path from "path";
 
+import { fetchwithRequestOptions } from "@continuedev/fetch";
 import ignore from "ignore";
 import { v4 as uuidv4 } from "uuid";
 
@@ -27,7 +28,6 @@ import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
-import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";
@@ -366,7 +366,6 @@ export class Core {
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
       const config = await configHandler.loadConfig();
-
       // Stop TTS on new StreamChat
       if (config.experimental?.readResponseTTS) {
         void TTS.kill();
@@ -735,7 +734,7 @@ export class Core {
     });
     on("indexing/setPaused", async (msg) => {
       if (msg.data.type === "docs") {
-        this.docsService.setPaused(msg.data.id, msg.data.paused);
+        // this.docsService.setPaused(msg.data.id, msg.data.paused);
       }
     });
     on("docs/getSuggestedDocs", async (msg) => {
@@ -860,10 +859,7 @@ export class Core {
       this.indexingCancellationController &&
       !this.indexingCancellationController.signal.aborted
     ) {
-      return console.debug(
-        "Codebase indexing already in progress, skipping indexing of files\n" +
-          files.join("\n"),
-      );
+      return;
     }
     this.indexingCancellationController = new AbortController();
     for await (const update of (await this.codebaseIndexerPromise).refreshFiles(
