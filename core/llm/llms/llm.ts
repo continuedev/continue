@@ -1,6 +1,6 @@
 import { Chunk } from "../../index.js";
-import { BaseLLM } from "../../llm/index.js";
 import { getBasename } from "../../util/index.js";
+import { BaseLLM } from "../index.js";
 
 const RERANK_PROMPT = (
   query: string,

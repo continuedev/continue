@@ -5,7 +5,6 @@ import {
   IdeSettings,
   SerializedContinueConfig,
 } from "../../";
-import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker.js";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { controlPlaneEnv } from "../../control-plane/env.js";
@@ -114,7 +113,7 @@ async function injectControlPlaneProxyInfo(
   }
 
   if (config.reranker?.providerName === "continue-proxy") {
-    (config.reranker as ContinueProxyReranker).controlPlaneProxyInfo = info;
+    (config.reranker as ContinueProxy).controlPlaneProxyInfo = info;
   }
 
   return config;

@@ -1,10 +1,9 @@
-import { LLMOptions } from "../../index.js";
+import { Chunk, LLMOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 import { BaseLLM } from "../index.js";
 
 class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
   static providerName = "huggingface-tei";
-  private _maxBatchSize?: number;
 
   static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "http://localhost:8080",
@@ -69,6 +68,38 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
       throw new Error(await resp.text());
     }
     return (await resp.json()) as TEIInfoResponse;
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.apiKey) {
+      headers["Authorization"] = `Bearer ${this.apiKey}`;
+    }
+
+    const resp = await fetch(new URL("rerank", this.apiBase), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: query,
+        return_text: false,
+        raw_scores: false,
+        texts: chunks.map((chunk) => chunk.content),
+        truncation_direction: "Right",
+        truncate: true,
+      }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    // Resort into original order and extract scores
+    const results = data.sort((a: any, b: any) => a.index - b.index);
+    return results.map((result: any) => result.score);
   }
 }
 

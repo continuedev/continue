@@ -2,7 +2,7 @@ import { ControlPlaneProxyInfo } from "../../../control-plane/analytics/IAnalyti
 import { Telemetry } from "../../../util/posthog.js";
 import OpenAI from "../OpenAI.js";
 
-import type { LLMOptions } from "../../../index.js";
+import type { Chunk, LLMOptions } from "../../../index.js";
 
 class ContinueProxy extends OpenAI {
   set controlPlaneProxyInfo(value: ControlPlaneProxyInfo) {
@@ -27,6 +27,25 @@ class ContinueProxy extends OpenAI {
 
   supportsFim(): boolean {
     return true;
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    const url = new URL("rerank", this.apiBase);
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        query,
+        documents: chunks.map((chunk) => chunk.content),
+        model: this.model,
+      }),
+    });
+    const data: any = await resp.json();
+    const results = data.data.sort((a: any, b: any) => a.index - b.index);
+    return results.map((result: any) => result.relevance_score);
   }
 }
 

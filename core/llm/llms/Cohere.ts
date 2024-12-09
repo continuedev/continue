@@ -1,4 +1,9 @@
-import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
+import {
+  ChatMessage,
+  Chunk,
+  CompletionOptions,
+  LLMOptions,
+} from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamJSON } from "../stream.js";
@@ -109,6 +114,29 @@ class Cohere extends BaseLLM {
 
     const data = (await resp.json()) as any;
     return data.embeddings.float;
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    const resp = await fetch(new URL("rerank", this.apiBase), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: this.model,
+        query,
+        documents: chunks.map((chunk) => chunk.content),
+      }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    const results = data.results.sort((a: any, b: any) => a.index - b.index);
+    return results.map((result: any) => result.relevance_score);
   }
 }
 

@@ -7,6 +7,7 @@ import { fromIni } from "@aws-sdk/credential-providers";
 
 import {
   ChatMessage,
+  Chunk,
   CompletionOptions,
   LLMOptions,
   MessageContent,
@@ -254,6 +255,56 @@ class Bedrock extends BaseLLM {
       throw new Error(`Unsupported model: ${this.model}`);
     }
     return modelConfigs[modelPrefix];
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    if (!query || !chunks.length) {
+      throw new Error("Query and chunks must not be empty");
+    }
+
+    try {
+      const credentials = await this._getCredentials();
+      const client = new BedrockRuntimeClient({
+        region: this.region,
+        credentials,
+      });
+
+      // Base payload for both models
+      const payload: any = {
+        query: query,
+        documents: chunks.map((chunk) => chunk.content),
+        top_n: chunks.length,
+      };
+
+      // Add api_version for Cohere model
+      if (this.model.startsWith("cohere.rerank")) {
+        payload.api_version = 2;
+      }
+
+      const input = {
+        body: JSON.stringify(payload),
+        modelId: this.model,
+        accept: "*/*",
+        contentType: "application/json",
+      };
+
+      const command = new InvokeModelCommand(input);
+      const response = await client.send(command);
+
+      if (!response.body) {
+        throw new Error("Empty response received from Bedrock");
+      }
+
+      const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+
+      // Sort results by index to maintain original order
+      return responseBody.results
+        .sort((a: any, b: any) => a.index - b.index)
+        .map((result: any) => result.relevance_score);
+    } catch (error) {
+      console.error("Error in BedrockReranker.rerank:", error);
+      throw error;
+    }
   }
 }
 

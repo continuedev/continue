@@ -29,6 +29,7 @@ import {
   slashCommandFromDescription,
   slashFromCustomCommand,
 } from "../commands/index.js";
+import { AllRerankers } from "../context/allRerankers";
 import MCPConnectionSingleton from "../context/mcp";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider";
@@ -36,13 +37,12 @@ import CustomContextProviderClass from "../context/providers/CustomContextProvid
 import FileContextProvider from "../context/providers/FileContextProvider";
 import { contextProviderClassFromName } from "../context/providers/index";
 import PromptFilesContextProvider from "../context/providers/PromptFilesContextProvider";
-import { AllRerankers } from "../context/rerankers/index";
-import { LLMReranker } from "../context/rerankers/llm";
 import { allEmbeddingsProviders } from "../indexing/allEmbeddingsProviders";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import FreeTrial from "../llm/llms/FreeTrial";
+import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
 import { allTools } from "../tools";
 import { copyOf } from "../util";
