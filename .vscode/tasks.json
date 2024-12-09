@@ -1,12 +1,29 @@
 {
   "version": "2.0.0",
   "tasks": [
+    {
+      "label": "tsc:watch",
+      "type": "npm",
+      "script": "tsc:watch",
+      "isBackground": true,
+      "problemMatcher": {
+        "base": "$tsc-watch",
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting compilation in watch mode...",
+          "endsPattern": "Found 0 errors"
+        }
+      },
+      "presentation": {
+        "revealProblems": "onProblem"
+      }
+    },
     // Compile and bundle the extension
     {
       "label": "vscode-extension:build",
       "dependsOn": [
-        // To detect compile errors
-        "vscode-extension:tsc",
+        // TSC type checking
+        "tsc:watch",
         // To build the React app that is used in the extension
         "vscode-extension:continue-ui:build",
         // // To bundle the code the same way we do for publishing
@@ -46,17 +63,6 @@
         }
       ]
     },
-    {
-      "label": "vscode-extension:tsc",
-      "type": "npm",
-      "script": "tsc",
-      "path": "extensions/vscode",
-      "problemMatcher": ["$tsc"],
-      "presentation": {
-        "revealProblems": "onProblem",
-        "clear": true
-      }
-    },
     // Build the React app. It gets bundled into the extension as a file resource and has a seprate build step
     {
       "label": "vscode-extension:continue-ui:build",
@@ -80,7 +86,7 @@
         // Build the extension
         "vscode-extension:build",
         // To detect compile errors - this type checks both the extension and the tests
-        "vscode-extension:tsc",
+        "tsc:watch",
         "vscode-extension:tests:esbuild"
       ]
     },
