@@ -44,9 +44,12 @@ export function modifyConfig(config: Config): Config {
     name: "commit",
     description: "Write a commit message",
     run: async function* (sdk) {
-      const diff = await sdk.ide.getDiff();
+      // getDiff 函数接受一个布尔参数，该参数指示是否
+      // 在 diff 中包含未暂存的更改。
+      const diff = await sdk.ide.getDiff(false); // 传递 false 以排除未暂存的更改
       for await (const message of sdk.llm.streamComplete(
         `${diff}\n\nWrite a commit message for the above changes. Use no more than 20 tokens to give a brief description in the imperative mood (e.g. 'Add feature' not 'Added feature'):`,
+        new AbortController().signal,
         {
           maxTokens: 20,
         },
