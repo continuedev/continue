@@ -168,6 +168,7 @@ export function History() {
                 )}
 
                 <HistoryTableRow
+                  index={index}
                   sessionMetadata={session}
                   date={date}
                   onDelete={deleteSessionInUI}

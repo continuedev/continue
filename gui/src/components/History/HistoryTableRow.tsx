@@ -18,11 +18,13 @@ export function HistoryTableRow({
   date,
   onDelete,
   onEdit,
+  index,
 }: {
   sessionMetadata: SessionMetadata;
   date: Date;
   onDelete: (sessionId: string) => void;
   onEdit: (session: SessionMetadata) => void;
+  index: number;
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -58,6 +60,7 @@ export function HistoryTableRow({
   return (
     <tr>
       <td
+        data-testid={`history-row-${index}`}
         className="p-1"
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -75,6 +78,7 @@ export function HistoryTableRow({
           }}
         >
           <div className="flex-1 cursor-pointer space-y-1">
+            {`history-row-${index}`}
             {editing ? (
               <div className="text-md">
                 <Input

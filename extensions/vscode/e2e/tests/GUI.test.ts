@@ -4,7 +4,6 @@ import {
   WebDriver,
   VSBrowser,
   Key,
-  ActivityBar,
 } from "vscode-extension-tester";
 import { expect } from "chai";
 import { GUIActions } from "../actions/GUI.actions";
@@ -20,24 +19,6 @@ describe("GUI Test", () => {
 
   before(async function () {
     this.timeout(10000000);
-
-    // get all the view controls
-    const activityBar = new ActivityBar();
-    const controls = await activityBar.getViewControls();
-    expect(controls).not.empty;
-
-    // get titles from the controls
-    const titles = await Promise.all(
-      controls.map(async (control) => {
-        return control.getTitle();
-      }),
-    );
-
-    console.log("Titles:", titles);
-
-    // assert a view control named 'Explorer' is present
-    // the keyboard shortcut is part of the title, so we do a little transformation
-    expect(titles.some((title) => title.startsWith("Explorer"))).is.true;
 
     await VSBrowser.instance.openResources(path.join("e2e/test-continue"));
 
@@ -68,11 +49,11 @@ describe("GUI Test", () => {
   });
 
   describe("Chat Paths", () => {
-    it.only("chat → new chat → history → original chat", async () => {
+    it.only("chat → history → chat", async () => {
       await GUIActions.selectModelFromDropdown(view, "Mock");
       await GUIActions.selectModelFromDropdown(view, "TEST LLM");
 
-      const tiptap = await GUISelectors.getTipTapEditor(view);
+      const [tiptap] = await GUISelectors.getTipTapEditor(view);
 
       const messagePair1 = TestUtils.generateTestMessagePair(1);
       await tiptap.sendKeys(messagePair1.userMessage);
@@ -91,27 +72,37 @@ describe("GUI Test", () => {
 
       await view.switchBack();
       await (await GUISelectors.getHistoryNavButton(view)).click();
-      await new Promise((res) => {
-        setTimeout(res, 2000);
-      });
-      await (await GUISelectors.getNewSessionNavButton(view)).click();
-      await new Promise((res) => {
-        setTimeout(res, 2000);
-      });
-      await (await GUISelectors.getHistoryNavButton(view)).click();
+      await Promise.all([
+        TestUtils.expectNoElement(() =>
+          GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
+        ),
+        TestUtils.expectNoElement(() =>
+          GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
+        ),
+      ]);
 
-      await new Promise((res) => {
-        setTimeout(res, 100000000);
-      });
+      await GUIActions.switchToReactIframe(driver);
+      await (await GUISelectors.getNthHistoryTableRow(view, 0)).click();
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
+      );
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
+      );
 
-      // const messagePair3 = TestUtils.generateTestMessagePair(3);
-      // await tiptap.sendKeys(messagePair3.userMessage);
-      // await tiptap.sendKeys(Key.ENTER);
-      // await TestUtils.waitForElement(() =>
-      //   GUISelectors.getThreadMessageByText(view, messagePair3.llmResponse),
-      // );
-
-      // ('aria-label="View History"');
+      const [, , tiptapNew] = await GUISelectors.getTipTapEditor(view);
+      const messagePair3 = TestUtils.generateTestMessagePair(3);
+      await tiptapNew.sendKeys(messagePair3.userMessage);
+      await tiptapNew.sendKeys(Key.ENTER);
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair1.llmResponse),
+      );
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair2.llmResponse),
+      );
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, messagePair3.llmResponse),
+      );
     }).timeout(DEFAULT_TIMEOUT);
   });
 });

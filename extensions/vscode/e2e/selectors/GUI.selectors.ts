@@ -7,7 +7,7 @@ export class GUISelectors {
   }
 
   public static getTipTapEditor(view: WebView) {
-    return view.findWebElement(By.className("tiptap"));
+    return view.findWebElements(By.className("tiptap"));
   }
 
   public static getAllIframes(driver: WebDriver) {
@@ -24,6 +24,10 @@ export class GUISelectors {
 
   public static getModelDropdownButton(view: WebView) {
     return SelectorUtils.getElementByDataTestId(view, "model-select-button");
+  }
+
+  public static getNthHistoryTableRow(view: WebView, index: number) {
+    return SelectorUtils.getElementByDataTestId(view, `history-row-${index}`);
   }
 
   public static getModelDropdownOption(view: WebView, option: string) {
