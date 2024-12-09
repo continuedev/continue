@@ -22,13 +22,25 @@ const esbuildConfig = {
   supported: { "dynamic-import": false },
 };
 
+const ENDS_PATTERN = "VS Code Extension esbuild complete"; // used verbatim in vscode tasks to detect completion
 (async () => {
-  // Bundles the extension into one file
-  if (flags.includes("--watch")) {
-    const ctx = await esbuild.context(esbuildConfig);
-    await ctx.watch();
-  } else {
-    await esbuild.build(esbuildConfig);
-  }
-  console.log("VS Code Extension esbuild complete"); // Used in task endpattern to signal completion
-})();
+    // Bundles the extension into one file
+    if (flags.includes("--watch")) {
+      const ctx = await esbuild.context(esbuildConfig);
+      await ctx.watch({
+        onRebuild(error, result) {
+          if (error) {
+            console.error("Watch build failed:", error);
+            throw error;
+          } else {
+            console.log(ENDS_PATTERN);
+          }
+        },
+      });
+      console.log("Esbuild: watching for changes...");
+    } else {
+      await esbuild.build(esbuildConfig);
+      console.log(ENDS_PATTERN);
+    }
+  },
+)();
