@@ -33,7 +33,6 @@ export const updateFileSymbolsFromNewContextItems = createAsyncThunk<
         if (result.status === "error") {
           throw new Error(result.error);
         }
-        console.log("Got symbols", result.content);
         dispatch(updateFileSymbols(result.content));
       }
     } catch (e) {
@@ -84,7 +83,6 @@ export const updateFileSymbolsFromHistory = createAsyncThunk<
       if (result.status === "error") {
         throw new Error(result.error);
       }
-      console.log("Got symbols", result.content);
       dispatch(updateFileSymbols(result.content));
     }
   } catch (e) {

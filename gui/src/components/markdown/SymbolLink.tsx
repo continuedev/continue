@@ -21,8 +21,8 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
   }
 
   const processedContent = useMemo(() => {
-    // // normalize indentation and truncate if long
     let content = symbol.content;
+    // TODO Normalize indentation
     // let lines = symbol.content.split("\n");
     // if (lines.length > 1) {
     //   const firstLineIndentation = lines[0].match(/^\s*/)?.[0].length || 0;
@@ -30,6 +30,8 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
     //     .map((line) => line.slice(firstLineIndentation))
     //     .join("\n");
     // }
+
+    // Truncate
     return content.length > 200 ? content.slice(0, 196) + "\n..." : content;
   }, [symbol]);
 
