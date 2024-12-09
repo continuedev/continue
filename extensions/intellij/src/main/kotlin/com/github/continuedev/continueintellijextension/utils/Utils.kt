@@ -1,5 +1,8 @@
 package com.github.continuedev.continueintellijextension.utils
 
+import java.net.NetworkInterface
+import java.util.*
+
 enum class Os {
     MAC, WINDOWS, LINUX
 }
@@ -36,4 +39,33 @@ fun getShiftKeyLabel(): String {
         Os.MAC -> "⇧"
         Os.WINDOWS, Os.LINUX -> "↑"
     }
+}
+
+fun getMachineUniqueID(): String {
+    val sb = StringBuilder()
+    val networkInterfaces = NetworkInterface.getNetworkInterfaces()
+
+    while (networkInterfaces.hasMoreElements()) {
+        val networkInterface = networkInterfaces.nextElement()
+        val mac = networkInterface.hardwareAddress
+
+        if (mac != null) {
+            for (i in mac.indices) {
+                sb.append(
+                    String.format(
+                        "%02X%s",
+                        mac[i],
+                        if (i < mac.size - 1) "-" else ""
+                    )
+                )
+            }
+            return sb.toString()
+        }
+    }
+
+    return "No MAC Address Found"
+}
+
+fun uuid(): String {
+    return UUID.randomUUID().toString()
 }
