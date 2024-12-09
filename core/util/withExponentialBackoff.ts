@@ -32,7 +32,7 @@ const withExponentialBackoff = async <T>(
       }
     }
   }
-  throw new Error("Failed to make API call after max tries");
+  throw new Error(`Failed to make API call after ${maxTries} retries`);
 };
 
 export { withExponentialBackoff };

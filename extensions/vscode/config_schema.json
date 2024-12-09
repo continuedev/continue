@@ -1252,9 +1252,15 @@
             "properties": {
               "model": {
                 "enum": [
+                  "Qwen/QwQ-32B-Preview",
                   "Qwen/Qwen2.5-Coder-32B-Instruct",
                   "Qwen/Qwen2.5-Coder-7B-Instruct",
-                  "Pro/Qwen/Qwen2.5-Coder-7B-Instruct"
+                  "Pro/Qwen/Qwen2.5-Coder-7B-Instruct",
+                  "Tencent/Hunyuan-A52B-Instruct",
+                  "nvidia/Llama-3.1-Nemotron-70B-Instruct",
+                  "Qwen/Qwen2-VL-72B-Instruct",
+                  "TeleAI/TeleMM",
+                  "deepseek-ai/DeepSeek-V2.5"
                 ]
               }
             }
@@ -2923,6 +2929,11 @@
               "x-intellij-html-description": "If set to <code>true</code>, a scrollbar will be displayed in the chat window to navigate through messages.",
               "default": false,
               "type": "boolean"
+            },
+            "codeWrap": {
+              "type": "boolean",
+              "description": "If set to true, code in pre blocks will wrap.",
+              "default": false
             }
           }
         },

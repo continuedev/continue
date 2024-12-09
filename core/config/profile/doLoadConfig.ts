@@ -5,12 +5,10 @@ import {
   IdeSettings,
   SerializedContinueConfig,
 } from "../../";
-import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker.js";
 import { ControlPlaneProxyInfo } from "../../control-plane/analytics/IAnalyticsProvider.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
 import { controlPlaneEnv } from "../../control-plane/env.js";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
-import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { Telemetry } from "../../util/posthog";
 import { TTS } from "../../util/tts";
@@ -111,13 +109,11 @@ async function injectControlPlaneProxyInfo(
   );
 
   if (config.embeddingsProvider?.providerName === "continue-proxy") {
-    (
-      config.embeddingsProvider as ContinueProxyEmbeddingsProvider
-    ).controlPlaneProxyInfo = info;
+    (config.embeddingsProvider as ContinueProxy).controlPlaneProxyInfo = info;
   }
 
-  if (config.reranker?.name === "continue-proxy") {
-    (config.reranker as ContinueProxyReranker).controlPlaneProxyInfo = info;
+  if (config.reranker?.providerName === "continue-proxy") {
+    (config.reranker as ContinueProxy).controlPlaneProxyInfo = info;
   }
 
   return config;

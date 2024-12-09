@@ -1,36 +1,29 @@
-import { Response } from "node-fetch";
-
-import {
-  EmbeddingsProviderName,
-  EmbedOptions,
-  FetchFunction,
-} from "../../index.js";
+import { Chunk, LLMOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+import { BaseLLM } from "../index.js";
 
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+class HuggingFaceTEIEmbeddingsProvider extends BaseLLM {
+  static providerName = "huggingface-tei";
 
-class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static providerName: EmbeddingsProviderName = "huggingface-tei";
-  private _maxBatchSize?: number;
-  get maxBatchSize(): number | undefined {
-    return this._maxBatchSize ?? super.maxBatchSize;
-  }
-
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: Partial<LLMOptions> | undefined = {
     apiBase: "http://localhost:8080",
     model: "tei",
   };
 
-  constructor(options: EmbedOptions, fetch: FetchFunction) {
-    super(options, fetch);
-    // without this extra slash the last portion of the path will be dropped from the URL when using the node.js URL constructor
-    if (!this.options.apiBase?.endsWith("/")) {
-      this.options.apiBase += "/";
-    }
-    this.doInfoRequest().then((response) => {
-      this.options.model = response.model_id;
-      this._maxBatchSize = response.max_client_batch_size;
-    });
+  constructor(options: LLMOptions) {
+    super(options);
+
+    this.doInfoRequest()
+      .then((response) => {
+        this.model = response.model_id;
+        this.maxEmbeddingBatchSize = response.max_client_batch_size;
+      })
+      .catch((error) => {
+        console.error(
+          "Failed to fetch info from HuggingFace TEI Embeddings Provider:",
+          error,
+        );
+      });
   }
 
   async embed(chunks: string[]) {
@@ -44,7 +37,7 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
 
   async doEmbedRequest(batch: string[]): Promise<number[][]> {
     const resp = await withExponentialBackoff<Response>(() =>
-      this.fetch(new URL("embed", this.options.apiBase), {
+      this.fetch(new URL("embed", this.apiBase), {
         method: "POST",
         body: JSON.stringify({
           inputs: batch,
@@ -67,7 +60,7 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
 
   async doInfoRequest(): Promise<TEIInfoResponse> {
     const resp = await withExponentialBackoff<Response>(() =>
-      this.fetch(new URL("info", this.options.apiBase), {
+      this.fetch(new URL("info", this.apiBase), {
         method: "GET",
       }),
     );
@@ -75,6 +68,38 @@ class HuggingFaceTEIEmbeddingsProvider extends BaseEmbeddingsProvider {
       throw new Error(await resp.text());
     }
     return (await resp.json()) as TEIInfoResponse;
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.apiKey) {
+      headers["Authorization"] = `Bearer ${this.apiKey}`;
+    }
+
+    const resp = await fetch(new URL("rerank", this.apiBase), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        query: query,
+        return_text: false,
+        raw_scores: false,
+        texts: chunks.map((chunk) => chunk.content),
+        truncation_direction: "Right",
+        truncate: true,
+      }),
+    });
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    // Resort into original order and extract scores
+    const results = data.sort((a: any, b: any) => a.index - b.index);
+    return results.map((result: any) => result.score);
   }
 }
 

@@ -8,7 +8,8 @@ import {
   CompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
-} from "openai/resources/index.mjs";
+  Model,
+} from "openai/resources/index";
 
 export interface FimCreateParamsStreaming
   extends CompletionCreateParamsStreaming {
@@ -40,26 +41,31 @@ export interface BaseLlmApi {
   // Chat, no stream
   chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion>;
 
   // Chat, stream
   chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk>;
 
   // Completion, no stream
   completionNonStream(
     body: CompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<Completion>;
 
   // Completion, stream
   completionStream(
     body: CompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<Completion>;
 
   // FIM, stream
   fimStream(
     body: FimCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk>;
 
   // Embeddings
@@ -67,4 +73,7 @@ export interface BaseLlmApi {
 
   // Reranking
   rerank(body: RerankCreateParams): Promise<CreateRerankResponse>;
+
+  // List Models
+  list(): Promise<Model[]>;
 }

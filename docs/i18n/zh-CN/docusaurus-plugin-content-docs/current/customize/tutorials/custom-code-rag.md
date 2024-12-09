@@ -4,7 +4,7 @@
 
 ## 步骤 1 ：选择嵌入模型
 
-如果可能，我们推荐使用 [`voyage-code-2`](https://docs.voyageai.com/docs/embeddings) ，它将给出最准确的答案，关于任何已存的代码嵌入模型。你可以在 [这里](https://dash.voyageai.com/api-keys) 获取 API key 。因为他门的 API 是 [OpenAI-兼容的](https://docs.voyageai.com/reference/embeddings-api) ，你可以使用任何 OpenAI 客户端换出 URL 。
+如果可能，我们推荐使用 [`voyage-code-3`](https://docs.voyageai.com/docs/embeddings) ，它将给出最准确的答案，关于任何已存的代码嵌入模型。你可以在 [这里](https://dash.voyageai.com/api-keys) 获取 API key 。因为他门的 API 是 [OpenAI-兼容的](https://docs.voyageai.com/reference/embeddings-api) ，你可以使用任何 OpenAI 客户端换出 URL 。
 
 ## 步骤 2 ：选择向量模型
 
@@ -16,7 +16,7 @@
 
 大多数嵌入模型只能一次处理有限的文本数量。为了解决这个问题，我们 "分块" 我们的代码到较小的部分。
 
-如果你使用 `voyage-code-2` ，它可以有最大 16,000 token 上下文长度，足够容纳大多数文件。这意味着，在开始的时候，你可以使用更朴素的策略避免超过限制。为了最简单到最综合，你可以使用 3 分块策略：
+如果你使用 `voyage-code-3` ，它可以有最大 16,000 token 上下文长度，足够容纳大多数文件。这意味着，在开始的时候，你可以使用更朴素的策略避免超过限制。为了最简单到最综合，你可以使用 3 分块策略：
 
 1. 截断文件，当它超过上下文长度：在这种情况下，你总是每个文件有 1 个分块。
 2. 拆分文件到一个固定长度的分块：从文件的最上面开始，添加你当前分块的行，直到它到达限制，然后开始一个新的分块。
@@ -42,7 +42,7 @@ from lancedb.embeddings import get_registry
 
 db = lancedb.connect("/tmp/db")
 func = get_registry().get("openai").create(
-    name="voyage-code-2",
+    name="voyage-code-3",
     base_url="https://api.voyageai.com/v1/",
     api_key=os.environ["VOYAGE_API_KEY"],
 )
@@ -50,7 +50,7 @@ func = get_registry().get("openai").create(
 class CodeChunks(LanceModel):
     filename: str
     text: str = func.SourceField()
-    # 1536 is the embedding dimension of the `voyage-code-2` model.
+    # 1536 is the embedding dimension of the `voyage-code-3` model.
     vector: Vector(1536) = func.VectorField()
 
 table = db.create_table("code_chunks", schema=CodeChunks, mode="overwrite")

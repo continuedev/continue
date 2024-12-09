@@ -1,6 +1,5 @@
 import { streamSse } from "@continuedev/fetch";
-import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -9,9 +8,10 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
-} from "openai/resources/index.mjs";
+} from "openai/resources/index";
 import { ChatCompletionCreateParams } from "openai/src/resources/index.js";
-import { LlmApiConfig } from "../index.js";
+import { AnthropicConfig } from "../types.js";
+import { customFetch } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -22,7 +22,7 @@ import {
 export class AnthropicApi implements BaseLlmApi {
   apiBase: string = "https://api.anthropic.com/v1/";
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: AnthropicConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
     if (!this.apiBase.endsWith("/")) {
       this.apiBase += "/";
@@ -87,17 +87,22 @@ export class AnthropicApi implements BaseLlmApi {
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
-    const response = await fetch(new URL("messages", this.apiBase), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.config.apiKey,
+    const response = await customFetch(this.config.requestOptions)(
+      new URL("messages", this.apiBase),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "anthropic-version": "2023-06-01",
+          "x-api-key": this.config.apiKey,
+        },
+        body: JSON.stringify(this._convertBody(body)),
+        signal,
       },
-      body: JSON.stringify(this._convertBody(body)),
-    });
+    );
 
     const completion = (await response.json()) as any;
     return {
@@ -127,18 +132,23 @@ export class AnthropicApi implements BaseLlmApi {
   }
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     body.messages;
-    const response = await fetch(new URL("messages", this.apiBase), {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "anthropic-version": "2023-06-01",
-        "x-api-key": this.config.apiKey,
+    const response = await customFetch(this.config.requestOptions)(
+      new URL("messages", this.apiBase),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          "anthropic-version": "2023-06-01",
+          "x-api-key": this.config.apiKey,
+        },
+        body: JSON.stringify(this._convertBody(body)),
+        signal,
       },
-      body: JSON.stringify(this._convertBody(body)),
-    });
+    );
 
     for await (const value of streamSse(response as any)) {
       if (value.delta?.text) {
@@ -165,16 +175,19 @@ export class AnthropicApi implements BaseLlmApi {
   }
   async completionNonStream(
     body: CompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<Completion> {
     throw new Error("Method not implemented.");
   }
   async *completionStream(
     body: CompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<Completion, any, unknown> {
     throw new Error("Method not implemented.");
   }
   async *fimStream(
     body: FimCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
     throw new Error("Method not implemented.");
   }
@@ -186,6 +199,10 @@ export class AnthropicApi implements BaseLlmApi {
   }
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
+    throw new Error("Method not implemented.");
+  }
+
+  list(): Promise<OpenAI.Models.Model[]> {
     throw new Error("Method not implemented.");
   }
 }
