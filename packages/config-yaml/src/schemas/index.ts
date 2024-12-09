@@ -16,7 +16,8 @@ const toolSchema = z.object({
 const mcpServerSchema = z.object({
   name: z.string(),
   command: z.string(),
-  args: z.string().optional(),
+  args: z.array(z.string()).optional(),
+
   env: z.record(z.string()).optional(),
 });
 

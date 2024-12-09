@@ -1,5 +1,3 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-
 import { BaseContextProvider } from "../";
 import {
   ContextItem,
@@ -8,10 +6,10 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../";
+import { MCPManagerSingleton } from "../mcp";
 
 interface MCPContextProviderOptions {
   submenuItems: ContextSubmenuItem[];
-  client: Client;
 }
 
 class MCPContextProvider extends BaseContextProvider {
@@ -22,6 +20,17 @@ class MCPContextProvider extends BaseContextProvider {
     type: "submenu",
   };
 
+  static encodeMCPResourceId(mcpId: string, uri: string): string {
+    return JSON.stringify({ mcpId, uri });
+  }
+
+  static decodeMCPResourceId(mcpResourceId: string): {
+    mcpId: string;
+    uri: string;
+  } {
+    return JSON.parse(mcpResourceId);
+  }
+
   constructor(options: MCPContextProviderOptions) {
     super(options);
   }
@@ -30,9 +39,14 @@ class MCPContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const { contents } = await (
-      this.options as MCPContextProviderOptions
-    ).client.readResource({ uri: query });
+    const { mcpId, uri } = MCPContextProvider.decodeMCPResourceId(query);
+
+    const connection = MCPManagerSingleton.getInstance().getConnection(mcpId);
+    if (!connection) {
+      throw new Error(`No MCP connection found for ${mcpId}`);
+    }
+
+    const { contents } = await connection.client.readResource({ uri });
 
     return await Promise.all(
       contents.map(async (resource) => {

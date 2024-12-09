@@ -64,7 +64,7 @@ async function autodetectModels(
         );
       }),
     );
-    return detectedModels.filter((x) => typeof x !== "undefined");
+    return detectedModels.filter((x) => typeof x !== "undefined") as BaseLLM[];
   } catch (e) {
     console.warn("Error listing models: ", e);
     return [];

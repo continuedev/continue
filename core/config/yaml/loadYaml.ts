@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "path";
-import * as YAML from "yaml";
 
 import {
   extendConfig,
@@ -9,6 +8,9 @@ import {
 } from "@continuedev/config-yaml";
 import { ConfigYaml } from "@continuedev/config-yaml/dist/schemas";
 import { ValidationLevel } from "@continuedev/config-yaml/dist/validation";
+import { fetchwithRequestOptions } from "@continuedev/fetch";
+import * as YAML from "yaml";
+
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -18,11 +20,12 @@ import {
   IdeType,
   SlashCommand,
 } from "../..";
-import MCPConnectionSingleton from "../../context/mcp";
+import { AllRerankers } from "../../context/allRerankers";
+import { MCPManagerSingleton } from "../../context/mcp";
 import { contextProviderClassFromName } from "../../context/providers/index";
-import { BaseLLM } from "../../llm";
+import { allEmbeddingsProviders } from "../../indexing/allEmbeddingsProviders";
 import FreeTrial from "../../llm/llms/FreeTrial";
-import { allTools } from "../../tools";
+import TransformersJsEmbeddingsProvider from "../../llm/llms/TransformersJsEmbeddingsProvider";
 import {
   getConfigYamlPath,
   getContinueDotEnv,
@@ -35,6 +38,7 @@ import {
   slashCommandFromPromptFile,
 } from "../promptFile.js";
 import { ConfigValidationError } from "../validation.js";
+
 import { llmsFromModelConfig } from "./models";
 
 export interface ConfigResult<T> {
@@ -134,10 +138,17 @@ async function configYamlToContinueConfig(
   workOsAccessToken: string | undefined,
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
-  const slashCommands = await slashCommandsFromV1PromptFiles(ide);
+  const continueConfig: ContinueConfig = {
+    slashCommands: await slashCommandsFromV1PromptFiles(ide),
+    models: [],
+    tools: [],
+    embeddingsProvider: new TransformersJsEmbeddingsProvider(),
+    experimental: {
+      modelContextProtocolServers: [],
+    },
+  };
 
   // Models
-  let models: BaseLLM[] = [];
   for (const model of config.models ?? []) {
     const llms = await llmsFromModelConfig(
       model,
@@ -146,12 +157,12 @@ async function configYamlToContinueConfig(
       ideSettings,
       writeLog,
     );
-    models.push(...llms);
+    continueConfig.models.push(...llms);
   }
 
   if (allowFreeTrial) {
     // Obtain auth token (iff free trial being used)
-    const freeTrialModels = models.filter(
+    const freeTrialModels = continueConfig.models.filter(
       (model) => model.providerName === "free-trial",
     );
     if (freeTrialModels.length > 0) {
@@ -162,13 +173,15 @@ async function configYamlToContinueConfig(
     }
   } else {
     // Remove free trial models
-    models = models.filter((model) => model.providerName !== "free-trial");
+    continueConfig.models = continueConfig.models.filter(
+      (model) => model.providerName !== "free-trial",
+    );
   }
 
   // TODO: Split into model roles.
 
   // Context
-  const contextProviders = config.context
+  continueConfig.contextProviders = config.context
     ?.map((context) => {
       const cls = contextProviderClassFromName(context.uses) as any;
       if (!cls) {
@@ -180,80 +193,83 @@ async function configYamlToContinueConfig(
     })
     .filter((p) => !!p) as IContextProvider[];
 
-  // Embeddings Provider - TODO
-  // const embeddingsProviderDescription = config.embeddingsProvider as
-  //   | EmbeddingsProviderDescription
-  //   | undefined;
-  // if (embeddingsProviderDescription?.provider) {
-  //   const { provider, ...options } = embeddingsProviderDescription;
-  //   const embeddingsProviderClass = allEmbeddingsProviders[provider];
-  //   if (embeddingsProviderClass) {
-  //     if (
-  //       embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-  //     ) {
-  //       config.embeddingsProvider = new embeddingsProviderClass();
-  //     } else {
-  //       config.embeddingsProvider = new embeddingsProviderClass(
-  //         options,
-  //         (url: string | URL, init: any) =>
-  //           fetchwithRequestOptions(url, init, {
-  //             ...config.requestOptions,
-  //             ...options.requestOptions,
-  //           }),
-  //       );
-  //     }
-  //   }
-  // }
-
-  // if (!config.embeddingsProvider) {
-  //   config.embeddingsProvider = new TransformersJsEmbeddingsProvider();
-  // }
+  // Embeddings Provider
+  const embedConfig = config.models?.find((model) =>
+    model.roles?.includes("embed"),
+  );
+  if (embedConfig) {
+    const { provider, ...options } = embedConfig;
+    const embeddingsProviderClass = allEmbeddingsProviders[provider];
+    if (embeddingsProviderClass) {
+      if (
+        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
+      ) {
+        continueConfig.embeddingsProvider = new embeddingsProviderClass();
+      } else {
+        continueConfig.embeddingsProvider = new embeddingsProviderClass(
+          options,
+          (url: string | URL, init: any) =>
+            fetchwithRequestOptions(url, init, {
+              ...options.requestOptions,
+            }),
+        );
+      }
+    }
+  }
 
   // Reranker
-  // if (config.reranker && !(config.reranker as Reranker | undefined)?.rerank) {
-  //   const { name, params } = config.reranker as RerankerDescription;
-  //   const rerankerClass = AllRerankers[name];
+  const rerankConfig = config.models?.find((model) =>
+    model.roles?.includes("rerank"),
+  );
+  if (rerankConfig) {
+    const { provider, ...options } = rerankConfig;
+    const rerankerClass = AllRerankers[provider];
 
-  //   if (name === "llm") {
-  //     const llm = models.find((model) => model.title === params?.modelTitle);
-  //     if (!llm) {
-  //       console.warn(`Unknown model ${params?.modelTitle}`);
-  //     } else {
-  //       config.reranker = new LLMReranker(llm);
-  //     }
-  //   } else if (rerankerClass) {
-  //     config.reranker = new rerankerClass(params);
-  //   }
-  // }
-
-  let continueConfig: ContinueConfig = {
-    ...config,
-    contextProviders,
-    models,
-    embeddingsProvider: config.embeddingsProvider as any,
-    tabAutocompleteModels,
-    reranker: config.reranker as any,
-    tools: allTools,
-  };
+    if (rerankerClass) {
+      continueConfig.reranker = new rerankerClass(
+        options,
+        (url: string | URL, init: any) =>
+          fetchwithRequestOptions(url, init, {
+            ...options.requestOptions,
+          }),
+      );
+    }
+  }
 
   // Apply MCP if specified
-  if (config.experimental?.modelContextProtocolServer) {
-    const mcpConnection = await MCPConnectionSingleton.getInstance(
-      config.experimental.modelContextProtocolServer,
-    );
-    continueConfig = await Promise.race<ContinueConfig>([
-      mcpConnection.modifyConfig(continueConfig),
-      new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("MCP connection timed out after 2000ms")),
-          2000,
-        ),
-      ),
-    ]).catch((error) => {
-      console.warn("MCP connection error:", error);
-      return continueConfig; // Return original config if timeout occurs
+  const mcpManager = MCPManagerSingleton.getInstance();
+  config.mcpServers?.forEach(async (server) => {
+    const mcpId = server.name;
+    const mcpConnection = mcpManager.createConnection(mcpId, {
+      transport: {
+        type: "stdio",
+        args: [],
+        ...server,
+      },
     });
-  }
+    if (!mcpConnection) {
+      return;
+    }
+
+    const abortController = new AbortController();
+    const mcpConnectionTimeout = setTimeout(
+      () => abortController.abort(),
+      2000,
+    );
+
+    try {
+      await mcpConnection.modifyConfig(
+        continueConfig,
+        mcpId,
+        abortController.signal,
+      );
+    } catch (e: any) {
+      if (e.name !== "AbortError") {
+        throw e;
+      }
+    }
+    clearTimeout(mcpConnectionTimeout);
+  });
 
   return continueConfig;
 }
