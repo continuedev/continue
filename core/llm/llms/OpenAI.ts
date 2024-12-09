@@ -10,6 +10,7 @@ import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import {
   fromChatCompletionChunk,
+  LlmApiRequestType,
   toChatBody,
 } from "../openaiTypeConverters.js";
 import { streamSse } from "../stream.js";
@@ -61,6 +62,8 @@ class OpenAI extends BaseLLM {
     apiBase: "https://api.openai.com/v1/",
     maxEmbeddingBatchSize: 128,
   };
+
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
 
   protected _convertModelName(model: string): string {
     return model;
