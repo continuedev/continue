@@ -45,7 +45,8 @@ type SessionState = {
   streamAborter: AbortController;
   codeToEdit: CodeToEdit[];
   curCheckpointIndex: number;
-  mainEditorContent?: JSONContent;
+  currentMainEditorContent?: JSONContent;
+  mainEditorContentTrigger?: JSONContent | undefined;
   symbols: FileSymbolMap;
   mode: MessageModes;
   codeBlockApplyStates: {
@@ -71,20 +72,6 @@ function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
 
   // If neither has a range, they are considered equal in this context
   return !("range" in a) && !("range" in b);
-}
-
-function getBaseHistoryItem(): ChatHistoryItemWithMessageId {
-  return {
-    message: {
-      id: uuidv4(),
-      role: "assistant",
-      content: "",
-    },
-    contextItems: [],
-    isGatheringContext: false,
-    checkpoint: {},
-    isBeforeCheckpoint: false,
-  };
 }
 
 const initialState: SessionState = {
@@ -134,15 +121,21 @@ export const sessionSlice = createSlice({
       if (state.history.length < 2) {
         return;
       }
-
       const lastMessage = state.history[state.history.length - 1];
 
       // Only clear in the case of an empty message
       if (!lastMessage.message.content.length) {
-        state.mainEditorContent =
+        state.mainEditorContentTrigger =
           state.history[state.history.length - 2].editorState;
         state.history = state.history.slice(0, -2);
       }
+    },
+    // Trigger value picked up by editor with isMainInput to set its content
+    setMainEditorContentTrigger: (
+      state,
+      action: PayloadAction<JSONContent | undefined>,
+    ) => {
+      state.mainEditorContentTrigger = action.payload;
     },
     updateFileSymbols: (state, action: PayloadAction<FileSymbolMap>) => {
       state.symbols = {
@@ -163,29 +156,63 @@ export const sessionSlice = createSlice({
         state.history[index].contextItems = contextItems;
       }
     },
-    resubmitAtIndex: (
+    submitEditorAndInitAtIndex: (
       state,
       {
         payload,
       }: PayloadAction<{
-        index: number;
+        index?: number;
         editorState: JSONContent;
       }>,
     ) => {
-      const historyItem = state.history[payload.index];
-      const lastHistoryItem = state.history[payload.index - 1];
+      const { index, editorState } = payload;
 
-      if (!historyItem) {
-        return;
+      if (typeof index === "number" && index < state.history.length) {
+        // Resubmission - update input message, truncate history after resubmit with new empty response message
+        if (index % 2 === 1) {
+          console.warn(
+            "Corrupted history: resubmitting at odd index, shouldn't happen",
+          );
+        }
+        const historyItem = state.history[index];
+
+        historyItem.message.content = ""; // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
+        historyItem.editorState = payload.editorState;
+
+        state.history = state.history.slice(0, index + 1).concat({
+          message: {
+            id: uuidv4(),
+            role: "assistant",
+            content: "", // IMPORTANT - this is subsequently updated by response streaming
+          },
+          contextItems: [],
+        });
+
+        state.curCheckpointIndex = Math.floor(index / 2);
+      } else {
+        // New input/response messages
+        state.history = state.history.concat([
+          {
+            message: {
+              id: uuidv4(),
+              role: "user",
+              content: "", // IMPORTANT - this is quickly updated by resolveEditorContent based on editor state prior to streaming
+            },
+            contextItems: [],
+            editorState,
+          },
+          {
+            message: {
+              id: uuidv4(),
+              role: "assistant",
+              content: "", // IMPORTANT - this is subsequently updated by response streaming
+            },
+            contextItems: [],
+          },
+        ]);
+
+        state.curCheckpointIndex = Math.floor((state.history.length - 1) / 2); // TODO this feels really fragile
       }
-
-      historyItem.message.content = "";
-      historyItem.editorState = payload.editorState;
-
-      // Cut off history after the resubmitted message
-      state.history = state.history
-        .slice(0, payload.index + 1)
-        .concat(getBaseHistoryItem());
 
       state.isStreaming = true;
     },
@@ -193,69 +220,27 @@ export const sessionSlice = createSlice({
       // Deletes the current assistant message and the previous user message
       state.history.splice(action.payload - 1, 2);
     },
-    initNewActiveMessage: (
+    updateHistoryItemAtIndex: (
       state,
       {
         payload,
       }: PayloadAction<{
-        editorState: JSONContent;
-      }>,
-    ) => {
-      const baseHistoryItem = getBaseHistoryItem();
-
-      state.history.push({
-        ...baseHistoryItem,
-        message: { ...baseHistoryItem.message, id: uuidv4(), role: "user" },
-        editorState: payload.editorState,
-      });
-
-      state.history.push({
-        ...baseHistoryItem,
-        message: {
-          ...baseHistoryItem.message,
-          id: uuidv4(),
-          role: "assistant",
-        },
-        editorState: payload.editorState,
-      });
-
-      state.isStreaming = true;
-      state.curCheckpointIndex = state.curCheckpointIndex + 1;
-    },
-    setMessageAtIndex: (
-      state,
-      {
-        payload,
-      }: PayloadAction<{
-        message: ChatMessage;
         index: number;
-        contextItems?: ContextItemWithId[];
+        updates: Partial<ChatHistoryItemWithMessageId>;
       }>,
     ) => {
-      if (payload.index >= state.history.length) {
-        const baseHistoryItem = getBaseHistoryItem();
-
-        state.history.push({
-          ...baseHistoryItem,
-          message: { ...baseHistoryItem.message, ...payload.message },
-          editorState: {
-            type: "doc",
-            content: renderChatMessage(payload.message)
-              .split("\n")
-              .map((line) => ({
-                type: "paragraph",
-                content: line === "" ? [] : [{ type: "text", text: line }],
-              })),
-          },
-        });
+      const { index, updates } = payload;
+      if (!state.history[index]) {
+        console.error(
+          `attempting to update history item at nonexistent index ${index}`,
+          updates,
+        );
+        return;
       }
-
-      state.history[payload.index].message = {
-        ...payload.message,
-        id: uuidv4(),
+      state.history[index] = {
+        ...state.history[index],
+        ...updates,
       };
-
-      state.history[payload.index].contextItems = payload.contextItems || [];
     },
     addContextItemsAtIndex: (
       state,
@@ -303,12 +288,13 @@ export const sessionSlice = createSlice({
                 message.role === "assistant" &&
                 message.toolCalls?.length))
           ) {
-            const baseHistoryItem = getBaseHistoryItem();
-
             // Create a new message
             const historyItem: ChatHistoryItemWithMessageId = {
-              ...baseHistoryItem,
-              message: { ...baseHistoryItem.message, ...message },
+              message: {
+                ...message,
+                id: uuidv4(),
+              },
+              contextItems: [],
             };
 
             if (message.role === "assistant" && message.toolCalls) {
@@ -625,13 +611,13 @@ export const {
   streamUpdate,
   newSession,
   updateSessionTitle,
-  resubmitAtIndex,
   addHighlightedCode,
   addPromptCompletionPair,
   setActive,
-  initNewActiveMessage,
-  setMessageAtIndex,
+  submitEditorAndInitAtIndex,
+  updateHistoryItemAtIndex,
   clearLastEmptyResponse,
+  setMainEditorContentTrigger,
   setSelectedProfileId,
   deleteMessage,
   setIsGatheringContext,

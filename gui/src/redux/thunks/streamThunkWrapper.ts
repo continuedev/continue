@@ -1,17 +1,19 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { setInactive } from "../slices/sessionSlice";
+import { clearLastEmptyResponse, setInactive } from "../slices/sessionSlice";
 import { ThunkApiType } from "../store";
 import { saveCurrentSession } from "./session";
 
-export const handleErrors = createAsyncThunk<
+export const streamThunkWrapper = createAsyncThunk<
   void,
   () => Promise<void>,
   ThunkApiType
->("chat/handleErrors", async (runStream, { dispatch, extra }) => {
+>("chat/streamWrapper", async (runStream, { dispatch, extra }) => {
   try {
     await runStream();
   } catch (e: any) {
+    // NOTE - streaming errors are shown as ide toasts in core, don't show duplicate here
     console.debug("Error streaming response: ", e);
+    dispatch(clearLastEmptyResponse());
   } finally {
     dispatch(setInactive());
     // NOTE will conflict with dallin/silent-chat-errors, move this dispatch to the streamWrapper on that version

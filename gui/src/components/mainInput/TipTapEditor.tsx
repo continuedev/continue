@@ -69,6 +69,7 @@ import {
   clearCodeToEdit,
   selectHasCodeToEdit,
   selectIsInEditMode,
+  setMainEditorContentTrigger,
 } from "../../redux/slices/sessionSlice";
 import { exitEditMode } from "../../redux/thunks";
 import {
@@ -258,7 +259,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   const isInEditModeRef = useUpdatingRef(isInEditMode);
   const hasCodeToEdit = useAppSelector(selectHasCodeToEdit);
   const isEditModeAndNoCodeToEdit = isInEditMode && !hasCodeToEdit;
-
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
@@ -302,10 +302,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
     return undefined;
   }
-
-  const mainEditorContent = useAppSelector(
-    (store) => store.session.mainEditorContent,
-  );
 
   const { prevRef, nextRef, addRef } = useInputHistory(props.historyKey);
 
@@ -384,7 +380,7 @@ function TipTapEditor(props: TipTapEditorProps) {
 
               onEnterRef.current({
                 useCodebase: false,
-                noContext: useActiveFile,
+                noContext: !!useActiveFile,
               });
 
               return true;
@@ -543,7 +539,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: `font-size: ${getFontSize()}px;`,
       },
     },
-    content: props.editorState || mainEditorContent || "",
+    content: props.editorState,
     editable: !isStreaming || props.isMainInput,
   });
 
@@ -663,6 +659,18 @@ function TipTapEditor(props: TipTapEditorProps) {
       editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, isStreaming, editor]);
+
+  // This allows anywhere in the app to set the content of the main input
+  const mainInputContentTrigger = useAppSelector(
+    (store) => store.session.mainEditorContentTrigger,
+  );
+  useEffect(() => {
+    if (!props.isMainInput || !mainInputContentTrigger) {
+      return;
+    }
+    editor.commands.setContent(mainInputContentTrigger);
+    dispatch(setMainEditorContentTrigger(undefined));
+  }, [editor, props.isMainInput, mainInputContentTrigger]);
 
   // IDE event listeners
   useWebviewListener(

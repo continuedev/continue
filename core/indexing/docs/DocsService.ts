@@ -37,12 +37,6 @@ import {
 } from "./preIndexed";
 import preIndexedDocs from "./preIndexedDocs";
 
-// Progress heuristic values
-// subpages -> embeddings -> delete from db -> add to db
-const PROGRESS_AT_EMBEDDING = 0.5;
-const PROGRESS_AT_DELETE_OPERATIONS = 0.7;
-const PROGRESS_AT_ADD_OPERATIONS = 0.8;
-
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
   title: string;
@@ -206,19 +200,19 @@ export default class DocsService {
   }
 
   // NOTE Pausing not supported for docs yet
-  setPaused(startUrl: string, pause: boolean) {
-    const status = this.statuses.get(startUrl);
-    if (status) {
-      this.handleStatusUpdate({
-        ...status,
-        status: pause ? "paused" : "indexing",
-      });
-    }
-  }
+  // setPaused(startUrl: string, pause: boolean) {
+  //   const status = this.statuses.get(startUrl);
+  //   if (status) {
+  //     this.handleStatusUpdate({
+  //       ...status,
+  //       status: pause ? "paused" : "indexing",
+  //     });
+  //   }
+  // }
 
-  isPaused(startUrl: string) {
-    return this.statuses.get(startUrl)?.status === "paused";
-  }
+  // isPaused(startUrl: string) {
+  //   return this.statuses.get(startUrl)?.status === "paused";
+  // }
 
   /*
    * Currently, we generate and host embeddings for pre-indexed docs using transformers.
@@ -383,16 +377,9 @@ export default class DocsService {
     const indexExists = await this.hasMetadata(startUrl);
 
     // Build status update - most of it is fixed values
-    const fixedStatus: Pick<
+    const fixedStatus: Omit<
       IndexingStatus,
-      | "type"
-      | "id"
-      | "embeddingsProviderId"
-      | "isReindexing"
-      | "debugInfo"
-      | "icon"
-      | "url"
-      | "title"
+      "progress" | "description" | "status"
     > = {
       type: "docs",
       id: siteIndexingConfig.startUrl,
@@ -405,7 +392,6 @@ export default class DocsService {
     };
 
     // Clear current indexes if reIndexing
-    //
     if (indexExists) {
       if (reIndex) {
         await this.deleteIndexes(startUrl);
@@ -452,9 +438,9 @@ export default class DocsService {
           description: `Finding subpages (${page.path})`,
           status: "indexing",
           progress:
-            0.3 * estimatedProgress +
-            Math.min(0.2, (0.2 * processedPages) / 500),
-          // For the first 50%, 30% is sum of series 1/(2^n) and the other 20% is based on number of files/ 500 max
+            0.15 * estimatedProgress +
+            Math.min(0.35, (0.35 * processedPages) / 500),
+          // For the first 50%, 15% is sum of series 1/(2^n) and the other 35% is based on number of files/ 500 max
         });
 
         const article = pageToArticle(page);
@@ -464,7 +450,11 @@ export default class DocsService {
         articles.push(article);
 
         processedPages++;
-        await new Promise((resolve) => setTimeout(resolve, 100)); // Locks down GUI if no sleeping
+
+        // Locks down GUI if no sleeping
+        // Wait proportional to how many docs are indexing
+        const toWait = 100 * this.docsIndexingQueue.size + 50;
+        await new Promise((resolve) => setTimeout(resolve, toWait));
       }
 
       void Telemetry.capture("docs_pages_crawled", {
@@ -1017,13 +1007,10 @@ export default class DocsService {
   }
 
   async delete(startUrl: string) {
+    this.docsIndexingQueue.delete(startUrl);
+    this.abort(startUrl);
     await this.deleteIndexes(startUrl);
     this.deleteFromConfig(startUrl);
-
-    const status = this.statuses.get(startUrl);
-    if (status) {
-      this.handleStatusUpdate({ ...status, status: "deleted" });
-    }
     this.messenger?.send("refreshSubmenuItems", undefined);
   }
 

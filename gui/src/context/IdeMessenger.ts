@@ -184,25 +184,32 @@ export class IdeMessenger implements IIdeMessenger {
     };
     window.addEventListener("message", handler);
 
-    cancelToken?.addEventListener("abort", () => {
+    const handleAbort = () => {
       this.post("abort", undefined, messageId);
-    });
+    };
+    cancelToken?.addEventListener("abort", handleAbort);
 
-    while (!done) {
+    try {
+      while (!done) {
+        if (buffer.length > index) {
+          const chunks = buffer.slice(index);
+          index = buffer.length;
+          yield chunks;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+
       if (buffer.length > index) {
         const chunks = buffer.slice(index);
-        index = buffer.length;
         yield chunks;
       }
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    }
 
-    if (buffer.length > index) {
-      const chunks = buffer.slice(index);
-      yield chunks;
+      return returnVal;
+    } catch (e) {
+      throw e;
+    } finally {
+      cancelToken?.removeEventListener("abort", handleAbort);
     }
-
-    return returnVal;
   }
 
   async *llmStreamChat(

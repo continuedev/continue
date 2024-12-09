@@ -1,16 +1,18 @@
 import { IndexingStatus, SiteIndexingConfig } from "core";
-import { useContext, useMemo } from "react";
-import { useDispatch } from "react-redux";
+import { useContext, useMemo, useState } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
   PauseCircleIcon,
+  TrashIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
-import { useAppSelector } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { updateIndexingStatus } from "../../redux/slices/indexingSlice";
+import { setDialogMessage, setShowDialog } from "../../redux/slices/uiSlice";
+import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
 interface IndexingStatusViewerProps {
   docConfig: SiteIndexingConfig;
@@ -21,14 +23,13 @@ const STATUS_TO_ICON: Record<IndexingStatus["status"], any> = {
   paused: PauseCircleIcon,
   complete: CheckCircleIcon,
   aborted: null,
-  deleted: null,
   pending: null,
-  failed: XMarkIcon, // Since we show an erorr message below
+  failed: XMarkIcon, // Since we show an error message below
 };
 
 function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
 
   const status = useAppSelector(
     (store) => store.indexing.indexing.statuses[docConfig.startUrl],
@@ -53,6 +54,26 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
     }
   };
 
+  const [hasDeleted, setHasDeleted] = useState(false); // simple alternative to optimistic redux update
+  const onDelete = () => {
+    // optimistic update
+    dispatch(
+      setDialogMessage(
+        <ConfirmationDialog
+          title={`Delete ${docConfig.title}`}
+          text={`Are you sure you want to remove ${docConfig.title} from your configuration?`}
+          onConfirm={() => {
+            ideMessenger.post("context/removeDocs", {
+              startUrl: docConfig.startUrl,
+            });
+            setHasDeleted(true);
+          }}
+        />,
+      ),
+    );
+    dispatch(setShowDialog(true));
+  };
+
   const progressPercentage = useMemo(() => {
     if (!status) {
       return 0;
@@ -61,6 +82,8 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
   }, [status?.progress]);
 
   const Icon = STATUS_TO_ICON[status?.status];
+
+  if (hasDeleted) return null;
 
   return (
     <div className="mt-2 flex w-full flex-col">
@@ -100,6 +123,12 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
                 }`}
               ></Icon>
             ) : null}
+            {status?.status !== "indexing" ? (
+              <TrashIcon
+                className="h-4 w-4 cursor-pointer text-stone-500"
+                onClick={onDelete}
+              />
+            ) : null}
           </div>
         )}
       </div>
@@ -125,7 +154,6 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               failed: reIndex,
               aborted: reIndex,
               paused: () => {},
-              deleted: () => {},
               pending: () => {},
             }[status?.status]
           }
@@ -137,7 +165,6 @@ function DocsIndexingStatus({ docConfig }: IndexingStatusViewerProps) {
               failed: "Click to retry",
               aborted: "Click to index",
               paused: "",
-              deleted: "",
               pending: "",
             }[status?.status]
           }

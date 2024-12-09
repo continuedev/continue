@@ -260,8 +260,6 @@ export function Chat() {
         return;
       }
 
-      editor.commands.clearContent(true);
-
       const promptPreamble = isInEditMode
         ? getMultifileEditPrompt(codeToEdit)
         : undefined;
@@ -269,6 +267,8 @@ export function Chat() {
       dispatch(
         streamResponseThunk({ editorState, modifiers, promptPreamble, index }),
       );
+
+      editor.commands.clearContent(true);
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
