@@ -1,9 +1,9 @@
-import { LLMOptions, ModelProvider } from "../../index.js";
+import { LLMOptions } from "../../index.js";
 
 import OpenAI from "./OpenAI.js";
 
 class Vllm extends OpenAI {
-  static providerName: ModelProvider = "vllm";
+  static providerName = "vllm";
   constructor(options: LLMOptions) {
     super(options);
     this._setupCompletionOptions();

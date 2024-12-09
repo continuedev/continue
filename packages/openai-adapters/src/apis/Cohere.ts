@@ -1,6 +1,5 @@
 import { streamJSON } from "@continuedev/fetch";
-import fetch from "node-fetch";
-import { OpenAI } from "openai/index.mjs";
+import { OpenAI } from "openai/index";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -12,8 +11,10 @@ import {
   CompletionCreateParamsStreaming,
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
-} from "openai/resources/index.mjs";
-import { LlmApiConfig } from "../index.js";
+  Model,
+} from "openai/resources/index";
+import { CohereConfig } from "../types.js";
+import { chatCompletion, customFetch, embedding } from "../util.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -26,11 +27,8 @@ export class CohereApi implements BaseLlmApi {
 
   static maxStopSequences = 5;
 
-  constructor(protected config: LlmApiConfig) {
+  constructor(protected config: CohereConfig) {
     this.apiBase = config.apiBase ?? this.apiBase;
-    if (!this.apiBase.endsWith("/")) {
-      this.apiBase += "/";
-    }
   }
 
   private _convertMessages(
@@ -62,58 +60,55 @@ export class CohereApi implements BaseLlmApi {
 
   async chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
+    signal: AbortSignal,
   ): Promise<ChatCompletion> {
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${this.config.apiKey}`,
     };
 
-    const resp = await fetch(new URL("chat", this.apiBase), {
-      method: "POST",
-      headers,
-      body: JSON.stringify(this._convertBody(body)),
-    });
+    const resp = await customFetch(this.config.requestOptions)(
+      new URL("chat", this.apiBase),
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(this._convertBody(body)),
+        signal,
+      },
+    );
 
     const data = (await resp.json()) as any;
     const { input_tokens, output_tokens } = data.meta.tokens;
-    return {
-      id: data.id,
-      object: "chat.completion",
+    return chatCompletion({
       model: body.model,
-      created: Date.now(),
+      id: data.id,
+      content: data.text,
       usage: {
         total_tokens: input_tokens + output_tokens,
         completion_tokens: output_tokens,
         prompt_tokens: input_tokens,
       },
-      choices: [
-        {
-          logprobs: null,
-          finish_reason: "stop",
-          message: {
-            role: "assistant",
-            content: data.text,
-            refusal: null,
-          },
-          index: 0,
-        },
-      ],
-    };
+    });
   }
 
   async *chatCompletionStream(
     body: ChatCompletionCreateParamsStreaming,
+    signal: AbortSignal,
   ): AsyncGenerator<ChatCompletionChunk> {
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${this.config.apiKey}`,
     };
 
-    const resp = await fetch(new URL("chat", this.apiBase), {
-      method: "POST",
-      headers,
-      body: JSON.stringify(this._convertBody(body)),
-    });
+    const resp = await customFetch(this.config.requestOptions)(
+      new URL("chat", this.apiBase),
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify(this._convertBody(body)),
+        signal,
+      },
+    );
 
     for await (const value of streamJSON(resp as any)) {
       if (value.event_type === "text-generation") {
@@ -155,7 +150,7 @@ export class CohereApi implements BaseLlmApi {
   }
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
     const endpoint = new URL("rerank", this.apiBase);
-    const response = await fetch(endpoint, {
+    const response = await customFetch(this.config.requestOptions)(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
@@ -182,7 +177,7 @@ export class CohereApi implements BaseLlmApi {
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
     const url = new URL("/embed", this.apiBase);
     const texts = typeof body.input === "string" ? [body.input] : body.input;
-    const response = await fetch(url, {
+    const response = await customFetch(this.config.requestOptions)(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -196,18 +191,17 @@ export class CohereApi implements BaseLlmApi {
     });
     const data = (await response.json()) as any;
 
-    return {
-      object: "list",
+    return embedding({
       model: body.model,
       usage: {
         total_tokens: 0,
         prompt_tokens: 0,
       },
-      data: data.embeddings.map((embedding: any, index: number) => ({
-        object: "embedding",
-        index,
-        embedding,
-      })),
-    };
+      data: data.embeddings.map((embedding: any) => embedding),
+    });
+  }
+
+  list(): Promise<Model[]> {
+    throw new Error("Method not implemented.");
   }
 }

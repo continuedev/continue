@@ -1,32 +1,33 @@
 import {
   BedrockRuntimeClient,
   ConverseStreamCommand,
+  InvokeModelCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
 
 import {
   ChatMessage,
+  Chunk,
   CompletionOptions,
   LLMOptions,
   MessageContent,
-  ModelProvider,
 } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 
-/**
- * Bedrock class implements AWS Bedrock LLM integration.
- * It handles streaming completions and chat messages using AWS Bedrock runtime.
- * Supports both text and image inputs through Claude 3 models.
- */
+interface ModelConfig {
+  formatPayload: (text: string) => any;
+  extractEmbeddings: (responseBody: any) => number[][];
+}
+
 class Bedrock extends BaseLLM {
-  static providerName: ModelProvider = "bedrock";
+  static providerName = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
     model: "anthropic.claude-3-sonnet-20240229-v1:0",
     contextLength: 200_000,
+    profile: "bedrock",
   };
-  profile?: string | undefined;
 
   constructor(options: LLMOptions) {
     super(options);
@@ -178,6 +179,131 @@ class Bedrock extends BaseLLM {
         `AWS profile with name ${this.profile} not found in ~/.aws/credentials, using default profile`,
       );
       return await fromIni()();
+    }
+  }
+
+  // EMBED //
+  async embed(chunks: string[]): Promise<number[][]> {
+    const credentials = await this._getCredentials();
+    const client = new BedrockRuntimeClient({
+      region: this.region,
+      credentials: {
+        accessKeyId: credentials.accessKeyId,
+        secretAccessKey: credentials.secretAccessKey,
+        sessionToken: credentials.sessionToken || "",
+      },
+    });
+
+    return (
+      await Promise.all(
+        chunks.map(async (chunk) => {
+          const input = this._generateInvokeModelCommandInput(chunk);
+          const command = new InvokeModelCommand(input);
+          const response = await client.send(command);
+          if (response.body) {
+            const responseBody = JSON.parse(
+              new TextDecoder().decode(response.body),
+            );
+            return this._extractEmbeddings(responseBody);
+          }
+          return [];
+        }),
+      )
+    ).flat();
+  }
+
+  private _generateInvokeModelCommandInput(text: string): any {
+    const modelConfig = this._getModelConfig();
+    const payload = modelConfig.formatPayload(text);
+
+    return {
+      body: JSON.stringify(payload),
+      modelId: this.model,
+      accept: "*/*",
+      contentType: "application/json",
+    };
+  }
+
+  private _extractEmbeddings(responseBody: any): number[][] {
+    const modelConfig = this._getModelConfig();
+    return modelConfig.extractEmbeddings(responseBody);
+  }
+
+  private _getModelConfig() {
+    const modelConfigs: { [key: string]: ModelConfig } = {
+      cohere: {
+        formatPayload: (text: string) => ({
+          texts: [text],
+          input_type: "search_document",
+          truncate: "END",
+        }),
+        extractEmbeddings: (responseBody: any) => responseBody.embeddings || [],
+      },
+      "amazon.titan-embed": {
+        formatPayload: (text: string) => ({
+          inputText: text,
+        }),
+        extractEmbeddings: (responseBody: any) =>
+          responseBody.embedding ? [responseBody.embedding] : [],
+      },
+    };
+
+    const modelPrefix = Object.keys(modelConfigs).find((prefix) =>
+      this.model!.startsWith(prefix),
+    );
+    if (!modelPrefix) {
+      throw new Error(`Unsupported model: ${this.model}`);
+    }
+    return modelConfigs[modelPrefix];
+  }
+
+  async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    if (!query || !chunks.length) {
+      throw new Error("Query and chunks must not be empty");
+    }
+
+    try {
+      const credentials = await this._getCredentials();
+      const client = new BedrockRuntimeClient({
+        region: this.region,
+        credentials,
+      });
+
+      // Base payload for both models
+      const payload: any = {
+        query: query,
+        documents: chunks.map((chunk) => chunk.content),
+        top_n: chunks.length,
+      };
+
+      // Add api_version for Cohere model
+      if (this.model.startsWith("cohere.rerank")) {
+        payload.api_version = 2;
+      }
+
+      const input = {
+        body: JSON.stringify(payload),
+        modelId: this.model,
+        accept: "*/*",
+        contentType: "application/json",
+      };
+
+      const command = new InvokeModelCommand(input);
+      const response = await client.send(command);
+
+      if (!response.body) {
+        throw new Error("Empty response received from Bedrock");
+      }
+
+      const responseBody = JSON.parse(new TextDecoder().decode(response.body));
+
+      // Sort results by index to maintain original order
+      return responseBody.results
+        .sort((a: any, b: any) => a.index - b.index)
+        .map((result: any) => result.relevance_score);
+    } catch (error) {
+      console.error("Error in BedrockReranker.rerank:", error);
+      throw error;
     }
   }
 }

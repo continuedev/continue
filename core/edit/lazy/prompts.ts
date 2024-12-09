@@ -1,4 +1,4 @@
-import { ChatMessage, ModelProvider } from "../..";
+import { ChatMessage } from "../..";
 import { dedent } from "../../util";
 
 export const UNCHANGED_CODE = "UNCHANGED CODE";
@@ -52,7 +52,7 @@ function claude35SonnetLazyApplyPrompt(
 
 export function lazyApplyPromptForModel(
   model: string,
-  provider: ModelProvider,
+  provider: string,
 ): LazyApplyPrompt | undefined {
   if (model.includes("sonnet")) {
     return claude35SonnetLazyApplyPrompt;

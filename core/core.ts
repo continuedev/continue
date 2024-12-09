@@ -1,5 +1,6 @@
 import path from "path";
 
+import { fetchwithRequestOptions } from "@continuedev/fetch";
 import ignore from "ignore";
 import { v4 as uuidv4 } from "uuid";
 
@@ -27,7 +28,6 @@ import { callTool } from "./tools/callTool";
 import { ChatDescriber } from "./util/chatDescriber";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
-import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import { GlobalContext } from "./util/GlobalContext";
 import historyManager from "./util/history";
 import { editConfigJson, setupInitialDotContinueDirectory } from "./util/paths";

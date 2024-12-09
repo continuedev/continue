@@ -1,9 +1,9 @@
-import { ChatMessage, LLMOptions, ModelProvider } from "..";
+import { ChatMessage, LLMOptions } from "..";
 
 import { BaseLLM } from ".";
 
 class DummyLLM extends BaseLLM {
-  static providerName: ModelProvider = "openai";
+  static providerName = "openai";
   static defaultOptions: Partial<LLMOptions> = {
     model: "dummy-model",
     contextLength: 200_000,
@@ -123,7 +123,7 @@ describe("BaseLLM", () => {
       expect(baseLLM.supportsPrefill()).toBe(false);
 
       class PrefillLLM extends BaseLLM {
-        static providerName: ModelProvider = "ollama";
+        static providerName = "ollama";
       }
       const prefillLLM = new PrefillLLM({ model: "some-model" });
       expect(prefillLLM.supportsPrefill()).toBe(true);
