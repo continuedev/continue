@@ -379,6 +379,7 @@ export const sessionSlice = createSlice({
     ) => {
       state.allSessionMetadata = payload;
     },
+    //////////////////////////////////////////////////////////////////////////////////
     // These are for optimistic session metadata updates, especially for History page
     addSessionMetadata: (
       state,

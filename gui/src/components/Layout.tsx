@@ -237,12 +237,6 @@ const Layout = () => {
     }
   }, [location]);
 
-  useEffect(() => {
-    if (isStreaming === false) {
-      saveSession(false);
-    }
-  }, [isStreaming]);
-
   return (
     <AuthProvider>
       <LayoutTopDiv>
