@@ -63,7 +63,14 @@ class OpenAI extends BaseLLM {
     maxEmbeddingBatchSize: 128,
   };
 
-  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = ["*"];
+  protected useOpenAIAdapterFor: (LlmApiRequestType | "*")[] = [
+    "chat",
+    "embed",
+    "list",
+    "rerank",
+    "streamChat",
+    "streamFim",
+  ];
 
   protected _convertModelName(model: string): string {
     return model;
