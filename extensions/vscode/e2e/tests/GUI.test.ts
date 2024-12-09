@@ -35,25 +35,29 @@ describe("GUI Test", () => {
     await new EditorView().closeAllEditors();
   });
 
-  it("should display correct panel description", async () => {
-    const description = await GUISelectors.getDescription(view);
+  describe("Onboarding", () => {
+    it("should display correct panel description", async () => {
+      const description = await GUISelectors.getDescription(view);
 
-    expect(await description.getText()).has.string(
-      "Quickly get up and running using our API keys.",
-    );
-  }).timeout(20_000);
+      expect(await description.getText()).has.string(
+        "Quickly get up and running using our API keys.",
+      );
+    });
+  });
 
-  it("should allow typing text in the editor", async () => {
-    await GUIActions.selectModelFromDropdown(view, "Mock");
-    await GUIActions.selectModelFromDropdown(view, "TEST LLM");
+  describe("Chat", () => {
+    it("should allow typing text in the editor", async () => {
+      await GUIActions.selectModelFromDropdown(view, "Mock");
+      await GUIActions.selectModelFromDropdown(view, "TEST LLM");
 
-    const tiptap = await GUISelectors.getTipTapEditor(view);
+      const tiptap = await GUISelectors.getTipTapEditor(view);
 
-    await tiptap.sendKeys("How are you?");
-    (await GUISelectors.getSubmitInputButton(view)).click();
+      await tiptap.sendKeys("How are you?");
+      (await GUISelectors.getSubmitInputButton(view)).click();
 
-    await TestUtils.waitForElement(() =>
-      GUISelectors.getThreadMessageByText(view, "I'm fine"),
-    );
-  }).timeout(20_000);
+      await TestUtils.waitForElement(() =>
+        GUISelectors.getThreadMessageByText(view, "I'm fine"),
+      );
+    }).timeout(20_000);
+  });
 });
