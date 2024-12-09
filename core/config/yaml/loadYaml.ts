@@ -274,7 +274,7 @@ async function configYamlToContinueConfig(
   return continueConfig;
 }
 
-export async function loadContinueConfig(
+export async function loadContinueConfigFromYaml(
   ide: IDE,
   workspaceConfigs: string[],
   ideSettings: IdeSettings,
@@ -327,7 +327,4 @@ export async function loadContinueConfig(
   };
 }
 
-export {
-  loadContinueConfig as loadFullConfigNode,
-  type BrowserSerializedContinueConfig,
-};
+export { type BrowserSerializedContinueConfig };
