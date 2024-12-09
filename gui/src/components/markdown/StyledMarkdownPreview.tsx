@@ -317,7 +317,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
       // some patches to source markdown are applied here:
       fixDoubleDollarNewLineLatex(patchNestedMarkdown(props.source ?? "")),
     );
-  }, [props.source]);
+  }, [props.source, allSymbols]);
 
   return (
     <StyledMarkdown fontSize={getFontSize()}>{reactContent}</StyledMarkdown>
