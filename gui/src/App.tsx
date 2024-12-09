@@ -70,9 +70,7 @@ const router = createMemoryRouter([
   TODO - look into a more redux-esque way to do this
 */
 function SetupListeners() {
-  const dispatch = useDispatch();
-
-  useSetup(dispatch);
+  useSetup();
   return <></>;
 }
 

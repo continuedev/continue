@@ -6,14 +6,9 @@ import { AppDispatch } from "../redux/store";
 import { streamResponseThunk } from "../redux/thunks/streamResponse";
 import { isJetBrains } from "../util";
 import { setLocalStorage } from "../util/localStorage";
-import { updateFileSymbolsFromContextItems } from "../util/symbols";
 import { useWebviewListener } from "./useWebviewListener";
-import { useAppSelector } from "../redux/hooks";
-import {
-  selectDefaultModel,
-  setConfig,
-  setConfigError,
-} from "../redux/slices/configSlice";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { setConfig, setConfigError } from "../redux/slices/configSlice";
 import { updateIndexingStatus } from "../redux/slices/indexingSlice";
 import { updateDocsSuggestions } from "../redux/slices/miscSlice";
 import {
@@ -23,8 +18,10 @@ import {
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import useUpdatingRef from "./useUpdatingRef";
+import { updateFileSymbolsFromHistory } from "../redux/thunks/updateFileSymbols";
 
-function useSetup(dispatch: AppDispatch) {
+function useSetup() {
+  const dispatch = useAppDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
   const history = useAppSelector((store) => store.session.history);
   const defaultModelTitle = useAppSelector(
@@ -87,18 +84,11 @@ function useSetup(dispatch: AppDispatch) {
 
   // Load symbols for chat on any session change
   const sessionId = useAppSelector((state) => state.session.id);
-  const sessionIdRef = useRef("");
-
   useEffect(() => {
-    if (sessionIdRef.current !== sessionId) {
-      updateFileSymbolsFromContextItems(
-        history.flatMap((item) => item.contextItems),
-        ideMessenger,
-        dispatch,
-      );
+    if (sessionId) {
+      dispatch(updateFileSymbolsFromHistory());
     }
-    sessionIdRef.current = sessionId;
-  }, [sessionId, history, ideMessenger, dispatch]);
+  }, [sessionId]);
 
   // ON LOAD
   useEffect(() => {
