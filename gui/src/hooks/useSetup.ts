@@ -23,6 +23,7 @@ import {
 } from "../redux/slices/sessionSlice";
 import { setTTSActive } from "../redux/slices/uiSlice";
 import useUpdatingRef from "./useUpdatingRef";
+import { refreshSessionMetadata } from "../redux/thunks/session";
 
 function useSetup(dispatch: AppDispatch) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -30,7 +31,7 @@ function useSetup(dispatch: AppDispatch) {
   const defaultModelTitle = useAppSelector(
     (store) => store.config.defaultModelTitle,
   );
-  const defaultModelTitleRef = useUpdatingRef(defaultModelTitle);
+
   const hasLoadedConfig = useRef(false);
   const loadConfig = useCallback(
     async (initial: boolean) => {
@@ -66,6 +67,7 @@ function useSetup(dispatch: AppDispatch) {
         // Init to run on initial config load
         ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
+        dispatch(refreshSessionMetadata({}));
 
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);

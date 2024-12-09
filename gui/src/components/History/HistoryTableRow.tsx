@@ -56,10 +56,11 @@ export function HistoryTableRow({
           }),
         );
       }
+      setEditing(false);
     } else if (e.key === "Escape") {
       setSessionTitleEditValue(sessionMetadata.title);
+      setEditing(false);
     }
-    setEditing(false);
   };
 
   return (
