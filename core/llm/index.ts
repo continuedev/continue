@@ -1,3 +1,4 @@
+import { fetchwithRequestOptions } from "@continuedev/fetch";
 import { findLlmInfo } from "@continuedev/llm-info";
 import { BaseLlmApi, constructLlmApi } from "@continuedev/openai-adapters";
 import Handlebars from "handlebars";
@@ -18,7 +19,6 @@ import {
 } from "../index.js";
 import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import mergeJson from "../util/merge.js";
 import { renderChatMessage } from "../util/messageContent.js";
 import { Telemetry } from "../util/posthog.js";

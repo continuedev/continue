@@ -3,6 +3,7 @@ import * as fs from "fs";
 import os from "os";
 import path from "path";
 
+import { fetchwithRequestOptions } from "@continuedev/fetch";
 import * as JSONC from "comment-json";
 import * as tar from "tar";
 
@@ -46,7 +47,6 @@ import { LLMReranker } from "../llm/llms/llm";
 import TransformersJsEmbeddingsProvider from "../llm/llms/TransformersJsEmbeddingsProvider";
 import { allTools } from "../tools";
 import { copyOf } from "../util";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import { GlobalContext } from "../util/GlobalContext";
 import mergeJson from "../util/merge";
 import {
