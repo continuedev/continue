@@ -37,4 +37,12 @@ export class GUISelectors {
       By.xpath(`//*[@class="thread-message"]//*[contains(text(), "${text}")]`),
     );
   }
+
+  public static getHistoryNavButton(view: WebView) {
+    return SelectorUtils.getElementByAriaLabel(view, "View History");
+  }
+
+  public static getNewSessionNavButton(view: WebView) {
+    return SelectorUtils.getElementByAriaLabel(view, "New Session");
+  }
 }

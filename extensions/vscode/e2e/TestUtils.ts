@@ -24,4 +24,14 @@ export class TestUtils {
 
     throw new Error(`Element not found after ${timeout}ms timeout`);
   }
+
+  public static generateTestMessagePair(id: number): {
+    userMessage: string;
+    llmResponse: string;
+  } {
+    return {
+      userMessage: `TEST_USER_MESSAGE_${id}`,
+      llmResponse: `TEST_LLM_RESPONSE_${id}`,
+    };
+  }
 }
