@@ -177,7 +177,7 @@ export const saveCurrentSession = createAsyncThunk<
           const result = await extra.ideMessenger.request(
             "chatDescriber/describe",
             {
-              text: message,
+              text: assistantResponse,
               selectedModelTitle: state.config.defaultModelTitle,
             },
           );
@@ -186,7 +186,7 @@ export const saveCurrentSession = createAsyncThunk<
           }
         }
       }
-      // Fallbacks if we get an error above or if the user has not set getChatTitles
+      // Fallbacks if above doesn't work out or getChatTitles = false
       if (title === NEW_SESSION_TITLE) {
         title = getChatTitleFromMessage(history[0].message);
       }
