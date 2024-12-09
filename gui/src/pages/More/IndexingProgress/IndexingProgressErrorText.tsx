@@ -1,8 +1,7 @@
-import { IndexingProgressUpdate } from "core";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { isJetBrains } from "../../../util";
 import { XCircleIcon } from "@heroicons/react/24/outline";
+import { IndexingProgressUpdate } from "core";
 import { useAppSelector } from "../../../redux/hooks";
+import { isJetBrains } from "../../../util";
 
 export interface IndexingProgressErrorTextProps {
   update: IndexingProgressUpdate;
@@ -14,9 +13,7 @@ function IndexingProgressErrorText({ update }: IndexingProgressErrorTextProps) {
   );
 
   const showJbError =
-    (isJetBrains() &&
-      embeddingsProvider === TransformersJsEmbeddingsProvider.model) ||
-    true;
+    (isJetBrains() && embeddingsProvider === "all-MiniLM-L6-v2") || true;
 
   if (showJbError) {
     return (

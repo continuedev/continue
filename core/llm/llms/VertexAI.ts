@@ -1,11 +1,6 @@
 import { GoogleAuth } from "google-auth-library";
 
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
+import { ChatMessage, CompletionOptions, LLMOptions } from "../../index.js";
 import { renderChatMessage } from "../../util/messageContent.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse, streamSse } from "../stream.js";
@@ -14,11 +9,16 @@ import Anthropic from "./Anthropic.js";
 import Gemini from "./Gemini.js";
 
 class VertexAI extends BaseLLM {
-  static providerName: ModelProvider = "vertexai";
+  static providerName = "vertexai";
   declare apiBase: string;
   declare vertexProvider: string;
   declare anthropicInstance: Anthropic;
   declare geminiInstance: Gemini;
+
+  static defaultOptions: Partial<LLMOptions> | undefined = {
+    maxEmbeddingBatchSize: 5,
+    region: "us-central1",
+  };
 
   private clientPromise = new GoogleAuth({
     scopes: "https://www.googleapis.com/auth/cloud-platform",
@@ -433,6 +433,39 @@ class VertexAI extends BaseLLM {
 
   supportsFim(): boolean {
     return ["code-gecko", "codestral-latest"].includes(this.model);
+  }
+
+  protected async _embed(chunks: string[]): Promise<number[][]> {
+    const client = await this.clientPromise;
+    const { token } = await client.getAccessToken();
+    if (!token) {
+      throw new Error(
+        "Could not get an access token. Set up your Google Application Default Credentials.",
+      );
+    }
+
+    const resp = await this.fetch(
+      new URL(this.apiBase + `/publishers/google/models/${this.model}:predict`),
+      {
+        method: "POST",
+        body: JSON.stringify({
+          instances: chunks.map((chunk) => ({ content: chunk })),
+        }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    return data.predictions.map(
+      (prediction: any) => prediction.embeddings.values,
+    );
   }
 }
 

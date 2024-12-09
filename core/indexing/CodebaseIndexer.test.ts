@@ -135,7 +135,6 @@ describe("CodebaseIndexer", () => {
     del: number,
   ) {
     const plan = await getIndexPlan();
-    console.log("PLAN: ", plan);
     expect(plan.compute).toHaveLength(compute);
     expect(plan.addTag).toHaveLength(addTag);
     expect(plan.removeTag).toHaveLength(removeTag);

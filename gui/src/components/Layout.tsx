@@ -65,6 +65,8 @@ const Layout = () => {
 
   const showDialog = useAppSelector((state) => state.ui.showDialog);
 
+  const isStreaming = useAppSelector((state) => state.session.isStreaming);
+
   useWebviewListener(
     "openDialogMessage",
     async (message) => {
@@ -234,6 +236,12 @@ const Layout = () => {
       onboardingCard.open("Quickstart");
     }
   }, [location]);
+
+  useEffect(() => {
+    if (isStreaming === false) {
+      saveSession(false);
+    }
+  }, [isStreaming]);
 
   return (
     <AuthProvider>
