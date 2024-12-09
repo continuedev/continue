@@ -16,7 +16,6 @@ export const streamThunkWrapper = createAsyncThunk<
     dispatch(clearLastEmptyResponse());
   } finally {
     dispatch(setInactive());
-    // NOTE will conflict with dallin/silent-chat-errors, move this dispatch to the streamWrapper on that version
     await dispatch(
       saveCurrentSession({
         openNewSession: false,
