@@ -10,16 +10,6 @@ function DocsIndexingStatuses() {
   const config = useAppSelector((store) => store.config.config);
   const configDocs = config.docs ?? [];
 
-  // const indexingStatuses = useSelector(
-  //   (store: RootState) => store.indexing.indexing.statuses,
-  // );
-  // const docsStatuses = useMemo(() => {
-  //   const docs = Object.values(indexingStatuses).filter(
-  //     (status) => status.type === "docs" && status.status !== "deleted",
-  //   );
-  //   return docs;
-  // }, [indexingStatuses]);
-
   return (
     <div className="flex flex-col gap-1">
       <div className="flex flex-row items-center justify-between">
@@ -38,9 +28,23 @@ function DocsIndexingStatuses() {
         ) : null}
       </div>
       <span className="text-xs text-stone-500">
-        Manage your documentation sources
+        {configDocs.length
+          ? "Manage your documentation sources"
+          : "No docs yet"}
       </span>
       <div className="flex max-h-[170px] flex-col gap-1 overflow-x-hidden overflow-y-scroll pr-2">
+        <div>
+          {configDocs.length === 0 && (
+            <SecondaryButton
+              onClick={() => {
+                dispatch(setShowDialog(true));
+                dispatch(setDialogMessage(<AddDocsDialog />));
+              }}
+            >
+              Add Docs
+            </SecondaryButton>
+          )}
+        </div>
         {configDocs.map((doc) => {
           return <DocsIndexingStatus key={doc.startUrl} docConfig={doc} />;
         })}
