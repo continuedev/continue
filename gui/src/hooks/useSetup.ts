@@ -63,6 +63,7 @@ function useSetup() {
         // Init to run on initial config load
         ideMessenger.post("docs/getSuggestedDocs", undefined);
         ideMessenger.post("docs/initStatuses", undefined);
+        dispatch(updateFileSymbolsFromHistory())
 
         // This triggers sending pending status to the GUI for relevant docs indexes
         clearInterval(interval);

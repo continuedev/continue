@@ -1,6 +1,8 @@
 import { SymbolWithRange } from "core";
-import { useContext } from "react";
+import { useContext, useMemo } from "react";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { ToolTip } from "../gui/Tooltip";
+import { v4 as uuidv4 } from "uuid";
 
 interface SymbolLinkProps {
   symbol: SymbolWithRange;
@@ -18,15 +20,37 @@ function SymbolLink({ symbol, content }: SymbolLinkProps) {
     });
   }
 
+  const processedContent = useMemo(() => {
+    // // normalize indentation and truncate if long
+    let content = symbol.content;
+    // let lines = symbol.content.split("\n");
+    // if (lines.length > 1) {
+    //   const firstLineIndentation = lines[0].match(/^\s*/)?.[0].length || 0;
+    //   content = lines
+    //     .map((line) => line.slice(firstLineIndentation))
+    //     .join("\n");
+    // }
+    return content.length > 200 ? content.slice(0, 196) + "\n..." : content;
+  }, [symbol]);
+
+  const id = uuidv4();
   return (
-    <span
-      className="mx-[0.1em] mb-[0.15em] inline-flex cursor-pointer flex-row items-center gap-[0.2rem] rounded-md align-middle hover:ring-1"
-      onClick={onClick}
-    >
-      <code className="align-middle underline underline-offset-2">
-        {content}
-      </code>
-    </span>
+    <>
+      <span
+        className="mx-[0.1em] mb-[0.15em] inline-flex cursor-pointer flex-row items-center gap-[0.2rem] rounded-md align-middle hover:ring-1"
+        onClick={onClick}
+        data-tooltip-id={id}
+      >
+        <code className="align-middle underline underline-offset-2">
+          {content}
+        </code>
+      </span>
+      <ToolTip id={id} place="top" className="m-0 p-0">
+        <pre className="text-left">
+          <code>{processedContent ?? symbol.filepath}</code>
+        </pre>
+      </ToolTip>
+    </>
   );
 }
 

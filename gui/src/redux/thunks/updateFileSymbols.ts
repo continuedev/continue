@@ -23,7 +23,6 @@ export const updateFileSymbolsFromNewContextItems = createAsyncThunk<
             .map((item) => item.uri!.value),
         ),
       );
-      console.log("Updating symbols for files", uniqueUris);
 
       // Update symbols for those files
       if (uniqueUris.length > 0) {
@@ -75,7 +74,6 @@ export const updateFileSymbolsFromHistory = createAsyncThunk<
     });
 
     const uriArray = Array.from(uniqueUris);
-    console.log("Updating symbols for files", uriArray);
 
     // And then update symbols for those files
     if (uriArray.length > 0) {
