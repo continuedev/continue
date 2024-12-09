@@ -210,7 +210,7 @@ export abstract class BaseLLM implements ILLM {
 
     this.openaiAdapter = constructLlmApi({
       provider: this.providerName as any,
-      apiKey: this.apiKey,
+      apiKey: this.apiKey ?? "",
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
     });
