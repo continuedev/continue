@@ -48,7 +48,6 @@ const ErrorPage: React.FC = () => {
           localStorage.removeItem("inputHistory_chat");
           // localStorage.removeItem("showTutorialCard");
           // localStorage.removeItem("onboardingStatus");
-          // localStorage.removeItem("lastSessionId");
           navigate("/");
         }}
       >

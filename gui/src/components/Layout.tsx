@@ -2,7 +2,6 @@ import { useEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { CustomScrollbarDiv, defaultBorderRadius } from ".";
-import { LastSessionProvider } from "../context/LastSessionContext";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { setEditStatus, focusEdit } from "../redux/slices/editModeState";
@@ -22,8 +21,8 @@ import { isNewUserOnboarding, useOnboardingCard } from "./OnboardingCard";
 import PostHogPageView from "./PosthogPageView";
 import AccountDialog from "./AccountDialog";
 import { AuthProvider } from "../context/Auth";
-import useHistory from "../hooks/useHistory";
 import { exitEditMode } from "../redux/thunks";
+import { loadLastSession, saveCurrentSession } from "../redux/thunks/session";
 
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
@@ -55,7 +54,6 @@ const Layout = () => {
   const dispatch = useAppDispatch();
   const onboardingCard = useOnboardingCard();
   const { pathname } = useLocation();
-  const { saveSession, loadLastSession } = useHistory(dispatch);
 
   const configError = useAppSelector((state) => state.config.configError);
 
@@ -157,7 +155,11 @@ const Layout = () => {
   useWebviewListener(
     "focusEdit",
     async () => {
-      await saveSession(false);
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: false,
+        }),
+      );
       dispatch(newSession());
       dispatch(focusEdit());
       dispatch(setMode("edit"));
@@ -168,8 +170,11 @@ const Layout = () => {
   useWebviewListener(
     "focusEditWithoutClear",
     async () => {
-      await saveSession(false);
-      dispatch(newSession());
+      await dispatch(
+        saveCurrentSession({
+          openNewSession: true,
+        }),
+      );
       dispatch(focusEdit());
       dispatch(setMode("edit"));
     },
@@ -193,10 +198,11 @@ const Layout = () => {
   );
 
   useWebviewListener("exitEditMode", async () => {
-    loadLastSession().catch((e) =>
-      console.error(`Failed to load last session: ${e}`),
+    dispatch(
+      loadLastSession({
+        saveCurrentSession: false,
+      }),
     );
-
     dispatch(exitEditMode());
   });
 
@@ -231,53 +237,51 @@ const Layout = () => {
 
   return (
     <AuthProvider>
-      <LastSessionProvider>
-        <LayoutTopDiv>
-          <div
-            style={{
-              scrollbarGutter: "stable both-edges",
-              minHeight: "100%",
-              display: "grid",
-              gridTemplateRows: "1fr auto",
+      <LayoutTopDiv>
+        <div
+          style={{
+            scrollbarGutter: "stable both-edges",
+            minHeight: "100%",
+            display: "grid",
+            gridTemplateRows: "1fr auto",
+          }}
+        >
+          <TextDialog
+            showDialog={showDialog}
+            onEnter={() => {
+              dispatch(setShowDialog(false));
             }}
-          >
-            <TextDialog
-              showDialog={showDialog}
-              onEnter={() => {
-                dispatch(setShowDialog(false));
-              }}
-              onClose={() => {
-                dispatch(setShowDialog(false));
-              }}
-              message={dialogMessage}
-            />
-
-            <GridDiv className="">
-              <PostHogPageView />
-              <Outlet />
-
-              {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
-                <div
-                  className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
-                  role="alert"
-                  onClick={() => navigate(ROUTES.CONFIG_ERROR)}
-                >
-                  <strong className="font-bold">Error!</strong>{" "}
-                  <span className="block sm:inline">
-                    Could not load config.json
-                  </span>
-                  <div className="mt-2 underline">Learn More</div>
-                </div>
-              )}
-              <Footer />
-            </GridDiv>
-          </div>
-          <div
-            style={{ fontSize: `${getFontSize() - 4}px` }}
-            id="tooltip-portal-div"
+            onClose={() => {
+              dispatch(setShowDialog(false));
+            }}
+            message={dialogMessage}
           />
-        </LayoutTopDiv>
-      </LastSessionProvider>
+
+          <GridDiv className="">
+            <PostHogPageView />
+            <Outlet />
+
+            {hasFatalErrors && pathname !== ROUTES.CONFIG_ERROR && (
+              <div
+                className="z-50 cursor-pointer bg-red-600 p-4 text-center text-white"
+                role="alert"
+                onClick={() => navigate(ROUTES.CONFIG_ERROR)}
+              >
+                <strong className="font-bold">Error!</strong>{" "}
+                <span className="block sm:inline">
+                  Could not load config.json
+                </span>
+                <div className="mt-2 underline">Learn More</div>
+              </div>
+            )}
+            <Footer />
+          </GridDiv>
+        </div>
+        <div
+          style={{ fontSize: `${getFontSize() - 4}px` }}
+          id="tooltip-portal-div"
+        />
+      </LayoutTopDiv>
     </AuthProvider>
   );
 };

@@ -1,12 +1,11 @@
 import { PencilSquareIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { SessionMetadata } from "core";
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Input } from "..";
-import useHistory from "../../hooks/useHistory";
 import HeaderButtonWithToolTip from "../gui/HeaderButtonWithToolTip";
-import { useAppSelector } from "../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
+import { switchToSession } from "../../redux/thunks/session";
 
 function lastPartOfPath(path: string): string {
   const sep = path.includes("/") ? "/" : "\\";
@@ -16,15 +15,11 @@ function lastPartOfPath(path: string): string {
 export function HistoryTableRow({
   sessionMetadata,
   date,
-  onDelete,
-  onEdit,
 }: {
   sessionMetadata: SessionMetadata;
   date: Date;
-  onDelete: (sessionId: string) => void;
-  onEdit: (session: SessionMetadata) => void;
 }) {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   const [hovered, setHovered] = useState(false);
@@ -34,12 +29,10 @@ export function HistoryTableRow({
   );
   const currentSessionId = useAppSelector((state) => state.session.id);
 
-  const { saveSession, deleteSession, loadSession, getSession, updateSession } =
-    useHistory(dispatch);
-
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       if (sessionTitleEditValue !== sessionMetadata.title) {
+        const session;
         const sessionData = await getSession(sessionMetadata.sessionId);
         sessionData.title = sessionTitleEditValue;
         await updateSession(sessionData);
@@ -65,10 +58,8 @@ export function HistoryTableRow({
         <div
           className="hover:bg-vsc-editor-background relative box-border flex max-w-full cursor-pointer overflow-hidden rounded-lg p-3"
           onClick={async () => {
-            // Save current session
             if (sessionMetadata.sessionId !== currentSessionId) {
-              await saveSession();
-              await loadSession(sessionMetadata.sessionId);
+              await dispatch(switchToSession(sessionMetadata.sessionId));
             }
 
             navigate("/");

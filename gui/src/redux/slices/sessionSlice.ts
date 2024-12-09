@@ -17,6 +17,7 @@ import {
   MessageModes,
   PromptLog,
   Session,
+  SessionMetadata,
   ToolCall,
 } from "core";
 import { NEW_SESSION_TITLE } from "core/util/constants";
@@ -34,6 +35,8 @@ type ChatHistoryItemWithMessageId = ChatHistoryItem & {
 };
 
 type SessionState = {
+  lastSessionId?: string;
+  allSessionMetadata: SessionMetadata[];
   history: ChatHistoryItemWithMessageId[];
   isStreaming: boolean;
   title: string;
@@ -85,6 +88,7 @@ function getBaseHistoryItem(): ChatHistoryItemWithMessageId {
 }
 
 const initialState: SessionState = {
+  allSessionMetadata: [],
   history: [],
   isStreaming: false,
   title: NEW_SESSION_TITLE,
@@ -99,6 +103,7 @@ const initialState: SessionState = {
     states: [],
     curIndex: 0,
   },
+  lastSessionId: undefined,
 };
 
 export const sessionSlice = createSlice({
@@ -358,6 +363,8 @@ export const sessionSlice = createSlice({
       }
     },
     newSession: (state, { payload }: PayloadAction<Session | undefined>) => {
+      state.lastSessionId = state.id;
+
       state.streamAborter.abort();
       state.streamAborter = new AbortController();
 
@@ -371,14 +378,57 @@ export const sessionSlice = createSlice({
         state.curCheckpointIndex = 0;
       } else {
         state.history = [];
-        state.title = "New Session";
+        state.title = NEW_SESSION_TITLE;
         state.id = uuidv4();
         state.curCheckpointIndex = 0;
       }
     },
+
     updateSessionTitle: (state, { payload }: PayloadAction<string>) => {
       state.title = payload;
     },
+    setAllSessionMetadata: (
+      state,
+      { payload }: PayloadAction<SessionMetadata[]>,
+    ) => {
+      state.allSessionMetadata = payload;
+    },
+    // These are for optimistic session metadata updates, especially for History page
+    addSessionMetadata: (
+      state,
+      { payload }: PayloadAction<SessionMetadata>,
+    ) => {
+      state.allSessionMetadata = [...state.allSessionMetadata, payload];
+    },
+    updateSessionMetadata: (
+      state,
+      {
+        payload,
+      }: PayloadAction<
+        {
+          sessionId: string;
+        } & Partial<SessionMetadata>
+      >,
+    ) => {
+      state.allSessionMetadata = state.allSessionMetadata.map((session) =>
+        session.sessionId === payload.sessionId
+          ? {
+              ...session,
+              ...payload,
+            }
+          : session,
+      );
+      if (payload.title && payload.sessionId === state.id) {
+        state.title = payload.title;
+      }
+    },
+    deleteSessionMetadata: (state, { payload }: PayloadAction<string>) => {
+      // Note, should not be allowed to delete current session from chat session
+      state.allSessionMetadata = state.allSessionMetadata.filter(
+        (session) => session.sessionId !== payload,
+      );
+    },
+    //////////////////////////////////////////////////////////////////////////////////
     addHighlightedCode: (
       state,
       {
@@ -599,6 +649,10 @@ export const {
   setToolGenerated,
   setToolCallOutput,
   setMode,
+  setAllSessionMetadata,
+  addSessionMetadata,
+  updateSessionMetadata,
+  deleteSessionMetadata,
 } = sessionSlice.actions;
 
 export const {
