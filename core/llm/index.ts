@@ -135,7 +135,7 @@ export abstract class BaseLLM implements ILLM {
 
   private _llmOptions: LLMOptions;
 
-  private openaiAdapter: BaseLlmApi;
+  private openaiAdapter?: BaseLlmApi;
 
   constructor(_options: LLMOptions) {
     this._llmOptions = _options;
@@ -221,6 +221,7 @@ export abstract class BaseLLM implements ILLM {
       apiBase: this.apiBase,
       requestOptions: this.requestOptions,
     });
+
     this.maxEmbeddingBatchSize =
       options.maxEmbeddingBatchSize ?? DEFAULT_MAX_BATCH_SIZE;
     this.maxEmbeddingChunkSize =
@@ -492,7 +493,7 @@ export abstract class BaseLLM implements ILLM {
 
     let completion = "";
 
-    if (this.shouldUseOpenAIAdapter("streamFim")) {
+    if (this.shouldUseOpenAIAdapter("streamFim") && this.openaiAdapter) {
       const stream = this.openaiAdapter.fimStream(
         toFimBody(prefix, suffix, completionOptions),
       );
@@ -563,7 +564,7 @@ export abstract class BaseLLM implements ILLM {
 
     let completion = "";
     try {
-      if (this.shouldUseOpenAIAdapter("streamComplete")) {
+      if (this.shouldUseOpenAIAdapter("streamComplete") && this.openaiAdapter) {
         for await (const chunk of this.openaiAdapter.completionStream({
           ...toCompleteBody(prompt, completionOptions),
           stream: true,
@@ -627,7 +628,7 @@ export abstract class BaseLLM implements ILLM {
     }
 
     let completion: string;
-    if (this.shouldUseOpenAIAdapter("complete")) {
+    if (this.shouldUseOpenAIAdapter("complete") && this.openaiAdapter) {
       const result = await this.openaiAdapter.completionNonStream({
         ...toCompleteBody(prompt, completionOptions),
         stream: false,
@@ -693,7 +694,7 @@ export abstract class BaseLLM implements ILLM {
           yield { role: "assistant", content: chunk };
         }
       } else {
-        if (this.shouldUseOpenAIAdapter("streamChat")) {
+        if (this.shouldUseOpenAIAdapter("streamChat") && this.openaiAdapter) {
           const stream = this.openaiAdapter.chatCompletionStream({
             ...toChatBody(messages, completionOptions),
             stream: true,
@@ -756,7 +757,7 @@ export abstract class BaseLLM implements ILLM {
 
           const embeddings = await withExponentialBackoff<number[][]>(
             async () => {
-              if (this.shouldUseOpenAIAdapter("embed")) {
+              if (this.shouldUseOpenAIAdapter("embed") && this.openaiAdapter) {
                 const result = await this.openaiAdapter.embed({
                   model: this.model,
                   input: chunks,
@@ -775,7 +776,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    if (this.shouldUseOpenAIAdapter("rerank")) {
+    if (this.shouldUseOpenAIAdapter("rerank") && this.openaiAdapter) {
       const results = await this.openaiAdapter.rerank({
         model: this.model,
         query,

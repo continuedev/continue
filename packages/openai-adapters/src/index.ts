@@ -23,7 +23,7 @@ function openAICompatible(
   });
 }
 
-export function constructLlmApi(config: LLMConfig): BaseLlmApi {
+export function constructLlmApi(config: LLMConfig): BaseLlmApi | undefined {
   switch (config.provider) {
     case "openai":
       return new OpenAIApi(config);
@@ -83,9 +83,7 @@ export function constructLlmApi(config: LLMConfig): BaseLlmApi {
     case "lmstudio":
       return openAICompatible("http://localhost:1234/", config);
     default:
-      throw new Error(
-        `Unsupported LLM API format: ${(config as any).provider}`,
-      );
+      return undefined;
   }
 }
 
