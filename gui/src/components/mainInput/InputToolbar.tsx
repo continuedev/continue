@@ -208,6 +208,7 @@ function InputToolbar(props: InputToolbarProps) {
           )}
 
           <EnterButton
+            data-testid="submit-input-button"
             onClick={async (e) => {
               if (props.onEnter) {
                 props.onEnter({

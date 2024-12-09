@@ -859,10 +859,7 @@ export class Core {
       this.indexingCancellationController &&
       !this.indexingCancellationController.signal.aborted
     ) {
-      return console.debug(
-        "Codebase indexing already in progress, skipping indexing of files\n" +
-          files.join("\n"),
-      );
+      return;
     }
     this.indexingCancellationController = new AbortController();
     for await (const update of (await this.codebaseIndexerPromise).refreshFiles(

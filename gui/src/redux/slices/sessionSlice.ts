@@ -19,6 +19,7 @@ import {
   Session,
   ToolCall,
 } from "core";
+import { NEW_SESSION_TITLE } from "core/util/constants";
 import { incrementalParseJson } from "core/util/incrementalParseJson";
 import { renderChatMessage } from "core/util/messageContent";
 import { v4 as uuidv4 } from "uuid";
@@ -73,7 +74,7 @@ function isCodeToEditEqual(a: CodeToEdit, b: CodeToEdit) {
 const initialState: SessionState = {
   history: [],
   isStreaming: false,
-  title: "New Session",
+  title: NEW_SESSION_TITLE,
   id: uuidv4(),
   selectedProfileId: "local",
   curCheckpointIndex: 0,
