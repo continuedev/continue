@@ -29,6 +29,7 @@ async function modelConfigToBaseLLM(
     },
     writeLog,
     uniqueId,
+    title: model.name,
   };
 
   const llm = new cls(options);
