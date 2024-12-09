@@ -316,6 +316,7 @@ function ModelSelect() {
     >
       <div className="relative">
         <StyledListboxButton
+          data-testid="model-select-button"
           ref={buttonRef}
           className="h-[18px] overflow-hidden"
           style={{ padding: 0 }}

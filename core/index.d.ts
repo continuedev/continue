@@ -807,6 +807,7 @@ type ModelProvider =
   | "nvidia"
   | "vllm"
   | "mock"
+  | "test"
   | "cerebras"
   | "askSage"
   | "vertexai"
@@ -1086,6 +1087,7 @@ export interface EmbeddingsProvider {
 
 export type RerankerName =
   | "cohere"
+  | "bedrock"
   | "voyage"
   | "llm"
   | "free-trial"
